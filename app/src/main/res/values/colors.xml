@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#D81B60</color>
+    <color name="colorButtonDark">#353535</color>
+    <color name="colorButtonLight">#ABABAB</color>
+    <color name="colorForeground">#000000</color>
+    <color name="colorPrimaryRowLight">#FFFFFF</color>
+    <color name="colorAlternateRowLight">#DDDDDD</color>
+    <color name="colorPrimaryRowDark">#303030</color>
+    <color name="colorAlternateRowDark">#252525</color>
+    <color name="colorTextLight">#BBBBBB</color>
+    <color name="colorTextDark">#202020</color>
+</resources>

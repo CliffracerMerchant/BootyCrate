@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/inventoryItemLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal|fill"
+    android:animateLayoutChanges="true"
+    app:layout_constraintHorizontal_chainStyle="spread">
+
+    <EditText
+        android:id="@+id/nameEdit"
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:ellipsize="end"
+        android:ems="10"
+        android:imeOptions="actionDone|flagNoExtractUi"
+        android:importantForAutofill="no"
+        android:inputType="none"
+        android:lines="1"
+        android:maxLines="1"
+        android:singleLine="true"
+        android:textSize="26sp"
+        app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
+        app:layout_constraintEnd_toStartOf="@id/amountEdit"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.cliffracermerchant.stuffcrate.IntegerEdit
+        android:id="@+id/amountEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:gravity="center_vertical"
+        app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/nameEdit"
+        app:layout_constraintTop_toTopOf="parent"
+        app:textSize="26" />
+
+    <EditText
+        android:id="@+id/extraInfoEdit"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginBottom="10dp"
+        android:inputType="none"
+        app:layout_constraintBottom_toTopOf="@id/inventoryItemDetailsLayoutInclude"
+        app:layout_constraintEnd_toStartOf="@id/expandDetailsButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nameEdit" />
+
+    <ImageButton
+        android:id="@+id/expandDetailsButton"
+        android:layout_width="30dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="10dp"
+        android:background="@android:drawable/arrow_down_float"
+        android:scaleX="0.5"
+        android:scaleY="0.5"
+        app:layout_constraintBottom_toBottomOf="@id/extraInfoEdit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="0"
+        app:layout_constraintStart_toEndOf="@id/extraInfoEdit"
+        app:layout_constraintTop_toTopOf="@id/extraInfoEdit" />
+
+    <include
+        android:id="@+id/inventoryItemDetailsLayoutInclude"
+        layout="@layout/inventory_item_details_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/extraInfoEdit" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

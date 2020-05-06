@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Stuff Crate</string>
+    <string name="action_settings">Settings</string>
+    <string name="inventory_item_amount_hint">0</string>
+    <string name="decrease_button_description">Decrease amount</string>
+    <string name="increase_button_description">Increase amount</string>
+    <string name="inventory_item_name_description">Inventory item name</string>
+    <string name="inventory_item_amount_description">Inventory item amount</string>
+    <string name="inventory_item_name_hint">New item</string>
+    <string name="add_item_button_name">Add Item</string>
+    <string name="delete_snackbar_text">%1$d item(s) deleted</string>
+    <string name="delete_snackbar_undo_text">Undo</string>
+    <string name="delete_item_button_name">Delete item(s)</string>
+    <string name="inventory_item_default_name">New item</string>
+    <string name="dark_theme_switch_description">Dark theme switch</string>
+    <string name="dark_theme_switch_title">Dark theme</string>
+    <string name="preferences_description">Preferences</string>
+    <string name="search_description">Search</string>
+    <string name="title_activity_preferences">Preferences</string>
+    <string name="action_mode_title">%1$d item(s) selected</string>
+</resources>

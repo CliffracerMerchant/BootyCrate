@@ -1,0 +1,67 @@
+<resources>
+
+    <style name="LightTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:colorBackground">@color/colorPrimaryRowLight</item>
+        <item name="colorBackgroundVariant">@color/colorAlternateRowLight</item>
+        <item name="colorSelected">@android:color/holo_blue_light</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="imageButtonStyle">@style/LightThemeImageButton</item>
+        <item name="editTextStyle">@style/LightThemeEditTextStyle</item>
+        <item name="checkboxStyle">@style/LightThemeCheckBoxStyle</item>
+        <item name="popupMenuBackground">@color/colorPrimaryRowLight</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeStyle">@style/LightThemeActionModeStyle</item>
+    </style>
+
+    <style name="DarkTheme" parent="LightTheme">
+        <item name="android:colorBackground">@color/colorPrimaryRowDark</item>
+        <item name="colorBackgroundVariant">@color/colorAlternateRowDark</item>
+        <item name="colorSelected">@android:color/holo_blue_dark</item>
+        <item name="imageButtonStyle">@style/DarkThemeImageButton</item>
+        <item name="android:textViewStyle">@style/DarkThemeTextAppearance</item>
+        <item name="editTextStyle">@style/DarkThemeEditTextStyle</item>
+        <item name="checkboxStyle">@style/DarkThemeCheckBoxStyle</item>
+        <item name="popupMenuBackground">@color/colorPrimaryRowDark</item>
+    </style>
+
+    <style name="LightThemeActionModeStyle" parent="Widget.AppCompat.ActionMode">
+        <item name="background">@color/colorPrimary</item>
+    </style>
+
+    <style name="LightThemeTextAppearance" parent="TextAppearance.AppCompat">
+        <item name="android:textColor">@color/colorTextDark</item>
+    </style>
+
+    <style name="DarkThemeTextAppearance" parent="TextAppearance.AppCompat">
+        <item name="android:textColor">@color/colorTextLight</item>
+    </style>
+
+    <style name="LightThemeEditTextStyle" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="android:textColor">@color/colorTextDark</item>
+    </style>
+
+    <style name="DarkThemeEditTextStyle" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="android:textColor">@color/colorTextLight</item>
+    </style>
+
+    <style name="LightThemeCheckBoxStyle" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
+        <item name="android:textColor">@color/colorTextDark</item>
+        <item name="android:minHeight">0dp</item>
+    </style>
+
+    <style name="DarkThemeCheckBoxStyle" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
+        <item name="android:textColor">@color/colorTextLight</item>
+        <item name="android:minHeight">0dp</item>
+    </style>
+
+    <style name="LightThemeImageButton" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/colorTextDark</item>
+    </style>
+
+    <style name="DarkThemeImageButton" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">@color/colorTextLight</item>
+    </style>
+
+</resources>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/inventoryItemDetailsLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal|fill"
+    android:animateLayoutChanges="true"
+    app:chainUseRtl="false"
+    app:layout_constraintHorizontal_chainStyle="spread">
+
+    <CheckBox
+        android:id="@+id/autoAddToShoppingListCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:text="Auto-add to shopping list when below: "
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/autoAddToShoppingListTriggerEdit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!--    <EditText-->
+    <!--        android:id="@+id/autoAddToShoppingListDaySelector"-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:layout_marginBottom="10dp"-->
+    <!--        android:ems="1"-->
+    <!--        android:inputType="number"-->
+    <!--        android:text="10"-->
+    <!--        android:textSize="16sp"-->
+    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
+    <!--        app:layout_constraintStart_toEndOf="@id/autoAddToShoppingListCheckBox"-->
+    <!--        app:layout_constraintTop_toBottomOf="@id/inventoryItemLayoutInclude" />-->
+
+    <com.cliffracermerchant.stuffcrate.IntegerEdit
+        android:id="@+id/autoAddToShoppingListTriggerEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:gravity="center_vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/autoAddToShoppingListCheckBox"
+        app:layout_constraintTop_toTopOf="parent"
+        app:textSize="16" />
+
+    <ImageButton
+        android:id="@+id/collapseDetailsButton"
+        android:layout_width="30dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="10dp"
+        android:background="@android:drawable/arrow_up_float"
+        android:scaleX="0.5"
+        android:scaleY="0.5"
+        app:layout_constraintBottom_toBottomOf="@+id/autoAddToShoppingListTriggerEdit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="0"
+        app:layout_constraintTop_toTopOf="@+id/autoAddToShoppingListTriggerEdit" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

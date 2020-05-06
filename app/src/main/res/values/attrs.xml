@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <attr name="colorBackgroundVariant" format="color"/>
+    <attr name="colorSelected" format="color"/>
+
+    <declare-styleable name="IntegerEdit">
+        <attr name="minValue" format="integer"/>
+        <attr name="maxValue" format="integer"/>
+        <attr name="valueChangedNotificationTimeout" format="integer" />
+        <attr name="stepSize" format="integer" />
+        <attr name="initialValue" format="integer" />
+        <attr name="textSize" format="float"/>
+    </declare-styleable>
+</resources>

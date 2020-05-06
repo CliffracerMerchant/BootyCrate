@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingTranslation">
+
+    <string name="pref_dark_theme_active">dark_theme_active</string>
+    <string name="key_recycler_view_selection">selection_state</string>
+
+</resources>
