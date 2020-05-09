@@ -20,12 +20,12 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
         android:layout_marginBottom="?attr/actionBarSize"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="?attr/actionBarSize"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.bottomappbar.BottomAppBar
         android:id="@+id/bottom_app_bar"
@@ -80,8 +80,6 @@
                 android:layout_weight="0"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/add_item_button_name"
-                android:scaleX="1.0"
-                android:scaleY="1.0"
                 app:srcCompat="@drawable/plus_icon" />
 
             <Space

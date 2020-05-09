@@ -56,7 +56,7 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
         val itemDecoration = AlternatingRowBackgroundDecoration(context)
         addItemDecoration(itemDecoration)
         setAdapter(adapter)
-        //(itemAnimator s SimpleItemAnimator).supportsChangeAnimations = false
+        (itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
     }
 
     fun setViewModel(owner: LifecycleOwner, viewModel: InventoryViewModel) =
@@ -160,7 +160,10 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                         Editable.Expanded -> {
                             assert(payload.value is Boolean)
                             if (payload.value as Boolean) holder.expand()
-                            else                          holder.collapse()
+                            else { //collapsing
+                                holder.collapse()
+                                expandedItemAdapterPos = null
+                            }
                         }
                         Editable.Name -> {
                             assert(payload.value is String)
@@ -246,7 +249,6 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
 
                 view.expandDetailsButton.setOnClickListener {
                     val oldExpandedItemAdapterPos = expandedItemAdapterPos
-                    expandedItemAdapterPos = adapterPosition
                     if (oldExpandedItemAdapterPos != null)
                         notifyItemChanged(oldExpandedItemAdapterPos,
                                           ItemChange(Editable.Expanded, false))
@@ -254,7 +256,6 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                 }
 
                 view.collapseDetailsButton.setOnClickListener {
-                    expandedItemAdapterPos = null
                     notifyItemChanged(adapterPosition, ItemChange(Editable.Expanded, false))
                 }
             }
@@ -262,9 +263,9 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
             fun bindTo(item: InventoryItem) {
                 itemView.nameEdit.setText(item.name)
                 itemView.amountEdit.currentValue = item.amount
-                itemView.extraInfoEdit.setText(item.extraInfo)
+                //itemView.extraInfoEdit.setText(item.extraInfo)
+                itemView.extraInfoEdit.setText("extra info")
                 if (expandedItemAdapterPos == adapterPosition) expand()
-                //else collapse()
                 val selected = selection.contains(adapterPosition)
                 if (selected) itemView.setBackgroundColor(selectedColor)
                 else itemView.background = null
@@ -279,28 +280,17 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                 itemView.extraInfoEdit.inputType = InputType.TYPE_CLASS_TEXT
                 itemView.autoAddToShoppingListTriggerEdit.editable = true
 
-                val matchParentSpec = MeasureSpec.makeMeasureSpec(itemView.width,
-                    MeasureSpec.EXACTLY)
-                val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-                itemView.inventoryItemDetailsLayoutInclude.measure(matchParentSpec, wrapContentSpec)
-                val expandedHeight = itemView.inventoryItemDetailsLayoutInclude.measuredHeight
-
-                val animator = ValueAnimator.ofInt(0, expandedHeight)
-                animator.addUpdateListener {
-                    itemView.inventoryItemDetailsLayoutInclude.layoutParams.height =
-                        (animator.animatedFraction * expandedHeight).toInt()
-                    itemView.inventoryItemDetailsLayoutInclude.requestLayout()
-                }
-                animator.addListener(object: AnimatorListenerAdapter() {
-                    override fun onAnimationStart(animation: Animator) {
-                        itemView.inventoryItemDetailsLayoutInclude.layoutParams.height = 0
-                        itemView.inventoryItemDetailsLayoutInclude.visibility = View.VISIBLE
-                        itemView.inventoryItemDetailsLayoutInclude.requestLayout()
+                val anim = expandCollapseAnimation(true)
+                anim.addListener(object: AnimatorListenerAdapter() {
+                    override fun onAnimationStart(animation: Animator?) {
                         itemView.expandDetailsButton.visibility = View.INVISIBLE
                     }
+                    override fun onAnimationEnd(animation: Animator?) {
+                        expandedItemAdapterPos = adapterPosition
+                        itemView.collapseDetailsButton.visibility = View.VISIBLE
+                    }
                 })
-                animator.duration = 1000
-                animator.start()
+                anim.start()
             }
 
             fun collapse() {
@@ -309,21 +299,42 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                 itemView.extraInfoEdit.inputType = InputType.TYPE_NULL
                 itemView.autoAddToShoppingListTriggerEdit.editable = false
 
-                val expandedHeight = itemView.inventoryItemDetailsLayoutInclude.layoutParams.height
-                val animator = ValueAnimator.ofInt(expandedHeight, 0)
-                animator.addUpdateListener {
-                    itemView.inventoryItemDetailsLayoutInclude.layoutParams.height =
-                        ((1.0f - animator.animatedFraction) * expandedHeight).toInt()
-                    itemView.inventoryItemDetailsLayoutInclude.requestLayout()
-                }
-                animator.addListener(object: AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        itemView.inventoryItemDetailsLayoutInclude.visibility = View.GONE
+                val anim = expandCollapseAnimation(false)
+                anim.addListener(object: AnimatorListenerAdapter() {
+                    override fun onAnimationStart(animation: Animator?) {
+                        itemView.collapseDetailsButton.visibility = View.INVISIBLE
+                    }
+                    override fun onAnimationEnd(animation: Animator?) {
                         itemView.expandDetailsButton.visibility = View.VISIBLE
+                        itemView.inventoryItemDetailsInclude.visibility = View.GONE
                     }
                 })
-                animator.duration = 1000
-                animator.start()
+                anim.start()
+            }
+
+            private fun expandCollapseAnimation(expanding: Boolean) : ValueAnimator {
+                val matchParentSpec = MeasureSpec.makeMeasureSpec(itemView.width,
+                                                                  MeasureSpec.EXACTLY)
+                val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+                itemView.measure(matchParentSpec, wrapContentSpec)
+                val startHeight = itemView.measuredHeight
+                val heightChange: Int
+                if (expanding) {
+                    itemView.inventoryItemDetailsInclude.visibility = View.VISIBLE
+                    itemView.measure(matchParentSpec, wrapContentSpec)
+                    heightChange = itemView.measuredHeight - startHeight
+                }
+                else heightChange = -itemView.inventoryItemDetailsInclude.measuredHeight
+                //val heightChange = endHeight - startHeight
+
+                val anim = ValueAnimator.ofInt(startHeight, startHeight + heightChange)
+                anim.addUpdateListener {
+                    itemView.layoutParams.height =
+                        startHeight + (anim.animatedFraction * heightChange).toInt()
+                    itemView.requestLayout()
+                }
+                anim.duration = 200
+                return anim
             }
         }
 
@@ -335,7 +346,7 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                 // If the new item is not expanded, then a quicker compare
                 // using only the values visible to the user can be used
                 if (expandedItemAdapterPos != null &&
-                    newItem.id != listDiffer.currentList[expandedItemAdapterPos ?: 0].id)
+                    newItem.id != listDiffer.currentList[expandedItemAdapterPos!!].id)
                         return oldItem.id == newItem.id &&
                                oldItem.name == newItem.name &&
                                oldItem.amount == newItem.amount &&
