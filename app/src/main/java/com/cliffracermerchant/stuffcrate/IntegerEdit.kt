@@ -33,7 +33,6 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
  *    tons will be adjusted to match the new text size. */
 class IntegerEdit(context: Context?, attrs: AttributeSet?) :
         LinearLayout(context, attrs) {
-    private val view = inflate(context, layout.integer_edit_layout, this)
     private val updateLiveData = Runnable { liveData.value = currentValue }
 
     var minValue: Int
@@ -48,22 +47,21 @@ class IntegerEdit(context: Context?, attrs: AttributeSet?) :
                                      incrementButton.scaleY = value / 32.0f }
     var currentValue: Int get() = try { valueEdit.text.toString().toInt() }
                                   catch (e: NumberFormatException) { 0 }
-                          set(value) { view.valueEdit.setText(value.coerceIn(
+                          set(value) { valueEdit.setText(value.coerceIn(
                                                 minValue, maxValue).toString()) }
     var editable: Boolean get() = valueEdit.isEnabled
                           set(editable) { valueEdit.isEnabled = editable }
 
-    val liveData = MutableLiveData(currentValue)
-
     init {
-        val styledAttrs = context?.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
-        currentValue = styledAttrs?.getInt(R.styleable.IntegerEdit_initialValue, 0) ?: 0
-        minValue = styledAttrs?.getInt(R.styleable.IntegerEdit_minValue, 0) ?: 0
-        maxValue = styledAttrs?.getInt(R.styleable.IntegerEdit_maxValue, 99) ?: 99
+        inflate(context, layout.integer_edit_layout, this)
+        val styledAttrs = context?.obtainStyledAttributes(attrs, styleable.IntegerEdit)
+        currentValue = styledAttrs?.getInt(styleable.IntegerEdit_initialValue, 0) ?: 0
+        minValue = styledAttrs?.getInt(styleable.IntegerEdit_minValue, 0) ?: 0
+        maxValue = styledAttrs?.getInt(styleable.IntegerEdit_maxValue, 99) ?: 99
         valueChangedNotificationTimeout = styledAttrs?.getInt(
-            R.styleable.IntegerEdit_valueChangedNotificationTimeout, 1000) ?: 1000
-        stepSize = styledAttrs?.getInt(R.styleable.IntegerEdit_stepSize, 1) ?: 1
-        textSize = styledAttrs?.getFloat(R.styleable.IntegerEdit_textSize, 16.0f) ?: 16.0f
+            styleable.IntegerEdit_valueChangedNotificationTimeout, 1000) ?: 1000
+        stepSize = styledAttrs?.getInt(styleable.IntegerEdit_stepSize, 1) ?: 1
+        textSize = styledAttrs?.getFloat(styleable.IntegerEdit_textSize, 16.0f) ?: 16.0f
         styledAttrs?.recycle()
 
         decrementButton.setOnClickListener { modifyValue(-stepSize) }
@@ -78,6 +76,8 @@ class IntegerEdit(context: Context?, attrs: AttributeSet?) :
         }
 
     }
+
+    val liveData = MutableLiveData(currentValue)
 
     private fun modifyValue(stepSize: Int) {
         val oldValue = currentValue
