@@ -17,84 +17,75 @@
         android:theme="?attr/actionBarTheme"
         app:menu="@menu/action_bar_menu" />
 
-    <com.cliffracermerchant.stuffcrate.InventoryRecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
-        android:layout_marginBottom="?attr/actionBarSize"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <include layout="@layout/content_main" />
 
-    <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/bottom_app_bar"
-        style="@style/Widget.MaterialComponents.BottomAppBar.Colored"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:layout_gravity="bottom">
+<!--    <com.google.android.material.bottomappbar.BottomAppBar-->
+<!--        android:id="@+id/bottom_app_bar"-->
+<!--        style="@style/Widget.MaterialComponents.BottomAppBar.Colored"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="?attr/actionBarSize"-->
+<!--        android:layout_gravity="bottom">-->
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="horizontal">
+<!--        <LinearLayout-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:gravity="center"-->
+<!--            android:orientation="horizontal">-->
 
-            <ToggleButton
-                android:id="@+id/toggleButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:background="@null"
-                android:button="@drawable/edit_mode_toggle"
-                android:text=""
-                android:textOff=""
-                android:textOn="" />
+<!--            <ToggleButton-->
+<!--                android:id="@+id/toggleButton"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="0"-->
+<!--                android:background="@null"-->
+<!--                android:button="@drawable/edit_mode_toggle"-->
+<!--                android:text=""-->
+<!--                android:textOff=""-->
+<!--                android:textOn="" />-->
 
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
+<!--            <Space-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="1" />-->
 
-            <ImageButton
-                android:id="@+id/delete_items_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:background="@android:color/transparent"
-                android:contentDescription="@string/delete_item_button_name"
-                android:scaleType="center"
-                android:scaleX="1.5"
-                android:scaleY="1.5"
-                app:srcCompat="@drawable/ic_delete_black_24dp" />
+<!--            <ImageButton-->
+<!--                android:id="@+id/delete_items_button"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="0"-->
+<!--                android:background="@android:color/transparent"-->
+<!--                android:contentDescription="@string/delete_item_button_name"-->
+<!--                android:scaleType="center"-->
+<!--                android:scaleX="1.5"-->
+<!--                android:scaleY="1.5"-->
+<!--                app:srcCompat="@drawable/ic_delete_black_24dp" />-->
 
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
+<!--            <Space-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="1" />-->
 
-            <ImageButton
-                android:id="@+id/add_item_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:background="@android:color/transparent"
-                android:contentDescription="@string/add_item_button_name"
-                app:srcCompat="@drawable/plus_icon" />
+<!--            <ImageButton-->
+<!--                android:id="@+id/add_item_button"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="0"-->
+<!--                android:background="@android:color/transparent"-->
+<!--                android:contentDescription="@string/add_item_button_name"-->
+<!--                app:srcCompat="@drawable/plus_icon" />-->
 
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
+<!--            <Space-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="1" />-->
 
-            <ToggleButton
-                android:id="@+id/toggleButton2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0"
-                android:background="@null" />
-        </LinearLayout>
-    </com.google.android.material.bottomappbar.BottomAppBar>
+<!--            <ToggleButton-->
+<!--                android:id="@+id/toggleButton2"-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:layout_weight="0"-->
+<!--                android:background="@null" />-->
+<!--        </LinearLayout>-->
+<!--    </com.google.android.material.bottomappbar.BottomAppBar>-->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

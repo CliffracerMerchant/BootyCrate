@@ -24,7 +24,7 @@ class PreferencesActivity : AppCompatActivity() {
         setContentView(R.layout.preferences_layout)
         setSupportActionBar(findViewById(R.id.toolbar))
         supportFragmentManager.beginTransaction().replace(
-            R.id.preferencesLayout,PreferencesFragment()).commit()
+            R.id.preferences_menu_item,PreferencesFragment()).commit()
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 

@@ -34,6 +34,9 @@ class InventoryItemLayout(context: Context) : ConstraintLayout(context) {
          * requiring an instance of InventoryItem to initialize the extra
          * fields displayed when expanded. */
         collapseDetailsButton.setOnClickListener { collapse() }
+        // If the layout's children are clipped, they will suddenly appear or
+        // disappear without an animation during the expand collapse animation
+        clipChildren = false
     }
 
     fun update(item: InventoryItem, expanded: Boolean) {
@@ -90,7 +93,7 @@ class InventoryItemLayout(context: Context) : ConstraintLayout(context) {
 
     private fun expandCollapseAnimation(expanding: Boolean) : ValueAnimator {
         if (collapsedHeight == 0) initExpandedCollapsedHeights(expanding)
-        else inventoryItemDetailsInclude.visibility = View.VISIBLE
+        inventoryItemDetailsInclude.visibility = View.VISIBLE
         val startHeight = if (expanding) collapsedHeight else expandedHeight
         val endHeight =   if (expanding) expandedHeight  else collapsedHeight
         val change = endHeight - startHeight

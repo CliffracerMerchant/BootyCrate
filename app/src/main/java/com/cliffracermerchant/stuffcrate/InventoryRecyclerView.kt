@@ -67,13 +67,13 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
         layoutManager = LinearLayoutManager(context)
         setItemViewCacheSize(10)
         setHasFixedSize(true)
-        ItemTouchHelper(SwipeToDeleteItemTouchHelperCallback(::deleteItem)).
+        ItemTouchHelper(SwipeToDeleteItemTouchHelperCallback(::deleteItemAtPos)).
                                                     attachToRecyclerView(this)
 
         val itemDecoration = AlternatingRowBackgroundDecoration(context)
         addItemDecoration(itemDecoration)
         setAdapter(adapter)
-        (itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
+        //(itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
     }
 
     fun setViewModel(owner: LifecycleOwner, viewModel: InventoryViewModel) {
@@ -84,15 +84,17 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
     fun addNewItem() = viewModel.insert(InventoryItem(
         context.getString(R.string.inventory_item_default_name)))
 
-    fun deleteItem(position: Int) = deleteItems(position)
+    fun deleteItemAtPos(pos: Int) = deleteItems(listDiffer.currentList[pos].id)
 
-    fun deleteItems(vararg positions: Int) {
-        val ids = LongArray(positions.size) {
-            assert(positions[it] in 0 until listDiffer.currentList.size)
-            listDiffer.currentList[positions[it]].id
-        }
+    fun deleteItem(id: Long) = deleteItems(id)
+
+    fun deleteItems(vararg ids: Long) {
+        val expandedPos = expandedItemAdapterPos
+        if (expandedPos != null && listDiffer.currentList[expandedPos].id in ids)
+            expandedItemAdapterPos = null
+        // no need to actually collapse the view since it is about to be removed
         viewModel.delete(*ids)
-        val text = context.getString(R.string.delete_snackbar_text, positions.size)
+        val text = context.getString(R.string.delete_snackbar_text, ids.size)
         val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
         snackBar.setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
         snackBar.show()

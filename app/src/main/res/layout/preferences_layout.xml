@@ -12,7 +12,7 @@
         android:theme="?attr/actionBarTheme" />
 
     <FrameLayout
-        android:id="@+id/preferencesLayout"
+        android:id="@+id/preferences_menu_item"
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
 
