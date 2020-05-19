@@ -1,9 +1,11 @@
 package com.cliffracermerchant.stuffcrate
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class InventoryViewModel(app: Application) : AndroidViewModel(app) {

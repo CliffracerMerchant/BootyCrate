@@ -3,23 +3,30 @@ package com.cliffracermerchant.stuffcrate
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.*
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
     private var actionMode: ActionMode? = null
-    private var deleteIcon: Drawable? = null// = getDrawable(R.drawable.ic_delete_black_24dp)
-    private var addIcon: Drawable? = null// = getDrawable(android.R.drawable.ic_input_add)
+    private var deleteIcon: Drawable? = null
+    private var addIcon: Drawable? = null
+
+    companion object {
+        var ranOnce = false
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
 
         val prefs = getDefaultSharedPreferences(this)
@@ -37,15 +44,28 @@ class MainActivity : AppCompatActivity() {
 
         val viewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
         recyclerView.setViewModel(this, viewModel)
-        recyclerView.adapter.selection.sizeLiveData.observe(this, Observer { newSize ->
+        recyclerView.selection.sizeLiveData.observe(this, Observer { newSize ->
             if (newSize == 0 && actionMode != null) actionMode?.finish()
             else if (newSize > 0) {
                 if (actionMode == null) actionMode = startSupportActionMode(actionModeCallback)
                 actionMode?.title = getString(R.string.action_mode_title, newSize)
             }
         })
-
         floatingActionButton.setOnClickListener { recyclerView.addNewItem() }
+
+        if (!ranOnce) {
+            ranOnce = true
+            return
+        }
+        val selectionStateFile = File(cacheDir, "selection_state")
+        if (selectionStateFile.exists()) {
+            val selectionStateString = selectionStateFile.readText().split(',')
+            // size - 1 is to leave off the trailing comma
+            val selectionState = IntArray(selectionStateString.size - 1) { i ->
+                selectionStateString[i].toInt()
+            }
+            recyclerView.selection.restoreState(selectionState)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -59,11 +79,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        val selectionStateFile = File(cacheDir, "selection_state")
+        val writer = selectionStateFile.writer()
+        for (id in recyclerView.selection.saveState())
+            writer.write("$id,")
+        writer.close()
         super.onSaveInstanceState(outState)
     }
 
-    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
+        val selectionStateFile = File(cacheDir, "selection_state")
+        if (selectionStateFile.exists()) {
+            val selectionStateString = selectionStateFile.readText().split(',')
+            for (idString in selectionStateString) Log.d("savestate", idString)
+            val selectionState = IntArray(selectionStateString.size) { idString ->
+                idString//.toInt()
+            }
+            recyclerView.selection.restoreState(selectionState)
+            selectionStateFile.delete()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 
     private val actionModeCallback = object: ActionMode.Callback {
@@ -84,7 +123,7 @@ class MainActivity : AppCompatActivity() {
             addToShoppingListButton?.isVisible = true
             moveToOtherInventoryButton?.isVisible = true
             search?.isVisible = false
-            floatingActionButton.setOnClickListener{ recyclerView.deleteItems(*recyclerView.selectionState().toLongArray()) }
+            floatingActionButton.setOnClickListener{ recyclerView.deleteItems(*recyclerView.selection.saveState()) }
             floatingActionButton.setImageDrawable(deleteIcon)
             return true
         }
@@ -92,10 +131,7 @@ class MainActivity : AppCompatActivity() {
         override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?) = true
 
         override fun onDestroyActionMode(mode: ActionMode?) {
-            recyclerView.adapter.selection.clear()
-            //addToShoppingListButton?.isVisible = false
-            //moveToOtherInventoryButton?.isVisible = false
-            //search?.isVisible = true
+            recyclerView.selection.clear()
             floatingActionButton.setOnClickListener { recyclerView.addNewItem() }
             floatingActionButton.setImageDrawable(addIcon)
             actionMode = null

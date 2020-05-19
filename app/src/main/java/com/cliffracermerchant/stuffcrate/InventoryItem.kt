@@ -15,7 +15,6 @@ class InventoryItem {
     @ColumnInfo(name = "autoAddToShoppingListTrigger") var autoAddToShoppingListTrigger: Int
     @ColumnInfo(name = "inTrash")   var inTrash: Boolean = false
 
-
     constructor(name: String, amount: Int = 1,
                 extraInfo: String = "",
                 autoAddToShoppingList: Boolean = false,
@@ -36,6 +35,15 @@ class InventoryItem {
                this.extraInfo == other.extraInfo &&
                this.autoAddToShoppingList == other.autoAddToShoppingList &&
                this.autoAddToShoppingListTrigger == other.autoAddToShoppingListTrigger
+    }
+
+    override fun toString(): String {
+        return "\nid = " + id +
+               "\nname = " + name +
+               "\namount = " + amount +
+               "\nextraInfo = " + extraInfo +
+               "\nautoAddToShoppingList = " + autoAddToShoppingList +
+               "\nautoAddToShoppingListTrigger = " + autoAddToShoppingListTrigger
     }
 }
 

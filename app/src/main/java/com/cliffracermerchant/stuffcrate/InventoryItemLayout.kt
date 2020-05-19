@@ -40,7 +40,7 @@ class InventoryItemLayout(context: Context) : ConstraintLayout(context) {
     }
 
     fun update(item: InventoryItem, expanded: Boolean) {
-        nameEdit.setText(item.name)
+        nameEdit.setText(item.name + item.id)
         amountEdit.currentValue = item.amount
         //itemView.extraInfoEdit.setText(item.extraInfo)
         extraInfoEdit.setText("extra info")

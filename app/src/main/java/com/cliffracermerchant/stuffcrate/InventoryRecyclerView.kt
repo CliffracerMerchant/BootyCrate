@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
@@ -33,19 +34,17 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.*
  *     Adding or removing inventory items is accomplished using the functions
  *  addItem, deleteItem, and deleteItems. When items are deleted, a snackbar
  *  will appear informing the user of the amount of items that were deleted, as
- *  well as providing an undo option.
- *      The selection state of the adapter (in the form of a HashSet<Long>)
- *  containing the ids of each selected item) can be exported using
- *  selectionState(), and restored using restoreSelectionState(HashSet<Long>). */
+ *  well as providing an undo option. */
 
 class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
         RecyclerView(context, attributes),
         Observer<List<InventoryItem>> {
 
-    val adapter = InventoryAdapter(context)
+    private val adapter = InventoryAdapter(context)
     private val listDiffer = AsyncListDiffer(adapter, DiffUtilCallback())
     private lateinit var viewModel: InventoryViewModel
     private var expandedItemAdapterPos: Int? = null
+    val selection = RecyclerViewSelection(adapter)
 
     /** The enum class Editable identifies user facing fields
      *  that are potentially editable by the user. */
@@ -67,13 +66,12 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
         layoutManager = LinearLayoutManager(context)
         setItemViewCacheSize(10)
         setHasFixedSize(true)
-        ItemTouchHelper(SwipeToDeleteItemTouchHelperCallback(::deleteItemAtPos)).
+        ItemTouchHelper(SwipeToDeleteItemTouchHelperCallback(::deleteItem)).
                                                     attachToRecyclerView(this)
 
         val itemDecoration = AlternatingRowBackgroundDecoration(context)
         addItemDecoration(itemDecoration)
         setAdapter(adapter)
-        //(itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
     }
 
     fun setViewModel(owner: LifecycleOwner, viewModel: InventoryViewModel) {
@@ -84,15 +82,14 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
     fun addNewItem() = viewModel.insert(InventoryItem(
         context.getString(R.string.inventory_item_default_name)))
 
-    fun deleteItemAtPos(pos: Int) = deleteItems(listDiffer.currentList[pos].id)
+    fun deleteItem(pos: Int) = deleteItems(pos)
 
-    fun deleteItem(id: Long) = deleteItems(id)
-
-    fun deleteItems(vararg ids: Long) {
+    fun deleteItems(vararg positions: Int) {
         val expandedPos = expandedItemAdapterPos
-        if (expandedPos != null && listDiffer.currentList[expandedPos].id in ids)
+        if (expandedPos != null && expandedPos in positions)
             expandedItemAdapterPos = null
         // no need to actually collapse the view since it is about to be removed
+        val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
         viewModel.delete(*ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
         val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
@@ -102,21 +99,17 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
 
     fun undoDelete() = viewModel.undoDelete()
 
-    fun selectionState() = adapter.selection.saveState()
-
-    fun restoreSelectionState(selectionState: HashSet<Long>) =
-        adapter.selection.restoreState(selectionState)
-
     override fun onChanged(items: List<InventoryItem>) = listDiffer.submitList(items)
 
-    /**     InventoryAdapter is a subclass of SelectionEnabledAdapter using its
-     *  own RecyclerView.ViewHolder subclass InventoryItemViewHolder to repre-
-     *  sent inventory items in an inventory. Its override of onBindViewHolder(
-     *  ViewHolder, Payload) makes use of InventoryRecyclerView.ItemChange
-     *  instances to support partial binding. It also modifies the background
-     *  color of the item views to refect their selected / not selected status. */
+    /** InventoryAdapter is a subclass of SelectionEnabledAdapter using its own
+     *  RecyclerView.ViewHolder subclass InventoryItemViewHolder to represent
+     *  inventory items in an inventory. Its override of onBindViewHolder(View-
+     *  Holder, Payload) makes use of InventoryRecyclerView.ItemChange instan-
+     *  ces to support partial binding. It also modifies the background color
+     *  of the item views to reflect their selected / not selected status. */
     inner class InventoryAdapter(context: Context) :
-        SelectionEnabledAdapter<InventoryAdapter.InventoryItemViewHolder>() {
+        //SelectionEnabledAdapter<InventoryAdapter.InventoryItemViewHolder>() {
+        RecyclerView.Adapter<InventoryAdapter.InventoryItemViewHolder>() {
 
         private val selectedColor: Int
         private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -125,6 +118,7 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
             val typedValue = TypedValue()
             context.theme.resolveAttribute(R.attr.colorSelected, typedValue, true)
             selectedColor = typedValue.data
+            setHasStableIds(true)
         }
 
         override fun getItemCount(): Int = listDiffer.currentList.size
@@ -183,7 +177,7 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
             }
         }
 
-        override fun getItemId(position: Int) = listDiffer.currentList[position].id
+        override fun getItemId(position: Int): Long = listDiffer.currentList[position].id
 
         /** InventoryItemViewHolder is a subclass of RecyclerView.ViewHolder
          *  that holds an instance of InventoryItemLayout to display the data
@@ -269,9 +263,8 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
             fun bindTo(item: InventoryItem) {
                 val expanded = expandedItemAdapterPos == adapterPosition
                 view.update(item, expanded)
-                val selected = selection.contains(adapterPosition)
-                if (selected) view.setBackgroundColor(selectedColor)
-                else          view.background = null
+                if (selection.contains(adapterPosition)) view.setBackgroundColor(selectedColor)
+                else                                     view.background = null
             }
         }
     }
@@ -290,9 +283,9 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
             // using only the values visible to the user can be used
             return if (newItem.id != expandedItemId)
                 oldItem.id == newItem.id &&
-                        oldItem.name == newItem.name &&
-                        oldItem.amount == newItem.amount &&
-                        oldItem.extraInfo == newItem.extraInfo
+                oldItem.name == newItem.name &&
+                oldItem.amount == newItem.amount &&
+                oldItem.extraInfo == newItem.extraInfo
             else oldItem == newItem
         }
 
@@ -307,7 +300,7 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                 return ItemChange(Editable.AutoAddToShoppingList, newItem.autoAddToShoppingList)
             if (oldItem.autoAddToShoppingListTrigger != newItem.autoAddToShoppingListTrigger)
                 return ItemChange(Editable.AutoAddToShoppingListTrigger,
-                    newItem.autoAddToShoppingListTrigger)
+                                  newItem.autoAddToShoppingListTrigger)
             return super.getChangePayload(oldItem, newItem)
         }
     }
