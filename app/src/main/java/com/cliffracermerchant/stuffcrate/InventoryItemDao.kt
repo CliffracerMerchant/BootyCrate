@@ -69,4 +69,24 @@ abstract class InventoryItemDao {
         emptyTrash()
         moveToTrash(*(items.map { it.id }).toLongArray())
     }
+
+    @Query("UPDATE inventory_item " +
+           "SET selected = 0")
+    abstract suspend fun clearSavedSelection()
+
+    @Query("UPDATE inventory_item " +
+           "SET selected = 1 " +
+           "WHERE id IN (:ids)")
+    abstract suspend fun addToSavedSelection(vararg ids: Long)
+
+    @Transaction
+    open suspend fun updateSavedSelection(vararg ids: Long) {
+        clearSavedSelection()
+        addToSavedSelection(*ids)
+    }
+
+    @Query("SELECT id " +
+           "FROM inventory_item " +
+           "WHERE selected = 1")
+    abstract fun getSavedSelection(): LiveData<List<Long>>
 }
