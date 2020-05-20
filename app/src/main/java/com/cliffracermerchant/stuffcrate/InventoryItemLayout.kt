@@ -7,6 +7,7 @@ import android.content.Context
 import android.text.InputType
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 
@@ -40,10 +41,9 @@ class InventoryItemLayout(context: Context) : ConstraintLayout(context) {
     }
 
     fun update(item: InventoryItem, expanded: Boolean) {
-        nameEdit.setText(item.name + item.id)
+        nameEdit.setText(item.name)
         amountEdit.currentValue = item.amount
-        //itemView.extraInfoEdit.setText(item.extraInfo)
-        extraInfoEdit.setText("extra info")
+        extraInfoEdit.setText(item.extraInfo)
         if (expanded) expand(item)
     }
 
@@ -51,10 +51,14 @@ class InventoryItemLayout(context: Context) : ConstraintLayout(context) {
         expandedPrivate = true
         autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
         autoAddToShoppingListTriggerEdit.currentValue = item.autoAddToShoppingListTrigger
+
+        nameEdit.isEnabled = true
+        //nameEdit.isFocusableInTouchMode = true
         amountEdit.editable = true
-        nameEdit.inputType = InputType.TYPE_CLASS_TEXT
-        extraInfoEdit.inputType = InputType.TYPE_CLASS_TEXT
+        extraInfoEdit.isEnabled = true
+        //extraInfoEdit.isFocusableInTouchMode = true
         autoAddToShoppingListTriggerEdit.editable = true
+
         expandDetailsButton.visibility = View.INVISIBLE
 
         if (animate) {
@@ -70,9 +74,11 @@ class InventoryItemLayout(context: Context) : ConstraintLayout(context) {
 
     fun collapse(animate: Boolean = true) {
         expandedPrivate = false
+        //nameEdit.isFocusableInTouchMode = false
+        nameEdit.isEnabled = false
         amountEdit.editable = false
-        nameEdit.inputType = InputType.TYPE_NULL
-        extraInfoEdit.inputType = InputType.TYPE_NULL
+        //extraInfoEdit.isFocusableInTouchMode = false
+        extraInfoEdit.isEnabled = false
         autoAddToShoppingListTriggerEdit.editable = false
         collapseDetailsButton.visibility = View.INVISIBLE
 
@@ -88,6 +94,11 @@ class InventoryItemLayout(context: Context) : ConstraintLayout(context) {
         } else {
             expandDetailsButton.visibility = View.VISIBLE
             inventoryItemDetailsInclude.visibility = View.GONE
+        }
+        when {
+            nameEdit.isFocused -> nameEdit.clearFocus()
+            amountEdit.valueEdit.isFocused -> valueEdit.clearFocus()
+            extraInfoEdit.isFocused -> extraInfoEdit.clearFocus()
         }
     }
 

@@ -36,6 +36,10 @@ class InventoryViewModel(app: Application) : AndroidViewModel(app) {
         dao.modifyAmount(item.id, change)
     }
 
+    fun updateExtraInfo(item: InventoryItem, extraInfo: String) = viewModelScope.launch {
+        dao.updateExtraInfo(item.id, extraInfo)
+    }
+
     fun updateAutoAddToShoppingList(item: InventoryItem, autoAddToShoppingList: Boolean) =
             viewModelScope.launch {
         dao.updateAutoAddToShoppingList(item.id, autoAddToShoppingList)
@@ -65,22 +69,5 @@ class InventoryViewModel(app: Application) : AndroidViewModel(app) {
 
     fun undoDelete() = viewModelScope.launch {
         dao.undoDelete()
-    }
-
-    fun updateSavedSelection(vararg ids: Long) = viewModelScope.launch {
-        dao.updateSavedSelection(*ids)
-    }
-
-    /*fun getSavedSelection(): List<Long> = viewModelScope.async {
-        val savedSelection = dao.getSavedSelection()
-        dao.clearSavedSelection()
-        savedSelection
-    }.await()*/
-
-    fun getSavedSelection(): LiveData<List<Long>> = dao.getSavedSelection()
-
-    fun clearSavedSelection() = viewModelScope.launch {
-        dao.clearSavedSelection()
-        Log.d("savestate", "saved state cleared")
     }
 }

@@ -1,29 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="wrap_content"
     android:layout_width="wrap_content">
 
     <ImageButton
-        android:id="@+id/decrementButton"
+        android:id="@+id/decreaseButton"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_gravity="center_vertical"
-        android:background="@drawable/minus_icon" />
+        android:background="@drawable/minus_icon"
+        android:contentDescription="@string/decrease_button_description" />
 
     <EditText
         android:id="@+id/valueEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
+        android:focusableInTouchMode="true"
+        android:enabled="false"
+        android:maxLines="1"
+        android:background="@drawable/edit_text_underline_background"
+        android:imeOptions="actionDone|flagNoExtractUi"
         android:gravity="center"
-        android:inputType="number" />
+        android:inputType="number"
+        android:contentDescription="@string/inventory_item_amount_description"
+        android:importantForAutofill="no"
+        tools:ignore="LabelFor" />
 
     <ImageButton
-        android:id="@+id/incrementButton"
+        android:id="@+id/increaseButton"
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_gravity="center_vertical"
-        android:background="@drawable/plus_icon" />
+        android:background="@drawable/plus_icon"
+        android:contentDescription="@string/increase_button_description" />
 </LinearLayout>

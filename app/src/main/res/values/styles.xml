@@ -40,6 +40,7 @@
 
     <style name="LightThemeEditTextStyle" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
         <item name="android:textColor">@color/colorTextDark</item>
+
     </style>
 
     <style name="DarkThemeEditTextStyle" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
