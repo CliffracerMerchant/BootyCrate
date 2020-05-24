@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/inventory_view_navigation_button"
+        android:icon="@drawable/ic_list_alt_24px"
+        android:title="@string/inventory_navigation_item_name" />
+    <item
+        android:id="@+id/shopping_list_navigation_button"
+        android:icon="@drawable/shopping_list_icon"
+        android:title="@string/shopping_list_navigation_item_name" />
+    <item
+        android:id="@+id/bottom_navigation_spacer"
+        android:enabled="false"
+        android:title=" " />
+    <item
+        android:id="@+id/preferences_navigation_button"
+        android:icon="@android:drawable/ic_menu_preferences"
+        android:title="@string/title_activity_preferences" />
+</menu>

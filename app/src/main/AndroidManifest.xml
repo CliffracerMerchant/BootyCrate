@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.cliffracermerchant.stuffcrate">
+    package="com.cliffracermerchant.bootycrate">
 
     <application
         android:allowBackup="true"
@@ -12,7 +12,7 @@
         android:theme="@style/LightTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:name="com.cliffracermerchant.stuffcrate.MainActivity"
+            android:name="com.cliffracermerchant.bootycrate.MainActivity"
             android:label="@string/app_name"
             android:launchMode="standard">
             <intent-filter>
@@ -22,12 +22,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.cliffracermerchant.stuffcrate.PreferencesActivity"
+            android:name="com.cliffracermerchant.bootycrate.PreferencesActivity"
             android:label="@string/title_activity_preferences"
-            android:parentActivityName="com.cliffracermerchant.stuffcrate.MainActivity">
+            android:parentActivityName="com.cliffracermerchant.bootycrate.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.cliffracermerchant.stuffcrate.MainActivity" />
+                android:value="com.cliffracermerchant.bootycrate.MainActivity" />
         </activity>
     </application>
 

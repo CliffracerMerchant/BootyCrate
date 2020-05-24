@@ -61,7 +61,7 @@
         <item name="backgroundTint">@color/colorTextDark</item>
     </style>
 
-    <style name="DarkThemeImageButton" parent="Widget.MaterialComponents.Button">
+    <style name="DarkThemeImageButton" parent="LightThemeImageButton">
         <item name="backgroundTint">@color/colorTextLight</item>
     </style>
 

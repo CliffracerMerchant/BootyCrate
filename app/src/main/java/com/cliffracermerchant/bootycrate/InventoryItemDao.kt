@@ -1,4 +1,4 @@
-package com.cliffracermerchant.stuffcrate
+package com.cliffracermerchant.bootycrate
 
 import androidx.lifecycle.LiveData
 import androidx.room.*

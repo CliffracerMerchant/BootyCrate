@@ -1,17 +1,21 @@
-package com.cliffracermerchant.stuffcrate
+package com.cliffracermerchant.bootycrate
 
+import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.lifecycle.*
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
+import com.google.android.material.bottomappbar.BottomAppBar
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.view.*
 import kotlinx.android.synthetic.main.content_main.*
 import java.io.File
 
@@ -21,9 +25,9 @@ class MainActivity : AppCompatActivity() {
     private var deleteIcon: Drawable? = null
     private var addIcon: Drawable? = null
 
-    companion object {
-        var ranOnce = false
-    }
+    // This is used to make sure that the selection state
+    // is not restored on a fresh restart of the app
+    companion object { var ranOnce = false }
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -39,8 +43,6 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_dashboard_black_24dp)
 
         val viewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
         recyclerView.setViewModel(this, viewModel)
@@ -51,12 +53,12 @@ class MainActivity : AppCompatActivity() {
                 actionMode?.title = getString(R.string.action_mode_title, newSize)
             }
         })
-        floatingActionButton.setOnClickListener { recyclerView.addNewItem() }
 
-        if (!ranOnce) {
-            ranOnce = true
-            return
-        }
+        floating_action_button.setImageDrawable(addIcon)
+        floating_action_button.setOnClickListener { recyclerView.addNewItem() }
+        bottom_navigation_bar.itemIconTintList = null
+
+        if (!ranOnce) { ranOnce = true; return }
         val selectionStateFile = File(cacheDir, "selection_state")
         if (selectionStateFile.exists()) {
             val selectionStateString = selectionStateFile.readText().split(',')
@@ -123,8 +125,8 @@ class MainActivity : AppCompatActivity() {
             addToShoppingListButton?.isVisible = true
             moveToOtherInventoryButton?.isVisible = true
             search?.isVisible = false
-            floatingActionButton.setOnClickListener{ recyclerView.deleteItems(*recyclerView.selection.saveState()) }
-            floatingActionButton.setImageDrawable(deleteIcon)
+            floating_action_button.setOnClickListener{ recyclerView.deleteItems(*recyclerView.selection.saveState()) }
+            floating_action_button.setImageDrawable(deleteIcon)
             return true
         }
 
@@ -132,8 +134,8 @@ class MainActivity : AppCompatActivity() {
 
         override fun onDestroyActionMode(mode: ActionMode?) {
             recyclerView.selection.clear()
-            floatingActionButton.setOnClickListener { recyclerView.addNewItem() }
-            floatingActionButton.setImageDrawable(addIcon)
+            floating_action_button.setOnClickListener { recyclerView.addNewItem() }
+            floating_action_button.setImageDrawable(addIcon)
             actionMode = null
         }
     }

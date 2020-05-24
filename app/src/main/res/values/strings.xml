@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Stuff Crate</string>
+    <string name="app_name">Booty Crate</string>
     <string name="action_settings">Settings</string>
     <string name="decrease_button_description">Decrease amount</string>
     <string name="increase_button_description">Increase amount</string>
@@ -21,4 +21,6 @@
     <string name="inventory_item_extra_info_description">Extra info</string>
     <string name="collapse_details_description">Collapse extra details</string>
     <string name="expand_details_description">Expand extra details</string>
+    <string name="inventory_navigation_item_name">Inventory</string>
+    <string name="shopping_list_navigation_item_name">Shopping List</string>
 </resources>

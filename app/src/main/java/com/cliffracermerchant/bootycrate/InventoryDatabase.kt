@@ -1,4 +1,4 @@
-package com.cliffracermerchant.stuffcrate
+package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import androidx.room.Database

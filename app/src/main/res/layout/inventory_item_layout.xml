@@ -21,10 +21,10 @@
         android:importantForAutofill="no"
         android:inputType="text"
         android:focusableInTouchMode="true"
+        android:clickable="false"
         android:maxLines="1"
         android:textSize="26sp"
-        android:enabled = "false"
-        android:background="@drawable/edit_text_underline_background"
+        android:background="@drawable/inventory_item_text_field_background"
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
         app:layout_constraintEnd_toStartOf="@id/amountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
@@ -34,7 +34,7 @@
         android:contentDescription="@string/inventory_item_name_description"
         tools:ignore="labelFor"/>
 
-    <com.cliffracermerchant.stuffcrate.IntegerEdit
+    <com.cliffracermerchant.bootycrate.IntegerEdit
         android:id="@+id/amountEdit"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
@@ -56,10 +56,11 @@
         android:imeOptions="actionDone|flagNoExtractUi"
         android:importantForAutofill="no"
         android:inputType="text"
+        android:checkable="false"
         android:focusableInTouchMode="true"
+        android:clickable="false"
         android:maxLines="1"
-        android:enabled = "false"
-        android:background="@drawable/edit_text_underline_background"
+        android:background="@drawable/inventory_item_text_field_background"
         app:layout_constraintEnd_toStartOf="@id/expandDetailsButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/nameEdit"

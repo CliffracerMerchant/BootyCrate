@@ -1,11 +1,11 @@
-package com.cliffracermerchant.stuffcrate
+package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.util.AttributeSet
 import android.view.inputmethod.EditorInfo
 import android.widget.LinearLayout
 import androidx.lifecycle.MutableLiveData
-import com.cliffracermerchant.stuffcrate.R.*
+import com.cliffracermerchant.bootycrate.R.*
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 
 /**     IntegerEdit is a compound view that combines an EditText displaying an
@@ -48,9 +48,8 @@ class IntegerEdit(context: Context?, attrs: AttributeSet?) :
                                   catch (e: Exception) { 0 }
                           set(value) { valueEdit.setText(value.coerceIn(
                                            minValue, maxValue).toString()) }
-    var editable: Boolean get() = valueEdit.isEnabled
-                          set(editable) { valueEdit.isEnabled = editable
-                                          valueEdit.isFocusableInTouchMode = editable }
+    var editable: Boolean get() = valueEdit.isClickable
+                          set(editable) { valueEdit.isClickable = editable }
 
     val liveData = MutableLiveData(currentValue)
     private val updateLiveData = Runnable { liveData.value = currentValue }

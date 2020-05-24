@@ -1,10 +1,9 @@
-package com.cliffracermerchant.stuffcrate
+package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
-import android.text.InputType
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
@@ -52,11 +51,15 @@ class InventoryItemLayout(context: Context) : ConstraintLayout(context) {
         autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
         autoAddToShoppingListTriggerEdit.currentValue = item.autoAddToShoppingListTrigger
 
-        nameEdit.isEnabled = true
+        //nameEdit.isEnabled = true
         //nameEdit.isFocusableInTouchMode = true
+        nameEdit.isClickable = true
+
         amountEdit.editable = true
-        extraInfoEdit.isEnabled = true
+
+        //extraInfoEdit.isEnabled = true
         //extraInfoEdit.isFocusableInTouchMode = true
+        extraInfoEdit.isClickable = true
         autoAddToShoppingListTriggerEdit.editable = true
 
         expandDetailsButton.visibility = View.INVISIBLE
@@ -75,10 +78,12 @@ class InventoryItemLayout(context: Context) : ConstraintLayout(context) {
     fun collapse(animate: Boolean = true) {
         expandedPrivate = false
         //nameEdit.isFocusableInTouchMode = false
-        nameEdit.isEnabled = false
+        nameEdit.isClickable = false
+        //nameEdit.isEnabled = false
         amountEdit.editable = false
         //extraInfoEdit.isFocusableInTouchMode = false
-        extraInfoEdit.isEnabled = false
+        //extraInfoEdit.isEnabled = false
+        extraInfoEdit.isClickable = false
         autoAddToShoppingListTriggerEdit.editable = false
         collapseDetailsButton.visibility = View.INVISIBLE
 

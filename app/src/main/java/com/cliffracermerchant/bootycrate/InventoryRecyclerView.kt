@@ -1,4 +1,4 @@
-package com.cliffracermerchant.stuffcrate
+package com.cliffracermerchant.bootycrate
 
 import android.animation.ValueAnimator
 import android.app.Activity
@@ -195,6 +195,8 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
             val view = itemView as InventoryItemLayout
 
             init {
+                view.nameEdit.isEnabled = true
+                view.nameEdit.isClickable = false
                 // Click & long click listeners
                 view.setOnClickListener {
                     if (!selection.isEmpty) selection.toggle(adapterPosition)

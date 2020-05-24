@@ -1,4 +1,4 @@
-package com.cliffracermerchant.stuffcrate
+package com.cliffracermerchant.bootycrate
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -45,5 +45,7 @@ class InventoryItem {
                "\nautoAddToShoppingList = " + autoAddToShoppingList +
                "\nautoAddToShoppingListTrigger = " + autoAddToShoppingListTrigger
     }
+
+    override fun hashCode(): Int = id.hashCode()
 }
 

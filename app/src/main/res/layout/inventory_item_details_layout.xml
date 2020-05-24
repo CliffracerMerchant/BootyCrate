@@ -20,7 +20,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.cliffracermerchant.stuffcrate.IntegerEdit
+    <com.cliffracermerchant.bootycrate.IntegerEdit
         android:id="@+id/autoAddToShoppingListTriggerEdit"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
