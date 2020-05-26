@@ -3,6 +3,7 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.AttributeSet
@@ -38,14 +39,15 @@ class MainActivity : AppCompatActivity() {
         setTheme(if (darkThemeActive) R.style.DarkTheme
                  else                 R.style.LightTheme)
 
-        deleteIcon = getDrawable(R.drawable.ic_delete_black_24dp)
-        addIcon = getDrawable(android.R.drawable.ic_input_add)
+        deleteIcon = getDrawable(R.drawable.fab_animated_add_to_delete_icon)
+        addIcon = getDrawable(R.drawable.fab_animated_delete_to_add_icon)
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
         val viewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
         recyclerView.setViewModel(this, viewModel)
+        recyclerView.bottomBar = bottom_app_bar
         recyclerView.selection.sizeLiveData.observe(this, Observer { newSize ->
             if (newSize == 0 && actionMode != null) actionMode?.finish()
             else if (newSize > 0) {
@@ -54,7 +56,6 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-        floating_action_button.setImageDrawable(addIcon)
         floating_action_button.setOnClickListener { recyclerView.addNewItem() }
         bottom_navigation_bar.itemIconTintList = null
 
@@ -125,8 +126,11 @@ class MainActivity : AppCompatActivity() {
             addToShoppingListButton?.isVisible = true
             moveToOtherInventoryButton?.isVisible = true
             search?.isVisible = false
-            floating_action_button.setOnClickListener{ recyclerView.deleteItems(*recyclerView.selection.saveState()) }
+            floating_action_button.setOnClickListener{
+                recyclerView.deleteItems(*recyclerView.selection.saveState())
+            }
             floating_action_button.setImageDrawable(deleteIcon)
+            (floating_action_button.drawable as AnimatedVectorDrawable).start()
             return true
         }
 
@@ -136,6 +140,7 @@ class MainActivity : AppCompatActivity() {
             recyclerView.selection.clear()
             floating_action_button.setOnClickListener { recyclerView.addNewItem() }
             floating_action_button.setImageDrawable(addIcon)
+            (floating_action_button.drawable as AnimatedVectorDrawable).start()
             actionMode = null
         }
     }

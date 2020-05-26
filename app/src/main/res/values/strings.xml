@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Booty Crate</string>
+    <string name="app_name">BootyCrate</string>
     <string name="action_settings">Settings</string>
     <string name="decrease_button_description">Decrease amount</string>
     <string name="increase_button_description">Increase amount</string>

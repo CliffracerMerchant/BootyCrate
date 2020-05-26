@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
@@ -19,7 +20,6 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
-
 
 /**     InventoryRecyclerView is a RecyclerView subclass specialized for dis-
  *  playing the contents of an inventory. Because it is intended to be inflated
@@ -45,6 +45,7 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
     private lateinit var viewModel: InventoryViewModel
     private var expandedItemAdapterPos: Int? = null
     val selection = RecyclerViewSelection(adapter)
+    var bottomBar: BottomAppBar? = null
 
     /** The enum class Field identifies user facing fields
      *  that are potentially editable by the user. */
@@ -92,7 +93,8 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
         val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
         viewModel.delete(*ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
-        val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
+        val snackBar = Snackbar.make(bottomBar ?: this, text, Snackbar.LENGTH_LONG)
+        snackBar.anchorView = bottomBar ?: this
         snackBar.setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
         snackBar.show()
     }
@@ -111,7 +113,6 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
         RecyclerView.Adapter<InventoryAdapter.InventoryItemViewHolder>() {
 
         private val selectedColor: Int
-        private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
 
         init {
             val typedValue = TypedValue()
@@ -124,7 +125,7 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) :
                 InventoryItemViewHolder {
-            val view = InventoryItemLayout(context)
+            val view = InventoryItemView(context)
             view.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                              ViewGroup.LayoutParams.WRAP_CONTENT)
             return InventoryItemViewHolder(view)
@@ -190,36 +191,26 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
          *   view holder before the clicked one is expanded.
          * - its bindTo function checks the selected / not selected status of
          *   an item and updates its background color accordingly. */
-        inner class InventoryItemViewHolder(view: InventoryItemLayout) :
+        inner class InventoryItemViewHolder(view: InventoryItemView) :
                 RecyclerView.ViewHolder(view) {
-            val view = itemView as InventoryItemLayout
+            private val view = itemView as InventoryItemView
 
             init {
-                view.nameEdit.isEnabled = true
-                view.nameEdit.isClickable = false
                 // Click & long click listeners
-                view.setOnClickListener {
+                val onClick = OnClickListener {
                     if (!selection.isEmpty) selection.toggle(adapterPosition)
                 }
-                view.setOnLongClickListener {
-                    selection.toggle(adapterPosition); true
-                }
-
-                val onClick = OnClickListener { editor ->
-                    if (adapterPosition == expandedItemAdapterPos) {
-                        (editor as EditText).requestFocus()
-                        imm.showSoftInput(editor, InputMethodManager.SHOW_IMPLICIT)
-                    } else if (!selection.isEmpty) selection.toggle(adapterPosition)
-                }
+                view.setOnClickListener(onClick)
                 view.nameEdit.setOnClickListener(onClick)
+                view.amountEdit.valueEdit.setOnClickListener(onClick)
                 view.extraInfoEdit.setOnClickListener(onClick)
 
                 val onLongClick = OnLongClickListener { editor ->
-                    if (adapterPosition == expandedItemAdapterPos)
-                        (editor as EditText).requestFocus()
-                    else selection.toggle(adapterPosition); true
+                    selection.toggle(adapterPosition); true
                 }
+                view.setOnLongClickListener(onLongClick)
                 view.nameEdit.setOnLongClickListener(onLongClick)
+                view.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
                 view.extraInfoEdit.setOnLongClickListener(onLongClick)
 
                 view.expandDetailsButton.setOnClickListener {
@@ -234,13 +225,11 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                 }
                 view.collapseDetailsButton.setOnClickListener {
                     view.collapse()
-                    imm.hideSoftInputFromWindow(view.windowToken, 0)
                     expandedItemAdapterPos = null
                 }
 
-
                 // Data change listeners
-                view.nameEdit.setOnEditorActionListener { _, actionId, _ ->
+                /*view.nameEdit.setOnEditorActionListener { _, actionId, _ ->
                     if (actionId == EditorInfo.IME_ACTION_DONE) {
                         imm.hideSoftInputFromWindow(view.nameEdit.windowToken, 0)
                         viewModel.updateName(listDiffer.currentList[adapterPosition],
@@ -249,20 +238,6 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                     }
                     actionId == EditorInfo.IME_ACTION_DONE
                 }
-
-                view.amountEdit.valueEdit.setOnEditorActionListener { _, actionId, _ ->
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        imm.hideSoftInputFromWindow(view.nameEdit.windowToken, 0)
-                        view.amountEdit.valueEdit.clearFocus()
-                        view.amountEdit.updateLiveDataFromEditor()
-                    }
-                    actionId == EditorInfo.IME_ACTION_DONE
-                }
-                view.amountEdit.liveData.observeForever { value ->
-                    if (adapterPosition == -1) return@observeForever
-                    viewModel.updateAmount(listDiffer.currentList[adapterPosition], value)
-                }
-
                 view.extraInfoEdit.setOnEditorActionListener { _, actionId, _ ->
                     if (actionId == EditorInfo.IME_ACTION_DONE) {
                         imm.hideSoftInputFromWindow(view.extraInfoEdit.windowToken, 0)
@@ -272,16 +247,33 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                     }
                     actionId == EditorInfo.IME_ACTION_DONE
                 }
-
+                view.amountEdit.valueEdit.setOnEditorActionListener { _, actionId, _ ->
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        view.amountEdit.valueEdit.clearFocus()
+                        view.amountEdit.updateLiveDataFromEditor()
+                    }
+                    actionId == EditorInfo.IME_ACTION_DONE
+                }*/
+                view.nameEdit.liveData.observeForever { value ->
+                    if (adapterPosition == -1) return@observeForever
+                    viewModel.updateName(listDiffer.currentList[adapterPosition], value)
+                }
+                view.amountEdit.liveData.observeForever { value ->
+                    if (adapterPosition == -1) return@observeForever
+                    viewModel.updateAmount(listDiffer.currentList[adapterPosition], value)
+                }
+                view.extraInfoEdit.liveData.observeForever { value ->
+                    if (adapterPosition == -1) return@observeForever
+                    viewModel.updateExtraInfo(listDiffer.currentList[adapterPosition], value)
+                }
                 view.autoAddToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
                     viewModel.updateAutoAddToShoppingList(
                         listDiffer.currentList[adapterPosition], checked)
                 }
                 view.autoAddToShoppingListTriggerEdit.liveData.observeForever { value ->
-                    if (adapterPosition != -1) {
-                        val item = listDiffer.currentList[adapterPosition]
-                        viewModel.updateAutoAddToShoppingListTrigger(item, value)
-                    }
+                    if (adapterPosition == -1) return@observeForever
+                    viewModel.updateAutoAddToShoppingListTrigger(
+                        listDiffer.currentList[adapterPosition], value)
                 }
             }
 

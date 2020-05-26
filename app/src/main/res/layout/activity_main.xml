@@ -54,10 +54,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:backgroundTint="?attr/colorAccent"
-        android:elevation="0dp"
+        android:src="@drawable/fab_animated_add_to_delete_icon"
         android:translationX="55dp"
         app:borderWidth="0dp"
-        app:elevation="0dp"
         app:layout_anchor="@id/bottom_app_bar" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

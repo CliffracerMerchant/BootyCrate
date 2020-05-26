@@ -8,6 +8,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="imageButtonStyle">@style/LightThemeImageButton</item>
+        <item name="android:textViewStyle">@style/LightThemeTextAppearance</item>
         <item name="editTextStyle">@style/LightThemeEditTextStyle</item>
         <item name="checkboxStyle">@style/LightThemeCheckBoxStyle</item>
         <item name="popupMenuBackground">@color/colorPrimaryRowLight</item>
@@ -40,11 +41,12 @@
 
     <style name="LightThemeEditTextStyle" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
         <item name="android:textColor">@color/colorTextDark</item>
-
+        <item name="android:textColorHint">@color/colorTextDarkSecondary</item>
     </style>
 
     <style name="DarkThemeEditTextStyle" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
         <item name="android:textColor">@color/colorTextLight</item>
+        <item name="android:textColorHint">@color/colorTextLightSecondary</item>
     </style>
 
     <style name="LightThemeCheckBoxStyle" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
