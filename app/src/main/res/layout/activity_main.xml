@@ -9,43 +9,44 @@
     tools:context=".MainActivity">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
+        android:id="@+id/action_bar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme"
-        app:menu="@menu/action_bar_menu" />
+        app:menu="@menu/action_bar_menu"
+        android:transitionName="action_bar" />
 
-    <include layout="@layout/content_main" />
+    <FrameLayout
+        android:id="@+id/fragment_container"
+        android:layout_width = "match_parent"
+        android:layout_height = "match_parent"
+        android:layout_marginTop="?attr/actionBarSize" />
+
 
     <com.cliffracermerchant.bootycrate.BottomAppBar
         android:id="@+id/bottom_app_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="?attr/actionBarSize"
         android:layout_gravity="bottom"
         android:backgroundTint="@color/colorPrimary"
         app:contentInsetStart="0dp"
         app:fabAlignmentMode="center"
         app:fabCradleMargin="6dp"
         app:fabCradleRoundedCornerRadius="20dp"
-        app:fabCradleVerticalOffset="-18dp">
+        app:fabCradleVerticalOffset="-18dp"
+        android:transitionName="bottom_app_bar">
 
-        <LinearLayout
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottom_navigation_bar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                android:id="@+id/bottom_navigation_bar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:background="@drawable/transparent_rectangle_background"
-                app:itemTextColor="@null"
-                app:labelVisibilityMode="labeled"
-                app:menu="@menu/bottom_navigation_bar_menu" />
-
-        </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@drawable/transparent_rectangle_background"
+            app:itemTextColor="@null"
+            app:labelVisibilityMode="labeled"
+            app:menu="@menu/bottom_navigation_bar_menu" />
 
     </com.cliffracermerchant.bootycrate.BottomAppBar>
 
@@ -57,6 +58,7 @@
         android:src="@drawable/fab_animated_add_to_delete_icon"
         android:translationX="55dp"
         app:borderWidth="0dp"
-        app:layout_anchor="@id/bottom_app_bar" />
+        app:layout_anchor="@id/bottom_app_bar"
+        android:transitionName="floating_action_button"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

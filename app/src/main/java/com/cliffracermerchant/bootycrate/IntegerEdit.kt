@@ -31,6 +31,11 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
  *  intermediate states, IntegerEdit will only change its publicly accessible
  *  LiveData member after a change is made AND no further change to the value
  *  is made within the valueChangedNotificationTimeout interval.
+ *      The EditText is by default not focusable in touch mode, but this can be
+ *  changed by setting the member isEditable. If set to true, the user can edit
+ *  the value directly (rather than through the user of the decrease / increase
+ *  buttons). When in the editable state, the EditText will underline the cur-
+ *  rent value to indicate this to the user.
  *
  *  XML Attributes:
  *  - Int initialValue = 0: The starting value

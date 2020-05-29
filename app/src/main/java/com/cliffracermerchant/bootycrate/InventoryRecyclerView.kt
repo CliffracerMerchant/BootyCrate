@@ -227,33 +227,6 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                     view.collapse()
                     expandedItemAdapterPos = null
                 }
-
-                // Data change listeners
-                /*view.nameEdit.setOnEditorActionListener { _, actionId, _ ->
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        imm.hideSoftInputFromWindow(view.nameEdit.windowToken, 0)
-                        viewModel.updateName(listDiffer.currentList[adapterPosition],
-                                             view.nameEdit.text.toString())
-                        view.nameEdit.clearFocus()
-                    }
-                    actionId == EditorInfo.IME_ACTION_DONE
-                }
-                view.extraInfoEdit.setOnEditorActionListener { _, actionId, _ ->
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        imm.hideSoftInputFromWindow(view.extraInfoEdit.windowToken, 0)
-                        view.extraInfoEdit.clearFocus()
-                        viewModel.updateExtraInfo(listDiffer.currentList[adapterPosition],
-                                                  view.extraInfoEdit.text.toString())
-                    }
-                    actionId == EditorInfo.IME_ACTION_DONE
-                }
-                view.amountEdit.valueEdit.setOnEditorActionListener { _, actionId, _ ->
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        view.amountEdit.valueEdit.clearFocus()
-                        view.amountEdit.updateLiveDataFromEditor()
-                    }
-                    actionId == EditorInfo.IME_ACTION_DONE
-                }*/
                 view.nameEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
                     viewModel.updateName(listDiffer.currentList[adapterPosition], value)
