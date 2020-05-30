@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_marginTop="8dp"
-        android:text="@string/auto_add_to_shopping_list_checkbox_text"
+        android:text="@string/inventory_item_auto_add_to_shopping_list_checkbox_text"
         app:layout_constraintEnd_toStartOf="@id/autoAddToShoppingListTriggerEdit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -29,6 +29,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/autoAddToShoppingListCheckBox"
         app:layout_constraintTop_toTopOf="parent"
+        android:contentDescription="@string/inventory_item_auto_add_to_shopping_list_trigger_edit_description"
         app:textSize="16" />
 
     <ImageButton

@@ -113,7 +113,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
 
     private fun setTextSizePrivate(size: Float) {
         valueEdit.textSize = size
-        valueEdit.setPadding((size / 3).toInt(), 0, (size / 3).toInt(), 0)
+        valueEdit.setPadding((size / 4).toInt(), 0, (size / 4).toInt(), 0)
         decreaseButton.scaleX = size / 32
         decreaseButton.scaleY = size / 32
         increaseButton.scaleX = size / 32

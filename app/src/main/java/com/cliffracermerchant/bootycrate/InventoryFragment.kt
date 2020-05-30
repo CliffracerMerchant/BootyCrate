@@ -11,19 +11,17 @@ import androidx.lifecycle.ViewModelProvider
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.recyclerView
 import java.io.File
 
-class InventoryViewFragment : Fragment() {
-
-    private var deleteIcon: Drawable? = null
-    private var addIcon: Drawable? = null
-    private lateinit var mainActivity: MainActivity
+class InventoryFragment : Fragment() {
 
     companion object {
-        val instance = InventoryViewFragment()
+        val instance = InventoryFragment()
         // This is used to make sure that the selection state
         // is not restored on a fresh restart of the app
         var ranOnce = false
     }
-
+    private var deleteIcon: Drawable? = null
+    private var addIcon: Drawable? = null
+    private lateinit var mainActivity: MainActivity
     private lateinit var viewModel: InventoryViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -36,10 +34,10 @@ class InventoryViewFragment : Fragment() {
         mainActivity = requireActivity() as MainActivity
         viewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
         recyclerView.setViewModel(this, viewModel)
-        recyclerView.bottomBar = mainActivity.bab
+        //recyclerView.bottomBar = mainActivity.bab
 
-        deleteIcon = requireActivity().getDrawable(R.drawable.fab_animated_add_to_delete_icon)
-        addIcon = requireActivity().getDrawable(R.drawable.fab_animated_delete_to_add_icon)
+        deleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon)
+        addIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon)
         mainActivity.fab.setImageDrawable(deleteIcon)
         mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
 
@@ -53,7 +51,7 @@ class InventoryViewFragment : Fragment() {
         })
 
         if (!ranOnce) { ranOnce = true; return }
-        val selectionStateFile = File(mainActivity.cacheDir, "selection_state")
+        val selectionStateFile = File(mainActivity.cacheDir, "inventory_selection_state")
         if (selectionStateFile.exists()) {
             val selectionStateString = selectionStateFile.readText().split(',')
             // size - 1 is to leave off the trailing comma
@@ -64,7 +62,7 @@ class InventoryViewFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        val selectionStateFile = File(mainActivity.cacheDir, "selection_state")
+        val selectionStateFile = File(mainActivity.cacheDir, "inventory_selection_state")
         val writer = selectionStateFile.writer()
         for (id in recyclerView.selection.saveState())
             writer.write("$id,")
@@ -103,9 +101,8 @@ class InventoryViewFragment : Fragment() {
             addToShoppingListButton?.isVisible = true
             moveToOtherInventoryButton?.isVisible = true
             search?.isVisible = false
-            mainActivity.fab.setOnClickListener{
-                recyclerView.deleteItems(*recyclerView.selection.saveState())
-            }
+            mainActivity.fab.setOnClickListener {
+                recyclerView.deleteItems(*recyclerView.selection.saveState()) }
             mainActivity.fab.setImageDrawable(deleteIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
             return true

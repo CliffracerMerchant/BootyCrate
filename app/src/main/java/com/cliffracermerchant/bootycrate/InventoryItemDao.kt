@@ -22,11 +22,6 @@ abstract class InventoryItemDao {
     abstract suspend fun updateAmount(id: Long, amount: Int)
 
     @Query("UPDATE inventory_item " +
-           "SET amount = amount + :change " +
-           "WHERE id = :id")
-    abstract suspend fun modifyAmount(id: Long, change: Int)
-
-    @Query("UPDATE inventory_item " +
            "SET extraInfo = :extraInfo " +
            "WHERE id = :id")
     abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
@@ -40,11 +35,6 @@ abstract class InventoryItemDao {
             "SET autoAddToShoppingListTrigger = :autoAddToShoppingListTrigger " +
             "WHERE id = :id")
     abstract suspend fun updateAutoAddToShoppingListTrigger(id: Long, autoAddToShoppingListTrigger: Int)
-
-    @Query("UPDATE inventory_item " +
-            "SET autoAddToShoppingListTrigger = autoAddToShoppingListTrigger + :change " +
-            "WHERE id = :id")
-    abstract suspend fun modifyAutoAddToShoppingListTrigger(id: Long, change: Int)
 
     @Query("DELETE FROM inventory_item")
     abstract suspend fun deleteAll()

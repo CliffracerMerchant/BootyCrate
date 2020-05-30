@@ -1,17 +1,12 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ValueAnimator
-import android.app.Activity
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.util.TypedValue
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
@@ -36,16 +31,16 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.*
  *  will appear informing the user of the amount of items that were deleted, as
  *  well as providing an undo option. */
 
-class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
-        RecyclerView(context, attributes),
+class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
+        RecyclerView(context, attrs),
         Observer<List<InventoryItem>> {
 
     private val adapter = InventoryAdapter(context)
     private val listDiffer = AsyncListDiffer(adapter, DiffUtilCallback())
     private lateinit var viewModel: InventoryViewModel
     private var expandedItemAdapterPos: Int? = null
+    //private var bottomBar: BottomAppBar? = null
     val selection = RecyclerViewSelection(adapter)
-    var bottomBar: BottomAppBar? = null
 
     /** The enum class Field identifies user facing fields
      *  that are potentially editable by the user. */
@@ -93,8 +88,8 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
         val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
         viewModel.delete(*ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
-        val snackBar = Snackbar.make(bottomBar ?: this, text, Snackbar.LENGTH_LONG)
-        snackBar.anchorView = bottomBar ?: this
+        val snackBar = Snackbar.make(/*bottomBar ?: */this, text, Snackbar.LENGTH_LONG)
+        snackBar.anchorView = /*bottomBar ?: */this
         snackBar.setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
         snackBar.show()
     }
@@ -196,7 +191,6 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
             private val view = itemView as InventoryItemView
 
             init {
-                // Click & long click listeners
                 val onClick = OnClickListener {
                     if (!selection.isEmpty) selection.toggle(adapterPosition)
                 }
@@ -227,6 +221,7 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
                     view.collapse()
                     expandedItemAdapterPos = null
                 }
+
                 view.nameEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
                     viewModel.updateName(listDiffer.currentList[adapterPosition], value)
@@ -267,8 +262,8 @@ class InventoryRecyclerView(context: Context, attributes: AttributeSet) :
             val expandedAdapterPos = expandedItemAdapterPos
             val range = 0 until listDiffer.currentList.size
             val expandedItemId = if (expandedAdapterPos != null && expandedAdapterPos in range)
-                listDiffer.currentList[expandedAdapterPos].id
-            else null
+                                    listDiffer.currentList[expandedAdapterPos].id
+                                 else null
             // If the new item is not expanded, then a quicker compare
             // using only the values visible to the user can be used
             return if (newItem.id != expandedItemId)

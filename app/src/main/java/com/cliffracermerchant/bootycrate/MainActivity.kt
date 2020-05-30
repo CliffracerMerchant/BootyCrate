@@ -1,5 +1,6 @@
 package com.cliffracermerchant.bootycrate
 
+import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -12,14 +13,11 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     var actionMode: ActionMode? = null
+    private var enabledFabVerticalOffset: Float = 0f
+    private var disabledFabVerticalOffset: Float = 0f
     lateinit var fab: FloatingActionButton
-    lateinit var bab: BottomAppBar
 
-    enum class FragmentID { InventoryView, Preferences }
-
-    companion object {
-        var activeFragmentID: FragmentID? = null
-    }
+    companion object { var selectedNavigationItemId: Int? = null }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,14 +30,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(action_bar)
         fab = floating_action_button
-        bab = bottom_app_bar
-        val currentFragmentId = when (activeFragmentID) {
-            FragmentID.Preferences -> R.id.preferences_navigation_button
-            else ->                   R.id.inventory_navigation_button
-        }
+        enabledFabVerticalOffset = bottom_app_bar.cradleVerticalOffset
+        disabledFabVerticalOffset = -0.5f * bottom_app_bar.cradleVerticalOffset
+
         bottom_navigation_bar.itemIconTintList = null
         bottom_navigation_bar.setOnNavigationItemSelectedListener(onNavigationItemSelected)
-        bottom_navigation_bar.selectedItemId = currentFragmentId
+        bottom_navigation_bar.selectedItemId = selectedNavigationItemId ?:
+                                               R.id.inventory_navigation_button
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -55,24 +52,42 @@ class MainActivity : AppCompatActivity() {
 
     private val onNavigationItemSelected =
             BottomNavigationView.OnNavigationItemSelectedListener { item: MenuItem ->
+        for (fragment in supportFragmentManager.fragments)
+            supportFragmentManager.saveFragmentInstanceState(fragment)
+        actionMode?.finish()
+        floating_action_button.setOnClickListener(null)
+
         when (item.itemId) {
             R.id.inventory_navigation_button -> {
-                actionMode?.finish()
-                activeFragmentID = FragmentID.InventoryView
-                supportFragmentManager.beginTransaction().replace(
-                    R.id.fragment_container, InventoryViewFragment.instance).commit()
+                if (selectedNavigationItemId == R.id.preferences_navigation_button) {
+                    floating_action_button.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
+                    ObjectAnimator.ofFloat(bottom_app_bar, "cradleVerticalOffset",
+                                           enabledFabVerticalOffset).setDuration(200).start()
+                }
+                selectedNavigationItemId = item.itemId
+                supportFragmentManager.beginTransaction().
+                    setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
+                    replace(R.id.fragment_container, InventoryFragment.instance).commit()
             }
             R.id.shopping_list_navigation_button -> {
-
+                if (selectedNavigationItemId == R.id.preferences_navigation_button) {
+                    floating_action_button.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
+                    ObjectAnimator.ofFloat(bottom_app_bar, "cradleVerticalOffset",
+                                           enabledFabVerticalOffset).setDuration(200).start()
+                }
+                selectedNavigationItemId = item.itemId
+                supportFragmentManager.beginTransaction().
+                setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
+                replace(R.id.fragment_container, ShoppingListFragment.instance).commit()
             }
             R.id.preferences_navigation_button -> {
-                if (activeFragmentID == FragmentID.InventoryView)
-                    supportFragmentManager.saveFragmentInstanceState(InventoryViewFragment.instance)
-                actionMode?.finish()
-                activeFragmentID = FragmentID.Preferences
-                supportFragmentManager.beginTransaction().replace(
-                    R.id.fragment_container, PreferencesFragment.instance).commit()
-                floating_action_button.setOnClickListener(null)
+                floating_action_button.animate().scaleX(0f).scaleY(0f).setDuration(200).start()
+                ObjectAnimator.ofFloat(bottom_app_bar, "cradleVerticalOffset",
+                                       disabledFabVerticalOffset).setDuration(200).start()
+                selectedNavigationItemId = item.itemId
+                supportFragmentManager.beginTransaction().
+                setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
+                replace(R.id.fragment_container, PreferencesFragment.instance).commit()
             }
         }
         false

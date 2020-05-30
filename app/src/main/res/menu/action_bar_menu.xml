@@ -11,7 +11,7 @@
     <item
         android:id="@+id/app_bar_search"
         android:icon="@drawable/ic_search_black_24dp"
-        android:title="Search"
+        android:title="@string/search_description"
         app:actionViewClass="android.widget.SearchView"
         app:showAsAction="ifRoom|collapseActionView" />
     <item
@@ -20,6 +20,6 @@
         android:visible="false" />
     <item
         android:id="@+id/preferences_menu_item"
-        android:title="@string/preferences_description"
+        android:title="@string/preferences_navigation_item_name"
         app:showAsAction="never" />
 </menu>
