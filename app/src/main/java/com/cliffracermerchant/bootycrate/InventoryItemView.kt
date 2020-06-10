@@ -5,12 +5,18 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
+import android.content.res.Resources
+import android.graphics.drawable.AnimatedVectorDrawable
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
-import kotlinx.android.synthetic.main.integer_edit_layout.view.*
+import androidx.core.animation.doOnEnd
+import androidx.core.view.marginTop
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
+import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
 
 
 /**     InventoryItemView is a ConstraintLayout that displays the data of an
@@ -23,6 +29,8 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     val expanded get() = expandedPrivate
     private var expandedPrivate = false
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+    private val editToMoreOptionsIcon = context.getDrawable(R.drawable.animated_edit_to_more_options_icon)
+    private val moreOptionsToEditIcon = context.getDrawable(R.drawable.animated_more_options_to_edit_icon)
 
     /* This companion object stores the heights of the layout when expanded/
        collapsed. This prevents the expand/collapse animations from having to
@@ -34,12 +42,11 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
 
     init {
         inflate(context, R.layout.inventory_item_layout, this)
-        // It is recommended to override the expandDetailsButton's onClickList-
-        // ener with one that passes in an instance of the contained Inventory-
-        // Item, as it is otherwise unable to fill out the new fields exposed
-        // when expanded.
-        expandDetailsButton.setOnClickListener { expand() }
-        collapseDetailsButton.setOnClickListener { collapse() }
+        editButton.setOnClickListener {
+            if (expanded) //TODO Implement more options menu
+            else          expand()
+        }
+        collapseButton.setOnClickListener{ collapse() }
         // If the layout's children are clipped, they will suddenly appear or
         // disappear without an animation during the expand collapse animation
         clipChildren = false
@@ -49,31 +56,24 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         nameEdit.setText(item.name)
         amountEdit.currentValue = item.amount
         extraInfoEdit.setText(item.extraInfo)
-        if (expanded) expand(item)
+        autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
+        autoAddToShoppingListTriggerEdit.currentValue = item.autoAddToShoppingListTrigger
+        if (expanded) expand()
     }
 
-    fun expand(item: InventoryItem? = null, animate: Boolean = true) {
+    fun expand(animate: Boolean = true) {
         expandedPrivate = true
-        if (item != null) {
-            autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
-            autoAddToShoppingListTriggerEdit.currentValue = item.autoAddToShoppingListTrigger
-        }
+
         nameEdit.isEditable = true
         amountEdit.isEditable = true
         extraInfoEdit.isEditable = true
         autoAddToShoppingListTriggerEdit.isEditable = true
 
-        expandDetailsButton.visibility = View.INVISIBLE
-
         if (animate) {
-            val anim = expandCollapseAnimation(true)
-            anim.addListener(object: AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
-                    collapseDetailsButton.visibility = View.VISIBLE
-                }
-            })
-            anim.start()
-        } else collapseDetailsButton.visibility = View.VISIBLE
+            editButton.background = editToMoreOptionsIcon
+            (editButton.background as AnimatedVectorDrawable).start()
+            expandCollapseAnimation(true).start()
+        } else editButton.background = moreOptionsToEditIcon
     }
 
     fun collapse(animate: Boolean = true) {
@@ -83,26 +83,21 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         extraInfoEdit.isEditable = false
         autoAddToShoppingListTriggerEdit.isEditable = false
 
-        collapseDetailsButton.visibility = View.INVISIBLE
-
         if (animate) {
+            editButton.background = moreOptionsToEditIcon
+            (editButton.background as AnimatedVectorDrawable).start()
             val anim = expandCollapseAnimation(false)
-            anim.addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
-                    expandDetailsButton.visibility = View.VISIBLE
-                    inventoryItemDetailsInclude.visibility = View.GONE
-                }
-            })
+            anim.doOnEnd { inventoryItemDetailsInclude.visibility = View.GONE }
             anim.start()
         } else {
-            expandDetailsButton.visibility = View.VISIBLE
+            editButton.background = editToMoreOptionsIcon
             inventoryItemDetailsInclude.visibility = View.GONE
         }
-        when {
+        /*when {
             nameEdit.isFocused ->             nameEdit.clearFocus()
             amountEdit.valueEdit.isFocused -> valueEdit.clearFocus()
             extraInfoEdit.isFocused ->        extraInfoEdit.clearFocus()
-        }
+        }*/
         imm?.hideSoftInputFromWindow(windowToken, 0)
     }
 
@@ -120,6 +115,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
             requestLayout()
         }
         anim.duration = 200
+        anim.interpolator = FastOutSlowInInterpolator()
         return anim
     }
 

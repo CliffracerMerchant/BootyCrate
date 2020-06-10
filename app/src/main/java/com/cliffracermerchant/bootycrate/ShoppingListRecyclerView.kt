@@ -14,6 +14,7 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
+import kotlinx.android.synthetic.main.shopping_list_item_details_layout.view.*
 import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
@@ -23,9 +24,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     private val adapter = ShoppingListAdapter(context)
     private val listDiffer = AsyncListDiffer(adapter, DiffUtilCallback())
     private lateinit var viewModel: ShoppingListViewModel
-    private var bottomBar: BottomAppBar? = null
+    var bottomBar: BottomAppBar? = null
     val selection = RecyclerViewSelection(adapter)
-
 
     /** The enum class Field identifies user facing fields
      *  that are potentially editable by the user. */
@@ -67,7 +67,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
         viewModel.delete(*ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
-        val snackBar = Snackbar.make(bottomBar ?: this, text, Snackbar.LENGTH_LONG)
+        val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
         snackBar.anchorView = bottomBar ?: this
         snackBar.setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
         snackBar.show()
@@ -79,7 +79,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     inner class ShoppingListAdapter(context: Context) :
             RecyclerView.Adapter<ShoppingListAdapter.ShoppingListItemViewHolder>() {
-        private val layoutInflater = LayoutInflater.from(context)
         private val selectedColor: Int
 
         init {
@@ -93,8 +92,10 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) :
                 ShoppingListItemViewHolder {
-            return ShoppingListItemViewHolder(layoutInflater.inflate(
-                    R.layout.shopping_list_item_layout, parent, false))
+            val view = ShoppingListItemView(context)
+            view.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                             ViewGroup.LayoutParams.WRAP_CONTENT)
+            return ShoppingListItemViewHolder(view)
         }
 
         override fun onBindViewHolder(holder: ShoppingListItemViewHolder, position: Int) =
@@ -108,13 +109,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 if (payload is Boolean) {
                     val startColor = if (payload) 0 else selectedColor
                     val endColor = if (payload) selectedColor else 0
-                    /*val valueAnimator = ValueAnimator.ofFloat(0.0f, 1.0f)
-                    valueAnimator.duration = 300
-                    valueAnimator.addUpdateListener { anim ->
-                        holder.itemView.setBackgroundColor(ColorUtils.blendARGB(
-                            startColor, endColor, anim.animatedValue as Float))
-                    }
-                    valueAnimator.start()*/
                     ObjectAnimator.ofArgb(holder.itemView, "backgroundColor",
                                           startColor, endColor).start()
                 } else if (payload is ItemChange) {
@@ -133,7 +127,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         }
                         Field.Amount -> {
                             assert(payload.value is Int)
-                            holder.itemView.amountEdit.currentValue = payload.value as Int
+                            holder.itemView.amountOnListEdit.currentValue = payload.value as Int
                         }
                     }
                 }
@@ -142,7 +136,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
         override fun getItemId(position: Int): Long = listDiffer.currentList[position].id
 
-        inner class ShoppingListItemViewHolder(view: View) :
+        inner class ShoppingListItemViewHolder(private val view: ShoppingListItemView) :
             RecyclerView.ViewHolder(view) {
 
             init {
@@ -152,40 +146,37 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 }
                 view.setOnClickListener(onClick)
                 view.nameEdit.setOnClickListener(onClick)
-                view.amountEdit.valueEdit.setOnClickListener(onClick)
-                view.extraInfoEdit.setOnClickListener(onClick)
+                view.amountInCartEdit.valueEdit.setOnClickListener(onClick)
+                view.amountOnListEdit.valueEdit.setOnClickListener(onClick)
 
                 val onLongClick = OnLongClickListener {
                     selection.toggle(adapterPosition); true
                 }
                 view.setOnLongClickListener(onLongClick)
                 view.nameEdit.setOnLongClickListener(onLongClick)
-                view.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
-                view.extraInfoEdit.setOnLongClickListener(onLongClick)
+                view.amountInCartEdit.valueEdit.setOnLongClickListener(onLongClick)
+                view.amountOnListEdit.valueEdit.setOnLongClickListener(onLongClick)
 
                 view.nameEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
                     viewModel.updateName(listDiffer.currentList[adapterPosition], value)
                 }
-                view.extraInfoEdit.liveData.observeForever { value ->
-                    if (adapterPosition == -1) return@observeForever
-                    viewModel.updateExtraInfo(listDiffer.currentList[adapterPosition], value)
-                }
                 view.amountInCartEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
                     viewModel.updateAmountInCart(listDiffer.currentList[adapterPosition], value)
                 }
-                view.amountEdit.liveData.observeForever { value ->
+                view.amountOnListEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
                     viewModel.updateAmount(listDiffer.currentList[adapterPosition], value)
+                }
+                view.extraInfoEdit.liveData.observeForever { value ->
+                    if (adapterPosition == -1) return@observeForever
+                    viewModel.updateExtraInfo(listDiffer.currentList[adapterPosition], value)
                 }
             }
 
             fun bindTo(item: ShoppingListItem) {
-                itemView.nameEdit.setText(item.name)
-                itemView.extraInfoEdit.setText(item.extraInfo)
-                itemView.amountInCartEdit.currentValue = item.amountInCart
-                itemView.amountEdit.currentValue = item.amount
+                view.update(item)
                 if (selection.contains(adapterPosition)) itemView.setBackgroundColor(selectedColor)
                 else                                     itemView.background = null
             }

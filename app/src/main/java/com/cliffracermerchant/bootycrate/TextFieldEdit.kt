@@ -3,12 +3,11 @@ package com.cliffracermerchant.bootycrate
 import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.Rect
 import android.text.InputType
 import android.text.TextUtils
 import android.util.AttributeSet
-import android.util.Log
-import android.util.TypedValue
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.AppCompatEditText
@@ -33,7 +32,6 @@ import androidx.lifecycle.MutableLiveData
 class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         AppCompatEditText(context, attrs) {
     val liveData = MutableLiveData<String>()
-    private val bounds = Rect()
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
     var editableHint: String?
 
@@ -45,21 +43,31 @@ class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         isEditable = styledAttrs.getBoolean(R.styleable.TextFieldEdit_isEditable, false)
         editableHint = styledAttrs.getString(R.styleable.TextFieldEdit_editableHint)
         styledAttrs.recycle()
-        val typedValue = TypedValue()
-        context.theme.resolveAttribute(android.R.attr.textColorHint, typedValue, true)
         maxLines = 1
-        //isSingleLine = true
-        paint.strokeWidth = textSize / 18f // for underline drawing
         imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
         ellipsize = TextUtils.TruncateAt.END
-        setOnEditorActionListener { _, actionId, _ ->
+        /*setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 clearFocus()
                 imm?.hideSoftInputFromWindow(windowToken, 0)
                 liveData.value = text.toString()
             }
             actionId == EditorInfo.IME_ACTION_DONE
+        }*/
+    }
+
+    override fun onEditorAction(actionCode: Int) {
+        if (actionCode == EditorInfo.IME_ACTION_DONE) {
+            clearFocus()
+            imm?.hideSoftInputFromWindow(windowToken, 0)
+            liveData.value = text.toString()
         }
+        super.onEditorAction(actionCode)
+    }
+
+    override fun onFocusChanged(focused: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
+        super.onFocusChanged(focused, direction, previouslyFocusedRect)
+        if (!focused) liveData.value = text.toString()
     }
 
     private fun setEditablePrivate(editable: Boolean) {
@@ -67,21 +75,13 @@ class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         hint = if (editable) editableHint else null
+        if (!editable && isFocused) clearFocus()
         invalidate()
     }
 
     override fun onDraw(canvas: Canvas) {
+        paintFlags = if (isEditable) paintFlags or Paint.UNDERLINE_TEXT_FLAG
+                     else paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
         super.onDraw(canvas)
-        if (!isEditable) return
-        val baseLine = getLineBounds(0, bounds)
-        var string = text.toString()
-        if (string.isEmpty()) {
-            if (hint == null || hint.isEmpty()) return
-            assert(hint.toString() == editableHint)
-            string = editableHint ?: "editable field here"
-        }
-        val underlineWidth = paint.measureText(string, 0, string.length)
-        canvas.drawLine(0f,             baseLine + 7f,
-                        underlineWidth, baseLine + 7f, paint)
     }
 }

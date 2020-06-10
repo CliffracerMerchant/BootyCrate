@@ -20,6 +20,7 @@
         android:maxLines="1"
         android:imeOptions="actionDone|flagNoExtractUi"
         android:gravity="center"
+        android:layout_gravity="center_vertical"
         android:inputType="number"
         android:contentDescription="@string/inventory_item_amount_description"
         android:importantForAutofill="no"

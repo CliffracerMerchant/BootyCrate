@@ -11,7 +11,8 @@
     <color name="colorPrimaryRowDark">#303030</color>
     <color name="colorAlternateRowDark">#252525</color>
     <color name="colorTextLight">#BBBBBB</color>
-    <color name="colorTextLightSecondary">#858585</color>
+    <color name="colorTextLightSecondary">#808080</color>
     <color name="colorTextDark">#202020</color>
     <color name="colorTextDarkSecondary">#353535</color>
+    <color name="colorTextLink">#3232FF</color>
 </resources>

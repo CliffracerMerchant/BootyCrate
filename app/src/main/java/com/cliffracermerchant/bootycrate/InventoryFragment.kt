@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.recyclerView
 import java.io.File
 
@@ -19,8 +20,8 @@ class InventoryFragment : Fragment() {
         // is not restored on a fresh restart of the app
         var ranOnce = false
     }
-    private var deleteIcon: Drawable? = null
-    private var addIcon: Drawable? = null
+    private var deleteToAddIcon: Drawable? = null
+    private var addToDeleteIcon: Drawable? = null
     private lateinit var mainActivity: MainActivity
     private lateinit var viewModel: InventoryViewModel
 
@@ -33,12 +34,12 @@ class InventoryFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
         viewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
-        recyclerView.setViewModel(this, viewModel)
-        //recyclerView.bottomBar = mainActivity.bab
+        recyclerView.setViewModel(viewLifecycleOwner, viewModel)
+        recyclerView.bottomBar = mainActivity.bottom_app_bar
 
-        deleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon)
-        addIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon)
-        mainActivity.fab.setImageDrawable(deleteIcon)
+        addToDeleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable
+        deleteToAddIcon = mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable
+        mainActivity.fab.setImageDrawable(deleteToAddIcon)
         mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
 
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
@@ -70,18 +71,6 @@ class InventoryFragment : Fragment() {
         super.onSaveInstanceState(outState)
     }
 
-//    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-//        super.onRestoreInstanceState(savedInstanceState)
-//        val selectionStateFile = File(cacheDir, "selection_state")
-//        if (selectionStateFile.exists()) {
-//            val selectionStateString = selectionStateFile.readText().split(',')
-//            for (idString in selectionStateString) Log.d("savestate", idString)
-//            val selectionState = IntArray(selectionStateString.size) { idString -> idString }
-//            recyclerView.selection.restoreState(selectionState)
-//            selectionStateFile.delete()
-//        }
-//    }
-
     private val actionModeCallback = object: ActionMode.Callback {
         private var addToShoppingListButton: MenuItem? = null
         private var moveToOtherInventoryButton: MenuItem? = null
@@ -89,7 +78,6 @@ class InventoryFragment : Fragment() {
 
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
             if (item?.itemId == R.id.preferences_menu_item) return true
-            //startActivity(Intent(this@MainActivity, PreferencesActivity::class.java))
             return true
         }
 
@@ -103,7 +91,7 @@ class InventoryFragment : Fragment() {
             search?.isVisible = false
             mainActivity.fab.setOnClickListener {
                 recyclerView.deleteItems(*recyclerView.selection.saveState()) }
-            mainActivity.fab.setImageDrawable(deleteIcon)
+            mainActivity.fab.setImageDrawable(deleteToAddIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
             return true
         }
@@ -113,7 +101,7 @@ class InventoryFragment : Fragment() {
         override fun onDestroyActionMode(mode: ActionMode?) {
             recyclerView.selection.clear()
             mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
-            mainActivity.fab.setImageDrawable(addIcon)
+            mainActivity.fab.setImageDrawable(addToDeleteIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
             mainActivity.actionMode = null
         }

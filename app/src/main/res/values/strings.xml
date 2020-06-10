@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">BootyCrate</string>
-    <string name="action_settings">Settings</string>
-    <string name="search_description">Search</string>
     <string name="inventory_navigation_item_name">Inventory</string>
     <string name="shopping_list_navigation_item_name">Shopping List</string>
     <string name="preferences_navigation_item_name">Preferences</string>
@@ -11,11 +9,11 @@
     <string name="inventory_item_amount_description">Item amount</string>
     <string name="increase_button_description">Increase amount</string>
     <string name="inventory_item_extra_info_description">Item extra info</string>
-    <string name="expand_details_description">Expand extra details</string>
+    <string name="edit_button_description">Edit item</string>
     <string name="inventory_item_auto_add_to_shopping_list_checkbox_description">Auto-add to shopping list</string>
-    <string name="inventory_item_auto_add_to_shopping_list_checkbox_text">Auto-add to shopping list when below:</string>
+    <string name="inventory_item_auto_add_to_shopping_list_checkbox_text">Auto-add to shopping list under:</string>
     <string name="inventory_item_auto_add_to_shopping_list_trigger_edit_description">Auto-add to shopping list amount threshold</string>
-    <string name="collapse_details_description">Collapse extra details</string>
+    <string name="collapse_button_description">Collapse extra item options</string>
 
     <string name="inventory_item_default_name">New item</string>
     <string name="add_item_button_name">Add new item</string>
@@ -27,10 +25,17 @@
     <string name="shopping_list_item_default_name">New item</string>
     <string name="shopping_list_item_name_description">Item name</string>
     <string name="shopping_list_item_extra_info_description">Item extra info</string>
+    <string name="amount_in_cart_edit_label">In cart: </string>
     <string name="shopping_list_item_amount_in_cart_description">Amount in cart</string>
     <string name="shopping_list_item_amount_description">Amount on list</string>
+    <string name="linked_shopping_list_item_description">Linked</string>
+    <string name="unlinked_shopping_list_item_description">Not linked</string>
+    <string name="shopping_list_item_link_now_action_description"><u>Link now</u></string>
+    <string name="shopping_list_item_change_link_action_description"><u>Change</u></string>
 
     <string name="dark_theme_switch_description">Dark theme toggle</string>
     <string name="dark_theme_switch_title">Dark theme</string>
+
+    <string name="search_description">Search</string>
 
 </resources>

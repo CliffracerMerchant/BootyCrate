@@ -15,6 +15,6 @@
         <attr name="valueChangedNotificationTimeout" format="integer" />
         <attr name="stepSize" format="integer" />
         <attr name="initialValue" format="integer" />
-        <attr name="textSize" format="float"/>
+        <attr name="textSize" format="float" />
     </declare-styleable>
 </resources>

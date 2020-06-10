@@ -1,13 +1,12 @@
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ValueAnimator
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
-import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
@@ -39,7 +38,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     private val listDiffer = AsyncListDiffer(adapter, DiffUtilCallback())
     private lateinit var viewModel: InventoryViewModel
     private var expandedItemAdapterPos: Int? = null
-    //private var bottomBar: BottomAppBar? = null
+    var bottomBar: BottomAppBar? = null
     val selection = RecyclerViewSelection(adapter)
 
     /** The enum class Field identifies user facing fields
@@ -84,12 +83,11 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         val expandedPos = expandedItemAdapterPos
         if (expandedPos != null && expandedPos in positions)
             expandedItemAdapterPos = null
-        // no need to actually collapse the view since it is about to be removed
         val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
         viewModel.delete(*ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
-        val snackBar = Snackbar.make(/*bottomBar ?: */this, text, Snackbar.LENGTH_LONG)
-        snackBar.anchorView = /*bottomBar ?: */this
+        val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
+        snackBar.anchorView = bottomBar ?: this
         snackBar.setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
         snackBar.show()
     }
@@ -136,13 +134,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 if (payload is Boolean) {
                     val startColor = if (payload) 0 else selectedColor
                     val endColor = if (payload) selectedColor else 0
-                    val valueAnimator = ValueAnimator.ofFloat(0.0f, 1.0f)
-                    valueAnimator.duration = 300
-                    valueAnimator.addUpdateListener { anim ->
-                        holder.itemView.setBackgroundColor(ColorUtils.blendARGB(
-                            startColor, endColor, anim.animatedValue as Float))
-                    }
-                    valueAnimator.start()
+                    ObjectAnimator.ofArgb(holder.itemView, "backgroundColor",
+                                          startColor, endColor).start()
                 } else if (payload is ItemChange) {
                     when (payload.editable) {
                         Field.Name -> {
@@ -186,9 +179,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
          *   view holder before the clicked one is expanded.
          * - its bindTo function checks the selected / not selected status of
          *   an item and updates its background color accordingly. */
-        inner class InventoryItemViewHolder(view: InventoryItemView) :
+        inner class InventoryItemViewHolder(private val view: InventoryItemView) :
                 RecyclerView.ViewHolder(view) {
-            private val view = itemView as InventoryItemView
 
             init {
                 val onClick = OnClickListener {
@@ -199,7 +191,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 view.amountEdit.valueEdit.setOnClickListener(onClick)
                 view.extraInfoEdit.setOnClickListener(onClick)
 
-                val onLongClick = OnLongClickListener { editor ->
+                val onLongClick = OnLongClickListener {
                     selection.toggle(adapterPosition); true
                 }
                 view.setOnLongClickListener(onLongClick)
@@ -207,17 +199,19 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 view.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
                 view.extraInfoEdit.setOnLongClickListener(onLongClick)
 
-                view.expandDetailsButton.setOnClickListener {
-                    val oldExpandedItemAdapterPos = expandedItemAdapterPos
-                    if (oldExpandedItemAdapterPos != null) {
-                        val alreadyExpandedVH = findViewHolderForAdapterPosition(
-                            oldExpandedItemAdapterPos) as InventoryItemViewHolder?
-                        alreadyExpandedVH?.view?.collapse()
+                view.editButton.setOnClickListener {
+                    if (!view.expanded) {
+                        val oldExpandedItemAdapterPos = expandedItemAdapterPos
+                        if (oldExpandedItemAdapterPos != null) {
+                            val alreadyExpandedVH = findViewHolderForAdapterPosition(
+                                oldExpandedItemAdapterPos) as InventoryItemViewHolder?
+                            alreadyExpandedVH?.view?.collapse()
+                        }
+                        view.expand()
+                        expandedItemAdapterPos = adapterPosition
                     }
-                    view.expand(listDiffer.currentList[adapterPosition])
-                    expandedItemAdapterPos = adapterPosition
                 }
-                view.collapseDetailsButton.setOnClickListener {
+                view.collapseButton.setOnClickListener {
                     view.collapse()
                     expandedItemAdapterPos = null
                 }
@@ -262,7 +256,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             val expandedAdapterPos = expandedItemAdapterPos
             val range = 0 until listDiffer.currentList.size
             val expandedItemId = if (expandedAdapterPos != null && expandedAdapterPos in range)
-                                    listDiffer.currentList[expandedAdapterPos].id
+                                     listDiffer.currentList[expandedAdapterPos].id
                                  else null
             // If the new item is not expanded, then a quicker compare
             // using only the values visible to the user can be used

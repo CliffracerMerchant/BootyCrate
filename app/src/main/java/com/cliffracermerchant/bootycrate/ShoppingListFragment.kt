@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.recyclerView
@@ -37,8 +38,8 @@ class ShoppingListFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
         viewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
-        recyclerView.setViewModel(this, viewModel)
-        //recyclerView.bottomBar = mainActivity.bab
+        recyclerView.setViewModel(viewLifecycleOwner, viewModel)
+        recyclerView.bottomBar = mainActivity.bottom_app_bar
 
         deleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon)
         addIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon)
@@ -80,7 +81,6 @@ class ShoppingListFragment : Fragment() {
 
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
             if (item?.itemId == R.id.preferences_menu_item) return true
-            //startActivity(Intent(this@MainActivity, PreferencesActivity::class.java))
             return true
         }
 

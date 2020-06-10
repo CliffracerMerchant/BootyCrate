@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.cliffracermerchant.bootycrate.TextFieldEdit
+        android:id="@+id/extraInfoEdit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/inventory_item_extra_info_description"
+        android:importantForAutofill="no"
+        android:textSize="18sp"
+        app:editableHint="@string/inventory_item_extra_info_description"
+        app:layout_constraintEnd_toStartOf="@id/collapseButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/linkedToIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center_vertical"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="@id/amountInCartEdit"
+        app:layout_constraintEnd_toStartOf="@+id/linkedToEdit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/amountInCartEdit" />
+
+    <TextView
+        android:id="@+id/linkedToEdit"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center_vertical"
+        android:textColor="@android:color/holo_blue_dark"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="@id/amountInCartEdit"
+        app:layout_constraintEnd_toStartOf="@+id/amountInCartLabel"
+        app:layout_constraintStart_toEndOf="@id/linkedToIndicator"
+        app:layout_constraintTop_toTopOf="@id/amountInCartEdit" />
+
+    <TextView
+        android:id="@+id/amountInCartLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:gravity="center_vertical"
+        android:text="@string/amount_in_cart_edit_label"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="@id/amountInCartEdit"
+        app:layout_constraintEnd_toStartOf="@id/amountInCartEdit"
+        app:layout_constraintStart_toEndOf="@id/linkedToEdit"
+        app:layout_constraintTop_toTopOf="@id/amountInCartEdit" />
+
+    <com.cliffracermerchant.bootycrate.IntegerEdit
+        android:id="@+id/amountInCartEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@id/collapseButton"
+        app:layout_constraintStart_toEndOf="@id/amountInCartLabel"
+        app:layout_constraintTop_toBottomOf="@id/extraInfoEdit"
+        app:textSize="30" />
+
+    <ImageButton
+        android:id="@+id/collapseButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@drawable/ic_expand_less_black_24dp"
+        android:scaleX="0.9"
+        android:scaleY="0.9"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:contentDescription="@string/collapse_button_description"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

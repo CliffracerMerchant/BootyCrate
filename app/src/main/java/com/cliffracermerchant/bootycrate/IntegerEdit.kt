@@ -4,19 +4,12 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.Point
-import android.graphics.Rect
-import android.text.SpannableString
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.UnderlineSpan
 import android.util.AttributeSet
-import android.util.Log
+import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import androidx.lifecycle.MutableLiveData
-import com.cliffracermerchant.bootycrate.R
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 
 //TODO: Don't force soft input to appear if hardware keyboard is present
@@ -28,9 +21,9 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
  *      Because a user might click on the provided decrease or increase buttons
  *  rapidly when intending to change the value by a large amount, and because
  *  external entities most likely don't want to deal with a rapid succession of
- *  intermediate states, IntegerEdit will only change its publicly accessible
- *  LiveData member after a change is made AND no further change to the value
- *  is made within the valueChangedNotificationTimeout interval.
+ *  intermediate states, IntegerEdit will only change its LiveData member after
+ *  a change is made AND no further change to the value is made within the
+ *  valueChangedNotificationTimeout interval.
  *      The EditText is by default not focusable in touch mode, but this can be
  *  changed by setting the member isEditable. If set to true, the user can edit
  *  the value directly (rather than through the user of the decrease / increase
@@ -52,8 +45,12 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 class IntegerEdit(context: Context, attrs: AttributeSet?) :
         LinearLayout(context, attrs) {
 
-    var minValue: Int
-    var maxValue: Int
+    // currentValue = currentValue is not pointless due
+    // to currentValue's custom getter and setter
+    var minValue = 0
+        set(value) { currentValue = currentValue; field = value }
+    var maxValue = 99
+        set(value) { currentValue = currentValue; field = value }
     var valueChangedNotificationTimeout: Int
     var stepSize: Int
     var textSize: Float get() = valueEdit.textSize
@@ -64,6 +61,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
                                          minValue, maxValue).toString()) }
     var isEditable: Boolean get() = valueEdit.isFocusableInTouchMode
                             set(editable) { valueEdit.isFocusableInTouchMode = editable
+                                            if (!editable && valueEdit.isFocused) valueEdit.clearFocus()
                                             invalidate() }
 
     val liveData = MutableLiveData(currentValue)
@@ -71,7 +69,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
 
     init {
-        inflate(context, R.layout.integer_edit_layout, this)
+        LayoutInflater.from(context).inflate(R.layout.integer_edit_layout, this)
         val styledAttrs = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
         currentValue = styledAttrs.getInt(R.styleable.IntegerEdit_initialValue, 0)
         minValue = styledAttrs.getInt(R.styleable.IntegerEdit_minValue, 0)
@@ -82,8 +80,8 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
         textSize = styledAttrs.getFloat(R.styleable.IntegerEdit_textSize, 16.0f)
         styledAttrs.recycle()
 
-        decreaseButton.setOnClickListener { modifyValue(-stepSize) }
-        increaseButton.setOnClickListener { modifyValue(stepSize) }
+        decreaseButton.setOnClickListener { decrement() }
+        increaseButton.setOnClickListener { increment() }
         valueEdit.setOnEditorActionListener{ _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 clearFocus()
@@ -92,12 +90,18 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
             }
             actionId == EditorInfo.IME_ACTION_DONE
         }
+        valueEdit.setOnFocusChangeListener { _, focused ->
+            if (!focused) updateLiveDataFromEditor()
+        }
         setWillNotDraw(false)
         clipChildren = false
     }
 
+    fun increment() = modifyValue(stepSize)
+    fun decrement() = modifyValue(-stepSize)
+
     private fun updateLiveDataFromEditor() {
-        currentValue = currentValue // not pointless due to custom setter and getter
+        currentValue = currentValue
         handler.removeCallbacks(updateLiveData)
         handler.postDelayed(updateLiveData, valueChangedNotificationTimeout.toLong())
     }
@@ -113,7 +117,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
 
     private fun setTextSizePrivate(size: Float) {
         valueEdit.textSize = size
-        valueEdit.setPadding((size / 4).toInt(), 0, (size / 4).toInt(), 0)
+        valueEdit.setPaddingRelative((size / 4).toInt(), 0, (size / 4).toInt(), 0)
         decreaseButton.scaleX = size / 32
         decreaseButton.scaleY = size / 32
         increaseButton.scaleX = size / 32

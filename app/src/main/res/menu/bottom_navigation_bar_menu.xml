@@ -17,5 +17,5 @@
     <item
         android:id="@+id/preferences_navigation_button"
         android:icon="@android:drawable/ic_menu_preferences"
-        android:title="@string/title_activity_preferences" />
+        android:title="@string/preferences_navigation_item_name" />
 </menu>

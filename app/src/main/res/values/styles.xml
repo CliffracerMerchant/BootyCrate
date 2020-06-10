@@ -14,14 +14,6 @@
         <item name="popupMenuBackground">@color/colorPrimaryRowLight</item>
         <item name="windowActionModeOverlay">true</item>
         <item name="actionModeStyle">@style/LightThemeActionModeStyle</item>
-<!--        <item name="android:windowActivityTransitions">true</item>-->
-<!--        <item name="android:windowContentTransitions">true</item>-->
-<!--        <item name="android:windowAllowEnterTransitionOverlap">true</item>-->
-<!--        <item name="android:windowAllowReturnTransitionOverlap">true</item>-->
-<!--        <item name="android:windowEnterTransition">@transition/to_preferences_activity_transition</item>-->
-<!--        <item name="android:windowExitTransition">@transition/to_preferences_activity_transition</item>-->
-<!--        <item name="android:windowSharedElementEnterTransition">@transition/to_preferences_activity_bottom_app_bar_transition</item>-->
-<!--        <item name="android:windowSharedElementExitTransition">@transition/to_preferences_activity_bottom_app_bar_transition</item>-->
     </style>
 
     <style name="DarkTheme" parent="LightTheme">
