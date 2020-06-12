@@ -37,8 +37,9 @@ class ShoppingListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
-        viewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
-        recyclerView.setViewModel(viewLifecycleOwner, viewModel)
+        recyclerView.setViewModels(viewLifecycleOwner,
+                                   mainActivity.shoppingListViewModel,
+                                   mainActivity.inventoryViewModel)
         recyclerView.bottomBar = mainActivity.bottom_app_bar
 
         deleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon)

@@ -30,6 +30,9 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
     fun updateAmount(item: ShoppingListItem, amount: Int) = viewModelScope.launch {
         dao.updateAmount(item.id, amount)
     }
+    fun updateLinkedInventoryItemId(item: ShoppingListItem, linkedInventoryItemId: Long) = viewModelScope.launch {
+        dao.updateLinkedInventoryItemId(item.id, linkedInventoryItemId)
+    }
     fun delete(vararg items: ShoppingListItem) = viewModelScope.launch {
         dao.delete(*items)
     }

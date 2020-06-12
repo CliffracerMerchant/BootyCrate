@@ -6,6 +6,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -15,12 +16,16 @@ class MainActivity : AppCompatActivity() {
     var actionMode: ActionMode? = null
     private var enabledFabVerticalOffset: Float = 0f
     private var disabledFabVerticalOffset: Float = 0f
+    lateinit var inventoryViewModel: InventoryViewModel
+    lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
 
     companion object { var selectedNavigationItemId: Int? = null }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        inventoryViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
+        shoppingListViewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
 
         val prefs = getDefaultSharedPreferences(this)
         val darkThemeActive = prefs.getBoolean(getString(R.string.pref_dark_theme_active), false)

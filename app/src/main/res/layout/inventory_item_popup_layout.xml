@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/inventoryItemLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center_horizontal|fill"
+    android:animateLayoutChanges="false"
+    android:paddingHorizontal="10dp"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp"
+    app:layout_constraintHorizontal_chainStyle="spread">
+
+    <TextView
+        android:id="@+id/nameEdit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/inventory_item_name_description"
+        android:importantForAutofill="no"
+        android:textSize="26sp"
+        app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
+        app:layout_constraintEnd_toStartOf="@id/amountEdit"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <com.cliffracermerchant.bootycrate.IntegerEdit
+        android:id="@+id/amountEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:contentDescription="@string/inventory_item_amount_description"
+        app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/nameEdit"
+        app:layout_constraintTop_toTopOf="parent"
+        app:textSize="28" />
+
+    <TextView
+        android:id="@+id/extraInfoEdit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:contentDescription="@string/inventory_item_extra_info_description"
+        android:importantForAutofill="no"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nameEdit" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

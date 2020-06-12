@@ -21,10 +21,8 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
 
 /**     InventoryItemView is a ConstraintLayout that displays the data of an
  *  InventoryItem instance. Its update(InventoryItem) function updates the con-
- *  tained views with the information of the InventoryItem instance. It uses
- *  lazy initialization of the extra fields displayed when expanded, and only
- *  updates them when the details are expanded. Its expand and collapse func-
- *  tions also allow for an optional animation. */
+ *  tained views with the information of the InventoryItem instance. Its expand
+ *  and collapse functions allow for an optional animation. */
 class InventoryItemView(context: Context) : ConstraintLayout(context) {
     val expanded get() = expandedPrivate
     private var expandedPrivate = false

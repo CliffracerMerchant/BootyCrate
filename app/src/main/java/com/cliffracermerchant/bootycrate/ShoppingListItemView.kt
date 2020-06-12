@@ -18,9 +18,7 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 /**     ShoppingListItemView is a ConstraintLayout that displays the data of an
  *  ShoppingListItem instance. Its update(ShoppingListItem) function updates
  *  the contained views with the information of the ShoppingListItem instance.
- *  It uses lazy initialization of the extra fields displayed when expanded,
- *  and only updates them when the details are expanded. Its expand and col-
- *  lapse functions also allow for an optional animation. */
+ *  Its expand and collapse functions allow for an optional animation. */
 class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     val expanded get() = expandedPrivate
     private var expandedPrivate = false
@@ -35,7 +33,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     private val unlinkedItemDescriptionString = context.getString(R.string.unlinked_shopping_list_item_description)
     private val linkNowActionString = context.getString(R.string.shopping_list_item_link_now_action_description)
     private val changeLinkActionString = context.getString(R.string.shopping_list_item_change_link_action_description)
-    private val normalTextColor: Int
 
     /* This companion object stores the heights of the layout when expanded/
        collapsed. This prevents the expand/collapse animations from having to
@@ -47,7 +44,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
 
     init {
         inflate(context, R.layout.shopping_list_item_layout, this)
-        normalTextColor = nameEdit.currentTextColor
 
         collapseButton.setOnClickListener { collapse() }
         // If the layout's children are clipped, they will suddenly appear or
@@ -55,9 +51,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         clipChildren = false
 
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-        linkedToEdit.setOnClickListener {
-            //TODO Make linkedToEdit on click listener
-        }
 
         editButton.setOnClickListener {
             if (expanded) //TODO: Implement more options menu
@@ -73,6 +66,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
                     amountInCartEdit.currentValue = amountOnListEdit.currentValue
             } else amountInCartEdit.currentValue = 0
         }
+        val normalTextColor = nameEdit.currentTextColor
         checkBox.setOnCheckedChangeListener { _, checked ->
             if (checked) {
                 nameEdit.paintFlags = nameEdit.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
@@ -82,9 +76,12 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
                 nameEdit.setTextColor(normalTextColor)
             }
         }
-        // A TextWatcher is used here instead of observing amountInCartEdit's
-        // liveData member so that the change is detected instantly, rather
-        // than after amountInCartEdit's valueChangedNotificationTimeout delay
+        // A TextWatcher is used here instead of observing the IntegerEdits'
+        // liveData members so that the change is detected instantly, rather
+        // than after their valueChangedNotificationTimeout delay
+        amountOnListEdit.valueEdit.doAfterTextChanged {
+            checkBox.isChecked = amountInCartEdit.currentValue >= amountOnListEdit.currentValue
+        }
         amountInCartEdit.valueEdit.doAfterTextChanged {
             checkBox.isChecked = amountInCartEdit.currentValue >= amountOnListEdit.currentValue
         }
@@ -97,7 +94,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         amountInCartEdit.currentValue = item.amountInCart
         extraInfoEdit.setText(item.extraInfo)
         checkBox.isChecked = amountInCartEdit.currentValue >= amountOnListEdit.currentValue
-        updateLinkedStatus(item)
+        updateLinkedStatus(item.linkedInventoryItemId)
     }
 
     fun expand(animate: Boolean = true) {
@@ -122,8 +119,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             amountOnListEdit.increaseButton.background = plusToBlankIcon
             editButton.background = moreOptionsToEditIcon
             shoppingListItemDetailsInclude.visibility = View.VISIBLE
-//            amountOnListEdit.valueEdit.apply { setPaddingRelative(paddingStart, paddingTop,
-//                                                                  paddingEnd / 6, paddingBottom) }
         }
     }
 
@@ -149,8 +144,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             amountOnListEdit.increaseButton.background = blankToPlusIcon
             editButton.background = editToMoreOptionsIcon
             shoppingListItemDetailsInclude.visibility = View.GONE
-//            amountOnListEdit.valueEdit.apply { setPaddingRelative(paddingStart, paddingTop,
-//                                                                  paddingEnd * 6, paddingBottom) }
         }
         /*when {
             nameEdit.isFocused -> nameEdit.clearFocus()
@@ -167,9 +160,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         val startHeight = if (expanding) collapsedHeight else expandedHeight
         val endHeight = if (expanding) expandedHeight else collapsedHeight
         val change = endHeight - startHeight
-        //val amountOnListStartPaddingEnd = amountOnListEdit.valueEdit.paddingEnd
-        //val amountOnListPaddingEndChange = if (expanding) amountOnListStartPaddingEnd * -5 / 6
-        //else amountOnListStartPaddingEnd * 5
 
         shoppingListItemDetailsInclude.visibility = View.VISIBLE
         amountInCartEdit.visibility = View.VISIBLE
@@ -178,11 +168,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         anim.addUpdateListener {
             layoutParams.height = startHeight + (anim.animatedFraction * change).toInt()
             requestLayout()
-//            val paddingEnd = amountOnListStartPaddingEnd +
-//                             (amountOnListPaddingEndChange * anim.animatedFraction).toInt()
-//            amountOnListEdit.valueEdit.apply { setPaddingRelative(paddingStart, paddingTop,
-//                                                                  paddingEnd, paddingBottom) }
-//            amountOnListEdit.valueEdit.requestLayout()
         }
         anim.duration = 200
         anim.interpolator = FastOutSlowInInterpolator()
@@ -207,15 +192,24 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         }
     }
 
-    private fun updateLinkedStatus(item: ShoppingListItem) {
-        if (item.linkedInventoryItemId != null) {
+    fun updateLinkedStatus(newLinkedId: Long?) {
+        if (newLinkedId != null) {
             linkedToIndicator.text = linkedItemDescriptionString
             linkedToEdit.text = changeLinkActionString
-            amountInCartEdit.visibility = View.INVISIBLE
+            amountInCartLabel.visibility = View.VISIBLE
+            //amountInCartEdit.visibility = View.VISIBLE
+            //For some reason setting the visibility of amountInCartEdit directly doesn't work
+            amountInCartEdit.valueEdit.visibility = View.VISIBLE
+            amountInCartEdit.decreaseButton.visibility = View.VISIBLE
+            amountInCartEdit.increaseButton.visibility = View.VISIBLE
         } else {
             linkedToIndicator.text = unlinkedItemDescriptionString
             linkedToEdit.text = linkNowActionString
-            amountInCartEdit.visibility = View.VISIBLE
+            amountInCartLabel.visibility = View.INVISIBLE
+            //amountInCartEdit.visibility = View.INVISIBLE
+            amountInCartEdit.valueEdit.visibility = View.INVISIBLE
+            amountInCartEdit.decreaseButton.visibility = View.INVISIBLE
+            amountInCartEdit.increaseButton.visibility = View.INVISIBLE
         }
     }
 }

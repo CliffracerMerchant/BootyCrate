@@ -33,8 +33,7 @@ class InventoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
-        viewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
-        recyclerView.setViewModel(viewLifecycleOwner, viewModel)
+        recyclerView.setViewModel(viewLifecycleOwner, mainActivity.inventoryViewModel)
         recyclerView.bottomBar = mainActivity.bottom_app_bar
 
         addToDeleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable

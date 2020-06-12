@@ -30,12 +30,14 @@
     <string name="shopping_list_item_amount_description">Amount on list</string>
     <string name="linked_shopping_list_item_description">Linked</string>
     <string name="unlinked_shopping_list_item_description">Not linked</string>
-    <string name="shopping_list_item_link_now_action_description"><u>Link now</u></string>
-    <string name="shopping_list_item_change_link_action_description"><u>Change</u></string>
+    <string name="shopping_list_item_link_now_action_description">Link now</string>
+    <string name="shopping_list_item_change_link_action_description">Change</string>
+    <string name="empty_inventory_message">Inventory is empty</string>
 
     <string name="dark_theme_switch_description">Dark theme toggle</string>
     <string name="dark_theme_switch_title">Dark theme</string>
 
     <string name="search_description">Search</string>
+    <string name="link_inventory_item_action_long_description">Select an item to link to:</string>
 
 </resources>

@@ -96,7 +96,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
     override fun onChanged(items: List<InventoryItem>) = listDiffer.submitList(items)
 
-    /** InventoryAdapter is a subclass of SelectionEnabledAdapter using its own
+    /** InventoryAdapter is a subclass of RecyclerView.Adapter using its own
      *  RecyclerView.ViewHolder subclass InventoryItemViewHolder to represent
      *  inventory items in an inventory. Its override of onBindViewHolder(View-
      *  Holder, Payload) makes use of InventoryRecyclerView.ItemChange instan-

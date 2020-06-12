@@ -1,14 +1,14 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Context
+import android.content.DialogInterface
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import androidx.core.graphics.ColorUtils
+import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
@@ -23,13 +23,14 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     private val adapter = ShoppingListAdapter(context)
     private val listDiffer = AsyncListDiffer(adapter, DiffUtilCallback())
-    private lateinit var viewModel: ShoppingListViewModel
+    private lateinit var shoppingListViewModel: ShoppingListViewModel
+    private lateinit var inventoryViewModel: InventoryViewModel
     var bottomBar: BottomAppBar? = null
     val selection = RecyclerViewSelection(adapter)
 
     /** The enum class Field identifies user facing fields
      *  that are potentially editable by the user. */
-    enum class Field { Name, ExtraInfo, AmountInCart, Amount  }
+    enum class Field { Name, ExtraInfo, AmountInCart, Amount, LinkedTo  }
 
     /** ItemChange is a simple pair of a Field value identifying a changed
      *  field, and the new value of that field. It is used as a payload in the
@@ -53,19 +54,22 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         setAdapter(adapter)
     }
 
-    fun setViewModel(owner: LifecycleOwner, viewModel: ShoppingListViewModel) {
-        this.viewModel = viewModel
-        viewModel.getAll().observe(owner, this)
+    fun setViewModels(owner: LifecycleOwner,
+                     shoppingListViewModel: ShoppingListViewModel,
+                     inventoryViewModel: InventoryViewModel) {
+        this.shoppingListViewModel = shoppingListViewModel
+        shoppingListViewModel.getAll().observe(owner, this)
+        this.inventoryViewModel = inventoryViewModel
     }
 
-    fun addNewItem() = viewModel.insert(ShoppingListItem(
+    fun addNewItem() = shoppingListViewModel.insert(ShoppingListItem(
         context.getString(R.string.shopping_list_item_default_name)))
 
     fun deleteItem(pos: Int) = deleteItems(pos)
 
     fun deleteItems(vararg positions: Int) {
         val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
-        viewModel.delete(*ids)
+        shoppingListViewModel.delete(*ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
         val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
         snackBar.anchorView = bottomBar ?: this
@@ -73,10 +77,11 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         snackBar.show()
     }
 
-    fun undoDelete() = viewModel.undoDelete()
+    fun undoDelete() = shoppingListViewModel.undoDelete()
 
     override fun onChanged(items: List<ShoppingListItem>) = listDiffer.submitList(items)
 
+    /** */
     inner class ShoppingListAdapter(context: Context) :
             RecyclerView.Adapter<ShoppingListAdapter.ShoppingListItemViewHolder>() {
         private val selectedColor: Int
@@ -129,6 +134,10 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                             assert(payload.value is Int)
                             holder.itemView.amountOnListEdit.currentValue = payload.value as Int
                         }
+                        Field.LinkedTo -> {
+                            assert(payload.value is Long)
+                            holder.view.updateLinkedStatus(payload.value as Long)
+                        }
                     }
                 }
             }
@@ -136,7 +145,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
         override fun getItemId(position: Int): Long = listDiffer.currentList[position].id
 
-        inner class ShoppingListItemViewHolder(private val view: ShoppingListItemView) :
+        inner class ShoppingListItemViewHolder(val view: ShoppingListItemView) :
             RecyclerView.ViewHolder(view) {
 
             init {
@@ -159,19 +168,45 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
                 view.nameEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    viewModel.updateName(listDiffer.currentList[adapterPosition], value)
+                    shoppingListViewModel.updateName(listDiffer.currentList[adapterPosition], value)
                 }
                 view.amountInCartEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    viewModel.updateAmountInCart(listDiffer.currentList[adapterPosition], value)
+                    shoppingListViewModel.updateAmountInCart(listDiffer.currentList[adapterPosition], value)
                 }
                 view.amountOnListEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    viewModel.updateAmount(listDiffer.currentList[adapterPosition], value)
+                    shoppingListViewModel.updateAmount(listDiffer.currentList[adapterPosition], value)
                 }
                 view.extraInfoEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    viewModel.updateExtraInfo(listDiffer.currentList[adapterPosition], value)
+                    shoppingListViewModel.updateExtraInfo(listDiffer.currentList[adapterPosition], value)
+                }
+
+                view.linkedToEdit.setOnClickListener {
+                    val items = inventoryViewModel.getAll().value
+                    if (items == null || items.isEmpty()) {
+                        val string = context.getString(R.string.empty_inventory_message)
+                        val snackBar = Snackbar.make(view, string, Snackbar.LENGTH_LONG)
+                        snackBar.anchorView = bottomBar ?: view
+                        snackBar.show()
+                        return@setOnClickListener
+                    }
+                    // AlertDialog seems to ignore the theme's alertDialogTheme value,
+                    // making this workaround necessary
+                    val typedValue = TypedValue()
+                    context.theme.resolveAttribute(android.R.attr.alertDialogTheme, typedValue, true)
+                    val builder = AlertDialog.Builder(context, typedValue.data)
+                    builder.setTitle(context.getString(R.string.link_inventory_item_action_long_description))
+                    val recyclerView = InventoryRecyclerViewDialog(context, items)
+                    val dialogClickListener = DialogInterface.OnClickListener { _, button ->
+                        if (button == DialogInterface.BUTTON_POSITIVE)
+                            updateLinkedTo(recyclerView.selectedItemId())
+                    }
+                    builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
+                    builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
+                    builder.setView(recyclerView)
+                    builder.show()
                 }
             }
 
@@ -179,6 +214,12 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 view.update(item)
                 if (selection.contains(adapterPosition)) itemView.setBackgroundColor(selectedColor)
                 else                                     itemView.background = null
+            }
+
+            private fun updateLinkedTo(newLinkedItemId: Long?) {
+                if (newLinkedItemId == null || newLinkedItemId == 0.toLong()) return
+                shoppingListViewModel.updateLinkedInventoryItemId(
+                    listDiffer.currentList[adapterPosition], newLinkedItemId)
             }
         }
     }
@@ -199,6 +240,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 return ItemChange(Field.AmountInCart, newItem.amountInCart)
             if (oldItem.amount != newItem.amount)
                 return ItemChange(Field.Amount, newItem.amount)
+            if (oldItem.linkedInventoryItemId != newItem.linkedInventoryItemId)
+                return ItemChange(Field.LinkedTo, newItem.linkedInventoryItemId ?: 0)
             return super.getChangePayload(oldItem, newItem)
         }
     }

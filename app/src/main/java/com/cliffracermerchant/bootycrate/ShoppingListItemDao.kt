@@ -27,19 +27,14 @@ abstract class ShoppingListItemDao {
     abstract suspend fun updateAmountInCart(id: Long, amountInCart: Int)
 
     @Query("UPDATE shopping_list_item " +
-            "SET amountInCart = amountInCart + :change " +
-            "WHERE id = :id")
-    abstract suspend fun modifyAmountInCart(id: Long, change: Int)
-
-    @Query("UPDATE shopping_list_item " +
            "SET amount = :amount " +
            "WHERE id = :id")
     abstract suspend fun updateAmount(id: Long, amount: Int)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amount = amount + :change " +
+           "SET linkedInventoryItemId = :linkedInventoryItemId " +
            "WHERE id = :id")
-    abstract suspend fun modifyAmount(id: Long, change: Int)
+    abstract suspend fun updateLinkedInventoryItemId(id: Long, linkedInventoryItemId: Long)
 
     @Query("DELETE FROM shopping_list_item")
     abstract suspend fun deleteAll()
