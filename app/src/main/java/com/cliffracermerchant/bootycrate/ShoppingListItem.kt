@@ -7,13 +7,20 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "shopping_list_item")
 class ShoppingListItem {
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")           var id:           Long = 0
-    @ColumnInfo(name = "name")         var name:         String
-    @ColumnInfo(name = "extraInfo")    var extraInfo:    String
-    @ColumnInfo(name = "amountInCart") var amountInCart: Int = 0
-    @ColumnInfo(name = "amount")       var amount:       Int
-    @ColumnInfo(name = "linkedInventoryItemId") var linkedInventoryItemId: Long? = null
-    @ColumnInfo(name = "inTrash")      var inTrash:      Boolean = false
+    @ColumnInfo(name = "id")
+    var id: Long = 0
+    @ColumnInfo(name = "name")
+    var name: String
+    @ColumnInfo(name = "extraInfo", defaultValue = "")
+    var extraInfo: String = ""
+    @ColumnInfo(name = "amount", defaultValue = "1")
+    var amount: Int = 1
+    @ColumnInfo(name = "amountInCart", defaultValue = "0")
+    var amountInCart: Int = 0
+    @ColumnInfo(name = "linkedInventoryItemId")
+    var linkedInventoryItemId: Long? = null
+    @ColumnInfo(name = "inTrash", defaultValue = "0")
+    var inTrash: Boolean = false
 
     constructor(name: String,
                 extraInfo: String = "",

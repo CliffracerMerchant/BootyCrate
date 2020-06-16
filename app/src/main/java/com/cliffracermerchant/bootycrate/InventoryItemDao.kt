@@ -11,6 +11,13 @@ abstract class InventoryItemDao {
     @Insert
     abstract suspend fun insert(vararg items: InventoryItem)
 
+    @Query("INSERT INTO inventory_item (name, extraInfo) " +
+           "SELECT name, extraInfo " +
+           "FROM shopping_list_item " +
+           "WHERE shopping_list_item.linkedInventoryItemId IS NULL " +
+           "AND shopping_list_item.id IN (:shoppingListItemIds)")
+    abstract suspend fun insertFromShoppingListItems(vararg shoppingListItemIds: Long)
+
     @Query("UPDATE inventory_item " +
            "SET name = :name " +
            "WHERE id = :id")
@@ -32,8 +39,8 @@ abstract class InventoryItemDao {
     abstract suspend fun updateAutoAddToShoppingList(id: Long, autoAddToShoppingList: Boolean)
 
     @Query("UPDATE inventory_item " +
-            "SET autoAddToShoppingListTrigger = :autoAddToShoppingListTrigger " +
-            "WHERE id = :id")
+           "SET autoAddToShoppingListTrigger = :autoAddToShoppingListTrigger " +
+           "WHERE id = :id")
     abstract suspend fun updateAutoAddToShoppingListTrigger(id: Long, autoAddToShoppingListTrigger: Int)
 
     @Query("DELETE FROM inventory_item")
@@ -57,11 +64,5 @@ abstract class InventoryItemDao {
     open suspend fun delete(vararg ids: Long) {
         emptyTrash()
         moveToTrash(*ids)
-    }
-
-    @Transaction
-    open suspend fun delete(vararg items: InventoryItem) {
-        emptyTrash()
-        moveToTrash(*(items.map { it.id }).toLongArray())
     }
 }

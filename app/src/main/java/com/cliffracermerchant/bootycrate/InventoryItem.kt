@@ -7,24 +7,33 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "inventory_item")
 class InventoryItem {
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")        var id:        Long = 0
-    @ColumnInfo(name = "name")      var name:      String
-    @ColumnInfo(name = "amount")    var amount:    Int
-    @ColumnInfo(name = "extraInfo") var extraInfo: String
-    @ColumnInfo(name = "autoAddToShoppingList") var autoAddToShoppingList: Boolean
-    @ColumnInfo(name = "autoAddToShoppingListTrigger") var autoAddToShoppingListTrigger: Int
-    @ColumnInfo(name = "inTrash")   var inTrash:   Boolean = false
+    @ColumnInfo(name = "id")
+    var id: Long = 0
+    @ColumnInfo(name = "name")
+    var name: String
+    @ColumnInfo(name = "amount", defaultValue = "0")
+    var amount: Int
+    @ColumnInfo(name = "extraInfo", defaultValue = "")
+    var extraInfo: String
+    @ColumnInfo(name = "autoAddToShoppingList", defaultValue = "0")
+    var autoAddToShoppingList: Boolean = false
+    @ColumnInfo(name = "autoAddToShoppingListTrigger", defaultValue = "1")
+    var autoAddToShoppingListTrigger: Int = 1
+    @ColumnInfo(name = "inTrash", defaultValue = "0")
+    var inTrash: Boolean = false
 
     constructor(name: String,
                 amount: Int = 1,
                 extraInfo: String = "",
                 autoAddToShoppingList: Boolean = false,
-                autoAddToShoppingListTrigger: Int = 1) {
+                autoAddToShoppingListTrigger: Int = 1,
+                inTrash: Boolean = false) {
         this.name = name
         this.amount = amount
         this.extraInfo = extraInfo
         this.autoAddToShoppingList = autoAddToShoppingList
         this.autoAddToShoppingListTrigger = autoAddToShoppingListTrigger
+        this.inTrash = inTrash
     }
 
     override fun equals(other: Any?): Boolean {

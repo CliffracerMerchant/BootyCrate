@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
+    var menu: Menu? = null
 
     companion object { var selectedNavigationItemId: Int? = null }
 
@@ -46,13 +47,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.action_bar_menu, menu)
+        this.menu = menu
         return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.preferences_menu_item) { }
-            //startActivity(Intent(this, PreferencesActivity::class.java))
-        return super.onOptionsItemSelected(item)
     }
 
     private val onNavigationItemSelected =

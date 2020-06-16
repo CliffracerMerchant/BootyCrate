@@ -66,7 +66,7 @@ class RecyclerViewSelection(private val adapter: RecyclerView.Adapter<out Recycl
         sizeLiveData.value = size
     }
 
-    fun saveState() = hashSet.toIntArray()
+    fun currentState() = hashSet.toIntArray()
 
     fun restoreState(savedState: IntArray) {
         hashSet.clear()

@@ -2,6 +2,8 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
+import android.text.Editable
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View.OnClickListener
@@ -17,14 +19,14 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 
 /**     InventoryRecyclerView is a RecyclerView subclass specialized for dis-
  *  playing the contents of an inventory. Because it is intended to be inflated
- *  from an XML layout before a valid InventoryViewModel can exist, an instance
- *  of InventoryViewModel must be passed along with an AndroidX LifecycleOwner
- *  to an instance of InventoryRecyclerView after it is created using the
- *  setViewModel function. If this is not done, a kotlin.UninitializedProperty-
- *  AccessException will be thrown when any type of data access is attempted.
- *  In order to allow it to calculate changes to the displayed data on a back-
- *  ground thread, it implements the Observer<List<InventoryItem>> interface
- *  and contains an AsyncListDiffer member.
+ *  from an XML layout before a valid InventoryViewModel can exist, instances
+ *  of InventoryViewModel and ShoppingListViewModel must be passed along with
+ *  an AndroidX LifecycleOwner to an instance of InventoryRecyclerView after it
+ *  is created using the setViewModel function. If this is not done, a
+ *  kotlin.UninitializedPropertyAccessException will be thrown when any type of
+ *  data access is attempted. In order to allow it to calculate changes to the
+ *  displayed data on a background thread, it implements the Observer<List<
+ *  InventoryItem>> interface and contains an AsyncListDiffer member.
  *     Adding or removing inventory items is accomplished using the functions
  *  addItem, deleteItem, and deleteItems. When items are deleted, a snackbar
  *  will appear informing the user of the amount of items that were deleted, as
@@ -37,41 +39,32 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     private val adapter = InventoryAdapter(context)
     private val listDiffer = AsyncListDiffer(adapter, DiffUtilCallback())
     private lateinit var viewModel: InventoryViewModel
+    private lateinit var shoppingListViewModel: ShoppingListViewModel
     private var expandedItemAdapterPos: Int? = null
-    var bottomBar: BottomAppBar? = null
+    var snackBarAnchor: BottomAppBar? = null
     val selection = RecyclerViewSelection(adapter)
 
-    /** The enum class Field identifies user facing fields
-     *  that are potentially editable by the user. */
+    /** The enum class Field identifies user facing fields that are potentially
+     *  editable by the user. Field values are used as payloads in the adapter
+     *  notifyItemChanged calls in order to identify which field was changed.*/
     enum class Field { Name, Amount, ExtraInfo,
                        AutoAddToShoppingList,
                        AutoAddToShoppingListTrigger }
-
-    /** ItemChange is a simple pair of a Field value identifying a changed
-     *  field, and the new value of that field. It is used as a payload in the
-     *  RecyclerView.Adapter notifyItemChanged calls in order to support par-
-     *  tial binding. */
-    class ItemChange(field: Field, value: Any) {
-        private val pair = Pair(field, value)
-        val editable = pair.first
-        val value = pair.second
-    }
 
     init {
         layoutManager = LinearLayoutManager(context)
         setItemViewCacheSize(10)
         setHasFixedSize(true)
-        ItemTouchHelper(SwipeToDeleteItemTouchHelperCallback(::deleteItem)).
-                                                    attachToRecyclerView(this)
-
-        val itemDecoration = AlternatingRowBackgroundDecoration(context)
-        addItemDecoration(itemDecoration)
+        ItemTouchHelper(SwipeToDeleteCallback(::deleteItem, context)).attachToRecyclerView(this)
         setAdapter(adapter)
     }
 
-    fun setViewModel(owner: LifecycleOwner, viewModel: InventoryViewModel) {
-        this.viewModel = viewModel
-        viewModel.getAll().observe(owner, this)
+    fun setViewModels(owner: LifecycleOwner,
+                      inventoryViewModel: InventoryViewModel,
+                      shoppingListViewModel: ShoppingListViewModel) {
+        this.viewModel = inventoryViewModel
+        inventoryViewModel.getAll().observe(owner, this)
+        this.shoppingListViewModel = shoppingListViewModel
     }
 
     fun addNewItem() = viewModel.insert(InventoryItem(
@@ -87,9 +80,16 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         viewModel.delete(*ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
         val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
-        snackBar.anchorView = bottomBar ?: this
+        snackBar.anchorView = snackBarAnchor ?: this
         snackBar.setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
         snackBar.show()
+    }
+
+    fun addItemToShoppingList(position: Int) = addItemsToShoppingList(position)
+
+    fun addItemsToShoppingList(vararg positions: Int) {
+        val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
+        shoppingListViewModel.insertFromInventoryItems(*ids)
     }
 
     fun undoDelete() = viewModel.undoDelete()
@@ -98,19 +98,25 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
     /** InventoryAdapter is a subclass of RecyclerView.Adapter using its own
      *  RecyclerView.ViewHolder subclass InventoryItemViewHolder to represent
-     *  inventory items in an inventory. Its override of onBindViewHolder(View-
-     *  Holder, Payload) makes use of InventoryRecyclerView.ItemChange instan-
-     *  ces to support partial binding. It also modifies the background color
-     *  of the item views to reflect their selected / not selected status. */
+     *  inventory items. Its override of onBindViewHolder makes use of
+     *  InventoryRecyclerView.Field values to support partial binding. It also
+     *  modifies the background color of the item views to reflect their sel-
+     *  ected / not selected status. */
     inner class InventoryAdapter(context: Context) :
         RecyclerView.Adapter<InventoryAdapter.InventoryItemViewHolder>() {
 
         private val selectedColor: Int
+        private val normalBgColor: Int
+        private val altBgColor: Int
 
         init {
             val typedValue = TypedValue()
             context.theme.resolveAttribute(R.attr.colorSelected, typedValue, true)
             selectedColor = typedValue.data
+            context.theme.resolveAttribute(R.attr.colorBackgroundVariant, typedValue, true)
+            altBgColor = typedValue.data
+            context.theme.resolveAttribute(android.R.attr.colorBackground, typedValue, true)
+            normalBgColor = typedValue.data
             setHasStableIds(true)
         }
 
@@ -132,34 +138,20 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             if (payloads.size == 0) return onBindViewHolder(holder, position)
             for (payload in payloads) {
                 if (payload is Boolean) {
-                    val startColor = if (payload) 0 else selectedColor
-                    val endColor = if (payload) selectedColor else 0
+                    val startColor = (holder.itemView.background as ColorDrawable).color
+                    val endColor = when { payload ->                         selectedColor
+                                          holder.adapterPosition % 2 == 0 -> normalBgColor
+                                          else ->                            altBgColor }
                     ObjectAnimator.ofArgb(holder.itemView, "backgroundColor",
                                           startColor, endColor).start()
-                } else if (payload is ItemChange) {
-                    when (payload.editable) {
-                        Field.Name -> {
-                            assert(payload.value is String)
-                            holder.itemView.nameEdit.setText(payload.value as String)
-                        }
-                        Field.Amount -> {
-                            assert(payload.value is Int)
-                            holder.itemView.amountEdit.currentValue = payload.value as Int
-                        }
-                        Field.ExtraInfo -> {
-                            assert(payload.value is String)
-                            holder.itemView.extraInfoEdit.setText(payload.value as String)
-                        }
-                        Field.AutoAddToShoppingList -> {
-                            assert(payload.value is Boolean)
-                            holder.itemView.autoAddToShoppingListCheckBox.isChecked =
-                                payload.value as Boolean
-                        }
-                        Field.AutoAddToShoppingListTrigger -> {
-                            assert(payload.value is Int)
-                            holder.itemView.autoAddToShoppingListTriggerEdit.currentValue =
-                                payload.value as Int
-                        }
+                } else if (payload is Field) {
+                    val item = listDiffer.currentList[position]
+                    when (payload) {
+                        Field.Name -> holder.itemView.nameEdit.setText(item.name)
+                        Field.Amount -> holder.itemView.amountEdit.currentValue = item.amount
+                        Field.ExtraInfo -> holder.itemView.extraInfoEdit.setText(item.extraInfo)
+                        Field.AutoAddToShoppingList -> holder.itemView.autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
+                        Field.AutoAddToShoppingListTrigger -> holder.itemView.autoAddToShoppingListTriggerEdit.currentValue = item.autoAddToShoppingListTrigger
                     }
                 }
             }
@@ -218,32 +210,38 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
                 view.nameEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    viewModel.updateName(listDiffer.currentList[adapterPosition], value)
+                    val id = listDiffer.currentList[adapterPosition].id
+                    viewModel.updateName(id, value)
+                    shoppingListViewModel.updateNameFromLinkedInventoryItem(id, value)
                 }
                 view.amountEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    viewModel.updateAmount(listDiffer.currentList[adapterPosition], value)
+                    viewModel.updateAmount(listDiffer.currentList[adapterPosition].id, value)
                 }
                 view.extraInfoEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    viewModel.updateExtraInfo(listDiffer.currentList[adapterPosition], value)
+                    val id = listDiffer.currentList[adapterPosition].id
+                    viewModel.updateExtraInfo(id, value)
+                    shoppingListViewModel.updateExtraInfoFromLinkedInventoryItem(id, value)
                 }
                 view.autoAddToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
-                    viewModel.updateAutoAddToShoppingList(
-                        listDiffer.currentList[adapterPosition], checked)
+                    val id = listDiffer.currentList[adapterPosition].id
+                    viewModel.updateAutoAddToShoppingList(id, checked)
                 }
                 view.autoAddToShoppingListTriggerEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    viewModel.updateAutoAddToShoppingListTrigger(
-                        listDiffer.currentList[adapterPosition], value)
+                    val id = listDiffer.currentList[adapterPosition].id
+                    viewModel.updateAutoAddToShoppingListTrigger(id, value)
                 }
             }
 
             fun bindTo(item: InventoryItem) {
                 val expanded = expandedItemAdapterPos == adapterPosition
                 view.update(item, expanded)
-                if (selection.contains(adapterPosition)) view.setBackgroundColor(selectedColor)
-                else                                     view.background = null
+                view.setBackgroundColor(when {
+                        selection.contains(adapterPosition) -> selectedColor
+                        adapterPosition % 2 == 1 ->            altBgColor
+                        else ->                                normalBgColor })
             }
         }
     }
@@ -252,35 +250,18 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         override fun areItemsTheSame(oldItem: InventoryItem, newItem: InventoryItem) =
             oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: InventoryItem, newItem: InventoryItem): Boolean {
-            val expandedAdapterPos = expandedItemAdapterPos
-            val range = 0 until listDiffer.currentList.size
-            val expandedItemId = if (expandedAdapterPos != null && expandedAdapterPos in range)
-                                     listDiffer.currentList[expandedAdapterPos].id
-                                 else null
-            // If the new item is not expanded, then a quicker compare
-            // using only the values visible to the user can be used
-            return if (newItem.id != expandedItemId)
-                oldItem.id == newItem.id &&
-                oldItem.name == newItem.name &&
-                oldItem.amount == newItem.amount &&
-                oldItem.extraInfo == newItem.extraInfo
-            else oldItem == newItem
-        }
+        override fun areContentsTheSame(oldItem: InventoryItem, newItem: InventoryItem): Boolean =
+            oldItem == newItem
 
         override fun getChangePayload(oldItem: InventoryItem, newItem: InventoryItem): Any? {
-            if (oldItem.name != newItem.name)
-                return ItemChange(Field.Name, newItem.name)
-            if (oldItem.amount != newItem.amount)
-                return ItemChange(Field.Amount, newItem.amount)
-            if (oldItem.extraInfo != newItem.extraInfo)
-                return ItemChange(Field.ExtraInfo, newItem.extraInfo)
-            if (oldItem.autoAddToShoppingList != newItem.autoAddToShoppingList)
-                return ItemChange(Field.AutoAddToShoppingList, newItem.autoAddToShoppingList)
-            if (oldItem.autoAddToShoppingListTrigger != newItem.autoAddToShoppingListTrigger)
-                return ItemChange(Field.AutoAddToShoppingListTrigger,
-                                  newItem.autoAddToShoppingListTrigger)
-            return super.getChangePayload(oldItem, newItem)
+            return when {
+                oldItem.name != newItem.name -> Field.Name
+                oldItem.amount != newItem.amount -> Field.Amount
+                oldItem.extraInfo != newItem.extraInfo -> Field.ExtraInfo
+                oldItem.autoAddToShoppingList != newItem.autoAddToShoppingList -> Field.AutoAddToShoppingList
+                oldItem.autoAddToShoppingListTrigger != newItem.autoAddToShoppingListTrigger -> Field.AutoAddToShoppingListTrigger
+                else -> super.getChangePayload(oldItem, newItem)
+            }
         }
     }
 }

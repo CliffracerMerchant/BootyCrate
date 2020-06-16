@@ -18,23 +18,31 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
     fun insert(vararg items: ShoppingListItem) = viewModelScope.launch {
         dao.insert(*items)
     }
-    fun updateName(item: ShoppingListItem, name: String) = viewModelScope.launch {
-        dao.updateName(item.id, name)
+    fun insertFromInventoryItems(vararg itemIds: Long) = viewModelScope.launch {
+        dao.insertFromInventoryItems(*itemIds)
     }
-    fun updateExtraInfo(item: ShoppingListItem, extraInfo: String) = viewModelScope.launch {
-        dao.updateExtraInfo(item.id, extraInfo)
+    fun updateName(id: Long, name: String) = viewModelScope.launch {
+        dao.updateName(id, name)
     }
-    fun updateAmountInCart(item: ShoppingListItem, amountInCart: Int) = viewModelScope.launch {
-        dao.updateAmountInCart(item.id, amountInCart)
+    fun updateNameFromLinkedInventoryItem(inventoryItemId: Long, name: String) = viewModelScope.launch {
+        dao.updateNameFromLinkedInventoryItem(inventoryItemId, name)
     }
-    fun updateAmount(item: ShoppingListItem, amount: Int) = viewModelScope.launch {
-        dao.updateAmount(item.id, amount)
+    fun updateExtraInfo(id: Long, extraInfo: String) = viewModelScope.launch {
+        dao.updateExtraInfo(id, extraInfo)
     }
-    fun updateLinkedInventoryItemId(item: ShoppingListItem, linkedInventoryItemId: Long) = viewModelScope.launch {
-        dao.updateLinkedInventoryItemId(item.id, linkedInventoryItemId)
+    fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String) = viewModelScope.launch {
+        dao.updateExtraInfoFromLinkedInventoryItem(inventoryItemId, extraInfo)
     }
-    fun delete(vararg items: ShoppingListItem) = viewModelScope.launch {
-        dao.delete(*items)
+    fun updateAmountInCart(id: Long, amountInCart: Int) = viewModelScope.launch {
+        dao.updateAmountInCart(id, amountInCart)
+    }
+    fun updateAmount(id: Long, amount: Int) = viewModelScope.launch {
+        dao.updateAmount(id, amount)
+    }
+    fun updateLinkedInventoryItemId(id: Long, linkedInventoryItem: InventoryItem) = viewModelScope.launch {
+        dao.updateLinkedInventoryItemId(id, linkedInventoryItem.id,
+                                        linkedInventoryItem.name,
+                                        linkedInventoryItem.extraInfo)
     }
     fun delete(vararg ids: Long) = viewModelScope.launch {
         dao.delete(*ids)

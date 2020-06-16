@@ -7,10 +7,7 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
-import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.recyclerView
 import java.io.File
 
@@ -29,6 +26,8 @@ class ShoppingListFragment : Fragment() {
     private lateinit var mainActivity: MainActivity
     private lateinit var viewModel: ShoppingListViewModel
 
+    init { setHasOptionsMenu(true) }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.shopping_list_fragment_layout, container, false)
@@ -40,7 +39,7 @@ class ShoppingListFragment : Fragment() {
         recyclerView.setViewModels(viewLifecycleOwner,
                                    mainActivity.shoppingListViewModel,
                                    mainActivity.inventoryViewModel)
-        recyclerView.bottomBar = mainActivity.bottom_app_bar
+        recyclerView.snackBarAnchor = mainActivity.bottom_app_bar
 
         deleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon)
         addIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon)
@@ -66,44 +65,47 @@ class ShoppingListFragment : Fragment() {
         }
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        menu.setGroupVisible(R.id.shopping_list_view_menu_group, true)
+        menu.setGroupVisible(R.id.inventory_view_menu_group, false)
+        super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         val selectionStateFile = File(mainActivity.cacheDir, "shopping_list_selection_state")
         val writer = selectionStateFile.writer()
-        for (id in recyclerView.selection.saveState())
+        for (id in recyclerView.selection.currentState())
             writer.write("$id,")
         writer.close()
         super.onSaveInstanceState(outState)
     }
 
     private val actionModeCallback = object: ActionMode.Callback {
-        private var addToShoppingListButton: MenuItem? = null
-        private var moveToOtherInventoryButton: MenuItem? = null
-        private var search: MenuItem? = null
+        private var menu: Menu? = null
 
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-            if (item?.itemId == R.id.preferences_menu_item) return true
+            if (item?.itemId == R.id.change_sorting_button) return true
+            if (item?.itemId == R.id.add_to_inventory_button) return true
             return true
         }
 
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
             mode?.menuInflater?.inflate(R.menu.action_bar_menu, menu)
-            addToShoppingListButton = menu?.findItem(R.id.add_to_shopping_list_button)
-            moveToOtherInventoryButton = menu?.findItem(R.id.move_to_other_inventory)
-            search = menu?.findItem(R.id.app_bar_search)
-            addToShoppingListButton?.isVisible = true
-            moveToOtherInventoryButton?.isVisible = true
-            search?.isVisible = false
+            this.menu = menu
+            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
+            menu?.setGroupVisible(R.id.shopping_list_view_menu_group, true)
             mainActivity.fab.setOnClickListener {
-                recyclerView.deleteItems(*recyclerView.selection.saveState()) }
+                recyclerView.deleteItems(*recyclerView.selection.currentState()) }
             mainActivity.fab.setImageDrawable(deleteIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
             return true
         }
 
-        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?) = true
+        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?) = false
 
         override fun onDestroyActionMode(mode: ActionMode?) {
             recyclerView.selection.clear()
+            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
             mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
             mainActivity.fab.setImageDrawable(addIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()

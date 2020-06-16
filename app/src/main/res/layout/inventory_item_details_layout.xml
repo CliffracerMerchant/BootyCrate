@@ -29,7 +29,8 @@
         app:layout_constraintTop_toTopOf="@id/autoAddToShoppingListCheckBox"
         app:layout_constraintBottom_toBottomOf="@id/autoAddToShoppingListCheckBox"
         android:contentDescription="@string/inventory_item_auto_add_to_shopping_list_trigger_edit_description"
-        app:textSize="26" />
+        app:textSize="26"
+        app:minValue="1"/>
 
     <ImageButton
         android:id="@+id/collapseButton"

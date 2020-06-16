@@ -1,25 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:colorBackground="@color/colorPrimaryRowDark">
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item
-        android:id="@+id/add_to_shopping_list_button"
-        android:title="+toSL"
-        android:visible="false"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/app_bar_search"
-        android:icon="@drawable/ic_search_black_24dp"
-        android:title="@string/search_description"
-        app:actionViewClass="android.widget.SearchView"
-        app:showAsAction="ifRoom|collapseActionView" />
-    <item
-        android:id="@+id/move_to_other_inventory"
-        android:title="Move to other inventory"
-        android:visible="false" />
-    <item
-        android:id="@+id/preferences_menu_item"
-        android:title="@string/preferences_navigation_item_name"
+    <item android:id="@+id/app_bar_search"
+          android:icon="@drawable/ic_search_black_24dp"
+          android:title="@string/search_description"
+          app:actionViewClass="android.widget.SearchView"
+          app:showAsAction="ifRoom|collapseActionView" />
+
+    <item android:id="@+id/change_sorting_button"
+          android:icon="@drawable/ic_bx_sort_down"
+          android:title="@string/change_sorting_description"
+          app:showAsAction="ifRoom" />
+
+    <group android:id="@+id/inventory_view_menu_group"
+           android:visible="false" >
+    </group>
+
+    <group android:id="@+id/inventory_view_action_mode_group"
+           android:visible="false" >
+        <item android:id="@+id/add_to_shopping_list_button"
+              android:title="@string/add_to_shopping_list_description"
+              android:visible="false"
+              app:showAsAction="never" />
+    </group>
+
+    <group android:id="@+id/shopping_list_view_menu_group"
+           android:visible="false">
+    </group>
+
+    <group android:id="@+id/shopping_list_view_action_mode_menu_group"
+           android:visible="false" >
+        <item android:id="@+id/add_to_inventory_button"
+              android:title="@string/add_to_inventory_description"
+              app:showAsAction="never" />
+    </group>
+
+    <item android:id="@+id/delete_all_button"
+        android:title="@string/delete_all_description"
         app:showAsAction="never" />
+
 </menu>

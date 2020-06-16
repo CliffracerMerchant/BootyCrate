@@ -44,19 +44,13 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
 
     init {
         inflate(context, R.layout.shopping_list_item_layout, this)
-
-        collapseButton.setOnClickListener { collapse() }
-        // If the layout's children are clipped, they will suddenly appear or
-        // disappear without an animation during the expand collapse animation
-        clipChildren = false
-
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
 
         editButton.setOnClickListener {
             if (expanded) //TODO: Implement more options menu
             else          expand()
         }
-
+        collapseButton.setOnClickListener { collapse() }
         amountOnListEdit.decreaseButton.setOnClickListener { if (expanded) amountOnListEdit.decrement() }
         amountOnListEdit.increaseButton.setOnClickListener { if (expanded) amountOnListEdit.increment() }
 
@@ -86,6 +80,10 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             checkBox.isChecked = amountInCartEdit.currentValue >= amountOnListEdit.currentValue
         }
         collapse(false)
+
+        // If the layout's children are clipped, they will suddenly appear or
+        // disappear without an animation during the expand collapse animation
+        clipChildren = false
     }
 
     fun update(item: ShoppingListItem) {
@@ -95,6 +93,27 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         extraInfoEdit.setText(item.extraInfo)
         checkBox.isChecked = amountInCartEdit.currentValue >= amountOnListEdit.currentValue
         updateLinkedStatus(item.linkedInventoryItemId)
+    }
+
+    fun updateLinkedStatus(newLinkedId: Long?) {
+        if (newLinkedId != null) {
+            linkedToIndicator.text = linkedItemDescriptionString
+            linkedToEdit.text = changeLinkActionString
+            amountInCartLabel.visibility = View.VISIBLE
+            //amountInCartEdit.visibility = View.VISIBLE
+            //For some reason setting the visibility of amountInCartEdit directly doesn't work
+            amountInCartEdit.valueEdit.visibility = View.VISIBLE
+            amountInCartEdit.decreaseButton.visibility = View.VISIBLE
+            amountInCartEdit.increaseButton.visibility = View.VISIBLE
+        } else {
+            linkedToIndicator.text = unlinkedItemDescriptionString
+            linkedToEdit.text = linkNowActionString
+            amountInCartLabel.visibility = View.INVISIBLE
+            //amountInCartEdit.visibility = View.INVISIBLE
+            amountInCartEdit.valueEdit.visibility = View.INVISIBLE
+            amountInCartEdit.decreaseButton.visibility = View.INVISIBLE
+            amountInCartEdit.increaseButton.visibility = View.INVISIBLE
+        }
     }
 
     fun expand(animate: Boolean = true) {
@@ -119,6 +138,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             amountOnListEdit.increaseButton.background = plusToBlankIcon
             editButton.background = moreOptionsToEditIcon
             shoppingListItemDetailsInclude.visibility = View.VISIBLE
+            amountOnListEdit.increaseButton.layoutParams.apply{ width *= 2 }
         }
     }
 
@@ -144,6 +164,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             amountOnListEdit.increaseButton.background = blankToPlusIcon
             editButton.background = editToMoreOptionsIcon
             shoppingListItemDetailsInclude.visibility = View.GONE
+            amountOnListEdit.increaseButton.layoutParams.apply { width /= 2 }
         }
         /*when {
             nameEdit.isFocused -> nameEdit.clearFocus()
@@ -160,13 +181,17 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         val startHeight = if (expanding) collapsedHeight else expandedHeight
         val endHeight = if (expanding) expandedHeight else collapsedHeight
         val change = endHeight - startHeight
+        val increaseButtonStartWidth = amountOnListEdit.increaseButton.layoutParams.width
+        val increaseButtonWidthChange = if (expanding) increaseButtonStartWidth
+                                        else           -increaseButtonStartWidth / 2
 
         shoppingListItemDetailsInclude.visibility = View.VISIBLE
-        amountInCartEdit.visibility = View.VISIBLE
 
         val anim = ValueAnimator.ofInt(startHeight, endHeight)
         anim.addUpdateListener {
             layoutParams.height = startHeight + (anim.animatedFraction * change).toInt()
+            amountOnListEdit.increaseButton.layoutParams.width = increaseButtonStartWidth +
+                    (anim.animatedFraction * increaseButtonWidthChange).toInt()
             requestLayout()
         }
         anim.duration = 200
@@ -178,7 +203,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         val matchParentSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(matchParentSpec, wrapContentSpec)
-
         if (expanding) {
             collapsedHeight = measuredHeight
             shoppingListItemDetailsInclude.visibility = View.VISIBLE
@@ -189,27 +213,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             shoppingListItemDetailsInclude.visibility = View.GONE
             measure(matchParentSpec, wrapContentSpec)
             collapsedHeight = measuredHeight
-        }
-    }
-
-    fun updateLinkedStatus(newLinkedId: Long?) {
-        if (newLinkedId != null) {
-            linkedToIndicator.text = linkedItemDescriptionString
-            linkedToEdit.text = changeLinkActionString
-            amountInCartLabel.visibility = View.VISIBLE
-            //amountInCartEdit.visibility = View.VISIBLE
-            //For some reason setting the visibility of amountInCartEdit directly doesn't work
-            amountInCartEdit.valueEdit.visibility = View.VISIBLE
-            amountInCartEdit.decreaseButton.visibility = View.VISIBLE
-            amountInCartEdit.increaseButton.visibility = View.VISIBLE
-        } else {
-            linkedToIndicator.text = unlinkedItemDescriptionString
-            linkedToEdit.text = linkNowActionString
-            amountInCartLabel.visibility = View.INVISIBLE
-            //amountInCartEdit.visibility = View.INVISIBLE
-            amountInCartEdit.valueEdit.visibility = View.INVISIBLE
-            amountInCartEdit.decreaseButton.visibility = View.INVISIBLE
-            amountInCartEdit.increaseButton.visibility = View.INVISIBLE
         }
     }
 }

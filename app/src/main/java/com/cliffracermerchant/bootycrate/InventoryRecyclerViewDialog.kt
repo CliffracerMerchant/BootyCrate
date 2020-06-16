@@ -16,7 +16,8 @@ import kotlinx.android.synthetic.main.inventory_item_popup_layout.view.*
  *  specialized for selecting a single item within the inventory from a popup
  *  window. */
 class InventoryRecyclerViewDialog(context: Context,
-                                  private val items: List<InventoryItem>) :
+                                  private val items: List<InventoryItem>,
+                                  private val initiallySelectedItemId: Long? = null) :
         RecyclerView(context) {
     private val adapter = PopupInventoryAdapter(context)
     private var selectedItemPos: Int? = null
@@ -31,9 +32,9 @@ class InventoryRecyclerViewDialog(context: Context,
         setAdapter(adapter)
     }
 
-    fun selectedItemId(): Long? {
+    fun selectedItem(): InventoryItem? {
         val pos = selectedItemPos
-        return if (pos != null) items[pos].id
+        return if (pos != null) items[pos]
                else             null
     }
 
@@ -126,6 +127,7 @@ class InventoryRecyclerViewDialog(context: Context,
                 view.nameEdit.text = item.name
                 view.amountEdit.currentValue = item.amount
                 view.extraInfoEdit.text = item.extraInfo
+                if (item.id == initiallySelectedItemId) selectedItemPos = adapterPosition
                 if (selectedItemPos == adapterPosition) itemView.setBackgroundColor(selectedColor)
                 else                                    itemView.background = null
             }

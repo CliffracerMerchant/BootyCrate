@@ -39,5 +39,9 @@
 
     <string name="search_description">Search</string>
     <string name="link_inventory_item_action_long_description">Select an item to link to:</string>
+    <string name="add_to_shopping_list_description">Add to shopping list</string>
+    <string name="change_sorting_description">Change sorting</string>
+    <string name="add_to_inventory_description">Add to inventory</string>
+    <string name="delete_all_description">Delete all</string>
 
 </resources>
