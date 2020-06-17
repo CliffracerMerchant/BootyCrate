@@ -2,7 +2,9 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.drawable.ClipDrawable
 import android.graphics.drawable.ColorDrawable
+import android.view.Gravity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
@@ -24,7 +26,7 @@ class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Cont
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
                         target: RecyclerView.ViewHolder) = false
 
-    override fun onChildDraw(canvas: Canvas, recyclerView: RecyclerView,
+    override fun onChildDrawOver(canvas: Canvas, recyclerView: RecyclerView,
                              viewHolder: RecyclerView.ViewHolder,
                              dX: Float, dY: Float, actionState: Int,
                              isCurrentlyActive: Boolean) {
@@ -43,8 +45,11 @@ class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Cont
         deleteIcon.bounds.right = if (dX > 0) viewHolder.itemView.left + iconSize + iconMargin
                                   else        viewHolder.itemView.right - iconMargin
         deleteIcon.bounds.bottom = deleteIcon.bounds.top + iconSize
+        canvas.save()
+        canvas.clipRect(deleteBg.bounds)
         deleteIcon.draw(canvas)
-        super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+        canvas.restore()
+        //super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {

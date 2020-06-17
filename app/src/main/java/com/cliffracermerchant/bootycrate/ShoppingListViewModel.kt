@@ -1,19 +1,29 @@
 package com.cliffracermerchant.bootycrate
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 
 class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao: ShoppingListItemDao = BootyCrateDatabase.get(app).shoppingListItemDao()
-    private val items: LiveData<List<ShoppingListItem>> = dao.getAll()
+    private val sortLiveData = MutableLiveData(Sort.OriginalInsertionOrder)
+    var sort get() = sortLiveData.value
+             set(value) { sortLiveData.value = value }
+    private val items = Transformations.switchMap(sortLiveData) { sort ->
+        when (sort) {
+            null -> dao.getAll()
+            Sort.OriginalInsertionOrder -> dao.getAll()
+            Sort.NameAsc -> dao.getAllSortedByNameAsc()
+            Sort.NameDesc -> dao.getAllSortedByNameDesc()
+            Sort.AmountAsc -> dao.getAllSortedByAmountAsc()
+            Sort.AmountDesc -> dao.getAllSortedByAmountDesc()
+        }
+    }
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun getAll() : LiveData<List<ShoppingListItem>> = items
+    fun getAll() = items
 
     fun insert(vararg items: ShoppingListItem) = viewModelScope.launch {
         dao.insert(*items)
@@ -44,11 +54,14 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
                                         linkedInventoryItem.name,
                                         linkedInventoryItem.extraInfo)
     }
-    fun delete(vararg ids: Long) = viewModelScope.launch {
-        dao.delete(*ids)
-    }
     fun deleteAll() = viewModelScope.launch {
         dao.deleteAll()
+    }
+    fun emptyTrash() = viewModelScope.launch {
+        dao.emptyTrash()
+    }
+    fun delete(vararg ids: Long) = viewModelScope.launch {
+        dao.delete(*ids)
     }
     fun undoDelete() = viewModelScope.launch {
         dao.undoDelete()

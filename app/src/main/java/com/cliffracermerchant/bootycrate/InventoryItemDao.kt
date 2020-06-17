@@ -7,6 +7,14 @@ import androidx.room.*
 abstract class InventoryItemDao {
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash")
     abstract fun getAll(): LiveData<List<InventoryItem>>
+    @Query("SELECT * FROM inventory_item WHERE NOT inTrash ORDER BY name ASC")
+    abstract fun getAllSortedByNameAsc(): LiveData<List<InventoryItem>>
+    @Query("SELECT * FROM inventory_item WHERE NOT inTrash ORDER BY name DESC")
+    abstract fun getAllSortedByNameDesc(): LiveData<List<InventoryItem>>
+    @Query("SELECT * FROM inventory_item WHERE NOT inTrash ORDER BY amount ASC")
+    abstract fun getAllSortedByAmountAsc(): LiveData<List<InventoryItem>>
+    @Query("SELECT * FROM inventory_item WHERE NOT inTrash ORDER BY amount DESC")
+    abstract fun getAllSortedByAmountDesc(): LiveData<List<InventoryItem>>
 
     @Insert
     abstract suspend fun insert(vararg items: InventoryItem)
@@ -46,23 +54,36 @@ abstract class InventoryItemDao {
     @Query("DELETE FROM inventory_item")
     abstract suspend fun deleteAll()
 
+    @Query("UPDATE shopping_list_item " +
+            "SET linkedInventoryItemId = NULL " +
+            "WHERE linkedInventoryItemId in " +
+            "(SELECT id FROM inventory_item WHERE inTrash = 1)")
+    abstract suspend fun clearShoppingListItemLinks()
+
     @Query("DELETE FROM inventory_item " +
            "WHERE inTrash = 1")
-    abstract suspend fun emptyTrash()
+    abstract suspend fun emptyTrashPrivate()
+
+    @Transaction
+    open suspend fun emptyTrash() {
+        clearShoppingListItemLinks()
+        emptyTrashPrivate()
+    }
 
     @Query("UPDATE inventory_item " +
            "SET inTrash = 1 " +
            "WHERE id IN (:ids)")
     abstract suspend fun moveToTrash(vararg ids: Long)
 
-    @Query("UPDATE inventory_item " +
-           "SET inTrash = 0 " +
-           "WHERE inTrash = 1")
-    abstract suspend fun undoDelete()
-
     @Transaction
     open suspend fun delete(vararg ids: Long) {
-        emptyTrash()
+        clearShoppingListItemLinks()
+        emptyTrashPrivate()
         moveToTrash(*ids)
     }
+
+    @Query("UPDATE inventory_item " +
+            "SET inTrash = 0 " +
+            "WHERE inTrash = 1")
+    abstract suspend fun undoDelete()
 }

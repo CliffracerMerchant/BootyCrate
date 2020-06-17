@@ -7,6 +7,14 @@ import androidx.room.*
 abstract class ShoppingListItemDao {
     @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash")
     abstract fun getAll(): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash ORDER BY name ASC")
+    abstract fun getAllSortedByNameAsc(): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash ORDER BY name DESC")
+    abstract fun getAllSortedByNameDesc(): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash ORDER BY amount ASC")
+    abstract fun getAllSortedByAmountAsc(): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash ORDER BY amount DESC")
+    abstract fun getAllSortedByAmountDesc(): LiveData<List<ShoppingListItem>>
 
     @Insert
     abstract suspend fun insert(vararg items: ShoppingListItem)
@@ -74,14 +82,14 @@ abstract class ShoppingListItemDao {
            "WHERE id IN (:ids)")
     abstract suspend fun moveToTrash(vararg ids: Long)
 
-    @Query("UPDATE shopping_list_item " +
-           "SET inTrash = 0 " +
-           "WHERE inTrash = 1")
-    abstract suspend fun undoDelete()
-
     @Transaction
     open suspend fun delete(vararg ids: Long) {
         emptyTrash()
         moveToTrash(*ids)
     }
+
+    @Query("UPDATE shopping_list_item " +
+            "SET inTrash = 0 " +
+            "WHERE inTrash = 1")
+    abstract suspend fun undoDelete()
 }

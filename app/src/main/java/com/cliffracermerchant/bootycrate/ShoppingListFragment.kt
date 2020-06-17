@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
 import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.recyclerView
 import java.io.File
 
@@ -69,6 +70,23 @@ class ShoppingListFragment : Fragment() {
         menu.setGroupVisible(R.id.shopping_list_view_menu_group, true)
         menu.setGroupVisible(R.id.inventory_view_menu_group, false)
         super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.isChecked) return true
+        if (item.itemId == R.id.delete_all_button) recyclerView.deleteAll()
+        else {
+            recyclerView.sortBy(when (item.itemId) {
+                R.id.original_insertion_order_option -> Sort.OriginalInsertionOrder
+                R.id.name_ascending_option -> Sort.NameAsc
+                R.id.name_descending_option -> Sort.NameDesc
+                R.id.amount_ascending_option -> Sort.AmountAsc
+                R.id.amount_descending_option -> Sort.AmountDesc
+                else -> Sort.OriginalInsertionOrder
+            })
+            item.isChecked = true
+        }
+        return true
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

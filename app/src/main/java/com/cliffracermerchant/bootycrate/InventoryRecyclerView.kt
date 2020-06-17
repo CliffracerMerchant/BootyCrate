@@ -2,16 +2,17 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
 import android.content.Context
-import android.graphics.drawable.ColorDrawable
-import android.text.Editable
+import android.content.DialogInterface
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
+import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
@@ -56,6 +57,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         setItemViewCacheSize(10)
         setHasFixedSize(true)
         ItemTouchHelper(SwipeToDeleteCallback(::deleteItem, context)).attachToRecyclerView(this)
+        addItemDecoration(AlternatingRowBackgroundDecoration(context))
         setAdapter(adapter)
     }
 
@@ -66,6 +68,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         inventoryViewModel.getAll().observe(owner, this)
         this.shoppingListViewModel = shoppingListViewModel
     }
+
+    fun sortBy(sort: Sort) { viewModel.sort = sort }
 
     fun addNewItem() = viewModel.insert(InventoryItem(
         context.getString(R.string.inventory_item_default_name)))
@@ -82,7 +86,28 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
         snackBar.anchorView = snackBarAnchor ?: this
         snackBar.setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
+        snackBar.addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                viewModel.emptyTrash()
+            }
+        })
         snackBar.show()
+    }
+
+    fun deleteAll() {
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(android.R.attr.alertDialogTheme, typedValue, true)
+        val builder = AlertDialog.Builder(context, typedValue.data)
+        val dialogClickListener = DialogInterface.OnClickListener { _, button ->
+            if (button == DialogInterface.BUTTON_POSITIVE) {
+                viewModel.deleteAll()
+                viewModel.emptyTrash()
+            }
+        }
+        builder.setPositiveButton(context.getString(android.R.string.yes), dialogClickListener)
+        builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
+        builder.setMessage(context.getString(R.string.delete_all_inventory_items_confirmation_message))
+        builder.show()
     }
 
     fun addItemToShoppingList(position: Int) = addItemsToShoppingList(position)
@@ -106,17 +131,11 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         RecyclerView.Adapter<InventoryAdapter.InventoryItemViewHolder>() {
 
         private val selectedColor: Int
-        private val normalBgColor: Int
-        private val altBgColor: Int
 
         init {
             val typedValue = TypedValue()
             context.theme.resolveAttribute(R.attr.colorSelected, typedValue, true)
             selectedColor = typedValue.data
-            context.theme.resolveAttribute(R.attr.colorBackgroundVariant, typedValue, true)
-            altBgColor = typedValue.data
-            context.theme.resolveAttribute(android.R.attr.colorBackground, typedValue, true)
-            normalBgColor = typedValue.data
             setHasStableIds(true)
         }
 
@@ -138,10 +157,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             if (payloads.size == 0) return onBindViewHolder(holder, position)
             for (payload in payloads) {
                 if (payload is Boolean) {
-                    val startColor = (holder.itemView.background as ColorDrawable).color
-                    val endColor = when { payload ->                         selectedColor
-                                          holder.adapterPosition % 2 == 0 -> normalBgColor
-                                          else ->                            altBgColor }
+                    val startColor = if (payloads[0] as Boolean) 0 else selectedColor
+                    val endColor =   if (payloads[0] as Boolean) selectedColor else 0
                     ObjectAnimator.ofArgb(holder.itemView, "backgroundColor",
                                           startColor, endColor).start()
                 } else if (payload is Field) {
@@ -238,10 +255,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             fun bindTo(item: InventoryItem) {
                 val expanded = expandedItemAdapterPos == adapterPosition
                 view.update(item, expanded)
-                view.setBackgroundColor(when {
-                        selection.contains(adapterPosition) -> selectedColor
-                        adapterPosition % 2 == 1 ->            altBgColor
-                        else ->                                normalBgColor })
+                if (selection.contains(adapterPosition)) view.setBackgroundColor(selectedColor)
+                else                                     view.background = null
             }
         }
     }

@@ -11,7 +11,23 @@
     <item android:id="@+id/change_sorting_button"
           android:icon="@drawable/ic_bx_sort_down"
           android:title="@string/change_sorting_description"
-          app:showAsAction="ifRoom" />
+          app:showAsAction="always" >
+        <menu android:id="@+id/change_sorting_menu">
+            <group android:id="@+id/sorting_options_group"
+                   android:checkableBehavior="single" >
+                <item android:id="@+id/original_insertion_order_option"
+                      android:title="@string/original_insertion_order_description" />
+                <item android:id="@+id/name_ascending_option"
+                      android:title="@string/name_ascending_description" />
+                <item android:id="@+id/name_descending_option"
+                      android:title="@string/name_descending_description" />
+                <item android:id="@+id/amount_ascending_option"
+                      android:title="@string/amount_ascending_description" />
+                <item android:id="@+id/amount_descending_option"
+                      android:title="@string/amount_descending_description" />
+            </group>
+        </menu>
+    </item>
 
     <group android:id="@+id/inventory_view_menu_group"
            android:visible="false" >

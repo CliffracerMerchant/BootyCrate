@@ -3,7 +3,6 @@ package com.cliffracermerchant.bootycrate
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.DialogInterface
-import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.ViewGroup
@@ -52,6 +51,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         setItemViewCacheSize(10)
         setHasFixedSize(true)
         ItemTouchHelper(SwipeToDeleteCallback(::deleteItem, context)).attachToRecyclerView(this)
+        addItemDecoration(AlternatingRowBackgroundDecoration(context))
         setAdapter(adapter)
     }
 
@@ -62,6 +62,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         shoppingListViewModel.getAll().observe(owner, this)
         this.inventoryViewModel = inventoryViewModel
     }
+
+    fun sortBy(sort: Sort) { viewModel.sort = sort }
 
     fun addNewItem() = viewModel.insert(ShoppingListItem(
         context.getString(R.string.shopping_list_item_default_name)))
@@ -80,6 +82,22 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun undoDelete() = viewModel.undoDelete()
 
+    fun deleteAll() {
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(android.R.attr.alertDialogTheme, typedValue, true)
+        val builder = AlertDialog.Builder(context, typedValue.data)
+        val dialogClickListener = DialogInterface.OnClickListener { _, button ->
+            if (button == DialogInterface.BUTTON_POSITIVE) {
+                viewModel.deleteAll()
+                viewModel.emptyTrash()
+            }
+        }
+        builder.setPositiveButton(context.getString(android.R.string.yes), dialogClickListener)
+        builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
+        builder.setMessage(context.getString(R.string.delete_all_shopping_list_items_confirmation_message))
+        builder.show()
+    }
+
     override fun onChanged(items: List<ShoppingListItem>) = listDiffer.submitList(items)
 
     /** ShoppingListAdapter is a subclass of RecyclerView.Adapter using its own
@@ -91,17 +109,11 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     inner class ShoppingListAdapter(context: Context) :
             RecyclerView.Adapter<ShoppingListAdapter.ShoppingListItemViewHolder>() {
         private val selectedColor: Int
-        private val normalBgColor: Int
-        private val altBgColor: Int
 
         init {
             val typedValue = TypedValue()
             context.theme.resolveAttribute(R.attr.colorSelected, typedValue, true)
             selectedColor = typedValue.data
-            context.theme.resolveAttribute(R.attr.colorBackgroundVariant, typedValue, true)
-            altBgColor = typedValue.data
-            context.theme.resolveAttribute(android.R.attr.colorBackground, typedValue, true)
-            normalBgColor = typedValue.data
             setHasStableIds(true)
         }
 
@@ -124,10 +136,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             if (payloads.size == 0) return onBindViewHolder(holder, position)
             for (payload in payloads) {
                 if (payload is Boolean) {
-                    val startColor = (holder.itemView.background as ColorDrawable).color
-                    val endColor = when { payload ->                         selectedColor
-                                          holder.adapterPosition % 2 == 0 -> normalBgColor
-                                          else ->                            altBgColor }
+                    val startColor = if (payloads[0] as Boolean) 0 else selectedColor
+                    val endColor =   if (payloads[0] as Boolean) selectedColor else 0
                     ObjectAnimator.ofArgb(holder.itemView, "backgroundColor",
                                           startColor, endColor).start()
                 } else if (payload is Field) {
@@ -219,10 +229,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
             fun bindTo(item: ShoppingListItem) {
                 view.update(item)
-                view.setBackgroundColor(when {
-                    selection.contains(adapterPosition) -> selectedColor
-                    adapterPosition % 2 == 1 ->            altBgColor
-                    else ->                                normalBgColor })
+                if (selection.contains(adapterPosition)) view.setBackgroundColor(selectedColor)
+                else                                     view.background = null
             }
 
             private fun updateLinkedTo(newLinkedItem: InventoryItem?) {

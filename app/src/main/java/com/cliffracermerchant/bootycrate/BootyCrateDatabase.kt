@@ -55,3 +55,11 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         }
     }
 }
+
+enum class Sort {
+    OriginalInsertionOrder,
+    NameAsc,
+    NameDesc,
+    AmountAsc,
+    AmountDesc
+}

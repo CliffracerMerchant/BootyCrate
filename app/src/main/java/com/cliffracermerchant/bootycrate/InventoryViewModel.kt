@@ -1,22 +1,36 @@
 package com.cliffracermerchant.bootycrate
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 
 class InventoryViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao: InventoryItemDao = BootyCrateDatabase.get(app).inventoryItemDao()
-    private val items: LiveData<List<InventoryItem>> = dao.getAll()
+    private val sortLiveData = MutableLiveData(Sort.OriginalInsertionOrder)
+    var sort get() = sortLiveData.value
+             set(value) { sortLiveData.value = value }
+    private val items = Transformations.switchMap(sortLiveData) { sort ->
+        when (sort) {
+            null -> dao.getAll()
+            Sort.OriginalInsertionOrder -> dao.getAll()
+            Sort.NameAsc -> dao.getAllSortedByNameAsc()
+            Sort.NameDesc -> dao.getAllSortedByNameDesc()
+            Sort.AmountAsc -> dao.getAllSortedByAmountAsc()
+            Sort.AmountDesc -> dao.getAllSortedByAmountDesc()
+        }
+    }
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun getAll() : LiveData<List<InventoryItem>> = items
+    fun getAll() = items
 
-    fun insert(vararg items: InventoryItem) = viewModelScope.launch { dao.insert(*items) }
-
+    fun insert(vararg items: InventoryItem) = viewModelScope.launch {
+        dao.insert(*items)
+    }
+    fun insertFromShoppingListItems(vararg shoppingListItemIds: Long) = viewModelScope.launch {
+        dao.insertFromShoppingListItems(*shoppingListItemIds)
+    }
     fun updateName(id: Long, name: String) = viewModelScope.launch {
         dao.updateName(id, name)
     }
@@ -26,19 +40,20 @@ class InventoryViewModel(app: Application) : AndroidViewModel(app) {
     fun updateExtraInfo(id: Long, extraInfo: String) = viewModelScope.launch {
         dao.updateExtraInfo(id, extraInfo)
     }
-    fun updateAutoAddToShoppingList(id: Long, autoAddToShoppingList: Boolean) =
-            viewModelScope.launch {
+    fun updateAutoAddToShoppingList(id: Long, autoAddToShoppingList: Boolean) = viewModelScope.launch {
         dao.updateAutoAddToShoppingList(id, autoAddToShoppingList)
     }
-    fun updateAutoAddToShoppingListTrigger(id: Long, autoAddToShoppingListTrigger: Int) =
-            viewModelScope.launch {
+    fun updateAutoAddToShoppingListTrigger(id: Long, autoAddToShoppingListTrigger: Int) = viewModelScope.launch {
         dao.updateAutoAddToShoppingListTrigger(id, autoAddToShoppingListTrigger)
-    }
-    fun delete(vararg ids: Long) = viewModelScope.launch {
-        dao.delete(*ids)
     }
     fun deleteAll() = viewModelScope.launch {
         dao.deleteAll()
+    }
+    fun emptyTrash() = viewModelScope.launch {
+        dao.emptyTrash()
+    }
+    fun delete(vararg ids: Long) = viewModelScope.launch {
+        dao.delete(*ids)
     }
     fun undoDelete() = viewModelScope.launch {
         dao.undoDelete()
