@@ -36,6 +36,7 @@ class InventoryFragment : Fragment() {
         mainActivity = requireActivity() as MainActivity
         recyclerView.setViewModels(viewLifecycleOwner, mainActivity.inventoryViewModel,
                                    mainActivity.shoppingListViewModel)
+        mainActivity.inventoryViewModel
         recyclerView.snackBarAnchor = mainActivity.bottom_app_bar
 
         addToDeleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable
@@ -67,6 +68,23 @@ class InventoryFragment : Fragment() {
         menu.setGroupVisible(R.id.inventory_view_menu_group, true)
         menu.setGroupVisible(R.id.shopping_list_view_menu_group, false)
         super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.isChecked) return true
+        if (item.itemId == R.id.delete_all_button) recyclerView.deleteAll()
+        else {
+            recyclerView.sortBy(when (item.itemId) {
+                R.id.original_insertion_order_option -> Sort.OriginalInsertionOrder
+                R.id.name_ascending_option -> Sort.NameAsc
+                R.id.name_descending_option -> Sort.NameDesc
+                R.id.amount_ascending_option -> Sort.AmountAsc
+                R.id.amount_descending_option -> Sort.AmountDesc
+                else -> Sort.OriginalInsertionOrder
+            })
+            item.isChecked = true
+        }
+        return true
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
