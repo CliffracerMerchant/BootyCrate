@@ -1,12 +1,18 @@
 package com.cliffracermerchant.bootycrate
 
+import android.app.SearchManager
+import android.content.Context
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
+import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.Observer
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.recyclerView
 import java.io.File
@@ -34,10 +40,15 @@ class InventoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
-        recyclerView.setViewModels(viewLifecycleOwner, mainActivity.inventoryViewModel,
-                                   mainActivity.shoppingListViewModel)
-        mainActivity.inventoryViewModel
         recyclerView.snackBarAnchor = mainActivity.bottom_app_bar
+
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val sortStr = prefs.getString(mainActivity.getString(R.string.pref_inventory_sort),
+            Sort.OriginalInsertionOrder.toString())
+        val initialSort = if (sortStr != null) Sort.valueOf(sortStr)
+                          else                 Sort.OriginalInsertionOrder
+        recyclerView.setViewModels(viewLifecycleOwner, mainActivity.inventoryViewModel,
+                                   mainActivity.shoppingListViewModel, initialSort)
 
         addToDeleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable
         deleteToAddIcon = mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable
@@ -64,6 +75,27 @@ class InventoryFragment : Fragment() {
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        menu.findItem(when (recyclerView.sort) {
+            Sort.OriginalInsertionOrder -> R.id.original_insertion_order_option
+            Sort.NameAsc -> R.id.name_ascending_option
+            Sort.NameDesc -> R.id.name_descending_option
+            Sort.AmountAsc -> R.id.amount_ascending_option
+            Sort.AmountDesc -> R.id.amount_descending_option
+            else -> R.id.original_insertion_order_option }).isChecked = true
+
+        val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
+        searchView.setOnCloseListener { Log.d("search", "search closed"); true }
+        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?) = true
+            override fun onQueryTextChange(newText: String?): Boolean {
+                recyclerView.searchFilter = newText
+                return true
+            }
+        })
+    }
+
     override fun onPrepareOptionsMenu(menu: Menu) {
         menu.setGroupVisible(R.id.inventory_view_menu_group, true)
         menu.setGroupVisible(R.id.shopping_list_view_menu_group, false)
@@ -71,28 +103,45 @@ class InventoryFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.isChecked) return true
-        if (item.itemId == R.id.delete_all_button) recyclerView.deleteAll()
-        else {
-            recyclerView.sortBy(when (item.itemId) {
-                R.id.original_insertion_order_option -> Sort.OriginalInsertionOrder
-                R.id.name_ascending_option -> Sort.NameAsc
-                R.id.name_descending_option -> Sort.NameDesc
-                R.id.amount_ascending_option -> Sort.AmountAsc
-                R.id.amount_descending_option -> Sort.AmountDesc
-                else -> Sort.OriginalInsertionOrder
-            })
-            item.isChecked = true
+        if (item.isChecked) return false
+        return when (item.itemId) {
+            R.id.delete_all_button -> {
+                recyclerView.deleteAll(); true
+            } R.id.original_insertion_order_option -> {
+                recyclerView.sort = Sort.OriginalInsertionOrder
+                item.isChecked = true; true
+            } R.id.name_ascending_option -> {
+                recyclerView.sort = Sort.NameAsc
+                item.isChecked = true; true
+            } R.id.name_descending_option -> {
+                recyclerView.sort = Sort.NameDesc
+                item.isChecked = true; true
+            } R.id.amount_ascending_option -> {
+                recyclerView.sort = Sort.AmountAsc
+                item.isChecked = true; true
+            } R.id.amount_descending_option -> {
+                recyclerView.sort = Sort.AmountDesc
+                item.isChecked = true; true
+            } else -> super.onOptionsItemSelected(item)
         }
-        return true
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        val selectionStateFile = File(mainActivity.cacheDir, "inventory_selection_state")
-        val writer = selectionStateFile.writer()
-        for (id in recyclerView.selection.currentState())
-            writer.write("$id,")
-        writer.close()
+        val context = this.context
+        if (context != null) {
+            val selectionStateFile = File(context.cacheDir, "inventory_selection_state")
+            val writer = selectionStateFile.writer()
+            for (id in recyclerView.selection.currentState())
+                writer.write("$id,")
+            writer.close()
+
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            val prefsEditor = prefs.edit()
+            val sortStr = if (recyclerView.sort != null) recyclerView.sort.toString()
+                          else                           Sort.OriginalInsertionOrder.toString()
+            prefsEditor.putString(context.getString(R.string.pref_inventory_sort), sortStr)
+            prefsEditor.apply()
+        }
         super.onSaveInstanceState(outState)
     }
 

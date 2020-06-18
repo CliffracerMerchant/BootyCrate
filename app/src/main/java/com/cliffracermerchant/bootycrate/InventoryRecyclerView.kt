@@ -44,6 +44,10 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     private var expandedItemAdapterPos: Int? = null
     var snackBarAnchor: BottomAppBar? = null
     val selection = RecyclerViewSelection(adapter)
+    var sort: Sort? get() = viewModel.sort
+                    set(value) { viewModel.sort = value }
+    var searchFilter: String? get() = viewModel.searchFilter
+                              set(value) { viewModel.searchFilter = value }
 
     /** The enum class Field identifies user facing fields that are potentially
      *  editable by the user. Field values are used as payloads in the adapter
@@ -63,13 +67,13 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun setViewModels(owner: LifecycleOwner,
                       inventoryViewModel: InventoryViewModel,
-                      shoppingListViewModel: ShoppingListViewModel) {
-        this.viewModel = inventoryViewModel
+                      shoppingListViewModel: ShoppingListViewModel,
+                      initialSort: Sort) {
+        viewModel = inventoryViewModel
+        sort = initialSort
         inventoryViewModel.getAll().observe(owner, this)
         this.shoppingListViewModel = shoppingListViewModel
     }
-
-    fun sortBy(sort: Sort) { viewModel.sort = sort }
 
     fun addNewItem() = viewModel.insert(InventoryItem(
         context.getString(R.string.inventory_item_default_name)))

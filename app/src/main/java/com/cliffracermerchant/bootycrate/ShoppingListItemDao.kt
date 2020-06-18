@@ -5,16 +5,16 @@ import androidx.room.*
 
 @Dao
 abstract class ShoppingListItemDao {
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash")
-    abstract fun getAll(): LiveData<List<ShoppingListItem>>
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash ORDER BY name ASC")
-    abstract fun getAllSortedByNameAsc(): LiveData<List<ShoppingListItem>>
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash ORDER BY name DESC")
-    abstract fun getAllSortedByNameDesc(): LiveData<List<ShoppingListItem>>
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash ORDER BY amount ASC")
-    abstract fun getAllSortedByAmountAsc(): LiveData<List<ShoppingListItem>>
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash ORDER BY amount DESC")
-    abstract fun getAllSortedByAmountDesc(): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter")
+    abstract fun getAll(filter: String): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY name ASC")
+    abstract fun getAllSortedByNameAsc(filter: String): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY name DESC")
+    abstract fun getAllSortedByNameDesc(filter: String): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount ASC")
+    abstract fun getAllSortedByAmountAsc(filter: String): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount DESC")
+    abstract fun getAllSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
     @Insert
     abstract suspend fun insert(vararg items: ShoppingListItem)

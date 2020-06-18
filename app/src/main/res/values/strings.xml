@@ -3,24 +3,26 @@
     <string name="inventory_navigation_item_name">Inventory</string>
     <string name="shopping_list_navigation_item_name">Shopping List</string>
     <string name="preferences_navigation_item_name">Preferences</string>
+    <string name="action_mode_title">%1$d item(s) selected</string>
+    <string name="add_item_button_name">Add new item</string>
+    <string name="delete_item_button_name">Delete item(s)</string>
+    <string name="delete_all_description">Delete all</string>
+    <string name="edit_button_description">Edit item</string>
+    <string name="delete_snackbar_text">%1$d item(s) deleted</string>
+    <string name="delete_snackbar_undo_text">Undo</string>
+    <string name="inventory_item_amount_description">Amount</string>
+    <string name="decrease_button_description">Decrease amount</string>
+    <string name="increase_button_description">Increase amount</string>
 
     <string name="inventory_item_name_description">Item name</string>
-    <string name="decrease_button_description">Decrease amount</string>
-    <string name="inventory_item_amount_description">Item amount</string>
-    <string name="increase_button_description">Increase amount</string>
     <string name="inventory_item_extra_info_description">Item extra info</string>
-    <string name="edit_button_description">Edit item</string>
     <string name="inventory_item_auto_add_to_shopping_list_checkbox_description">Auto-add to shopping list</string>
     <string name="inventory_item_auto_add_to_shopping_list_checkbox_text">Auto-add to shopping list under:</string>
     <string name="inventory_item_auto_add_to_shopping_list_trigger_edit_description">Auto-add to shopping list amount threshold</string>
     <string name="collapse_button_description">Collapse extra item options</string>
-
     <string name="inventory_item_default_name">New item</string>
-    <string name="add_item_button_name">Add new item</string>
-    <string name="delete_item_button_name">Delete item(s)</string>
-    <string name="delete_snackbar_text">%1$d item(s) deleted</string>
-    <string name="delete_snackbar_undo_text">Undo</string>
-    <string name="action_mode_title">%1$d item(s) selected</string>
+    <string name="delete_all_inventory_items_confirmation_message">This will delete all items in the inventory. Are you sure?</string>
+    <string name="add_to_inventory_description">Add to inventory</string>
 
     <string name="shopping_list_item_default_name">New item</string>
     <string name="shopping_list_item_name_description">Item name</string>
@@ -33,22 +35,18 @@
     <string name="shopping_list_item_link_now_action_description">Link now</string>
     <string name="shopping_list_item_change_link_action_description">Change</string>
     <string name="empty_inventory_message">Inventory is empty</string>
+    <string name="link_inventory_item_action_long_description">Select an item to link to:</string>
+    <string name="add_to_shopping_list_description">Add to shopping list</string>
+    <string name="delete_all_shopping_list_items_confirmation_message">This will delete all items in the shopping list. Are you sure?</string>
 
     <string name="dark_theme_switch_description">Dark theme toggle</string>
     <string name="dark_theme_switch_title">Dark theme</string>
 
     <string name="search_description">Search</string>
-    <string name="link_inventory_item_action_long_description">Select an item to link to:</string>
-    <string name="add_to_shopping_list_description">Add to shopping list</string>
     <string name="change_sorting_description">Change sorting</string>
-    <string name="add_to_inventory_description">Add to inventory</string>
-    <string name="delete_all_description">Delete all</string>
     <string name="original_insertion_order_description">Original insertion order</string>
     <string name="name_ascending_description">Name ascending</string>
     <string name="name_descending_description">Name descending</string>
     <string name="amount_ascending_description">Amount ascending</string>
     <string name="amount_descending_description">Amount descending</string>
-    <string name="delete_all_inventory_items_confirmation_message">This will delete all items in the inventory. Are you sure?</string>
-    <string name="delete_all_shopping_list_items_confirmation_message">This will delete all items in the shopping list. Are you sure?</string>
-
 </resources>

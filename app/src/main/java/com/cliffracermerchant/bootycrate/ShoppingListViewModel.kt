@@ -8,18 +8,26 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao: ShoppingListItemDao = BootyCrateDatabase.get(app).shoppingListItemDao()
     private val sortLiveData = MutableLiveData(Sort.OriginalInsertionOrder)
-    var sort get() = sortLiveData.value
-             set(value) { sortLiveData.value = value }
-    private val items = Transformations.switchMap(sortLiveData) { sort ->
-        when (sort) {
-            null -> dao.getAll()
-            Sort.OriginalInsertionOrder -> dao.getAll()
-            Sort.NameAsc -> dao.getAllSortedByNameAsc()
-            Sort.NameDesc -> dao.getAllSortedByNameDesc()
-            Sort.AmountAsc -> dao.getAllSortedByAmountAsc()
-            Sort.AmountDesc -> dao.getAllSortedByAmountDesc()
+    private val searchFilterLiveData = MutableLiveData("")
+    private val sortAndFilterLiveData = MediatorLiveData<Pair<Sort?, String?>>().apply {
+        addSource(sortLiveData) { value = Pair(it, searchFilterLiveData.value) }
+        addSource(searchFilterLiveData) { value = Pair(sortLiveData.value, it) }
+    }
+    private val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
+        val filter = '%' + (sortAndFilter.second ?: "") + '%'
+        when (sortAndFilter.first) {
+            null -> dao.getAll(filter)
+            Sort.OriginalInsertionOrder -> dao.getAll(filter)
+            Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)
+            Sort.NameDesc -> dao.getAllSortedByNameDesc(filter)
+            Sort.AmountAsc -> dao.getAllSortedByAmountAsc(filter)
+            Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
         }
     }
+    var sort get() = sortLiveData.value
+        set(value) { sortLiveData.value = value }
+    var searchFilter get() = searchFilterLiveData.value
+        set(value) { searchFilterLiveData.value = value }
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
