@@ -7,12 +7,8 @@ import kotlinx.coroutines.launch
 class InventoryViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao: InventoryItemDao = BootyCrateDatabase.get(app).inventoryItemDao()
-    private val sortLiveData = MutableLiveData(Sort.OriginalInsertionOrder)
-    private val searchFilterLiveData = MutableLiveData("")
-    private val sortAndFilterLiveData = MediatorLiveData<Pair<Sort?, String?>>().apply {
-        addSource(sortLiveData) { value = Pair(it, searchFilterLiveData.value) }
-        addSource(searchFilterLiveData) { value = Pair(sortLiveData.value, it) }
-    }
+    private val sortAndFilterLiveData =
+        MutableLiveData(Pair<Sort?, String?>(Sort.OriginalInsertionOrder, ""))
     private val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
         val filter = '%' + (sortAndFilter.second ?: "") + '%'
         when (sortAndFilter.first) {
@@ -24,10 +20,10 @@ class InventoryViewModel(app: Application) : AndroidViewModel(app) {
             Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
         }
     }
-    var sort get() = sortLiveData.value
-        set(value) { sortLiveData.value = value }
-    var searchFilter get() = searchFilterLiveData.value
-        set(value) { searchFilterLiveData.value = value }
+    var sort get() = sortAndFilterLiveData.value?.first
+             set(value) { sortAndFilterLiveData.value = Pair(value, searchFilter) }
+    var searchFilter get() = sortAndFilterLiveData.value?.second
+                     set(value) { sortAndFilterLiveData.value = Pair(sort, value) }
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 

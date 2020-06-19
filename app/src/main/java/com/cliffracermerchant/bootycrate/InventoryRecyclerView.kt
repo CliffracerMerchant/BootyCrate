@@ -65,6 +65,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         setAdapter(adapter)
     }
 
+    override fun onChanged(items: List<InventoryItem>) = listDiffer.submitList(items)
+
     fun setViewModels(owner: LifecycleOwner,
                       inventoryViewModel: InventoryViewModel,
                       shoppingListViewModel: ShoppingListViewModel,
@@ -121,9 +123,16 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         shoppingListViewModel.insertFromInventoryItems(*ids)
     }
 
-    fun undoDelete() = viewModel.undoDelete()
+    fun checkAutoAddToShoppingList(position: Int) {
+        val item = listDiffer.currentList[position]
+        if (!item.autoAddToShoppingList) return
+        if (item.amount < item.autoAddToShoppingListTrigger) {
+            val minAmount = item.autoAddToShoppingListTrigger - item.amount
+            shoppingListViewModel.autoAddFromInventoryItem(item.id, minAmount)
+        }
+    }
 
-    override fun onChanged(items: List<InventoryItem>) = listDiffer.submitList(items)
+    fun undoDelete() = viewModel.undoDelete()
 
     /** InventoryAdapter is a subclass of RecyclerView.Adapter using its own
      *  RecyclerView.ViewHolder subclass InventoryItemViewHolder to represent
@@ -169,10 +178,19 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     val item = listDiffer.currentList[position]
                     when (payload) {
                         Field.Name -> holder.itemView.nameEdit.setText(item.name)
-                        Field.Amount -> holder.itemView.amountEdit.currentValue = item.amount
+                        Field.Amount -> {
+                            holder.itemView.amountEdit.currentValue = item.amount
+                            checkAutoAddToShoppingList(holder.adapterPosition)
+                        }
                         Field.ExtraInfo -> holder.itemView.extraInfoEdit.setText(item.extraInfo)
-                        Field.AutoAddToShoppingList -> holder.itemView.autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
-                        Field.AutoAddToShoppingListTrigger -> holder.itemView.autoAddToShoppingListTriggerEdit.currentValue = item.autoAddToShoppingListTrigger
+                        Field.AutoAddToShoppingList -> {
+                            holder.itemView.autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
+                            checkAutoAddToShoppingList(holder.adapterPosition)
+                        }
+                        Field.AutoAddToShoppingListTrigger -> {
+                            holder.itemView.autoAddToShoppingListTriggerEdit.currentValue = item.autoAddToShoppingListTrigger
+                            checkAutoAddToShoppingList(holder.adapterPosition)
+                        }
                     }
                 }
             }
@@ -194,6 +212,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
          *   an item and updates its background color accordingly. */
         inner class InventoryItemViewHolder(private val view: InventoryItemView) :
                 RecyclerView.ViewHolder(view) {
+            val item: InventoryItem get() = listDiffer.currentList[adapterPosition]
 
             init {
                 val onClick = OnClickListener {
@@ -231,28 +250,24 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
                 view.nameEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    val id = listDiffer.currentList[adapterPosition].id
-                    viewModel.updateName(id, value)
-                    shoppingListViewModel.updateNameFromLinkedInventoryItem(id, value)
+                    viewModel.updateName(item.id, value)
+                    shoppingListViewModel.updateNameFromLinkedInventoryItem(item.id, value)
                 }
                 view.amountEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    viewModel.updateAmount(listDiffer.currentList[adapterPosition].id, value)
+                    viewModel.updateAmount(item.id, value)
                 }
                 view.extraInfoEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    val id = listDiffer.currentList[adapterPosition].id
-                    viewModel.updateExtraInfo(id, value)
-                    shoppingListViewModel.updateExtraInfoFromLinkedInventoryItem(id, value)
+                    viewModel.updateExtraInfo(item.id, value)
+                    shoppingListViewModel.updateExtraInfoFromLinkedInventoryItem(item.id, value)
                 }
                 view.autoAddToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
-                    val id = listDiffer.currentList[adapterPosition].id
-                    viewModel.updateAutoAddToShoppingList(id, checked)
+                    viewModel.updateAutoAddToShoppingList(item.id, checked)
                 }
                 view.autoAddToShoppingListTriggerEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
-                    val id = listDiffer.currentList[adapterPosition].id
-                    viewModel.updateAutoAddToShoppingListTrigger(id, value)
+                    viewModel.updateAutoAddToShoppingListTrigger(item.id, value)
                 }
             }
 

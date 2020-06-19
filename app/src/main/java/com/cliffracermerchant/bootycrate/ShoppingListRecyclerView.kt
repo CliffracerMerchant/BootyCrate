@@ -10,6 +10,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
+import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.shopping_list_item_details_layout.view.*
@@ -81,6 +82,11 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
         snackBar.anchorView = snackBarAnchor ?: this
         snackBar.setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
+        snackBar.addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                viewModel.emptyTrash()
+            }
+        })
         snackBar.show()
     }
 

@@ -20,15 +20,25 @@ abstract class ShoppingListItemDao {
     abstract suspend fun insert(vararg items: ShoppingListItem)
 
     @Query("INSERT INTO shopping_list_item (name, extraInfo, linkedInventoryItemId) " +
-           "SELECT name, extraInfo, id " +
-           "FROM inventory_item " +
+           "SELECT name, extraInfo, id FROM inventory_item " +
            "WHERE inventory_item.id IN (:inventoryItemIds) " +
            "AND inventory_item.id NOT IN (SELECT linkedInventoryItemId from shopping_list_item)")
     abstract suspend fun insertFromInventoryItems(vararg inventoryItemIds: Long)
 
+//    @Query("INSERT INTO shopping_list_item (name, extraInfo, amount, linkedInventoryItemId) " +
+//           "SELECT name, extraInfo, autoAddToShoppingListTrigger - amount, id FROM inventory_item " +
+//           "WHERE inventory_item.id = :inventoryItemId " +
+//           "AND inventory_item.id NOT IN (SELECT linkedInventoryItemId from shopping_list_item)")
+//    abstract suspend fun autoAddFromInventoryItem(inventoryItemId: Long)
+
+    @Transaction
+    open suspend fun autoAddFromInventoryItem(inventoryItemId: Long, minAmount: Int) {
+        insertFromInventoryItems(inventoryItemId)
+        setMinimumAmountFromLinkedItem(inventoryItemId, minAmount)
+    }
+
     @Query("UPDATE shopping_list_item " +
-           "SET name = :name " +
-           "WHERE id = :id")
+           "SET name = :name WHERE id = :id")
     abstract suspend fun updateName(id: Long, name: String)
 
     @Query("UPDATE shopping_list_item " +
@@ -47,14 +57,25 @@ abstract class ShoppingListItemDao {
     abstract suspend fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amountInCart = :amountInCart " +
-           "WHERE id = :id")
-    abstract suspend fun updateAmountInCart(id: Long, amountInCart: Int)
-
-    @Query("UPDATE shopping_list_item " +
            "SET amount = :amount " +
            "WHERE id = :id")
     abstract suspend fun updateAmount(id: Long, amount: Int)
+
+    @Query("UPDATE shopping_list_item " +
+           "SET amount = CASE WHEN amount < :minAmount THEN :minAmount " +
+                                                      "ELSE amount END " +
+           "WHERE linkedInventoryItemId = :inventoryItemId")
+    abstract suspend fun setMinimumAmountFromLinkedItem(inventoryItemId: Long, minAmount: Int)
+
+    @Query("UPDATE shopping_list_item " +
+           "SET amount = :amount " +
+           "WHERE linkedInventoryItemId = :inventoryItemId")
+    abstract suspend fun updateAmountFromLinkedItem(inventoryItemId: Long, amount: Int)
+
+    @Query("UPDATE shopping_list_item " +
+           "SET amountInCart = :amountInCart " +
+           "WHERE id = :id")
+    abstract suspend fun updateAmountInCart(id: Long, amountInCart: Int)
 
     @Query("UPDATE shopping_list_item " +
            "SET linkedInventoryItemId = :linkedInventoryItemId, " +
