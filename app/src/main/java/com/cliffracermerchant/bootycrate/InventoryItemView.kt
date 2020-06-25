@@ -5,13 +5,17 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
+import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.graphics.drawable.PaintDrawable
+import android.graphics.drawable.ShapeDrawable
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
+import androidx.core.content.ContextCompat
 import androidx.core.view.marginTop
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
@@ -52,10 +56,12 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
 
     fun update(item: InventoryItem, expanded: Boolean) {
         nameEdit.setText(item.name)
-        amountEdit.currentValue = item.amount
+        amountEdit.setCurrentValueWithoutDataUpdate(item.amount)
         extraInfoEdit.setText(item.extraInfo)
         autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
-        autoAddToShoppingListTriggerEdit.currentValue = item.autoAddToShoppingListTrigger
+        autoAddToShoppingListTriggerEdit.setCurrentValueWithoutDataUpdate(item.autoAddToShoppingListTrigger)
+        colorEdit.background = ColoredCircleDrawable(colorEdit.layoutParams.width.toFloat(),
+                                                     item.color, nameEdit.currentTextColor)
         if (expanded) expand()
     }
 

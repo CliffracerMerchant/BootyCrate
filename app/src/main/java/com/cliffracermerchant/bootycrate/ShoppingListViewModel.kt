@@ -1,7 +1,6 @@
 package com.cliffracermerchant.bootycrate
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 
@@ -9,12 +8,12 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao: ShoppingListItemDao = BootyCrateDatabase.get(app).shoppingListItemDao()
     private val sortAndFilterLiveData =
-        MutableLiveData(Pair<Sort?, String?>(Sort.OriginalInsertionOrder, ""))
+        MutableLiveData(Pair<Sort?, String?>(Sort.Color, ""))
     private val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
         val filter = '%' + (sortAndFilter.second ?: "") + '%'
         when (sortAndFilter.first) {
-            null -> dao.getAll(filter)
-            Sort.OriginalInsertionOrder -> dao.getAll(filter)
+            null -> dao.getAllSortedByColor(filter)
+            Sort.Color -> dao.getAllSortedByColor(filter)
             Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)
             Sort.NameDesc -> dao.getAllSortedByNameDesc(filter)
             Sort.AmountAsc -> dao.getAllSortedByAmountAsc(filter)
@@ -31,10 +30,10 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
     fun getAll() = items
 
     fun insert(vararg items: ShoppingListItem) = viewModelScope.launch {
-        Log.d("insertion", "insert new result: " + dao.insert(*items).toString())
+        dao.insert(*items)
     }
     fun insertFromInventoryItems(vararg itemIds: Long) = viewModelScope.launch {
-        Log.d("insertion", "insert from inventory item result: " + dao.insertFromInventoryItems(*itemIds).toString())
+        dao.insertFromInventoryItems(*itemIds)
     }
     fun autoAddFromInventoryItem(inventoryItemId: Long, minAmount: Int) = viewModelScope.launch {
         dao.autoAddFromInventoryItem(inventoryItemId, minAmount)
@@ -51,11 +50,11 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
     fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String) = viewModelScope.launch {
         dao.updateExtraInfoFromLinkedInventoryItem(inventoryItemId, extraInfo)
     }
-    fun updateAmount(id: Long, amount: Int) = viewModelScope.launch {
-        dao.updateAmount(id, amount)
+    fun updateAmountOnList(id: Long, amountOnList: Int) = viewModelScope.launch {
+        dao.updateAmountOnList(id, amountOnList)
     }
-    fun updateAmountFromLinkedItem(inventoryItemId: Long, amount: Int) = viewModelScope.launch {
-        dao.updateAmountFromLinkedItem(inventoryItemId, amount)
+    fun updateAmountOnListFromLinkedItem(inventoryItemId: Long, amount: Int) = viewModelScope.launch {
+        dao.updateAmountOnListFromLinkedItem(inventoryItemId, amount)
     }
     fun updateAmountInCart(id: Long, amountInCart: Int) = viewModelScope.launch {
         dao.updateAmountInCart(id, amountInCart)
@@ -64,6 +63,9 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
         dao.updateLinkedInventoryItemId(id, linkedInventoryItem.id,
                                         linkedInventoryItem.name,
                                         linkedInventoryItem.extraInfo)
+    }
+    fun updateColor(id: Long, color: Int) = viewModelScope.launch {
+        dao.updateColor(id, color)
     }
     fun deleteAll() = viewModelScope.launch {
         dao.deleteAll()

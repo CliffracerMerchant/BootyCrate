@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <attr name="colorBackgroundVariant" format="color"/>
-    <attr name="colorSelected" format="color"/>
+    <attr name="colorBackgroundVariant" format="color" />
+    <attr name="colorSelected" format="color" />
+    <attr name="textColor" format="color" />
+
+    <declare-styleable name="ColoredCircleDrawable">
+        <attr name="color" format="color" />
+        <attr name="outlineColor" format="color" />
+    </declare-styleable>
 
     <declare-styleable name="TextFieldEdit">
         <attr name="isEditable" format="boolean" />
@@ -10,8 +16,8 @@
     </declare-styleable>
 
     <declare-styleable name="IntegerEdit">
-        <attr name="minValue" format="integer"/>
-        <attr name="maxValue" format="integer"/>
+        <attr name="minValue" format="integer" />
+        <attr name="maxValue" format="integer" />
         <attr name="valueChangedNotificationTimeout" format="integer" />
         <attr name="stepSize" format="integer" />
         <attr name="initialValue" format="integer" />

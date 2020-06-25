@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.graphics.drawable.LayerDrawable
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -19,6 +21,7 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
  *  ShoppingListItem instance. Its update(ShoppingListItem) function updates
  *  the contained views with the information of the ShoppingListItem instance.
  *  Its expand and collapse functions allow for an optional animation. */
+
 class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     val expanded get() = expandedPrivate
     private var expandedPrivate = false
@@ -29,10 +32,13 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     private val plusToBlankIcon = context.getDrawable(R.drawable.animated_plus_to_blank_icon)
     private val editToMoreOptionsIcon = context.getDrawable(R.drawable.animated_edit_to_more_options_icon)
     private val moreOptionsToEditIcon = context.getDrawable(R.drawable.animated_more_options_to_edit_icon)
+    private val checkBoxCheckedToUncheckedIcon = context.getDrawable(R.drawable.shopping_list_checkbox_checked_to_unchecked_background)
+    private val checkBoxUncheckedToCheckedIcon = context.getDrawable(R.drawable.shopping_list_checkbox_unchecked_to_checked_background)
     private val linkedItemDescriptionString = context.getString(R.string.linked_shopping_list_item_description)
     private val unlinkedItemDescriptionString = context.getString(R.string.unlinked_shopping_list_item_description)
     private val linkNowActionString = context.getString(R.string.shopping_list_item_link_now_action_description)
     private val changeLinkActionString = context.getString(R.string.shopping_list_item_change_link_action_description)
+    var currentColor: Int? = null
 
     /* This companion object stores the heights of the layout when expanded/
        collapsed. This prevents the expand/collapse animations from having to
@@ -58,16 +64,30 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             if (checkBox.isChecked) {
                 if (amountInCartEdit.currentValue < amountOnListEdit.currentValue)
                     amountInCartEdit.currentValue = amountOnListEdit.currentValue
-            } else amountInCartEdit.currentValue = 0
+            } else {
+                amountInCartEdit.currentValue = 0
+            }
         }
         val normalTextColor = nameEdit.currentTextColor
         checkBox.setOnCheckedChangeListener { _, checked ->
             if (checked) {
                 nameEdit.paintFlags = nameEdit.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
                 nameEdit.setTextColor(nameEdit.currentHintTextColor)
+                checkBox.background = checkBoxUncheckedToCheckedIcon
+                val icon = checkBox.background as LayerDrawable
+                val bg = icon.getDrawable(0) as AnimatedVectorDrawable
+                bg.setTint(currentColor ?: 0)
+                bg.start()
+                (icon.getDrawable(1) as AnimatedVectorDrawable).start()
             } else {
                 nameEdit.paintFlags = nameEdit.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
                 nameEdit.setTextColor(normalTextColor)
+                checkBox.background = checkBoxCheckedToUncheckedIcon
+                val icon = checkBox.background as LayerDrawable
+                val bg = icon.getDrawable(0) as AnimatedVectorDrawable
+                bg.setTint(currentColor ?: 0)
+                bg.start()
+                (icon.getDrawable(1) as AnimatedVectorDrawable).start()
             }
         }
         // A TextWatcher is used here instead of observing the IntegerEdits'
@@ -88,10 +108,15 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
 
     fun update(item: ShoppingListItem) {
         nameEdit.setText(item.name)
-        amountOnListEdit.currentValue = item.amount
-        amountInCartEdit.currentValue = item.amountInCart
         extraInfoEdit.setText(item.extraInfo)
-        checkBox.isChecked = amountInCartEdit.currentValue >= amountOnListEdit.currentValue
+        amountOnListEdit.setCurrentValueWithoutDataUpdate(item.amountOnList)
+        amountInCartEdit.setCurrentValueWithoutDataUpdate(item.amountInCart)
+
+        currentColor = item.color
+        checkBox.background = if (item.amountInCart >= item.amountOnList) checkBoxCheckedToUncheckedIcon
+                              else                                        checkBoxUncheckedToCheckedIcon
+        (checkBox.background as LayerDrawable).getDrawable(0).setTint(currentColor ?: 0)
+
         updateLinkedStatus(item.linkedInventoryItemId)
     }
 

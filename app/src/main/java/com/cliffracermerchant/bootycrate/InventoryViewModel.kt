@@ -8,12 +8,12 @@ class InventoryViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao: InventoryItemDao = BootyCrateDatabase.get(app).inventoryItemDao()
     private val sortAndFilterLiveData =
-        MutableLiveData(Pair<Sort?, String?>(Sort.OriginalInsertionOrder, ""))
+        MutableLiveData(Pair<Sort?, String?>(Sort.Color, ""))
     private val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
         val filter = '%' + (sortAndFilter.second ?: "") + '%'
         when (sortAndFilter.first) {
-            null -> dao.getAll(filter)
-            Sort.OriginalInsertionOrder -> dao.getAll(filter)
+            null -> dao.getAllSortedByColor(filter)
+            Sort.Color -> dao.getAllSortedByColor(filter)
             Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)
             Sort.NameDesc -> dao.getAllSortedByNameDesc(filter)
             Sort.AmountAsc -> dao.getAllSortedByAmountAsc(filter)
@@ -49,6 +49,9 @@ class InventoryViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun updateAutoAddToShoppingListTrigger(id: Long, autoAddToShoppingListTrigger: Int) = viewModelScope.launch {
         dao.updateAutoAddToShoppingListTrigger(id, autoAddToShoppingListTrigger)
+    }
+    fun updateColor(id: Long, color: Int) = viewModelScope.launch {
+        dao.updateColor(id, color)
     }
     fun deleteAll() = viewModelScope.launch {
         dao.deleteAll()

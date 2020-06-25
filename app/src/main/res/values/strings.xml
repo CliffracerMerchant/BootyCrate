@@ -44,9 +44,10 @@
 
     <string name="search_description">Search</string>
     <string name="change_sorting_description">Change sorting</string>
-    <string name="original_insertion_order_description">Original insertion order</string>
+    <string name="color_description">Color</string>
     <string name="name_ascending_description">Name ascending</string>
     <string name="name_descending_description">Name descending</string>
     <string name="amount_ascending_description">Amount ascending</string>
     <string name="amount_descending_description">Amount descending</string>
+    <string name="edit_color_description">Edit item color</string>
 </resources>

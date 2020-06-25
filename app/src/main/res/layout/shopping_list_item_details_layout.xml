@@ -4,6 +4,20 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
+    <ImageButton
+        android:id="@+id/editColorButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@drawable/ic_color_lens_black_24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginEnd="10dp"
+        app:layout_constraintEnd_toStartOf="@id/extraInfoEdit"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="6dp"
+        android:scaleX="1"
+        android:scaleY="1"
+        android:contentDescription="@string/edit_color_description"/>
+
     <com.cliffracermerchant.bootycrate.TextFieldEdit
         android:id="@+id/extraInfoEdit"
         android:layout_width="0dp"
@@ -13,7 +27,7 @@
         android:textSize="18sp"
         app:editableHint="@string/inventory_item_extra_info_description"
         app:layout_constraintEnd_toStartOf="@id/collapseButton"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/editColorButton"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
@@ -25,7 +39,7 @@
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@id/amountInCartEdit"
         app:layout_constraintEnd_toStartOf="@+id/linkedToEdit"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/extraInfoEdit"
         app:layout_constraintTop_toTopOf="@id/amountInCartEdit" />
 
     <TextView

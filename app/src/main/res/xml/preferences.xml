@@ -5,7 +5,7 @@
     <SwitchPreferenceCompat
         android:key="@string/pref_dark_theme_active"
         android:title="@string/dark_theme_switch_title"
-        android:defaultValue="false"/>
+        android:defaultValue="false" />
 
     <CheckBoxPreference
         android:key="agarg"

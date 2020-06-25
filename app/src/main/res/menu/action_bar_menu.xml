@@ -15,8 +15,8 @@
         <menu android:id="@+id/change_sorting_menu">
             <group android:id="@+id/sorting_options_group"
                    android:checkableBehavior="single" >
-                <item android:id="@+id/original_insertion_order_option"
-                      android:title="@string/original_insertion_order_description" />
+                <item android:id="@+id/color_option"
+                      android:title="@string/color_description" />
                 <item android:id="@+id/name_ascending_option"
                       android:title="@string/name_ascending_description" />
                 <item android:id="@+id/name_descending_option"

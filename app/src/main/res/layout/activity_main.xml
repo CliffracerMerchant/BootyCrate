@@ -14,8 +14,9 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme"
+        android:theme="@null"
         app:menu="@menu/action_bar_menu"
+        app:titleTextColor="@color/colorTextDark"
         android:transitionName="action_bar" />
 
     <FrameLayout

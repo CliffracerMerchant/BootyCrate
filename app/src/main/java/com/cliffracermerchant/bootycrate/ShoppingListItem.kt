@@ -9,21 +9,24 @@ class ShoppingListItem {
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")                               var id: Long = 0
     @ColumnInfo(name = "name")                             var name: String
-    @ColumnInfo(name = "extraInfo", defaultValue = "")     var extraInfo: String = ""
-    @ColumnInfo(name = "amount", defaultValue = "1")       var amount: Int = 1
+    @ColumnInfo(name = "extraInfo")                        var extraInfo: String = ""
+    @ColumnInfo(name = "color")                            var color: Int
+    @ColumnInfo(name = "amountOnList", defaultValue = "1") var amountOnList: Int = 1
     @ColumnInfo(name = "amountInCart", defaultValue = "0") var amountInCart: Int = 0
-    @ColumnInfo(name = "linkedInventoryItemId")            var linkedInventoryItemId: Long? = null
+    @ColumnInfo(name = "linkedInventoryItemId")            var linkedInventoryItemId: Long?
     @ColumnInfo(name = "inTrash", defaultValue = "0")      var inTrash: Boolean = false
 
     constructor(name: String,
                 extraInfo: String = "",
+                color: Int = -144976720,
+                amountOnList: Int = 1,
                 amountInCart: Int = 0,
-                amount: Int = 1,
                 linkedInventoryItemId: Long? = null) {
         this.name = name
         this.extraInfo = extraInfo
+        this.color = color
+        this.amountOnList = amountOnList
         this.amountInCart = amountInCart
-        this.amount = amount
         this.linkedInventoryItemId = linkedInventoryItemId
     }
 
@@ -33,8 +36,9 @@ class ShoppingListItem {
         return this.id == other.id &&
                this.name == other.name &&
                this.extraInfo == other.extraInfo &&
+               this.color == other.color &&
+               this.amountOnList == other.amountOnList &&
                this.amountInCart == other.amountInCart &&
-               this.amount == other.amount &&
                this.linkedInventoryItemId == other.linkedInventoryItemId
     }
 
@@ -42,8 +46,9 @@ class ShoppingListItem {
         return "\nid = $id" +
                "\nname = $name" +
                "\nextraInfo = $extraInfo" +
+               "\ncolor = $color" +
+               "\namountOnList = $amountOnList" +
                "\namountInCart = $amountInCart" +
-               "\namount = $amount" +
                "\nlinkedInventoryItemId = $linkedInventoryItemId"
     }
 

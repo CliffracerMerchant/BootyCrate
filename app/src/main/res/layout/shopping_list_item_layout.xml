@@ -11,10 +11,16 @@
     android:animateLayoutChanges="false"
     app:layout_constraintHorizontal_chainStyle="spread">
 
-    <CheckBox
+    <ToggleButton
         android:id="@+id/checkBox"
-        android:layout_width="35dp"
-        android:layout_height="wrap_content"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="6dp"
+        android:background="@null"
+        android:scaleX="0.8"
+        android:scaleY="0.8"
+        android:textOff="@null"
+        android:textOn="@null"
         android:textSize="26sp"
         app:layout_constraintEnd_toStartOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="parent"
@@ -25,15 +31,16 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:contentDescription="@string/inventory_item_name_description"
+        android:ellipsize="end"
         android:importantForAutofill="no"
         android:textSize="26sp"
         app:editableHint="@string/inventory_item_name_description"
+        app:layout_constraintBottom_toBottomOf="@id/checkBox"
         app:layout_constraintEnd_toStartOf="@id/amountOnListEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@id/checkBox"
         app:layout_constraintTop_toTopOf="@id/checkBox"
-        app:layout_constraintBottom_toBottomOf="@id/checkBox"
         tools:ignore="labelFor" />
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
@@ -52,7 +59,6 @@
         layout="@layout/shopping_list_item_details_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="35dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

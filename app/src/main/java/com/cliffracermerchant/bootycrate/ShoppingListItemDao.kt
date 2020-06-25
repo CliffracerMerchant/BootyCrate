@@ -5,31 +5,32 @@ import androidx.room.*
 
 @Dao
 abstract class ShoppingListItemDao {
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter")
-    abstract fun getAll(filter: String): LiveData<List<ShoppingListItem>>
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY color")
+    abstract fun getAllSortedByColor(filter: String): LiveData<List<ShoppingListItem>>
+
     @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY name ASC")
     abstract fun getAllSortedByNameAsc(filter: String): LiveData<List<ShoppingListItem>>
+
     @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY name DESC")
     abstract fun getAllSortedByNameDesc(filter: String): LiveData<List<ShoppingListItem>>
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount ASC")
+
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amountOnList ASC")
     abstract fun getAllSortedByAmountAsc(filter: String): LiveData<List<ShoppingListItem>>
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount DESC")
+
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amountOnList DESC")
     abstract fun getAllSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
     @Insert
     abstract suspend fun insert(vararg items: ShoppingListItem)
 
-    @Query("INSERT INTO shopping_list_item (name, extraInfo, linkedInventoryItemId) " +
-           "SELECT name, extraInfo, id FROM inventory_item " +
+    @Query("INSERT INTO shopping_list_item (name, extraInfo, " +
+                                           "color, linkedInventoryItemId) " +
+           "SELECT name, extraInfo, color, id FROM inventory_item " +
            "WHERE inventory_item.id IN (:inventoryItemIds) " +
-           "AND inventory_item.id NOT IN (SELECT linkedInventoryItemId from shopping_list_item)")
+           "AND inventory_item.id NOT IN (SELECT linkedInventoryItemId " +
+                                         "FROM shopping_list_item " +
+                                         "WHERE NOT inTrash)")
     abstract suspend fun insertFromInventoryItems(vararg inventoryItemIds: Long)
-
-//    @Query("INSERT INTO shopping_list_item (name, extraInfo, amount, linkedInventoryItemId) " +
-//           "SELECT name, extraInfo, autoAddToShoppingListTrigger - amount, id FROM inventory_item " +
-//           "WHERE inventory_item.id = :inventoryItemId " +
-//           "AND inventory_item.id NOT IN (SELECT linkedInventoryItemId from shopping_list_item)")
-//    abstract suspend fun autoAddFromInventoryItem(inventoryItemId: Long)
 
     @Transaction
     open suspend fun autoAddFromInventoryItem(inventoryItemId: Long, minAmount: Int) {
@@ -57,20 +58,20 @@ abstract class ShoppingListItemDao {
     abstract suspend fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amount = :amount " +
+           "SET amountOnList = :amountOnList " +
            "WHERE id = :id")
-    abstract suspend fun updateAmount(id: Long, amount: Int)
+    abstract suspend fun updateAmountOnList(id: Long, amountOnList: Int)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amount = CASE WHEN amount < :minAmount THEN :minAmount " +
-                                                      "ELSE amount END " +
+           "SET amountOnList = CASE WHEN amountOnList < :minAmount THEN :minAmount " +
+                                                                  "ELSE amountOnList END " +
            "WHERE linkedInventoryItemId = :inventoryItemId")
     abstract suspend fun setMinimumAmountFromLinkedItem(inventoryItemId: Long, minAmount: Int)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amount = :amount " +
+           "SET amountOnList = :amountOnList " +
            "WHERE linkedInventoryItemId = :inventoryItemId")
-    abstract suspend fun updateAmountFromLinkedItem(inventoryItemId: Long, amount: Int)
+    abstract suspend fun updateAmountOnListFromLinkedItem(inventoryItemId: Long, amountOnList: Int)
 
     @Query("UPDATE shopping_list_item " +
            "SET amountInCart = :amountInCart " +
@@ -90,6 +91,11 @@ abstract class ShoppingListItemDao {
            "SET linkedInventoryItemId = null " +
            "WHERE id = :id")
     abstract suspend fun removeInventoryItemLink(id: Long)
+
+    @Query("UPDATE shopping_list_item " +
+            "SET color = :color " +
+            "WHERE id = :id")
+    abstract suspend fun updateColor(id: Long, color: Int)
 
     @Query("DELETE FROM shopping_list_item")
     abstract suspend fun deleteAll()

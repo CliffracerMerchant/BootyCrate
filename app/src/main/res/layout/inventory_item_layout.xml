@@ -4,14 +4,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/inventoryItemLayout"
-    android:paddingHorizontal="10dp"
-    android:paddingTop="10dp"
-    android:paddingBottom="2dp"
+    android:paddingVertical="10dp"
+    android:paddingStart="4dp"
+    android:paddingEnd="10dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="center_horizontal|fill"
     android:animateLayoutChanges="false"
     app:layout_constraintHorizontal_chainStyle="spread">
+
+
+<!--    <com.cliffracermerchant.bootycrate.ColorIndicator-->
+<!--        android:id="@+id/colorIndicator"-->
+<!--        android:layout_width="60dp"-->
+<!--        android:layout_height="60dp"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent" />-->
+
+    <View
+        android:id="@+id/colorEdit"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.cliffracermerchant.bootycrate.TextFieldEdit
         android:id="@+id/nameEdit"
@@ -25,8 +40,9 @@
         app:layout_constraintEnd_toStartOf="@id/amountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/colorEdit"
+        app:layout_constraintTop_toTopOf="@id/colorEdit"
+        android:layout_marginStart="6dp"
         tools:ignore="labelFor" />
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
@@ -37,7 +53,7 @@
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/colorEdit"
         app:textSize="28" />
 
     <com.cliffracermerchant.bootycrate.TextFieldEdit
@@ -50,8 +66,9 @@
         android:textSize="18sp"
         app:editableHint="@string/inventory_item_extra_info_description"
         app:layout_constraintEnd_toStartOf="@id/editButton"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/colorEdit"
         app:layout_constraintTop_toBottomOf="@id/nameEdit"
+        android:layout_marginStart="6dp"
         tools:ignore="LabelFor" />
 
     <ImageButton
@@ -70,6 +87,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:layout_marginStart="10dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

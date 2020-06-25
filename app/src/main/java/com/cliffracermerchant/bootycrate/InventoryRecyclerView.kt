@@ -4,16 +4,19 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.DialogInterface
 import android.util.AttributeSet
+import android.util.Log
 import android.util.TypedValue
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import dev.sasikanth.colorsheet.ColorSheet
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
@@ -42,6 +45,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     private lateinit var viewModel: InventoryViewModel
     private lateinit var shoppingListViewModel: ShoppingListViewModel
     private var expandedItemAdapterPos: Int? = null
+    var fragmentManager: FragmentManager? = null
     var snackBarAnchor: BottomAppBar? = null
     val selection = RecyclerViewSelection(adapter)
     var sort: Sort? get() = viewModel.sort
@@ -54,7 +58,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      *  notifyItemChanged calls in order to identify which field was changed.*/
     enum class Field { Name, Amount, ExtraInfo,
                        AutoAddToShoppingList,
-                       AutoAddToShoppingListTrigger }
+                       AutoAddToShoppingListTrigger,
+                       Color }
 
     init {
         layoutManager = LinearLayoutManager(context)
@@ -191,6 +196,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                             holder.itemView.autoAddToShoppingListTriggerEdit.currentValue = item.autoAddToShoppingListTrigger
                             checkAutoAddToShoppingList(holder.adapterPosition)
                         }
+                        Field.Color -> {
+                            val colorEditBg = holder.itemView.colorEdit.background as ColoredCircleDrawable
+                            val startColor = colorEditBg.color
+                            val endColor = item.color
+                            ObjectAnimator.ofArgb(colorEditBg, "color", startColor, endColor).start()
+                        }
                     }
                 }
             }
@@ -248,6 +259,18 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     expandedItemAdapterPos = null
                 }
 
+                view.colorEdit.setOnClickListener {
+                    val colors = resources.getIntArray(R.array.color_picker_presets)
+                    val selectedColor = if (item.color != 0) item.color
+                                        else                 ColorSheet.NO_COLOR
+                    val colorPicker = ColorSheet().colorPicker(colors, selectedColor, true) { color ->
+                        val itemColor = if (color == ColorSheet.NO_COLOR) 0
+                                        else color
+                        viewModel.updateColor(item.id, itemColor)
+                    }
+                    colorPicker.show(fragmentManager!!)
+                }
+
                 view.nameEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
                     viewModel.updateName(item.id, value)
@@ -294,6 +317,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 oldItem.extraInfo != newItem.extraInfo -> Field.ExtraInfo
                 oldItem.autoAddToShoppingList != newItem.autoAddToShoppingList -> Field.AutoAddToShoppingList
                 oldItem.autoAddToShoppingListTrigger != newItem.autoAddToShoppingListTrigger -> Field.AutoAddToShoppingListTrigger
+                oldItem.color != newItem.color -> Field.Color
                 else -> super.getChangePayload(oldItem, newItem)
             }
         }

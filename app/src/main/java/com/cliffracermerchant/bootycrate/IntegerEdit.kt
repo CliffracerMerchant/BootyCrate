@@ -4,11 +4,13 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.os.Handler
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 
@@ -47,33 +49,44 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
 
     // currentValue = currentValue is not pointless due
     // to currentValue's custom getter and setter
-    var minValue = 0
-        set(value) { currentValue = currentValue; field = value }
-    var maxValue = 99
-        set(value) { currentValue = currentValue; field = value }
+    private var _minValue = 0
+    var minValue get() = _minValue
+                 set(value) { _minValue = value; currentValue = currentValue }
+    private var _maxValue = 0
+    var maxValue get() = _maxValue
+                 set(value) { _maxValue = value; currentValue = currentValue }
+
     var valueChangedNotificationTimeout: Int
     var stepSize: Int
     var textSize: Float get() = valueEdit.textSize
                         set(value) = setTextSizePrivate(value)
-    var currentValue: Int get() = try { valueEdit.text.toString().toInt() }
-                                  catch (e: Exception) { 0 }
-                          set(value) { valueEdit.setText(value.coerceIn(
-                                         minValue, maxValue).toString()) }
-    var isEditable: Boolean get() = valueEdit.isFocusableInTouchMode
-                            set(editable) { valueEdit.isFocusableInTouchMode = editable
-                                            if (!editable && valueEdit.isFocused) valueEdit.clearFocus()
-                                            invalidate() }
 
-    val liveData = MutableLiveData(currentValue)
-    private val updateLiveData = Runnable { liveData.value = currentValue }
+    private var _currentValue get() = try { valueEdit.text.toString().toInt() }
+                                      catch (e: Exception) { 0 }
+                              set(value) { valueEdit.setText(value.coerceIn(
+                                            minValue, maxValue).toString()) }
+    var currentValue get() = _currentValue
+                     set(value) { _currentValue = value
+                                  updateLiveDataWithDelay() }
+
+
+    var isEditable get() = valueEdit.isFocusableInTouchMode
+                   set(editable) { valueEdit.isFocusableInTouchMode = editable
+                                   if (!editable && valueEdit.isFocused) valueEdit.clearFocus()
+                                   invalidate() }
+
+    val liveData: LiveData<Int> get() = liveDataPrivate
+    private val liveDataPrivate = MutableLiveData(currentValue)
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+    private val _handler = Handler()
 
     init {
         LayoutInflater.from(context).inflate(R.layout.integer_edit_layout, this)
         val styledAttrs = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
-        currentValue = styledAttrs.getInt(R.styleable.IntegerEdit_initialValue, 0)
-        minValue = styledAttrs.getInt(R.styleable.IntegerEdit_minValue, 0)
-        maxValue = styledAttrs.getInt(R.styleable.IntegerEdit_maxValue, 99)
+        _minValue = styledAttrs.getInt(R.styleable.IntegerEdit_minValue, 0)
+        _maxValue = styledAttrs.getInt(R.styleable.IntegerEdit_maxValue, 99)
+        _currentValue = styledAttrs.getInt(R.styleable.IntegerEdit_initialValue, 0)
+
         valueChangedNotificationTimeout = styledAttrs.getInt(
             R.styleable.IntegerEdit_valueChangedNotificationTimeout, 1000)
         stepSize = styledAttrs.getInt(R.styleable.IntegerEdit_stepSize, 1)
@@ -86,12 +99,16 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 clearFocus()
                 imm?.hideSoftInputFromWindow(windowToken, 0)
-                updateLiveDataFromEditor()
+                currentValue = currentValue // To enforce min/max value
+                updateLiveDataWithDelay()
             }
             actionId == EditorInfo.IME_ACTION_DONE
         }
         valueEdit.setOnFocusChangeListener { _, focused ->
-            if (!focused) updateLiveDataFromEditor()
+            if (!focused) {
+                currentValue = currentValue // To enforce min/max value
+                updateLiveDataWithDelay()
+            }
         }
         setWillNotDraw(false)
         clipChildren = false
@@ -100,20 +117,20 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
     fun increment() = modifyValue(stepSize)
     fun decrement() = modifyValue(-stepSize)
 
-    private fun updateLiveDataFromEditor() {
-        currentValue = currentValue
-        handler.removeCallbacks(updateLiveData)
-        handler.postDelayed(updateLiveData, valueChangedNotificationTimeout.toLong())
+    private fun updateLiveData() { liveDataPrivate.value = currentValue }
+
+    private fun updateLiveDataWithDelay() {
+        _handler.removeCallbacks(::updateLiveData)
+        _handler.postDelayed(::updateLiveData, valueChangedNotificationTimeout.toLong())
     }
 
     private fun modifyValue(stepSize: Int) {
         val oldValue = currentValue
         currentValue += stepSize
-        if (currentValue != oldValue) {
-            handler.removeCallbacks(updateLiveData)
-            handler.postDelayed(updateLiveData, valueChangedNotificationTimeout.toLong())
-        }
+        if (currentValue != oldValue) updateLiveDataWithDelay()
     }
+
+    fun setCurrentValueWithoutDataUpdate(newValue: Int) { _currentValue = newValue }
 
     private fun setTextSizePrivate(size: Float) {
         valueEdit.textSize = size

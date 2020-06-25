@@ -42,12 +42,14 @@ class ShoppingListFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
         recyclerView.snackBarAnchor = mainActivity.bottom_app_bar
+        recyclerView.fragmentManager = mainActivity.supportFragmentManager
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(mainActivity.getString(R.string.pref_shopping_list_sort),
-                                      Sort.OriginalInsertionOrder.toString())
-        val initialSort = if (sortStr != null) Sort.valueOf(sortStr)
-                          else                 Sort.OriginalInsertionOrder
+                                      Sort.Color.toString())
+        val initialSort = try { Sort.valueOf(sortStr!!) }
+        catch(e: IllegalArgumentException) { Sort.Color } // If sortStr value doesn't match a Sort value
+        catch(e: NullPointerException) { Sort.Color } // If sortStr is null
         recyclerView.setViewModels(viewLifecycleOwner, mainActivity.shoppingListViewModel,
                                    mainActivity.inventoryViewModel, initialSort)
 
@@ -78,12 +80,12 @@ class ShoppingListFragment : Fragment() {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
         menu.findItem(when (recyclerView.sort) {
-            Sort.OriginalInsertionOrder -> R.id.original_insertion_order_option
+            Sort.Color -> R.id.color_option
             Sort.NameAsc -> R.id.name_ascending_option
             Sort.NameDesc -> R.id.name_descending_option
             Sort.AmountAsc -> R.id.amount_ascending_option
             Sort.AmountDesc -> R.id.amount_descending_option
-            else -> R.id.original_insertion_order_option }).isChecked = true
+            else -> R.id.color_option }).isChecked = true
 
         val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
         searchView.setOnCloseListener { Log.d("search", "search closed"); true }
@@ -107,8 +109,8 @@ class ShoppingListFragment : Fragment() {
         return when (item.itemId) {
             R.id.delete_all_button -> {
                 recyclerView.deleteAll(); true
-            } R.id.original_insertion_order_option -> {
-                recyclerView.sort = Sort.OriginalInsertionOrder
+            } R.id.color_option -> {
+                recyclerView.sort = Sort.Color
                 item.isChecked = true; true
             } R.id.name_ascending_option -> {
                 recyclerView.sort = Sort.NameAsc
@@ -138,7 +140,7 @@ class ShoppingListFragment : Fragment() {
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
             val prefsEditor = prefs.edit()
             val sortStr = if (recyclerView.sort != null) recyclerView.sort.toString()
-            else                           Sort.OriginalInsertionOrder.toString()
+            else                           Sort.Color.toString()
             prefsEditor.putString(context.getString(R.string.pref_shopping_list_sort), sortStr)
             prefsEditor.apply()
         }

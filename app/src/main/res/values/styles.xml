@@ -27,10 +27,29 @@
         <item name="checkboxStyle">@style/DarkThemeCheckBoxStyle</item>
         <item name="popupMenuBackground">@color/colorPrimaryRowDark</item>
         <item name="android:alertDialogTheme">@style/DarkThemeAlertDialog</item>
+        <item name="actionModeStyle">@style/DarkThemeActionModeStyle</item>
+        <item name="android:searchViewStyle">@style/DarkThemeSearchStyle</item>
+        <item name="android:textColorPrimary">@color/colorTextLight</item>
+        <item name="android:editTextColor">@android:color/black</item>
+        <item name="actionBarTheme">@style/DarkThemeActionBarStyle</item>
+    </style>
+
+    <style name="DarkThemeActionBarStyle" parent="ThemeOverlay.AppCompat.ActionBar">
+        <item name="android:textColorPrimary">@android:color/black</item>
+    </style>
+
+    <style name="DarkThemeSearchStyle" parent="Widget.AppCompat.SearchView">
+        <item name="android:textColor">@color/colorTextDark</item>
     </style>
 
     <style name="LightThemeActionModeStyle" parent="Widget.AppCompat.ActionMode">
         <item name="background">@color/colorPrimary</item>
+        <item name="android:textColor">@color/colorTextDark</item>
+    </style>
+
+    <style name="DarkThemeActionModeStyle" parent="LightThemeActionModeStyle">
+        <item name="background">@color/colorPrimary</item>
+        <item name="android:textColor">@color/colorTextLight</item>
     </style>
 
     <style name="LightThemeTextAppearance" parent="TextAppearance.AppCompat">
@@ -63,10 +82,12 @@
 
     <style name="LightThemeImageButton" parent="Widget.MaterialComponents.Button">
         <item name="backgroundTint">@color/colorTextDark</item>
+        <item name="tint">@color/colorTextDark</item>
     </style>
 
     <style name="DarkThemeImageButton" parent="LightThemeImageButton">
         <item name="backgroundTint">@color/colorTextLight</item>
+        <item name="tint">@color/colorTextLight</item>
     </style>
 
     <style name="LightThemeAlertDialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">

@@ -5,24 +5,29 @@ import androidx.room.*
 
 @Dao
 abstract class InventoryItemDao {
-    @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter")
-    abstract fun getAll(filter: String): LiveData<List<InventoryItem>>
+    @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY color")
+    abstract fun getAllSortedByColor(filter: String): LiveData<List<InventoryItem>>
+
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY name ASC")
     abstract fun getAllSortedByNameAsc(filter: String): LiveData<List<InventoryItem>>
+
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY name DESC")
     abstract fun getAllSortedByNameDesc(filter: String): LiveData<List<InventoryItem>>
+
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount ASC")
     abstract fun getAllSortedByAmountAsc(filter: String): LiveData<List<InventoryItem>>
+
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount DESC")
     abstract fun getAllSortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
 
     @Insert
     abstract suspend fun insert(vararg items: InventoryItem)
 
-    @Query("INSERT INTO inventory_item (name, extraInfo) " +
-           "SELECT name, extraInfo " +
+    @Query("INSERT INTO inventory_item (name, extraInfo, color) " +
+           "SELECT name, extraInfo, color " +
            "FROM shopping_list_item " +
            "WHERE shopping_list_item.linkedInventoryItemId IS NULL " +
+           "AND shopping_list_item.inTrash = 0 " +
            "AND shopping_list_item.id IN (:shoppingListItemIds)")
     abstract suspend fun insertFromShoppingListItems(vararg shoppingListItemIds: Long)
 
@@ -55,10 +60,15 @@ abstract class InventoryItemDao {
     abstract suspend fun deleteAll()
 
     @Query("UPDATE shopping_list_item " +
-            "SET linkedInventoryItemId = NULL " +
-            "WHERE linkedInventoryItemId in " +
-            "(SELECT id FROM inventory_item WHERE inTrash = 1)")
+           "SET linkedInventoryItemId = NULL " +
+           "WHERE linkedInventoryItemId in " +
+           "(SELECT id FROM inventory_item WHERE inTrash = 1)")
     abstract suspend fun clearShoppingListItemLinks()
+
+    @Query("UPDATE inventory_item " +
+           "SET color = :color " +
+           "WHERE id = :id")
+    abstract suspend fun updateColor(id: Long, color: Int)
 
     @Query("DELETE FROM inventory_item " +
            "WHERE inTrash = 1")
