@@ -27,8 +27,8 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     private var expandedPrivate = false
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
     private val minusToMultiplyIcon = context.getDrawable(R.drawable.shopping_list_animated_minus_to_multiply_icon)
-    private val blankToPlusIcon = context.getDrawable(R.drawable.animated_blank_to_plus_icon)
     private val multiplyToMinusIcon = context.getDrawable(R.drawable.shopping_list_animated_multiply_to_minus_icon)
+    private val blankToPlusIcon = context.getDrawable(R.drawable.animated_blank_to_plus_icon)
     private val plusToBlankIcon = context.getDrawable(R.drawable.animated_plus_to_blank_icon)
     private val editToMoreOptionsIcon = context.getDrawable(R.drawable.animated_edit_to_more_options_icon)
     private val moreOptionsToEditIcon = context.getDrawable(R.drawable.animated_more_options_to_edit_icon)
@@ -99,25 +99,25 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         amountInCartEdit.valueEdit.doAfterTextChanged {
             checkBox.isChecked = amountInCartEdit.currentValue >= amountOnListEdit.currentValue
         }
-        collapse(false)
 
         // If the layout's children are clipped, they will suddenly appear or
         // disappear without an animation during the expand collapse animation
         clipChildren = false
     }
 
-    fun update(item: ShoppingListItem) {
+    fun update(item: ShoppingListItem, isExpanded: Boolean = false) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
-        amountOnListEdit.setCurrentValueWithoutDataUpdate(item.amountOnList)
-        amountInCartEdit.setCurrentValueWithoutDataUpdate(item.amountInCart)
-
+        amountOnListEdit.initCurrentValue(item.amountOnList)
+        amountInCartEdit.initCurrentValue(item.amountInCart)
         currentColor = item.color
         checkBox.background = if (item.amountInCart >= item.amountOnList) checkBoxCheckedToUncheckedIcon
                               else                                        checkBoxUncheckedToCheckedIcon
         (checkBox.background as LayerDrawable).getDrawable(0).setTint(currentColor ?: 0)
 
         updateLinkedStatus(item.linkedInventoryItemId)
+        if (isExpanded) expand(false)
+        else            collapse(false)
     }
 
     fun updateLinkedStatus(newLinkedId: Long?) {
@@ -149,6 +149,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         amountInCartEdit.isEditable = true
 
         if (animate) {
+            Log.d("clicky", "expanding with animation")
             amountOnListEdit.decreaseButton.background = multiplyToMinusIcon
             amountOnListEdit.increaseButton.background = blankToPlusIcon
             editButton.background = editToMoreOptionsIcon
@@ -159,6 +160,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.doOnEnd { shoppingListItemDetailsInclude.visibility = View.VISIBLE }
             anim.start()
         } else {
+            Log.d("clicky", "expanding without animation")
             amountOnListEdit.decreaseButton.background = minusToMultiplyIcon
             amountOnListEdit.increaseButton.background = plusToBlankIcon
             editButton.background = moreOptionsToEditIcon
@@ -175,6 +177,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         amountInCartEdit.isEditable = false
 
         if (animate) {
+            Log.d("clicky", "collapsing with animation")
             amountOnListEdit.decreaseButton.background = minusToMultiplyIcon
             amountOnListEdit.increaseButton.background = plusToBlankIcon
             editButton.background = moreOptionsToEditIcon
@@ -185,19 +188,17 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.doOnEnd { shoppingListItemDetailsInclude.visibility = View.GONE }
             anim.start()
         } else {
+            Log.d("clicky", "collapsing without animation")
             amountOnListEdit.decreaseButton.background = multiplyToMinusIcon
             amountOnListEdit.increaseButton.background = blankToPlusIcon
             editButton.background = editToMoreOptionsIcon
             shoppingListItemDetailsInclude.visibility = View.GONE
             amountOnListEdit.increaseButton.layoutParams.apply { width /= 2 }
         }
-        /*when {
-            nameEdit.isFocused -> nameEdit.clearFocus()
-            amountInCartEdit.valueEdit.isFocused -> amountInCartEdit.valueEdit.clearFocus()
-            amountOnListEdit.valueEdit.isFocused -> amountOnListEdit.valueEdit.clearFocus()
-            extraInfoEdit.isFocused -> nameEdit.clearFocus()
-        }*/
-        imm?.hideSoftInputFromWindow(windowToken, 0)
+        if (nameEdit.isFocused || extraInfoEdit.isFocused ||
+            amountOnListEdit.valueEdit.isFocused ||
+            amountInCartEdit.valueEdit.isFocused)
+            imm?.hideSoftInputFromWindow(windowToken, 0)
     }
 
     private fun expandCollapseAnimation(expanding: Boolean): ValueAnimator {

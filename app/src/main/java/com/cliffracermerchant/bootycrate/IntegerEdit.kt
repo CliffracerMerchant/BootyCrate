@@ -130,7 +130,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
         if (currentValue != oldValue) updateLiveDataWithDelay()
     }
 
-    fun setCurrentValueWithoutDataUpdate(newValue: Int) { _currentValue = newValue }
+    fun initCurrentValue(newValue: Int) { _currentValue = newValue }
 
     private fun setTextSizePrivate(size: Float) {
         valueEdit.textSize = size

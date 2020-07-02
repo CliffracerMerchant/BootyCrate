@@ -3,11 +3,12 @@
     <color name="colorPrimary">#16806a</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#ee4141</color>
+    <color name="colorAccentDark">#AA3030</color>
     <color name="colorButtonDark">#353535</color>
     <color name="colorButtonLight">#ABABAB</color>
     <color name="colorForeground">#000000</color>
     <color name="colorPrimaryRowLight">#FFFFFF</color>
-    <color name="colorAlternateRowLight">#DDDDDD</color>
+    <color name="colorAlternateRowLight">#DEDEDE</color>
     <color name="colorPrimaryRowDark">#303030</color>
     <color name="colorAlternateRowDark">#252525</color>
     <color name="colorTextLight">#BBBBBB</color>

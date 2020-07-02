@@ -21,6 +21,9 @@ abstract class InventoryItemDao {
     abstract fun getAllSortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
 
     @Insert
+    abstract suspend fun insert(item: InventoryItem): Long
+
+    @Insert
     abstract suspend fun insert(vararg items: InventoryItem)
 
     @Query("INSERT INTO inventory_item (name, extraInfo, color) " +

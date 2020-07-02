@@ -16,7 +16,7 @@ class InventoryItem {
     @ColumnInfo(name = "autoAddToShoppingListTrigger", defaultValue = "1") var autoAddToShoppingListTrigger: Int
     @ColumnInfo(name = "inTrash", defaultValue = "0") var inTrash: Boolean = false
 
-    constructor(name: String,
+    constructor(name: String = "",
                 extraInfo: String = "",
                 color: Int = -144976720,
                 amount: Int = 1,

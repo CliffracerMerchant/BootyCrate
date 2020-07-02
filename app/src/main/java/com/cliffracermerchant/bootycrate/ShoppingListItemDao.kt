@@ -21,6 +21,9 @@ abstract class ShoppingListItemDao {
     abstract fun getAllSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
     @Insert
+    abstract suspend fun insert(item: ShoppingListItem): Long
+
+    @Insert
     abstract suspend fun insert(vararg items: ShoppingListItem)
 
     @Query("INSERT INTO shopping_list_item (name, extraInfo, " +

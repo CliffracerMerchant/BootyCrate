@@ -16,7 +16,7 @@ class ShoppingListItem {
     @ColumnInfo(name = "linkedInventoryItemId")            var linkedInventoryItemId: Long?
     @ColumnInfo(name = "inTrash", defaultValue = "0")      var inTrash: Boolean = false
 
-    constructor(name: String,
+    constructor(name: String = "",
                 extraInfo: String = "",
                 color: Int = -144976720,
                 amountOnList: Int = 1,

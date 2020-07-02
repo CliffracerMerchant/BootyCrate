@@ -1,14 +1,15 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
+import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.util.AttributeSet
-import android.util.Log
 import android.util.TypedValue
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
@@ -29,22 +30,22 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.*
  *  is created using the setViewModel function. If this is not done, a
  *  kotlin.UninitializedPropertyAccessException will be thrown when any type of
  *  data access is attempted. In order to allow it to calculate changes to the
- *  displayed data on a background thread, it implements the Observer<List<
- *  InventoryItem>> interface and contains an AsyncListDiffer member.
+ *  displayed data on a background thread, it also contains an AsyncListDiffer
+ *  member.
  *     Adding or removing inventory items is accomplished using the functions
  *  addItem, deleteItem, and deleteItems. When items are deleted, a snackbar
  *  will appear informing the user of the amount of items that were deleted, as
  *  well as providing an undo option. */
 
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
-        RecyclerView(context, attrs),
-        Observer<List<InventoryItem>> {
+        RecyclerView(context, attrs) {
 
     private val adapter = InventoryAdapter(context)
     private val listDiffer = AsyncListDiffer(adapter, DiffUtilCallback())
     private lateinit var viewModel: InventoryViewModel
     private lateinit var shoppingListViewModel: ShoppingListViewModel
-    private var expandedItemAdapterPos: Int? = null
+    private var expandedItemId: Long? = null
+    private var expandedViewHolder: InventoryAdapter.InventoryItemViewHolder? = null
     var fragmentManager: FragmentManager? = null
     var snackBarAnchor: BottomAppBar? = null
     val selection = RecyclerViewSelection(adapter)
@@ -56,10 +57,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     /** The enum class Field identifies user facing fields that are potentially
      *  editable by the user. Field values are used as payloads in the adapter
      *  notifyItemChanged calls in order to identify which field was changed.*/
-    enum class Field { Name, Amount, ExtraInfo,
-                       AutoAddToShoppingList,
-                       AutoAddToShoppingListTrigger,
-                       Color }
+    enum class Field { Name, Amount, ExtraInfo, AutoAddToShoppingList,
+                       AutoAddToShoppingListTrigger, Color }
 
     init {
         layoutManager = LinearLayoutManager(context)
@@ -70,27 +69,37 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         setAdapter(adapter)
     }
 
-    override fun onChanged(items: List<InventoryItem>) = listDiffer.submitList(items)
-
     fun setViewModels(owner: LifecycleOwner,
                       inventoryViewModel: InventoryViewModel,
                       shoppingListViewModel: ShoppingListViewModel,
                       initialSort: Sort) {
         viewModel = inventoryViewModel
+        // Resetting the newly inserted item id here prevents the recycler view
+        // from always expanding the item with that id until a new one is inserted
+        viewModel.resetNewlyInsertedItemId()
         sort = initialSort
-        inventoryViewModel.getAll().observe(owner, this)
+        viewModel.items.observe(owner, Observer { items -> listDiffer.submitList(items) })
         this.shoppingListViewModel = shoppingListViewModel
     }
 
-    fun addNewItem() = viewModel.insert(InventoryItem(
-        context.getString(R.string.inventory_item_default_name)))
+    fun setExpandedItem(newExpandedVh: InventoryAdapter.InventoryItemViewHolder?,
+                        animateCollapse: Boolean = true, animateExpand: Boolean = true) {
+        val oldExpandedId = expandedItemId
+        if (oldExpandedId != null && expandedViewHolder?.itemId == oldExpandedId)
+            expandedViewHolder?.view?.collapse(animateCollapse)
+        expandedItemId = newExpandedVh?.itemId
+        expandedViewHolder = newExpandedVh
+        newExpandedVh?.view?.expand(animateExpand)
+    }
+
+    fun addNewItem() = viewModel.insert(InventoryItem())
 
     fun deleteItem(pos: Int) = deleteItems(pos)
 
     fun deleteItems(vararg positions: Int) {
-        val expandedPos = expandedItemAdapterPos
-        if (expandedPos != null && expandedPos in positions)
-            expandedItemAdapterPos = null
+        val expandedItemId = this.expandedItemId
+        if (expandedItemId != null && expandedItemId in positions.map { adapter.getItemId(it) })
+            setExpandedItem(null)
         val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
         viewModel.delete(*ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
@@ -149,6 +158,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         RecyclerView.Adapter<InventoryAdapter.InventoryItemViewHolder>() {
 
         private val selectedColor: Int
+        private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
 
         init {
             val typedValue = TypedValue()
@@ -221,7 +231,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
          *   view holder before the clicked one is expanded.
          * - its bindTo function checks the selected / not selected status of
          *   an item and updates its background color accordingly. */
-        inner class InventoryItemViewHolder(private val view: InventoryItemView) :
+        inner class InventoryItemViewHolder(val view: InventoryItemView) :
                 RecyclerView.ViewHolder(view) {
             val item: InventoryItem get() = listDiffer.currentList[adapterPosition]
 
@@ -242,22 +252,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 view.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
                 view.extraInfoEdit.setOnLongClickListener(onLongClick)
 
-                view.editButton.setOnClickListener {
-                    if (!view.expanded) {
-                        val oldExpandedItemAdapterPos = expandedItemAdapterPos
-                        if (oldExpandedItemAdapterPos != null) {
-                            val alreadyExpandedVH = findViewHolderForAdapterPosition(
-                                oldExpandedItemAdapterPos) as InventoryItemViewHolder?
-                            alreadyExpandedVH?.view?.collapse()
-                        }
-                        view.expand()
-                        expandedItemAdapterPos = adapterPosition
-                    }
-                }
-                view.collapseButton.setOnClickListener {
-                    view.collapse()
-                    expandedItemAdapterPos = null
-                }
+                view.editButton.setOnClickListener { setExpandedItem(this) }
+                view.collapseButton.setOnClickListener { setExpandedItem(null) }
 
                 view.colorEdit.setOnClickListener {
                     val colors = resources.getIntArray(R.array.color_picker_presets)
@@ -295,8 +291,13 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             }
 
             fun bindTo(item: InventoryItem) {
-                val expanded = expandedItemAdapterPos == adapterPosition
-                view.update(item, expanded)
+                view.update(item, itemId == expandedItemId)
+                if (item.id == viewModel.newlyInsertedItemId) {
+                    setExpandedItem(this, animateCollapse = true, animateExpand = false)
+                    imm?.hideSoftInputFromWindow(nameEdit.windowToken, 0)
+                    view.nameEdit.requestFocus()
+                    imm?.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
+                }
                 if (selection.contains(adapterPosition)) view.setBackgroundColor(selectedColor)
                 else                                     view.background = null
             }
@@ -313,11 +314,11 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         override fun getChangePayload(oldItem: InventoryItem, newItem: InventoryItem): Any? {
             return when {
                 oldItem.name != newItem.name -> Field.Name
-                oldItem.amount != newItem.amount -> Field.Amount
                 oldItem.extraInfo != newItem.extraInfo -> Field.ExtraInfo
+                oldItem.color != newItem.color -> Field.Color
+                oldItem.amount != newItem.amount -> Field.Amount
                 oldItem.autoAddToShoppingList != newItem.autoAddToShoppingList -> Field.AutoAddToShoppingList
                 oldItem.autoAddToShoppingListTrigger != newItem.autoAddToShoppingListTrigger -> Field.AutoAddToShoppingListTrigger
-                oldItem.color != newItem.color -> Field.Color
                 else -> super.getChangePayload(oldItem, newItem)
             }
         }

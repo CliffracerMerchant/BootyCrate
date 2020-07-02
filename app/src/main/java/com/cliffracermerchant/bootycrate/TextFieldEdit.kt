@@ -46,14 +46,6 @@ class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         maxLines = 1
         imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
         ellipsize = TextUtils.TruncateAt.END
-        /*setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                clearFocus()
-                imm?.hideSoftInputFromWindow(windowToken, 0)
-                liveData.value = text.toString()
-            }
-            actionId == EditorInfo.IME_ACTION_DONE
-        }*/
     }
 
     override fun onEditorAction(actionCode: Int) {
@@ -68,6 +60,7 @@ class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     override fun onFocusChanged(focused: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
         super.onFocusChanged(focused, direction, previouslyFocusedRect)
         if (!focused) liveData.value = text.toString()
+        //else imm?.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
     }
 
     private fun setEditablePrivate(editable: Boolean) {

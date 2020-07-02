@@ -21,7 +21,6 @@
         android:scaleY="0.8"
         android:textOff="@null"
         android:textOn="@null"
-        android:textSize="26sp"
         app:layout_constraintEnd_toStartOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -33,7 +32,7 @@
         android:contentDescription="@string/inventory_item_name_description"
         android:ellipsize="end"
         android:importantForAutofill="no"
-        android:textSize="26sp"
+        android:textSize="22sp"
         app:editableHint="@string/inventory_item_name_description"
         app:layout_constraintBottom_toBottomOf="@id/checkBox"
         app:layout_constraintEnd_toStartOf="@id/amountOnListEdit"
@@ -52,7 +51,7 @@
         app:layout_constraintEnd_toStartOf="@+id/editButton"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
         app:minValue="1"
-        app:textSize="28" />
+        app:textSize="26" />
 
     <include
         android:id="@+id/shoppingListItemDetailsInclude"

@@ -14,10 +14,8 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
-        android:theme="@null"
         app:menu="@menu/action_bar_menu"
-        app:titleTextColor="@color/colorTextDark"
-        android:transitionName="action_bar" />
+        app:titleTextColor="@android:color/black" />
 
     <FrameLayout
         android:id="@+id/fragment_container"
@@ -45,8 +43,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:background="@drawable/transparent_rectangle_background"
-            app:itemTextColor="@null"
+            app:itemTextColor="@color/bottom_navigation_view_item_color"
             app:labelVisibilityMode="labeled"
+            app:itemIconTint="@color/bottom_navigation_view_item_color"
             app:menu="@menu/bottom_navigation_bar_menu" />
 
     </com.cliffracermerchant.bootycrate.BottomAppBar>

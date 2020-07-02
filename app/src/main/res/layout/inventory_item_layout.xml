@@ -13,14 +13,6 @@
     android:animateLayoutChanges="false"
     app:layout_constraintHorizontal_chainStyle="spread">
 
-
-<!--    <com.cliffracermerchant.bootycrate.ColorIndicator-->
-<!--        android:id="@+id/colorIndicator"-->
-<!--        android:layout_width="60dp"-->
-<!--        android:layout_height="60dp"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />-->
-
     <View
         android:id="@+id/colorEdit"
         android:layout_width="60dp"
@@ -34,8 +26,9 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/inventory_item_name_description"
         android:importantForAutofill="no"
-        android:textSize="26sp"
+        android:textSize="22sp"
         app:editableHint="@string/inventory_item_name_description"
+        android:focusable="true"
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
         app:layout_constraintEnd_toStartOf="@id/amountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
@@ -54,7 +47,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
         app:layout_constraintTop_toTopOf="@id/colorEdit"
-        app:textSize="28" />
+        app:textSize="26" />
 
     <com.cliffracermerchant.bootycrate.TextFieldEdit
         android:id="@+id/extraInfoEdit"
@@ -63,7 +56,7 @@
         android:layout_marginTop="2dp"
         android:contentDescription="@string/inventory_item_extra_info_description"
         android:importantForAutofill="no"
-        android:textSize="18sp"
+        android:textSize="16sp"
         app:editableHint="@string/inventory_item_extra_info_description"
         app:layout_constraintEnd_toStartOf="@id/editButton"
         app:layout_constraintStart_toEndOf="@id/colorEdit"

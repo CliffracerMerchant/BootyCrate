@@ -7,7 +7,7 @@ import android.graphics.PixelFormat
 import android.graphics.drawable.Drawable
 
 class ColoredCircleDrawable(size: Float, color: Int, outlineColor: Int): Drawable() {
-    private val radius = size / 3.5f
+    private val radius = size / 3f
     private val centerX = size / 2
     private val paint = Paint()
     private val outlinePaint = Paint()

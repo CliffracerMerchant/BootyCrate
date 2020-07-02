@@ -1,11 +1,15 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
+import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -39,15 +43,16 @@ class MainActivity : AppCompatActivity() {
         enabledFabVerticalOffset = bottom_app_bar.cradleVerticalOffset
         disabledFabVerticalOffset = -0.5f * bottom_app_bar.cradleVerticalOffset
 
-        bottom_navigation_bar.itemIconTintList = null
         bottom_navigation_bar.setOnNavigationItemSelectedListener(onNavigationItemSelected)
         bottom_navigation_bar.selectedItemId = selectedNavigationItemId ?:
-                                               R.id.inventory_navigation_button
+                                               R.id.shopping_list_navigation_button
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.action_bar_menu, menu)
         this.menu = menu
+        val searchView = menu?.findItem(R.id.app_bar_search)?.actionView as SearchView?
+        (searchView?.findViewById(androidx.appcompat.R.id.search_close_btn) as ImageView).setColorFilter(ContextCompat.getColor(this, android.R.color.black))
         return true
     }
 
@@ -57,8 +62,20 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.saveFragmentInstanceState(fragment)
         actionMode?.finish()
         floating_action_button.setOnClickListener(null)
-
+        item.isChecked = true
         when (item.itemId) {
+            R.id.shopping_list_navigation_button -> {
+                if (selectedNavigationItemId == R.id.preferences_navigation_button) {
+                    floating_action_button.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
+                    ObjectAnimator.ofFloat(bottom_app_bar, "cradleVerticalOffset",
+                        enabledFabVerticalOffset).setDuration(200).start()
+                }
+
+                selectedNavigationItemId = item.itemId
+                supportFragmentManager.beginTransaction().
+                setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
+                replace(R.id.fragment_container, ShoppingListFragment.instance).commit()
+            }
             R.id.inventory_navigation_button -> {
                 if (selectedNavigationItemId == R.id.preferences_navigation_button) {
                     floating_action_button.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
@@ -69,17 +86,6 @@ class MainActivity : AppCompatActivity() {
                 supportFragmentManager.beginTransaction().
                     setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
                     replace(R.id.fragment_container, InventoryFragment.instance).commit()
-            }
-            R.id.shopping_list_navigation_button -> {
-                if (selectedNavigationItemId == R.id.preferences_navigation_button) {
-                    floating_action_button.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
-                    ObjectAnimator.ofFloat(bottom_app_bar, "cradleVerticalOffset",
-                                           enabledFabVerticalOffset).setDuration(200).start()
-                }
-                selectedNavigationItemId = item.itemId
-                supportFragmentManager.beginTransaction().
-                setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
-                replace(R.id.fragment_container, ShoppingListFragment.instance).commit()
             }
             R.id.preferences_navigation_button -> {
                 floating_action_button.animate().scaleX(0f).scaleY(0f).setDuration(200).start()

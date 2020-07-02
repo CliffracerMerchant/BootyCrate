@@ -85,7 +85,6 @@ class InventoryFragment : Fragment() {
             else -> R.id.color_option }).isChecked = true
 
         val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
-        searchView.setOnCloseListener { Log.d("search", "search closed"); true }
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = true
             override fun onQueryTextChange(newText: String?): Boolean {

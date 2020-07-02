@@ -3,13 +3,14 @@ package com.cliffracermerchant.bootycrate
 import android.app.Application
 import androidx.lifecycle.*
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicLong
 
 class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao: ShoppingListItemDao = BootyCrateDatabase.get(app).shoppingListItemDao()
     private val sortAndFilterLiveData =
         MutableLiveData(Pair<Sort?, String?>(Sort.Color, ""))
-    private val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
+    val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
         val filter = '%' + (sortAndFilter.second ?: "") + '%'
         when (sortAndFilter.first) {
             null -> dao.getAllSortedByColor(filter)
@@ -20,15 +21,21 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
             Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
         }
     }
+
     var sort get() = sortAndFilterLiveData.value?.first
              set(value) { sortAndFilterLiveData.value = Pair(value, searchFilter) }
     var searchFilter get() = sortAndFilterLiveData.value?.second
                      set(value) { sortAndFilterLiveData.value = Pair(sort, value) }
 
+    private var _newlyInsertedItemId = AtomicLong()
+    val newlyInsertedItemId: Long get() = _newlyInsertedItemId.get()
+    fun resetNewlyInsertedItemId() = _newlyInsertedItemId.set(0)
+
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun getAll() = items
-
+    fun insert(item: ShoppingListItem) = viewModelScope.launch {
+        _newlyInsertedItemId.set(dao.insert(item))
+    }
     fun insert(vararg items: ShoppingListItem) = viewModelScope.launch {
         dao.insert(*items)
     }
