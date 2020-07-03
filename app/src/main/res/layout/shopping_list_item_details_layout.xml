@@ -47,7 +47,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:gravity="center_vertical"
-        android:textColor="@android:color/holo_blue_dark"
+        android:textColor="@color/colorTextLink"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@id/amountInCartEdit"
         app:layout_constraintEnd_toStartOf="@+id/amountInCartLabel"

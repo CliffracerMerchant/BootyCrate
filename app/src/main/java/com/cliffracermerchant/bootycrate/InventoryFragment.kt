@@ -3,7 +3,6 @@ package com.cliffracermerchant.bootycrate
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
@@ -25,7 +24,7 @@ class InventoryFragment : Fragment() {
     private var deleteToAddIcon: Drawable? = null
     private var addToDeleteIcon: Drawable? = null
     private lateinit var mainActivity: MainActivity
-    private lateinit var viewModel: InventoryViewModel
+    private lateinit var menu: Menu
 
     init { setHasOptionsMenu(true) }
 
@@ -76,13 +75,9 @@ class InventoryFragment : Fragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-        menu.findItem(when (recyclerView.sort) {
-            Sort.Color -> R.id.color_option
-            Sort.NameAsc -> R.id.name_ascending_option
-            Sort.NameDesc -> R.id.name_descending_option
-            Sort.AmountAsc -> R.id.amount_ascending_option
-            Sort.AmountDesc -> R.id.amount_descending_option
-            else -> R.id.color_option }).isChecked = true
+        this.menu = menu
+        menu.setGroupVisible(R.id.inventory_view_menu_group, true)
+        initOptionsMenuSort(menu)
 
         val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
@@ -92,12 +87,6 @@ class InventoryFragment : Fragment() {
                 return true
             }
         })
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        menu.setGroupVisible(R.id.inventory_view_menu_group, true)
-        menu.setGroupVisible(R.id.shopping_list_view_menu_group, false)
-        super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -148,12 +137,11 @@ class InventoryFragment : Fragment() {
 
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
             return when (item?.itemId) {
-                R.id.change_sorting_button -> true
                 R.id.add_to_shopping_list_button -> {
                     recyclerView.apply{ addItemsToShoppingList(*selection.currentState()) }
                     true
                 }
-                else -> true
+                else -> onOptionsItemSelected(item!!)
             }
         }
 
@@ -166,6 +154,8 @@ class InventoryFragment : Fragment() {
                 recyclerView.apply{ deleteItems(*selection.currentState()) }}
             mainActivity.fab.setImageDrawable(deleteToAddIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
+
+            if (menu != null) initOptionsMenuSort(menu)
             return true
         }
 
@@ -177,8 +167,18 @@ class InventoryFragment : Fragment() {
             mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
             mainActivity.fab.setImageDrawable(addToDeleteIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
+            initOptionsMenuSort(this@InventoryFragment.menu)
             mainActivity.actionMode = null
         }
     }
 
+    private fun initOptionsMenuSort(menu: Menu) {
+        menu.findItem(when (recyclerView.sort) {
+            Sort.Color -> R.id.color_option
+            Sort.NameAsc -> R.id.name_ascending_option
+            Sort.NameDesc -> R.id.name_descending_option
+            Sort.AmountAsc -> R.id.amount_ascending_option
+            Sort.AmountDesc -> R.id.amount_descending_option
+            else -> R.id.color_option }).isChecked = true
+    }
 }

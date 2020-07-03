@@ -5,7 +5,7 @@
     <color name="colorAccent">#ee4141</color>
     <color name="colorAccentDark">#AA3030</color>
     <color name="colorButtonDark">#353535</color>
-    <color name="colorButtonLight">#ABABAB</color>
+    <color name="colorButtonLight">#CCCCCC</color>
     <color name="colorForeground">#000000</color>
     <color name="colorPrimaryRowLight">#FFFFFF</color>
     <color name="colorAlternateRowLight">#DEDEDE</color>
@@ -15,5 +15,5 @@
     <color name="colorTextLightSecondary">#808080</color>
     <color name="colorTextDark">#202020</color>
     <color name="colorTextDarkSecondary">#353535</color>
-    <color name="colorTextLink">#3232FF</color>
+    <color name="colorTextLink">#00BCD4</color>
 </resources>

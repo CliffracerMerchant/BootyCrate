@@ -29,6 +29,7 @@
         android:id="@+id/nameEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
         android:contentDescription="@string/inventory_item_name_description"
         android:ellipsize="end"
         android:importantForAutofill="no"

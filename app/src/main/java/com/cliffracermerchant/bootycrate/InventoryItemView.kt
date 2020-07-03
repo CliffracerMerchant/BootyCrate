@@ -9,6 +9,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import com.google.android.material.bottomappbar.BottomAppBar
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
@@ -76,6 +77,11 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     }
 
     fun collapse(animate: Boolean = true) {
+        if (nameEdit.isFocused || extraInfoEdit.isFocused ||
+            amountEdit.valueEdit.isFocused ||
+            autoAddToShoppingListTriggerEdit.valueEdit.isFocused)
+                imm?.hideSoftInputFromWindow(windowToken, 0)
+
         _isExpanded = false
         nameEdit.isEditable = false
         amountEdit.isEditable = false
@@ -92,10 +98,6 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
             editButton.background = editToMoreOptionsIcon
             inventoryItemDetailsInclude.visibility = View.GONE
         }
-        if (nameEdit.isFocused || extraInfoEdit.isFocused ||
-            amountEdit.valueEdit.isFocused ||
-            autoAddToShoppingListTriggerEdit.valueEdit.isFocused)
-            imm?.hideSoftInputFromWindow(windowToken, 0)
     }
 
     private fun expandCollapseAnimation(expanding: Boolean) : ValueAnimator {

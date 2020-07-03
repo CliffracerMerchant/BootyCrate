@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
+import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View.OnClickListener
@@ -114,6 +115,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         snackBar.show()
     }
 
+    fun undoDelete() = viewModel.undoDelete()
+
     fun deleteAll() {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(android.R.attr.alertDialogTheme, typedValue, true)
@@ -130,8 +133,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         builder.show()
     }
 
-    fun addItemToShoppingList(position: Int) = addItemsToShoppingList(position)
-
     fun addItemsToShoppingList(vararg positions: Int) {
         val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
         shoppingListViewModel.insertFromInventoryItems(*ids)
@@ -145,8 +146,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             shoppingListViewModel.autoAddFromInventoryItem(item.id, minAmount)
         }
     }
-
-    fun undoDelete() = viewModel.undoDelete()
 
     /** InventoryAdapter is a subclass of RecyclerView.Adapter using its own
      *  RecyclerView.ViewHolder subclass InventoryItemViewHolder to represent

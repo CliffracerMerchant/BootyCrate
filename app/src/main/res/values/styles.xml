@@ -19,6 +19,9 @@
         <item name="actionBarTheme">@style/ActionBarStyle</item>
         <item name="actionOverflowButtonStyle">@style/OverflowButtonStyle</item>
         <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="snackbarStyle">@style/LightThemeSnackbarStyle</item>
+        <item name="snackbarTextViewStyle">@style/LightThemeTextAppearance</item>
+        <item name="snackbarButtonStyle">@style/SnackbarActionTextAppearance</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">
@@ -33,6 +36,20 @@
         <item name="android:alertDialogTheme">@style/DarkThemeAlertDialog</item>
         <item name="android:editTextColor">@android:color/black</item>
         <item name="android:textColorPrimary">@color/colorTextLight</item>
+        <item name="snackbarStyle">@style/DarkThemeSnackbarStyle</item>
+        <item name="snackbarTextViewStyle">@style/DarkThemeTextAppearance</item>
+    </style>
+
+    <style name="SnackbarActionTextAppearance" parent="Widget.MaterialComponents.Button.TextButton.Snackbar">
+        <item name="android:textColor">@color/colorTextLink</item>
+    </style>
+
+    <style name="LightThemeSnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
+        <item name="android:background">@color/colorButtonLight</item>
+    </style>
+
+    <style name="DarkThemeSnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
+        <item name="android:background">@color/colorButtonDark</item>
     </style>
 
     <style name="ActionBarStyle" parent="ThemeOverlay.AppCompat.ActionBar">

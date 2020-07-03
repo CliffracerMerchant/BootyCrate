@@ -29,7 +29,7 @@ class ShoppingListFragment : Fragment() {
     private var deleteIcon: Drawable? = null
     private var addIcon: Drawable? = null
     private lateinit var mainActivity: MainActivity
-    private lateinit var viewModel: ShoppingListViewModel
+    private lateinit var menu: Menu
 
     init { setHasOptionsMenu(true) }
 
@@ -48,8 +48,8 @@ class ShoppingListFragment : Fragment() {
         val sortStr = prefs.getString(mainActivity.getString(R.string.pref_shopping_list_sort),
                                       Sort.Color.toString())
         val initialSort = try { Sort.valueOf(sortStr!!) }
-        catch(e: IllegalArgumentException) { Sort.Color } // If sortStr value doesn't match a Sort value
-        catch(e: NullPointerException) { Sort.Color } // If sortStr is null
+                          catch(e: IllegalArgumentException) { Sort.Color } // If sortStr value doesn't match a Sort value
+                          catch(e: NullPointerException) { Sort.Color } // If sortStr is null
         recyclerView.setViewModels(viewLifecycleOwner, mainActivity.shoppingListViewModel,
                                    mainActivity.inventoryViewModel, initialSort)
 
@@ -79,13 +79,9 @@ class ShoppingListFragment : Fragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         super.onCreateOptionsMenu(menu, inflater)
-        menu.findItem(when (recyclerView.sort) {
-            Sort.Color -> R.id.color_option
-            Sort.NameAsc -> R.id.name_ascending_option
-            Sort.NameDesc -> R.id.name_descending_option
-            Sort.AmountAsc -> R.id.amount_ascending_option
-            Sort.AmountDesc -> R.id.amount_descending_option
-            else -> R.id.color_option }).isChecked = true
+        this.menu = menu
+        menu.setGroupVisible(R.id.shopping_list_view_menu_group, true)
+        initOptionsMenuSort(menu)
 
         val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
@@ -95,12 +91,6 @@ class ShoppingListFragment : Fragment() {
                 return true
             }
         })
-    }
-
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        menu.setGroupVisible(R.id.shopping_list_view_menu_group, true)
-        menu.setGroupVisible(R.id.inventory_view_menu_group, false)
-        super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -151,20 +141,26 @@ class ShoppingListFragment : Fragment() {
         private var menu: Menu? = null
 
         override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-            if (item?.itemId == R.id.change_sorting_button) return true
-            if (item?.itemId == R.id.add_to_inventory_button) return true
-            return true
+            return when (item?.itemId) {
+                R.id.add_to_inventory_button -> {
+                    recyclerView.apply{ addItemsToInventory(*selection.currentState()) }
+                    true
+                }
+                else -> onOptionsItemSelected(item!!)
+            }
         }
 
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
             mode?.menuInflater?.inflate(R.menu.action_bar_menu, menu)
             this.menu = menu
-            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
             menu?.setGroupVisible(R.id.shopping_list_view_menu_group, true)
+            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
             mainActivity.fab.setOnClickListener {
                 recyclerView.deleteItems(*recyclerView.selection.currentState()) }
             mainActivity.fab.setImageDrawable(deleteIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
+
+            if (menu != null) initOptionsMenuSort(menu)
             return true
         }
 
@@ -176,7 +172,18 @@ class ShoppingListFragment : Fragment() {
             mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
             mainActivity.fab.setImageDrawable(addIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
+            initOptionsMenuSort(this@ShoppingListFragment.menu)
             mainActivity.actionMode = null
         }
+    }
+
+    private fun initOptionsMenuSort(menu: Menu) {
+        menu.findItem(when (recyclerView.sort) {
+            Sort.Color -> R.id.color_option
+            Sort.NameAsc -> R.id.name_ascending_option
+            Sort.NameDesc -> R.id.name_descending_option
+            Sort.AmountAsc -> R.id.amount_ascending_option
+            Sort.AmountDesc -> R.id.amount_descending_option
+            else -> R.id.color_option }).isChecked = true
     }
 }

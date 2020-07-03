@@ -40,8 +40,7 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.nameEdit
  *  snackbar will appear informing the user of the amount of items that were
  *  deleted, as well as providing an undo option. */
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
-        RecyclerView(context, attrs),
-        Observer<List<ShoppingListItem>> {
+        RecyclerView(context, attrs) {
 
     private val adapter = ShoppingListAdapter(context)
     private val listDiffer = AsyncListDiffer(adapter, DiffUtilCallback())
@@ -80,7 +79,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         // from always expanding the item with that id until a new one is inserted
         viewModel.resetNewlyInsertedItemId()
         sort = initialSort
-        viewModel.items.observe(owner, this)
+        viewModel.items.observe(owner, Observer { items -> listDiffer.submitList(items) })
         this.inventoryViewModel = inventoryViewModel
     }
 
@@ -134,7 +133,10 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         builder.show()
     }
 
-    override fun onChanged(items: List<ShoppingListItem>) = listDiffer.submitList(items)
+    fun addItemsToInventory(vararg positions: Int) {
+        val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
+        inventoryViewModel.insertFromShoppingListItems(*ids)
+    }
 
     /** ShoppingListAdapter is a subclass of RecyclerView.Adapter using its own
      *  RecyclerView.ViewHolder subclass ShoppingListItemViewHolder to repre-

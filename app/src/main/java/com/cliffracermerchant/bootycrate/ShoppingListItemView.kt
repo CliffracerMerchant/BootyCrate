@@ -149,7 +149,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         amountInCartEdit.isEditable = true
 
         if (animate) {
-            Log.d("clicky", "expanding with animation")
             amountOnListEdit.decreaseButton.background = multiplyToMinusIcon
             amountOnListEdit.increaseButton.background = blankToPlusIcon
             editButton.background = editToMoreOptionsIcon
@@ -160,7 +159,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.doOnEnd { shoppingListItemDetailsInclude.visibility = View.VISIBLE }
             anim.start()
         } else {
-            Log.d("clicky", "expanding without animation")
             amountOnListEdit.decreaseButton.background = minusToMultiplyIcon
             amountOnListEdit.increaseButton.background = plusToBlankIcon
             editButton.background = moreOptionsToEditIcon
@@ -170,6 +168,11 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     }
 
     fun collapse(animate: Boolean = true) {
+        if (nameEdit.isFocused || extraInfoEdit.isFocused ||
+            amountOnListEdit.valueEdit.isFocused ||
+            amountInCartEdit.valueEdit.isFocused)
+                imm?.hideSoftInputFromWindow(windowToken, 0)
+
         expandedPrivate = false
         nameEdit.isEditable = false
         amountOnListEdit.isEditable = false
@@ -177,7 +180,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         amountInCartEdit.isEditable = false
 
         if (animate) {
-            Log.d("clicky", "collapsing with animation")
             amountOnListEdit.decreaseButton.background = minusToMultiplyIcon
             amountOnListEdit.increaseButton.background = plusToBlankIcon
             editButton.background = moreOptionsToEditIcon
@@ -188,17 +190,12 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.doOnEnd { shoppingListItemDetailsInclude.visibility = View.GONE }
             anim.start()
         } else {
-            Log.d("clicky", "collapsing without animation")
             amountOnListEdit.decreaseButton.background = multiplyToMinusIcon
             amountOnListEdit.increaseButton.background = blankToPlusIcon
             editButton.background = editToMoreOptionsIcon
             shoppingListItemDetailsInclude.visibility = View.GONE
             amountOnListEdit.increaseButton.layoutParams.apply { width /= 2 }
         }
-        if (nameEdit.isFocused || extraInfoEdit.isFocused ||
-            amountOnListEdit.valueEdit.isFocused ||
-            amountInCartEdit.valueEdit.isFocused)
-            imm?.hideSoftInputFromWindow(windowToken, 0)
     }
 
     private fun expandCollapseAnimation(expanding: Boolean): ValueAnimator {

@@ -85,8 +85,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.android.material.internal.ThemeEnforcement.createThemedContext;
 import static com.google.android.material.shape.MaterialShapeDrawable.SHADOW_COMPAT_MODE_NEVER;
+import static com.google.android.material.theme.overlay.MaterialThemeOverlay.wrap;
 
 public class BottomAppBar extends Toolbar implements AttachedBehavior {
 
@@ -176,7 +176,7 @@ public class BottomAppBar extends Toolbar implements AttachedBehavior {
   }
   @SuppressLint("RestrictedApi")
   public BottomAppBar(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
-    super(createThemedContext(context, attrs, defStyleAttr, DEF_STYLE_RES), attrs, defStyleAttr);
+    super(wrap(context, attrs, defStyleAttr, DEF_STYLE_RES), attrs, defStyleAttr);
     // Ensure we are using the correctly themed context rather than the context that was passed in.
     context = getContext();
 
