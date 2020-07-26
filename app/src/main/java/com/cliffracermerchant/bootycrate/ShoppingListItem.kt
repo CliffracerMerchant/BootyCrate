@@ -11,6 +11,7 @@ class ShoppingListItem {
     @ColumnInfo(name = "name")                             var name: String
     @ColumnInfo(name = "extraInfo")                        var extraInfo: String = ""
     @ColumnInfo(name = "color")                            var color: Int
+    @ColumnInfo(name = "isChecked", defaultValue = "0")    var isChecked: Boolean = false
     @ColumnInfo(name = "amountOnList", defaultValue = "1") var amountOnList: Int = 1
     @ColumnInfo(name = "amountInCart", defaultValue = "0") var amountInCart: Int = 0
     @ColumnInfo(name = "linkedInventoryItemId")            var linkedInventoryItemId: Long?
@@ -19,12 +20,14 @@ class ShoppingListItem {
     constructor(name: String = "",
                 extraInfo: String = "",
                 color: Int = -144976720,
+                isChecked: Boolean = false,
                 amountOnList: Int = 1,
                 amountInCart: Int = 0,
                 linkedInventoryItemId: Long? = null) {
         this.name = name
         this.extraInfo = extraInfo
         this.color = color
+        this.isChecked = isChecked
         this.amountOnList = amountOnList
         this.amountInCart = amountInCart
         this.linkedInventoryItemId = linkedInventoryItemId
@@ -37,6 +40,7 @@ class ShoppingListItem {
                this.name == other.name &&
                this.extraInfo == other.extraInfo &&
                this.color == other.color &&
+               this.isChecked == other.isChecked &&
                this.amountOnList == other.amountOnList &&
                this.amountInCart == other.amountInCart &&
                this.linkedInventoryItemId == other.linkedInventoryItemId
@@ -47,6 +51,7 @@ class ShoppingListItem {
                "\nname = $name" +
                "\nextraInfo = $extraInfo" +
                "\ncolor = $color" +
+               "\nisChecked = $isChecked" +
                "\namountOnList = $amountOnList" +
                "\namountInCart = $amountInCart" +
                "\nlinkedInventoryItemId = $linkedInventoryItemId"

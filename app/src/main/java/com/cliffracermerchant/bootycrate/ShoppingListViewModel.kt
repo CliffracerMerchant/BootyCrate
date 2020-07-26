@@ -8,8 +8,8 @@ import java.util.concurrent.atomic.AtomicLong
 class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao: ShoppingListItemDao = BootyCrateDatabase.get(app).shoppingListItemDao()
-    private val sortAndFilterLiveData =
-        MutableLiveData(Pair<Sort?, String?>(Sort.Color, ""))
+    private val sortAndFilterLiveData = MutableLiveData(Pair<Sort?, String?>(Sort.Color, ""))
+
     val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
         val filter = '%' + (sortAndFilter.second ?: "") + '%'
         when (sortAndFilter.first) {
@@ -21,7 +21,6 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
             Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
         }
     }
-
     var sort get() = sortAndFilterLiveData.value?.first
              set(value) { sortAndFilterLiveData.value = Pair(value, searchFilter) }
     var searchFilter get() = sortAndFilterLiveData.value?.second
@@ -57,6 +56,12 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
     fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String) = viewModelScope.launch {
         dao.updateExtraInfoFromLinkedInventoryItem(inventoryItemId, extraInfo)
     }
+    fun updateColor(id: Long, color: Int) = viewModelScope.launch {
+        dao.updateColor(id, color)
+    }
+    fun updateIsChecked(id: Long, isChecked: Boolean) = viewModelScope.launch {
+        dao.updateIsChecked(id, isChecked)
+    }
     fun updateAmountOnList(id: Long, amountOnList: Int) = viewModelScope.launch {
         dao.updateAmountOnList(id, amountOnList)
     }
@@ -71,8 +76,8 @@ class ShoppingListViewModel(app: Application) : AndroidViewModel(app) {
                                         linkedInventoryItem.name,
                                         linkedInventoryItem.extraInfo)
     }
-    fun updateColor(id: Long, color: Int) = viewModelScope.launch {
-        dao.updateColor(id, color)
+    fun checkOut() = viewModelScope.launch {
+        dao.checkOut()
     }
     fun deleteAll() = viewModelScope.launch {
         dao.deleteAll()

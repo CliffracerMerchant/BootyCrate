@@ -3,28 +3,35 @@ package com.cliffracermerchant.bootycrate
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.recyclerView
 import java.io.File
 
 class InventoryFragment : Fragment() {
-
-    companion object {
-        val instance = InventoryFragment()
-        // This is used to make sure that the selection state
-        // is not restored on a fresh restart of the app
-        var ranOnce = false
-    }
-    private var deleteToAddIcon: Drawable? = null
-    private var addToDeleteIcon: Drawable? = null
+    var actionMode: ActionMode? = null
+    private var savedSelectionState: IntArray? = null
+    private var deleteToAddIcon: AnimatedVectorDrawable? = null
+    private var addToDeleteIcon: AnimatedVectorDrawable? = null
     private lateinit var mainActivity: MainActivity
     private lateinit var menu: Menu
+
+    private companion object {
+        // Due to the target API level, the reset function of AnimatedVectorDrawable
+        // cannot be used. Tracking whether or not the action mode has been started
+        // at least once (and therefore whether or not the animated drawables used for
+        // the FAB have been animated yet) allows us to set the image drawable of the
+        // FAB accordingly.
+        var actionModeStartedOnce = false
+    }
 
     init { setHasOptionsMenu(true) }
 
@@ -36,7 +43,7 @@ class InventoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
-        recyclerView.snackBarAnchor = mainActivity.bottom_app_bar
+        recyclerView.snackBarAnchor = mainActivity.fab
         recyclerView.fragmentManager = mainActivity.supportFragmentManager
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -48,37 +55,35 @@ class InventoryFragment : Fragment() {
         recyclerView.setViewModels(viewLifecycleOwner, mainActivity.inventoryViewModel,
                                    mainActivity.shoppingListViewModel, initialSort)
 
-        addToDeleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable
-        deleteToAddIcon = mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable
-        mainActivity.fab.setImageDrawable(deleteToAddIcon)
-        mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
+        addToDeleteIcon = ContextCompat.getDrawable(mainActivity,
+            R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable
+        deleteToAddIcon = ContextCompat.getDrawable(mainActivity,
+            R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable
 
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
-            if (newSize == 0 && mainActivity.actionMode != null) mainActivity.actionMode?.finish()
+            if (newSize == 0 && actionMode != null) actionMode?.finish()
             else if (newSize > 0) {
-                if (mainActivity.actionMode == null)
-                    mainActivity.actionMode = mainActivity.startSupportActionMode(actionModeCallback)
-                mainActivity.actionMode?.title = getString(R.string.action_mode_title, newSize)
+                actionMode = actionMode ?: mainActivity.startSupportActionMode(actionModeCallback)
+                actionMode?.title = getString(R.string.action_mode_title, newSize)
             }
         })
+    }
 
-        if (!ranOnce) { ranOnce = true; return }
-        val selectionStateFile = File(mainActivity.cacheDir, "inventory_selection_state")
-        if (selectionStateFile.exists()) {
-            val selectionStateString = selectionStateFile.readText().split(',')
-            // size - 1 is to leave off the trailing comma
-            val selectionState = IntArray(selectionStateString.size - 1) { i ->
-                selectionStateString[i].toInt() }
-            recyclerView.selection.restoreState(selectionState)
-        }
+    fun enable() {
+        mainActivity.fab.setImageDrawable(if (actionModeStartedOnce) deleteToAddIcon
+                                          else                       addToDeleteIcon)
+        mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
+        restoreRecyclerViewSelectionState()
+    }
+
+    fun disable() {
+        saveRecyclerViewSelectionState()
+        mainActivity.fab.setOnClickListener(null)
+        actionMode?.finish()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
         this.menu = menu
-        menu.setGroupVisible(R.id.inventory_view_menu_group, true)
-        initOptionsMenuSort(menu)
-
         val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = true
@@ -89,10 +94,15 @@ class InventoryFragment : Fragment() {
         })
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        menu.setGroupVisible(R.id.inventory_view_menu_group, true)
+        initOptionsMenuSort(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.isChecked) return false
         return when (item.itemId) {
-            R.id.delete_all_button -> {
+            R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
             } R.id.color_option -> {
                 recyclerView.sort = Sort.Color
@@ -114,22 +124,27 @@ class InventoryFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        val context = this.context
-        if (context != null) {
-            val selectionStateFile = File(context.cacheDir, "inventory_selection_state")
-            val writer = selectionStateFile.writer()
-            for (id in recyclerView.selection.currentState())
-                writer.write("$id,")
-            writer.close()
-
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val prefsEditor = prefs.edit()
-            val sortStr = if (recyclerView.sort != null) recyclerView.sort.toString()
-                          else                           Sort.Color.toString()
-            prefsEditor.putString(context.getString(R.string.pref_inventory_sort), sortStr)
-            prefsEditor.apply()
-        }
+        disable()
         super.onSaveInstanceState(outState)
+    }
+
+    fun saveRecyclerViewSelectionState() {
+        savedSelectionState = recyclerView.selection.currentState()
+    }
+
+    fun restoreRecyclerViewSelectionState() {
+        savedSelectionState?.let { recyclerView.selection.restoreState(it) }
+        savedSelectionState = null
+    }
+
+    private fun initOptionsMenuSort(menu: Menu) {
+        menu.findItem(when (recyclerView.sort) {
+            Sort.Color -> R.id.color_option
+            Sort.NameAsc -> R.id.name_ascending_option
+            Sort.NameDesc -> R.id.name_descending_option
+            Sort.AmountAsc -> R.id.amount_ascending_option
+            Sort.AmountDesc -> R.id.amount_descending_option
+            else -> R.id.color_option }).isChecked = true
     }
 
     private val actionModeCallback = object: ActionMode.Callback {
@@ -146,13 +161,14 @@ class InventoryFragment : Fragment() {
         }
 
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+            actionModeStartedOnce = true
             mode?.menuInflater?.inflate(R.menu.action_bar_menu, menu)
             this.menu = menu
             menu?.setGroupVisible(R.id.inventory_view_menu_group, true)
             menu?.setGroupVisible(R.id.inventory_view_action_mode_group, true)
             mainActivity.fab.setOnClickListener {
                 recyclerView.apply{ deleteItems(*selection.currentState()) }}
-            mainActivity.fab.setImageDrawable(deleteToAddIcon)
+            mainActivity.fab.setImageDrawable(addToDeleteIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
 
             if (menu != null) initOptionsMenuSort(menu)
@@ -163,22 +179,12 @@ class InventoryFragment : Fragment() {
 
         override fun onDestroyActionMode(mode: ActionMode?) {
             recyclerView.selection.clear()
-            menu?.setGroupVisible(R.id.inventory_view_action_mode_group, false)
+            //menu?.setGroupVisible(R.id.inventory_view_action_mode_group, false)
             mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
-            mainActivity.fab.setImageDrawable(addToDeleteIcon)
+            mainActivity.fab.setImageDrawable(deleteToAddIcon)
             (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
             initOptionsMenuSort(this@InventoryFragment.menu)
-            mainActivity.actionMode = null
+            actionMode = null
         }
-    }
-
-    private fun initOptionsMenuSort(menu: Menu) {
-        menu.findItem(when (recyclerView.sort) {
-            Sort.Color -> R.id.color_option
-            Sort.NameAsc -> R.id.name_ascending_option
-            Sort.NameDesc -> R.id.name_descending_option
-            Sort.AmountAsc -> R.id.amount_ascending_option
-            Sort.AmountDesc -> R.id.amount_descending_option
-            else -> R.id.color_option }).isChecked = true
     }
 }

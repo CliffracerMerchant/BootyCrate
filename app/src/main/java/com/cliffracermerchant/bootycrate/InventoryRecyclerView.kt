@@ -7,6 +7,7 @@ import android.content.DialogInterface
 import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.View
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
@@ -48,7 +49,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     private var expandedItemId: Long? = null
     private var expandedViewHolder: InventoryAdapter.InventoryItemViewHolder? = null
     var fragmentManager: FragmentManager? = null
-    var snackBarAnchor: BottomAppBar? = null
+    var snackBarAnchor: View? = null
     val selection = RecyclerViewSelection(adapter)
     var sort: Sort? get() = viewModel.sort
                     set(value) { viewModel.sort = value }
@@ -85,8 +86,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun setExpandedItem(newExpandedVh: InventoryAdapter.InventoryItemViewHolder?,
                         animateCollapse: Boolean = true, animateExpand: Boolean = true) {
-        val oldExpandedId = expandedItemId
-        if (oldExpandedId != null && expandedViewHolder?.itemId == oldExpandedId)
+        if (expandedItemId != null && expandedViewHolder?.itemId == expandedItemId)
             expandedViewHolder?.view?.collapse(animateCollapse)
         expandedItemId = newExpandedVh?.itemId
         expandedViewHolder = newExpandedVh

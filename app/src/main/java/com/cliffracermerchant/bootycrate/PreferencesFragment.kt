@@ -2,18 +2,17 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.os.Bundle
-import androidx.preference.Preference
+import android.util.TypedValue
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.ViewGroup
-import androidx.appcompat.view.ContextThemeWrapper
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 
 class PreferencesFragment : PreferenceFragmentCompat() {
-    companion object { val instance = PreferencesFragment() }
 
     init { setHasOptionsMenu(true) }
 
@@ -42,9 +41,5 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         return recyclerView
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        menu.findItem(R.id.app_bar_search).isVisible = false
-        menu.findItem(R.id.change_sorting_button).isVisible = false
-        menu.findItem(R.id.delete_all_button).isVisible = false
-    }
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) = menu.clear()
 }

@@ -1,5 +1,6 @@
 package com.cliffracermerchant.bootycrate
 
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 
@@ -20,13 +21,14 @@ import androidx.recyclerview.widget.RecyclerView
 class RecyclerViewSelection(private val adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>) :
         RecyclerView.AdapterDataObserver() {
     private val hashSet = HashSet<Int>()
+    private val _sizeLiveData = MutableLiveData(size)
 
     val size: Int get() = hashSet.size
-    val sizeLiveData = MutableLiveData(size)
+    val sizeLiveData: LiveData<Int> = _sizeLiveData
     val isEmpty: Boolean get() = hashSet.isEmpty()
 
-    var selectedPayload: Any? = true
-    var deselectedPayload: Any? = false
+    var selectedPayload: Any = true
+    var deselectedPayload: Any = false
 
     init { adapter.registerAdapterDataObserver(this) }
 
@@ -36,21 +38,21 @@ class RecyclerViewSelection(private val adapter: RecyclerView.Adapter<out Recycl
         if (hashSet.isEmpty()) return
         hashSet.clear()
         adapter.notifyDataSetChanged()
-        sizeLiveData.value = size
+        _sizeLiveData.value = size
     }
 
     fun add(pos: Int) {
         if (pos !in 0 until adapter.itemCount) return
         hashSet.add(pos)
         adapter.notifyItemChanged(pos, selectedPayload)
-        sizeLiveData.value = size
+        _sizeLiveData.value = size
     }
 
     fun remove(pos: Int) {
         if (pos !in 0 until adapter.itemCount) return
         hashSet.remove(pos)
         adapter.notifyItemChanged(pos, deselectedPayload)
-        sizeLiveData.value = size
+        _sizeLiveData.value = size
     }
 
     fun toggle(pos: Int) {
@@ -63,7 +65,7 @@ class RecyclerViewSelection(private val adapter: RecyclerView.Adapter<out Recycl
             selectedPayload
         }
         adapter.notifyItemChanged(pos, payload)
-        sizeLiveData.value = size
+        _sizeLiveData.value = size
     }
 
     fun currentState() = hashSet.toIntArray()
@@ -75,12 +77,12 @@ class RecyclerViewSelection(private val adapter: RecyclerView.Adapter<out Recycl
             if (hashSet.contains(pos))
                 adapter.notifyItemChanged(pos, selectedPayload)
         }
-        sizeLiveData.value = size
+        _sizeLiveData.value = size
     }
 
     override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
         for (pos in positionStart until positionStart + itemCount)
             hashSet.remove(pos)
-        sizeLiveData.value = size
+        _sizeLiveData.value = size
     }
 }

@@ -61,23 +61,44 @@ abstract class ShoppingListItemDao {
     abstract suspend fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amountOnList = :amountOnList " +
+            "SET color = :color " +
+            "WHERE id = :id")
+    abstract suspend fun updateColor(id: Long, color: Int)
+
+    @Query("UPDATE shopping_list_item " +
+           "SET isChecked = :isChecked, " +
+               "amountInCart = CASE WHEN :isChecked = 0 THEN              0 " +
+                                   "WHEN amountInCart < amountOnList THEN amountOnList " +
+                                   "ELSE                                  amountInCart END " +
+           "WHERE id = :id")
+    abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
+
+    @Query("UPDATE shopping_list_item " +
+           "SET amountOnList = :amountOnList, " +
+               "isChecked = CASE WHEN amountInCart >= :amountOnList THEN 1 " +
+                                "ELSE 0 END " +
            "WHERE id = :id")
     abstract suspend fun updateAmountOnList(id: Long, amountOnList: Int)
 
     @Query("UPDATE shopping_list_item " +
            "SET amountOnList = CASE WHEN amountOnList < :minAmount THEN :minAmount " +
-                                                                  "ELSE amountOnList END " +
-           "WHERE linkedInventoryItemId = :inventoryItemId")
+                              "ELSE                                     amountOnList END, " +
+               "isChecked = CASE WHEN amountInCart >= amountOnList THEN 1 " +
+                                "ELSE 0 END " +
+            "WHERE linkedInventoryItemId = :inventoryItemId")
     abstract suspend fun setMinimumAmountFromLinkedItem(inventoryItemId: Long, minAmount: Int)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amountOnList = :amountOnList " +
+           "SET amountOnList = :amountOnList, " +
+               "isChecked = CASE WHEN amountInCart >= :amountOnList THEN 1 " +
+                                "ELSE 0 END " +
            "WHERE linkedInventoryItemId = :inventoryItemId")
     abstract suspend fun updateAmountOnListFromLinkedItem(inventoryItemId: Long, amountOnList: Int)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amountInCart = :amountInCart " +
+           "SET amountInCart = :amountInCart, " +
+               "isChecked = CASE WHEN amountInCart >= amountOnList THEN 1 " +
+                                "ELSE 0 END " +
            "WHERE id = :id")
     abstract suspend fun updateAmountInCart(id: Long, amountInCart: Int)
 
@@ -95,10 +116,38 @@ abstract class ShoppingListItemDao {
            "WHERE id = :id")
     abstract suspend fun removeInventoryItemLink(id: Long)
 
+//    data class InventoryItemBoughtAmount(var id: Long, var amount: Int)
+//
+//    @Query("SELECT linkedInventoryItemId, amountInCart " +
+//            "FROM shopping_list_item WHERE linkedInventoryItemId IS NOT NULL")
+//    abstract suspend fun getBoughtInventoryItemAmounts(): List<InventoryItemBoughtAmount>
+
+//    @Query("UPDATE inventory_item " +
+//           "SET amount = amount + (SELECT amountInCart FROM shopping_list_item WHERE linkedInventoryItemId = inventory_item.id)")
+//    abstract suspend fun updateInventoryItemAmountsFromAmountInCart()
+
+    @Query("WITH bought_amounts AS (SELECT linkedInventoryItemId AS id, " +
+                                          "amountInCart AS amount " +
+                                   "FROM shopping_list_item " +
+                                   "WHERE linkedInventoryItemId IS NOT NULL) " +
+           "UPDATE inventory_item " +
+           "SET amount = amount + (SELECT amount FROM bought_amounts WHERE id = inventory_item.id) " +
+           "WHERE id IN (SELECT id FROM bought_amounts)")
+    abstract suspend fun updateInventoryItemAmountsFromAmountInCart()
+
     @Query("UPDATE shopping_list_item " +
-            "SET color = :color " +
-            "WHERE id = :id")
-    abstract suspend fun updateColor(id: Long, color: Int)
+           "SET amountOnList = amountOnList - amountInCart")
+    abstract suspend fun subtractAmountInCartFromAmountOnList()
+
+    @Query("DELETE FROM shopping_list_item WHERE amountOnList < 1")
+    abstract suspend fun clearZeroOrNegativeAmountItems()
+
+    @Transaction
+    open suspend fun checkOut() {
+        updateInventoryItemAmountsFromAmountInCart()
+        subtractAmountInCartFromAmountOnList()
+        clearZeroOrNegativeAmountItems()
+    }
 
     @Query("DELETE FROM shopping_list_item")
     abstract suspend fun deleteAll()

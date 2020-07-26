@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -51,7 +52,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
         colorEdit.background = ColoredCircleDrawable(colorEdit.layoutParams.width.toFloat(),
-            item.color, nameEdit.currentTextColor)
+                                                     item.color, nameEdit.currentTextColor)
         amountEdit.initCurrentValue(item.amount)
         autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
         autoAddToShoppingListTriggerEdit.initCurrentValue(item.autoAddToShoppingListTrigger)

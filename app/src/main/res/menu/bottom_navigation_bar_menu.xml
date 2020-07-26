@@ -2,20 +2,17 @@
 <menu
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item
-        android:id="@+id/shopping_list_navigation_button"
-        android:icon="@drawable/ic_shopping_cart_black_24dp"
-        android:title="@string/shopping_list_navigation_item_name" />
-    <item
-        android:id="@+id/inventory_navigation_button"
-        android:icon="@drawable/ic_format_list_bulleted_black_24dp"
-        android:title="@string/inventory_navigation_item_name" />
-    <item
-        android:id="@+id/bottom_navigation_spacer"
-        android:enabled="false"
-        android:title="" />
-    <item
-        android:id="@+id/preferences_navigation_button"
-        android:icon="@drawable/ic_settings_black_24dp"
-        android:title="@string/preferences_navigation_item_name" />
+    <item android:id="@+id/shopping_list_button"
+          android:title="@string/shopping_list_navigation_item_name"
+          android:icon="@drawable/ic_shopping_cart_black_24dp" />
+
+    <item android:enabled="false"
+          android:title="" />
+
+    <item android:enabled="false"
+          android:title="" />
+
+    <item android:id="@+id/inventory_button"
+          android:title="@string/inventory_navigation_item_name"
+          android:icon="@drawable/ic_format_list_bulleted_black_24dp" />
 </menu>

@@ -8,11 +8,12 @@ import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
+import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.*
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
@@ -23,6 +24,8 @@ import kotlinx.android.synthetic.main.shopping_list_item_details_layout.view.*
 import kotlinx.android.synthetic.main.shopping_list_item_details_layout.view.extraInfoEdit
 import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 import kotlinx.android.synthetic.main.shopping_list_item_layout.view.nameEdit
+import java.util.*
+import java.util.concurrent.ConcurrentLinkedQueue
 
 /**     ShoppingListRecyclerView is a RecyclerView subclass specialized for
  *  displaying the contents of a shopping list. Because it is intended to be
@@ -48,18 +51,24 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     private lateinit var inventoryViewModel: InventoryViewModel
     private var expandedItemId: Long? = null
     private var expandedViewHolder: ShoppingListAdapter.ShoppingListItemViewHolder? = null
+    val checkedItems = ShoppingListCheckedItems()
+
     var fragmentManager: FragmentManager? = null
-    var snackBarAnchor: BottomAppBar? = null
+    var snackBarAnchor: View? = null
     val selection = RecyclerViewSelection(adapter)
+
     var sort: Sort? get() = viewModel.sort
                     set(value) { viewModel.sort = value }
     var searchFilter: String? get() = viewModel.searchFilter
         set(value) { viewModel.searchFilter = value }
 
     /** The enum class Field identifies user facing fields that are potentially
-     *  editable by the user. Field values are used as payloads in the adapter
-     *  notifyItemChanged calls in order to identify which field was changed.*/
-    enum class Field { Name, ExtraInfo, AmountOnList, AmountInCart, LinkedTo, Color  }
+     *  editable by the user. Field values (in the form of an EnumSet<Field>) are
+     *  used as payloads in the adapter notifyItemChanged calls in order to iden-
+     *  tify which field was changed.*/
+    enum class Field { Name, ExtraInfo, IsChecked,
+                       AmountOnList, AmountInCart,
+                       LinkedTo, Color  }
 
     init {
         layoutManager = LinearLayoutManager(context)
@@ -85,8 +94,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun setExpandedItem(newExpandedVh: ShoppingListAdapter.ShoppingListItemViewHolder?,
                         animateCollapse: Boolean = true, animateExpand: Boolean = true) {
-        val oldExpandedId = expandedItemId
-        if (oldExpandedId != null && expandedViewHolder?.itemId == oldExpandedId)
+
+        if (expandedItemId != null && expandedViewHolder?.itemId == expandedItemId)
             expandedViewHolder?.view?.collapse(animateCollapse)
         expandedItemId = newExpandedVh?.itemId
         expandedViewHolder = newExpandedVh
@@ -99,10 +108,11 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun deleteItems(vararg positions: Int) {
         val expandedItemId = this.expandedItemId
-        if (expandedItemId != null && expandedItemId in positions.map{ adapter.getItemId(it) })
+        if (expandedItemId in positions.map{ adapter.getItemId(it) })
             setExpandedItem(null)
         val ids = LongArray(positions.size) { listDiffer.currentList[positions[it]].id }
         viewModel.delete(*ids)
+
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
         val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
         snackBar.anchorView = snackBarAnchor ?: this
@@ -115,7 +125,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         snackBar.show()
     }
 
-    fun undoDelete() = viewModel.undoDelete()
+    fun undoDelete() {
+        viewModel.undoDelete()
+    }
 
     fun deleteAll() {
         val typedValue = TypedValue()
@@ -138,12 +150,14 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         inventoryViewModel.insertFromShoppingListItems(*ids)
     }
 
+    fun checkout() = viewModel.checkOut()
+
     /** ShoppingListAdapter is a subclass of RecyclerView.Adapter using its own
-     *  RecyclerView.ViewHolder subclass ShoppingListItemViewHolder to repre-
-     *  sent shopping list items. Its override of onBindViewHolder(View-
-     *  Holder, Payload) makes use of ShoppingListRecyclerView.Field values to
-     *  support partial binding. It also modifies the background color of the
-     *  item views to reflect their selected / not selected status. */
+     *  RecyclerView.ViewHolder subclass ShoppingListItemViewHolder to represent shop-
+     *  ping list items. Its override of onBindViewHolder(ViewHolder, Payload) makes use
+     *  of ShoppingListRecyclerView.Field values to support partial binding. It also
+     *  modifies the background color of the item views to reflect their selected / not
+     *  selected status. */
     inner class ShoppingListAdapter(context: Context) :
             RecyclerView.Adapter<ShoppingListAdapter.ShoppingListItemViewHolder>() {
         private val selectedColor: Int
@@ -160,10 +174,10 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) :
                 ShoppingListItemViewHolder {
-            val view = ShoppingListItemView(context)
-            view.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                             ViewGroup.LayoutParams.WRAP_CONTENT)
-            return ShoppingListItemViewHolder(view)
+                val view = ShoppingListItemView(context)
+                view.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                                 ViewGroup.LayoutParams.WRAP_CONTENT)
+                return ShoppingListItemViewHolder(view)
         }
 
         override fun onBindViewHolder(holder: ShoppingListItemViewHolder, position: Int) =
@@ -178,21 +192,21 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     val endColor =   if (payloads[0] as Boolean) selectedColor else 0
                     ObjectAnimator.ofArgb(holder.itemView, "backgroundColor",
                                           startColor, endColor).start()
-                } else if (payload is Field) {
+                } else if (payload is EnumSet<*>) {
                     val item = listDiffer.currentList[position]
-                    when (payload) {
-                        Field.Name -> holder.itemView.nameEdit.setText(item.name)
-                        Field.ExtraInfo -> holder.itemView.extraInfoEdit.setText(item.extraInfo)
-                        Field.AmountOnList ->holder.itemView.amountOnListEdit.currentValue = item.amountOnList
-                        Field.AmountInCart -> holder.itemView.amountInCartEdit.currentValue = item.amountInCart
-                        Field.LinkedTo -> holder.view.updateLinkedStatus(item.linkedInventoryItemId)
-                        Field.Color -> {
-                            val checkBoxBg = (holder.itemView.checkBox.background as LayerDrawable).getDrawable(0)
-                            val startColor = holder.view.currentColor ?: 0
-                            holder.view.currentColor = item.color
+                    val changes = payload as EnumSet<Field>
+                    if (changes.contains(Field.Name))         holder.itemView.nameEdit.setText(item.name)
+                    if (changes.contains(Field.ExtraInfo))    holder.view.extraInfoEdit.setText(item.extraInfo)
+                    if (changes.contains(Field.IsChecked))    holder.view.checkBox.isChecked = item.isChecked
+                    if (changes.contains(Field.AmountOnList)) holder.view.amountOnListEdit.currentValue = item.amountOnList
+                    if (changes.contains(Field.AmountInCart)) holder.view.amountInCartEdit.currentValue = item.amountInCart
+                    if (changes.contains(Field.LinkedTo))     holder.view.updateLinkedStatus(item.linkedInventoryItemId)
+                    if (changes.contains(Field.Color)) {
+                            val checkBoxBg = (holder.view.checkBox.background as LayerDrawable).getDrawable(0)
+                            val startColor = holder.view.itemColor ?: 0
+                            holder.view.itemColor = item.color
                             val endColor = item.color
                             ObjectAnimator.ofArgb(checkBoxBg, "tint", startColor, endColor).start()
-                        }
                     }
                 }
             }
@@ -222,7 +236,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 view.amountInCartEdit.valueEdit.setOnLongClickListener(onLongClick)
                 view.amountOnListEdit.valueEdit.setOnLongClickListener(onLongClick)
 
-                view.editButton.setOnClickListener { setExpandedItem(this) }
+                view.editButton.setOnClickListener { if (!view.isExpanded) setExpandedItem(this) }
                 view.collapseButton.setOnClickListener { setExpandedItem(null) }
 
                 view.nameEdit.liveData.observeForever { value ->
@@ -240,7 +254,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 view.editColorButton.setOnClickListener {
                     val colors = resources.getIntArray(R.array.color_picker_presets)
                     val selectedColor = if (item.color != 0) item.color
-                    else                 ColorSheet.NO_COLOR
+                                        else                 ColorSheet.NO_COLOR
                     val colorPicker = ColorSheet().colorPicker(colors, selectedColor, true) { color ->
                         val itemColor = if (color == ColorSheet.NO_COLOR) 0
                         else color
@@ -282,6 +296,15 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     builder.setView(recyclerView)
                     builder.show()
                 }
+
+                view.checkBox.isClickable = false
+                view.checkBox.setOnClickListener { viewModel.updateIsChecked(item.id, view.checkBox.isChecked) }
+                view.checkBox.setOnCheckedChangeListener { checkBox, checked ->
+                    view.defaultOnCheckedChangeListener.onCheckedChanged(checkBox, checked)
+                    Log.d("update", "overridden onCheckedChangeListener called")
+                    if (checked) checkedItems.add(adapterPosition)
+                    else         checkedItems.remove(adapterPosition)
+                }
             }
 
             fun bindTo(item: ShoppingListItem) {
@@ -291,6 +314,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     imm?.hideSoftInputFromWindow(nameEdit.windowToken, 0)
                     view.nameEdit.requestFocus()
                     imm?.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
+                    viewModel.resetNewlyInsertedItemId()
                 }
                 if (selection.contains(adapterPosition)) view.setBackgroundColor(selectedColor)
                 else                                     view.background = null
@@ -305,22 +329,69 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     }
 
     internal inner class DiffUtilCallback : DiffUtil.ItemCallback<ShoppingListItem>() {
+        private val listChanges = mutableMapOf<Long, EnumSet<Field>>()
+        private val itemChanges = EnumSet.noneOf(Field::class.java)
+
         override fun areItemsTheSame(oldItem: ShoppingListItem, newItem: ShoppingListItem) =
             oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: ShoppingListItem, newItem: ShoppingListItem) =
-            oldItem == newItem
+        override fun areContentsTheSame(oldItem: ShoppingListItem,
+                                        newItem: ShoppingListItem): Boolean {
+            itemChanges.clear()
+            if (newItem.name != oldItem.name)                 itemChanges.add(Field.Name)
+            if (newItem.extraInfo != oldItem.extraInfo)       itemChanges.add(Field.ExtraInfo)
+            if (newItem.color != oldItem.color)               itemChanges.add(Field.Color)
+            if (newItem.isChecked != oldItem.isChecked)       itemChanges.add(Field.IsChecked)
+            if (newItem.amountOnList != oldItem.amountOnList) itemChanges.add(Field.AmountOnList)
+            if (newItem.amountInCart != oldItem.amountInCart) itemChanges.add(Field.AmountInCart)
+            if (newItem.linkedInventoryItemId != oldItem.linkedInventoryItemId) itemChanges.add(Field.LinkedTo)
+            if (!itemChanges.isEmpty()) listChanges[newItem.id] = EnumSet.copyOf(itemChanges)
+            return itemChanges.isEmpty()
+        }
 
-        override fun getChangePayload(oldItem: ShoppingListItem, newItem: ShoppingListItem): Any? {
-            return when {
-                oldItem.name != newItem.name -> Field.Name
-                oldItem.extraInfo != newItem.extraInfo -> Field.ExtraInfo
-                oldItem.color != newItem.color -> Field.Color
-                oldItem.amountOnList != newItem.amountOnList -> Field.AmountOnList
-                oldItem.amountInCart != newItem.amountInCart -> Field.AmountInCart
-                oldItem.linkedInventoryItemId != newItem.linkedInventoryItemId -> Field.LinkedTo
-                else -> super.getChangePayload(oldItem, newItem)
-            }
+        override fun getChangePayload(oldItem: ShoppingListItem,
+                                      newItem: ShoppingListItem): Any? {
+            return listChanges.remove(newItem.id)
+        }
+    }
+
+    inner class ShoppingListCheckedItems() :
+            RecyclerView.AdapterDataObserver() {
+        private val hashSet = HashSet<Int>()
+        private val _sizeLiveData = MutableLiveData(hashSet.size)
+
+        val size: Int get() = hashSet.size
+        val sizeLiveData: LiveData<Int> = _sizeLiveData
+        val isEmpty: Boolean get() = hashSet.isEmpty()
+
+        init { adapter.registerAdapterDataObserver(this) }
+
+        fun add(pos: Int) {
+            if (pos !in 0 until adapter.itemCount) return
+            hashSet.add(pos)
+            _sizeLiveData.value = size
+            Log.d("update", "item checked, checked items size now " + hashSet.size)
+        }
+
+        fun remove(pos: Int) {
+            if (pos !in 0 until adapter.itemCount) return
+            hashSet.remove(pos)
+            _sizeLiveData.value = size
+            Log.d("update", "item unchecked, checked items size now " + hashSet.size)
+        }
+
+        override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+
+            for (pos in positionStart until positionStart + itemCount)
+                if (hashSet.contains(pos)) remove(pos)
+            Log.d("update", "item removed, checked items size now " + hashSet.size)
+            _sizeLiveData.value = size
+        }
+        override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+//            for (pos in positionStart until positionStart + itemCount)
+//                if (listDiffer.currentList[pos].isChecked) hashSet.add(pos)
+//            _sizeLiveData.value = size
+            Log.d("update", "item inserted, checked items size now " + hashSet.size)
         }
     }
 }

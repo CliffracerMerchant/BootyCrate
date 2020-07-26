@@ -21,21 +21,22 @@
         android:id="@+id/fragment_container"
         android:layout_width = "match_parent"
         android:layout_height = "match_parent"
-        android:layout_marginTop="?attr/actionBarSize" />
-
+        android:layout_marginTop="?attr/actionBarSize" >
+    </FrameLayout>
 
     <com.cliffracermerchant.bootycrate.BottomAppBar
         android:id="@+id/bottom_app_bar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_gravity="bottom"
-        android:backgroundTint="@color/colorPrimary"
+        app:backgroundTint="@color/colorPrimary"
+        app:cradleAlignmentMode="center"
+        app:cradleContentsMargin="6dp"
+        app:cradleTopCornerRadius="25dp"
+        app:cradleBottomCornerRadius="34dp"
+        app:cradleDepth="52dp"
         app:contentInsetStart="0dp"
-        app:fabAlignmentMode="center"
-        app:fabCradleMargin="6dp"
-        app:fabCradleRoundedCornerRadius="20dp"
-        app:fabCradleVerticalOffset="-18dp"
-        android:transitionName="bottom_app_bar">
+        app:cradleLayoutId="@id/cradle_layout">
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation_bar"
@@ -50,15 +51,31 @@
 
     </com.cliffracermerchant.bootycrate.BottomAppBar>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floating_action_button"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/cradle_layout"
         android:layout_height="wrap_content"
-        android:backgroundTint="?attr/colorAccent"
-        android:src="@drawable/fab_animated_add_to_delete_icon"
-        android:translationX="55dp"
-        app:borderWidth="0dp"
-        app:layout_anchor="@id/bottom_app_bar"
-        android:transitionName="floating_action_button"/>
+        android:layout_width="wrap_content" >
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/checkout_button"
+            android:layout_width="120dp"
+            android:layout_height="46dp"
+            android:text="@string/checkout_description"
+            android:background="@drawable/checkout_button_background"
+            app:backgroundTint="@android:color/darker_gray"
+            android:textColor="@color/colorTextLightSecondary"
+            android:paddingStart="6dp"
+            android:layout_gravity="bottom"
+            android:translationX="12dp"
+            android:transformPivotX="108dp" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/floating_action_button"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:backgroundTint="?attr/colorAccent"
+            android:src="@drawable/fab_animated_add_to_delete_icon"
+            app:borderWidth="0dp" />
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,31 +1,72 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
-import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
-    var actionMode: ActionMode? = null
-    private var enabledFabVerticalOffset: Float = 0f
-    private var disabledFabVerticalOffset: Float = 0f
+    private var darkGrayColor: Int = 0
+    private var lightGrayColor: Int = 0
+    private var blackColor: Int = 0
+    private var yellowColor: Int = 0
+    var checkoutButtonIsEnabled = false
+        set(value) {
+            if (checkoutButtonIsEnabled == value) return
+
+            val bgColorAnim = ValueAnimator.ofArgb(if (value) lightGrayColor else yellowColor,
+                                                   if (value) yellowColor else lightGrayColor)
+            bgColorAnim.addUpdateListener {
+                checkout_button.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int)
+            }
+            bgColorAnim.duration = 200
+            bgColorAnim.start()
+             val textColorAnim = ObjectAnimator.ofArgb(checkout_button, "textColor",
+                                                       if (value) blackColor else darkGrayColor)
+            textColorAnim.duration = 200
+            textColorAnim.start()
+            field = value
+        }
+    private var checkoutButtonIsHidden = false
+        set(value) {
+            if (checkoutButtonIsHidden == value) return
+            val anim = ValueAnimator.ofFloat(if (value) 1f else 0f,
+                                             if (value) 0f else 1f)
+            anim.addUpdateListener {
+                checkout_button.scaleX = it.animatedValue as Float
+                bottom_app_bar.redrawCradle()
+            }
+            anim.start()
+            field = value
+        }
+    private var checkoutButtonWidth = 0
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
+    lateinit var checkoutButton: MaterialButton
     var menu: Menu? = null
 
-    companion object { var selectedNavigationItemId: Int? = null }
+//    private companion object FragmentManagerHelper {
+    enum class FragmentId { ShoppingList, Inventory, Preferences }
+
+    val shoppingListFragment = ShoppingListFragment()
+    val inventoryFragment = InventoryFragment()
+    val preferencesFragment = PreferencesFragment()
+
+    var showingInventory = false
+    var showingPreferences = false
+//    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,63 +81,82 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(action_bar)
         fab = floating_action_button
-        enabledFabVerticalOffset = bottom_app_bar.cradleVerticalOffset
-        disabledFabVerticalOffset = -0.5f * bottom_app_bar.cradleVerticalOffset
-
-        bottom_navigation_bar.setOnNavigationItemSelectedListener(onNavigationItemSelected)
-        bottom_navigation_bar.selectedItemId = selectedNavigationItemId ?:
-                                               R.id.shopping_list_navigation_button
+        checkoutButton = checkout_button
+        checkoutButtonWidth = checkout_button.width
+        darkGrayColor = ContextCompat.getColor(this, R.color.colorTextLightSecondary)
+        lightGrayColor = ContextCompat.getColor(this, android.R.color.darker_gray)
+        blackColor = ContextCompat.getColor(this, android.R.color.black)
+        yellowColor = ContextCompat.getColor(this, R.color.checkoutButtonEnabledColor)
+        bottom_navigation_bar.setOnNavigationItemSelectedListener { item ->
+            item.isChecked = true
+            toggleShoppingListInventoryFragments(switchingToInventory = item.itemId == R.id.inventory_button)
+            true
+        }
+        supportFragmentManager.beginTransaction().
+                add(R.id.fragment_container, preferencesFragment).
+                add(R.id.fragment_container, inventoryFragment).
+                add(R.id.fragment_container, shoppingListFragment).
+                hide(preferencesFragment).hide(inventoryFragment).
+                runOnCommit{ shoppingListFragment.enable() }.commit()
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.action_bar_menu, menu)
         this.menu = menu
-        val searchView = menu?.findItem(R.id.app_bar_search)?.actionView as SearchView?
-        (searchView?.findViewById(androidx.appcompat.R.id.search_close_btn) as ImageView).setColorFilter(ContextCompat.getColor(this, android.R.color.black))
+        val searchView = menu.findItem(R.id.app_bar_search)?.actionView as SearchView?
+        (searchView?.findViewById(androidx.appcompat.R.id.search_close_btn) as ImageView).
+            setColorFilter(blackColor)
         return true
     }
 
-    private val onNavigationItemSelected =
-            BottomNavigationView.OnNavigationItemSelectedListener { item: MenuItem ->
-        for (fragment in supportFragmentManager.fragments)
-            supportFragmentManager.saveFragmentInstanceState(fragment)
-        actionMode?.finish()
-        floating_action_button.setOnClickListener(null)
-        item.isChecked = true
-        when (item.itemId) {
-            R.id.shopping_list_navigation_button -> {
-                if (selectedNavigationItemId == R.id.preferences_navigation_button) {
-                    floating_action_button.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
-                    ObjectAnimator.ofFloat(bottom_app_bar, "cradleVerticalOffset",
-                        enabledFabVerticalOffset).setDuration(200).start()
-                }
-
-                selectedNavigationItemId = item.itemId
-                supportFragmentManager.beginTransaction().
-                setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
-                replace(R.id.fragment_container, ShoppingListFragment.instance).commit()
-            }
-            R.id.inventory_navigation_button -> {
-                if (selectedNavigationItemId == R.id.preferences_navigation_button) {
-                    floating_action_button.animate().scaleX(1f).scaleY(1f).setDuration(200).start()
-                    ObjectAnimator.ofFloat(bottom_app_bar, "cradleVerticalOffset",
-                                           enabledFabVerticalOffset).setDuration(200).start()
-                }
-                selectedNavigationItemId = item.itemId
-                supportFragmentManager.beginTransaction().
-                    setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
-                    replace(R.id.fragment_container, InventoryFragment.instance).commit()
-            }
-            R.id.preferences_navigation_button -> {
-                floating_action_button.animate().scaleX(0f).scaleY(0f).setDuration(200).start()
-                ObjectAnimator.ofFloat(bottom_app_bar, "cradleVerticalOffset",
-                                       disabledFabVerticalOffset).setDuration(200).start()
-                selectedNavigationItemId = item.itemId
-                supportFragmentManager.beginTransaction().
-                setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
-                replace(R.id.fragment_container, PreferencesFragment.instance).commit()
-            }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.settings_menu_item) {
+            togglePreferencesFragment(showing = true)
+            return true
         }
-        false
+        return false
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        return if (showingPreferences) {
+            togglePreferencesFragment(showing = false)
+            true
+        } else false
+    }
+
+    override fun onBackPressed() { onSupportNavigateUp() }
+
+    private fun togglePreferencesFragment(showing: Boolean) {
+        val oldFragment = when { !showing ->         preferencesFragment
+                                 showingInventory -> inventoryFragment
+                                 else ->             shoppingListFragment }
+        val newFragment = when { showing ->          preferencesFragment
+                                 showingInventory -> inventoryFragment
+                                 else ->             shoppingListFragment }
+        showingPreferences = showing
+        supportActionBar?.setDisplayHomeAsUpEnabled(showing)
+        bottom_app_bar.animate().translationYBy(if (showing) 250f else -250f).start()
+        fab.animate().translationYBy(if (showing) 250f else -250f).start()
+        supportFragmentManager.beginTransaction().
+            setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
+            hide(oldFragment).show(newFragment).commit()
+    }
+
+    private fun toggleShoppingListInventoryFragments(switchingToInventory: Boolean) {
+        showingInventory = switchingToInventory
+        checkoutButtonIsHidden = switchingToInventory
+        if (switchingToInventory) {
+            shoppingListFragment.disable()
+            inventoryFragment.enable()
+            supportFragmentManager.beginTransaction().
+                setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
+                hide(shoppingListFragment).show(inventoryFragment).commit()
+        } else {
+            shoppingListFragment.enable()
+            inventoryFragment.disable()
+            supportFragmentManager.beginTransaction().
+                setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
+                hide(inventoryFragment).show(shoppingListFragment).commit()
+        }
     }
 }

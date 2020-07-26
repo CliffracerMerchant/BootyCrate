@@ -75,8 +75,9 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
                                    if (!editable && valueEdit.isFocused) valueEdit.clearFocus()
                                    invalidate() }
 
-    val liveData: LiveData<Int> get() = liveDataPrivate
-    private val liveDataPrivate = MutableLiveData(currentValue)
+    private val _liveData = MutableLiveData(currentValue)
+    val liveData: LiveData<Int> get() = _liveData
+
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
     private val _handler = Handler()
 
@@ -117,7 +118,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
     fun increment() = modifyValue(stepSize)
     fun decrement() = modifyValue(-stepSize)
 
-    private fun updateLiveData() { liveDataPrivate.value = currentValue }
+    private fun updateLiveData() { _liveData.value = currentValue }
 
     private fun updateLiveDataWithDelay() {
         _handler.removeCallbacks(::updateLiveData)
@@ -143,7 +144,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
 
     override fun onDraw(canvas: Canvas) {
         if (isEditable) valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-        else valueEdit.paintFlags = valueEdit.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
+        else            valueEdit.paintFlags = valueEdit.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
         super.onDraw(canvas)
     }
 }

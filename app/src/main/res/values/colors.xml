@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#16806a</color>
-    <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#ee4141</color>
-    <color name="colorAccentDark">#AA3030</color>
+    <color name="colorPrimary">#FF8765</color>
+    <color name="colorPrimaryDark">#C14B26</color>
+    <color name="colorAccent">#FF4F70</color>
+    <color name="colorAccentDark">#D53150</color>
     <color name="colorButtonDark">#353535</color>
     <color name="colorButtonLight">#CCCCCC</color>
     <color name="colorForeground">#000000</color>
@@ -16,4 +16,5 @@
     <color name="colorTextDark">#202020</color>
     <color name="colorTextDarkSecondary">#353535</color>
     <color name="colorTextLink">#00BCD4</color>
+    <color name="checkoutButtonEnabledColor">#FF9F46</color>
 </resources>

@@ -1,35 +1,41 @@
 package com.cliffracermerchant.bootycrate
 
-import android.content.SharedPreferences
 import android.graphics.drawable.AnimatedVectorDrawable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.util.Log
+import android.os.Handler
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.recyclerView
-import java.io.File
 
 
 class ShoppingListFragment : Fragment() {
-
-    companion object {
-        val instance = ShoppingListFragment()
-        // This is used to make sure that the selection state
-        // is not restored on a fresh restart of the app
-        var ranOnce = false
-    }
-
-    private var deleteIcon: Drawable? = null
-    private var addIcon: Drawable? = null
+    private var actionMode: ActionMode? = null
+    private var savedSelectionState: IntArray? = null
+    private var deleteToAddIcon: AnimatedVectorDrawable? = null
+    private var addToDeleteIcon: AnimatedVectorDrawable? = null
+    private val checkedItems = HashSet<Int>()
+    private var checkoutButtonLastPressTimeStamp = 0L
+    private val handler = Handler()
+    private lateinit var checkoutButtonNormalText: String
+    private lateinit var checkoutButtonConfirmText: String
     private lateinit var mainActivity: MainActivity
     private lateinit var menu: Menu
+    private var actionModeStartedOnce = false
+
+//    private companion object {
+//        // Due to the target API level, the reset function of AnimatedVectorDrawable
+//        // cannot be used. Tracking whether or not the action mode has been started
+//        // at least once (and therefore whether or not the animated drawables used for
+//        // the FAB have been animated yet) allows us to set the image drawable of the
+//        // FAB accordingly.
+//
+//    }
 
     init { setHasOptionsMenu(true) }
 
@@ -41,7 +47,7 @@ class ShoppingListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
-        recyclerView.snackBarAnchor = mainActivity.bottom_app_bar
+        recyclerView.snackBarAnchor = mainActivity.fab
         recyclerView.fragmentManager = mainActivity.supportFragmentManager
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -53,36 +59,65 @@ class ShoppingListFragment : Fragment() {
         recyclerView.setViewModels(viewLifecycleOwner, mainActivity.shoppingListViewModel,
                                    mainActivity.inventoryViewModel, initialSort)
 
-        deleteIcon = mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon)
-        addIcon = mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon)
-        mainActivity.fab.setImageDrawable(deleteIcon)
-        mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
+        addToDeleteIcon = ContextCompat.getDrawable(mainActivity,
+            R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable
+        deleteToAddIcon = ContextCompat.getDrawable(mainActivity,
+            R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable
+        checkoutButtonNormalText = getString(R.string.checkout_description)
+        checkoutButtonConfirmText = getString(R.string.checkout_confirm_description)
 
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
-            if (newSize == 0 && mainActivity.actionMode != null) mainActivity.actionMode?.finish()
+            if (newSize == 0) actionMode?.finish()
             else if (newSize > 0) {
-                if (mainActivity.actionMode == null)
-                    mainActivity.actionMode = mainActivity.startSupportActionMode(actionModeCallback)
-                mainActivity.actionMode?.title = getString(R.string.action_mode_title, newSize)
+                actionMode = actionMode ?: mainActivity.startSupportActionMode(actionModeCallback)
+                actionMode?.title = getString(R.string.action_mode_title, newSize)
             }
         })
-        if (!ranOnce) { ranOnce = true; return }
-        val selectionStateFile = File(mainActivity.cacheDir, "shopping_list_selection_state")
-        if (selectionStateFile.exists()) {
-            val selectionStateString = selectionStateFile.readText().split(',')
-            // size - 1 is to leave off the trailing comma
-            val selectionState = IntArray(selectionStateString.size - 1) { i ->
-                selectionStateString[i].toInt() }
-            recyclerView.selection.restoreState(selectionState)
+        recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
+            if (newSize > 0) mainActivity.checkoutButtonIsEnabled = true
+            if (newSize == 0) {
+                revertCheckoutButtonToNormalState()
+                mainActivity.checkoutButtonIsEnabled = false
+            }
+        })
+    }
+
+    fun revertCheckoutButtonToNormalState() {
+        mainActivity.checkoutButton.text = checkoutButtonNormalText
+        checkoutButtonLastPressTimeStamp = 0
+    }
+
+    fun enable() {
+        mainActivity.fab.setImageDrawable(if (actionModeStartedOnce) deleteToAddIcon
+                                          else                       addToDeleteIcon)
+        mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
+        mainActivity.checkoutButton.setOnClickListener {
+            if (!mainActivity.checkoutButtonIsEnabled) return@setOnClickListener
+            val currentTime = System.currentTimeMillis()
+            if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
+                revertCheckoutButtonToNormalState()
+                recyclerView.checkout()
+            }
+            else {
+                checkoutButtonLastPressTimeStamp = currentTime
+                mainActivity.checkoutButton.text = checkoutButtonConfirmText
+                handler.removeCallbacks(::revertCheckoutButtonToNormalState)
+                handler.postDelayed(::revertCheckoutButtonToNormalState, 2000)
+            }
+
         }
+        restoreRecyclerViewSelectionState()
+    }
+
+    fun disable() {
+        saveRecyclerViewSelectionState()
+        mainActivity.fab.setOnClickListener(null)
+        mainActivity.checkoutButton.setOnClickListener(null)
+        actionMode?.finish()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        super.onCreateOptionsMenu(menu, inflater)
         this.menu = menu
-        menu.setGroupVisible(R.id.shopping_list_view_menu_group, true)
-        initOptionsMenuSort(menu)
-
         val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = true
@@ -93,10 +128,16 @@ class ShoppingListFragment : Fragment() {
         })
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        menu.setGroupVisible(R.id.shopping_list_view_menu_group, true)
+        initOptionsMenuSort(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        super.onOptionsItemSelected(item)
         if (item.isChecked) return false
         return when (item.itemId) {
-            R.id.delete_all_button -> {
+            R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
             } R.id.color_option -> {
                 recyclerView.sort = Sort.Color
@@ -113,68 +154,22 @@ class ShoppingListFragment : Fragment() {
             } R.id.amount_descending_option -> {
                 recyclerView.sort = Sort.AmountDesc
                 item.isChecked = true; true
-            } else -> super.onOptionsItemSelected(item)
+            } else -> mainActivity.onOptionsItemSelected(item)
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        val context = this.context
-        if (context != null) {
-            val selectionStateFile = File(context.cacheDir, "shopping_list_selection_state")
-            val writer = selectionStateFile.writer()
-            for (id in recyclerView.selection.currentState())
-                writer.write("$id,")
-            writer.close()
-
-            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-            val prefsEditor = prefs.edit()
-            val sortStr = if (recyclerView.sort != null) recyclerView.sort.toString()
-            else                           Sort.Color.toString()
-            prefsEditor.putString(context.getString(R.string.pref_shopping_list_sort), sortStr)
-            prefsEditor.apply()
-        }
-
+        disable()
         super.onSaveInstanceState(outState)
     }
 
-    private val actionModeCallback = object: ActionMode.Callback {
-        private var menu: Menu? = null
+    fun saveRecyclerViewSelectionState() {
+        savedSelectionState = recyclerView.selection.currentState()
+    }
 
-        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-            return when (item?.itemId) {
-                R.id.add_to_inventory_button -> {
-                    recyclerView.apply{ addItemsToInventory(*selection.currentState()) }
-                    true
-                }
-                else -> onOptionsItemSelected(item!!)
-            }
-        }
-
-        override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            mode?.menuInflater?.inflate(R.menu.action_bar_menu, menu)
-            this.menu = menu
-            menu?.setGroupVisible(R.id.shopping_list_view_menu_group, true)
-            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
-            mainActivity.fab.setOnClickListener {
-                recyclerView.deleteItems(*recyclerView.selection.currentState()) }
-            mainActivity.fab.setImageDrawable(deleteIcon)
-            (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
-
-            if (menu != null) initOptionsMenuSort(menu)
-            return true
-        }
-
-        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?) = false
-
-        override fun onDestroyActionMode(mode: ActionMode?) {
-            recyclerView.selection.clear()
-            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
-            mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
-            mainActivity.fab.setImageDrawable(addIcon)
-            (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
-            initOptionsMenuSort(this@ShoppingListFragment.menu)
-            mainActivity.actionMode = null
-        }
+    fun restoreRecyclerViewSelectionState() {
+        savedSelectionState?.let { recyclerView.selection.restoreState(it) }
+        savedSelectionState = null
     }
 
     private fun initOptionsMenuSort(menu: Menu) {
@@ -186,4 +181,75 @@ class ShoppingListFragment : Fragment() {
             Sort.AmountDesc -> R.id.amount_descending_option
             else -> R.id.color_option }).isChecked = true
     }
+
+    private val actionModeCallback = object: ActionMode.Callback {
+        private var menu: Menu? = null
+
+        override fun onActionItemClicked(mode: ActionMode?, item: MenuItem): Boolean {
+            return when (item.itemId) {
+                R.id.add_to_inventory_button -> {
+                    recyclerView.apply{ addItemsToInventory(*selection.currentState()) }
+                    true
+                } else -> onOptionsItemSelected(item)
+            }
+        }
+
+        override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+            actionModeStartedOnce = true
+            mode?.menuInflater?.inflate(R.menu.action_bar_menu, menu)
+            this.menu = menu
+            menu?.setGroupVisible(R.id.shopping_list_view_menu_group, true)
+            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
+            mainActivity.fab.setOnClickListener {
+                recyclerView.deleteItems(*recyclerView.selection.currentState()) }
+            mainActivity.fab.setImageDrawable(addToDeleteIcon)
+            (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
+
+            if (menu != null) initOptionsMenuSort(menu)
+            return true
+        }
+
+        override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?) = false
+
+        override fun onDestroyActionMode(mode: ActionMode?) {
+            recyclerView.selection.clear()
+            //menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
+            mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
+            mainActivity.fab.setImageDrawable(deleteToAddIcon)
+            (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
+            initOptionsMenuSort(this@ShoppingListFragment.menu)
+            actionMode = null
+        }
+    }
 }
+
+/*if (recyclerView.selection.isEmpty) return
+        val context = this.context
+        if (context != null) {
+            val selectionStateFile = File(context.cacheDir, "inventory_selection_state")
+            val writer = selectionStateFile.writer()
+            for (id in recyclerView.selection.currentState())
+                writer.write("$id,")
+            writer.close()
+
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            val prefsEditor = prefs.edit()
+            val sortStr = if (recyclerView.sort != null) recyclerView.sort.toString()
+            else                           Sort.Color.toString()
+            prefsEditor.putString(context.getString(R.string.pref_inventory_sort), sortStr)
+            prefsEditor.apply()
+        }*/
+
+/*val context = this.context
+if (context != null) {
+    val selectionStateFile = File(context.cacheDir, "inventory_selection_state")
+    if (selectionStateFile.exists()) {
+        val selectionStateString = selectionStateFile.readText().split(',')
+        // size - 1 is to leave off the trailing comma
+        val selectionState = IntArray(selectionStateString.size - 1) { i ->
+            selectionStateString[i].toInt()
+        }
+        recyclerView.selection.restoreState(selectionState)
+        selectionStateFile.delete()
+    }
+}*/
