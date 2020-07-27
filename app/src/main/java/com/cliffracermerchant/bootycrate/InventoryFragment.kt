@@ -19,8 +19,7 @@ import java.io.File
 class InventoryFragment : Fragment() {
     var actionMode: ActionMode? = null
     private var savedSelectionState: IntArray? = null
-    private var deleteToAddIcon: AnimatedVectorDrawable? = null
-    private var addToDeleteIcon: AnimatedVectorDrawable? = null
+    private lateinit var fabIconController: AnimatedVectorDrawableController
     private lateinit var mainActivity: MainActivity
     private lateinit var menu: Menu
 
@@ -55,11 +54,6 @@ class InventoryFragment : Fragment() {
         recyclerView.setViewModels(viewLifecycleOwner, mainActivity.inventoryViewModel,
                                    mainActivity.shoppingListViewModel, initialSort)
 
-        addToDeleteIcon = ContextCompat.getDrawable(mainActivity,
-            R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable
-        deleteToAddIcon = ContextCompat.getDrawable(mainActivity,
-            R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable
-
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
             if (newSize == 0 && actionMode != null) actionMode?.finish()
             else if (newSize > 0) {
@@ -70,8 +64,9 @@ class InventoryFragment : Fragment() {
     }
 
     fun enable() {
-        mainActivity.fab.setImageDrawable(if (actionModeStartedOnce) deleteToAddIcon
-                                          else                       addToDeleteIcon)
+        fabIconController = AnimatedVectorDrawableController(mainActivity.fab,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
         mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
         restoreRecyclerViewSelectionState()
     }
@@ -168,8 +163,7 @@ class InventoryFragment : Fragment() {
             menu?.setGroupVisible(R.id.inventory_view_action_mode_group, true)
             mainActivity.fab.setOnClickListener {
                 recyclerView.apply{ deleteItems(*selection.currentState()) }}
-            mainActivity.fab.setImageDrawable(addToDeleteIcon)
-            (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
+            fabIconController.toStateB()
 
             if (menu != null) initOptionsMenuSort(menu)
             return true
@@ -181,8 +175,7 @@ class InventoryFragment : Fragment() {
             recyclerView.selection.clear()
             //menu?.setGroupVisible(R.id.inventory_view_action_mode_group, false)
             mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
-            mainActivity.fab.setImageDrawable(deleteToAddIcon)
-            (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
+            fabIconController.toStateA()
             initOptionsMenuSort(this@InventoryFragment.menu)
             actionMode = null
         }

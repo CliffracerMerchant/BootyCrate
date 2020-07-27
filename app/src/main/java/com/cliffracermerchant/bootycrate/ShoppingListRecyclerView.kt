@@ -1,6 +1,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
@@ -202,11 +203,12 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(Field.AmountInCart)) holder.view.amountInCartEdit.currentValue = item.amountInCart
                     if (changes.contains(Field.LinkedTo))     holder.view.updateLinkedStatus(item.linkedInventoryItemId)
                     if (changes.contains(Field.Color)) {
-                            val checkBoxBg = (holder.view.checkBox.background as LayerDrawable).getDrawable(0)
-                            val startColor = holder.view.itemColor ?: 0
-                            holder.view.itemColor = item.color
-                            val endColor = item.color
-                            ObjectAnimator.ofArgb(checkBoxBg, "tint", startColor, endColor).start()
+                        holder.view.itemColor = item.color
+                        val startColor = holder.view.itemColor ?: 0
+                        val endColor = item.color
+                        val anim = ValueAnimator.ofArgb(startColor, endColor)
+                        anim.addUpdateListener { holder.view.checkBoxBackgroundController.tint = anim.animatedValue as Int }
+                        anim.start()
                     }
                 }
             }
@@ -299,8 +301,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
                 view.checkBox.isClickable = false
                 view.checkBox.setOnClickListener { viewModel.updateIsChecked(item.id, view.checkBox.isChecked) }
-                view.checkBox.setOnCheckedChangeListener { checkBox, checked ->
-                    view.defaultOnCheckedChangeListener.onCheckedChanged(checkBox, checked)
+                view.checkBox.setOnCheckedChangeListener { _, checked ->
+                    view.defaultOnCheckedChange(checked)
                     Log.d("update", "overridden onCheckedChangeListener called")
                     if (checked) checkedItems.add(adapterPosition)
                     else         checkedItems.remove(adapterPosition)

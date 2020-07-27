@@ -10,16 +10,13 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.recyclerView
 
 
 class ShoppingListFragment : Fragment() {
     private var actionMode: ActionMode? = null
     private var savedSelectionState: IntArray? = null
-    private var deleteToAddIcon: AnimatedVectorDrawable? = null
-    private var addToDeleteIcon: AnimatedVectorDrawable? = null
-    private val checkedItems = HashSet<Int>()
+    private lateinit var fabIconController: AnimatedVectorDrawableController
     private var checkoutButtonLastPressTimeStamp = 0L
     private val handler = Handler()
     private lateinit var checkoutButtonNormalText: String
@@ -59,10 +56,6 @@ class ShoppingListFragment : Fragment() {
         recyclerView.setViewModels(viewLifecycleOwner, mainActivity.shoppingListViewModel,
                                    mainActivity.inventoryViewModel, initialSort)
 
-        addToDeleteIcon = ContextCompat.getDrawable(mainActivity,
-            R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable
-        deleteToAddIcon = ContextCompat.getDrawable(mainActivity,
-            R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable
         checkoutButtonNormalText = getString(R.string.checkout_description)
         checkoutButtonConfirmText = getString(R.string.checkout_confirm_description)
 
@@ -88,8 +81,9 @@ class ShoppingListFragment : Fragment() {
     }
 
     fun enable() {
-        mainActivity.fab.setImageDrawable(if (actionModeStartedOnce) deleteToAddIcon
-                                          else                       addToDeleteIcon)
+        fabIconController = AnimatedVectorDrawableController(mainActivity.fab,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
         mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
         mainActivity.checkoutButton.setOnClickListener {
             if (!mainActivity.checkoutButtonIsEnabled) return@setOnClickListener
@@ -202,9 +196,7 @@ class ShoppingListFragment : Fragment() {
             menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
             mainActivity.fab.setOnClickListener {
                 recyclerView.deleteItems(*recyclerView.selection.currentState()) }
-            mainActivity.fab.setImageDrawable(addToDeleteIcon)
-            (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
-
+            fabIconController.toStateB()
             if (menu != null) initOptionsMenuSort(menu)
             return true
         }
@@ -213,10 +205,8 @@ class ShoppingListFragment : Fragment() {
 
         override fun onDestroyActionMode(mode: ActionMode?) {
             recyclerView.selection.clear()
-            //menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
             mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
-            mainActivity.fab.setImageDrawable(deleteToAddIcon)
-            (mainActivity.fab.drawable as AnimatedVectorDrawable).start()
+            fabIconController.toStateA()
             initOptionsMenuSort(this@ShoppingListFragment.menu)
             actionMode = null
         }

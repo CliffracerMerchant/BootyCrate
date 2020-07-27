@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/animated_checkbox_unchecked_to_checked_background"/>
-    <item android:drawable="@drawable/animated_checkbox_unchecked_to_checked_checkmark" />
+    <item
+        android:id="@+id/checkBoxBackground"
+        android:drawable="@drawable/animated_checkbox_unchecked_to_checked_background"/>
+    <item
+        android:id="@+id/checkBoxCheckmark"
+        android:drawable="@drawable/animated_checkbox_unchecked_to_checked_checkmark" />
 </layer-list>
