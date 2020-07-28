@@ -54,23 +54,26 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
         normalTextColor = nameEdit.currentTextColor
 
-        decreaseButtonIconController = AnimatedVectorDrawableController(amountOnListEdit.decreaseButton,
+        decreaseButtonIconController = AnimatedVectorDrawableController.forView(
+            amountOnListEdit.decreaseButton,
             context.getDrawable(R.drawable.shopping_list_animated_multiply_to_minus_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.shopping_list_animated_minus_to_multiply_icon) as AnimatedVectorDrawable)
-        increaseButtonIconController = AnimatedVectorDrawableController(amountOnListEdit.increaseButton,
+        increaseButtonIconController = AnimatedVectorDrawableController.forView(
+            amountOnListEdit.increaseButton,
             context.getDrawable(R.drawable.animated_blank_to_plus_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_plus_to_blank_icon) as AnimatedVectorDrawable)
-        editButtonIconController = AnimatedVectorDrawableController(editButton,
+        editButtonIconController = AnimatedVectorDrawableController.forView(
+            editButton,
             context.getDrawable(R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
-        checkBoxBackgroundController = AnimatedVectorDrawableController(checkBox.background,
+        checkBoxBackgroundController = AnimatedVectorDrawableController.forDrawableLayer(
+            checkBox.background as LayerDrawable, R.id.checkBoxBackground,
             context.getDrawable(R.drawable.animated_checkbox_unchecked_to_checked_background) as AnimatedVectorDrawable,
-            context.getDrawable(R.drawable.animated_checkbox_checked_to_unchecked_background) as AnimatedVectorDrawable,
-            R.id.checkBoxBackground)
-        checkBoxCheckmarkController = AnimatedVectorDrawableController(checkBox.background,
+            context.getDrawable(R.drawable.animated_checkbox_checked_to_unchecked_background) as AnimatedVectorDrawable)
+        checkBoxCheckmarkController = AnimatedVectorDrawableController.forDrawableLayer(
+            checkBox.background as LayerDrawable, R.id.checkBoxCheckmark,
             context.getDrawable(R.drawable.animated_checkbox_unchecked_to_checked_checkmark) as AnimatedVectorDrawable,
-            context.getDrawable(R.drawable.animated_checkbox_checked_to_unchecked_checkmark) as AnimatedVectorDrawable,
-            R.id.checkBoxCheckmark)
+            context.getDrawable(R.drawable.animated_checkbox_checked_to_unchecked_checkmark) as AnimatedVectorDrawable)
 
         editButton.setOnClickListener {
             if (isExpanded) //TODO: Implement more options menu

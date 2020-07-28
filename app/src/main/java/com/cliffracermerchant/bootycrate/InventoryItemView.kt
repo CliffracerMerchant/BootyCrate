@@ -37,7 +37,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
 
     init {
         inflate(context, R.layout.inventory_item_layout, this)
-        editButtonIconController = AnimatedVectorDrawableController(editButton,
+        editButtonIconController = AnimatedVectorDrawableController.forView(editButton,
             context.getDrawable(R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
 

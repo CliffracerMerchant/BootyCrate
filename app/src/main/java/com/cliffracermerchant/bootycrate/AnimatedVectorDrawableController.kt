@@ -6,31 +6,42 @@ import android.view.View
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.security.InvalidParameterException
 
-class AnimatedVectorDrawableController(private val target: Any,
-                                       private val aToBDrawable: AnimatedVectorDrawable,
-                                       private val bToADrawable: AnimatedVectorDrawable,
-                                       private val layerId: Int = -1) {
+class AnimatedVectorDrawableController private constructor(
+    private val target: Any,
+    private val aToBDrawable: AnimatedVectorDrawable,
+    private val bToADrawable: AnimatedVectorDrawable,
+    private var targetLayerId: Int = -1) {
     private var aToBHasBeenAnimated = false
     private var bToAHasBeenAnimated = false
+    private var _isInStateA = true
     private val targetIsFab = target is FloatingActionButton
     private val targetIsDrawableLayer = target is LayerDrawable
 
-    private var _isInStateA = true
-
     var isInStateA get() = _isInStateA
-                   set(value) { setState(value) }
+        set(value) { setState(value) }
     var tint: Int? = null
         set(value) { field = value
                      aToBDrawable.setTint(value ?: 0)
                      bToADrawable.setTint(value ?: 0) }
 
-    init {
-        if (!targetIsFab && !targetIsDrawableLayer && target !is View)
-            throw InvalidParameterException("The target for an AnimatedVectorDrawable" +
-                                            "Controller must be a FloatingActionButton, " +
-                                            "a LayerDrawable, or a View descendant")
-        setBackground(aToBDrawable)
+    companion object {
+        fun forFloatingActionButton(fab: FloatingActionButton,
+                                    aToBDrawable: AnimatedVectorDrawable,
+                                    bToADrawable: AnimatedVectorDrawable) =
+            AnimatedVectorDrawableController(fab, aToBDrawable, bToADrawable)
+
+        fun forView(view: View,
+                    aToBDrawable: AnimatedVectorDrawable,
+                    bToADrawable: AnimatedVectorDrawable) =
+            AnimatedVectorDrawableController(view, aToBDrawable, bToADrawable)
+
+        fun forDrawableLayer(layerDrawable: LayerDrawable, targetLayerId: Int,
+                             aToBDrawable: AnimatedVectorDrawable,
+                             bToADrawable: AnimatedVectorDrawable) =
+            AnimatedVectorDrawableController(layerDrawable, aToBDrawable, bToADrawable, targetLayerId)
     }
+
+    init { setBackground(aToBDrawable) }
 
     fun setState(toStateA: Boolean, animate: Boolean = true) {
         _isInStateA = toStateA
@@ -62,7 +73,7 @@ class AnimatedVectorDrawableController(private val target: Any,
         when { targetIsFab ->
                    (target as FloatingActionButton).setImageDrawable(newBackground)
                targetIsDrawableLayer ->
-                   (target as LayerDrawable).setDrawableByLayerId(layerId, newBackground)
+                   (target as LayerDrawable).setDrawableByLayerId(targetLayerId, newBackground)
                else ->
                    (target as View).background = newBackground
         }

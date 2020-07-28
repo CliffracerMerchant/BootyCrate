@@ -64,7 +64,8 @@ class InventoryFragment : Fragment() {
     }
 
     fun enable() {
-        fabIconController = AnimatedVectorDrawableController(mainActivity.fab,
+        fabIconController = AnimatedVectorDrawableController.forFloatingActionButton(
+            mainActivity.fab,
             ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
             ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
         mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
