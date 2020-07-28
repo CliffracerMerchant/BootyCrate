@@ -54,16 +54,13 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
         normalTextColor = nameEdit.currentTextColor
 
-        decreaseButtonIconController = AnimatedVectorDrawableController.forView(
-            amountOnListEdit.decreaseButton,
+        decreaseButtonIconController = AnimatedVectorDrawableController.forView(amountOnListEdit.decreaseButton,
             context.getDrawable(R.drawable.shopping_list_animated_multiply_to_minus_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.shopping_list_animated_minus_to_multiply_icon) as AnimatedVectorDrawable)
-        increaseButtonIconController = AnimatedVectorDrawableController.forView(
-            amountOnListEdit.increaseButton,
+        increaseButtonIconController = AnimatedVectorDrawableController.forView(amountOnListEdit.increaseButton,
             context.getDrawable(R.drawable.animated_blank_to_plus_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_plus_to_blank_icon) as AnimatedVectorDrawable)
-        editButtonIconController = AnimatedVectorDrawableController.forView(
-            editButton,
+        editButtonIconController = AnimatedVectorDrawableController.forView(editButton,
             context.getDrawable(R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
         checkBoxBackgroundController = AnimatedVectorDrawableController.forDrawableLayer(

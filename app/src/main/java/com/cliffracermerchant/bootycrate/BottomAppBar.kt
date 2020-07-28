@@ -1,30 +1,18 @@
+
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.RectF
 import android.util.AttributeSet
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.LinearLayout
 import androidx.appcompat.widget.Toolbar
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.content.res.getResourceIdOrThrow
-import androidx.core.graphics.toRectF
-import androidx.core.graphics.transform
-import androidx.core.view.children
 import androidx.core.view.isEmpty
-import androidx.core.view.marginLeft
 import com.google.android.material.shape.EdgeTreatment
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.shape.ShapePath
-import kotlinx.android.synthetic.main.activity_main.view.*
 
 class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
     private val arcQuarter = 90f
@@ -36,27 +24,24 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     enum class CradleAlignmentMode { Start, Center, End }
 
     private val cradleLayoutId: Int
-    lateinit var cradleLayout: LinearLayout
-    private val cradleLayoutFirstChildRect = Rect()
-    private val cradleLayoutLastChildRect = Rect()
+    lateinit var cradleLayout: ViewGroup
 
     private val materialShapeDrawable = MaterialShapeDrawable()
     var cradleStartEndMargin: Int
+    var cradleContentsMargin: Int
     val cradleAlignmentMode: CradleAlignmentMode
     var cradleWidth: Int = 0
     var cradleDepth: Int
     var cradleHorizontalOffset: Int = 0
     var cradleTopCornerRadius: Int
     var cradleBottomCornerRadius: Int
-    var cradleContentsMargin: Int
 
     init {
         clipChildren = false
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
 
         cradleAlignmentMode = CradleAlignmentMode.values()[
-                a.getInt(R.styleable.BottomAppBar_cradleAlignmentMode,
-                         CradleAlignmentMode.Center.ordinal)]
+            a.getInt(R.styleable.BottomAppBar_cradleAlignmentMode, CradleAlignmentMode.Center.ordinal)]
         cradleLayoutId = a.getResourceId(R.styleable.BottomAppBar_cradleLayoutId, -1)
         cradleDepth = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleDepth, 0)
         cradleTopCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleTopCornerRadius, 0)
@@ -74,9 +59,13 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
         viewTreeObserver.addOnGlobalLayoutListener(object: ViewTreeObserver.OnGlobalLayoutListener {
             override fun onGlobalLayout() {
                 val parent = parent as ViewGroup?
-                cradleLayout = if (parent?.findViewById<LinearLayout>(cradleLayoutId) != null)
+                cradleLayout = if (parent?.findViewById<ViewGroup>(cradleLayoutId) != null)
                                    parent.findViewById(cradleLayoutId)
                                else LinearLayout(context)
+                // Setting cradleLayout.layoutParams.width here is necessary to
+                // prevent the cradle being drawn incorrectly the first time due to the
+                // layoutParams.width being 0
+                cradleLayout.layoutParams.width = cradleLayout.width
                 redrawCradle()
                 viewTreeObserver.removeOnGlobalLayoutListener(this)
             }
@@ -86,26 +75,13 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     fun redrawCradle() {
         if (cradleLayout.isEmpty()) return
 
-        val firstChild = cradleLayout.getChildAt(0)
-        firstChild.getGlobalVisibleRect(cradleLayoutFirstChildRect)
-        val lastChild = cradleLayout.getChildAt(cradleLayout.childCount - 1)
-        lastChild.getGlobalVisibleRect(cradleLayoutLastChildRect)
-
-        cradleWidth = cradleLayoutLastChildRect.right - cradleLayoutFirstChildRect.left + 2 * cradleContentsMargin
+        cradleWidth = cradleLayout.layoutParams.width + 2 * cradleContentsMargin
         cradleHorizontalOffset = when (cradleAlignmentMode) {
             CradleAlignmentMode.Start ->  left + cradleStartEndMargin
             CradleAlignmentMode.Center -> left + (width - cradleWidth) / 2
             CradleAlignmentMode.End ->    right - cradleStartEndMargin - cradleWidth
         }
-        var summedWidth = 0
-        var summedAdjustedWidth = 0
-        for (child in cradleLayout.children) {
-            summedWidth += child.width
-            child.getGlobalVisibleRect(cradleLayoutFirstChildRect)
-            summedAdjustedWidth += cradleLayoutFirstChildRect.width()
-        }
-
-        cradleLayout.x = left + cradleHorizontalOffset.toFloat() + cradleContentsMargin + summedAdjustedWidth - summedWidth - firstChild.translationX * firstChild.scaleX
+        cradleLayout.x = left + cradleHorizontalOffset.toFloat() + cradleContentsMargin
         cradleLayout.y = top + cradleDepth.toFloat() - height - cradleContentsMargin
         materialShapeDrawable.invalidateSelf()
     }

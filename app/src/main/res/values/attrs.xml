@@ -4,19 +4,6 @@
     <attr name="colorSelected" format="color" />
     <attr name="textColor" format="color" />
 
-<!--    <declare-styleable name="BottomAppBar">-->
-<!--        <attr name="cradleAlignmentMode" format="enum" >-->
-<!--            <enum name="start" value="0" />-->
-<!--            <enum name="center" value="1" />-->
-<!--            <enum name="end" value="2" />-->
-<!--        </attr>-->
-<!--        <attr name="fabCradleAlignmentMode" format="enum" >-->
-<!--            <enum name="start" value="3" />-->
-<!--            <enum name="end" value="4" />-->
-<!--        </attr>-->
-<!--        <attr name="cradleExtraWidth" format="dimension" />-->
-<!--    </declare-styleable>-->
-
     <declare-styleable name="BottomAppBar">
         <attr name="cradleLayoutId" format="reference" />
         <attr name="cradleAlignmentMode" format="enum" >
@@ -24,11 +11,6 @@
             <enum name="center" value="1" />
             <enum name="end" value="2" />
         </attr>
-<!--        <attr name="fabCradleAlignmentMode" format="enum" >-->
-<!--            <enum name="start" value="0" />-->
-<!--            <enum name="end" value="1" />-->
-<!--        </attr>-->
-<!--        <attr name="cradleWidth" format="dimension" />-->
         <attr name="cradleDepth" format="dimension" />
         <attr name="cradleTopCornerRadius" format="dimension" />
         <attr name="cradleBottomCornerRadius" format="dimension" />

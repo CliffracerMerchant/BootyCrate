@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private var lightGrayColor: Int = 0
     private var blackColor: Int = 0
     private var yellowColor: Int = 0
+    private var cradleLayoutInitialWidth = -1
     var checkoutButtonIsEnabled = false
         set(value) {
             if (checkoutButtonIsEnabled == value) return
@@ -41,23 +42,29 @@ class MainActivity : AppCompatActivity() {
     private var checkoutButtonIsHidden = false
         set(value) {
             if (checkoutButtonIsHidden == value) return
+            if (cradleLayoutInitialWidth == -1) cradleLayoutInitialWidth = cradle_layout.width
+            val cradleLayoutStartWidth = if (value) cradle_layout.width else fab.width
+            val cradleLayoutEndWidth = if (value) fab.width else cradleLayoutInitialWidth
+            val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
             val anim = ValueAnimator.ofFloat(if (value) 1f else 0f,
                                              if (value) 0f else 1f)
             anim.addUpdateListener {
                 checkout_button.scaleX = it.animatedValue as Float
+                cradle_layout.layoutParams.width = cradleLayoutStartWidth +
+                        (cradleLayoutWidthChange * it.animatedFraction).toInt()
+                cradle_layout.requestLayout()
                 bottom_app_bar.redrawCradle()
             }
             anim.start()
             field = value
         }
     private var checkoutButtonWidth = 0
+    private var menu: Menu? = null
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
     lateinit var checkoutButton: MaterialButton
-    var menu: Menu? = null
 
-//    private companion object FragmentManagerHelper {
     enum class FragmentId { ShoppingList, Inventory, Preferences }
 
     val shoppingListFragment = ShoppingListFragment()

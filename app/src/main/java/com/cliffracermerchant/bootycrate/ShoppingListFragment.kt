@@ -23,16 +23,6 @@ class ShoppingListFragment : Fragment() {
     private lateinit var checkoutButtonConfirmText: String
     private lateinit var mainActivity: MainActivity
     private lateinit var menu: Menu
-    private var actionModeStartedOnce = false
-
-//    private companion object {
-//        // Due to the target API level, the reset function of AnimatedVectorDrawable
-//        // cannot be used. Tracking whether or not the action mode has been started
-//        // at least once (and therefore whether or not the animated drawables used for
-//        // the FAB have been animated yet) allows us to set the image drawable of the
-//        // FAB accordingly.
-//
-//    }
 
     init { setHasOptionsMenu(true) }
 
@@ -81,8 +71,7 @@ class ShoppingListFragment : Fragment() {
     }
 
     fun enable() {
-        fabIconController = AnimatedVectorDrawableController.forFloatingActionButton(
-            mainActivity.fab,
+        fabIconController = AnimatedVectorDrawableController.forFloatingActionButton(mainActivity.fab,
             ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
             ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
         mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
@@ -190,7 +179,6 @@ class ShoppingListFragment : Fragment() {
         }
 
         override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-            actionModeStartedOnce = true
             mode?.menuInflater?.inflate(R.menu.action_bar_menu, menu)
             this.menu = menu
             menu?.setGroupVisible(R.id.shopping_list_view_menu_group, true)

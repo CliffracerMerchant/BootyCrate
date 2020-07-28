@@ -126,9 +126,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         snackBar.show()
     }
 
-    fun undoDelete() {
-        viewModel.undoDelete()
-    }
+    fun undoDelete() = viewModel.undoDelete()
 
     fun deleteAll() {
         val typedValue = TypedValue()
