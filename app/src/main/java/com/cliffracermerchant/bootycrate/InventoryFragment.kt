@@ -1,9 +1,21 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
 import android.graphics.drawable.AnimatedVectorDrawable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
-import android.util.Log
 import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
@@ -11,17 +23,23 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
-import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.recyclerView
-import java.io.File
 
+/** A fragment to display and modify the user's inventory using an InventoryRecyclerView.
+ *
+ *  InventoryFragment initially sets the onClickListener and icon of the main
+ *  activity's floating action button to add a new item to the inventory.
+ *  InventoryFragment also contains a custom ActionMode to respond to the user
+ *  selecting one or more inventory items in the inventory. When in its action
+ *  mode, InventoryFragment will change the onClickListener and icon of the
+ *  floating action button to indicate that it is now used to delete the sel-
+ *  ected items rather than to add a new one. */
 class InventoryFragment : Fragment() {
-    var actionMode: ActionMode? = null
-    private var savedSelectionState: IntArray? = null
-    private lateinit var fabIconController: AnimatedVectorDrawableController
     private lateinit var mainActivity: MainActivity
     private lateinit var menu: Menu
+    var actionMode: ActionMode? = null
+    private var savedSelectionState: IntArray? = null
+    private lateinit var fabIconController: TwoStateAnimatedIconController
 
     init { setHasOptionsMenu(true) }
 
@@ -33,8 +51,9 @@ class InventoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
-        recyclerView.snackBarAnchor = mainActivity.fab
-        recyclerView.fragmentManager = mainActivity.supportFragmentManager
+        fabIconController = TwoStateAnimatedIconController.forFloatingActionButton(mainActivity.fab,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(mainActivity.getString(R.string.pref_inventory_sort),
@@ -42,8 +61,10 @@ class InventoryFragment : Fragment() {
         val initialSort = try { Sort.valueOf(sortStr!!) }
                           catch(e: IllegalArgumentException) { Sort.Color } // If sortStr value doesn't match a Sort value
                           catch(e: NullPointerException) { Sort.Color } // If sortStr is null
-        recyclerView.setViewModels(viewLifecycleOwner, mainActivity.inventoryViewModel,
-                                   mainActivity.shoppingListViewModel, initialSort)
+        recyclerView.finishInit(viewLifecycleOwner, mainActivity.inventoryViewModel,
+                                mainActivity.shoppingListViewModel,
+                                mainActivity.supportFragmentManager, initialSort)
+        recyclerView.snackBarAnchor = mainActivity.fab
 
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
             if (newSize == 0 && actionMode != null) actionMode?.finish()
@@ -55,9 +76,7 @@ class InventoryFragment : Fragment() {
     }
 
     fun enable() {
-        fabIconController = AnimatedVectorDrawableController.forFloatingActionButton(mainActivity.fab,
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
+        fabIconController.toStateA(animate = false)
         mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
         restoreRecyclerViewSelectionState()
     }

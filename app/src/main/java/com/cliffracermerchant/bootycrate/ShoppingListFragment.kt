@@ -1,5 +1,22 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.content.res.ColorStateList
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.os.Bundle
 import android.os.Handler
@@ -10,19 +27,50 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.recyclerView
 
-
+/** A fragment to display and modify the user's shopping list.
+ *
+ *  ShoppingListFragment's primary functions are to host an instance of Shop-
+ *  pingListRecyclerView, and to manage the state and function of the floating
+ *  action button and the checkout button.
+ *
+ *  ShoppingListFragment initially sets the onClickListener and icon of the
+ *  main activity's floating action button to add a new item to the shopping
+ *  list. ShoppingListFragment also contains a custom ActionMode to respond to
+ *  the user selecting one or more shopping list items in the shopping list.
+ *  When in its action mode, ShoppingListFragment will change the onClickList-
+ *  ener and icon of the floating action button to indicate that it is now used
+ *  to delete the selected items rather than to add a new one.
+ *
+ *  The checkout button can be either enabled or disabled, and is controlled
+ *  using the property checkoutButtonIsEnabled. ShoppingListFragment observes
+ *  its ShoppingListRecyclerView's checkedItems.sizeLiveData to determined
+ *  whether or not to enable or disable the checkout button. If the checkout
+ *  button is clicked while it is enabled, it switches to its confirmatory
+ *  state to safeguard the user from checking out accidentally. If the user
+ *  does not press the button again within two seconds, it will revert to its
+ *  normal state. This can also be accomplished manually using the member func-
+ *  tion revertCheckoutButtonToNormalState(). */
 class ShoppingListFragment : Fragment() {
-    private var actionMode: ActionMode? = null
-    private var savedSelectionState: IntArray? = null
-    private lateinit var fabIconController: AnimatedVectorDrawableController
-    private var checkoutButtonLastPressTimeStamp = 0L
-    private val handler = Handler()
-    private lateinit var checkoutButtonNormalText: String
-    private lateinit var checkoutButtonConfirmText: String
     private lateinit var mainActivity: MainActivity
     private lateinit var menu: Menu
+    private var actionMode: ActionMode? = null
+    private val handler = Handler()
+    private var savedSelectionState: IntArray? = null
+    private lateinit var fabIconController: TwoStateAnimatedIconController
+    private var checkoutButtonLastPressTimeStamp = 0L
+
+    private var darkGrayColor: Int = 0
+    private var lightGrayColor: Int = 0
+    private var blackColor: Int = 0
+    private var yellowColor: Int = 0
+    private lateinit var checkoutButtonNormalText: String
+    private lateinit var checkoutButtonConfirmText: String
+
+    private var checkoutButtonIsEnabled = false
+        set(value) { enableCheckoutButton(value); field = value }
 
     init { setHasOptionsMenu(true) }
 
@@ -34,20 +82,29 @@ class ShoppingListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mainActivity = requireActivity() as MainActivity
-        recyclerView.snackBarAnchor = mainActivity.fab
-        recyclerView.fragmentManager = mainActivity.supportFragmentManager
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(mainActivity.getString(R.string.pref_shopping_list_sort),
                                       Sort.Color.toString())
         val initialSort = try { Sort.valueOf(sortStr!!) }
-                          catch(e: IllegalArgumentException) { Sort.Color } // If sortStr value doesn't match a Sort value
-                          catch(e: NullPointerException) { Sort.Color } // If sortStr is null
-        recyclerView.setViewModels(viewLifecycleOwner, mainActivity.shoppingListViewModel,
-                                   mainActivity.inventoryViewModel, initialSort)
+                          // If sortStr value doesn't match a Sort value
+                          catch(e: IllegalArgumentException) { Sort.Color }
+                          // If sortStr is null
+                          catch(e: NullPointerException) { Sort.Color }
+        recyclerView.finishInit(viewLifecycleOwner, mainActivity.shoppingListViewModel,
+                                mainActivity.inventoryViewModel,
+                                mainActivity.supportFragmentManager, initialSort)
+        recyclerView.snackBarAnchor = mainActivity.fab
 
+        darkGrayColor = ContextCompat.getColor(mainActivity, R.color.colorTextLightSecondary)
+        lightGrayColor = ContextCompat.getColor(mainActivity, android.R.color.darker_gray)
+        blackColor = ContextCompat.getColor(mainActivity, android.R.color.black)
+        yellowColor = ContextCompat.getColor(mainActivity, R.color.checkoutButtonEnabledColor)
         checkoutButtonNormalText = getString(R.string.checkout_description)
         checkoutButtonConfirmText = getString(R.string.checkout_confirm_description)
+        fabIconController = TwoStateAnimatedIconController.forFloatingActionButton(mainActivity.fab,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
 
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
             if (newSize == 0) actionMode?.finish()
@@ -57,26 +114,19 @@ class ShoppingListFragment : Fragment() {
             }
         })
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
-            if (newSize > 0) mainActivity.checkoutButtonIsEnabled = true
+            if (newSize > 0) checkoutButtonIsEnabled = true
             if (newSize == 0) {
                 revertCheckoutButtonToNormalState()
-                mainActivity.checkoutButtonIsEnabled = false
+                checkoutButtonIsEnabled = false
             }
         })
     }
 
-    fun revertCheckoutButtonToNormalState() {
-        mainActivity.checkoutButton.text = checkoutButtonNormalText
-        checkoutButtonLastPressTimeStamp = 0
-    }
-
     fun enable() {
-        fabIconController = AnimatedVectorDrawableController.forFloatingActionButton(mainActivity.fab,
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
+        fabIconController.toStateA(animate = false)
         mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
         mainActivity.checkoutButton.setOnClickListener {
-            if (!mainActivity.checkoutButtonIsEnabled) return@setOnClickListener
+            if (!checkoutButtonIsEnabled) return@setOnClickListener
             val currentTime = System.currentTimeMillis()
             if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
                 revertCheckoutButtonToNormalState()
@@ -88,7 +138,6 @@ class ShoppingListFragment : Fragment() {
                 handler.removeCallbacks(::revertCheckoutButtonToNormalState)
                 handler.postDelayed(::revertCheckoutButtonToNormalState, 2000)
             }
-
         }
         restoreRecyclerViewSelectionState()
     }
@@ -164,6 +213,27 @@ class ShoppingListFragment : Fragment() {
             Sort.AmountAsc -> R.id.amount_ascending_option
             Sort.AmountDesc -> R.id.amount_descending_option
             else -> R.id.color_option }).isChecked = true
+    }
+
+    private fun revertCheckoutButtonToNormalState() {
+        mainActivity.checkoutButton.text = checkoutButtonNormalText
+        checkoutButtonLastPressTimeStamp = 0
+    }
+
+    private fun enableCheckoutButton(enabling: Boolean) {
+        if (checkoutButtonIsEnabled == enabling) return
+
+        val bgColorAnim = ValueAnimator.ofArgb(if (enabling) lightGrayColor else yellowColor,
+                                               if (enabling) yellowColor else lightGrayColor)
+        bgColorAnim.addUpdateListener {
+            mainActivity.checkout_button.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int)
+        }
+        bgColorAnim.duration = 200
+        bgColorAnim.start()
+        val textColorAnim = ObjectAnimator.ofArgb(mainActivity.checkout_button, "textColor",
+                                                  if (enabling) blackColor else darkGrayColor)
+        textColorAnim.duration = 200
+        textColorAnim.start()
     }
 
     private val actionModeCallback = object: ActionMode.Callback {

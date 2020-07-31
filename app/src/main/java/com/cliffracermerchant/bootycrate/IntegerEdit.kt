@@ -1,3 +1,17 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
 import android.app.Activity
@@ -16,19 +30,23 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 
 //TODO: Don't force soft input to appear if hardware keyboard is present
 
-/**     IntegerEdit is a compound view that combines an EditText displaying an
+/** A compound view to edit an integer quantity.
+ *
+ *  IntegerEdit is a compound view that combines an EditText displaying an
  *  integer with two image buttons on its left and right to act as decrease and
  *  increase buttons. IntegerEdit provides a publicly accessible LiveData mem-
  *  ber to allow external entities to react to a change in its data.
- *      Because a user might click on the provided decrease or increase buttons
+ *
+ *  Because a user might click on the provided decrease or increase buttons
  *  rapidly when intending to change the value by a large amount, and because
  *  external entities most likely don't want to deal with a rapid succession of
  *  intermediate states, IntegerEdit will only change its LiveData member after
- *  a change is made AND no further change to the value is made within the
+ *  a change is made and no further change to the value is made within the
  *  valueChangedNotificationTimeout interval.
- *      The EditText is by default not focusable in touch mode, but this can be
+ *
+ *  The EditText is by default not focusable in touch mode, but this can be
  *  changed by setting the member isEditable. If set to true, the user can edit
- *  the value directly (rather than through the user of the decrease / increase
+ *  the value directly (rather than through the use of the decrease / increase
  *  buttons). When in the editable state, the EditText will underline the cur-
  *  rent value to indicate this to the user.
  *
@@ -84,10 +102,9 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
     init {
         LayoutInflater.from(context).inflate(R.layout.integer_edit_layout, this)
         val styledAttrs = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
+        _currentValue = styledAttrs.getInt(R.styleable.IntegerEdit_initialValue, 0)
         _minValue = styledAttrs.getInt(R.styleable.IntegerEdit_minValue, 0)
         _maxValue = styledAttrs.getInt(R.styleable.IntegerEdit_maxValue, 99)
-        _currentValue = styledAttrs.getInt(R.styleable.IntegerEdit_initialValue, 0)
-
         valueChangedNotificationTimeout = styledAttrs.getInt(
             R.styleable.IntegerEdit_valueChangedNotificationTimeout, 1000)
         stepSize = styledAttrs.getInt(R.styleable.IntegerEdit_stepSize, 1)

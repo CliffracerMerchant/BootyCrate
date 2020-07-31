@@ -12,7 +12,7 @@
             <group android:name="check_group">
                 <path
                     android:name="check_path"
-                    android:pathData="M 4.2 12.75 L 9 17.5 L 19.2 6.25"
+                    android:pathData="M 19.2 6.25 L 9 17.5 L 4.2 12.75"
                     android:fillAlpha="0"
                     android:strokeColor="#000000"
                     android:strokeWidth="3"/>

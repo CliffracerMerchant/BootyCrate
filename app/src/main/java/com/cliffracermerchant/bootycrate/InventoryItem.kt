@@ -1,16 +1,31 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+/** A Room entity that represents an inventory item in the user's inventory. */
 @Entity(tableName = "inventory_item")
 class InventoryItem {
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")                         var id: Long = 0
-    @ColumnInfo(name = "name")                       var name: String
-    @ColumnInfo(name = "extraInfo")                  var extraInfo: String
-    @ColumnInfo(name = "color")                      var color: Int
+    @ColumnInfo(name = "id")        var id: Long = 0
+    @ColumnInfo(name = "name")      var name: String
+    @ColumnInfo(name = "extraInfo") var extraInfo: String
+    @ColumnInfo(name = "color")     var color: Int
     @ColumnInfo(name = "amount", defaultValue = "1") var amount: Int
     @ColumnInfo(name = "autoAddToShoppingList", defaultValue = "0") var autoAddToShoppingList: Boolean
     @ColumnInfo(name = "autoAddToShoppingListTrigger", defaultValue = "1") var autoAddToShoppingListTrigger: Int

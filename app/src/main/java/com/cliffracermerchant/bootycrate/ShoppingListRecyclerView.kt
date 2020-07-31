@@ -1,3 +1,17 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
@@ -28,21 +42,32 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.nameEdit
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 
-/**     ShoppingListRecyclerView is a RecyclerView subclass specialized for
- *  displaying the contents of a shopping list. Because it is intended to be
- *  inflated from an XML layout before a valid InventoryViewModel can exist,
- *  instances of ShoppingListViewModel and InventoryViewModel must be passed
- *  along with an AndroidX LifecycleOwner to an instance of ShoppingListRecy-
- *  clerView after it is created using the setViewModel function. If this is
- *  not done, a kotlin.UninitializedPropertyAccessException will be thrown when
- *  any type of data access is attempted. In order to allow it to calculate
- *  changes to the displayed data on a background thread, it implements the
- *  Observer<List<InventoryItem>> interface and contains an AsyncListDiffer
- *  member.
- *      Adding or removing shopping list items is accomplished using the func-
- *  tions addItem, deleteItem, and deleteItems. When items are deleted, a
- *  snackbar will appear informing the user of the amount of items that were
- *  deleted, as well as providing an undo option. */
+/** A RecyclerView to display the data provided by a ShoppingListViewModel.
+ *
+ *  ShoppingListRecyclerView is a RecyclerView subclass specialized for display-
+ *  ing the contents of a shopping list. Several of ShoppingListRecyclerView's
+ *  necessary fields can not be obtained when it is inflated from XML, such as
+ *  its viewmodels. To finish initialization with these required members, the
+ *  function finishInit MUST be called after runtime but before any sort of
+ *  data access is attempted. An initial sort can be passed during this finish-
+ *  Init call, and can thereafter be modified (along with a search filter)
+ *  using the public properties sort and searchFilter.
+ *
+ *  In order to allow it to calculate changes to the displayed data on a back-
+ *  ground thread, ShoppingListRecyclerView contains an AsyncListDiffer member.
+ *  Its custom DiffUtilCallback dispatches an EnumSet<ShoppingListRecyclerView.
+ *  Field> to indicate which fields of the inventory item need to be updated.
+ *
+ *  Adding or removing shopping list items is accomplished using the functions
+ *  addItem, deleteItem, and deleteItems. An ItemTouchHelper with a SwipeTo-
+ *  DeleteCallback is used to allow the user to call deleteItem on items that
+ *  are swiped left or right. When items are deleted, a snackbar will appear
+ *  informing the user of the amount of items that were deleted, as well as
+ *  providing an undo option.
+ *
+ *  The snackbar that appears after deleting items will be anchored to the view
+ *  set as the public property snackBarAnchor, in case this needs to be custom-
+ *  ized, or to the ShoppingListRecyclerView otherwise. */
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         RecyclerView(context, attrs) {
 
@@ -50,13 +75,20 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     private val listDiffer = AsyncListDiffer(adapter, DiffUtilCallback())
     private lateinit var viewModel: ShoppingListViewModel
     private lateinit var inventoryViewModel: InventoryViewModel
+    /* To simplify the user experience, only one shopping list item view is allowed
+     * to be expanded at once. Keeping track of both the expanded item ID as well
+     * as its ViewHolder allows ShoppingListRecyclerView to use expandedViewHolder
+     * when its contained item id == expandedItemId (meaning that it hasn't been
+     * rebound to a new item), thereby preventing a potentially costly
+     * findViewHolderForItemId call. */
     private var expandedItemId: Long? = null
     private var expandedViewHolder: ShoppingListAdapter.ShoppingListItemViewHolder? = null
+    val selection = RecyclerViewSelection(adapter)
     val checkedItems = ShoppingListCheckedItems()
 
-    var fragmentManager: FragmentManager? = null
+    lateinit var fragmentManager: FragmentManager
     var snackBarAnchor: View? = null
-    val selection = RecyclerViewSelection(adapter)
+
 
     var sort: Sort? get() = viewModel.sort
                     set(value) { viewModel.sort = value }
@@ -64,9 +96,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         set(value) { viewModel.searchFilter = value }
 
     /** The enum class Field identifies user facing fields that are potentially
-     *  editable by the user. Field values (in the form of an EnumSet<Field>) are
-     *  used as payloads in the adapter notifyItemChanged calls in order to iden-
-     *  tify which field was changed.*/
+     *  editable by the user. Field values (in the form of an EnumSet<Field>)
+     *  are used as a payload in the adapter notifyItemChanged calls in order
+     *  to identify which fields were changed.*/
     enum class Field { Name, ExtraInfo, IsChecked,
                        AmountOnList, AmountInCart,
                        LinkedTo, Color  }
@@ -80,17 +112,19 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         setAdapter(adapter)
     }
 
-    fun setViewModels(owner: LifecycleOwner,
-                     shoppingListViewModel: ShoppingListViewModel,
-                     inventoryViewModel: InventoryViewModel,
-                     initialSort: Sort) {
+    fun finishInit(owner: LifecycleOwner,
+                   shoppingListViewModel: ShoppingListViewModel,
+                   inventoryViewModel: InventoryViewModel,
+                   fragmentManager: FragmentManager,
+                   initialSort: Sort? = null) {
         viewModel = shoppingListViewModel
         // Resetting the newly inserted item id here prevents the recycler view
         // from always expanding the item with that id until a new one is inserted
         viewModel.resetNewlyInsertedItemId()
-        sort = initialSort
+        if (initialSort != null) sort = initialSort
         viewModel.items.observe(owner, Observer { items -> listDiffer.submitList(items) })
         this.inventoryViewModel = inventoryViewModel
+        this.fragmentManager = fragmentManager
     }
 
     fun setExpandedItem(newExpandedVh: ShoppingListAdapter.ShoppingListItemViewHolder?,
@@ -103,7 +137,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         newExpandedVh?.view?.expand(animateExpand)
     }
 
-    fun addNewItem() = viewModel.insert(ShoppingListItem())
+    fun addNewItem() {
+        viewModel.insert(ShoppingListItem())
+    }
 
     fun deleteItem(pos: Int) = deleteItems(pos)
 
@@ -151,12 +187,14 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun checkout() = viewModel.checkOut()
 
-    /** ShoppingListAdapter is a subclass of RecyclerView.Adapter using its own
-     *  RecyclerView.ViewHolder subclass ShoppingListItemViewHolder to represent shop-
-     *  ping list items. Its override of onBindViewHolder(ViewHolder, Payload) makes use
-     *  of ShoppingListRecyclerView.Field values to support partial binding. It also
-     *  modifies the background color of the item views to reflect their selected / not
-     *  selected status. */
+    /** A RecyclerView.Adapter to display the contents of a list of shopping list items.
+     *
+     *  ShoppingListAdapter is a subclass of RecyclerView.Adapter using its own
+     *  RecyclerView.ViewHolder subclass ShoppingListItemViewHolder to repre-
+     *  sent shopping list items. Its override of onBindViewHolder(ViewHolder,
+     *  Payload) makes use of ShoppingListRecyclerView.Field values to support
+     *  partial binding. It also modifies the background color of the item
+     *  views to reflect their selected / not selected status. */
     inner class ShoppingListAdapter(context: Context) :
             RecyclerView.Adapter<ShoppingListAdapter.ShoppingListItemViewHolder>() {
         private val selectedColor: Int
@@ -214,6 +252,20 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
         override fun getItemId(position: Int): Long = listDiffer.currentList[position].id
 
+        /** A RecyclerView.ViewHolder that wraps an instance of ShoppingListItemView.
+         *
+         *  ShoppingListItemViewHolder is a subclass of RecyclerView.ViewHolder
+         *  that holds an instance of ShoppingListItemView to display the data
+         *  for a ShoppingListItem. Besides its use of this custom item view,
+         *  its differences from RecyclerView.ViewHolder are:
+         * - It sets the on click listeners of each of the sub views in the
+         *   ShoppingListItemView to permit the user to select/deselect items,
+         *   and to edit the displayed data when allowed.
+         * - Its override of the expand details button onClickListener calls
+         *   ShoppingListRecyclerView.setExpandedItem on itself to enforce the
+         *   one expanded item at a time rule.
+         * - its bindTo function checks the selected / not selected status of
+         *   an item and updates its background color accordingly. */
         inner class ShoppingListItemViewHolder(val view: ShoppingListItemView) :
                 RecyclerView.ViewHolder(view) {
             val item: ShoppingListItem get() = listDiffer.currentList[adapterPosition]
@@ -260,7 +312,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         else color
                         viewModel.updateColor(item.id, itemColor)
                     }
-                    colorPicker.show(fragmentManager!!)
+                    colorPicker.show(fragmentManager)
                 }
                 view.amountOnListEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
@@ -289,7 +341,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                             listDiffer.currentList[adapterPosition].linkedInventoryItemId)
                     val dialogClickListener = DialogInterface.OnClickListener { _, button ->
                         if (button == DialogInterface.BUTTON_POSITIVE)
-                            updateLinkedTo(recyclerView.selectedItem())
+                            updateLinkedTo(recyclerView.selectedItem)
                     }
                     builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
                     builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
@@ -299,9 +351,14 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
                 view.checkBox.isClickable = false
                 view.checkBox.setOnClickListener { viewModel.updateIsChecked(item.id, view.checkBox.isChecked) }
+                /* ShoppingListItemView's default onCheckedChangeListener has
+                 * "overridden" here by replacing it with another implementa-
+                 * tion that calls ShoppingListItemView.defaultOnCheckedChange
+                 * so that checkedItems can keep track of which items are
+                 * checked while still keeping the original onCheckedChange
+                 * functionality. */
                 view.checkBox.setOnCheckedChangeListener { _, checked ->
                     view.defaultOnCheckedChange(checked)
-                    Log.d("update", "overridden onCheckedChangeListener called")
                     if (checked) checkedItems.add(adapterPosition)
                     else         checkedItems.remove(adapterPosition)
                 }
@@ -328,6 +385,14 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         }
     }
 
+    /** Computes a diff between two shopping list items.
+     *
+     *  ShoppingListRecyclerView.DiffUtilCallback uses the ids of shopping list
+     *  items to determine if they are the same or not. If they are the same,
+     *  changes are logged by setting the appropriate bit of an instance of
+     *  EnumSet<ShoppingListRecyclerView.Field>. The change payload for modi-
+     *  fied items will then be the enum set containing all of the Fields that
+     *  were changed. */
     internal inner class DiffUtilCallback : DiffUtil.ItemCallback<ShoppingListItem>() {
         private val listChanges = mutableMapOf<Long, EnumSet<Field>>()
         private val itemChanges = EnumSet.noneOf(Field::class.java)
@@ -345,16 +410,29 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             if (newItem.amountOnList != oldItem.amountOnList) itemChanges.add(Field.AmountOnList)
             if (newItem.amountInCart != oldItem.amountInCart) itemChanges.add(Field.AmountInCart)
             if (newItem.linkedInventoryItemId != oldItem.linkedInventoryItemId) itemChanges.add(Field.LinkedTo)
+
             if (!itemChanges.isEmpty()) listChanges[newItem.id] = EnumSet.copyOf(itemChanges)
             return itemChanges.isEmpty()
         }
 
         override fun getChangePayload(oldItem: ShoppingListItem,
-                                      newItem: ShoppingListItem): Any? {
-            return listChanges.remove(newItem.id)
-        }
+                                      newItem: ShoppingListItem) =
+            listChanges.remove(newItem.id)
     }
 
+    /** A wrapper around a HashSet<Int> to keep track of checked items in the shopping list.
+     *
+     *  ShoppingListCheckedItems functions similarly to a RecyclerViewSelection
+     *  in that it keeps track of a set of items, in this case ones that are
+     *  checked. Items that are inserted already checked and items that are
+     *  removed while checked should be automatically added or removed by the
+     *  RecyclerView.AdapterDataObserver overrides. Changes to the checked
+     *  status of an already existing item must be recorded via use of the add
+     *  or remove functions.
+     *
+     *  A LiveData<Int> member is provided in sizeLiveData to allow external
+     *  entities to respond to changes in the number of checked shopping list
+     *  items. */
     inner class ShoppingListCheckedItems() :
             RecyclerView.AdapterDataObserver() {
         private val hashSet = HashSet<Int>()
@@ -370,28 +448,24 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             if (pos !in 0 until adapter.itemCount) return
             hashSet.add(pos)
             _sizeLiveData.value = size
-            Log.d("update", "item checked, checked items size now " + hashSet.size)
         }
 
         fun remove(pos: Int) {
             if (pos !in 0 until adapter.itemCount) return
             hashSet.remove(pos)
             _sizeLiveData.value = size
-            Log.d("update", "item unchecked, checked items size now " + hashSet.size)
         }
 
         override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
 
             for (pos in positionStart until positionStart + itemCount)
                 if (hashSet.contains(pos)) remove(pos)
-            Log.d("update", "item removed, checked items size now " + hashSet.size)
             _sizeLiveData.value = size
         }
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
 //            for (pos in positionStart until positionStart + itemCount)
 //                if (listDiffer.currentList[pos].isChecked) hashSet.add(pos)
 //            _sizeLiveData.value = size
-            Log.d("update", "item inserted, checked items size now " + hashSet.size)
         }
     }
 }

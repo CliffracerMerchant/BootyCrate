@@ -1,31 +1,46 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.AnimatedVectorDrawable
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
-import com.google.android.material.bottomappbar.BottomAppBar
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
 
 
-/**     InventoryItemView is a ConstraintLayout that displays the data of an
- *  InventoryItem instance. Its update(InventoryItem) function updates the con-
- *  tained views with the information of the InventoryItem instance. Its expand
- *  and collapse functions allow for an optional animation. */
+/** A layout to display the contents of an inventory item.
+ *
+ *  InventoryItemView is a ConstraintLayout subclass that inflates a layout to
+ *  display the data of an InventoryItem instance. Its update(InventoryItem)
+ *  function updates the contained views with the information of the Inventory-
+ *  Item instance. Its expand and collapse functions allow for an optional anim-
+ *  ation. */
 class InventoryItemView(context: Context) : ConstraintLayout(context) {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-    private val editButtonIconController: AnimatedVectorDrawableController
+    private val editButtonIconController: TwoStateAnimatedIconController
 
     /* This companion object stores the heights of the layout when expanded/
        collapsed. This prevents the expand/collapse animations from having to
@@ -37,7 +52,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
 
     init {
         inflate(context, R.layout.inventory_item_layout, this)
-        editButtonIconController = AnimatedVectorDrawableController.forView(editButton,
+        editButtonIconController = TwoStateAnimatedIconController.forView(editButton,
             context.getDrawable(R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
 

@@ -1,16 +1,41 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.LayerDrawable
 import android.view.View
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import java.security.InvalidParameterException
 
-class AnimatedVectorDrawableController private constructor(
+/** A wrapper to manage the AnimatedVectorDrawable backgrounds of a view.
+ *
+ *  TwoStateAnimatedIconController manages the background of a target view to
+ *  enable easy animated switching between two states. Instances are created
+ *  using the static factory methods forFloatingActionButton, forView, or
+ *  forDrawableLayer.
+ *
+ *  The state of the managed background is altered using the functions setState(
+ *  toStateA: Boolean), toStateA(), toStateB(), and toggleState(), or using the
+ *  public boolean property isInStateA. All of the functions also allow an optional
+ *  second parameter to enable or disable animating between states. */
+class TwoStateAnimatedIconController private constructor(
     private val target: Any,
     private val aToBDrawable: AnimatedVectorDrawable,
     private val bToADrawable: AnimatedVectorDrawable,
     private var targetLayerId: Int = -1) {
+    // Due to AnimatedVectorDrawable.reset() not being
     private var aToBHasBeenAnimated = false
     private var bToAHasBeenAnimated = false
     private var _isInStateA = true
@@ -28,17 +53,17 @@ class AnimatedVectorDrawableController private constructor(
         fun forFloatingActionButton(fab: FloatingActionButton,
                                     aToBDrawable: AnimatedVectorDrawable,
                                     bToADrawable: AnimatedVectorDrawable) =
-            AnimatedVectorDrawableController(fab, aToBDrawable, bToADrawable)
+            TwoStateAnimatedIconController(fab, aToBDrawable, bToADrawable)
 
         fun forView(view: View,
                     aToBDrawable: AnimatedVectorDrawable,
                     bToADrawable: AnimatedVectorDrawable) =
-            AnimatedVectorDrawableController(view, aToBDrawable, bToADrawable)
+            TwoStateAnimatedIconController(view, aToBDrawable, bToADrawable)
 
         fun forDrawableLayer(layerDrawable: LayerDrawable, targetLayerId: Int,
                              aToBDrawable: AnimatedVectorDrawable,
                              bToADrawable: AnimatedVectorDrawable) =
-            AnimatedVectorDrawableController(layerDrawable, aToBDrawable, bToADrawable, targetLayerId)
+            TwoStateAnimatedIconController(layerDrawable, aToBDrawable, bToADrawable, targetLayerId)
     }
 
     init { setBackground(aToBDrawable) }

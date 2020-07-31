@@ -1,35 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Used as the alternate row color in AlternatingRowBackgroundDecoration. -->
     <attr name="colorBackgroundVariant" format="color" />
-    <attr name="colorSelected" format="color" />
-    <attr name="textColor" format="color" />
+    <!-- Used as the background color of an item selected in a RecyclerView. -->
+    <attr name="colorSelected"          format="color" />
+    <!-- A text color. Used in some places instead of @android.attr.textColor
+         due to dev.sasikanth.colorsheet.ColorSheet picking its background
+         color based on the android attribute. -->
+    <attr name="textColor"              format="color" />
 
+    <!-- Where the cradle is drawn on the BottomAppBar. -->
     <declare-styleable name="BottomAppBar">
-        <attr name="cradleLayoutId" format="reference" />
         <attr name="cradleAlignmentMode" format="enum" >
-            <enum name="start" value="0" />
+            <enum name="start"  value="0" />
             <enum name="center" value="1" />
-            <enum name="end" value="2" />
+            <enum name="end"    value="2" />
         </attr>
-        <attr name="cradleDepth" format="dimension" />
-        <attr name="cradleTopCornerRadius" format="dimension" />
+        <!-- The resource id of the layout to be nested in the BottomAppBar cradle. -->
+        <attr name="cradleLayoutId"           format="reference" />
+        <!-- The depth of the BottomAppBar cradle. -->
+        <attr name="cradleDepth"              format="dimension" />
+        <!-- The radius of the cradle curved top corners. -->
+        <attr name="cradleTopCornerRadius"    format="dimension" />
+        <!-- The radius of the cradle curved bottom corners. -->
         <attr name="cradleBottomCornerRadius" format="dimension" />
-        <attr name="cradleStartEndMargin" format="dimension" />
-        <attr name="cradleContentsMargin" format="dimension" />
-        <attr name="backgroundTint" format="color" />
+        <!-- The margin from the start or end of the BottomAppBar to the cradle. -->
+        <attr name="cradleStartEndMargin"     format="dimension" />
+        <!-- The margin in between the cradle and the cradle layout contents. -->
+        <attr name="cradleContentsMargin"     format="dimension" />
+        <!-- The background tint of the BottomAppBar. -->
+        <attr name="backgroundTint"           format="color" />
     </declare-styleable>
 
     <declare-styleable name="TextFieldEdit">
-        <attr name="isEditable" format="boolean" />
+        <!-- Whether the TextFieldEdit will start in an editable state. -->
+        <attr name="isEditable"   format="boolean" />
+        <!-- The hint that will appear when the TextFieldEdit is editable. -->
         <attr name="editableHint" format="string" />
     </declare-styleable>
 
     <declare-styleable name="IntegerEdit">
-        <attr name="minValue" format="integer" />
-        <attr name="maxValue" format="integer" />
-        <attr name="valueChangedNotificationTimeout" format="integer" />
-        <attr name="stepSize" format="integer" />
+        <!-- The initial value of the IntegerEdit. -->
         <attr name="initialValue" format="integer" />
-        <attr name="textSize" format="float" />
+        <!-- The minimum value the IntegerEdit can hold. -->
+        <attr name="minValue"     format="integer" />
+        <!-- The maximum value the IntegerEdit can hold. -->
+        <attr name="maxValue"     format="integer" />
+        <!-- The delay, in milliseconds, after which the IntegerEdit will update its LiveData member. -->
+        <attr name="valueChangedNotificationTimeout" format="integer" />
+        <!-- The step size of the increment and decrement buttons. -->
+        <attr name="stepSize"     format="integer" />
+        <!-- The text size of the IntegerEdit. -->
+        <attr name="textSize"     format="float" />
     </declare-styleable>
 </resources>

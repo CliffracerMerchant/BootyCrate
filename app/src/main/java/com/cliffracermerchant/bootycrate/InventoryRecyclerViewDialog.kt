@@ -1,3 +1,17 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
@@ -12,15 +26,21 @@ import androidx.recyclerview.widget.*
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_popup_layout.view.*
 
-/** PopupInventoryRecyclerView is an alteration of InventoryRecyclerView
+/** A RecyclerView for selecting a single item in the user's inventory in a popup.
+ *
+ *  PopupInventoryRecyclerView is an alteration of InventoryRecyclerView
  *  specialized for selecting a single item within the inventory from a popup
- *  window. */
+ *  window. The selected item (or null is no item is selected) can queried from
+ *  the property selectedItem. */
 class InventoryRecyclerViewDialog(context: Context,
                                   private val items: List<InventoryItem>,
                                   private val initiallySelectedItemId: Long? = null) :
         RecyclerView(context) {
     private val adapter = PopupInventoryAdapter(context)
     private var selectedItemPos: Int? = null
+    val selectedItem: InventoryItem? get() { val pos = selectedItemPos
+                                             return if (pos != null) items[pos]
+                                                    else             null}
 
     init {
         layoutManager = LinearLayoutManager(context)
@@ -32,16 +52,6 @@ class InventoryRecyclerViewDialog(context: Context,
         setAdapter(adapter)
     }
 
-    fun selectedItem(): InventoryItem? {
-        val pos = selectedItemPos
-        return if (pos != null) items[pos]
-               else             null
-    }
-
-    /** PopupInventoryAdapter displays the data of inventory items with its
-     *  inner class InventoryItemViewHolder. It also modifies the background
-     *  color of the item views to reflect their selected / not selected
-     *  status. */
     inner class PopupInventoryAdapter(context: Context) :
             RecyclerView.Adapter<PopupInventoryAdapter.InventoryItemViewHolder>() {
         private val layoutInflater = LayoutInflater.from(context)
@@ -66,8 +76,6 @@ class InventoryRecyclerViewDialog(context: Context,
         override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int) =
             holder.bindTo(items[position])
 
-
-
         override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int, payloads: MutableList<Any>) {
             if (payloads.size != 1 || payloads[0] !is Boolean)
                 return onBindViewHolder(holder, position)
@@ -79,21 +87,8 @@ class InventoryRecyclerViewDialog(context: Context,
 
         override fun getItemId(position: Int): Long = items[position].id
 
-        /** InventoryItemViewHolder is a subclass of RecyclerView.ViewHolder
-         *  that holds an instance of InventoryItemLayout to display the data
-         *  for an InventoryItem. Besides its use of this custom item view, its
-         *  differences from RecyclerView.ViewHolder are:
-         * - It sets the on click listeners of each of the sub views in the
-         *   InventoryItemLayout to permit the user to select/deselect items,
-         *   and to edit the displayed data when allowed.
-         * - Its override of the expand details button onClickListener enforces
-         *   a one expanded item at a time rule, collapsing any other expanded
-         *   view holder before the clicked one is expanded.
-         * - its bindTo function checks the selected / not selected status of
-         *   an item and updates its background color accordingly. */
         inner class InventoryItemViewHolder(private val view: View) :
                 RecyclerView.ViewHolder(view) {
-
             init {
                 view.amountEdit.decreaseButton.background = multiplyIcon
                 view.amountEdit.increaseButton.background = null

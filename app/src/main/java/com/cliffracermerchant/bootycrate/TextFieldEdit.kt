@@ -1,3 +1,17 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
 import android.app.Activity
@@ -15,17 +29,20 @@ import androidx.lifecycle.MutableLiveData
 
 //TODO: Don't force soft input to appear if hardware keyboard is present
 
-/**     TextFieldEdit is an AppCompatEditText optimized for toggleable editing
+/** A view to edit a single line text field.
+ *
+ *  TextFieldEdit is an AppCompatEditText optimized for toggleable editing
  *  of a single line. When isEditable is false, the TextFieldEdit will present
- *  itself as a normal single line EditText. When isEditable is true, TextField-
+ *  itself as a normal single line TextView. When isEditable is true, TextField-
  *  Edit will request focus when it is tapped and display a soft input. If the
- *  user presses the done action on the soft input, the TextFieldEdit's live-
- *  data member's value will be set. Changes to the displayed field can be list-
- *  ened to through this live data member.
- *      When in editable mode, TextFieldEdit will underline it's text to indi-
- *  cate this to the user. If the TextFieldEdit is empty, it will instead draw
- *  its underlined editableHint (like TextView.hint except that it is not dis-
- *  played when not editable). It will also toggle its input mode between
+ *  user presses the done action on the soft input or if the focus is changed,
+ *  the TextFieldEdit's liveData member's value will be set. Changes to the dis-
+ *  played field can be listened to through this live data member.
+ *
+ *  When in editable mode, TextFieldEdit will underline it's text to indicate
+ *  this to the user. If the TextFieldEdit is empty, it will instead draw its
+ *  underlined editableHint (like TextView.hint except that it is not displayed
+ *  when not editable). It will also toggle its input mode between
  *  TYPE_TEXT_FLAG_NO_SUGGESTIONS when not editable and TYPE_CLASS_TEXT when
  *  editable. This will prevent misspelling underlines from being displayed
  *  when the TextFieldEdit is not in an editable state. */
@@ -60,7 +77,6 @@ class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     override fun onFocusChanged(focused: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
         super.onFocusChanged(focused, direction, previouslyFocusedRect)
         if (!focused) liveData.value = text.toString()
-        //else imm?.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
     }
 
     private fun setEditablePrivate(editable: Boolean) {

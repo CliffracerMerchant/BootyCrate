@@ -1,8 +1,20 @@
+/* Copyright 2020 Nicholas Hochstetler
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License. */
+
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -16,64 +28,44 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.android.synthetic.main.activity_main.*
 
+/** The primary activity for BootyCrate
+ *
+ *  Instead of switching between activities, nearly everything in BootyCrate is
+ *  accomplished in the ShoppingListFragment, InventoryFragment, or the Preferences-
+ *  Fragment. Instances of these fragments are instantiated on app startup, and
+ *  hidden/shown by the fragment manager as appropriate. The active fragment can be
+ *  determined via the boolean members showingInventory and showingPreferences as
+ *  follows:
+ *  Active fragment = if (showingPreferences)    PreferencesFragment
+ *                    else if (showingInventory) InventoryFragment
+ *                    else                       ShoppingListFragment
+ *  If showingPreferences is true, the value of showingInventory determines the
+ *  fragment "under" the preferences (i.e. the one that will be returned to on a
+ *  back button press or a navigate up).
+ *
+ *  Both ShoppingListFragment and InventoryFragment are expected to have an
+ *  enable() and a disable() function to be called when they are shown or hidden,
+ *  respectively. These functions should prepare the main activity's UI for that
+ *  fragment, e.g. by setting the floating action button's on click listener or
+ *  icon.
+ */
 class MainActivity : AppCompatActivity() {
-    private var darkGrayColor: Int = 0
-    private var lightGrayColor: Int = 0
-    private var blackColor: Int = 0
-    private var yellowColor: Int = 0
-    private var cradleLayoutInitialWidth = -1
-    var checkoutButtonIsEnabled = false
-        set(value) {
-            if (checkoutButtonIsEnabled == value) return
+    private val shoppingListFragment = ShoppingListFragment()
+    private val inventoryFragment = InventoryFragment()
+    private val preferencesFragment = PreferencesFragment()
+    private var showingInventory = false
+    private var showingPreferences = false
 
-            val bgColorAnim = ValueAnimator.ofArgb(if (value) lightGrayColor else yellowColor,
-                                                   if (value) yellowColor else lightGrayColor)
-            bgColorAnim.addUpdateListener {
-                checkout_button.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int)
-            }
-            bgColorAnim.duration = 200
-            bgColorAnim.start()
-             val textColorAnim = ObjectAnimator.ofArgb(checkout_button, "textColor",
-                                                       if (value) blackColor else darkGrayColor)
-            textColorAnim.duration = 200
-            textColorAnim.start()
-            field = value
-        }
-    private var checkoutButtonIsHidden = false
-        set(value) {
-            if (checkoutButtonIsHidden == value) return
-            if (cradleLayoutInitialWidth == -1) cradleLayoutInitialWidth = cradle_layout.width
-            val cradleLayoutStartWidth = if (value) cradle_layout.width else fab.width
-            val cradleLayoutEndWidth = if (value) fab.width else cradleLayoutInitialWidth
-            val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
-            val anim = ValueAnimator.ofFloat(if (value) 1f else 0f,
-                                             if (value) 0f else 1f)
-            anim.addUpdateListener {
-                checkout_button.scaleX = it.animatedValue as Float
-                cradle_layout.layoutParams.width = cradleLayoutStartWidth +
-                        (cradleLayoutWidthChange * it.animatedFraction).toInt()
-                cradle_layout.requestLayout()
-                bottom_app_bar.redrawCradle()
-            }
-            anim.start()
-            field = value
-        }
-    private var checkoutButtonWidth = 0
-    private var menu: Menu? = null
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
     lateinit var checkoutButton: MaterialButton
 
-    enum class FragmentId { ShoppingList, Inventory, Preferences }
+    private var blackColor: Int = 0
+    private var cradleLayoutInitialWidth = -1
 
-    val shoppingListFragment = ShoppingListFragment()
-    val inventoryFragment = InventoryFragment()
-    val preferencesFragment = PreferencesFragment()
-
-    var showingInventory = false
-    var showingPreferences = false
-//    }
+    private var checkoutButtonIsHidden = false
+        set(value) { showCheckoutButton(value); field = value }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,11 +81,8 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(action_bar)
         fab = floating_action_button
         checkoutButton = checkout_button
-        checkoutButtonWidth = checkout_button.width
-        darkGrayColor = ContextCompat.getColor(this, R.color.colorTextLightSecondary)
-        lightGrayColor = ContextCompat.getColor(this, android.R.color.darker_gray)
         blackColor = ContextCompat.getColor(this, android.R.color.black)
-        yellowColor = ContextCompat.getColor(this, R.color.checkoutButtonEnabledColor)
+
         bottom_navigation_bar.setOnNavigationItemSelectedListener { item ->
             item.isChecked = true
             toggleShoppingListInventoryFragments(switchingToInventory = item.itemId == R.id.inventory_button)
@@ -109,7 +98,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.action_bar_menu, menu)
-        this.menu = menu
+        // Setting the SearchView icon color manually is a temporary work-
+        // around because setting it in the theme/style did not work.
         val searchView = menu.findItem(R.id.app_bar_search)?.actionView as SearchView?
         (searchView?.findViewById(androidx.appcompat.R.id.search_close_btn) as ImageView).
             setColorFilter(blackColor)
@@ -159,11 +149,29 @@ class MainActivity : AppCompatActivity() {
                 setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
                 hide(shoppingListFragment).show(inventoryFragment).commit()
         } else {
-            shoppingListFragment.enable()
             inventoryFragment.disable()
+            shoppingListFragment.enable()
             supportFragmentManager.beginTransaction().
                 setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
                 hide(inventoryFragment).show(shoppingListFragment).commit()
         }
+    }
+
+    private fun showCheckoutButton(showing: Boolean) {
+        if (checkoutButtonIsHidden == showing) return
+        if (cradleLayoutInitialWidth == -1) cradleLayoutInitialWidth = cradle_layout.width
+        val cradleLayoutStartWidth = if (showing) cradle_layout.width else fab.width
+        val cradleLayoutEndWidth = if (showing) fab.width else cradleLayoutInitialWidth
+        val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
+        val anim = ValueAnimator.ofFloat(if (showing) 1f else 0f,
+                                         if (showing) 0f else 1f)
+        anim.addUpdateListener {
+            checkout_button.scaleX = it.animatedValue as Float
+            cradle_layout.layoutParams.width = cradleLayoutStartWidth +
+                    (cradleLayoutWidthChange * it.animatedFraction).toInt()
+            cradle_layout.requestLayout()
+            bottom_app_bar.redrawCradle()
+        }
+        anim.start()
     }
 }
