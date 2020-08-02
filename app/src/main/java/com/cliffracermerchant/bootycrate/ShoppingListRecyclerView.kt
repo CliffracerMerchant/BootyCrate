@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
  *  ing the contents of a shopping list. Several of ShoppingListRecyclerView's
  *  necessary fields can not be obtained when it is inflated from XML, such as
  *  its viewmodels. To finish initialization with these required members, the
- *  function finishInit MUST be called after runtime but before any sort of
+ *  function finishInit MUST be called after runtime, but before any sort of
  *  data access is attempted. An initial sort can be passed during this finish-
  *  Init call, and can thereafter be modified (along with a search filter)
  *  using the public properties sort and searchFilter.
@@ -88,7 +88,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     lateinit var fragmentManager: FragmentManager
     var snackBarAnchor: View? = null
-
 
     var sort: Sort? get() = viewModel.sort
                     set(value) { viewModel.sort = value }
@@ -137,9 +136,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         newExpandedVh?.view?.expand(animateExpand)
     }
 
-    fun addNewItem() {
-        viewModel.insert(ShoppingListItem())
-    }
+    fun addNewItem() = viewModel.insert(ShoppingListItem())
 
     fun deleteItem(pos: Int) = deleteItems(pos)
 
@@ -463,9 +460,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             _sizeLiveData.value = size
         }
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-//            for (pos in positionStart until positionStart + itemCount)
-//                if (listDiffer.currentList[pos].isChecked) hashSet.add(pos)
-//            _sizeLiveData.value = size
+            for (pos in positionStart until positionStart + itemCount)
+                if (listDiffer.currentList[pos].isChecked) hashSet.add(pos)
+            _sizeLiveData.value = size
         }
     }
 }

@@ -46,10 +46,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
 
     var itemColor: Int? = null
 
-    /* This companion object stores resources common to all ShoppingListItem-
-     * views as well as the heights of the layout when expanded/collapsed. This
-     * prevents the expand/collapse animations from having to calculate these
-     * values every time the animation is started. */
+    // This companion object stores resources common to all ShoppingListItemViews.
     private companion object {
         private lateinit var imm: InputMethodManager
         private lateinit var linkedItemDescriptionString: String
@@ -57,15 +54,12 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         private lateinit var linkNowActionString: String
         private lateinit var changeLinkActionString: String
         private var normalTextColor = -1
-        var collapsedHeight = 0
-        var expandedHeight = 0
-        var increaseButtonFullWidth = 0
     }
 
     init {
         inflate(context, R.layout.shopping_list_item_layout, this)
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-        if (normalTextColor == -1) initCompanionObjectResources(context)
+        if (normalTextColor == -1) initSharedResources(context)
 
         decreaseButtonIconController = TwoStateAnimatedIconController.forView(amountOnListEdit.decreaseButton,
             context.getDrawable(R.drawable.shopping_list_animated_multiply_to_minus_icon) as AnimatedVectorDrawable,
@@ -101,7 +95,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     }
 
     fun update(item: ShoppingListItem, isExpanded: Boolean = false) {
-        Log.d("update", "shoppingListItemView updated")
         collapse(false)
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
@@ -154,7 +147,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.start()
         } else {
             shoppingListItemDetailsInclude.visibility = View.VISIBLE
-            amountOnListEdit.increaseButton.layoutParams.apply{ width = increaseButtonFullWidth }
+            amountOnListEdit.increaseButton.layoutParams.apply{ width *= 2 }
         }
     }
 
@@ -179,7 +172,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.start()
         } else {
             shoppingListItemDetailsInclude.visibility = View.GONE
-            amountOnListEdit.increaseButton.layoutParams.apply { width = increaseButtonFullWidth / 2 }
+            amountOnListEdit.increaseButton.layoutParams.apply { width /= 2 }
         }
     }
 
@@ -199,19 +192,20 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     }
 
     private fun expandCollapseAnimation(expanding: Boolean): ValueAnimator {
-        if (collapsedHeight == 0) initCompanionObjectDimensions(expanding)
+        shoppingListItemDetailsInclude.visibility = View.VISIBLE
+        val matchParentSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
+        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        shoppingListItemDetailsInclude.measure(matchParentSpec, wrapContentSpec)
+        val endHeight = height + (if (expanding) 1 else -1) *
+                        shoppingListItemDetailsInclude.measuredHeight
 
-        val startHeight = if (expanding) collapsedHeight else expandedHeight
-        val endHeight = if (expanding) expandedHeight else collapsedHeight
-        val increaseButtonStartWidth = if (expanding) increaseButtonFullWidth / 2
-                                       else           increaseButtonFullWidth
-        val increaseButtonEndWidth = if (expanding) increaseButtonFullWidth
-                                     else           increaseButtonFullWidth / 2
-        val increaseButtonWidthChange = increaseButtonEndWidth - increaseButtonStartWidth
+        val increaseButtonStartWidth = increaseButton.width
+        val increaseButtonWidthChange = if (expanding) increaseButton.width
+                                        else           -increaseButton.width / 2
 
         shoppingListItemDetailsInclude.visibility = View.VISIBLE
 
-        val anim = ValueAnimator.ofInt(startHeight, endHeight)
+        val anim = ValueAnimator.ofInt(height, endHeight)
         anim.addUpdateListener {
             layoutParams.height = anim.animatedValue as Int
             amountOnListEdit.increaseButton.layoutParams.width = increaseButtonStartWidth +
@@ -223,31 +217,12 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         return anim
     }
 
-    private fun initCompanionObjectResources(context: Context) {
+    private fun initSharedResources(context: Context) {
         imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         linkedItemDescriptionString = context.getString(R.string.linked_shopping_list_item_description)
         unlinkedItemDescriptionString = context.getString(R.string.unlinked_shopping_list_item_description)
         linkNowActionString = context.getString(R.string.shopping_list_item_link_now_action_description)
         changeLinkActionString = context.getString(R.string.shopping_list_item_change_link_action_description)
         normalTextColor = nameEdit.currentTextColor
-    }
-
-    private fun initCompanionObjectDimensions(expanding: Boolean) {
-        val matchParentSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
-        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        measure(matchParentSpec, wrapContentSpec)
-        if (expanding) {
-            increaseButtonFullWidth = increaseButton.layoutParams.width * 2
-            collapsedHeight = measuredHeight
-            shoppingListItemDetailsInclude.visibility = View.VISIBLE
-            measure(matchParentSpec, wrapContentSpec)
-            expandedHeight = measuredHeight
-        } else {
-            increaseButtonFullWidth = increaseButton.layoutParams.width
-            expandedHeight = measuredHeight
-            shoppingListItemDetailsInclude.visibility = View.GONE
-            measure(matchParentSpec, wrapContentSpec)
-            collapsedHeight = measuredHeight
-        }
     }
 }

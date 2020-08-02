@@ -59,7 +59,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     enum class CradleAlignmentMode { Start, Center, End }
     val cradleAlignmentMode: CradleAlignmentMode
     private val cradleLayoutId: Int
-    lateinit var cradleLayout: ViewGroup
+    var cradleLayout: ViewGroup? = null
 
     var cradleWidth: Int = 0
     var cradleHorizontalOffset: Int = 0
@@ -75,7 +75,6 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
                      materialShapeDrawable.tintList = ColorStateList.valueOf(value ?: 0) }
 
     init {
-        //clipChildren = false
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
         cradleAlignmentMode = CradleAlignmentMode.values()[
             a.getInt(R.styleable.BottomAppBar_cradleAlignmentMode, CradleAlignmentMode.Center.ordinal)]
@@ -99,20 +98,22 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
                 cradleLayout = if (parent?.findViewById<ViewGroup>(cradleLayoutId) != null)
                                    parent.findViewById(cradleLayoutId)
                                else LinearLayout(context)
+                val layout = cradleLayout ?: return
                 // Setting cradleLayout.layoutParams.width here is necessary to
                 // prevent the cradle being drawn incorrectly the first time due
                 // to the layoutParams.width being 0
-                cradleLayout.layoutParams.width = cradleLayout.width
-                redrawCradle()
+                layout.layoutParams.width = layout.width
+                materialShapeDrawable.invalidateSelf()
                 viewTreeObserver.removeOnGlobalLayoutListener(this)
             }
         })
     }
 
-    fun redrawCradle() {
-        if (cradleLayout.isEmpty()) return
+    fun prepareCradleLayout() {
+        val cradleLayout = this.cradleLayout
+        if (cradleLayout == null || cradleLayout.isEmpty()) return
 
-        cradleWidth = cradleLayout.layoutParams.width + 2 * cradleContentsMargin
+        cradleWidth = cradleLayout.width + 2 * cradleContentsMargin
         cradleHorizontalOffset = when (cradleAlignmentMode) {
             CradleAlignmentMode.Start ->  left + cradleStartEndMargin
             CradleAlignmentMode.Center -> left + (width - cradleWidth) / 2
@@ -120,7 +121,6 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
         }
         cradleLayout.x = left + cradleHorizontalOffset.toFloat() + cradleContentsMargin
         cradleLayout.y = top + cradleDepth.toFloat() - height - cradleContentsMargin
-        materialShapeDrawable.invalidateSelf()
     }
 
     /** An EdgeTreatment used to draw a cradle cutout for the BottomAppBar.
@@ -135,6 +135,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     inner class CradleTopEdgeTreatment : EdgeTreatment() {
         override fun getEdgePath(length: Float, center: Float,
                                  interpolation: Float, shapePath: ShapePath) {
+            prepareCradleLayout()
             val start = cradleHorizontalOffset.toFloat()
             val end = start + cradleWidth
             val cradleVerticalSideLength = cradleDepth - cradleTopCornerRadius -

@@ -15,12 +15,17 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ValueAnimator
+import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
@@ -61,6 +66,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var fab: FloatingActionButton
     lateinit var checkoutButton: MaterialButton
 
+    private lateinit var imm: InputMethodManager
     private var blackColor: Int = 0
     private var cradleLayoutInitialWidth = -1
 
@@ -81,6 +87,7 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(action_bar)
         fab = floating_action_button
         checkoutButton = checkout_button
+        imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         blackColor = ContextCompat.getColor(this, android.R.color.black)
 
         bottom_navigation_bar.setOnNavigationItemSelectedListener { item ->
@@ -131,9 +138,11 @@ class MainActivity : AppCompatActivity() {
                                  showingInventory -> inventoryFragment
                                  else ->             shoppingListFragment }
         showingPreferences = showing
+        imm.hideSoftInputFromWindow(bottom_app_bar.windowToken, 0)
         supportActionBar?.setDisplayHomeAsUpEnabled(showing)
-        bottom_app_bar.animate().translationYBy(if (showing) 250f else -250f).start()
-        fab.animate().translationYBy(if (showing) 250f else -250f).start()
+        bottom_app_bar.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
+        fab.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
+        checkoutButton.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
         supportFragmentManager.beginTransaction().
             setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
             hide(oldFragment).show(newFragment).commit()
@@ -142,6 +151,7 @@ class MainActivity : AppCompatActivity() {
     private fun toggleShoppingListInventoryFragments(switchingToInventory: Boolean) {
         showingInventory = switchingToInventory
         checkoutButtonIsHidden = switchingToInventory
+        imm.hideSoftInputFromWindow(bottom_app_bar.windowToken, 0)
         if (switchingToInventory) {
             shoppingListFragment.disable()
             inventoryFragment.enable()
@@ -159,10 +169,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun showCheckoutButton(showing: Boolean) {
         if (checkoutButtonIsHidden == showing) return
-        if (cradleLayoutInitialWidth == -1) cradleLayoutInitialWidth = cradle_layout.width
+
+        if (cradleLayoutInitialWidth == -1) cradleLayoutInitialWidth = cradle_layout.layoutParams.width
         val cradleLayoutStartWidth = if (showing) cradle_layout.width else fab.width
         val cradleLayoutEndWidth = if (showing) fab.width else cradleLayoutInitialWidth
         val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
+        checkout_button.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         val anim = ValueAnimator.ofFloat(if (showing) 1f else 0f,
                                          if (showing) 0f else 1f)
         anim.addUpdateListener {
@@ -170,8 +182,9 @@ class MainActivity : AppCompatActivity() {
             cradle_layout.layoutParams.width = cradleLayoutStartWidth +
                     (cradleLayoutWidthChange * it.animatedFraction).toInt()
             cradle_layout.requestLayout()
-            bottom_app_bar.redrawCradle()
+            bottom_app_bar.background.invalidateSelf()
         }
+        anim.doOnEnd { checkout_button.setLayerType(View.LAYER_TYPE_NONE, null) }
         anim.start()
     }
 }

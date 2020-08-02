@@ -42,16 +42,14 @@ import androidx.lifecycle.MutableLiveData
  *  When in editable mode, TextFieldEdit will underline it's text to indicate
  *  this to the user. If the TextFieldEdit is empty, it will instead draw its
  *  underlined editableHint (like TextView.hint except that it is not displayed
- *  when not editable). It will also toggle its input mode between
- *  TYPE_TEXT_FLAG_NO_SUGGESTIONS when not editable and TYPE_CLASS_TEXT when
- *  editable. This will prevent misspelling underlines from being displayed
- *  when the TextFieldEdit is not in an editable state. */
+ *  when not editable). If editable hint is null, the TextFieldEdit will use
+ *  TextView's hint as normal (displayed all the time when empty). */
 class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         AppCompatEditText(context, attrs) {
     val liveData = MutableLiveData<String>()
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-    var editableHint: String?
 
+    var editableHint: String?
     var isEditable: Boolean get() = isFocusableInTouchMode
                             set(editable) = setEditablePrivate(editable)
 
@@ -81,9 +79,12 @@ class TextFieldEdit(context: Context, attrs: AttributeSet?) :
 
     private fun setEditablePrivate(editable: Boolean) {
         isFocusableInTouchMode = editable
+        /* Setting the input type here will prevent misspelling underlines from
+         * being displayed when the TextFieldEdit is not in an editable state. */
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-        hint = if (editable) editableHint else null
+        if (editableHint != null) hint = if (editable) editableHint
+                                         else          null
         if (!editable && isFocused) clearFocus()
         invalidate()
     }

@@ -18,6 +18,7 @@ import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -26,7 +27,10 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
+import kotlinx.android.synthetic.main.inventory_item_layout.view.editButton
 import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
+import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
+import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 
 
 /** A layout to display the contents of an inventory item.
@@ -41,14 +45,6 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     private var _isExpanded = false
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
     private val editButtonIconController: TwoStateAnimatedIconController
-
-    /* This companion object stores the heights of the layout when expanded/
-       collapsed. This prevents the expand/collapse animations from having to
-       calculate these values every time the animation is started. */
-    private companion object {
-        var collapsedHeight = 0
-        var expandedHeight = 0
-    }
 
     init {
         inflate(context, R.layout.inventory_item_layout, this)
@@ -112,13 +108,15 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     }
 
     private fun expandCollapseAnimation(expanding: Boolean) : ValueAnimator {
-        if (collapsedHeight == 0) initExpandedCollapsedHeights(expanding)
         inventoryItemDetailsInclude.visibility = View.VISIBLE
 
-        val startHeight = if (expanding) collapsedHeight else expandedHeight
-        val endHeight =   if (expanding) expandedHeight  else collapsedHeight
+        val matchParentSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
+        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        inventoryItemDetailsInclude.measure(matchParentSpec, wrapContentSpec)
+        val endHeight = height + (if (expanding) 1 else -1) *
+                        inventoryItemDetailsInclude.measuredHeight
 
-        val anim = ValueAnimator.ofInt(startHeight, endHeight)
+        val anim = ValueAnimator.ofInt(height, endHeight)
         anim.addUpdateListener {
             layoutParams.height = anim.animatedValue as Int
             requestLayout()
@@ -126,23 +124,5 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         anim.duration = 200
         anim.interpolator = FastOutSlowInInterpolator()
         return anim
-    }
-
-    private fun initExpandedCollapsedHeights(expanding: Boolean) {
-        val matchParentSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
-        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        measure(matchParentSpec, wrapContentSpec)
-
-        if (expanding) {
-            collapsedHeight = measuredHeight
-            inventoryItemDetailsInclude.visibility = View.VISIBLE
-            measure(matchParentSpec, wrapContentSpec)
-            expandedHeight = measuredHeight
-        } else {
-            expandedHeight = measuredHeight
-            inventoryItemDetailsInclude.visibility = View.GONE
-            measure(matchParentSpec, wrapContentSpec)
-            collapsedHeight = measuredHeight
-        }
     }
 }

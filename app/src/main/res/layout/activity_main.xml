@@ -47,7 +47,7 @@
         android:layout_gravity="bottom"
         app:backgroundTint="@color/colorPrimary"
         app:cradleAlignmentMode="center"
-        app:cradleContentsMargin="6dp"
+        app:cradleContentsMargin="8dp"
         app:cradleTopCornerRadius="25dp"
         app:cradleBottomCornerRadius="34dp"
         app:cradleDepth="52dp"
@@ -70,8 +70,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cradle_layout"
         android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        >
+        android:layout_width="wrap_content" >
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/checkout_button"

@@ -25,7 +25,7 @@ import androidx.recyclerview.widget.RecyclerView
  *  contains(pos: Int) and its size and isEmpty properties. The
  *  RecyclerView.AdapterDataObserver.onItemRangeRemoved override will cause
  *  selected items to be automatically removed from the selection when they are
- *  deleted
+ *  deleted.
  *
  *  The selection size is exposed via the sizeLiveData property to allow on
  *  selection size changed listeners to respond to a change in selection size
