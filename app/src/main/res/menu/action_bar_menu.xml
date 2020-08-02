@@ -58,5 +58,4 @@
 
     <item android:id="@+id/settings_menu_item"
           android:title="@string/settings_description" />
-
 </menu>

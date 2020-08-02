@@ -21,6 +21,7 @@ import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
+import androidx.core.view.isEmpty
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.recyclerView
@@ -41,7 +42,7 @@ class InventoryFragment : Fragment() {
     private var savedSelectionState: IntArray? = null
     private lateinit var fabIconController: TwoStateAnimatedIconController
 
-    init { setHasOptionsMenu(true) }
+    init { setHasOptionsMenu(true); }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -88,6 +89,7 @@ class InventoryFragment : Fragment() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        if (menu.size() == 0) inflater.inflate(R.menu.action_bar_menu, menu)
         this.menu = menu
         val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
@@ -144,12 +146,12 @@ class InventoryFragment : Fragment() {
 
     private fun initOptionsMenuSort(menu: Menu) {
         menu.findItem(when (recyclerView.sort) {
-            Sort.Color -> R.id.color_option
-            Sort.NameAsc -> R.id.name_ascending_option
-            Sort.NameDesc -> R.id.name_descending_option
-            Sort.AmountAsc -> R.id.amount_ascending_option
+            Sort.Color ->      R.id.color_option
+            Sort.NameAsc ->    R.id.name_ascending_option
+            Sort.NameDesc ->   R.id.name_descending_option
+            Sort.AmountAsc ->  R.id.amount_ascending_option
             Sort.AmountDesc -> R.id.amount_descending_option
-            else -> R.id.color_option }).isChecked = true
+            else ->            R.id.color_option }).isChecked = true
     }
 
     private val actionModeCallback = object: ActionMode.Callback {

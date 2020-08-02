@@ -8,7 +8,7 @@
     <color name="colorButtonLight">#CCCCCC</color>
     <color name="colorForeground">#000000</color>
     <color name="colorPrimaryRowLight">#FFFFFF</color>
-    <color name="colorAlternateRowLight">#DEDEDE</color>
+    <color name="colorAlternateRowLight">#DDDDDD</color>
     <color name="colorPrimaryRowDark">#303030</color>
     <color name="colorAlternateRowDark">#252525</color>
     <color name="colorTextLight">#BBBBBB</color>

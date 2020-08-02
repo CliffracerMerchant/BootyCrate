@@ -17,7 +17,6 @@ package com.cliffracermerchant.bootycrate
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -55,9 +54,9 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  icon.
  */
 class MainActivity : AppCompatActivity() {
-    private val shoppingListFragment = ShoppingListFragment()
-    private val inventoryFragment = InventoryFragment()
-    private val preferencesFragment = PreferencesFragment()
+    private lateinit var shoppingListFragment: ShoppingListFragment
+    private lateinit var inventoryFragment: InventoryFragment
+    private lateinit var preferencesFragment: PreferencesFragment
     private var showingInventory = false
     private var showingPreferences = false
 
@@ -95,12 +94,47 @@ class MainActivity : AppCompatActivity() {
             toggleShoppingListInventoryFragments(switchingToInventory = item.itemId == R.id.inventory_button)
             true
         }
-        supportFragmentManager.beginTransaction().
-                add(R.id.fragment_container, preferencesFragment).
-                add(R.id.fragment_container, inventoryFragment).
-                add(R.id.fragment_container, shoppingListFragment).
-                hide(preferencesFragment).hide(inventoryFragment).
-                runOnCommit{ shoppingListFragment.enable() }.commit()
+
+        if (savedInstanceState != null) {
+            shoppingListFragment = supportFragmentManager.getFragment(
+                savedInstanceState, "shoppingListFragment") as ShoppingListFragment
+            inventoryFragment = supportFragmentManager.getFragment(
+                savedInstanceState, "inventoryFragment") as InventoryFragment
+            preferencesFragment = supportFragmentManager.getFragment(
+                savedInstanceState, "preferencesFragment") as PreferencesFragment
+            //See preferencesFragment.updateItemDecoration definition for why this is necessary
+            preferencesFragment.updateItemDecoration(this)
+        } else {
+            shoppingListFragment = ShoppingListFragment()
+            inventoryFragment = InventoryFragment()
+            preferencesFragment = PreferencesFragment()
+        }
+
+        showingInventory = savedInstanceState?.getBoolean("showingInventory") ?: false
+        showingPreferences = savedInstanceState?.getBoolean("showingPreferences") ?: false
+
+        val transaction = supportFragmentManager.beginTransaction()
+        if (savedInstanceState == null) transaction.
+            add(R.id.fragment_container, preferencesFragment, "preferences").
+            add(R.id.fragment_container, inventoryFragment, "inventory").
+            add(R.id.fragment_container, shoppingListFragment, "shoppingList")
+
+        val hiddenFragment1 = if (showingInventory) shoppingListFragment
+        else                  inventoryFragment
+        val hiddenFragment2 = when { !showingPreferences -> preferencesFragment
+                                     showingInventory ->    inventoryFragment
+                                     else ->                shoppingListFragment }
+        transaction.hide(hiddenFragment1).hide(hiddenFragment2).runOnCommit {
+            if (!showingPreferences) if (showingInventory) inventoryFragment.enable()
+                                     else                  shoppingListFragment.enable()
+        }.commit()
+
+        if (showingPreferences) {
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            bottom_app_bar.translationY = 250f
+            fab.translationY = 250f
+            checkoutButton.translationY = 250f
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -186,5 +220,14 @@ class MainActivity : AppCompatActivity() {
         }
         anim.doOnEnd { checkout_button.setLayerType(View.LAYER_TYPE_NONE, null) }
         anim.start()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean("showingPreferences", showingPreferences)
+        outState.putBoolean("showingInventory", showingInventory)
+        supportFragmentManager.putFragment(outState, "shoppingListFragment", shoppingListFragment)
+        supportFragmentManager.putFragment(outState, "inventoryFragment", inventoryFragment)
+        supportFragmentManager.putFragment(outState, "preferencesFragment", preferencesFragment)
     }
 }

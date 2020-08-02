@@ -330,7 +330,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 view.update(item, itemId == expandedItemId)
                 if (item.id == viewModel.newlyInsertedItemId) {
                     setExpandedItem(this, animateCollapse = true, animateExpand = false)
-                    imm?.hideSoftInputFromWindow(nameEdit.windowToken, 0)
+                    imm?.hideSoftInputFromWindow(view.nameEdit.windowToken, 0)
                     view.nameEdit.requestFocus()
                     imm?.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
                 }

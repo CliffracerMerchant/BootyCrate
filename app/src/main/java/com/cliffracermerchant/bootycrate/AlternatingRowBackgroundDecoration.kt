@@ -31,6 +31,10 @@ class AlternatingRowBackgroundDecoration(context: Context) :
 
     init {
         backgroundFill.style = Paint.Style.FILL
+        update(context)
+    }
+
+    fun update(context: Context) {
         val typedValue = TypedValue()
         if (context.theme.resolveAttribute(R.attr.colorBackgroundVariant, typedValue, true))
             backgroundFill.color = typedValue.data
@@ -38,8 +42,7 @@ class AlternatingRowBackgroundDecoration(context: Context) :
 
     override fun onDraw(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
         if (parent.childCount < 2) return
-        // startPos will be equal to the on screen position
-        // of the first visible odd numbered item
+        // startPos will be equal to the on screen position of the first visible odd numbered item
         val firstChildAdapterPos = parent.getChildAdapterPosition(parent.getChildAt(0))
         val startPos = if (firstChildAdapterPos % 2 == 0) 1
                        else                               0

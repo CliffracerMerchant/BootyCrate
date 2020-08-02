@@ -16,14 +16,9 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.os.Bundle
-import android.util.TypedValue
+import android.view.*
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.ViewGroup
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 
 /** A fragment to display the BootyCrate app settings. */
@@ -36,8 +31,8 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
         val darkThemeActivePref = findPreference<SwitchPreferenceCompat>(getString(R.string.pref_dark_theme_active))
-        // An activity restart is necessary when the user changes the theme to
-        // ensure that all fragments use the new theme.
+        // An activity restart is necessary when the user changes
+        // the theme to ensure that all fragments use the new theme.
         darkThemeActivePref?.setOnPreferenceChangeListener { _, _ ->
             activity?.recreate()
             true
@@ -52,11 +47,17 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
     override fun onCreateRecyclerView(inflater: LayoutInflater, parent: ViewGroup,
                                       savedInstanceState: Bundle?): RecyclerView? {
-        val recyclerView = super.onCreateRecyclerView(inflater, parent,
-                                                      savedInstanceState)
+        val recyclerView = super.onCreateRecyclerView(inflater, parent, savedInstanceState)
         recyclerView.addItemDecoration(itemDecoration)
         return recyclerView
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) = menu.clear()
+    override fun onCreateOptionsMenu(menu: Menu, menuInflater: MenuInflater) =
+        menu.clear()
+
+    /* For some reason after recreating the main activity to apply a theme change,
+     * PreferencesFragment's theme is sometimes not changed with the rest of the
+     * app. The item decoration will therefore use the wrong alternate background
+     * color. Calling updateItemDecoration in the activity's onCreate can fix this. */
+    fun updateItemDecoration(context: Context) = itemDecoration.update(context)
 }
