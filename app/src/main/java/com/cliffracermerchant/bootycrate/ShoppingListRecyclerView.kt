@@ -136,7 +136,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         newExpandedVh?.view?.expand(animateExpand)
     }
 
-    fun addNewItem() = viewModel.insert(ShoppingListItem())
+    fun addNewItem() = newShoppingListItemDialog(context, fragmentManager) { newItem ->
+        if (newItem != null) viewModel.insert(newItem)
+    }//viewModel.insert(ShoppingListItem())
 
     fun deleteItem(pos: Int) = deleteItems(pos)
 
@@ -301,15 +303,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     if (linkedId != null) inventoryViewModel.updateExtraInfo(linkedId, value)
                 }
                 view.editColorButton.setOnClickListener {
-                    val colors = resources.getIntArray(R.array.color_picker_presets)
-                    val selectedColor = if (item.color != 0) item.color
-                                        else                 ColorSheet.NO_COLOR
-                    val colorPicker = ColorSheet().colorPicker(colors, selectedColor, true) { color ->
-                        val itemColor = if (color == ColorSheet.NO_COLOR) 0
-                        else color
-                        viewModel.updateColor(item.id, itemColor)
-                    }
-                    colorPicker.show(fragmentManager)
+                    colorPickerDialog(context, fragmentManager) { pickedColor ->
+                        viewModel.updateColor(item.id, pickedColor) }
                 }
                 view.amountOnListEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
@@ -320,40 +315,19 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     viewModel.updateAmountInCart(item.id, value)
                 }
                 view.linkedToEdit.setOnClickListener {
-                    val items = inventoryViewModel.items.value
-                    if (items == null || items.isEmpty()) {
-                        val string = context.getString(R.string.empty_inventory_message)
-                        val snackBar = Snackbar.make(view, string, Snackbar.LENGTH_LONG)
-                        snackBar.anchorView = snackBarAnchor ?: view
-                        snackBar.show()
-                        return@setOnClickListener
-                    }
-                    // AlertDialog seems to ignore the theme's alertDialogTheme value,
-                    // making this workaround necessary
-                    val typedValue = TypedValue()
-                    context.theme.resolveAttribute(android.R.attr.alertDialogTheme, typedValue, true)
-                    val builder = AlertDialog.Builder(context, typedValue.data)
-                    builder.setTitle(context.getString(R.string.link_inventory_item_action_long_description))
-                    val recyclerView = InventoryRecyclerViewDialog(context, items,
-                            listDiffer.currentList[adapterPosition].linkedInventoryItemId)
-                    val dialogClickListener = DialogInterface.OnClickListener { _, button ->
-                        if (button == DialogInterface.BUTTON_POSITIVE)
-                            updateLinkedTo(recyclerView.selectedItem)
-                    }
-                    builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
-                    builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
-                    builder.setView(recyclerView)
-                    builder.show()
+                    selectInventoryItemDialog(context = context,
+                                              inventoryItems = inventoryViewModel.items.value,
+                                              initiallySelectedItemId = item.linkedInventoryItemId,
+                                              snackBarAnchor = snackBarAnchor ?: itemView,
+                                              callback = ::updateLinkedTo)
                 }
 
                 view.checkBox.isClickable = false
                 view.checkBox.setOnClickListener { viewModel.updateIsChecked(item.id, view.checkBox.isChecked) }
-                /* ShoppingListItemView's default onCheckedChangeListener has
-                 * "overridden" here by replacing it with another implementa-
-                 * tion that calls ShoppingListItemView.defaultOnCheckedChange
-                 * so that checkedItems can keep track of which items are
-                 * checked while still keeping the original onCheckedChange
-                 * functionality. */
+                /* ShoppingListItemView's default onCheckedChangeListener has to be "overridden"
+                 * here by replacing it with another implementation that calls ShoppingListItem-
+                 * View.defaultOnCheckedChange so that checkedItems can keep track of which items
+                 * are checked while still keeping the original onCheckedChange functionality. */
                 view.checkBox.setOnCheckedChangeListener { _, checked ->
                     view.defaultOnCheckedChange(checked)
                     if (checked) checkedItems.add(adapterPosition)
@@ -365,19 +339,16 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 view.update(item, itemId == expandedItemId)
                 if (item.id == viewModel.newlyInsertedItemId) {
                     setExpandedItem(this, animateCollapse = true, animateExpand = false)
-                    imm?.hideSoftInputFromWindow(view.nameEdit.windowToken, 0)
-                    view.nameEdit.requestFocus()
-                    imm?.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
-                    viewModel.resetNewlyInsertedItemId()
+                    smoothScrollToPosition(adapterPosition)
                 }
-                if (selection.contains(adapterPosition)) view.setBackgroundColor(selectedColor)
-                else                                     view.background = null
+                if (selection.contains(adapterPosition))
+                    view.setBackgroundColor(selectedColor)
+                else view.background = null
             }
 
             private fun updateLinkedTo(newLinkedItem: InventoryItem?) {
                 if (newLinkedItem == null || newLinkedItem.id == 0L) return
-                viewModel.updateLinkedInventoryItemId(
-                    listDiffer.currentList[adapterPosition].id, newLinkedItem)
+                viewModel.updateLinkedInventoryItemId(item.id, newLinkedItem)
             }
         }
     }
@@ -408,7 +379,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             if (newItem.amountInCart != oldItem.amountInCart) itemChanges.add(Field.AmountInCart)
             if (newItem.linkedInventoryItemId != oldItem.linkedInventoryItemId) itemChanges.add(Field.LinkedTo)
 
-            if (!itemChanges.isEmpty()) listChanges[newItem.id] = EnumSet.copyOf(itemChanges)
+            if (!itemChanges.isEmpty())
+                listChanges[newItem.id] = EnumSet.copyOf(itemChanges)
             return itemChanges.isEmpty()
         }
 

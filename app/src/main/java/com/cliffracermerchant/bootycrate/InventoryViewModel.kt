@@ -21,14 +21,14 @@ import java.util.concurrent.atomic.AtomicLong
 
 /** A viewmodel to expose the data set of the inventory_item table.
  *
- *  InventoryViewModel exposes the contents of the inventory_item table, accor-
- *  ding to its sort and searchFilter properties, using the public property
- *  items: LiveData<List<InventoryItem>>. Setting the sort or searchFilter to a
- *  new value will automatically update the LiveData with the new data.
+ *  InventoryViewModel exposes the contents of the inventory_item table through
+ *  the public property items: LiveData<List<InventoryItem>>. Setting the sort
+ *  or searchFilter properties to a new value will automatically update the
+ *  LiveData with the new data
  *
  *  When a single new item is inserted, the property newlyInsertedItemId will
  *  be set equal to the new items id. This allows external entities the possi-
- *  bility of treating a newly inserted item differently that it does existing
+ *  bility of treating a newly inserted item differently than it does existing
  *  items. The function resetNewlyInsertedItemId should generally be called
  *  after the newlyInsertedItemId value is used so that the item will not be
  *  considered a new item long after it is inserted if no other item has since

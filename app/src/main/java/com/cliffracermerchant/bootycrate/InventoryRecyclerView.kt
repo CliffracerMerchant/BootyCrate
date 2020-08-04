@@ -129,7 +129,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         newExpandedVh?.view?.expand(animateExpand)
     }
 
-    fun addNewItem() = viewModel.insert(InventoryItem())
+    fun addNewItem() = newInventoryItemDialog(context, fragmentManager) { newItem ->
+        if (newItem != null) {
+            viewModel.insert(newItem)
+            smoothScrollToPosition(listDiffer.currentList.size - 1)
+        }
+    }
 
     fun deleteItem(pos: Int) = deleteItems(pos)
 
@@ -195,7 +200,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         RecyclerView.Adapter<InventoryAdapter.InventoryItemViewHolder>() {
 
         private val selectedColor: Int
-        private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
 
         init {
             val typedValue = TypedValue()
@@ -292,17 +296,9 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 view.collapseButton.setOnClickListener { setExpandedItem(null) }
 
                 view.colorEdit.setOnClickListener {
-                    val colors = resources.getIntArray(R.array.color_picker_presets)
-                    val selectedColor = if (item.color != 0) item.color
-                                        else                 ColorSheet.NO_COLOR
-                    val colorPicker = ColorSheet().colorPicker(colors, selectedColor, true) { color ->
-                        val itemColor = if (color == ColorSheet.NO_COLOR) 0
-                                        else color
-                        viewModel.updateColor(item.id, itemColor)
-                    }
-                    colorPicker.show(fragmentManager)
+                    colorPickerDialog(context, fragmentManager) { chosenColor ->
+                        viewModel.updateColor(item.id, chosenColor) }
                 }
-
                 view.nameEdit.liveData.observeForever { value ->
                     if (adapterPosition == -1) return@observeForever
                     viewModel.updateName(item.id, value)
@@ -330,9 +326,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 view.update(item, itemId == expandedItemId)
                 if (item.id == viewModel.newlyInsertedItemId) {
                     setExpandedItem(this, animateCollapse = true, animateExpand = false)
-                    imm?.hideSoftInputFromWindow(view.nameEdit.windowToken, 0)
-                    view.nameEdit.requestFocus()
-                    imm?.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, 0)
+                    smoothScrollToPosition(adapterPosition)
+                    viewModel.resetNewlyInsertedItemId()
                 }
                 if (selection.contains(adapterPosition)) view.setBackgroundColor(selectedColor)
                 else                                     view.background = null
@@ -365,7 +360,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             if (newItem.autoAddToShoppingList != oldItem.autoAddToShoppingList) itemChanges.add(Field.AutoAddToShoppingList)
             if (newItem.autoAddToShoppingListTrigger != oldItem.autoAddToShoppingListTrigger) itemChanges.add(Field.AutoAddToShoppingListTrigger)
 
-            if (!itemChanges.isEmpty()) listChanges[newItem.id] = EnumSet.copyOf(itemChanges)
+            if (!itemChanges.isEmpty())
+                listChanges[newItem.id] = EnumSet.copyOf(itemChanges)
             return itemChanges.isEmpty()
         }
 

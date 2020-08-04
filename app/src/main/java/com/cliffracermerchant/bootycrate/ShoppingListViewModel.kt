@@ -21,15 +21,14 @@ import java.util.concurrent.atomic.AtomicLong
 
 /** A viewmodel to expose the data set of the shopping_list_item table.
  *
- *  ShoppingListViewModel exposes the contents of the shopping_list_item table,
- *  according to its sort and searchFilter properties, through the public pro-
- *  perty items: LiveData<List<ShoppingListItem>>. Setting the sort or search-
- *  Filter to a new value will automatically update the LiveData with the new
- *  data.
+ *  ShoppingListViewModel exposes the contents of the shopping_list_item table
+ *  through the public property items: LiveData<List<ShoppingListItem>>. Set-
+ *  ting the sort or searchFilter properties to a new value will automatically
+ *  update the LiveData with the new data.
  *
  *  When a single new item is inserted, the property newlyInsertedItemId will
  *  be set equal to the new items id. This allows external entities the possi-
- *  bility of treating a newly inserted item differently that it does existing
+ *  bility of treating a newly inserted item differently than it does existing
  *  items. The function resetNewlyInsertedItemId should generally be called
  *  after the newlyInsertedItemId value is used so that the item will not be
  *  considered a new item long after it is inserted if no other item has since

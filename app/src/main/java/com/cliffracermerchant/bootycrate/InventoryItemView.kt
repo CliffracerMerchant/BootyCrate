@@ -43,7 +43,7 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 class InventoryItemView(context: Context) : ConstraintLayout(context) {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
-    private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
     private val editButtonIconController: TwoStateAnimatedIconController
 
     init {
@@ -51,6 +51,8 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         editButtonIconController = TwoStateAnimatedIconController.forView(editButton,
             context.getDrawable(R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
+        colorEdit.background = ColoredCircleDrawable(colorEdit.layoutParams.width.toFloat(),
+                                                     0, nameEdit.currentTextColor)
 
         editButton.setOnClickListener {
             if (isExpanded) //TODO Implement more options menu
@@ -66,8 +68,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     fun update(item: InventoryItem, isExpanded: Boolean = false) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
-        colorEdit.background = ColoredCircleDrawable(colorEdit.layoutParams.width.toFloat(),
-                                                     item.color, nameEdit.currentTextColor)
+        (colorEdit.background as ColoredCircleDrawable).color = item.color
         amountEdit.initCurrentValue(item.amount)
         autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
         autoAddToShoppingListTriggerEdit.initCurrentValue(item.autoAddToShoppingListTrigger)

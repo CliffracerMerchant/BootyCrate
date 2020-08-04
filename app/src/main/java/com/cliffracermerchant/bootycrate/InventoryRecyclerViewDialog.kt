@@ -28,7 +28,7 @@ import kotlinx.android.synthetic.main.inventory_item_popup_layout.view.*
 
 /** A RecyclerView for selecting a single item in the user's inventory in a popup.
  *
- *  PopupInventoryRecyclerView is an alteration of InventoryRecyclerView
+ *  InventoryRecyclerViewDialog is an alteration of InventoryRecyclerView
  *  specialized for selecting a single item within the inventory from a popup
  *  window. The selected item (or null is no item is selected) can queried from
  *  the property selectedItem. */

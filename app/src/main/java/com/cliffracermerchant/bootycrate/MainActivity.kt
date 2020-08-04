@@ -67,10 +67,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var imm: InputMethodManager
     private var blackColor: Int = 0
-    private var cradleLayoutInitialWidth = -1
 
-    private var checkoutButtonIsHidden = false
-        set(value) { showCheckoutButton(value); field = value }
+    private var checkoutButtonIsVisible = true
+        set(value) { showHideCheckoutButton(value, true); field = value }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,6 +128,7 @@ class MainActivity : AppCompatActivity() {
                                      else                  shoppingListFragment.enable()
         }.commit()
 
+        if (showingInventory) showHideCheckoutButton(showing = false, animate = false)
         if (showingPreferences) {
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
             bottom_app_bar.translationY = 250f
@@ -184,7 +184,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun toggleShoppingListInventoryFragments(switchingToInventory: Boolean) {
         showingInventory = switchingToInventory
-        checkoutButtonIsHidden = switchingToInventory
+        checkoutButtonIsVisible = !switchingToInventory
         imm.hideSoftInputFromWindow(bottom_app_bar.windowToken, 0)
         if (switchingToInventory) {
             shoppingListFragment.disable()
@@ -201,25 +201,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showCheckoutButton(showing: Boolean) {
-        if (checkoutButtonIsHidden == showing) return
+    private fun showHideCheckoutButton(showing: Boolean, animate: Boolean) {
+        val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        cradle_layout.measure(wrapContentSpec, wrapContentSpec)
+        val cradleLayoutFullWidth = cradle_layout.measuredWidth
+        fab.measure(wrapContentSpec, wrapContentSpec)
+        val fabWidth = fab.measuredWidth
 
-        if (cradleLayoutInitialWidth == -1) cradleLayoutInitialWidth = cradle_layout.layoutParams.width
-        val cradleLayoutStartWidth = if (showing) cradle_layout.width else fab.width
-        val cradleLayoutEndWidth = if (showing) fab.width else cradleLayoutInitialWidth
-        val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
-        checkout_button.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-        val anim = ValueAnimator.ofFloat(if (showing) 1f else 0f,
-                                         if (showing) 0f else 1f)
-        anim.addUpdateListener {
-            checkout_button.scaleX = it.animatedValue as Float
-            cradle_layout.layoutParams.width = cradleLayoutStartWidth +
-                    (cradleLayoutWidthChange * it.animatedFraction).toInt()
+        if (animate && checkoutButtonIsVisible != showing) {
+            val cradleLayoutStartWidth = if (showing) fabWidth else cradleLayoutFullWidth
+            val cradleLayoutEndWidth =   if (showing) cradleLayoutFullWidth else fabWidth
+            val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
+            checkout_button.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            val anim = ValueAnimator.ofFloat(if (showing) 0f else 1f,
+                                             if (showing) 1f else 0f)
+            anim.addUpdateListener {
+                checkout_button.scaleX = it.animatedValue as Float
+                cradle_layout.layoutParams.width = cradleLayoutStartWidth +
+                        (cradleLayoutWidthChange * it.animatedFraction).toInt()
+                cradle_layout.requestLayout()
+                bottom_app_bar.background.invalidateSelf()
+            }
+            anim.doOnEnd { checkout_button.setLayerType(View.LAYER_TYPE_NONE, null) }
+            anim.start()
+        } else {
+            checkout_button.scaleX = if (showing) 1f else 0f
+            cradle_layout.layoutParams.width = if (showing) cradleLayoutFullWidth
+                                               else         fabWidth
             cradle_layout.requestLayout()
             bottom_app_bar.background.invalidateSelf()
         }
-        anim.doOnEnd { checkout_button.setLayerType(View.LAYER_TYPE_NONE, null) }
-        anim.start()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
