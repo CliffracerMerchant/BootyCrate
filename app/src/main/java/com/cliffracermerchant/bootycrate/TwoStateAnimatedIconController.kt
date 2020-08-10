@@ -1,16 +1,8 @@
 /* Copyright 2020 Nicholas Hochstetler
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License. */
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
+ * LICENSE in the project's root directory. */
 
 package com.cliffracermerchant.bootycrate
 
@@ -32,60 +24,66 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
  *  second parameter to enable or disable animating between states. */
 class TwoStateAnimatedIconController private constructor(
     private val target: Any,
-    private val aToBDrawable: AnimatedVectorDrawable,
-    private val bToADrawable: AnimatedVectorDrawable,
+    aToBDrawable: AnimatedVectorDrawable? = null,
+    bToADrawable: AnimatedVectorDrawable? = null,
     private var targetLayerId: Int = -1) {
-    // Due to AnimatedVectorDrawable.reset() not being
+    /* Due to AnimatedVectorDrawable.reset() not being present in lower API
+     * levels, TwoStateAnimatedIconController keeps track of whether or not each
+     * drawable has been animated at least once so that it can set the drawable
+     * properly for a non-animated state change. */
     private var aToBHasBeenAnimated = false
     private var bToAHasBeenAnimated = false
+    private lateinit var aToBDrawable: AnimatedVectorDrawable
+    private lateinit var bToADrawable: AnimatedVectorDrawable
     private var _isInStateA = true
     private val targetIsFab = target is FloatingActionButton
     private val targetIsDrawableLayer = target is LayerDrawable
 
     var isInStateA get() = _isInStateA
-        set(value) { setState(value) }
-    var tint: Int? = null
+                   set(value) { setState(value) }
+    var tint: Int = 0
         set(value) { field = value
-                     aToBDrawable.setTint(value ?: 0)
-                     bToADrawable.setTint(value ?: 0) }
+                     aToBDrawable.setTint(value)
+                     bToADrawable.setTint(value) }
 
     companion object {
         fun forFloatingActionButton(fab: FloatingActionButton,
-                                    aToBDrawable: AnimatedVectorDrawable,
-                                    bToADrawable: AnimatedVectorDrawable) =
+                                    aToBDrawable: AnimatedVectorDrawable? = null,
+                                    bToADrawable: AnimatedVectorDrawable? = null) =
             TwoStateAnimatedIconController(fab, aToBDrawable, bToADrawable)
 
         fun forView(view: View,
-                    aToBDrawable: AnimatedVectorDrawable,
-                    bToADrawable: AnimatedVectorDrawable) =
+                    aToBDrawable: AnimatedVectorDrawable? = null,
+                    bToADrawable: AnimatedVectorDrawable? = null) =
             TwoStateAnimatedIconController(view, aToBDrawable, bToADrawable)
 
         fun forDrawableLayer(layerDrawable: LayerDrawable, targetLayerId: Int,
-                             aToBDrawable: AnimatedVectorDrawable,
-                             bToADrawable: AnimatedVectorDrawable) =
+                             aToBDrawable: AnimatedVectorDrawable? = null,
+                             bToADrawable: AnimatedVectorDrawable? = null) =
             TwoStateAnimatedIconController(layerDrawable, aToBDrawable, bToADrawable, targetLayerId)
     }
 
-    init { setBackground(aToBDrawable) }
+    init {
+        if (aToBDrawable != null) this.aToBDrawable = aToBDrawable
+        if (bToADrawable != null) this.bToADrawable = bToADrawable
+    }
 
     fun setState(toStateA: Boolean, animate: Boolean = true) {
         _isInStateA = toStateA
-        val newBg =
-            if (animate)
-                if (toStateA) {
-                    bToAHasBeenAnimated = true
-                    bToADrawable
-                } else {
-                    aToBHasBeenAnimated = true
-                    aToBDrawable
-                }
-            else
-                if (toStateA)
-                    if (!aToBHasBeenAnimated) aToBDrawable
-                    else                      bToADrawable
-                else
-                    if (!bToAHasBeenAnimated) bToADrawable
-                    else                      aToBDrawable
+        val newBg = if (animate)
+                        if (toStateA) {
+                            bToAHasBeenAnimated = true
+                            bToADrawable
+                        } else {
+                            aToBHasBeenAnimated = true
+                            aToBDrawable
+                        }
+                    else if (toStateA)
+                             if (!aToBHasBeenAnimated) aToBDrawable
+                             else                      bToADrawable
+                         else
+                             if (!bToAHasBeenAnimated) bToADrawable
+                             else                      aToBDrawable
         setBackground(newBg)
         if (animate) newBg.start()
     }
@@ -93,6 +91,18 @@ class TwoStateAnimatedIconController private constructor(
     fun toStateA(animate: Boolean = true) = setState(true, animate)
     fun toStateB(animate: Boolean = true) = setState(false, animate)
     fun toggleState(animate: Boolean = true) = setState(!_isInStateA, animate)
+
+    fun setAtoBDrawable(drawable: AnimatedVectorDrawable) {
+        aToBDrawable = drawable
+        aToBHasBeenAnimated = false
+        if (isInStateA && !bToAHasBeenAnimated) setBackground(drawable)
+    }
+
+    fun setBtoADrawable(drawable: AnimatedVectorDrawable) {
+        bToADrawable = drawable
+        bToAHasBeenAnimated = false
+        if (!isInStateA && !aToBHasBeenAnimated) setBackground(drawable)
+    }
 
     private fun setBackground(newBackground: AnimatedVectorDrawable) {
         when { targetIsFab ->

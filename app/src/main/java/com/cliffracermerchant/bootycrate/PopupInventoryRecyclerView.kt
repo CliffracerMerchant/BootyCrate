@@ -1,16 +1,8 @@
 /* Copyright 2020 Nicholas Hochstetler
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License. */
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
+ * LICENSE in the project's root directory. */
 
 package com.cliffracermerchant.bootycrate
 
@@ -28,20 +20,21 @@ import kotlinx.android.synthetic.main.inventory_item_popup_layout.view.*
 
 /** A RecyclerView for selecting a single item in the user's inventory in a popup.
  *
- *  InventoryRecyclerViewDialog is an alteration of InventoryRecyclerView
+ *  PopupInventoryRecyclerView is an alteration of InventoryRecyclerView
  *  specialized for selecting a single item within the inventory from a popup
  *  window. The selected item (or null is no item is selected) can queried from
  *  the property selectedItem. */
-class InventoryRecyclerViewDialog(context: Context,
-                                  private val items: List<InventoryItem>,
-                                  private val initiallySelectedItemId: Long? = null) :
-        RecyclerView(context) {
+class PopupInventoryRecyclerView(
+    context: Context,
+    private val items: List<InventoryItem>,
+    private val initiallySelectedItemId: Long? = null) :
+    androidx.recyclerview.widget.RecyclerView(context)
+{
     private val adapter = PopupInventoryAdapter(context)
     private var selectedItemPos: Int? = null
     val selectedItem: InventoryItem? get() { val pos = selectedItemPos
                                              return if (pos != null) items[pos]
-                                                    else             null}
-
+                                                    else             null }
     init {
         layoutManager = LinearLayoutManager(context)
         setItemViewCacheSize(10)
@@ -73,8 +66,17 @@ class InventoryRecyclerViewDialog(context: Context,
             return InventoryItemViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int) =
-            holder.bindTo(items[position])
+        override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int) {
+            val item = items[position]
+            holder.apply {
+                view.nameEdit.text = item.name
+                view.amountEdit.currentValue = item.amount
+                view.extraInfoEdit.text = item.extraInfo
+                if (item.id == initiallySelectedItemId) selectedItemPos = adapterPosition
+                if (selectedItemPos == adapterPosition) itemView.setBackgroundColor(selectedColor)
+                else itemView.background = null
+            }
+        }
 
         override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int, payloads: MutableList<Any>) {
             if (payloads.size != 1 || payloads[0] !is Boolean)
@@ -87,7 +89,7 @@ class InventoryRecyclerViewDialog(context: Context,
 
         override fun getItemId(position: Int): Long = items[position].id
 
-        inner class InventoryItemViewHolder(private val view: View) :
+        inner class InventoryItemViewHolder(val view: View) :
                 RecyclerView.ViewHolder(view) {
             init {
                 view.amountEdit.decreaseButton.background = multiplyIcon
@@ -107,24 +109,13 @@ class InventoryRecyclerViewDialog(context: Context,
                 view.amountEdit.decreaseButton.setOnClickListener(onClick)
                 view.amountEdit.increaseButton.setOnClickListener(onClick)
 
-                val onLongClick = OnLongClickListener { view ->
-                    onClick.onClick(view); true
-                }
+                val onLongClick = OnLongClickListener { view -> onClick.onClick(view); true }
                 view.setOnLongClickListener(onLongClick)
                 view.nameEdit.setOnLongClickListener(onLongClick)
                 view.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
                 view.extraInfoEdit.setOnLongClickListener(onLongClick)
                 view.amountEdit.decreaseButton.setOnLongClickListener(onLongClick)
                 view.amountEdit.increaseButton.setOnLongClickListener(onLongClick)
-            }
-
-            fun bindTo(item: InventoryItem) {
-                view.nameEdit.text = item.name
-                view.amountEdit.currentValue = item.amount
-                view.extraInfoEdit.text = item.extraInfo
-                if (item.id == initiallySelectedItemId) selectedItemPos = adapterPosition
-                if (selectedItemPos == adapterPosition) itemView.setBackgroundColor(selectedColor)
-                else                                    itemView.background = null
             }
         }
     }

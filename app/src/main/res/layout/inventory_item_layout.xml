@@ -25,9 +25,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:importantForAutofill="no"
+        android:ellipsize="end"
         android:textSize="22sp"
         android:hint="@string/inventory_item_name_description"
-        android:focusable="true"
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
         app:layout_constraintEnd_toStartOf="@id/amountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
@@ -35,7 +35,9 @@
         app:layout_constraintStart_toEndOf="@id/colorEdit"
         app:layout_constraintTop_toTopOf="@id/colorEdit"
         android:layout_marginStart="6dp"
-        tools:ignore="labelFor" />
+        tools:ignore="labelFor"
+        app:isEditable="false"
+        />
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
         android:id="@+id/amountEdit"

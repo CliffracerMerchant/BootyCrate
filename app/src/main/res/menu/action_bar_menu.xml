@@ -33,7 +33,7 @@
            android:visible="false" >
     </group>
 
-    <group android:id="@+id/inventory_view_action_mode_group"
+    <group android:id="@+id/inventory_view_action_mode_menu_group"
            android:visible="false" >
         <item android:id="@+id/add_to_shopping_list_button"
               android:title="@string/add_to_shopping_list_description"

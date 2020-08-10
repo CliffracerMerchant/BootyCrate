@@ -1,16 +1,8 @@
 /* Copyright 2020 Nicholas Hochstetler
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License. */
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
+ * LICENSE in the project's root directory. */
 
 package com.cliffracermerchant.bootycrate
 
@@ -21,6 +13,7 @@ import android.graphics.Paint
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.LayerDrawable
 import android.util.Log
+import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -36,8 +29,8 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
  *  updates the contained views with the information of the provided Shopping-
  *  ListItem. Its expand and collapse functions allow for an optional animation. */
 class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
-    val isExpanded get() = expandedPrivate
-    private var expandedPrivate = false
+    val isExpanded get() = _isExpanded
+    private var _isExpanded = false
     val decreaseButtonIconController: TwoStateAnimatedIconController
     val increaseButtonIconController: TwoStateAnimatedIconController
     val editButtonIconController: TwoStateAnimatedIconController
@@ -47,19 +40,19 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     var itemColor: Int? = null
 
     // This companion object stores resources common to all ShoppingListItemViews.
-    private companion object {
+    private companion object SharedResources {
+        private var isInitialized = false
         private lateinit var imm: InputMethodManager
         private lateinit var linkedItemDescriptionString: String
         private lateinit var unlinkedItemDescriptionString: String
         private lateinit var linkNowActionString: String
         private lateinit var changeLinkActionString: String
-        private var normalTextColor = -1
     }
 
     init {
         inflate(context, R.layout.shopping_list_item_layout, this)
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-        if (normalTextColor == -1) initSharedResources(context)
+        if (!SharedResources.isInitialized) initSharedResources(context)
 
         decreaseButtonIconController = TwoStateAnimatedIconController.forView(amountOnListEdit.decreaseButton,
             context.getDrawable(R.drawable.shopping_list_animated_multiply_to_minus_icon) as AnimatedVectorDrawable,
@@ -80,14 +73,13 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             context.getDrawable(R.drawable.animated_checkbox_checked_to_unchecked_checkmark) as AnimatedVectorDrawable)
 
         editButton.setOnClickListener {
-            if (isExpanded) //TODO: Implement more options menu
+            if (_isExpanded) //TODO: Implement more options menu
             else            expand()
         }
         collapseButton.setOnClickListener { collapse() }
         amountOnListEdit.decreaseButton.setOnClickListener { if (isExpanded) amountOnListEdit.decrement() }
         amountOnListEdit.increaseButton.setOnClickListener { if (isExpanded) amountOnListEdit.increment() }
         checkBox.setOnCheckedChangeListener { _, checked -> defaultOnCheckedChange(checked) }
-        amountOnListEdit.increaseButton.layoutParams.apply { width /= 2 }
 
         // If the layout's children are clipped, they will suddenly appear or
         // disappear without an animation during the expand collapse animation
@@ -95,7 +87,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     }
 
     fun update(item: ShoppingListItem, isExpanded: Boolean = false) {
-        collapse(false)
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
         amountOnListEdit.initCurrentValue(item.amountOnList)
@@ -103,6 +94,10 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         itemColor = item.color
         checkBoxBackgroundController.tint = item.color
         checkBox.isChecked = item.isChecked
+        /* The above line will not call defaultOnCheckedChange if the item is not checked,
+         * since the item's check state will not have changed. It is called manually here
+         * if the item is not checked to make sure it is initialized in the correct state. */
+        if (!item.isChecked) defaultOnCheckedChange(checked = false, animate = false)
 
         updateLinkedStatus(item.linkedInventoryItemId)
         if (isExpanded) expand(false)
@@ -131,15 +126,14 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     }
 
     fun expand(animate: Boolean = true) {
-        if (expandedPrivate) return
-        expandedPrivate = true
+        _isExpanded = true
         nameEdit.isEditable = true
         amountOnListEdit.isEditable = true
         extraInfoEdit.isEditable = true
         amountInCartEdit.isEditable = true
-        decreaseButtonIconController.toggleState(animate)
-        increaseButtonIconController.toggleState(animate)
-        editButtonIconController.toggleState(animate)
+        decreaseButtonIconController.toStateB(animate)
+        increaseButtonIconController.toStateB(animate)
+        editButtonIconController.toStateB(animate)
 
         if (animate) {
             val anim = expandCollapseAnimation(true)
@@ -147,17 +141,16 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.start()
         } else {
             shoppingListItemDetailsInclude.visibility = View.VISIBLE
-            amountOnListEdit.increaseButton.layoutParams.apply{ width *= 2 }
+            amountOnListEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth }
         }
     }
 
     fun collapse(animate: Boolean = true) {
-        if (!expandedPrivate) return
         if (nameEdit.isFocused || extraInfoEdit.isFocused ||
             amountOnListEdit.valueEdit.isFocused ||
             amountInCartEdit.valueEdit.isFocused)
                 imm.hideSoftInputFromWindow(windowToken, 0)
-        expandedPrivate = false
+        _isExpanded = false
         nameEdit.isEditable = false
         amountOnListEdit.isEditable = false
         extraInfoEdit.isEditable = false
@@ -172,12 +165,11 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.start()
         } else {
             shoppingListItemDetailsInclude.visibility = View.GONE
-            amountOnListEdit.increaseButton.layoutParams.apply { width /= 2 }
+            amountOnListEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth / 2 }
         }
     }
 
     fun defaultOnCheckedChange(checked: Boolean, animate: Boolean = true) {
-        Log.d("update", "default onCheckedChangeListener called")
         if (checked) {
             nameEdit.paintFlags = nameEdit.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
             nameEdit.setTextColor(nameEdit.currentHintTextColor)
@@ -185,7 +177,9 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             checkBoxBackgroundController.toStateB(animate)
         } else {
             nameEdit.paintFlags = nameEdit.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-            nameEdit.setTextColor(normalTextColor)
+            val typedValue = TypedValue()
+            context.theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
+            nameEdit.setTextColor(typedValue.data)
             checkBoxBackgroundController.toStateA(animate)
             checkBoxCheckmarkController.toStateA(animate)
         }
@@ -223,6 +217,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         unlinkedItemDescriptionString = context.getString(R.string.unlinked_shopping_list_item_description)
         linkNowActionString = context.getString(R.string.shopping_list_item_link_now_action_description)
         changeLinkActionString = context.getString(R.string.shopping_list_item_change_link_action_description)
-        normalTextColor = nameEdit.currentTextColor
+        isInitialized = true
     }
 }

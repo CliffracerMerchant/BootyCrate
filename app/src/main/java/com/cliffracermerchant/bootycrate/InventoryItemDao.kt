@@ -1,16 +1,8 @@
 /* Copyright 2020 Nicholas Hochstetler
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License. */
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy
+ * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
+ * LICENSE in the project's root directory. */
 
 package com.cliffracermerchant.bootycrate
 
@@ -18,28 +10,25 @@ import androidx.lifecycle.LiveData
 import androidx.room.*
 
 /** A Room DAO for BootyCrateDatabase's inventory_item table. */
-@Dao
-abstract class InventoryItemDao {
+@Dao abstract class InventoryItemDao : DataAccessObject<InventoryItem>() {
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY color")
-    abstract fun getAllSortedByColor(filter: String): LiveData<List<InventoryItem>>
+    abstract override fun getAllSortedByColor(filter: String): LiveData<List<InventoryItem>>
 
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY name ASC")
-    abstract fun getAllSortedByNameAsc(filter: String): LiveData<List<InventoryItem>>
+    abstract override fun getAllSortedByNameAsc(filter: String): LiveData<List<InventoryItem>>
 
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY name DESC")
-    abstract fun getAllSortedByNameDesc(filter: String): LiveData<List<InventoryItem>>
+    abstract override fun getAllSortedByNameDesc(filter: String): LiveData<List<InventoryItem>>
 
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount ASC")
-    abstract fun getAllSortedByAmountAsc(filter: String): LiveData<List<InventoryItem>>
+    abstract override fun getAllSortedByAmountAsc(filter: String): LiveData<List<InventoryItem>>
 
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount DESC")
-    abstract fun getAllSortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
+    abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
 
-    @Insert
-    abstract suspend fun insert(item: InventoryItem): Long
+    @Insert abstract override suspend fun insert(item: InventoryItem): Long
 
-    @Insert
-    abstract suspend fun insert(vararg items: InventoryItem)
+    @Insert abstract override suspend fun insert(vararg items: InventoryItem)
 
     @Query("INSERT INTO inventory_item (name, extraInfo, color) " +
            "SELECT name, extraInfo, color " +
@@ -75,7 +64,7 @@ abstract class InventoryItemDao {
     abstract suspend fun updateAutoAddToShoppingListTrigger(id: Long, autoAddToShoppingListTrigger: Int)
 
     @Query("DELETE FROM inventory_item")
-    abstract suspend fun deleteAll()
+    abstract override suspend fun deleteAll()
 
     @Query("UPDATE shopping_list_item " +
            "SET linkedInventoryItemId = NULL " +
@@ -92,8 +81,7 @@ abstract class InventoryItemDao {
            "WHERE inTrash = 1")
     abstract suspend fun emptyTrashPrivate()
 
-    @Transaction
-    open suspend fun emptyTrash() {
+    @Transaction override suspend fun emptyTrash() {
         clearShoppingListItemLinks()
         emptyTrashPrivate()
     }
@@ -103,15 +91,14 @@ abstract class InventoryItemDao {
            "WHERE id IN (:ids)")
     abstract suspend fun moveToTrash(vararg ids: Long)
 
-    @Transaction
-    open suspend fun delete(vararg ids: Long) {
+    @Transaction override suspend fun delete(vararg ids: Long) {
         clearShoppingListItemLinks()
         emptyTrashPrivate()
         moveToTrash(*ids)
     }
 
     @Query("UPDATE inventory_item " +
-            "SET inTrash = 0 " +
-            "WHERE inTrash = 1")
-    abstract suspend fun undoDelete()
+           "SET inTrash = 0 " +
+           "WHERE inTrash = 1")
+    abstract override suspend fun undoDelete()
 }
