@@ -47,7 +47,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         inventoryViewModel: InventoryViewModel,
         shoppingListViewModel: ShoppingListViewModel,
         fragmentManager: FragmentManager,
-        initialSort: Sort? = null
+        initialSort: BootyCrateItem.Sort? = null
     ) {
         this.inventoryViewModel = inventoryViewModel
         this.shoppingListViewModel = shoppingListViewModel
@@ -110,7 +110,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.Name))
                         holder.view.nameEdit.setText(item.name)
                     if (changes.contains(InventoryItem.Field.Amount)) {
-                        holder.view.amountEdit.currentValue = item.amount
+                        holder.view.inventoryAmountEdit.currentValue = item.amount
                         checkAutoAddToShoppingList(holder.adapterPosition) }
                     if (changes.contains(InventoryItem.Field.ExtraInfo))
                         holder.view.extraInfoEdit.setText(item.extraInfo)
@@ -123,7 +123,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.Color)) {
                         val colorEditBg = holder.view.colorEdit.background as ColoredCircleDrawable
                         val startColor = colorEditBg.color
-                        val endColor = item.color
+                        val endColor = BootyCrateItem.Colors[item.color]
                         ObjectAnimator.ofArgb(colorEditBg, "color", startColor, endColor).start()
                     }
                 } else unhandledChanges.add(payload)
@@ -131,8 +131,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             if (unhandledChanges.isNotEmpty())
                 super.onBindViewHolder(holder, position, unhandledChanges)
         }
-
-        override fun getItemId(position: Int): Long = currentList[position].id
     }
 
     /** A BootyCrateViewHolder that wraps an instance of InventoryItemView.
@@ -157,7 +155,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             }
             view.setOnClickListener(onClick)
             view.nameEdit.setOnClickListener(onClick)
-            view.amountEdit.valueEdit.setOnClickListener(onClick)
+            view.inventoryAmountEdit.valueEdit.setOnClickListener(onClick)
             view.extraInfoEdit.setOnClickListener(onClick)
 
             val onLongClick = OnLongClickListener {
@@ -165,13 +163,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             }
             view.setOnLongClickListener(onLongClick)
             view.nameEdit.setOnLongClickListener(onLongClick)
-            view.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
+            view.inventoryAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
             view.extraInfoEdit.setOnLongClickListener(onLongClick)
 
             view.colorEdit.setOnClickListener {
-                colorPickerDialog(context, fragmentManager, item.color) { chosenColor ->
-                    inventoryViewModel.updateColor(item.id, chosenColor)
-                }
+                colorPickerDialog(fragmentManager, item.color) { chosenColor ->
+                    inventoryViewModel.updateColor(item.id, chosenColor) }
             }
             view.editButton.setOnClickListener { expandedItem.set(this) }
             view.collapseButton.setOnClickListener { expandedItem.set(null) }
@@ -182,7 +179,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 inventoryViewModel.updateName(item.id, value)
                 shoppingListViewModel.updateNameFromLinkedInventoryItem(item.id, value)
             }
-            view.amountEdit.liveData.observeForever { value ->
+            view.inventoryAmountEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 inventoryViewModel.updateAmount(item.id, value)
             }

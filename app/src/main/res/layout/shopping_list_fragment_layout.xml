@@ -2,7 +2,7 @@
 <com.cliffracermerchant.bootycrate.ShoppingListRecyclerView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/shopping_list_recycler_view"
+    android:id="@+id/shoppingListRecyclerView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingBottom="?attr/actionBarSize"

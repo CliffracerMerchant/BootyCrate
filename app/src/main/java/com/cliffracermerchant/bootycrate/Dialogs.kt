@@ -25,15 +25,16 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
 import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
 
 fun colorPickerDialog(
-    context: Context,
     fragmentManager: FragmentManager,
-    initialColor: Int = -8355712, //Medium gray
+    initialColorIndex: Int = 0,
     callback: (Int) -> Unit
 ) {
-    val colors = context.resources.getIntArray(R.array.color_picker_presets)
-    val colorPicker = ColorSheet().colorPicker(colors, initialColor,
-                                               noColorOption = false)
-                                               { color -> callback(color) }
+    val initialColor = BootyCrateItem.Colors[initialColorIndex.coerceIn(BootyCrateItem.Colors.indices)]
+    val colorPicker = ColorSheet().colorPicker(BootyCrateItem.Colors, initialColor,
+                                               noColorOption = false) { color ->
+        val colorIndex = BootyCrateItem.Colors.indexOf(color)
+        callback(if (colorIndex != -1) colorIndex else 0)
+    }
     colorPicker.show(fragmentManager)
 }
 
@@ -64,58 +65,45 @@ fun selectInventoryItemDialog(
     builder.show()
 }
 
-internal fun newItemDialogFromInventoryItemView(
-    itemView: InventoryItemView,
-    dialogClickListener: DialogInterface.OnClickListener,
-    context: Context,
-    fragmentManager: FragmentManager
-) : AlertDialog {
-    val colorEdit = itemView.colorEdit.background as ColoredCircleDrawable
-    colorEdit.color = -8355712 //Medium gray
-    itemView.colorEdit.setOnClickListener {
-        colorPickerDialog(context, fragmentManager, colorEdit.color) { chosenColor ->
-            colorEdit.color = chosenColor
-        }
-    }
-    itemView.editButton.isVisible = false
-    itemView.collapseButton.isVisible = false
-    itemView.nameEdit.isEditable = true
-    itemView.extraInfoEdit.isEditable = true
-    itemView.amountEdit.isEditable = true
-
-    val builder = themedAlertDialogBuilder(context)
-    builder.setView(itemView)
-    builder.setPositiveButton(android.R.string.ok, dialogClickListener)
-    builder.setNegativeButton(android.R.string.cancel, dialogClickListener)
-    val dialog = builder.create()
-    dialog.setOnShowListener {
-        val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-        itemView.nameEdit.requestFocus()
-        imm?.showSoftInput(itemView.nameEdit, InputMethodManager.SHOW_IMPLICIT)
-    }
-    return dialog
-}
-
 fun newShoppingListItemDialog(
     context: Context,
     fragmentManager: FragmentManager,
     callback: (ShoppingListItem?) -> Unit
 ) {
     val newItem = ShoppingListItem()
+    val builder = themedAlertDialogBuilder(context)
+    builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
+    val colorEdit = itemView.colorEdit.background as ColoredCircleDrawable
+    colorEdit.color = newItem.color
+    itemView.colorEdit.setOnClickListener {
+        colorPickerDialog(fragmentManager, newItem.color)
+                         { chosenColor -> colorEdit.color = chosenColor }
+    }
+    itemView.editButton.isVisible = false
+    itemView.collapseButton.isVisible = false
+    itemView.nameEdit.isEditable = true
+    itemView.extraInfoEdit.isEditable = true
+    itemView.inventoryAmountEdit.isEditable = true
     val dialogClickListener = DialogInterface.OnClickListener { _, button ->
         if (button == DialogInterface.BUTTON_POSITIVE) {
             newItem.name = itemView.nameEdit.text.toString()
             newItem.extraInfo = itemView.extraInfoEdit.text.toString()
-            newItem.color = (itemView.colorEdit.background as ColoredCircleDrawable).color
-            newItem.amountOnList = itemView.amountEdit.currentValue
+            newItem.color = colorEdit.color
+            newItem.amount = itemView.inventoryAmountEdit.currentValue
             callback(newItem)
         }
         else callback(null)
     }
-    val dialog = newItemDialogFromInventoryItemView(itemView, dialogClickListener,
-                                                    context, fragmentManager)
-    dialog.setTitle(R.string.add_item_button_name)
+    builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
+    builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
+    builder.setView(itemView)
+    val dialog = builder.create()
+    dialog.setOnShowListener {
+        val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+        itemView.nameEdit.requestFocus()
+        imm?.showSoftInput(itemView.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+    }
     dialog.show()
 }
 
@@ -125,106 +113,40 @@ fun newInventoryItemDialog(
     callback: (InventoryItem?) -> Unit
 ) {
     val newItem = InventoryItem()
+    val builder = themedAlertDialogBuilder(context)
+    builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
+    val colorEdit = itemView.colorEdit.background as ColoredCircleDrawable
+    itemView.update(newItem, isExpanded = true)
+    itemView.colorEdit.setOnClickListener {
+        colorPickerDialog(fragmentManager, colorEdit.color)
+                         { chosenColor -> colorEdit.color = chosenColor }
+    }
+    itemView.editButton.isVisible = false
+    itemView.collapseButton.isVisible = false
     val dialogClickListener = DialogInterface.OnClickListener { _, button ->
         if (button == DialogInterface.BUTTON_POSITIVE) {
             newItem.name = itemView.nameEdit.text.toString()
             newItem.extraInfo = itemView.extraInfoEdit.text.toString()
-            newItem.color = (itemView.colorEdit.background as ColoredCircleDrawable).color
-            newItem.amount = itemView.amountEdit.currentValue
+            newItem.color = colorEdit.color
+            newItem.amount = itemView.inventoryAmountEdit.currentValue
             newItem.autoAddToShoppingList = itemView.autoAddToShoppingListCheckBox.isChecked
             newItem.autoAddToShoppingListTrigger = itemView.autoAddToShoppingListTriggerEdit.currentValue
             callback(newItem)
         }
         else callback(null)
     }
-    val dialog = newItemDialogFromInventoryItemView(itemView, dialogClickListener,
-                                                    context, fragmentManager)
-    dialog.setTitle(R.string.add_item_button_name)
+    builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
+    builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
+    builder.setView(itemView)
+    val dialog = builder.create()
+    dialog.setOnShowListener {
+        val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+        itemView.nameEdit.requestFocus()
+        imm?.showSoftInput(itemView.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+    }
     dialog.show()
 }
-
-//fun newShoppingListItemDialog2(
-//    context: Context,
-//    fragmentManager: FragmentManager,
-//    callback: (ShoppingListItem?) -> Unit
-//) {
-//    val newItem = ShoppingListItem()
-//    val builder = themedAlertDialogBuilder(context)
-//    builder.setTitle(context.getString(R.string.add_item_button_name))
-//    val itemView = InventoryItemView(context)
-//    val colorEdit = itemView.colorEdit.background as ColoredCircleDrawable
-//    colorEdit.color = newItem.color
-//    itemView.colorEdit.setOnClickListener {
-//        colorPickerDialog(context, fragmentManager, newItem.color) { chosenColor ->
-//            colorEdit.color = chosenColor
-//        }
-//    }
-//    itemView.editButton.isVisible = false
-//    itemView.collapseButton.isVisible = false
-//    itemView.nameEdit.isEditable = true
-//    itemView.extraInfoEdit.isEditable = true
-//    itemView.amountEdit.isEditable = true
-//    val dialogClickListener = DialogInterface.OnClickListener { _, button ->
-//        if (button == DialogInterface.BUTTON_POSITIVE) {
-//            newItem.name = itemView.nameEdit.text.toString()
-//            newItem.extraInfo = itemView.extraInfoEdit.text.toString()
-//            newItem.color = colorEdit.color
-//            newItem.amountOnList = itemView.amountEdit.currentValue
-//            callback(newItem)
-//        }
-//        else callback(null)
-//    }
-//    builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
-//    builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
-//    builder.setView(itemView)
-//    val dialog = builder.create()
-//    dialog.setOnShowListener {
-//        val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-//        itemView.nameEdit.requestFocus()
-//        imm?.showSoftInput(itemView.nameEdit, InputMethodManager.SHOW_IMPLICIT)
-//    }
-//    dialog.show()
-//}
-//
-//fun newInventoryItemDialog2(context: Context, fragmentManager: FragmentManager,
-//                           callback: (InventoryItem?) -> Unit) {
-//    val newItem = InventoryItem()
-//    val builder = themedAlertDialogBuilder(context)
-//    builder.setTitle(context.getString(R.string.add_item_button_name))
-//    val itemView = InventoryItemView(context)
-//    val colorEdit = itemView.colorEdit.background as ColoredCircleDrawable
-//    itemView.update(newItem, isExpanded = true)
-//    itemView.colorEdit.setOnClickListener {
-//        colorPickerDialog(context, fragmentManager, colorEdit.color) { chosenColor ->
-//            colorEdit.color = chosenColor
-//        }
-//    }
-//    itemView.editButton.isVisible = false
-//    itemView.collapseButton.isVisible = false
-//    val dialogClickListener = DialogInterface.OnClickListener { _, button ->
-//        if (button == DialogInterface.BUTTON_POSITIVE) {
-//            newItem.name = itemView.nameEdit.text.toString()
-//            newItem.extraInfo = itemView.extraInfoEdit.text.toString()
-//            newItem.color = colorEdit.color
-//            newItem.amount = itemView.amountEdit.currentValue
-//            newItem.autoAddToShoppingList = itemView.autoAddToShoppingListCheckBox.isChecked
-//            newItem.autoAddToShoppingListTrigger = itemView.autoAddToShoppingListTriggerEdit.currentValue
-//            callback(newItem)
-//        }
-//        else callback(null)
-//    }
-//    builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
-//    builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
-//    builder.setView(itemView)
-//    val dialog = builder.create()
-//    dialog.setOnShowListener {
-//        val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-//        itemView.nameEdit.requestFocus()
-//        imm?.showSoftInput(itemView.nameEdit, InputMethodManager.SHOW_IMPLICIT)
-//    }
-//    dialog.show()
-//}
 
 // AlertDialog seems to ignore the theme's alertDialogTheme value, making it
 // necessary to pass it's value in manually to the AlertDialog.builder constructor

@@ -9,12 +9,8 @@ package com.cliffracermerchant.bootycrate
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.os.Bundle
 import android.view.*
-import androidx.fragment.app.Fragment
 import androidx.appcompat.view.ActionMode
-import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
-import androidx.core.view.isEmpty
-import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
 
@@ -38,13 +34,13 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerView = inventory_recycler_view
+        recyclerView = inventoryRecyclerView
         val mainActivity = requireActivity() as MainActivity
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(mainActivity.getString(R.string.pref_inventory_sort),
-            Sort.Color.toString())
-        val initialSort = sortFromString(sortStr)
+            BootyCrateItem.Sort.Color.toString())
+        val initialSort = BootyCrateItem.sortFrom(sortStr)
         recyclerView.finishInit(viewLifecycleOwner, mainActivity.inventoryViewModel,
                                 mainActivity.shoppingListViewModel,
                                 mainActivity.supportFragmentManager, initialSort)

@@ -9,6 +9,7 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.content.DialogInterface
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
@@ -59,15 +60,18 @@ import com.google.android.material.snackbar.Snackbar
  *  snackbar will be anchored to the view set as the public property snackBar-
  *  Anchor, in case this needs to be customized, or to the RecyclerView itself
  *  otherwise. */
-abstract class ViewModelRecyclerView<Entity>(context: Context, attrs: AttributeSet) :
-        RecyclerView(context, attrs) {
+abstract class ViewModelRecyclerView<Entity: BootyCrateItem>(
+    context: Context,
+    attrs: AttributeSet
+) : RecyclerView(context, attrs) {
+
     abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
     abstract val adapter: ViewModelAdapter<out ViewHolder>
     private lateinit var viewModel: ViewModel<Entity>
     var snackBarAnchor: View? = null
 
-    var sort: Sort? get() = viewModel.sort
-                    set(value) { viewModel.sort = value }
+    var sort: BootyCrateItem.Sort? get() = viewModel.sort
+                                   set(value) { viewModel.sort = value }
     var searchFilter: String? get() = viewModel.searchFilter
                               set(value) { viewModel.searchFilter = value }
 
@@ -76,7 +80,7 @@ abstract class ViewModelRecyclerView<Entity>(context: Context, attrs: AttributeS
     fun finishInit(
         owner: LifecycleOwner,
         viewModel: ViewModel<Entity>,
-        initialSort: Sort? = null
+        initialSort: BootyCrateItem.Sort? = null
     ) {
         setAdapter(adapter)
         this.viewModel = viewModel
@@ -89,7 +93,7 @@ abstract class ViewModelRecyclerView<Entity>(context: Context, attrs: AttributeS
     fun deleteItem(pos: Int) = deleteItems(pos)
 
     fun deleteItems(vararg positions: Int) {
-        val ids = LongArray(positions.size) { adapter.getItemId(it) }
+        val ids = LongArray(positions.size) { adapter.getItemId(positions[it]) }
         viewModel.delete(*ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
         val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
@@ -141,5 +145,7 @@ abstract class ViewModelRecyclerView<Entity>(context: Context, attrs: AttributeS
                 viewModel.resetNewlyInsertedItemId()
             }
         }
+
+        override fun getItemId(position: Int) = currentList[position].id
     }
 }

@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** A Room database to access the tables shopping_list_item and inventory_item. */
 @Database(entities = [ShoppingListItem::class, InventoryItem::class],
-          version = 2, exportSchema = false)
+          version = 3, exportSchema = false)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun inventoryItemDao(): InventoryItemDao
@@ -32,7 +32,8 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 val newInstance = Room.databaseBuilder(context.applicationContext,
                                                        BootyCrateDatabase::class.java,
                                                        "booty-crate-db").
-                                                       addMigrations(MIGRATION_1_2).build()
+                                                       addMigrations(MIGRATION_1_2).
+                                                       addMigrations(MIGRATION_2_3).build()
                 this.instance = newInstance
                 return newInstance
             }
@@ -46,26 +47,21 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             }
         }
 
-//        private val MIGRATION_1_2 = object: Migration(4, 1) {
-//            override fun migrate(database: SupportSQLiteDatabase) {
-//                database.execSQL("PRAGMA foreign_keys=off")
-//                database.execSQL("BEGIN TRANSACTION")
-//                database.execSQL("CREATE TABLE IF NOT EXISTS `shopping_list_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL , `color` INTEGER NOT NULL, `amountOnList` INTEGER NOT NULL DEFAULT 1, `amountInCart` INTEGER NOT NULL DEFAULT 0, `linkedInventoryItemId` INTEGER, `inTrash` INTEGER NOT NULL DEFAULT 0)")
-//                database.execSQL("INSERT INTO shopping_list_item_copy (id, name, extraInfo, color, amountOnList, amountInCart, linkedInventoryItemId, inTrash) SELECT id, name, extraInfo, color, amount, amountInCart, linkedInventoryItemId, inTrash FROM shopping_list_item")
-//                database.execSQL("DROP TABLE shopping_list_item")
-//                database.execSQL("ALTER TABLE shopping_list_item_copy RENAME TO shopping_list_item")
-//                database.execSQL("COMMIT")
-//                database.execSQL("PRAGMA foreign_keys=on")
-//            }
-//        }
+        private val MIGRATION_2_3 = object: Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("PRAGMA foreign_keys=off")
+                database.execSQL("BEGIN TRANSACTION")
+                database.execSQL("CREATE TABLE IF NOT EXISTS `shopping_list_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `inTrash` INTEGER NOT NULL DEFAULT 0, `isChecked` INTEGER NOT NULL DEFAULT 0, `amountInCart` INTEGER NOT NULL DEFAULT 0, `linkedInventoryItemId` INTEGER)")
+                database.execSQL("CREATE TABLE IF NOT EXISTS `inventory_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `inTrash` INTEGER NOT NULL DEFAULT 0, `autoAddToShoppingList` INTEGER NOT NULL DEFAULT 0, `autoAddToShoppingListTrigger` INTEGER NOT NULL DEFAULT 1)")
+                database.execSQL("INSERT INTO shopping_list_item_copy (id, name, extraInfo, color, amount, inTrash, isChecked, amountInCart, linkedInventoryItemId) SELECT id, name, extraInfo, color, amountOnList, inTrash, isChecked, amountInCart, linkedInventoryItemId FROM shopping_list_item")
+                database.execSQL("INSERT INTO inventory_item_copy (id, name, extraInfo, color, amount, inTrash, autoAddToShoppingList, autoAddToShoppingListTrigger) SELECT id, name, extraInfo, color, amount, inTrash, autoAddToShoppingList, autoAddToShoppingListTrigger FROM inventory_item")
+                database.execSQL("DROP TABLE shopping_list_item")
+                database.execSQL("DROP TABLE inventory_item")
+                database.execSQL("ALTER TABLE shopping_list_item_copy RENAME TO shopping_list_item")
+                database.execSQL("ALTER TABLE inventory_item_copy RENAME TO inventory_item")
+                database.execSQL("COMMIT")
+                database.execSQL("PRAGMA foreign_keys=on")
+            }
+        }
     }
-}
-
-enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc }
-
-fun sortFromString(string: String?): Sort {
-    return if (string == null) Sort.Color
-           else try { Sort.valueOf(string) }
-                // If sortStr value doesn't match a Sort value
-                catch(e: IllegalArgumentException) { Sort.Color }
 }

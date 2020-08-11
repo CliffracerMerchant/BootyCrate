@@ -29,7 +29,7 @@
         android:textSize="22sp"
         android:hint="@string/inventory_item_name_description"
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
-        app:layout_constraintEnd_toStartOf="@id/amountEdit"
+        app:layout_constraintEnd_toStartOf="@id/inventoryAmountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@id/colorEdit"
@@ -40,7 +40,7 @@
         />
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
-        android:id="@+id/amountEdit"
+        android:id="@+id/inventoryAmountEdit"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:contentDescription="@string/inventory_item_amount_description"
@@ -73,7 +73,7 @@
         android:contentDescription="@string/edit_button_description"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_weight="0"
-        app:layout_constraintTop_toBottomOf="@+id/amountEdit" />
+        app:layout_constraintTop_toBottomOf="@+id/inventoryAmountEdit" />
 
     <include
         android:id="@+id/inventoryItemDetailsInclude"

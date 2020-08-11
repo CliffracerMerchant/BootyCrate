@@ -30,19 +30,20 @@ import java.util.concurrent.atomic.AtomicLong
  *  lyInsertedItemId should usually be called after this value is utilized so
  *  that the most recently inserted item will not be treated as new forever
  *  until a new item is inserted. */
-abstract class ViewModel<Entity>(app: Application): AndroidViewModel(app) {
+abstract class ViewModel<Entity: BootyCrateItem>(app: Application): AndroidViewModel(app) {
     protected abstract val dao: DataAccessObject<Entity>
-    private val sortAndFilterLiveData = MutableLiveData(Pair<Sort?, String?>(Sort.Color, ""))
+    private val sortAndFilterLiveData = MutableLiveData(Pair<BootyCrateItem.Sort?, String?>(
+        BootyCrateItem.Sort.Color, ""))
 
     val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
         val filter = '%' + (sortAndFilter.second ?: "") + '%'
         when (sortAndFilter.first) {
             null -> dao.getAllSortedByColor(filter)
-            Sort.Color -> dao.getAllSortedByColor(filter)
-            Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)
-            Sort.NameDesc -> dao.getAllSortedByNameDesc(filter)
-            Sort.AmountAsc -> dao.getAllSortedByAmountAsc(filter)
-            Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
+            BootyCrateItem.Sort.Color -> dao.getAllSortedByColor(filter)
+            BootyCrateItem.Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)
+            BootyCrateItem.Sort.NameDesc -> dao.getAllSortedByNameDesc(filter)
+            BootyCrateItem.Sort.AmountAsc -> dao.getAllSortedByAmountAsc(filter)
+            BootyCrateItem.Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
         }
     }
     var sort get() = sortAndFilterLiveData.value?.first
@@ -105,10 +106,10 @@ class ShoppingListViewModel(app: Application) : ViewModel<ShoppingListItem>(app)
         dao.updateIsChecked(id, isChecked)
     }
     fun updateAmountOnList(id: Long, amountOnList: Int) = viewModelScope.launch {
-        dao.updateAmountOnList(id, amountOnList)
+        dao.updateAmount(id, amountOnList)
     }
     fun updateAmountOnListFromLinkedItem(inventoryItemId: Long, amount: Int) = viewModelScope.launch {
-        dao.updateAmountOnListFromLinkedItem(inventoryItemId, amount)
+        dao.updateAmountFromLinkedItem(inventoryItemId, amount)
     }
     fun updateAmountInCart(id: Long, amountInCart: Int) = viewModelScope.launch {
         dao.updateAmountInCart(id, amountInCart)

@@ -12,7 +12,6 @@ import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.LayerDrawable
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -54,10 +53,10 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
         if (!SharedResources.isInitialized) initSharedResources(context)
 
-        decreaseButtonIconController = TwoStateAnimatedIconController.forView(amountOnListEdit.decreaseButton,
+        decreaseButtonIconController = TwoStateAnimatedIconController.forView(shoppingListAmountEdit.decreaseButton,
             context.getDrawable(R.drawable.shopping_list_animated_multiply_to_minus_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.shopping_list_animated_minus_to_multiply_icon) as AnimatedVectorDrawable)
-        increaseButtonIconController = TwoStateAnimatedIconController.forView(amountOnListEdit.increaseButton,
+        increaseButtonIconController = TwoStateAnimatedIconController.forView(shoppingListAmountEdit.increaseButton,
             context.getDrawable(R.drawable.animated_blank_to_plus_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_plus_to_blank_icon) as AnimatedVectorDrawable)
         editButtonIconController = TwoStateAnimatedIconController.forView(editButton,
@@ -77,8 +76,8 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             else            expand()
         }
         collapseButton.setOnClickListener { collapse() }
-        amountOnListEdit.decreaseButton.setOnClickListener { if (isExpanded) amountOnListEdit.decrement() }
-        amountOnListEdit.increaseButton.setOnClickListener { if (isExpanded) amountOnListEdit.increment() }
+        shoppingListAmountEdit.decreaseButton.setOnClickListener { if (isExpanded) shoppingListAmountEdit.decrement() }
+        shoppingListAmountEdit.increaseButton.setOnClickListener { if (isExpanded) shoppingListAmountEdit.increment() }
         checkBox.setOnCheckedChangeListener { _, checked -> defaultOnCheckedChange(checked) }
 
         // If the layout's children are clipped, they will suddenly appear or
@@ -89,10 +88,11 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     fun update(item: ShoppingListItem, isExpanded: Boolean = false) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
-        amountOnListEdit.initCurrentValue(item.amountOnList)
+        shoppingListAmountEdit.initCurrentValue(item.amount)
         amountInCartEdit.initCurrentValue(item.amountInCart)
         itemColor = item.color
-        checkBoxBackgroundController.tint = item.color
+        val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
+        checkBoxBackgroundController.tint = BootyCrateItem.Colors[colorIndex]
         checkBox.isChecked = item.isChecked
         /* The above line will not call defaultOnCheckedChange if the item is not checked,
          * since the item's check state will not have changed. It is called manually here
@@ -128,7 +128,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     fun expand(animate: Boolean = true) {
         _isExpanded = true
         nameEdit.isEditable = true
-        amountOnListEdit.isEditable = true
+        shoppingListAmountEdit.isEditable = true
         extraInfoEdit.isEditable = true
         amountInCartEdit.isEditable = true
         decreaseButtonIconController.toStateB(animate)
@@ -141,18 +141,18 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.start()
         } else {
             shoppingListItemDetailsInclude.visibility = View.VISIBLE
-            amountOnListEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth }
+            shoppingListAmountEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth }
         }
     }
 
     fun collapse(animate: Boolean = true) {
         if (nameEdit.isFocused || extraInfoEdit.isFocused ||
-            amountOnListEdit.valueEdit.isFocused ||
+            shoppingListAmountEdit.valueEdit.isFocused ||
             amountInCartEdit.valueEdit.isFocused)
                 imm.hideSoftInputFromWindow(windowToken, 0)
         _isExpanded = false
         nameEdit.isEditable = false
-        amountOnListEdit.isEditable = false
+        shoppingListAmountEdit.isEditable = false
         extraInfoEdit.isEditable = false
         amountInCartEdit.isEditable = false
         decreaseButtonIconController.toStateA(animate)
@@ -165,7 +165,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             anim.start()
         } else {
             shoppingListItemDetailsInclude.visibility = View.GONE
-            amountOnListEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth / 2 }
+            shoppingListAmountEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth / 2 }
         }
     }
 
@@ -202,7 +202,7 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         val anim = ValueAnimator.ofInt(height, endHeight)
         anim.addUpdateListener {
             layoutParams.height = anim.animatedValue as Int
-            amountOnListEdit.increaseButton.layoutParams.width = increaseButtonStartWidth +
+            shoppingListAmountEdit.increaseButton.layoutParams.width = increaseButtonStartWidth +
                     (anim.animatedFraction * increaseButtonWidthChange).toInt()
             requestLayout()
         }

@@ -17,7 +17,6 @@ import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 
 /** A fragment to display and modify the user's shopping list.
@@ -61,13 +60,13 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         inflater.inflate(R.layout.shopping_list_fragment_layout, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerView = shopping_list_recycler_view
+        recyclerView = shoppingListRecyclerView
         val mainActivity = requireActivity() as MainActivity
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(mainActivity.getString(R.string.pref_shopping_list_sort),
-            Sort.Color.toString())
-        val initialSort = sortFromString(sortStr)
+            BootyCrateItem.Sort.Color.toString())
+        val initialSort = BootyCrateItem.sortFrom(sortStr)
         recyclerView.finishInit(viewLifecycleOwner, mainActivity.shoppingListViewModel,
                                 mainActivity.inventoryViewModel,
                                 mainActivity.supportFragmentManager, initialSort)
@@ -93,7 +92,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override fun enable() {
         super.enable()
         mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
-        mainActivity.checkoutButton.setOnClickListener {
+        mainActivity.checkoutBtn.setOnClickListener {
             if (!checkoutButtonIsEnabled) return@setOnClickListener
             val currentTime = System.currentTimeMillis()
             if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
@@ -101,7 +100,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
                 recyclerView.checkout()
             } else {
                 checkoutButtonLastPressTimeStamp = currentTime
-                mainActivity.checkoutButton.text = checkoutButtonConfirmText
+                mainActivity.checkoutBtn.text = checkoutButtonConfirmText
                 handler.removeCallbacks(::revertCheckoutButtonToNormalState)
                 handler.postDelayed(::revertCheckoutButtonToNormalState, 2000)
             }
@@ -113,7 +112,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     }
 
     private fun revertCheckoutButtonToNormalState() {
-        mainActivity.checkoutButton.text = checkoutButtonNormalText
+        mainActivity.checkoutBtn.text = checkoutButtonNormalText
         checkoutButtonLastPressTimeStamp = 0
     }
 
@@ -123,11 +122,11 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         val bgColorAnim = ValueAnimator.ofArgb(if (enabling) lightGrayColor else yellowColor,
             if (enabling) yellowColor else lightGrayColor)
         bgColorAnim.addUpdateListener {
-            mainActivity.checkout_button.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int)
+            mainActivity.checkoutBtn.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int)
         }
         bgColorAnim.duration = 200
         bgColorAnim.start()
-        val textColorAnim = ObjectAnimator.ofArgb(mainActivity.checkout_button, "textColor",
+        val textColorAnim = ObjectAnimator.ofArgb(mainActivity.checkoutBtn, "textColor",
                                                   if (enabling) blackColor else darkGrayColor)
         textColorAnim.duration = 200
         textColorAnim.start()

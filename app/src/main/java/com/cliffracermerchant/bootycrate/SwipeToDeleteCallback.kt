@@ -28,7 +28,7 @@ class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Cont
 
     private val deleteBg = ColorDrawable(ContextCompat.getColor(context, android.R.color.holo_red_light))
     private val deleteIcon = context.getDrawable(R.drawable.ic_delete_black_24dp)
-    private val iconSize = ((deleteIcon?.intrinsicHeight ?: 0) * 3 / 2)
+    private val iconSize = deleteIcon?.intrinsicHeight ?: 0
     private val iconMargin = iconSize / 2
 
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,

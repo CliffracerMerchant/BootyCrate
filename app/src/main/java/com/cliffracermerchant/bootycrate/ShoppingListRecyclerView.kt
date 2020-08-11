@@ -49,7 +49,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         shoppingListViewModel: ShoppingListViewModel,
         inventoryViewModel: InventoryViewModel,
         fragmentManager: FragmentManager,
-        initialSort: Sort? = null
+        initialSort: BootyCrateItem.Sort? = null
     ) {
         this.shoppingListViewModel = shoppingListViewModel
         this.inventoryViewModel = inventoryViewModel
@@ -109,16 +109,17 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(ShoppingListItem.Field.IsChecked))
                         if (holder.view.checkBox.isChecked != item.isChecked)
                             holder.view.checkBox.isChecked = item.isChecked
-                    if (changes.contains(ShoppingListItem.Field.AmountOnList))
-                        holder.view.amountOnListEdit.currentValue = item.amountOnList
+                    if (changes.contains(ShoppingListItem.Field.Amount))
+                        holder.view.shoppingListAmountEdit.currentValue = item.amount
                     if (changes.contains(ShoppingListItem.Field.AmountInCart))
                         holder.view.amountInCartEdit.currentValue = item.amountInCart
                     if (changes.contains(ShoppingListItem.Field.LinkedTo))
                         holder.view.updateLinkedStatus(item.linkedInventoryItemId)
                     if (changes.contains(ShoppingListItem.Field.Color)) {
                         holder.view.itemColor = item.color
-                        val startColor = holder.view.itemColor ?: 0
-                        val endColor = item.color
+                        val itemColor = holder.view.itemColor ?: 0
+                        val startColor = BootyCrateItem.Colors[itemColor]
+                        val endColor = BootyCrateItem.Colors[item.color]
                         ObjectAnimator.ofArgb(holder.view.checkBoxBackgroundController,
                                               "tint", startColor, endColor).start()
                     }
@@ -127,8 +128,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             if (unhandledChanges.isNotEmpty())
                 super.onBindViewHolder(holder, position, unhandledChanges)
         }
-
-        override fun getItemId(position: Int): Long = currentList[position].id
     }
 
     /** A BootyCrateViewHolder that wraps an instance of ShoppingListItemView.
@@ -155,18 +154,17 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             view.setOnClickListener(onClick)
             view.nameEdit.setOnClickListener(onClick)
             view.amountInCartEdit.valueEdit.setOnClickListener(onClick)
-            view.amountOnListEdit.valueEdit.setOnClickListener(onClick)
+            view.shoppingListAmountEdit.valueEdit.setOnClickListener(onClick)
 
             val onLongClick = OnLongClickListener { selection.toggle(adapterPosition); true }
             view.setOnLongClickListener(onLongClick)
             view.nameEdit.setOnLongClickListener(onLongClick)
             view.amountInCartEdit.valueEdit.setOnLongClickListener(onLongClick)
-            view.amountOnListEdit.valueEdit.setOnLongClickListener(onLongClick)
+            view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
 
             view.editColorButton.setOnClickListener {
-                colorPickerDialog(context, fragmentManager) { pickedColor ->
-                    shoppingListViewModel.updateColor(item.id, pickedColor)
-                }
+                colorPickerDialog(fragmentManager, item.color) { pickedColor ->
+                    shoppingListViewModel.updateColor(item.id, pickedColor) }
             }
             view.linkedToEdit.setOnClickListener {
                 selectInventoryItemDialog(
@@ -204,7 +202,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 val linkedId = item.linkedInventoryItemId
                 if (linkedId != null) inventoryViewModel.updateExtraInfo(linkedId, value)
             }
-            view.amountOnListEdit.liveData.observeForever { value ->
+            view.shoppingListAmountEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 shoppingListViewModel.updateAmountOnList(item.id, value)
             }
@@ -294,8 +292,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             if (newItem.name != oldItem.name)                 itemChanges.add(ShoppingListItem.Field.Name)
             if (newItem.extraInfo != oldItem.extraInfo)       itemChanges.add(ShoppingListItem.Field.ExtraInfo)
             if (newItem.color != oldItem.color)               itemChanges.add(ShoppingListItem.Field.Color)
+            if (newItem.amount != oldItem.amount)             itemChanges.add(ShoppingListItem.Field.Amount)
             if (newItem.isChecked != oldItem.isChecked)       itemChanges.add(ShoppingListItem.Field.IsChecked)
-            if (newItem.amountOnList != oldItem.amountOnList) itemChanges.add(ShoppingListItem.Field.AmountOnList)
             if (newItem.amountInCart != oldItem.amountInCart) itemChanges.add(ShoppingListItem.Field.AmountInCart)
             if (newItem.linkedInventoryItemId != oldItem.linkedInventoryItemId) itemChanges.add(
                 ShoppingListItem.Field.LinkedTo)

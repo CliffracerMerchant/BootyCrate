@@ -35,7 +35,7 @@
         android:textSize="22sp"
         android:hint="@string/inventory_item_name_description"
         app:layout_constraintBottom_toBottomOf="@id/checkBox"
-        app:layout_constraintEnd_toStartOf="@id/amountOnListEdit"
+        app:layout_constraintEnd_toStartOf="@id/shoppingListAmountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@id/checkBox"
@@ -45,7 +45,7 @@
         />
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
-        android:id="@+id/amountOnListEdit"
+        android:id="@+id/shoppingListAmountEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="@id/checkBox"
@@ -76,7 +76,7 @@
         app:layout_constraintTop_toTopOf="@id/checkBox"
         app:layout_constraintBottom_toBottomOf="@id/checkBox"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/amountOnListEdit"
+        app:layout_constraintStart_toEndOf="@+id/shoppingListAmountEdit"
         android:contentDescription="@string/edit_button_description"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

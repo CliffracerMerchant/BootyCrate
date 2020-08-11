@@ -23,7 +23,7 @@
     tools:context=".MainActivity">
 
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/action_bar"
+        android:id="@+id/topActionBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
@@ -32,14 +32,14 @@
         app:titleTextColor="@android:color/black" />
 
     <FrameLayout
-        android:id="@+id/fragment_container"
+        android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize" >
     </FrameLayout>
 
     <com.cliffracermerchant.bootycrate.BottomAppBar
-        android:id="@+id/bottom_app_bar"
+        android:id="@+id/bottomAppBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_gravity="bottom"
@@ -50,10 +50,10 @@
         app:cradleBottomCornerRadius="34dp"
         app:cradleDepth="52dp"
         app:contentInsetStart="0dp"
-        app:cradleLayoutId="@id/cradle_layout">
+        app:cradleLayoutId="@id/cradleLayout">
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottom_navigation_bar"
+            android:id="@+id/bottomNavigationBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
@@ -66,12 +66,12 @@
     </com.cliffracermerchant.bootycrate.BottomAppBar>
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/cradle_layout"
+        android:id="@+id/cradleLayout"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content" >
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/checkout_button"
+            android:id="@+id/checkoutButton"
             android:layout_width="120dp"
             android:layout_height="46dp"
             android:text="@string/checkout_description"
@@ -88,7 +88,7 @@
             />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/floating_action_button"
+            android:id="@+id/floatingActionButton"
             android:layout_width="56dp"
             android:layout_height="56dp"
             app:layout_constraintEnd_toEndOf="parent"

@@ -10,7 +10,6 @@ import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.AnimatedVectorDrawable
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -22,7 +21,6 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.editButton
 import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
 import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
-import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 
 
 /** A layout to display the contents of an inventory item.
@@ -60,8 +58,9 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     fun update(item: InventoryItem, isExpanded: Boolean = false) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
-        (colorEdit.background as ColoredCircleDrawable).color = item.color
-        amountEdit.initCurrentValue(item.amount)
+        val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
+        (colorEdit.background as ColoredCircleDrawable).color = BootyCrateItem.Colors[colorIndex]
+        inventoryAmountEdit.initCurrentValue(item.amount)
         autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
         autoAddToShoppingListTriggerEdit.initCurrentValue(item.autoAddToShoppingListTrigger)
         if (isExpanded) expand(false)
@@ -71,7 +70,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     fun expand(animate: Boolean = true) {
         _isExpanded = true
         nameEdit.isEditable = true
-        amountEdit.isEditable = true
+        inventoryAmountEdit.isEditable = true
         extraInfoEdit.isEditable = true
         autoAddToShoppingListTriggerEdit.isEditable = true
         editButtonIconController.toStateB(animate)
@@ -82,13 +81,13 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
 
     fun collapse(animate: Boolean = true) {
         if (nameEdit.isFocused || extraInfoEdit.isFocused ||
-            amountEdit.valueEdit.isFocused ||
+            inventoryAmountEdit.valueEdit.isFocused ||
             autoAddToShoppingListTriggerEdit.valueEdit.isFocused)
                 imm?.hideSoftInputFromWindow(windowToken, 0)
 
         _isExpanded = false
         nameEdit.isEditable = false
-        amountEdit.isEditable = false
+        inventoryAmountEdit.isEditable = false
         extraInfoEdit.isEditable = false
         autoAddToShoppingListTriggerEdit.isEditable = false
         editButtonIconController.toStateA(animate)

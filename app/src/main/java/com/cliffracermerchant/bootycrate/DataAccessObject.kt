@@ -13,13 +13,13 @@ import androidx.room.Query
 import androidx.room.Transaction
 
 /** A pure abstract class that declares a generic data access object interface. */
-abstract class DataAccessObject<Entity>() {
+abstract class DataAccessObject<Entity: BootyCrateItem>() {
     abstract fun getAllSortedByColor(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByNameAsc(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByNameDesc(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByAmountAsc(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByAmountDesc(filter: String): LiveData<List<Entity>>
-    abstract suspend fun insert(entity: Entity): Long
+    abstract suspend fun insert(item: Entity): Long
     abstract suspend fun insert(vararg items: Entity)
     abstract suspend fun deleteAll()
     abstract suspend fun emptyTrash()

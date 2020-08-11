@@ -47,7 +47,7 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  hidden. Both of these functions can be overridden in subclasses (though the
  *  default implementation should always be called in overrides) in case fur-
  *  ther enable or disable functionality is required. */
-abstract class RecyclerViewFragment<Entity: Any>: Fragment() {
+abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
     protected lateinit var mainActivity: MainActivity
     protected lateinit var menu: Menu
     abstract val recyclerView: BootyCrateRecyclerView<Entity>
@@ -67,7 +67,7 @@ abstract class RecyclerViewFragment<Entity: Any>: Fragment() {
         super.onViewCreated(view, savedInstanceState)
         mainActivity = requireActivity() as MainActivity
         fabIconController = TwoStateAnimatedIconController.forFloatingActionButton(mainActivity.fab)
-        recyclerView.snackBarAnchor = mainActivity.bottom_app_bar
+        recyclerView.snackBarAnchor = mainActivity.bottomAppBar
 
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
             if (newSize == 0) actionMode?.finish()
@@ -87,7 +87,7 @@ abstract class RecyclerViewFragment<Entity: Any>: Fragment() {
     open fun disable() {
         savedSelectionState = recyclerView.selection.currentState()
         mainActivity.fab.setOnClickListener(null)
-        mainActivity.checkoutButton.setOnClickListener(null)
+        mainActivity.checkoutBtn.setOnClickListener(null)
         actionMode?.finish()
     }
 
@@ -112,19 +112,19 @@ abstract class RecyclerViewFragment<Entity: Any>: Fragment() {
             R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
             } R.id.color_option -> {
-                recyclerView.sort = Sort.Color
+                recyclerView.sort = BootyCrateItem.Sort.Color
                 item.isChecked = true; true
             } R.id.name_ascending_option -> {
-                recyclerView.sort = Sort.NameAsc
+                recyclerView.sort = BootyCrateItem.Sort.NameAsc
                 item.isChecked = true; true
             } R.id.name_descending_option -> {
-                recyclerView.sort = Sort.NameDesc
+                recyclerView.sort = BootyCrateItem.Sort.NameDesc
                 item.isChecked = true; true
             } R.id.amount_ascending_option -> {
-                recyclerView.sort = Sort.AmountAsc
+                recyclerView.sort = BootyCrateItem.Sort.AmountAsc
                 item.isChecked = true; true
             } R.id.amount_descending_option -> {
-                recyclerView.sort = Sort.AmountDesc
+                recyclerView.sort = BootyCrateItem.Sort.AmountDesc
                 item.isChecked = true; true
             } else -> mainActivity.onOptionsItemSelected(item)
         }
@@ -137,11 +137,11 @@ abstract class RecyclerViewFragment<Entity: Any>: Fragment() {
 
     private fun initOptionsMenuSort(menu: Menu) {
         menu.findItem(when (recyclerView.sort) {
-            Sort.Color ->      R.id.color_option
-            Sort.NameAsc ->    R.id.name_ascending_option
-            Sort.NameDesc ->   R.id.name_descending_option
-            Sort.AmountAsc ->  R.id.amount_ascending_option
-            Sort.AmountDesc -> R.id.amount_descending_option
+            BootyCrateItem.Sort.Color ->      R.id.color_option
+            BootyCrateItem.Sort.NameAsc ->    R.id.name_ascending_option
+            BootyCrateItem.Sort.NameDesc ->   R.id.name_descending_option
+            BootyCrateItem.Sort.AmountAsc ->  R.id.amount_ascending_option
+            BootyCrateItem.Sort.AmountDesc -> R.id.amount_descending_option
             else ->            R.id.color_option }).isChecked = true
     }
 

@@ -70,7 +70,7 @@ class PopupInventoryRecyclerView(
             val item = items[position]
             holder.apply {
                 view.nameEdit.text = item.name
-                view.amountEdit.currentValue = item.amount
+                view.inventoryAmountEdit.currentValue = item.amount
                 view.extraInfoEdit.text = item.extraInfo
                 if (item.id == initiallySelectedItemId) selectedItemPos = adapterPosition
                 if (selectedItemPos == adapterPosition) itemView.setBackgroundColor(selectedColor)
@@ -92,8 +92,8 @@ class PopupInventoryRecyclerView(
         inner class InventoryItemViewHolder(val view: View) :
                 RecyclerView.ViewHolder(view) {
             init {
-                view.amountEdit.decreaseButton.background = multiplyIcon
-                view.amountEdit.increaseButton.background = null
+                view.inventoryAmountEdit.decreaseButton.background = multiplyIcon
+                view.inventoryAmountEdit.increaseButton.background = null
 
                 val onClick = OnClickListener {
                     val oldSelectedItemPos = selectedItemPos
@@ -104,18 +104,18 @@ class PopupInventoryRecyclerView(
                 }
                 view.setOnClickListener(onClick)
                 view.nameEdit.setOnClickListener(onClick)
-                view.amountEdit.valueEdit.setOnClickListener(onClick)
+                view.inventoryAmountEdit.valueEdit.setOnClickListener(onClick)
                 view.extraInfoEdit.setOnClickListener(onClick)
-                view.amountEdit.decreaseButton.setOnClickListener(onClick)
-                view.amountEdit.increaseButton.setOnClickListener(onClick)
+                view.inventoryAmountEdit.decreaseButton.setOnClickListener(onClick)
+                view.inventoryAmountEdit.increaseButton.setOnClickListener(onClick)
 
                 val onLongClick = OnLongClickListener { view -> onClick.onClick(view); true }
                 view.setOnLongClickListener(onLongClick)
                 view.nameEdit.setOnLongClickListener(onLongClick)
-                view.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
+                view.inventoryAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
                 view.extraInfoEdit.setOnLongClickListener(onLongClick)
-                view.amountEdit.decreaseButton.setOnLongClickListener(onLongClick)
-                view.amountEdit.increaseButton.setOnLongClickListener(onLongClick)
+                view.inventoryAmountEdit.decreaseButton.setOnLongClickListener(onLongClick)
+                view.inventoryAmountEdit.increaseButton.setOnLongClickListener(onLongClick)
             }
         }
     }

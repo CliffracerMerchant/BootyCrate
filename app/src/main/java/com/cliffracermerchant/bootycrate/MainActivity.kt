@@ -17,7 +17,6 @@ package com.cliffracermerchant.bootycrate
 import android.animation.ValueAnimator
 import android.app.Activity
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -32,7 +31,6 @@ import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlin.reflect.full.isSubclassOf
 
 /** The primary activity for BootyCrate
  *
@@ -65,7 +63,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
-    lateinit var checkoutButton: MaterialButton
+    lateinit var checkoutBtn: MaterialButton
 
     private lateinit var imm: InputMethodManager
     private var blackColor: Int = 0
@@ -84,13 +82,13 @@ class MainActivity : AppCompatActivity() {
                  else                 R.style.LightTheme)
 
         setContentView(R.layout.activity_main)
-        setSupportActionBar(action_bar)
-        fab = floating_action_button
-        checkoutButton = checkout_button
+        setSupportActionBar(topActionBar)
+        fab = floatingActionButton
+        checkoutBtn = checkoutButton
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         blackColor = ContextCompat.getColor(this, android.R.color.black)
 
-        bottom_navigation_bar.setOnNavigationItemSelectedListener { item ->
+        bottomNavigationBar.setOnNavigationItemSelectedListener { item ->
             item.isChecked = true
             toggleShoppingListInventoryFragments(switchingToInventory = item.itemId == R.id.inventory_button)
             true
@@ -116,9 +114,9 @@ class MainActivity : AppCompatActivity() {
 
         val transaction = supportFragmentManager.beginTransaction()
         if (savedInstanceState == null) transaction.
-            add(R.id.fragment_container, preferencesFragment, "preferences").
-            add(R.id.fragment_container, inventoryFragment, "inventory").
-            add(R.id.fragment_container, shoppingListFragment, "shoppingList")
+            add(R.id.fragmentContainer, preferencesFragment, "preferences").
+            add(R.id.fragmentContainer, inventoryFragment, "inventory").
+            add(R.id.fragmentContainer, shoppingListFragment, "shoppingList")
 
         val hiddenFragment1 = if (showingInventory) shoppingListFragment
         else                  inventoryFragment
@@ -133,9 +131,9 @@ class MainActivity : AppCompatActivity() {
         if (showingInventory) showHideCheckoutButton(showing = false, animate = false)
         if (showingPreferences) {
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
-            bottom_app_bar.translationY = 250f
+            bottomAppBar.translationY = 250f
             fab.translationY = 250f
-            checkoutButton.translationY = 250f
+            checkoutBtn.translationY = 250f
         }
     }
 
@@ -174,11 +172,11 @@ class MainActivity : AppCompatActivity() {
                                  showingInventory -> inventoryFragment
                                  else ->             shoppingListFragment }
         showingPreferences = showing
-        imm.hideSoftInputFromWindow(bottom_app_bar.windowToken, 0)
+        imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
         supportActionBar?.setDisplayHomeAsUpEnabled(showing)
-        bottom_app_bar.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
+        bottomAppBar.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
         fab.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
-        checkoutButton.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
+        checkoutBtn.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
         supportFragmentManager.beginTransaction().
             setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
             hide(oldFragment).show(newFragment).commit()
@@ -187,7 +185,7 @@ class MainActivity : AppCompatActivity() {
     private fun toggleShoppingListInventoryFragments(switchingToInventory: Boolean) {
         showingInventory = switchingToInventory
         checkoutButtonIsVisible = !switchingToInventory
-        imm.hideSoftInputFromWindow(bottom_app_bar.windowToken, 0)
+        imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
         if (switchingToInventory) {
             shoppingListFragment.disable()
             inventoryFragment.enable()
@@ -205,8 +203,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun showHideCheckoutButton(showing: Boolean, animate: Boolean) {
         val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        cradle_layout.measure(wrapContentSpec, wrapContentSpec)
-        val cradleLayoutFullWidth = cradle_layout.measuredWidth
+        cradleLayout.measure(wrapContentSpec, wrapContentSpec)
+        val cradleLayoutFullWidth = cradleLayout.measuredWidth
         fab.measure(wrapContentSpec, wrapContentSpec)
         val fabWidth = fab.measuredWidth
 
@@ -214,24 +212,24 @@ class MainActivity : AppCompatActivity() {
             val cradleLayoutStartWidth = if (showing) fabWidth else cradleLayoutFullWidth
             val cradleLayoutEndWidth =   if (showing) cradleLayoutFullWidth else fabWidth
             val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
-            checkout_button.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            checkoutBtn.setLayerType(View.LAYER_TYPE_HARDWARE, null)
             val anim = ValueAnimator.ofFloat(if (showing) 0f else 1f,
                                              if (showing) 1f else 0f)
             anim.addUpdateListener {
-                checkout_button.scaleX = it.animatedValue as Float
-                cradle_layout.layoutParams.width = cradleLayoutStartWidth +
+                checkoutBtn.scaleX = it.animatedValue as Float
+                cradleLayout.layoutParams.width = cradleLayoutStartWidth +
                         (cradleLayoutWidthChange * it.animatedFraction).toInt()
-                cradle_layout.requestLayout()
-                bottom_app_bar.background.invalidateSelf()
+                cradleLayout.requestLayout()
+                bottomAppBar.background.invalidateSelf()
             }
-            anim.doOnEnd { checkout_button.setLayerType(View.LAYER_TYPE_NONE, null) }
+            anim.doOnEnd { checkoutBtn.setLayerType(View.LAYER_TYPE_NONE, null) }
             anim.start()
         } else {
-            checkout_button.scaleX = if (showing) 1f else 0f
-            cradle_layout.layoutParams.width = if (showing) cradleLayoutFullWidth
+            checkoutBtn.scaleX = if (showing) 1f else 0f
+            cradleLayout.layoutParams.width = if (showing) cradleLayoutFullWidth
                                                else         fabWidth
-            cradle_layout.requestLayout()
-            bottom_app_bar.background.invalidateSelf()
+            cradleLayout.requestLayout()
+            bottomAppBar.background.invalidateSelf()
         }
     }
 

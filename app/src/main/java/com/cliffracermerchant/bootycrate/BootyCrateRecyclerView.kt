@@ -22,8 +22,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
  *  Because users would likely want to view extra details of newly inserted
  *  items, BootyCrateRecyclerView overrides ViewModelRecyclerView's onNewItem-
  *  Insertion so that new items are automatically expanded. */
-abstract class BootyCrateRecyclerView<Entity>(context: Context, attrs: AttributeSet) :
-        ViewModelRecyclerView<Entity>(context, attrs) {
+abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
+    context: Context,
+    attrs: AttributeSet
+) : ViewModelRecyclerView<Entity>(context, attrs) {
     abstract override val adapter: BootyCrateAdapter<out BootyCrateViewHolder>
     lateinit var selection: RecyclerViewSelection
     val expandedItem = RecyclerViewExpandedItem(this)

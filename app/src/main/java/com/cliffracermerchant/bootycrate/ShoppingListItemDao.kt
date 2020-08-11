@@ -20,10 +20,10 @@ import androidx.room.*
     @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY name DESC")
     abstract override fun getAllSortedByNameDesc(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amountOnList ASC")
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount ASC")
     abstract override fun getAllSortedByAmountAsc(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amountOnList DESC")
+    @Query("SELECT * FROM shopping_list_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount DESC")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
     @Insert abstract override suspend fun insert(item: ShoppingListItem): Long
@@ -73,36 +73,36 @@ import androidx.room.*
     @Query("UPDATE shopping_list_item " +
            "SET isChecked = :isChecked, " +
                "amountInCart = CASE WHEN :isChecked = 0 THEN 0 " +
-                                   "WHEN amountInCart < amountOnList THEN amountOnList " +
+                                   "WHEN amountInCart < amount THEN amount " +
                                    "ELSE amountInCart END " +
            "WHERE id = :id")
     abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amountOnList = :amountOnList, " +
-               "isChecked = CASE WHEN amountInCart >= :amountOnList THEN 1 " +
+           "SET amount = :amount, " +
+               "isChecked = CASE WHEN amountInCart >= :amount THEN 1 " +
                                 "ELSE 0 END " +
            "WHERE id = :id")
-    abstract suspend fun updateAmountOnList(id: Long, amountOnList: Int)
+    abstract suspend fun updateAmount(id: Long, amount: Int)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amountOnList = CASE WHEN amountOnList < :minAmount THEN :minAmount " +
-                                   "ELSE amountOnList END, " +
-               "isChecked = CASE WHEN amountInCart >= amountOnList THEN 1 " +
+           "SET amount = CASE WHEN amount < :minAmount THEN :minAmount " +
+                                   "ELSE amount END, " +
+               "isChecked = CASE WHEN amountInCart >= amount THEN 1 " +
                                 "ELSE 0 END " +
            "WHERE linkedInventoryItemId = :inventoryItemId")
     abstract suspend fun setMinimumAmountFromLinkedItem(inventoryItemId: Long, minAmount: Int)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amountOnList = :amountOnList, " +
-               "isChecked = CASE WHEN amountInCart >= :amountOnList THEN 1 " +
+           "SET amount = :amount, " +
+               "isChecked = CASE WHEN amountInCart >= :amount THEN 1 " +
                                 "ELSE 0 END " +
            "WHERE linkedInventoryItemId = :inventoryItemId")
-    abstract suspend fun updateAmountOnListFromLinkedItem(inventoryItemId: Long, amountOnList: Int)
+    abstract suspend fun updateAmountFromLinkedItem(inventoryItemId: Long, amount: Int)
 
     @Query("UPDATE shopping_list_item " +
            "SET amountInCart = :amountInCart, " +
-               "isChecked = CASE WHEN amountInCart >= amountOnList THEN 1 " +
+               "isChecked = CASE WHEN amountInCart >= amount THEN 1 " +
                                 "ELSE 0 END " +
            "WHERE id = :id")
     abstract suspend fun updateAmountInCart(id: Long, amountInCart: Int)
@@ -132,10 +132,10 @@ import androidx.room.*
     abstract suspend fun updateInventoryItemAmountsFromAmountInCart()
 
     @Query("UPDATE shopping_list_item " +
-           "SET amountOnList = amountOnList - amountInCart")
-    abstract suspend fun subtractAmountInCartFromAmountOnList()
+           "SET amount = amount - amountInCart")
+    abstract suspend fun subtractAmountInCartFromAmount()
 
-    @Query("DELETE FROM shopping_list_item WHERE amountOnList < 1")
+    @Query("DELETE FROM shopping_list_item WHERE amount < 1")
     abstract suspend fun clearZeroOrNegativeAmountItems()
 
     /** The checkout function allows the user to clear all checked shopping
@@ -145,7 +145,7 @@ import androidx.room.*
      *  removing them via swiping or the delete button. */
     @Transaction open suspend fun checkOut() {
         updateInventoryItemAmountsFromAmountInCart()
-        subtractAmountInCartFromAmountOnList()
+        subtractAmountInCartFromAmount()
         clearZeroOrNegativeAmountItems()
     }
 
