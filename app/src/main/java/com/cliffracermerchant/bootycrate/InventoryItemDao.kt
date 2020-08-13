@@ -26,17 +26,13 @@ import androidx.room.*
     @Query("SELECT * FROM inventory_item WHERE NOT inTrash AND name LIKE :filter ORDER BY amount DESC")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
 
-    @Insert abstract override suspend fun insert(item: InventoryItem): Long
-
-    @Insert abstract override suspend fun insert(vararg items: InventoryItem)
-
     @Query("INSERT INTO inventory_item (name, extraInfo, color) " +
            "SELECT name, extraInfo, color " +
            "FROM shopping_list_item " +
            "WHERE shopping_list_item.linkedInventoryItemId IS NULL " +
            "AND shopping_list_item.inTrash = 0 " +
            "AND shopping_list_item.id IN (:shoppingListItemIds)")
-    abstract suspend fun insertFromShoppingListItems(vararg shoppingListItemIds: Long)
+    abstract suspend fun insertFromShoppingListItems(shoppingListItemIds: LongArray)
 
     @Query("UPDATE inventory_item " +
            "SET name = :name " +
@@ -89,12 +85,12 @@ import androidx.room.*
     @Query("UPDATE inventory_item " +
            "SET inTrash = 1 " +
            "WHERE id IN (:ids)")
-    abstract suspend fun moveToTrash(vararg ids: Long)
+    abstract suspend fun moveToTrash(ids: LongArray)
 
-    @Transaction override suspend fun delete(vararg ids: Long) {
+    @Transaction override suspend fun delete(ids: LongArray) {
         clearShoppingListItemLinks()
         emptyTrashPrivate()
-        moveToTrash(*ids)
+        moveToTrash(ids)
     }
 
     @Query("UPDATE inventory_item " +

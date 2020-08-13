@@ -30,58 +30,34 @@ import androidx.recyclerview.widget.RecyclerView
  *  will automatically update the expanded item in response to these operations. */
 class RecyclerViewExpandedItem(private val recyclerView: RecyclerView) :
         RecyclerView.AdapterDataObserver() {
-    private var _expandedPos: Int? = null
-    private var _expandedViewHolderCache: ExpandableViewHolder? = null
-    val pos get() = _expandedPos
-    val viewHolder: ExpandableViewHolder?
-        get() {
-            if (recyclerView.adapter == null) return null
-            val expandedPos = _expandedPos ?: return null
-            val expandedVh = _expandedViewHolderCache
-            return if (expandedVh?.getAdapterPosition() == expandedPos) expandedVh
-            else recyclerView.findViewHolderForAdapterPosition(expandedPos) as? ExpandableViewHolder
-        }
+    private var _expandedId: Long? = null
+    val id get() = _expandedId
+    private var expandedViewHolderCache: ExpandableViewHolder? = null
 
     fun set(
         newExpandedVh: ExpandableViewHolder?,
         animateCollapse: Boolean = true,
         animateExpand: Boolean = true
     ) {
-        if (_expandedPos != null && _expandedViewHolderCache?.getAdapterPosition() == _expandedPos)
-            _expandedViewHolderCache?.onExpansionStateChange(false, animateCollapse)
-        _expandedPos = newExpandedVh?.getAdapterPosition()
-        _expandedViewHolderCache = newExpandedVh
+        val adapter = recyclerView.adapter ?: return
+        val expandedVhCache = expandedViewHolderCache
+        if (expandedVhCache != null && adapter.getItemId(expandedVhCache.adapterPos) == _expandedId)
+            expandedVhCache.onExpansionStateChange(false, animateCollapse)
+        _expandedId = if (newExpandedVh == null) null
+                      else adapter.getItemId(newExpandedVh.adapterPos)
+        expandedViewHolderCache = newExpandedVh
         newExpandedVh?.onExpansionStateChange(true, animateExpand)
     }
 
-    fun set(
-        newExpandedPos: Int,
-        animateCollapse: Boolean = true,
-        animateExpand: Boolean = true
-    ) {
-        if (_expandedPos != null && _expandedViewHolderCache?.getAdapterPosition() == _expandedPos)
-            _expandedViewHolderCache?.onExpansionStateChange(false, animateCollapse)
-        _expandedPos = newExpandedPos
-        _expandedViewHolderCache = null
-        _expandedViewHolderCache = viewHolder
-        _expandedViewHolderCache?.onExpansionStateChange(true, animateExpand)
-    }
-
     override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-        if (_expandedPos in positionStart until positionStart + itemCount)
-            _expandedPos = null
-    }
-
-    override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
-        val expandedPos = _expandedPos ?: return
-        if (expandedPos in fromPosition until fromPosition + itemCount)
-            _expandedPos = expandedPos + toPosition - fromPosition
+        val adapter = recyclerView.adapter ?: return
+        for (pos in positionStart until positionStart + itemCount)
+            if (adapter.getItemId(pos) == _expandedId)
+                _expandedId = null
     }
 
     interface ExpandableViewHolder {
         fun onExpansionStateChange(expanding: Boolean, animate: Boolean = true)
+        val adapterPos get() = (this as RecyclerView.ViewHolder).adapterPosition
     }
-
-    private fun ExpandableViewHolder.getAdapterPosition(): Int =
-        (this as RecyclerView.ViewHolder).adapterPosition
 }

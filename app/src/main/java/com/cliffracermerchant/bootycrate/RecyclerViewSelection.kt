@@ -18,10 +18,10 @@ import androidx.recyclerview.widget.RecyclerView
  *
  *  RecyclerViewSelection is a utility class intended to be incorporated into a
  *  RecyclerView via composition that keeps track of a multi-selection of the
- *  RecyclerView items. It can be queried using its public function contains(
- *  pos: Int) and its size and isEmpty properties. The RecyclerView.Adapter-
- *  DataObserver.onItemRangeRemoved override will cause selected items to be
- *  automatically removed from the selection when they are deleted.
+ *  RecyclerView items. It can be queried using its public function contains
+ *  and its size and isEmpty properties. The RecyclerView.AdapterData-
+ *  Observer.onItemRangeRemoved override will cause selected items to be auto-
+ *  matically removed from the selection when they are deleted.
  *
  *  The selection size is exposed via the sizeLiveData property to allow on
  *  selection size changed listeners to respond to a change in selection size
@@ -38,9 +38,10 @@ import androidx.recyclerview.widget.RecyclerView
  *  function updateVisualState is provided. Passing it a view holder will
  *  update the view holder with a background color appropriate for it selection
  *  state. */
-class RecyclerViewSelection(context: Context, private val adapter: RecyclerView.Adapter<*>) :
+class RecyclerViewSelection(context: Context, private val recyclerView: RecyclerView) :
         RecyclerView.AdapterDataObserver() {
-    private val hashSet = HashSet<Int>()
+    private val adapter = recyclerView.adapter ?: throw IllegalStateException("RecyclerViewSelection requires a RecyclerView with a non-null adapter")
+    private val hashSet = HashMap<Long, Int>()
     private val _sizeLiveData = MutableLiveData(size)
     private val selectedColor: Int
 
@@ -51,76 +52,104 @@ class RecyclerViewSelection(context: Context, private val adapter: RecyclerView.
     enum class State { Selected, NotSelected }
 
     init {
+        assert(adapter.hasStableIds())
         val typedValue = TypedValue()
         context.theme.resolveAttribute(R.attr.colorSelected, typedValue, true)
         selectedColor = typedValue.data
     }
 
-    fun contains(pos: Int) = hashSet.contains(pos)
+    fun contains(id: Long) = hashSet.contains(id)
 
     fun clear() {
         if (hashSet.isEmpty()) return
-        hashSet.clear()
-        adapter.notifyDataSetChanged()
+        val it = hashSet.iterator()
+        while (it.hasNext()) {
+            // If the id for the item at
+            val entry = it.next()
+            val id = entry.component1()
+            val posCache = entry.component2()
+            it.remove()
+            val pos = if (adapter.getItemId(posCache) == id) posCache
+                      else recyclerView.findViewHolderForItemId(id).adapterPosition
+            adapter.notifyItemChanged(pos, State.NotSelected)
+        }
+//        hashSet.clear()
+//        adapter.notifyDataSetChanged()
+        _sizeLiveData.value = size
+    }
+
+    fun clearWithoutVisualUpdate(ids: LongArray) {
+        for (id in ids)
+            if (hashSet.contains(id))
+                hashSet.remove(id)
         _sizeLiveData.value = size
     }
 
     fun add(pos: Int) {
         if (pos !in 0 until adapter.itemCount) return
-        hashSet.add(pos)
+        //hashSet.add(adapter.getItemId(pos))
+        hashSet[adapter.getItemId(pos)] = pos
         adapter.notifyItemChanged(pos, State.Selected)
         _sizeLiveData.value = size
     }
 
     fun remove(pos: Int) {
         if (pos !in 0 until adapter.itemCount) return
-        hashSet.remove(pos)
+        val id = adapter.getItemId(pos)
+        if (!hashSet.contains(id)) return
+        hashSet.remove(id)
         adapter.notifyItemChanged(pos, State.NotSelected)
         _sizeLiveData.value = size
     }
 
     fun toggle(pos: Int) {
         if (pos !in 0 until adapter.itemCount) return
-        val payload = if (hashSet.contains(pos)) {
-            hashSet.remove(pos)
+        val id = adapter.getItemId(pos)
+        val payload = if (hashSet.contains(id)) {
+            hashSet.remove(id)
             State.NotSelected
         } else {
-            hashSet.add(pos)
+            hashSet[id] = pos
             State.Selected
         }
         adapter.notifyItemChanged(pos, payload)
         _sizeLiveData.value = size
     }
 
-    fun currentState() = hashSet.toIntArray()
+    fun allSelectedIds() = hashSet.keys.toLongArray()
 
-    fun restoreState(savedState: IntArray) {
+    fun currentState() = hashSet.toList()
+
+    fun restoreState(savedState: List<Pair<Long, Int>>) {
         hashSet.clear()
-        for (pos in savedState) hashSet.add(pos)
-        for (pos in 0 until adapter.itemCount) {
-            if (hashSet.contains(pos))
-                adapter.notifyItemChanged(pos, State.Selected)
+        for (pair in savedState) {
+            hashSet[pair.first] = pair.second
+            adapter.notifyItemChanged(pair.second, State.Selected)
         }
         _sizeLiveData.value = size
     }
+
     override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-        for (pos in positionStart until positionStart + itemCount)
-            hashSet.remove(pos)
+        for (entry in hashSet)
+            if (entry.component2() in positionStart until positionStart + itemCount)
+                hashSet.remove(entry.component1())
+        // Since the items have been removed, no notifyItemChanged calls are necessary
         _sizeLiveData.value = size
     }
 
     fun updateVisualState(holder: RecyclerView.ViewHolder, animate: Boolean = true) {
+        val id = adapter.getItemId(holder.adapterPosition)
         if (animate) {
-            val selected = hashSet.contains(holder.adapterPosition)
+            val selected = hashSet.contains(id)
             val startColor = if (selected) 0 else selectedColor
             val endColor =   if (selected) selectedColor else 0
             val anim = ObjectAnimator.ofArgb(holder.itemView, "backgroundColor",
                                              startColor, endColor)
             if (!selected) anim.doOnEnd { holder.itemView.background = null }
             anim.start()
-        } else if (hashSet.contains(holder.adapterPosition))
-                   holder.itemView.setBackgroundColor(selectedColor)
-               else holder.itemView.background = null
+        }
+        else if (hashSet.contains(id)) holder.itemView.setBackgroundColor(selectedColor)
+             else                      holder.itemView.background = null
     }
 
 //    /** A RecyclerView.Adapter with overrides for managing item views' selected/not selected state.

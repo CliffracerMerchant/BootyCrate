@@ -36,12 +36,18 @@ abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
         addItemDecoration(AlternatingRowBackgroundDecoration(context))
     }
 
-    protected fun initSelection() { selection = RecyclerViewSelection(context, adapter) }
+    protected fun initSelection() { selection = RecyclerViewSelection(context, this) }
 
     override fun onNewItemInsertion(item: Entity, vh: ViewHolder) {
         super.onNewItemInsertion(item, vh)
         expandedItem.set(vh as RecyclerViewExpandedItem.ExpandableViewHolder,
                          animateCollapse = true, animateExpand = false)
+    }
+
+    override fun deleteItems(ids: LongArray) {
+        super.deleteItems(ids)
+        // Since the items are being removed, not visual deselection change is necessary
+        selection.clearWithoutVisualUpdate(ids)
     }
 
     /** A subclass of ViewModelAdapter that contains onBindViewHolder overrides

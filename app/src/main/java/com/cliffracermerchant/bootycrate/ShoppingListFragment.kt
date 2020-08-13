@@ -12,6 +12,7 @@ import android.content.res.ColorStateList
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
@@ -41,7 +42,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override val fabRegularOnClickListener = View.OnClickListener {
         recyclerView.addNewItem() }
     override val fabActionModeOnClickListener = View.OnClickListener {
-        recyclerView.deleteItems(*recyclerView.selection.currentState()) }
+        recyclerView.deleteItems(recyclerView.selection.allSelectedIds()) }
 
     private val handler = Handler()
     private var checkoutButtonLastPressTimeStamp = 0L
@@ -78,10 +79,13 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         yellowColor = ContextCompat.getColor(mainActivity, R.color.checkoutButtonEnabledColor)
         checkoutButtonNormalText = getString(R.string.checkout_description)
         checkoutButtonConfirmText = getString(R.string.checkout_confirm_description)
-        fabIconController.setAtoBDrawable(ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable)
-        fabIconController.setBtoADrawable(ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
+        fabIconController.setAtoBDrawable(ContextCompat.getDrawable(mainActivity,
+            R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable)
+        fabIconController.setBtoADrawable(ContextCompat.getDrawable(mainActivity,
+            R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
 
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
+            Log.d("checkeditems", "checked items size = $newSize")
             if (newSize > 0) checkoutButtonIsEnabled = true
             if (newSize == 0) {
                 revertCheckoutButtonToNormalState()
@@ -141,7 +145,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             return when (item.itemId) {
                 R.id.add_to_inventory_button -> {
-                    recyclerView.apply{ addItemsToInventory(*selection.currentState()) }
+                    recyclerView.apply{ addItemsToInventory(selection.allSelectedIds()) }
                     true
                 } else -> onOptionsItemSelected(item)
             }

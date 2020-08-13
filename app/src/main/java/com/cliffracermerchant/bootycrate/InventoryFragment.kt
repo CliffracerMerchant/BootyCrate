@@ -26,7 +26,7 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
     override val actionModeCallback = ActionModeCallback()
     override val fabRegularOnClickListener = View.OnClickListener { recyclerView.addNewItem() }
     override val fabActionModeOnClickListener = View.OnClickListener {
-        recyclerView.deleteItems(*recyclerView.selection.currentState()) }
+        recyclerView.deleteItems(recyclerView.selection.allSelectedIds()) }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -46,8 +46,10 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
                                 mainActivity.supportFragmentManager, initialSort)
         super.onViewCreated(view, savedInstanceState)
 
-        fabIconController.setAtoBDrawable(ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable)
-        fabIconController.setBtoADrawable(ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
+        fabIconController.setAtoBDrawable(ContextCompat.getDrawable(mainActivity,
+            R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable)
+        fabIconController.setBtoADrawable(ContextCompat.getDrawable(mainActivity,
+            R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
@@ -64,7 +66,7 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             return when (item.itemId) {
                 R.id.add_to_shopping_list_button -> {
-                    recyclerView.apply{ addItemsToShoppingList(*selection.currentState()) }
+                    recyclerView.apply{ addItemsToShoppingList(selection.allSelectedIds()) }
                     true
                 } else -> onOptionsItemSelected(item)
             }

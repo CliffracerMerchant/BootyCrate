@@ -88,13 +88,12 @@ abstract class ViewModelRecyclerView<Entity: BootyCrateItem>(
         viewModel.items.observe(owner, Observer { items -> adapter.submitList(items) })
     }
 
-    fun addItem(item: Entity) = viewModel.insert(item)
+    open fun addItem(item: Entity) = viewModel.insert(item)
 
-    fun deleteItem(pos: Int) = deleteItems(pos)
+    open fun deleteItem(pos: Int) = deleteItems(LongArray(1) { adapter.getItemId(pos) })
 
-    fun deleteItems(vararg positions: Int) {
-        val ids = LongArray(positions.size) { adapter.getItemId(positions[it]) }
-        viewModel.delete(*ids)
+    open fun deleteItems(ids: LongArray) {
+        viewModel.delete(ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
         val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
         snackBar.anchorView = snackBarAnchor ?: this
@@ -102,14 +101,13 @@ abstract class ViewModelRecyclerView<Entity: BootyCrateItem>(
         snackBar.addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
                 viewModel.emptyTrash()
-            }
-        })
+        }})
         snackBar.show()
     }
 
-    fun undoDelete() = viewModel.undoDelete()
+    open fun undoDelete() { viewModel.undoDelete() }
 
-    fun deleteAll() {
+    open fun deleteAll() {
         val builder = themedAlertDialogBuilder(context)
         val dialogClickListener = DialogInterface.OnClickListener { _, button ->
             if (button == DialogInterface.BUTTON_POSITIVE) {

@@ -62,12 +62,15 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         if (newItem != null) shoppingListViewModel.insert(newItem)
     }
 
-    fun addItemsToInventory(vararg positions: Int) {
-        val ids = LongArray(positions.size) { adapter.getItemId(positions[it]) }
-        inventoryViewModel.insertFromShoppingListItems(*ids)
-    }
+    fun addItemsToInventory(ids: LongArray) =
+        inventoryViewModel.insertFromShoppingListItems(ids)
 
     fun checkout() = shoppingListViewModel.checkOut()
+
+    override fun deleteItems(ids: LongArray) {
+        checkedItems.removeAllIds(ids)
+        super.deleteItems(ids)
+    }
 
     /** A RecyclerView.Adapter to display the contents of a list of shopping list items.
      *
@@ -86,7 +89,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         }
 
         override fun onBindViewHolder(holder: ShoppingListItemViewHolder, position: Int) {
-            holder.view.update(holder.item, isExpanded = position == expandedItem.pos)
+            holder.view.update(holder.item, isExpanded = getItemId(position) == expandedItem.id)
             super.onBindViewHolder(holder, position)
         }
 
@@ -106,9 +109,12 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.nameEdit.setText(item.name)
                     if (changes.contains(ShoppingListItem.Field.ExtraInfo))
                         holder.view.extraInfoEdit.setText(item.extraInfo)
-                    if (changes.contains(ShoppingListItem.Field.IsChecked))
+                    if (changes.contains(ShoppingListItem.Field.IsChecked)) {
                         if (holder.view.checkBox.isChecked != item.isChecked)
                             holder.view.checkBox.isChecked = item.isChecked
+                        if (holder.view.checkBox.isChecked) checkedItems.add(position)
+                        else                                checkedItems.remove(position)
+                    }
                     if (changes.contains(ShoppingListItem.Field.Amount))
                         holder.view.shoppingListAmountEdit.currentValue = item.amount
                     if (changes.contains(ShoppingListItem.Field.AmountInCart))
@@ -149,8 +155,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         init {
             // Click & long click listeners
             val onClick = OnClickListener {
-                if (!selection.isEmpty) selection.toggle(adapterPosition)
-            }
+                if (!selection.isEmpty) selection.toggle(adapterPosition) }
             view.setOnClickListener(onClick)
             view.nameEdit.setOnClickListener(onClick)
             view.amountInCartEdit.valueEdit.setOnClickListener(onClick)
@@ -175,17 +180,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     callback = ::updateLinkedTo)
             }
             view.checkBox.setOnClickListener {
-                shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
-            }
-            /* ShoppingListItemView's default onCheckedChangeListener has to be "overridden"
-            * here by replacing it with another implementation that calls ShoppingListItem-
-            * View.defaultOnCheckedChange so that checkedItems can keep track of which items
-            * are checked while still keeping the original onCheckedChange functionality. */
-            view.checkBox.setOnCheckedChangeListener { _, checked ->
-                view.defaultOnCheckedChange(checked)
-                if (checked) checkedItems.add(adapterPosition)
-                else         checkedItems.remove(adapterPosition)
-            }
+                shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked) }
             view.editButton.setOnClickListener { if (!view.isExpanded) expandedItem.set(this) }
             view.collapseButton.setOnClickListener { expandedItem.set(null) }
 
@@ -236,37 +231,39 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
      *  entities to respond to changes in the number of checked shopping list
      *  items. */
     inner class ShoppingListCheckedItems : AdapterDataObserver() {
-        private val hashSet = HashSet<Int>()
+        private val hashSet = HashSet<Long>()
         private val _sizeLiveData = MutableLiveData(hashSet.size)
+        //private var temporarilyRemovedItems = mutableListOf<Long>()
 
         val size: Int get() = hashSet.size
         val sizeLiveData: LiveData<Int> = _sizeLiveData
-        val isEmpty: Boolean get() = hashSet.isEmpty()
+        val isEmpty get() = hashSet.isEmpty()
 
         init { adapter.registerAdapterDataObserver(this) }
 
         fun add(pos: Int) {
             if (pos !in 0 until adapter.itemCount) return
-            hashSet.add(pos)
+            hashSet.add(adapter.getItemId(pos))
             _sizeLiveData.value = size
         }
 
         fun remove(pos: Int) {
             if (pos !in 0 until adapter.itemCount) return
-            hashSet.remove(pos)
+            hashSet.remove(adapter.getItemId(pos))
             _sizeLiveData.value = size
         }
 
-        override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-
-            for (pos in positionStart until positionStart + itemCount)
-                if (hashSet.contains(pos)) remove(pos)
+        fun removeAllIds(ids: LongArray) {
+            for (id in ids) if (hashSet.contains(id))
+                hashSet.remove(id)
             _sizeLiveData.value = size
         }
 
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-            for (pos in positionStart until positionStart + itemCount)
-                if (adapter.currentList[pos].isChecked) hashSet.add(pos)
+            for (pos in positionStart until positionStart + itemCount) {
+                val item = adapter.currentList[pos]
+                if (item.isChecked) hashSet.add(item.id)
+            }
             _sizeLiveData.value = size
         }
     }

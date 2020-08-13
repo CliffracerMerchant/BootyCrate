@@ -58,8 +58,8 @@ abstract class ViewModel<Entity: BootyCrateItem>(app: Application): AndroidViewM
     fun insert(item: Entity) = viewModelScope.launch {
         _newlyInsertedItemId.set(dao.insert(item))
     }
-    fun insert(vararg items: Entity) = viewModelScope.launch {
-        dao.insert(*items)
+    fun insert(items: Array<Entity>) = viewModelScope.launch {
+        dao.insert(items)
     }
     fun deleteAll() = viewModelScope.launch {
         dao.deleteAll()
@@ -67,8 +67,8 @@ abstract class ViewModel<Entity: BootyCrateItem>(app: Application): AndroidViewM
     fun emptyTrash() = viewModelScope.launch {
         dao.emptyTrash()
     }
-    fun delete(vararg ids: Long) = viewModelScope.launch {
-        dao.delete(*ids)
+    fun delete(ids: LongArray) = viewModelScope.launch {
+        dao.delete(ids)
     }
     fun undoDelete() = viewModelScope.launch {
         dao.undoDelete()
@@ -81,8 +81,8 @@ class ShoppingListViewModel(app: Application) : ViewModel<ShoppingListItem>(app)
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun insertFromInventoryItems(vararg itemIds: Long) = viewModelScope.launch {
-        dao.insertFromInventoryItems(*itemIds)
+    fun insertFromInventoryItems(ids: LongArray) = viewModelScope.launch {
+        dao.insertFromInventoryItems(ids)
     }
     fun autoAddFromInventoryItem(inventoryItemId: Long, minAmount: Int) = viewModelScope.launch {
         dao.autoAddFromInventoryItem(inventoryItemId, minAmount)
@@ -130,8 +130,8 @@ class InventoryViewModel(app: Application) : ViewModel<InventoryItem>(app) {
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun insertFromShoppingListItems(vararg shoppingListItemIds: Long) = viewModelScope.launch {
-        dao.insertFromShoppingListItems(*shoppingListItemIds)
+    fun insertFromShoppingListItems(shoppingListItemIds: LongArray) = viewModelScope.launch {
+        dao.insertFromShoppingListItems(shoppingListItemIds)
     }
     fun updateName(id: Long, name: String) = viewModelScope.launch {
         dao.updateName(id, name)

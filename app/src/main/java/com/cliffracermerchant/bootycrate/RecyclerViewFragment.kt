@@ -59,7 +59,7 @@ abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
     protected abstract val fabRegularOnClickListener: View.OnClickListener?
     protected abstract val fabActionModeOnClickListener: View.OnClickListener?
 
-    private var savedSelectionState: IntArray? = null
+    private var savedSelectionState: List<Pair<Long, Int>>? = null
 
     init { setHasOptionsMenu(true) }
 

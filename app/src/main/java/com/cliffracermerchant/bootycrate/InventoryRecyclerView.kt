@@ -60,9 +60,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         if (newItem != null) inventoryViewModel.insert(newItem)
     }
 
-    fun addItemsToShoppingList(vararg positions: Int) {
-        val ids = LongArray(positions.size) { adapter.getItemId(positions[it]) }
-        shoppingListViewModel.insertFromInventoryItems(*ids)
+    fun addItemsToShoppingList(ids: LongArray) {
+        shoppingListViewModel.insertFromInventoryItems(ids)
     }
 
     fun checkAutoAddToShoppingList(position: Int) {
@@ -91,7 +90,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         }
 
         override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int) {
-            holder.view.update(holder.item, isExpanded = position == expandedItem.pos)
+            holder.view.update(holder.item, isExpanded = getItemId(position) == expandedItem.id)
             super.onBindViewHolder(holder, position)
         }
 
