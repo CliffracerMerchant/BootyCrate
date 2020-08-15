@@ -93,11 +93,14 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         itemColor = item.color
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
         checkBoxBackgroundController.tint = BootyCrateItem.Colors[colorIndex]
+        checkBox.setOnCheckedChangeListener(null)
         checkBox.isChecked = item.isChecked
         /* The above line will not call defaultOnCheckedChange if the item is not checked,
          * since the item's check state will not have changed. It is called manually here
          * if the item is not checked to make sure it is initialized in the correct state. */
-        if (!item.isChecked) defaultOnCheckedChange(checked = false, animate = false)
+        //if (!item.isChecked) defaultOnCheckedChange(checked = false, animate = false)
+        defaultOnCheckedChange(checked = item.isChecked, animate = false)
+        checkBox.setOnCheckedChangeListener { _, checked -> defaultOnCheckedChange(checked) }
 
         updateLinkedStatus(item.linkedInventoryItemId)
         if (isExpanded) expand(false)

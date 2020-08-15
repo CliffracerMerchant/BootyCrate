@@ -41,13 +41,13 @@ import androidx.recyclerview.widget.RecyclerView
 class RecyclerViewSelection(context: Context, private val recyclerView: RecyclerView) :
         RecyclerView.AdapterDataObserver() {
     private val adapter = recyclerView.adapter ?: throw IllegalStateException("RecyclerViewSelection requires a RecyclerView with a non-null adapter")
-    private val hashSet = HashMap<Long, Int>()
+    private val hashMap = HashMap<Long, Int>()
     private val _sizeLiveData = MutableLiveData(size)
     private val selectedColor: Int
 
-    val size: Int get() = hashSet.size
+    val size: Int get() = hashMap.size
     val sizeLiveData: LiveData<Int> = _sizeLiveData
-    val isEmpty: Boolean get() = hashSet.isEmpty()
+    val isEmpty: Boolean get() = hashMap.isEmpty()
 
     enum class State { Selected, NotSelected }
 
@@ -58,11 +58,11 @@ class RecyclerViewSelection(context: Context, private val recyclerView: Recycler
         selectedColor = typedValue.data
     }
 
-    fun contains(id: Long) = hashSet.contains(id)
+    fun contains(id: Long) = hashMap.contains(id)
 
     fun clear() {
-        if (hashSet.isEmpty()) return
-        val it = hashSet.iterator()
+        if (hashMap.isEmpty()) return
+        val it = hashMap.iterator()
         while (it.hasNext()) {
             // If the id for the item at
             val entry = it.next()
@@ -80,15 +80,15 @@ class RecyclerViewSelection(context: Context, private val recyclerView: Recycler
 
     fun clearWithoutVisualUpdate(ids: LongArray) {
         for (id in ids)
-            if (hashSet.contains(id))
-                hashSet.remove(id)
+            if (hashMap.contains(id))
+                hashMap.remove(id)
         _sizeLiveData.value = size
     }
 
     fun add(pos: Int) {
         if (pos !in 0 until adapter.itemCount) return
         //hashSet.add(adapter.getItemId(pos))
-        hashSet[adapter.getItemId(pos)] = pos
+        hashMap[adapter.getItemId(pos)] = pos
         adapter.notifyItemChanged(pos, State.Selected)
         _sizeLiveData.value = size
     }
@@ -96,8 +96,8 @@ class RecyclerViewSelection(context: Context, private val recyclerView: Recycler
     fun remove(pos: Int) {
         if (pos !in 0 until adapter.itemCount) return
         val id = adapter.getItemId(pos)
-        if (!hashSet.contains(id)) return
-        hashSet.remove(id)
+        if (!hashMap.contains(id)) return
+        hashMap.remove(id)
         adapter.notifyItemChanged(pos, State.NotSelected)
         _sizeLiveData.value = size
     }
@@ -105,34 +105,34 @@ class RecyclerViewSelection(context: Context, private val recyclerView: Recycler
     fun toggle(pos: Int) {
         if (pos !in 0 until adapter.itemCount) return
         val id = adapter.getItemId(pos)
-        val payload = if (hashSet.contains(id)) {
-            hashSet.remove(id)
+        val payload = if (hashMap.contains(id)) {
+            hashMap.remove(id)
             State.NotSelected
         } else {
-            hashSet[id] = pos
+            hashMap[id] = pos
             State.Selected
         }
         adapter.notifyItemChanged(pos, payload)
         _sizeLiveData.value = size
     }
 
-    fun allSelectedIds() = hashSet.keys.toLongArray()
+    fun allSelectedIds() = hashMap.keys.toLongArray()
 
-    fun currentState() = hashSet.toList()
+    fun currentState() = hashMap.toList()
 
     fun restoreState(savedState: List<Pair<Long, Int>>) {
-        hashSet.clear()
+        hashMap.clear()
         for (pair in savedState) {
-            hashSet[pair.first] = pair.second
+            hashMap[pair.first] = pair.second
             adapter.notifyItemChanged(pair.second, State.Selected)
         }
         _sizeLiveData.value = size
     }
 
     override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-        for (entry in hashSet)
+        for (entry in hashMap)
             if (entry.component2() in positionStart until positionStart + itemCount)
-                hashSet.remove(entry.component1())
+                hashMap.remove(entry.component1())
         // Since the items have been removed, no notifyItemChanged calls are necessary
         _sizeLiveData.value = size
     }
@@ -140,7 +140,7 @@ class RecyclerViewSelection(context: Context, private val recyclerView: Recycler
     fun updateVisualState(holder: RecyclerView.ViewHolder, animate: Boolean = true) {
         val id = adapter.getItemId(holder.adapterPosition)
         if (animate) {
-            val selected = hashSet.contains(id)
+            val selected = hashMap.contains(id)
             val startColor = if (selected) 0 else selectedColor
             val endColor =   if (selected) selectedColor else 0
             val anim = ObjectAnimator.ofArgb(holder.itemView, "backgroundColor",
@@ -148,7 +148,7 @@ class RecyclerViewSelection(context: Context, private val recyclerView: Recycler
             if (!selected) anim.doOnEnd { holder.itemView.background = null }
             anim.start()
         }
-        else if (hashSet.contains(id)) holder.itemView.setBackgroundColor(selectedColor)
+        else if (hashMap.contains(id)) holder.itemView.setBackgroundColor(selectedColor)
              else                      holder.itemView.background = null
     }
 

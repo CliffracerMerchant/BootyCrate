@@ -68,6 +68,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     }
 
     fun expand(animate: Boolean = true) {
+        if (_isExpanded) return
         _isExpanded = true
         nameEdit.isEditable = true
         inventoryAmountEdit.isEditable = true
@@ -80,6 +81,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     }
 
     fun collapse(animate: Boolean = true) {
+        if (!_isExpanded) return
         if (nameEdit.isFocused || extraInfoEdit.isFocused ||
             inventoryAmountEdit.valueEdit.isFocused ||
             autoAddToShoppingListTriggerEdit.valueEdit.isFocused)

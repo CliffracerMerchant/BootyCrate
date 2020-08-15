@@ -40,11 +40,13 @@ class RecyclerViewExpandedItem(private val recyclerView: RecyclerView) :
         animateExpand: Boolean = true
     ) {
         val adapter = recyclerView.adapter ?: return
+        val newExpandedId = if (newExpandedVh == null) null
+                            else adapter.getItemId(newExpandedVh.adapterPos)
+        if (newExpandedId == _expandedId) return
         val expandedVhCache = expandedViewHolderCache
         if (expandedVhCache != null && adapter.getItemId(expandedVhCache.adapterPos) == _expandedId)
             expandedVhCache.onExpansionStateChange(false, animateCollapse)
-        _expandedId = if (newExpandedVh == null) null
-                      else adapter.getItemId(newExpandedVh.adapterPos)
+        _expandedId = newExpandedId
         expandedViewHolderCache = newExpandedVh
         newExpandedVh?.onExpansionStateChange(true, animateExpand)
     }
