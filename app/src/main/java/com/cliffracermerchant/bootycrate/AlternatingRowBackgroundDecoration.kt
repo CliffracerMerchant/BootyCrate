@@ -28,7 +28,7 @@ class AlternatingRowBackgroundDecoration(context: Context) :
 
     fun update(context: Context) {
         val typedValue = TypedValue()
-        if (context.theme.resolveAttribute(R.attr.colorBackgroundVariant, typedValue, true))
+        if (context.theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true))
             backgroundFill.color = typedValue.data
     }
 

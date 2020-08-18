@@ -30,11 +30,11 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
-    val decreaseButtonIconController: TwoStateAnimatedIconController
-    val increaseButtonIconController: TwoStateAnimatedIconController
-    val editButtonIconController: TwoStateAnimatedIconController
-    val checkBoxBackgroundController: TwoStateAnimatedIconController
-    val checkBoxCheckmarkController: TwoStateAnimatedIconController
+    val decreaseButtonIconController: AnimatedIconController
+    val increaseButtonIconController: AnimatedIconController
+    val editButtonIconController: AnimatedIconController
+    val checkBoxBackgroundController: AnimatedIconController
+    val checkBoxCheckmarkController: AnimatedIconController
 
     var itemColor: Int? = null
 
@@ -53,23 +53,45 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
         if (!SharedResources.isInitialized) initSharedResources(context)
 
-        decreaseButtonIconController = TwoStateAnimatedIconController.forView(shoppingListAmountEdit.decreaseButton,
+        decreaseButtonIconController = AnimatedIconController.forView(shoppingListAmountEdit.decreaseButton)
+        decreaseButtonIconController.addTransition(
+            decreaseButtonIconController.addState("multiply"), decreaseButtonIconController.addState("minus"),
             context.getDrawable(R.drawable.shopping_list_animated_multiply_to_minus_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.shopping_list_animated_minus_to_multiply_icon) as AnimatedVectorDrawable)
-        increaseButtonIconController = TwoStateAnimatedIconController.forView(shoppingListAmountEdit.increaseButton,
+        increaseButtonIconController = AnimatedIconController.forView(shoppingListAmountEdit.increaseButton)
+        increaseButtonIconController.addTransition(
+            increaseButtonIconController.addState("blank"), increaseButtonIconController.addState("plus"),
             context.getDrawable(R.drawable.animated_blank_to_plus_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_plus_to_blank_icon) as AnimatedVectorDrawable)
-        editButtonIconController = TwoStateAnimatedIconController.forView(editButton,
+        editButtonIconController = AnimatedIconController.forView(editButton)
+        editButtonIconController.addTransition(
+            editButtonIconController.addState("edit"), editButtonIconController.addState("more_options"),
             context.getDrawable(R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
-        checkBoxBackgroundController = TwoStateAnimatedIconController.forDrawableLayer(
-            checkBox.background as LayerDrawable, R.id.checkBoxBackground,
+        checkBoxBackgroundController = AnimatedIconController.forDrawableLayer(
+            checkBox.background as LayerDrawable, R.id.checkBoxBackground)
+        val checkBoxBackgroundUncheckedIndex = checkBoxBackgroundController.addState("unchecked")
+        val checkBoxBackgroundCheckedIndex = checkBoxBackgroundController.addState("checked")
+        val checkBoxBackgroundColorEditIndex = checkBoxBackgroundController.addState("edit_color")
+        checkBoxBackgroundController.addTransition(
+            checkBoxBackgroundUncheckedIndex, checkBoxBackgroundCheckedIndex,
             context.getDrawable(R.drawable.animated_checkbox_unchecked_to_checked_background) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_checkbox_checked_to_unchecked_background) as AnimatedVectorDrawable)
-        checkBoxCheckmarkController = TwoStateAnimatedIconController.forDrawableLayer(
-            checkBox.background as LayerDrawable, R.id.checkBoxCheckmark,
+        checkBoxBackgroundController.addTransition(
+            checkBoxBackgroundUncheckedIndex, checkBoxBackgroundColorEditIndex,
+            context.getDrawable(R.drawable.animated_checkbox_unchecked_background_to_circle) as AnimatedVectorDrawable,
+            context.getDrawable(R.drawable.animated_circle_to_checkbox_unchecked_background) as AnimatedVectorDrawable)
+        checkBoxBackgroundController.addTransition(
+            checkBoxBackgroundCheckedIndex, checkBoxBackgroundColorEditIndex,
+            context.getDrawable(R.drawable.animated_checkbox_checked_background_to_circle) as AnimatedVectorDrawable,
+            context.getDrawable(R.drawable.animated_circle_to_checkbox_checked_background) as AnimatedVectorDrawable)
+        checkBoxCheckmarkController = AnimatedIconController.forDrawableLayer(
+            checkBox.background as LayerDrawable, R.id.checkBoxCheckmark)
+        checkBoxCheckmarkController.addTransition(
+            checkBoxCheckmarkController.addState("unchecked"), checkBoxCheckmarkController.addState("checked"),
             context.getDrawable(R.drawable.animated_checkbox_unchecked_to_checked_checkmark) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_checkbox_checked_to_unchecked_checkmark) as AnimatedVectorDrawable)
+        collapse(false)
 
         editButton.setOnClickListener {
             if (_isExpanded) //TODO: Implement more options menu
@@ -89,7 +111,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
         shoppingListAmountEdit.initCurrentValue(item.amount)
-        amountInCartEdit.initCurrentValue(item.amountInCart)
         itemColor = item.color
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
         checkBoxBackgroundController.tint = BootyCrateItem.Colors[colorIndex]
@@ -111,20 +132,9 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         if (newLinkedId != null) {
             linkedToIndicator.text = linkedItemDescriptionString
             linkedToEdit.text = changeLinkActionString
-            amountInCartLabel.visibility = View.VISIBLE
-            //amountInCartEdit.visibility = View.VISIBLE
-            //For some reason setting the visibility of amountInCartEdit directly doesn't work
-            amountInCartEdit.valueEdit.visibility = View.VISIBLE
-            amountInCartEdit.decreaseButton.visibility = View.VISIBLE
-            amountInCartEdit.increaseButton.visibility = View.VISIBLE
         } else {
             linkedToIndicator.text = unlinkedItemDescriptionString
             linkedToEdit.text = linkNowActionString
-            amountInCartLabel.visibility = View.INVISIBLE
-            //amountInCartEdit.visibility = View.INVISIBLE
-            amountInCartEdit.valueEdit.visibility = View.INVISIBLE
-            amountInCartEdit.decreaseButton.visibility = View.INVISIBLE
-            amountInCartEdit.increaseButton.visibility = View.INVISIBLE
         }
     }
 
@@ -133,10 +143,11 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         nameEdit.isEditable = true
         shoppingListAmountEdit.isEditable = true
         extraInfoEdit.isEditable = true
-        amountInCartEdit.isEditable = true
-        decreaseButtonIconController.toStateB(animate)
-        increaseButtonIconController.toStateB(animate)
-        editButtonIconController.toStateB(animate)
+        decreaseButtonIconController.setState("minus", animate)
+        increaseButtonIconController.setState("plus", animate)
+        editButtonIconController.setState("more_options", animate)
+        if (checkBox.isChecked) checkBoxCheckmarkController.setState("unchecked", animate)
+        checkBoxBackgroundController.setState("edit_color", animate)
 
         if (animate) {
             val anim = expandCollapseAnimation(true)
@@ -150,17 +161,21 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
 
     fun collapse(animate: Boolean = true) {
         if (nameEdit.isFocused || extraInfoEdit.isFocused ||
-            shoppingListAmountEdit.valueEdit.isFocused ||
-            amountInCartEdit.valueEdit.isFocused)
+            shoppingListAmountEdit.valueEdit.isFocused)
                 imm.hideSoftInputFromWindow(windowToken, 0)
         _isExpanded = false
         nameEdit.isEditable = false
         shoppingListAmountEdit.isEditable = false
         extraInfoEdit.isEditable = false
-        amountInCartEdit.isEditable = false
-        decreaseButtonIconController.toStateA(animate)
-        increaseButtonIconController.toStateA(animate)
-        editButtonIconController.toStateA(animate)
+        decreaseButtonIconController.setState("multiply", animate)
+        increaseButtonIconController.setState("blank", animate)
+        editButtonIconController.setState("edit", animate)
+
+        if (checkBox.isChecked) {
+            checkBoxCheckmarkController.setState("checked", animate)
+            checkBoxBackgroundController.setState("checked", animate)
+        }
+        else checkBoxBackgroundController.setState("unchecked", animate)
 
         if (animate) {
             val anim = expandCollapseAnimation(false)
@@ -175,16 +190,18 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
     fun defaultOnCheckedChange(checked: Boolean, animate: Boolean = true) {
         if (checked) {
             nameEdit.paintFlags = nameEdit.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+            extraInfoEdit.paintFlags = extraInfoEdit.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
             nameEdit.setTextColor(nameEdit.currentHintTextColor)
-            checkBoxCheckmarkController.toStateB(animate)
-            checkBoxBackgroundController.toStateB(animate)
+            checkBoxCheckmarkController.setState("checked", animate)
+            checkBoxBackgroundController.setState("checked", animate)
         } else {
             nameEdit.paintFlags = nameEdit.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+            extraInfoEdit.paintFlags = extraInfoEdit.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
             val typedValue = TypedValue()
             context.theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
             nameEdit.setTextColor(typedValue.data)
-            checkBoxBackgroundController.toStateA(animate)
-            checkBoxCheckmarkController.toStateA(animate)
+            checkBoxCheckmarkController.setState("unchecked", animate)
+            checkBoxBackgroundController.setState("unchecked", animate)
         }
     }
 

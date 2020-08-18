@@ -111,9 +111,6 @@ class ShoppingListViewModel(app: Application) : ViewModel<ShoppingListItem>(app)
     fun updateAmountOnListFromLinkedItem(inventoryItemId: Long, amount: Int) = viewModelScope.launch {
         dao.updateAmountFromLinkedItem(inventoryItemId, amount)
     }
-    fun updateAmountInCart(id: Long, amountInCart: Int) = viewModelScope.launch {
-        dao.updateAmountInCart(id, amountInCart)
-    }
     fun updateLinkedInventoryItemId(id: Long, linkedInventoryItem: InventoryItem) = viewModelScope.launch {
         dao.updateLinkedInventoryItemId(id, linkedInventoryItem.id,
                                         linkedInventoryItem.name,

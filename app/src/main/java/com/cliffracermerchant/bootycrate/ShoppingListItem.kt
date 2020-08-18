@@ -12,9 +12,8 @@ import androidx.room.Entity
 /** A Room entity that represents an shopping list item in the user's shopping list. */
 @Entity(tableName = "shopping_list_item")
 class ShoppingListItem(
-    @ColumnInfo(name = "isChecked", defaultValue = "0")    var isChecked: Boolean = false,
-    @ColumnInfo(name = "amountInCart", defaultValue = "0") var amountInCart: Int = 0,
-    @ColumnInfo(name = "linkedInventoryItemId")            var linkedInventoryItemId: Long? = null
+    @ColumnInfo(name = "isChecked", defaultValue = "0") var isChecked: Boolean = false,
+    @ColumnInfo(name = "linkedInventoryItemId")         var linkedInventoryItemId: Long? = null
 ) : BootyCrateItem() {
 
     override fun equals(other: Any?): Boolean {
@@ -22,14 +21,12 @@ class ShoppingListItem(
         if (other == null || other !is ShoppingListItem) return false
         return super.equals(other) &&
                this.isChecked == other.isChecked &&
-               this.amountInCart == other.amountInCart &&
                this.linkedInventoryItemId == other.linkedInventoryItemId
     }
 
     override fun toString(): String {
         return super.toString() +
                "\nisChecked = $isChecked" +
-               "\namountInCart = $amountInCart" +
                "\nlinkedInventoryItemId = $linkedInventoryItemId"
     }
 
@@ -38,6 +35,5 @@ class ShoppingListItem(
      *  are used as a payload in the adapter notifyItemChanged calls in order
      *  to identify which fields were changed.*/
     enum class Field { Name, ExtraInfo, Color,
-                       Amount, IsChecked,
-                       AmountInCart, LinkedTo }
+                       Amount, IsChecked, LinkedTo }
 }

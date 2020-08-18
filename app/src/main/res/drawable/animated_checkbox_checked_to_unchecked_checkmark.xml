@@ -8,15 +8,11 @@
             android:height="24dp"
             android:viewportWidth="24"
             android:viewportHeight="24">
-            <group android:name="background_group"/>
-            <group android:name="check_group">
-                <path
-                    android:name="check_path"
-                    android:pathData="M 19.2 6.25 L 9 17.5 L 4.2 12.75"
-                    android:fillAlpha="0"
-                    android:strokeColor="#000000"
-                    android:strokeWidth="3"/>
-            </group>
+            <path android:name="check_path"
+                  android:pathData="M 19.2 6.25 L 9 17.5 L 4.2 12.75"
+                  android:fillAlpha="0"
+                  android:strokeColor="#000000"
+                  android:strokeWidth="3"/>
         </vector>
     </aapt:attr>
     <target android:name="check_path">

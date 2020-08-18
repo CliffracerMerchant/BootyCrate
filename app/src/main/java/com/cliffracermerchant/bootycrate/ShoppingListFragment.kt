@@ -79,10 +79,10 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         yellowColor = ContextCompat.getColor(mainActivity, R.color.checkoutButtonEnabledColor)
         checkoutButtonNormalText = getString(R.string.checkout_description)
         checkoutButtonConfirmText = getString(R.string.checkout_confirm_description)
-        fabIconController.setAtoBDrawable(ContextCompat.getDrawable(mainActivity,
-            R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable)
-        fabIconController.setBtoADrawable(ContextCompat.getDrawable(mainActivity,
-            R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
+        fabIconController.addTransition(
+            fabIconController.addState("add"), fabIconController.addState("delete"),
+            mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
+            mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
 
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
             Log.d("checkeditems", "checked items size = $newSize")

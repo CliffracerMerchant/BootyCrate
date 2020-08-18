@@ -7,10 +7,10 @@
     <color name="colorButtonDark">#353535</color>
     <color name="colorButtonLight">#CCCCCC</color>
     <color name="colorForeground">#000000</color>
-    <color name="colorPrimaryRowLight">#FFFFFF</color>
-    <color name="colorAlternateRowLight">#EEEEEE</color>
-    <color name="colorPrimaryRowDark">#303030</color>
-    <color name="colorAlternateRowDark">#252525</color>
+    <color name="colorPrimaryRowLight">#DEDEDE</color>
+    <color name="colorCardBackground">#FFFFFF</color>
+    <color name="colorPrimaryRowDark">#202020</color>
+    <color name="colorAlternateRowDark">#303030</color>
     <color name="colorTextLight">#BBBBBB</color>
     <color name="colorTextLightSecondary">#808080</color>
     <color name="colorTextDark">#202020</color>

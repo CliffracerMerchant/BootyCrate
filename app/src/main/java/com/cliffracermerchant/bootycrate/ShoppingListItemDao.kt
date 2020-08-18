@@ -67,41 +67,25 @@ import androidx.room.*
     abstract suspend fun updateColor(id: Long, color: Int)
 
     @Query("UPDATE shopping_list_item " +
-           "SET isChecked = :isChecked, " +
-               "amountInCart = CASE WHEN :isChecked = 0 THEN 0 " +
-                                   "WHEN amountInCart < amount THEN amount " +
-                                   "ELSE amountInCart END " +
+           "SET isChecked = :isChecked " +
            "WHERE id = :id")
     abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amount = :amount, " +
-               "isChecked = CASE WHEN amountInCart >= :amount THEN 1 " +
-                                "ELSE 0 END " +
+           "SET amount = :amount " +
            "WHERE id = :id")
     abstract suspend fun updateAmount(id: Long, amount: Int)
 
     @Query("UPDATE shopping_list_item " +
            "SET amount = CASE WHEN amount < :minAmount THEN :minAmount " +
-                                   "ELSE amount END, " +
-               "isChecked = CASE WHEN amountInCart >= amount THEN 1 " +
-                                "ELSE 0 END " +
+                                   "ELSE amount END " +
            "WHERE linkedInventoryItemId = :inventoryItemId")
     abstract suspend fun setMinimumAmountFromLinkedItem(inventoryItemId: Long, minAmount: Int)
 
     @Query("UPDATE shopping_list_item " +
-           "SET amount = :amount, " +
-               "isChecked = CASE WHEN amountInCart >= :amount THEN 1 " +
-                                "ELSE 0 END " +
+           "SET amount = :amount " +
            "WHERE linkedInventoryItemId = :inventoryItemId")
     abstract suspend fun updateAmountFromLinkedItem(inventoryItemId: Long, amount: Int)
-
-    @Query("UPDATE shopping_list_item " +
-           "SET amountInCart = :amountInCart, " +
-               "isChecked = CASE WHEN amountInCart >= amount THEN 1 " +
-                                "ELSE 0 END " +
-           "WHERE id = :id")
-    abstract suspend fun updateAmountInCart(id: Long, amountInCart: Int)
 
     @Query("UPDATE shopping_list_item " +
            "SET linkedInventoryItemId = :linkedInventoryItemId, " +
@@ -118,31 +102,27 @@ import androidx.room.*
     abstract suspend fun removeInventoryItemLink(id: Long)
 
     @Query("WITH bought_amounts AS (SELECT linkedInventoryItemId AS id, " +
-                                          "amountInCart AS amount " +
+                                          "amount AS amountBought " +
                                    "FROM shopping_list_item " +
-                                   "WHERE linkedInventoryItemId IS NOT NULL) " +
+                                   "WHERE linkedInventoryItemId IS NOT NULL " +
+                                   "AND isChecked = 1) " +
             "UPDATE inventory_item " +
-            "SET amount = amount + (SELECT amount FROM bought_amounts " +
+            "SET amount = amount + (SELECT amountBought FROM bought_amounts " +
                                    "WHERE id = inventory_item.id) " +
             "WHERE id IN (SELECT id FROM bought_amounts)")
-    abstract suspend fun updateInventoryItemAmountsFromAmountInCart()
+    abstract suspend fun updateInventoryItemAmountsFromShoppingList()
 
-    @Query("UPDATE shopping_list_item " +
-           "SET amount = amount - amountInCart")
-    abstract suspend fun subtractAmountInCartFromAmount()
-
-    @Query("DELETE FROM shopping_list_item WHERE amount < 1")
-    abstract suspend fun clearZeroOrNegativeAmountItems()
+    @Query("DELETE FROM shopping_list_item WHERE isChecked = 1")
+    abstract suspend fun clearCheckedItems()
 
     /** The checkout function allows the user to clear all checked shopping
      *  list items at once and modify the amounts of linked inventory items
      *  appropriately. For non-linked shopping list items, which are simply
-     *  removed from the list, the checkout functions acts no differently than
+     *  removed from the list, the checkout function acts no differently than
      *  removing them via swiping or the delete button. */
     @Transaction open suspend fun checkOut() {
-        updateInventoryItemAmountsFromAmountInCart()
-        subtractAmountInCartFromAmount()
-        clearZeroOrNegativeAmountItems()
+        updateInventoryItemAmountsFromShoppingList()
+        clearCheckedItems()
     }
 
     @Query("DELETE FROM shopping_list_item")

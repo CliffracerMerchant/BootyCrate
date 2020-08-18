@@ -6,6 +6,8 @@
 
 package com.cliffracermerchant.bootycrate
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.graphics.Canvas
 import android.graphics.ColorFilter
 import android.graphics.Paint
@@ -22,12 +24,15 @@ class ColoredCircleDrawable(size: Float, color: Int, outlineColor: Int): Drawabl
     private val outlinePaint = Paint()
     private var centerX = size / 2
 
-    var radius = size / 3.5f
+    var radius = size / 2f
         set(value) { field = value
             centerX = value * 3.5f/2f }
     var color: Int
         get() = paint.color
-        set(value) { paint.color = value; invalidateSelf() }
+        set(value) {
+            paint.color = value
+            invalidateSelf()
+        }
 
     init {
         this.color = color
@@ -41,6 +46,11 @@ class ColoredCircleDrawable(size: Float, color: Int, outlineColor: Int): Drawabl
         canvas.drawCircle(centerX, centerX, radius,
                           if (color != 0) paint
                           else            outlinePaint)
+    }
+
+    fun setColor(newColor: Int, animate: Boolean = true) {
+        if (!animate) color = newColor
+        else ObjectAnimator.ofArgb(this, "color", color, newColor).start()
     }
 
     override fun setAlpha(alpha: Int) { }

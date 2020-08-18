@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Used as the alternate row color in AlternatingRowBackgroundDecoration. -->
-    <attr name="colorBackgroundVariant" format="color" />
+    <attr name="recyclerViewItemColor" format="color" />
     <!-- Used as the background color of an item selected in a RecyclerView. -->
     <attr name="colorSelected"          format="color" />
     <!-- A text color. Used in some places instead of @android.attr.textColor

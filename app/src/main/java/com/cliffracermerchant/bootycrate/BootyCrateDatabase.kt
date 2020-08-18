@@ -15,7 +15,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 /** A Room database to access the tables shopping_list_item and inventory_item. */
 @Database(entities = [ShoppingListItem::class, InventoryItem::class],
-          version = 3, exportSchema = false)
+          version = 4, exportSchema = false)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun inventoryItemDao(): InventoryItemDao
@@ -33,7 +33,8 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                                                        BootyCrateDatabase::class.java,
                                                        "booty-crate-db").
                                                        addMigrations(MIGRATION_1_2).
-                                                       addMigrations(MIGRATION_2_3).build()
+                                                       addMigrations(MIGRATION_2_3).
+                                                       addMigrations(MIGRATION_3_4).build()
                 this.instance = newInstance
                 return newInstance
             }
@@ -59,6 +60,19 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 database.execSQL("DROP TABLE inventory_item")
                 database.execSQL("ALTER TABLE shopping_list_item_copy RENAME TO shopping_list_item")
                 database.execSQL("ALTER TABLE inventory_item_copy RENAME TO inventory_item")
+                database.execSQL("COMMIT")
+                database.execSQL("PRAGMA foreign_keys=on")
+            }
+        }
+
+        private val MIGRATION_3_4 = object: Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("PRAGMA foreign_keys=off")
+                database.execSQL("BEGIN TRANSACTION")
+                database.execSQL("CREATE TABLE IF NOT EXISTS `shopping_list_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `inTrash` INTEGER NOT NULL DEFAULT 0, `isChecked` INTEGER NOT NULL DEFAULT 0, `linkedInventoryItemId` INTEGER)")
+                database.execSQL("INSERT INTO shopping_list_item_copy (id, name, extraInfo, color, amount, inTrash, isChecked, linkedInventoryItemId) SELECT id, name, extraInfo, color, amount, inTrash, isChecked, linkedInventoryItemId FROM shopping_list_item")
+                database.execSQL("DROP TABLE shopping_list_item")
+                database.execSQL("ALTER TABLE shopping_list_item_copy RENAME TO shopping_list_item")
                 database.execSQL("COMMIT")
                 database.execSQL("PRAGMA foreign_keys=on")
             }

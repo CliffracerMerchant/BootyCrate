@@ -34,11 +34,13 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-    private val editButtonIconController: TwoStateAnimatedIconController
+    private val editButtonIconController: AnimatedIconController
 
     init {
         inflate(context, R.layout.inventory_item_layout, this)
-        editButtonIconController = TwoStateAnimatedIconController.forView(editButton,
+        editButtonIconController = AnimatedIconController.forView(editButton)
+        editButtonIconController.addTransition(
+            editButtonIconController.addState("edit"), editButtonIconController.addState("more_options"),
             context.getDrawable(R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
         colorEdit.background = ColoredCircleDrawable(colorEdit.layoutParams.width.toFloat(),
@@ -74,7 +76,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         inventoryAmountEdit.isEditable = true
         extraInfoEdit.isEditable = true
         autoAddToShoppingListTriggerEdit.isEditable = true
-        editButtonIconController.toStateB(animate)
+        editButtonIconController.setState("more_options", animate)
 
         if (animate) expandCollapseAnimation(true).start()
         else inventoryItemDetailsInclude.visibility = View.VISIBLE
@@ -92,7 +94,7 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         inventoryAmountEdit.isEditable = false
         extraInfoEdit.isEditable = false
         autoAddToShoppingListTriggerEdit.isEditable = false
-        editButtonIconController.toStateA(animate)
+        editButtonIconController.setState("edit", animate)
 
         if (animate) {
             val anim = expandCollapseAnimation(false)

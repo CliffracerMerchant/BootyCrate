@@ -10,7 +10,6 @@
     app:layout_constraintHorizontal_chainStyle="spread">
 
     <CheckBox
-
         android:id="@+id/autoAddToShoppingListCheckBox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -18,6 +17,7 @@
         app:layout_constraintEnd_toStartOf="@id/autoAddToShoppingListTriggerEdit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="16dp"
         android:textSize="16sp"/>
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
@@ -37,8 +37,17 @@
         android:layout_width="32dp"
         android:layout_height="32dp"
         android:background="@drawable/ic_expand_less_black_24dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/autoAddToShoppingListCheckBox"
+        app:layout_constraintBottom_toBottomOf="@id/autoAddToShoppingListCheckBox"
         app:layout_constraintEnd_toEndOf="parent"
         android:contentDescription="@string/collapse_button_description" />
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/autoAddToShoppingListCheckBox" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

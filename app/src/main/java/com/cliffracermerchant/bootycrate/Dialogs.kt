@@ -78,13 +78,14 @@ fun newShoppingListItemDialog(
     colorEdit.color = newItem.color
     itemView.colorEdit.setOnClickListener {
         colorPickerDialog(fragmentManager, newItem.color)
-                         { chosenColor -> colorEdit.color = chosenColor }
+                         { chosenColor -> colorEdit.setColor(chosenColor) }
     }
     itemView.editButton.isVisible = false
     itemView.collapseButton.isVisible = false
     itemView.nameEdit.isEditable = true
     itemView.extraInfoEdit.isEditable = true
     itemView.inventoryAmountEdit.isEditable = true
+    itemView.inventoryAmountEdit.minValue = 1
     val dialogClickListener = DialogInterface.OnClickListener { _, button ->
         if (button == DialogInterface.BUTTON_POSITIVE) {
             newItem.name = itemView.nameEdit.text.toString()
@@ -120,7 +121,7 @@ fun newInventoryItemDialog(
     itemView.update(newItem, isExpanded = true)
     itemView.colorEdit.setOnClickListener {
         colorPickerDialog(fragmentManager, colorEdit.color)
-                         { chosenColor -> colorEdit.color = chosenColor }
+                         { chosenColor -> colorEdit.setColor(chosenColor) }
     }
     itemView.editButton.isVisible = false
     itemView.collapseButton.isVisible = false

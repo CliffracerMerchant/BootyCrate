@@ -50,12 +50,12 @@ import kotlinx.android.synthetic.main.activity_main.*
 abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
     protected lateinit var mainActivity: MainActivity
     protected lateinit var menu: Menu
-    abstract val recyclerView: BootyCrateRecyclerView<Entity>
+    abstract val recyclerView: SelectableExpandableRecyclerView<Entity>
 
     private var actionMode: ActionMode? = null
     protected open val actionModeCallback = ActionModeCallback()
 
-    protected lateinit var fabIconController: TwoStateAnimatedIconController
+    protected lateinit var fabIconController: AnimatedIconController
     protected abstract val fabRegularOnClickListener: View.OnClickListener?
     protected abstract val fabActionModeOnClickListener: View.OnClickListener?
 
@@ -66,7 +66,7 @@ abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mainActivity = requireActivity() as MainActivity
-        fabIconController = TwoStateAnimatedIconController.forFloatingActionButton(mainActivity.fab)
+        fabIconController = AnimatedIconController.forFloatingActionButton(mainActivity.fab)
         recyclerView.snackBarAnchor = mainActivity.bottomAppBar
 
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
@@ -78,7 +78,7 @@ abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
         })
     }
     open fun enable() {
-        fabIconController.toStateA(animate = false)
+        fabIconController.setState("add", animate = false)
         mainActivity.fab.setOnClickListener(fabRegularOnClickListener)
         savedSelectionState?.let { recyclerView.selection.restoreState(it) }
         savedSelectionState = null
@@ -158,7 +158,7 @@ abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
         override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
             mode.menuInflater?.inflate(R.menu.action_bar_menu, menu)
             mainActivity.fab.setOnClickListener(fabActionModeOnClickListener)
-            fabIconController.toStateB()
+            fabIconController.setState("delete")
             initOptionsMenuSort(menu)
             return true
         }
@@ -167,7 +167,7 @@ abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
         override fun onDestroyActionMode(mode: ActionMode) {
             recyclerView.selection.clear()
             mainActivity.fab.setOnClickListener(fabRegularOnClickListener)
-            fabIconController.toStateA()
+            fabIconController.setState("add")
             initOptionsMenuSort(this@RecyclerViewFragment.menu)
             actionMode = null
         }

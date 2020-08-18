@@ -6,7 +6,6 @@
 
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View.OnClickListener
@@ -35,7 +34,7 @@ import java.util.*
  *  View also provides a new function, addItemsToShoppingList, to add new shop-
  *  ping list items from existing inventory items. */
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
-        BootyCrateRecyclerView<InventoryItem>(context, attrs) {
+        SelectableExpandableRecyclerView<InventoryItem>(context, attrs) {
     override val diffUtilCallback = InventoryItemDiffUtilCallback()
     override val adapter = InventoryAdapter()
     private lateinit var inventoryViewModel: InventoryViewModel
@@ -53,7 +52,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         this.shoppingListViewModel = shoppingListViewModel
         this.fragmentManager = fragmentManager
         finishInit(owner, inventoryViewModel, initialSort)
-        initSelection()
     }
 
     fun addNewItem() = newInventoryItemDialog(context, fragmentManager) { newItem ->
@@ -79,7 +77,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      *  InventoryItemViewHolder instances to represent inventory items. Its
      *  overrides of onBindViewHolder make use of the InventoryItem.Field val-
      *  ues passed by InventoryItemDiffUtilCallback to support partial binding. */
-    inner class InventoryAdapter : BootyCrateAdapter<InventoryItemViewHolder>() {
+    inner class InventoryAdapter : SelectableExpandableItemAdapter<InventoryItemViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) :
                 InventoryItemViewHolder {
@@ -121,9 +119,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                         checkAutoAddToShoppingList(holder.adapterPosition) }
                     if (changes.contains(InventoryItem.Field.Color)) {
                         val colorEditBg = holder.view.colorEdit.background as ColoredCircleDrawable
-                        val startColor = colorEditBg.color
-                        val endColor = BootyCrateItem.Colors[item.color]
-                        ObjectAnimator.ofArgb(colorEditBg, "color", startColor, endColor).start()
+                        colorEditBg.setColor(BootyCrateItem.Colors[item.color])
                     }
                 } else unhandledChanges.add(payload)
             }
@@ -145,7 +141,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      *   RecyclerViewExpandableItem.set function on itself. Its override of
      *   ExpandableViewHolder.onExpansionStateChanged calls the corresponding
      *   expand or collapse functions on its InventoryItemView instance. */
-    inner class InventoryItemViewHolder(val view: InventoryItemView) : BootyCrateViewHolder(view) {
+    inner class InventoryItemViewHolder(val view: InventoryItemView) : SelectableExpandableViewHolder(view) {
 
         init {
             // Click & long click listeners
@@ -195,7 +191,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 inventoryViewModel.updateAutoAddToShoppingListTrigger(item.id, value)
             }
         }
-        override fun onExpansionStateChange(expanding: Boolean, animate: Boolean) {
+        override fun onExpansionStateChanged(expanding: Boolean, animate: Boolean) {
             if (expanding) view.expand(animate)
             else           view.collapse(animate)
         }

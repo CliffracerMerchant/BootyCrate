@@ -2,7 +2,7 @@
 
     <style name="LightTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:colorBackground">@color/colorPrimaryRowLight</item>
-        <item name="colorBackgroundVariant">@color/colorAlternateRowLight</item>
+        <item name="recyclerViewItemColor">@color/colorCardBackground</item>
         <item name="colorSelected">@android:color/holo_blue_light</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -26,7 +26,7 @@
 
     <style name="DarkTheme" parent="LightTheme">
         <item name="android:colorBackground">@color/colorPrimaryRowDark</item>
-        <item name="colorBackgroundVariant">@color/colorAlternateRowDark</item>
+        <item name="recyclerViewItemColor">@color/colorAlternateRowDark</item>
         <item name="colorSelected">@android:color/holo_blue_dark</item>
         <item name="imageButtonStyle">@style/DarkThemeImageButton</item>
         <item name="android:textViewStyle">@style/DarkThemeTextAppearance</item>
