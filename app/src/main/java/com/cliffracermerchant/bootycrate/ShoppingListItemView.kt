@@ -12,7 +12,6 @@ import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.LayerDrawable
-import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -91,7 +90,6 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
             checkBoxCheckmarkController.addState("unchecked"), checkBoxCheckmarkController.addState("checked"),
             context.getDrawable(R.drawable.animated_checkbox_unchecked_to_checked_checkmark) as AnimatedVectorDrawable,
             context.getDrawable(R.drawable.animated_checkbox_checked_to_unchecked_checkmark) as AnimatedVectorDrawable)
-        collapse(false)
 
         editButton.setOnClickListener {
             if (_isExpanded) //TODO: Implement more options menu
@@ -102,18 +100,17 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         shoppingListAmountEdit.increaseButton.setOnClickListener { if (isExpanded) shoppingListAmountEdit.increment() }
         checkBox.setOnCheckedChangeListener { _, checked -> defaultOnCheckedChange(checked) }
 
-        // If the layout's children are clipped, they will suddenly appear or
-        // disappear without an animation during the expand collapse animation
         clipChildren = false
     }
 
     fun update(item: ShoppingListItem, isExpanded: Boolean = false) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
-        shoppingListAmountEdit.initCurrentValue(item.amount)
         itemColor = item.color
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
         checkBoxBackgroundController.tint = BootyCrateItem.Colors[colorIndex]
+        shoppingListAmountEdit.initCurrentValue(item.amount)
+
         checkBox.setOnCheckedChangeListener(null)
         checkBox.isChecked = item.isChecked
         /* The above line will not call defaultOnCheckedChange if the item is not checked,
@@ -149,11 +146,10 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         if (checkBox.isChecked) checkBoxCheckmarkController.setState("unchecked", animate)
         checkBoxBackgroundController.setState("edit_color", animate)
 
-        if (animate) {
-            val anim = expandCollapseAnimation(true)
-            anim.doOnEnd { shoppingListItemDetailsInclude.visibility = View.VISIBLE }
-            anim.start()
-        } else {
+        if (animate)
+            expandCollapseAnimation(true, extraInfoEdit.text.isNullOrBlank()).start()
+        else {
+            extraInfoEdit.visibility = View.VISIBLE
             shoppingListItemDetailsInclude.visibility = View.VISIBLE
             shoppingListAmountEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth }
         }
@@ -177,35 +173,36 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         }
         else checkBoxBackgroundController.setState("unchecked", animate)
 
+        val extraInfoNeedsCollapsed = extraInfoEdit.text.isNullOrBlank()
         if (animate) {
-            val anim = expandCollapseAnimation(false)
-            anim.doOnEnd { shoppingListItemDetailsInclude.visibility = View.GONE }
+            val anim = expandCollapseAnimation(false, extraInfoNeedsCollapsed)
+            anim.doOnEnd {
+                shoppingListItemDetailsInclude.visibility = View.GONE
+                if (extraInfoNeedsCollapsed)
+                    extraInfoEdit.visibility = View.GONE
+            }
             anim.start()
         } else {
+            if (extraInfoNeedsCollapsed)
+                extraInfoEdit.visibility = View.GONE
             shoppingListItemDetailsInclude.visibility = View.GONE
             shoppingListAmountEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth / 2 }
         }
     }
 
     fun defaultOnCheckedChange(checked: Boolean, animate: Boolean = true) {
+        nameEdit.setStrikethruEnabled(checked, animate)
+        extraInfoEdit.setStrikethruEnabled(checked, animate)
         if (checked) {
-            nameEdit.paintFlags = nameEdit.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-            extraInfoEdit.paintFlags = extraInfoEdit.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-            nameEdit.setTextColor(nameEdit.currentHintTextColor)
             checkBoxCheckmarkController.setState("checked", animate)
             checkBoxBackgroundController.setState("checked", animate)
         } else {
-            nameEdit.paintFlags = nameEdit.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-            extraInfoEdit.paintFlags = extraInfoEdit.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
-            val typedValue = TypedValue()
-            context.theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
-            nameEdit.setTextColor(typedValue.data)
             checkBoxCheckmarkController.setState("unchecked", animate)
             checkBoxBackgroundController.setState("unchecked", animate)
         }
     }
 
-    private fun expandCollapseAnimation(expanding: Boolean): ValueAnimator {
+    private fun expandCollapseAnimation(expanding: Boolean, animatingExtraInfo: Boolean) : ValueAnimator {
         shoppingListItemDetailsInclude.visibility = View.VISIBLE
         val matchParentSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
@@ -217,14 +214,27 @@ class ShoppingListItemView(context: Context) : ConstraintLayout(context) {
         val increaseButtonWidthChange = if (expanding) increaseButton.width
                                         else           -increaseButton.width / 2
 
-        shoppingListItemDetailsInclude.visibility = View.VISIBLE
+        var extraInfoStartHeight = 0
+        var extraInfoHeightChange = 0
+        if (animatingExtraInfo) {
+            extraInfoEdit.visibility = View.VISIBLE
+            extraInfoEdit.measure(wrapContentSpec, wrapContentSpec)
+            extraInfoStartHeight = if (expanding) 0 else extraInfoEdit.measuredHeight
+            extraInfoHeightChange = extraInfoEdit.measuredHeight * (if (expanding) 1 else -1)
+        }
 
         val anim = ValueAnimator.ofInt(height, endHeight)
         anim.addUpdateListener {
             layoutParams.height = anim.animatedValue as Int
             shoppingListAmountEdit.increaseButton.layoutParams.width = increaseButtonStartWidth +
                     (anim.animatedFraction * increaseButtonWidthChange).toInt()
-            requestLayout()
+            shoppingListAmountEdit.increaseButton.requestLayout()
+            if (animatingExtraInfo) {
+                extraInfoEdit.layoutParams.height = extraInfoStartHeight +
+                        (anim.animatedFraction * extraInfoHeightChange).toInt()
+                extraInfoEdit.requestLayout()
+            }
+            else requestLayout()
         }
         anim.duration = 200
         anim.interpolator = FastOutSlowInInterpolator()

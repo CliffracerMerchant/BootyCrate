@@ -26,7 +26,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.cliffracermerchant.bootycrate.TextFieldEdit
+    <com.cliffracermerchant.bootycrate.AnimatedStrkethruTextFieldEdit
         android:id="@+id/nameEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -35,14 +35,16 @@
         android:importantForAutofill="no"
         android:textSize="22sp"
         app:isEditable="false"
+        app:layout_goneMarginBottom="2dp"
         app:layout_constraintEnd_toStartOf="@id/shoppingListAmountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toEndOf="@id/checkBox"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/checkBox"
+        app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
         tools:ignore="labelFor" />
 
-    <com.cliffracermerchant.bootycrate.TextFieldEdit
+    <com.cliffracermerchant.bootycrate.AnimatedStrkethruTextFieldEdit
         android:id="@+id/extraInfoEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -52,6 +54,7 @@
         android:textSize="18sp"
         app:editableHint="@string/inventory_item_extra_info_description"
         app:isEditable="false"
+        app:layout_constraintBottom_toBottomOf="@id/checkBox"
         app:layout_constraintEnd_toEndOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="@id/nameEdit"
         app:layout_constraintTop_toBottomOf="@id/nameEdit" />
@@ -61,6 +64,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:isEditable="false"
+        android:contentDescription="@string/shopping_list_item_amount_description"
         app:layout_constraintBottom_toBottomOf="@+id/extraInfoEdit"
         app:layout_constraintEnd_toStartOf="@+id/editButton"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
@@ -68,18 +72,6 @@
         app:minValue="1"
         app:textSize="26"
         app:valueChangedNotificationTimeout="0" />
-
-
-    <include
-        android:id="@+id/shoppingListItemDetailsInclude"
-        layout="@layout/shopping_list_item_details_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="49dp"
-        android:visibility="visible"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/extraInfoEdit" />
 
     <ImageButton
         android:id="@+id/editButton"
@@ -89,8 +81,25 @@
         android:contentDescription="@string/edit_button_description"
         android:scaleX="0.8"
         android:scaleY="0.8"
-        app:layout_constraintBottom_toBottomOf="@+id/extraInfoEdit"
+        app:layout_constraintBottom_toBottomOf="@id/shoppingListAmountEdit"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/shoppingListAmountEdit" />
+
+    <include
+        android:id="@+id/shoppingListItemDetailsInclude"
+        layout="@layout/shopping_list_item_details_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="49dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/extraInfoEdit" />
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="53dp"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

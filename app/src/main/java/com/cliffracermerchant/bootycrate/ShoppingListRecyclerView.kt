@@ -158,11 +158,13 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 if (!selection.isEmpty) selection.toggle(adapterPosition) }
             view.setOnClickListener(onClick)
             view.nameEdit.setOnClickListener(onClick)
+            view.extraInfoEdit.setOnClickListener(onClick)
             view.shoppingListAmountEdit.valueEdit.setOnClickListener(onClick)
 
             val onLongClick = OnLongClickListener { selection.toggle(adapterPosition); true }
             view.setOnLongClickListener(onLongClick)
             view.nameEdit.setOnLongClickListener(onLongClick)
+            view.extraInfoEdit.setOnLongClickListener(onLongClick)
             view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
 
 //            view.editColorButton.setOnClickListener {
@@ -178,8 +180,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     callback = ::updateLinkedTo)
             }
             view.checkBox.setOnClickListener {
-                shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked) }
-
+                shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
+            }
             view.editButton.setOnClickListener {
                 if (!view.isExpanded) {
                     expandedItem.set(this)
@@ -189,8 +191,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             } }
             view.collapseButton.setOnClickListener {
                 expandedItem.set(null)
-                view.checkBox.setOnClickListener(null)
-            }
+                view.checkBox.setOnClickListener {
+                    shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
+            } }
 
             // Data change listeners
             view.nameEdit.liveData.observeForever { value ->

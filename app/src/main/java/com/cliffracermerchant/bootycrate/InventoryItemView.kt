@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.editButton
 import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
 import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
+import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 
 
 /** A layout to display the contents of an inventory item.
@@ -63,14 +64,15 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
         (colorEdit.background as ColoredCircleDrawable).color = BootyCrateItem.Colors[colorIndex]
         inventoryAmountEdit.initCurrentValue(item.amount)
+
         autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
         autoAddToShoppingListTriggerEdit.initCurrentValue(item.autoAddToShoppingListTrigger)
+
         if (isExpanded) expand(false)
         else            collapse(false)
     }
 
     fun expand(animate: Boolean = true) {
-        if (_isExpanded) return
         _isExpanded = true
         nameEdit.isEditable = true
         inventoryAmountEdit.isEditable = true
@@ -78,12 +80,15 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         autoAddToShoppingListTriggerEdit.isEditable = true
         editButtonIconController.setState("more_options", animate)
 
-        if (animate) expandCollapseAnimation(true).start()
-        else inventoryItemDetailsInclude.visibility = View.VISIBLE
+        if (animate)
+            expandCollapseAnimation(true, extraInfoEdit.text.isNullOrBlank()).start()
+        else {
+            inventoryItemDetailsInclude.visibility = View.VISIBLE
+            extraInfoEdit.visibility = View.VISIBLE
+        }
     }
 
     fun collapse(animate: Boolean = true) {
-        if (!_isExpanded) return
         if (nameEdit.isFocused || extraInfoEdit.isFocused ||
             inventoryAmountEdit.valueEdit.isFocused ||
             autoAddToShoppingListTriggerEdit.valueEdit.isFocused)
@@ -96,14 +101,23 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         autoAddToShoppingListTriggerEdit.isEditable = false
         editButtonIconController.setState("edit", animate)
 
+        val extraInfoNeedsCollapsed = extraInfoEdit.text.isNullOrBlank()
         if (animate) {
-            val anim = expandCollapseAnimation(false)
-            anim.doOnEnd { inventoryItemDetailsInclude.visibility = View.GONE }
+            val anim = expandCollapseAnimation(false, extraInfoNeedsCollapsed)
+            anim.doOnEnd {
+                inventoryItemDetailsInclude.visibility = View.GONE
+                if (extraInfoNeedsCollapsed)
+                    extraInfoEdit.visibility = View.GONE
+            }
             anim.start()
-        } else inventoryItemDetailsInclude.visibility = View.GONE
+        } else {
+            if (extraInfoNeedsCollapsed)
+                extraInfoEdit.visibility = View.GONE
+            inventoryItemDetailsInclude.visibility = View.GONE
+        }
     }
 
-    private fun expandCollapseAnimation(expanding: Boolean) : ValueAnimator {
+    private fun expandCollapseAnimation(expanding: Boolean, animatingExtraInfo: Boolean): ValueAnimator {
         inventoryItemDetailsInclude.visibility = View.VISIBLE
 
         val matchParentSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
@@ -112,10 +126,24 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         val endHeight = height + (if (expanding) 1 else -1) *
                         inventoryItemDetailsInclude.measuredHeight
 
+        var extraInfoStartHeight = 0
+        var extraInfoHeightChange = 0
+        if (animatingExtraInfo) {
+            extraInfoEdit.visibility = View.VISIBLE
+            extraInfoEdit.measure(wrapContentSpec, wrapContentSpec)
+            extraInfoStartHeight = if (expanding) 0 else extraInfoEdit.measuredHeight
+            extraInfoHeightChange = extraInfoEdit.measuredHeight * (if (expanding) 1 else -1)
+        }
+
         val anim = ValueAnimator.ofInt(height, endHeight)
         anim.addUpdateListener {
             layoutParams.height = anim.animatedValue as Int
-            requestLayout()
+            if (animatingExtraInfo) {
+                extraInfoEdit.layoutParams.height = extraInfoStartHeight +
+                        (anim.animatedFraction * extraInfoHeightChange).toInt()
+                extraInfoEdit.requestLayout()
+            }
+            else requestLayout()
         }
         anim.duration = 200
         anim.interpolator = FastOutSlowInInterpolator()

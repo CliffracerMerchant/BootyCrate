@@ -33,23 +33,14 @@
         android:importantForAutofill="no"
         android:textSize="22sp"
         app:isEditable="false"
+        app:layout_goneMarginBottom="2dp"
+        app:layout_constraintStart_toEndOf="@id/colorEdit"
         app:layout_constraintEnd_toStartOf="@id/inventoryAmountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintHorizontal_weight="1"
-        app:layout_constraintStart_toEndOf="@id/colorEdit"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@id/colorEdit"
+        app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
         tools:ignore="labelFor" />
-
-    <com.cliffracermerchant.bootycrate.IntegerEdit
-        android:id="@+id/inventoryAmountEdit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="@string/inventory_item_amount_description"
-        app:layout_constraintBottom_toBottomOf="@id/extraInfoEdit"
-        app:layout_constraintEnd_toStartOf="@id/editButton"
-        app:layout_constraintStart_toEndOf="@id/nameEdit"
-        app:layout_constraintTop_toTopOf="@id/nameEdit"
-        app:textSize="26" />
 
     <com.cliffracermerchant.bootycrate.TextFieldEdit
         android:id="@+id/extraInfoEdit"
@@ -60,10 +51,24 @@
         android:textColor="@color/colorTextLightSecondary"
         android:textSize="18sp"
         app:editableHint="@string/inventory_item_extra_info_description"
+        app:isEditable="false"
         app:layout_constraintEnd_toEndOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="@id/nameEdit"
         app:layout_constraintTop_toBottomOf="@id/nameEdit"
+        app:layout_constraintBottom_toBottomOf="@id/colorEdit"
         tools:ignore="LabelFor" />
+
+    <com.cliffracermerchant.bootycrate.IntegerEdit
+        android:id="@+id/inventoryAmountEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/inventory_item_amount_description"
+        app:layout_constraintBottom_toBottomOf="@id/extraInfoEdit"
+        app:layout_constraintEnd_toStartOf="@id/editButton"
+        app:layout_constraintStart_toEndOf="@id/nameEdit"
+        app:layout_constraintTop_toTopOf="@id/nameEdit"
+        app:minValue="1"
+        app:textSize="26" />
 
     <ImageButton
         android:id="@+id/editButton"
@@ -73,10 +78,10 @@
         android:contentDescription="@string/edit_button_description"
         android:scaleX="0.8"
         android:scaleY="0.8"
-        app:layout_constraintBottom_toBottomOf="@+id/inventoryAmountEdit"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_weight="0"
-        app:layout_constraintTop_toTopOf="@+id/inventoryAmountEdit" />
+        app:layout_constraintTop_toTopOf="@+id/inventoryAmountEdit"
+        app:layout_constraintBottom_toBottomOf="@+id/inventoryAmountEdit"/>
 
     <include
         android:id="@+id/inventoryItemDetailsInclude"
@@ -90,5 +95,11 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/extraInfoEdit" />
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="53dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
