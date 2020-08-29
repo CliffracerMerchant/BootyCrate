@@ -7,6 +7,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
+import android.view.ViewPropertyAnimator
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -79,3 +80,18 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         }
     }
 }
+
+class ViewPropertyAnimatorSet {
+    private val animators = mutableListOf<ViewPropertyAnimator>()
+
+    fun add(anim: ViewPropertyAnimator) = animators.add(anim)
+
+    fun start() {
+        if (animators.isEmpty()) return
+        animators.removeAt(animators.size - 1).withStartAction {
+            for (anim in animators) anim.start()
+        }.start()
+    }
+}
+
+enum class SelectionState { Selected, NotSelected }

@@ -94,7 +94,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             android:backgroundTint="?attr/colorAccent"
-            android:src="@drawable/fab_animated_add_to_delete_icon"
             app:borderWidth="0dp" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 

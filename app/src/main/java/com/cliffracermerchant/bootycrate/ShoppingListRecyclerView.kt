@@ -166,11 +166,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             view.nameEdit.setOnLongClickListener(onLongClick)
             view.extraInfoEdit.setOnLongClickListener(onLongClick)
             view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
-
-//            view.editColorButton.setOnClickListener {
-//                colorPickerDialog(fragmentManager, item.color) { pickedColor ->
-//                    shoppingListViewModel.updateColor(item.id, pickedColor) }
-//            }
             view.linkedToEdit.setOnClickListener {
                 selectInventoryItemDialog(
                     context = context,
@@ -217,20 +212,25 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 shoppingListViewModel.updateAmountOnList(item.id, value)
             }
         }
-        override fun onExpansionStateChanged(expanding: Boolean, animate: Boolean) {
+        override fun onExpansionStateChanged(expanding: Boolean, animate: Boolean): Int {
             if (expanding) {
-                view.expand(animate)
                 view.checkBox.setOnClickListener {
                     colorPickerDialog(fragmentManager, item.color) { pickedColor ->
-                        shoppingListViewModel.updateColor(item.id, pickedColor) } }
+                        shoppingListViewModel.updateColor(item.id, pickedColor)
+                    }
+                }
                 view.checkBox.setOnCheckedChangeListener{ checkBox, isChecked ->
-                    checkBox.isChecked = !isChecked }
+                    checkBox.isChecked = !isChecked
+                }
+                return view.expand(animate)
             } else {
-                view.collapse(animate)
                 view.checkBox.setOnClickListener {
-                    shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked) }
+                    shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
+                }
                 view.checkBox.setOnCheckedChangeListener{ _, isChecked ->
-                    view.defaultOnCheckedChange(isChecked) }
+                    view.defaultOnCheckedChange(isChecked)
+                }
+                return view.collapse(animate)
             }
         }
 

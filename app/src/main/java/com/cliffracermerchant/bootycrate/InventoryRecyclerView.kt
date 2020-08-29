@@ -192,9 +192,9 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 inventoryViewModel.updateAutoAddToShoppingListTrigger(item.id, value)
             }
         }
-        override fun onExpansionStateChanged(expanding: Boolean, animate: Boolean) {
-            if (expanding) view.expand(animate)
-            else           view.collapse(animate)
+        override fun onExpansionStateChanged(expanding: Boolean, animate: Boolean): Int {
+            return if (expanding) view.expand(animate)
+                   else           view.collapse(animate)
         }
     }
 

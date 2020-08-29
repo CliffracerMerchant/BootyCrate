@@ -147,4 +147,10 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
 
         override fun getItemId(position: Int) = currentList[position].id
     }
+
+   /** A ViewHolder subclass that provides a simplified way of obtaining the
+    *  instance of the item that it represents through the property item. */
+    open inner class ViewModelItemViewHolder(view: View) : ViewHolder(view) {
+        val item: Entity get() = adapter.currentList[adapterPosition]
+    }
 }

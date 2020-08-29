@@ -6,7 +6,7 @@
 
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ValueAnimator
+import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
@@ -14,6 +14,7 @@ import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.LayerDrawable
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -22,6 +23,7 @@ import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.shopping_list_item_details_layout.view.*
 import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
+
 /** A layout to display the contents of a shopping list item.
  *
  *  ShoppingListItemView is a ConstraintLayout subclass that inflates a layout
@@ -33,6 +35,7 @@ class ShoppingListItemView(context: Context) :
 {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
+    private val pendingViewPropAnimations = ViewPropertyAnimatorSet()
     val decreaseButtonIconController: AnimatedIconController
     val increaseButtonIconController: AnimatedIconController
     val editButtonIconController: AnimatedIconController
@@ -111,12 +114,13 @@ class ShoppingListItemView(context: Context) :
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
         checkBoxBackgroundController.tint = ViewModelItem.Colors[colorIndex]
         shoppingListAmountEdit.initCurrentValue(item.amount)
-
+//        layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
         checkBox.setOnCheckedChangeListener(null)
         checkBox.isChecked = item.isChecked
         defaultOnCheckedChange(checked = item.isChecked, animate = false)
         checkBox.setOnCheckedChangeListener { _, checked -> defaultOnCheckedChange(checked) }
         updateLinkedStatus(item.linkedInventoryItemId)
+
         if (isExpanded) expand(false)
         else            collapse(false)
     }
@@ -131,27 +135,29 @@ class ShoppingListItemView(context: Context) :
         }
     }
 
-    fun expand(animate: Boolean = true) {
+    fun expand(animate: Boolean = true): Int {
         _isExpanded = true
         nameEdit.isEditable = true
         shoppingListAmountEdit.isEditable = true
         extraInfoEdit.isEditable = true
-        decreaseButtonIconController.setState("minus", animate)
-        increaseButtonIconController.setState("plus", animate)
+        setAmountEditable(true, animate)
+        if (extraInfoEdit.text.isNullOrBlank())
+            setExtraInfoVisible(true, animate)
+        val expandAnimAndHeightChange = setDetailsVisible(true, animate)
+
         editButtonIconController.setState("more_options", animate)
         if (checkBox.isChecked) checkBoxCheckmarkController.setState("unchecked", animate)
         checkBoxBackgroundController.setState("edit_color", animate)
 
-        if (animate)
-            expandCollapseAnimation(true, extraInfoEdit.text.isNullOrBlank()).start()
-        else {
-            extraInfoEdit.visibility = View.VISIBLE
-            shoppingListItemDetailsInclude.visibility = View.VISIBLE
-            shoppingListAmountEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth }
+        if (animate) {
+            expandAnimAndHeightChange!!.first.start()
+            pendingViewPropAnimations.start()
+            return expandAnimAndHeightChange.second
         }
+        return 0
     }
 
-    fun collapse(animate: Boolean = true) {
+    fun collapse(animate: Boolean = true): Int {
         if (nameEdit.isFocused || extraInfoEdit.isFocused ||
             shoppingListAmountEdit.valueEdit.isFocused)
                 imm.hideSoftInputFromWindow(windowToken, 0)
@@ -160,31 +166,25 @@ class ShoppingListItemView(context: Context) :
         nameEdit.isEditable = false
         shoppingListAmountEdit.isEditable = false
         extraInfoEdit.isEditable = false
-        decreaseButtonIconController.setState("multiply", animate)
-        increaseButtonIconController.setState("blank", animate)
-        editButtonIconController.setState("edit", animate)
 
+        setAmountEditable(false, animate)
+        if (extraInfoEdit.text.isNullOrBlank())
+            setExtraInfoVisible(false, animate)
+        val collapseAnimAndHeightChange = setDetailsVisible(false, animate)
+
+        editButtonIconController.setState("edit", animate)
         if (checkBox.isChecked) {
             checkBoxCheckmarkController.setState("checked", animate)
             checkBoxBackgroundController.setState("checked", animate)
         }
         else checkBoxBackgroundController.setState("unchecked", animate)
 
-        val extraInfoNeedsCollapsed = extraInfoEdit.text.isNullOrBlank()
         if (animate) {
-            val anim = expandCollapseAnimation(false, extraInfoNeedsCollapsed)
-            anim.doOnEnd {
-                shoppingListItemDetailsInclude.visibility = View.GONE
-                if (extraInfoNeedsCollapsed)
-                    extraInfoEdit.visibility = View.GONE
-            }
-            anim.start()
-        } else {
-            if (extraInfoNeedsCollapsed)
-                extraInfoEdit.visibility = View.GONE
-            shoppingListItemDetailsInclude.visibility = View.GONE
-            shoppingListAmountEdit.increaseButton.apply { layoutParams.width = background.intrinsicWidth / 2 }
+            collapseAnimAndHeightChange!!.first.start()
+            pendingViewPropAnimations.start()
+            return collapseAnimAndHeightChange.second
         }
+        return 0
     }
 
     fun defaultOnCheckedChange(checked: Boolean, animate: Boolean = true) {
@@ -199,43 +199,68 @@ class ShoppingListItemView(context: Context) :
         }
     }
 
-    private fun expandCollapseAnimation(expanding: Boolean, animatingExtraInfo: Boolean) : ValueAnimator {
-        shoppingListItemDetailsInclude.visibility = View.VISIBLE
-        val matchParentSpec = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
-        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        shoppingListItemDetailsInclude.measure(matchParentSpec, wrapContentSpec)
-        val endHeight = height + (if (expanding) 1 else -1) *
-                        shoppingListItemDetailsInclude.measuredHeight
+    private fun setAmountEditable(makingEditable: Boolean = true, animate: Boolean = true) {
+        decreaseButtonIconController.setState(if (makingEditable) "minus" else "multiply", animate)
+        increaseButtonIconController.setState(if (makingEditable) "plus" else "blank", animate)
 
-        val increaseButtonStartWidth = increaseButton.width
-        val increaseButtonWidthChange = if (expanding) increaseButton.width
-                                        else           -increaseButton.width / 2
+        if (makingEditable) decreaseButton.setOnClickListener { shoppingListAmountEdit.decrement() }
+        else                decreaseButton.setOnClickListener(null)
+        if (makingEditable) increaseButton.setOnClickListener { shoppingListAmountEdit.increment() }
+        else                increaseButton.setOnClickListener(null)
+        val amountEditTranslationX = if (makingEditable) 0f
+                                     else increaseButton.background.intrinsicWidth / 2f
 
-        var extraInfoStartHeight = 0
-        var extraInfoHeightChange = 0
-        if (animatingExtraInfo) {
-            extraInfoEdit.visibility = View.VISIBLE
-            extraInfoEdit.measure(wrapContentSpec, wrapContentSpec)
-            extraInfoStartHeight = if (expanding) 0 else extraInfoEdit.measuredHeight
-            extraInfoHeightChange = extraInfoEdit.measuredHeight * (if (expanding) 1 else -1)
+        if (!animate) {
+            decreaseButton.translationX = amountEditTranslationX
+            valueEdit.translationX = amountEditTranslationX
+        } else {
+            // The decrease button does not use a graphical layer here because its icon
+            // should also be animating at the same time as the translation animation
+            pendingViewPropAnimations.add(
+                decreaseButton.animate().translationX(amountEditTranslationX).setDuration(200))
+            pendingViewPropAnimations.add(
+                valueEdit.animate().translationX(amountEditTranslationX).withLayer().setDuration(200))
         }
+    }
 
-        val anim = ValueAnimator.ofInt(height, endHeight)
-        anim.addUpdateListener {
-            layoutParams.height = anim.animatedValue as Int
-            shoppingListAmountEdit.increaseButton.layoutParams.width = increaseButtonStartWidth +
-                    (anim.animatedFraction * increaseButtonWidthChange).toInt()
-            shoppingListAmountEdit.increaseButton.requestLayout()
-            if (animatingExtraInfo) {
-                extraInfoEdit.layoutParams.height = extraInfoStartHeight +
-                        (anim.animatedFraction * extraInfoHeightChange).toInt()
-                extraInfoEdit.requestLayout()
-            }
-            else requestLayout()
+    private fun setExtraInfoVisible(makingVisible: Boolean = true, animate: Boolean = true) {
+        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        extraInfoEdit.measure(wrapContentSpec, wrapContentSpec)
+        val nameEditTranslationY = if (makingVisible) 0f
+                                   else extraInfoEdit.measuredHeight/ 2.5f
+        if (!animate) {
+            extraInfoEdit.alpha = if (makingVisible) 1f else 0f
+            nameEdit.translationY = nameEditTranslationY
+        }
+        else {
+            pendingViewPropAnimations.add(
+                extraInfoEdit.animate().alpha(if (makingVisible) 1f else 0f).withLayer().setDuration(200))
+            pendingViewPropAnimations.add(
+                nameEdit.animate().translationY(nameEditTranslationY).withLayer().setDuration(200))
+        }
+    }
+
+    private fun setDetailsVisible(
+        makingVisible: Boolean = true,
+        animate: Boolean = true
+    ) : Pair<ObjectAnimator, Int>? {
+        val startHeight = height
+        shoppingListItemDetailsGroup.visibility = if (makingVisible) View.VISIBLE
+                                                  else               View.GONE
+        if (!animate) return null
+
+        measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
+        val heightChange = measuredHeight - startHeight
+        layoutParams.height = startHeight
+        val anim = ObjectAnimator.ofInt(this, "bottom", bottom + heightChange)
+        anim.doOnEnd {
+            if (!makingVisible) shoppingListItemDetailsGroup.visibility = View.GONE
+            layoutParams.height = startHeight + heightChange
+            requestLayout()
         }
         anim.duration = 200
-        anim.interpolator = FastOutSlowInInterpolator()
-        return anim
+        return Pair(anim, heightChange)
     }
 
     private fun initSharedResources(context: Context) {

@@ -6,12 +6,11 @@
 
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ValueAnimator
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
-import android.view.ViewGroup
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,8 +38,6 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
     private val selectedColor: Int
     private val itemNormalBackgroundColor: Int
 
-    enum class SelectionState { Selected, NotSelected }
-
     init {
         addItemDecoration(ItemSpacingDecoration(context))
         val typedValue = TypedValue()
@@ -48,10 +45,11 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
         selectedColor = typedValue.data
         context.theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
         itemNormalBackgroundColor = typedValue.data
+        setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
     }
 
-    override fun onNewItemInsertion(item: Entity, vh: ViewHolder) {
+    override fun onNewItemInsertion(item: Entity, vh: ViewModelItemViewHolder) {
         super.onNewItemInsertion(item, vh)
         expandedItem.set((vh as SelectableExpandableRecyclerView<Entity>.ExpandableViewHolder),
                          animateCollapse = true, animateExpand = false)
@@ -88,13 +86,11 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
             val unhandledChanges = mutableListOf<Any>()
             for (payload in payloads)
                 if (payload is SelectionState) {
-                    val background = (holder.itemView as ViewGroup).getChildAt(0).background
-                    val selected = payload == SelectionState.Selected
-                    val startColor = if (selected) itemNormalBackgroundColor else selectedColor
-                    val endColor =   if (selected) selectedColor else itemNormalBackgroundColor
-                    val anim = ValueAnimator.ofArgb(startColor, endColor)
-                    anim.addUpdateListener { background.setTint(anim.animatedValue as Int) }
-                    anim.start()
+                    val isSelected = payload == SelectionState.Selected
+                    val startColor = if (isSelected) itemNormalBackgroundColor else selectedColor
+                    val endColor =   if (isSelected) selectedColor else itemNormalBackgroundColor
+                    ObjectAnimator.ofArgb(holder.itemView.background,
+                                          "tint", startColor, endColor).start()
                 }
                 else unhandledChanges.add(payload)
             if (unhandledChanges.isNotEmpty())
@@ -107,6 +103,24 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
         open fun onExpansionStateChanged(expanding: Boolean, animate: Boolean = true) = 0
     }
 
+    /** A RecyclerView utility to keep track of a multi-selection in a RecyclerView.
+     *
+     *  Selection is a utility class intended to be incorporated into a RecyclerView
+     *  via composition that keeps track of a multi-selection of the RecyclerView
+     *  items. It can be queried using its public function contains and its size and
+     *  isEmpty properties. The RecyclerView.AdapterDataObserver.onItemRangeRemoved
+     *  override will cause selected items to be automatically removed from the sel-
+     *  ection when they are deleted.
+     *
+     *  The selection size is exposed via the sizeLiveData property to allow on
+     *  selection size changed listeners to respond to a change in selection size.
+     *
+     *  The selection modifying functions add, remove, toggle, and clear will call
+     *  the appropriate notifyItemChanged function on the adapter provided in the
+     *  constructor so that the items' visual selected/not-selected statuses can be
+     *  updated. To support partial binding, these notifyItemChanged calls use a
+     *  SelectionState value as a payload to indicate the new state of
+     *  the item. */
     inner class Selection :
         RecyclerView.AdapterDataObserver() {
         private val hashMap = HashMap<Long, Int>()
@@ -191,26 +205,132 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
         }
     }
 
-    inner class ExpandedItem :
-        RecyclerView.AdapterDataObserver() {
+    /** A RecyclerView utility that manages the expansion of a single RecyclerView item at a time.
+     *
+     *  RecyclerViewExpandedItem is intended to be incorporated into a RecyclerView
+     *  via composition to help it manage the expanded or collapsed state of its
+     *  items. To accomplish this, the RecyclerView's view holder must inherit the
+     *  ExpandableViewHolder interface and implement the function onExpansionState-
+     *  Changed to determine what will happen with the view upon its collapse or
+     *  expansion.
+     *
+     *  The current expanded item and view holder can be queried using the property
+     *  id. The property id will return null if there is no expanded item. The
+     *  expanded item can be set by view holder instance with the set function, or
+     *  can be set to null (no expanded item) by passing null to the set function. */
+    inner class ExpandedItem : RecyclerView.AdapterDataObserver() {
         private var _expandedId: Long? = null
         val id get() = _expandedId
-        private var expandedViewHolderCache: SelectableExpandableViewHolder? = null
+        private var expandedViewHolderCache: ExpandableViewHolder? = null
 
         fun set(
-            newExpandedVh: SelectableExpandableViewHolder?,
+            newExpandedVh: ExpandableViewHolder?,
             animateCollapse: Boolean = true,
             animateExpand: Boolean = true
         ) {
             val newExpandedId = if (newExpandedVh == null) null
-            else adapter.getItemId(newExpandedVh.adapterPosition)
+                                else adapter.getItemId(newExpandedVh.adapterPosition)
             if (newExpandedId == _expandedId) return
+
+            val collapsingViewPos: Int?
+            val expandingViewPos: Int?
+            var heightChange = 0
+
+            // Collapse old expanded view holder and record its position
             val expandedVhCache = expandedViewHolderCache
-            if (expandedVhCache != null && adapter.getItemId(expandedVhCache.adapterPosition) == _expandedId)
-                expandedVhCache.onExpansionStateChanged(false, animateCollapse)
+            if (expandedVhCache != null && adapter.getItemId(expandedVhCache.adapterPosition) == _expandedId) {
+                    collapsingViewPos = expandedVhCache.adapterPosition
+                    heightChange = expandedVhCache.onExpansionStateChanged(false, animateCollapse)
+            }
+            else collapsingViewPos = null
+
+            // Update _expandedId, expand newly expanded view holder, and record its position
             _expandedId = newExpandedId
-            expandedViewHolderCache = newExpandedVh
-            newExpandedVh?.onExpansionStateChanged(true, animateExpand)
+            this.expandedViewHolderCache = newExpandedVh
+            if (newExpandedVh != null) {
+                expandingViewPos = newExpandedVh.adapterPosition
+                heightChange = newExpandedVh.onExpansionStateChanged(true, animateExpand)
+            } else expandingViewPos = null
+
+            // Calling onExpansionStateChanged on the collapsing and expanding view holders
+            // above should take care of their collapsing/expanding, but now the views below
+            // or in between need to be slid up or down accordingly.
+            if (!animateCollapse && !animateExpand) return
+            val layoutManager = this@SelectableExpandableRecyclerView.layoutManager ?: return
+            // If the recycler view is scrolled down, the adapter binding position of the
+            // first child in the layout will not be 0, and the start and end positions
+            // (which are adapter binding positions, not layout positions) will need to
+            // be offset by this value.
+            val firstChild = layoutManager.getChildAt(0) ?: return
+            val firstChildBindingPosition = getChildAdapterPosition(firstChild)
+
+            val animSet = ViewPropertyAnimatorSet()
+            val toBeTranslatedStart: Int
+            val toBeTranslatedEnd: Int
+            var translationDistance = heightChange.toFloat()
+
+            if (collapsingViewPos == null && expandingViewPos != null) {
+                // All views starting one below the one being expanding should be slid
+                // down. heightChange should already be positive from the return value
+                // of newExpandedVh.onExpansionStateChanged()
+                toBeTranslatedStart = expandingViewPos + 1 - firstChildBindingPosition
+                toBeTranslatedEnd = layoutManager.childCount - 1
+            } else if (collapsingViewPos != null && expandingViewPos == null) {
+                // All views starting one below the one being collapsed should be slid
+                // up. heightChange should already be negative from the return value
+                // of expandedViewHolderCache.onExpansionStateChanged
+                toBeTranslatedStart = collapsingViewPos + 1 - firstChildBindingPosition
+                toBeTranslatedEnd = layoutManager.childCount - 1
+            } else if (collapsingViewPos == null || expandingViewPos == null) {
+                throw IllegalStateException("collapsingViewPos and expandingViewPos should not both be null")
+//            } else  {
+//                if (collapsingViewPos < firstChildBindingPosition)
+            } else if (expandingViewPos < collapsingViewPos) {
+                // All views in between the expanding and collapsed views should be
+                // slid down. heightChange should already be positive from the return
+                // value of newExpandedVh.onExpansionStateChanged()
+                toBeTranslatedStart = expandingViewPos + 1 - firstChildBindingPosition
+                toBeTranslatedEnd = collapsingViewPos - 1 - firstChildBindingPosition
+            } else {// collapsingViewPos < expandingViewPos
+                // Same as above, except that since the collapsing view is on top all
+                // of the views need to be slid up rather than down. Because height-
+                // Change should be positive from the return value of newExpandedVh.-
+                // onExpansionStateChanged(), it is reversed here.
+                if (collapsingViewPos >= firstChildBindingPosition) {
+                    toBeTranslatedStart = collapsingViewPos + 1 - firstChildBindingPosition
+                    toBeTranslatedEnd = expandingViewPos - 1 - firstChildBindingPosition
+                    translationDistance *= -1f
+                } else {
+                    // If the collapsing view is off of the top of the screen, the layout
+                    // manager will not take into account its height change when it collapses.
+                    // This causes the items to jump back to their pre-translation position
+                    // after their animation. To prevent this the items below the newly
+                    // expanded item are translated down, as if there was no collapsing view.
+                    toBeTranslatedStart = expandingViewPos + 1 - firstChildBindingPosition
+                    toBeTranslatedEnd = layoutManager.childCount - 1
+                }
+            }
+
+            // In the case that there is both an expanding and collapsing view, the
+            // expanding or collapsing view on bottom will also need to be a part
+            // of the vertical translation. It is animated separately here from the
+            // range of translated in between views because it should be expanding
+            // or collapsing at the same time as this translation, and therefore
+            // should not use a graphical layer.
+            if (collapsingViewPos != null && expandingViewPos != null) {
+                val endChild = layoutManager.getChildAt(toBeTranslatedEnd + 1)
+                if (endChild != null) animSet.add(endChild.animate().setDuration(200).
+                                                  translationY(translationDistance).
+                                                  withEndAction{ endChild.translationY = 0f })
+            }
+
+            for (i in toBeTranslatedStart..toBeTranslatedEnd) {
+                val child = layoutManager.getChildAt(i)
+                if (child != null) animSet.add(child.animate().setDuration(200).withLayer().
+                                               translationY(translationDistance).
+                                               withEndAction { child.translationY = 0f })
+            }
+            animSet.start()
         }
 
         override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
