@@ -47,7 +47,7 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  hidden. Both of these functions can be overridden in subclasses (though the
  *  default implementation should always be called in overrides) in case fur-
  *  ther enable or disable functionality is required. */
-abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
+abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
     protected lateinit var mainActivity: MainActivity
     protected lateinit var menu: Menu
     abstract val recyclerView: SelectableExpandableRecyclerView<Entity>
@@ -112,19 +112,19 @@ abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
             R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
             } R.id.color_option -> {
-                recyclerView.sort = BootyCrateItem.Sort.Color
+                recyclerView.sort = ViewModelItem.Sort.Color
                 item.isChecked = true; true
             } R.id.name_ascending_option -> {
-                recyclerView.sort = BootyCrateItem.Sort.NameAsc
+                recyclerView.sort = ViewModelItem.Sort.NameAsc
                 item.isChecked = true; true
             } R.id.name_descending_option -> {
-                recyclerView.sort = BootyCrateItem.Sort.NameDesc
+                recyclerView.sort = ViewModelItem.Sort.NameDesc
                 item.isChecked = true; true
             } R.id.amount_ascending_option -> {
-                recyclerView.sort = BootyCrateItem.Sort.AmountAsc
+                recyclerView.sort = ViewModelItem.Sort.AmountAsc
                 item.isChecked = true; true
             } R.id.amount_descending_option -> {
-                recyclerView.sort = BootyCrateItem.Sort.AmountDesc
+                recyclerView.sort = ViewModelItem.Sort.AmountDesc
                 item.isChecked = true; true
             } else -> mainActivity.onOptionsItemSelected(item)
         }
@@ -137,12 +137,12 @@ abstract class RecyclerViewFragment<Entity: BootyCrateItem>: Fragment() {
 
     private fun initOptionsMenuSort(menu: Menu) {
         menu.findItem(when (recyclerView.sort) {
-            BootyCrateItem.Sort.Color ->      R.id.color_option
-            BootyCrateItem.Sort.NameAsc ->    R.id.name_ascending_option
-            BootyCrateItem.Sort.NameDesc ->   R.id.name_descending_option
-            BootyCrateItem.Sort.AmountAsc ->  R.id.amount_ascending_option
-            BootyCrateItem.Sort.AmountDesc -> R.id.amount_descending_option
-            else ->            R.id.color_option }).isChecked = true
+            ViewModelItem.Sort.Color ->      R.id.color_option
+            ViewModelItem.Sort.NameAsc ->    R.id.name_ascending_option
+            ViewModelItem.Sort.NameDesc ->   R.id.name_descending_option
+            ViewModelItem.Sort.AmountAsc ->  R.id.amount_ascending_option
+            ViewModelItem.Sort.AmountDesc -> R.id.amount_descending_option
+            else ->                           R.id.color_option }).isChecked = true
     }
 
     /** The default ActionMode.Callback used by RecyclerViewFragment.

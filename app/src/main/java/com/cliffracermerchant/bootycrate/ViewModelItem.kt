@@ -8,10 +8,9 @@ package com.cliffracermerchant.bootycrate
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 
-@Entity open class BootyCrateItem(
+@Entity open class ViewModelItem(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")        var id: Long = 0,
     @ColumnInfo(name = "name")      var name: String = "",
@@ -22,7 +21,7 @@ import androidx.room.PrimaryKey
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
-        if (other == null || other !is BootyCrateItem) return false
+        if (other == null || other !is ViewModelItem) return false
         return this.id == other.id &&
                this.name == other.name &&
                this.extraInfo == other.extraInfo &&

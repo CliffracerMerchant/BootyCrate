@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<merge
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/inventoryItemDetailsLayout"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal|fill"
-    app:chainUseRtl="false"
-    app:layout_constraintHorizontal_chainStyle="spread">
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/inventoryItemDetailsGroup"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:constraint_referenced_ids="autoAddToShoppingListCheckBox, autoAddToShoppingListTriggerEdit, collapseButton" />
 
     <CheckBox
         android:id="@+id/autoAddToShoppingListCheckBox"
@@ -16,9 +21,9 @@
         android:text="@string/inventory_item_auto_add_to_shopping_list_checkbox_text"
         app:layout_constraintEnd_toStartOf="@id/autoAddToShoppingListTriggerEdit"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/extraInfoEdit"
         android:layout_marginTop="16dp"
-        android:textSize="16sp"/>
+        android:textSize="16sp" />
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
         android:id="@+id/autoAddToShoppingListTriggerEdit"
@@ -42,12 +47,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:contentDescription="@string/collapse_button_description" />
 
-    <Space
-        android:layout_width="0dp"
-        android:layout_height="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/autoAddToShoppingListCheckBox" />
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+<!--    <Space-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="4dp"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/autoAddToShoppingListCheckBox" />-->
+</merge>

@@ -89,29 +89,28 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
 
 /** A TextFieldEdit subclass that allows the toggling of a strike-through
  *  effect, optionally with an animation, using the public function setStrike-
- *  ThruEnabled. */
-class AnimatedStrkethruTextFieldEdit(context: Context, attrs: AttributeSet) :
+ *  throughEnabled. */
+class AnimatedStrkethroughTextFieldEdit(context: Context, attrs: AttributeSet) :
         TextFieldEdit(context, attrs) {
     private var strikethruLength: Float = 0f
     private var strikethruAnimationIsReversed = false
     private val normalTextColor: Int = currentTextColor
 
-    fun setStrikethruEnabled(strikethruEnabled: Boolean, animate: Boolean = true) {
+    fun setStrikethroughEnabled(strikethruEnabled: Boolean, animate: Boolean = true) {
         strikethruAnimationIsReversed = !strikethruEnabled
         val fullLength = paint.measureText(text, 0, text?.length ?: 0)
 
         if (animate) {
             ObjectAnimator.ofArgb(this, "textColor", currentTextColor,
-                if (strikethruEnabled) currentHintTextColor
-                else                   normalTextColor).start()
+                                  if (strikethruEnabled) currentHintTextColor
+                                  else                   normalTextColor).start()
             val anim = ValueAnimator.ofFloat(0f, fullLength)
             anim.addUpdateListener { strikethruLength = anim.animatedValue as Float; invalidate() }
             anim.start()
         } else {
             strikethruLength = if (strikethruEnabled) fullLength else 0f
             setTextColor(if (strikethruEnabled) currentHintTextColor
-            else                   normalTextColor)
-            return
+                         else                   normalTextColor)
         }
     }
     
@@ -119,12 +118,11 @@ class AnimatedStrkethruTextFieldEdit(context: Context, attrs: AttributeSet) :
         super.onDraw(canvas)
         if (strikethruLength == 0f) return
         val fullLength = paint.measureText(text, 0, text?.length ?: 0)
-        paint.strokeWidth = paint.strikeThruThickness
+        paint.strokeWidth = textSize / 12
         val begin = if (!strikethruAnimationIsReversed) 0f
-        else strikethruLength
+                    else strikethruLength
         val end = if (strikethruAnimationIsReversed) fullLength
-        else strikethruLength
-        canvas.drawLine(begin, paint.strikeThruPosition + baseline,
-            end, paint.strikeThruPosition + baseline, paint)
+                  else strikethruLength
+        canvas.drawLine(begin, baseline / 1.4f, end, baseline / 1.4f, paint)
     }
 }

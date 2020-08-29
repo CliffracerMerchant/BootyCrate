@@ -12,17 +12,16 @@ import android.content.Context
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
-import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.editButton
 import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
 import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
-import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
-
 
 /** A layout to display the contents of an inventory item.
  *
@@ -31,7 +30,9 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
  *  function updates the contained views with the information of the Inventory-
  *  Item instance. Its expand and collapse functions allow for an optional anim-
  *  ation. */
-class InventoryItemView(context: Context) : ConstraintLayout(context) {
+class InventoryItemView(context: Context) :
+    ConstraintLayout(ContextThemeWrapper(context, R.style.RecyclerViewItemStyle))
+{
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
@@ -42,8 +43,8 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
         editButtonIconController = AnimatedIconController.forView(editButton)
         editButtonIconController.addTransition(
             editButtonIconController.addState("edit"), editButtonIconController.addState("more_options"),
-            context.getDrawable(R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
-            context.getDrawable(R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
+            ContextCompat.getDrawable(context, R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
+            ContextCompat.getDrawable(context, R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
         colorEdit.background = ColoredCircleDrawable(colorEdit.layoutParams.width.toFloat(),
                                                      0, nameEdit.currentTextColor)
 
@@ -61,8 +62,8 @@ class InventoryItemView(context: Context) : ConstraintLayout(context) {
     fun update(item: InventoryItem, isExpanded: Boolean = false) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
-        val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
-        (colorEdit.background as ColoredCircleDrawable).color = BootyCrateItem.Colors[colorIndex]
+        val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
+        (colorEdit.background as ColoredCircleDrawable).color = ViewModelItem.Colors[colorIndex]
         inventoryAmountEdit.initCurrentValue(item.amount)
 
         autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList

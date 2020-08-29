@@ -174,9 +174,9 @@ class MainActivity : AppCompatActivity() {
         showingPreferences = showing
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
         supportActionBar?.setDisplayHomeAsUpEnabled(showing)
-        bottomAppBar.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
-        fab.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
-        checkoutBtn.animate().translationYBy(if (showing) 250f else -250f).withLayer().start()
+        bottomAppBar.animate().translationY(if (showing) 250f else 0f).withLayer().start()
+        fab.animate().translationY(if (showing) 250f else 0f).withLayer().start()
+        checkoutBtn.animate().translationY(if (showing) 250f else 0f).withLayer().start()
         supportFragmentManager.beginTransaction().
             setCustomAnimations(android.R.anim.slide_in_left, android.R.anim.slide_out_right).
             hide(oldFragment).show(newFragment).commit()

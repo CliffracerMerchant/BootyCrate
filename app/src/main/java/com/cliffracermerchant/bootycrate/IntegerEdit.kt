@@ -15,7 +15,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.LinearLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
@@ -52,8 +52,7 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
  *  - Float textSize = 16.0f: The text display size for the central EditText
  *    member. When this is set, the scale of the decrease and increase buttons
  *    will be adjusted to match the new text size. */
-class IntegerEdit(context: Context, attrs: AttributeSet?) :
-        LinearLayout(context, attrs) {
+class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
     // currentValue = currentValue is not pointless due
     // to currentValue's custom getter and setter
@@ -90,7 +89,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) :
     private val _handler = Handler()
 
     init {
-        LayoutInflater.from(context).inflate(R.layout.integer_edit_layout, this)
+        LayoutInflater.from(context).inflate(R.layout.integer_edit_layout, this, true)
         val styledAttrs = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
         _currentValue = styledAttrs.getInt(R.styleable.IntegerEdit_initialValue, 0)
         _minValue = styledAttrs.getInt(R.styleable.IntegerEdit_minValue, 0)

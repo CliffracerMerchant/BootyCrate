@@ -1,16 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/shoppingListItemLayout"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center_horizontal|fill"
-    android:animateLayoutChanges="false"
-    android:background="@drawable/recycler_view_item_background"
-    android:backgroundTint="?attr/recyclerViewItemColor"
-    android:padding="4dp"
-    app:layout_constraintHorizontal_chainStyle="spread">
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <ToggleButton
         android:id="@+id/checkBox"
@@ -26,7 +19,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.cliffracermerchant.bootycrate.AnimatedStrkethruTextFieldEdit
+    <com.cliffracermerchant.bootycrate.AnimatedStrkethroughTextFieldEdit
         android:id="@+id/nameEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -35,7 +28,6 @@
         android:importantForAutofill="no"
         android:textSize="22sp"
         app:isEditable="false"
-        app:layout_goneMarginBottom="2dp"
         app:layout_constraintEnd_toStartOf="@id/shoppingListAmountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintHorizontal_weight="1"
@@ -44,7 +36,7 @@
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
         tools:ignore="labelFor" />
 
-    <com.cliffracermerchant.bootycrate.AnimatedStrkethruTextFieldEdit
+    <com.cliffracermerchant.bootycrate.AnimatedStrkethroughTextFieldEdit
         android:id="@+id/extraInfoEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -63,8 +55,8 @@
         android:id="@+id/shoppingListAmountEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:isEditable="false"
         android:contentDescription="@string/shopping_list_item_amount_description"
+        app:isEditable="false"
         app:layout_constraintBottom_toBottomOf="@+id/extraInfoEdit"
         app:layout_constraintEnd_toStartOf="@+id/editButton"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
@@ -85,21 +77,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/shoppingListAmountEdit" />
 
-    <include
-        android:id="@+id/shoppingListItemDetailsInclude"
-        layout="@layout/shopping_list_item_details_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="49dp"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/extraInfoEdit" />
+    <include layout="@layout/shopping_list_item_details_layout"/>
 
-    <Space
-        android:layout_width="0dp"
-        android:layout_height="53dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</merge>

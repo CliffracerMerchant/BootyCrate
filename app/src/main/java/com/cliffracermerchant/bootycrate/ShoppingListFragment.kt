@@ -66,8 +66,8 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(mainActivity.getString(R.string.pref_shopping_list_sort),
-            BootyCrateItem.Sort.Color.toString())
-        val initialSort = BootyCrateItem.sortFrom(sortStr)
+            ViewModelItem.Sort.Color.toString())
+        val initialSort = ViewModelItem.sortFrom(sortStr)
         recyclerView.finishInit(viewLifecycleOwner, mainActivity.shoppingListViewModel,
                                 mainActivity.inventoryViewModel,
                                 mainActivity.supportFragmentManager, initialSort)

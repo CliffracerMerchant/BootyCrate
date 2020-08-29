@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<merge
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/shoppingListItemDetailsGroup"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:constraint_referenced_ids="linkedToIndicator, linkedToEdit, collapseButton" />
 
     <TextView
         android:id="@+id/linkedToIndicator"
@@ -13,7 +22,8 @@
         android:gravity="center_vertical"
         android:textSize="18sp"
         android:layout_marginTop="16dp"
-        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="49dp"
+        app:layout_constraintTop_toBottomOf="@id/extraInfoEdit"
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
@@ -35,16 +45,10 @@
         android:background="@drawable/ic_expand_less_black_24dp"
         android:scaleX="0.9"
         android:scaleY="0.9"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/linkedToIndicator"
+        app:layout_constraintBottom_toBottomOf="@id/linkedToIndicator"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="2dp"
         android:contentDescription="@string/collapse_button_description"/>
 
-    <Space
-        android:layout_width="0dp"
-        android:layout_height="4dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/linkedToIndicator" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</merge>

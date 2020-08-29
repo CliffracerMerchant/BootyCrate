@@ -114,4 +114,13 @@
         <item name="android:windowBackground">@color/colorPrimaryRowDark</item>
     </style>
 
+    <style name="RecyclerViewItemStyle">
+        <item name="android:background">@drawable/recycler_view_item_background</item>
+        <item name="android:backgroundTint">?attr/recyclerViewItemColor</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
 </resources>

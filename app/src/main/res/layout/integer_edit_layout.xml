@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="wrap_content"
-    android:layout_width="wrap_content">
+    android:layout_width="wrap_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <ImageButton
         android:id="@+id/decreaseButton"
@@ -10,12 +13,20 @@
         android:layout_height="24dp"
         android:layout_gravity="center_vertical"
         android:background="@drawable/minus_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/valueEdit"
         android:contentDescription="@string/decrease_button_description" />
 
     <EditText
         android:id="@+id/valueEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/decreaseButton"
+        app:layout_constraintEnd_toStartOf="@id/increaseButton"
         android:focusableInTouchMode="false"
         android:maxLines="1"
         android:imeOptions="actionDone|flagNoExtractUi"
@@ -31,6 +42,10 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         android:layout_gravity="center_vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/valueEdit"
+        app:layout_constraintEnd_toEndOf="parent"
         android:background="@drawable/plus_icon"
         android:contentDescription="@string/increase_button_description" />
-</LinearLayout>
+</merge>

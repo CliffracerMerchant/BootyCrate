@@ -44,12 +44,14 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     protected lateinit var fragmentManager: FragmentManager
     val checkedItems = ShoppingListCheckedItems()
 
+    init { adapter.registerAdapterDataObserver(expandedItem) }
+
     fun finishInit(
         owner: LifecycleOwner,
         shoppingListViewModel: ShoppingListViewModel,
         inventoryViewModel: InventoryViewModel,
         fragmentManager: FragmentManager,
-        initialSort: BootyCrateItem.Sort? = null
+        initialSort: ViewModelItem.Sort? = null
     ) {
         this.shoppingListViewModel = shoppingListViewModel
         this.inventoryViewModel = inventoryViewModel
@@ -78,9 +80,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
      *  overrides of onBindViewHolder make use of the ShoppingListItem.Field
      *  values passed by ShoppingListItemDiffUtilCallback to support partial
      *  binding. */
-    inner class ShoppingListAdapter : SelectableExpandableItemAdapter<ShoppingListItemViewHolder>() {
+    inner class ShoppingListAdapter : SelectableItemAdapter<ShoppingListItemViewHolder>() {
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShoppingListItemViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : ShoppingListItemViewHolder {
             val view = ShoppingListItemView(context)
             view.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                              ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -121,10 +123,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(ShoppingListItem.Field.Color)) {
                         holder.view.itemColor = item.color
                         val itemColor = holder.view.itemColor ?: 0
-                        val startColor = BootyCrateItem.Colors[itemColor]
-                        val endColor = BootyCrateItem.Colors[item.color]
-//                        ObjectAnimator.ofArgb(holder.view.checkBoxBackgroundController,
-//                                              "tint", startColor, endColor).start()
+                        val startColor = ViewModelItem.Colors[itemColor]
+                        val endColor = ViewModelItem.Colors[item.color]
                         val anim = ValueAnimator.ofArgb(startColor, endColor)
                         anim.addUpdateListener { holder.view.checkBoxBackgroundController.tint = it.animatedValue as Int }
                         anim.start()
@@ -150,7 +150,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
      *   ExpandableViewHolder.onExpansionStateChanged calls the corresponding
      *   expand or collapse functions on its ShoppingListItemView instance. */
     inner class ShoppingListItemViewHolder(val view: ShoppingListItemView) :
-            SelectableExpandableViewHolder(view) {
+            ExpandableViewHolder(view) {
 
         init {
             // Click & long click listeners
@@ -187,13 +187,17 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     expandedItem.set(this)
                     view.checkBox.setOnClickListener {
                         colorPickerDialog(fragmentManager, item.color) { pickedColor ->
-                            shoppingListViewModel.updateColor(item.id, pickedColor) }}
-            } }
+                            shoppingListViewModel.updateColor(item.id, pickedColor)
+                        }
+                    }
+                }
+            }
             view.collapseButton.setOnClickListener {
                 expandedItem.set(null)
                 view.checkBox.setOnClickListener {
                     shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
-            } }
+                }
+            }
 
             // Data change listeners
             view.nameEdit.liveData.observeForever { value ->

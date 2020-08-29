@@ -30,20 +30,20 @@ import java.util.concurrent.atomic.AtomicLong
  *  lyInsertedItemId should usually be called after this value is utilized so
  *  that the most recently inserted item will not be treated as new forever
  *  until a new item is inserted. */
-abstract class ViewModel<Entity: BootyCrateItem>(app: Application): AndroidViewModel(app) {
+abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewModel(app) {
     protected abstract val dao: DataAccessObject<Entity>
-    private val sortAndFilterLiveData = MutableLiveData(Pair<BootyCrateItem.Sort?, String?>(
-        BootyCrateItem.Sort.Color, ""))
+    private val sortAndFilterLiveData = MutableLiveData(Pair<ViewModelItem.Sort?, String?>(
+        ViewModelItem.Sort.Color, ""))
 
     val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
         val filter = '%' + (sortAndFilter.second ?: "") + '%'
         when (sortAndFilter.first) {
             null -> dao.getAllSortedByColor(filter)
-            BootyCrateItem.Sort.Color -> dao.getAllSortedByColor(filter)
-            BootyCrateItem.Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)
-            BootyCrateItem.Sort.NameDesc -> dao.getAllSortedByNameDesc(filter)
-            BootyCrateItem.Sort.AmountAsc -> dao.getAllSortedByAmountAsc(filter)
-            BootyCrateItem.Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
+            ViewModelItem.Sort.Color -> dao.getAllSortedByColor(filter)
+            ViewModelItem.Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)
+            ViewModelItem.Sort.NameDesc -> dao.getAllSortedByNameDesc(filter)
+            ViewModelItem.Sort.AmountAsc -> dao.getAllSortedByAmountAsc(filter)
+            ViewModelItem.Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
         }
     }
     var sort get() = sortAndFilterLiveData.value?.first

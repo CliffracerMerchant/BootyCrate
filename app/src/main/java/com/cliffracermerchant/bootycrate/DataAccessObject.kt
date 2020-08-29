@@ -9,11 +9,9 @@ package com.cliffracermerchant.bootycrate
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Transaction
 
 /** A pure abstract class that declares a generic data access object interface. */
-@Dao abstract class DataAccessObject<Entity: BootyCrateItem>() {
+@Dao abstract class DataAccessObject<Entity: ViewModelItem>() {
     abstract fun getAllSortedByColor(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByNameAsc(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByNameDesc(filter: String): LiveData<List<Entity>>

@@ -14,7 +14,7 @@ import androidx.room.Entity
 class InventoryItem(
     @ColumnInfo(name = "autoAddToShoppingList", defaultValue = "0") var autoAddToShoppingList: Boolean = false,
     @ColumnInfo(name = "autoAddToShoppingListTrigger", defaultValue = "1") var autoAddToShoppingListTrigger: Int = 1
-) : BootyCrateItem() {
+) : ViewModelItem() {
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true

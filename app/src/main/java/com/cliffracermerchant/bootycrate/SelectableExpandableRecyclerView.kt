@@ -20,18 +20,20 @@ import androidx.recyclerview.widget.RecyclerView
 /** A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
  *
  *  SelectableExpandableRecyclerView extends ViewModelRecyclerView by incorpora-
- *  ting a Selection and RecyclerViewExpandedItem as members to facilitate
- *  multi-selection and expansion of the items it contains. SelectableExpand-
- *  ableRecyclerView also utilizes its own custom adapter, BootyCrateAdapter, and view holder, BootyCrateViewHolder.
+ *  ting a Selection and an ExpandedItem as members to facilitate multi-selec-
+ *  tion and expansion of the items it contains. SelectableExpandableRecycler-
+ *  View also utilizes its own custom adapter, SelectableItemAdapter, and view
+ *  holder, ExpandableViewHolder.
  *
  *  Because users would likely want to view extra details of newly inserted
- *  items, BootyCrateRecyclerView overrides ViewModelRecyclerView's onNewItem-
- *  Insertion so that new items are automatically expanded. */
-abstract class SelectableExpandableRecyclerView<Entity: BootyCrateItem>(
+ *  items, SelectableExpandableRecyclerView overrides ViewModelRecyclerView's
+ *  onNewItemInsertion so that new items are automatically expanded. */
+abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
     context: Context,
     attrs: AttributeSet
 ) : ViewModelRecyclerView<Entity>(context, attrs) {
-    abstract override val adapter: SelectableExpandableItemAdapter<out SelectableExpandableViewHolder>
+
+    abstract override val adapter: SelectableItemAdapter<out ExpandableViewHolder>
     val selection = Selection()
     val expandedItem = ExpandedItem()
     private val selectedColor: Int
@@ -47,12 +49,11 @@ abstract class SelectableExpandableRecyclerView<Entity: BootyCrateItem>(
         context.theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
         itemNormalBackgroundColor = typedValue.data
         layoutManager = LinearLayoutManager(context)
-        setHasFixedSize(true)
     }
 
     override fun onNewItemInsertion(item: Entity, vh: ViewHolder) {
         super.onNewItemInsertion(item, vh)
-        expandedItem.set((vh as SelectableExpandableRecyclerView<Entity>.SelectableExpandableViewHolder),
+        expandedItem.set((vh as SelectableExpandableRecyclerView<Entity>.ExpandableViewHolder),
                          animateCollapse = true, animateExpand = false)
     }
 
@@ -67,15 +68,14 @@ abstract class SelectableExpandableRecyclerView<Entity: BootyCrateItem>(
      *  update the items visual selected / not selected state, and enforces the use
      *  of BootyCrateViewHolder. It does not implement onCreateViewHolder, and is
      *  therefore abstract.*/
-    abstract inner class SelectableExpandableItemAdapter<VHType: SelectableExpandableViewHolder> :
+    abstract inner class SelectableItemAdapter<VHType: ExpandableViewHolder> :
             ViewModelAdapter<VHType>() {
 
         override fun onBindViewHolder(holder: VHType, position: Int) {
             super.onBindViewHolder(holder, position)
-            val background = (holder.itemView as ViewGroup).getChildAt(0).background
             val isSelected = selection.contains(getItemId(position))
-            background.setTint(if (isSelected) selectedColor
-                               else itemNormalBackgroundColor)
+            holder.itemView.background.setTint(if (isSelected) selectedColor
+                                               else itemNormalBackgroundColor)
         }
 
         override fun onBindViewHolder(
@@ -102,15 +102,9 @@ abstract class SelectableExpandableRecyclerView<Entity: BootyCrateItem>(
         }
     }
 
-    /** A ViewHolder subclass that provides a simplified way of obtaining the
-     *  instance of the item that it represents through the property item, and
-     *  enforces the use of the ExpandableViewHolder interface. It does not imple-
-     *  ment ExpandableViewHolder's one abstract function, onExpansionStateChanged,
-     *  and is therefore abstract. */
-    abstract inner class SelectableExpandableViewHolder(view: View) : ViewHolder(view) {
-        val item: Entity get() = adapter.currentList[adapterPosition]
-
-        open fun onExpansionStateChanged(expanding: Boolean, animate: Boolean = true) { }
+    /** A ViewModelItemViewHolder subclass that provides an overridable function onExpansionStateChanged(). */
+    open inner class ExpandableViewHolder(view: View) : ViewModelItemViewHolder(view) {
+        open fun onExpansionStateChanged(expanding: Boolean, animate: Boolean = true) = 0
     }
 
     inner class Selection :

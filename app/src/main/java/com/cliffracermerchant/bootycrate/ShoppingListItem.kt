@@ -14,7 +14,7 @@ import androidx.room.Entity
 class ShoppingListItem(
     @ColumnInfo(name = "isChecked", defaultValue = "0") var isChecked: Boolean = false,
     @ColumnInfo(name = "linkedInventoryItemId")         var linkedInventoryItemId: Long? = null
-) : BootyCrateItem() {
+) : ViewModelItem() {
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true

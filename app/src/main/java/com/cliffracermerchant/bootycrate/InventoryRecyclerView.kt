@@ -41,12 +41,14 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     private lateinit var shoppingListViewModel: ShoppingListViewModel
     private lateinit var fragmentManager: FragmentManager
 
+    init { adapter.registerAdapterDataObserver(expandedItem) }
+
     fun finishInit(
         owner: LifecycleOwner,
         inventoryViewModel: InventoryViewModel,
         shoppingListViewModel: ShoppingListViewModel,
         fragmentManager: FragmentManager,
-        initialSort: BootyCrateItem.Sort? = null
+        initialSort: ViewModelItem.Sort? = null
     ) {
         this.inventoryViewModel = inventoryViewModel
         this.shoppingListViewModel = shoppingListViewModel
@@ -77,10 +79,9 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      *  InventoryItemViewHolder instances to represent inventory items. Its
      *  overrides of onBindViewHolder make use of the InventoryItem.Field val-
      *  ues passed by InventoryItemDiffUtilCallback to support partial binding. */
-    inner class InventoryAdapter : SelectableExpandableItemAdapter<InventoryItemViewHolder>() {
+    inner class InventoryAdapter : SelectableItemAdapter<InventoryItemViewHolder>() {
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) :
-                InventoryItemViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : InventoryItemViewHolder {
             val view = InventoryItemView(context)
             view.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                              ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -119,7 +120,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                         checkAutoAddToShoppingList(holder.adapterPosition) }
                     if (changes.contains(InventoryItem.Field.Color)) {
                         val colorEditBg = holder.view.colorEdit.background as ColoredCircleDrawable
-                        colorEditBg.setColor(BootyCrateItem.Colors[item.color])
+                        colorEditBg.setColor(ViewModelItem.Colors[item.color])
                     }
                 } else unhandledChanges.add(payload)
             }
@@ -141,7 +142,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      *   RecyclerViewExpandableItem.set function on itself. Its override of
      *   ExpandableViewHolder.onExpansionStateChanged calls the corresponding
      *   expand or collapse functions on its InventoryItemView instance. */
-    inner class InventoryItemViewHolder(val view: InventoryItemView) : SelectableExpandableViewHolder(view) {
+    inner class InventoryItemViewHolder(val view: InventoryItemView) : ExpandableViewHolder(view) {
 
         init {
             // Click & long click listeners

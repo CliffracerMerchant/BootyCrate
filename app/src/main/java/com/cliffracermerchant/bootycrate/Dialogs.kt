@@ -29,10 +29,10 @@ fun colorPickerDialog(
     initialColorIndex: Int = 0,
     callback: (Int) -> Unit
 ) {
-    val initialColor = BootyCrateItem.Colors[initialColorIndex.coerceIn(BootyCrateItem.Colors.indices)]
-    val colorPicker = ColorSheet().colorPicker(BootyCrateItem.Colors, initialColor,
+    val initialColor = ViewModelItem.Colors[initialColorIndex.coerceIn(ViewModelItem.Colors.indices)]
+    val colorPicker = ColorSheet().colorPicker(ViewModelItem.Colors, initialColor,
                                                noColorOption = false) { color ->
-        val colorIndex = BootyCrateItem.Colors.indexOf(color)
+        val colorIndex = ViewModelItem.Colors.indexOf(color)
         callback(if (colorIndex != -1) colorIndex else 0)
     }
     colorPicker.show(fragmentManager)

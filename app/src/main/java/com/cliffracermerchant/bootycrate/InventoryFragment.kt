@@ -39,8 +39,8 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(mainActivity.getString(R.string.pref_inventory_sort),
-            BootyCrateItem.Sort.Color.toString())
-        val initialSort = BootyCrateItem.sortFrom(sortStr)
+            ViewModelItem.Sort.Color.toString())
+        val initialSort = ViewModelItem.sortFrom(sortStr)
         recyclerView.finishInit(viewLifecycleOwner, mainActivity.inventoryViewModel,
                                 mainActivity.shoppingListViewModel,
                                 mainActivity.supportFragmentManager, initialSort)
@@ -48,8 +48,8 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
 
         fabIconController.addTransition(
             fabIconController.addState("add"), fabIconController.addState("delete"),
-            mainActivity.getDrawable(R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
-            mainActivity.getDrawable(R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
@@ -59,9 +59,8 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
 
     /** An ActionMode.Callback for use when the user selects one or more inventory items.
      *
-     *  ActionModeCallback overrides RecyclerViewFragment.ActionModeCallback
-     *  with new implementations of onActionItemClicked and onPrepareAction-
-     *  Mode. */
+     *  ActionModeCallback overrides RecyclerViewFragment.ActionModeCallback with
+     *  new implementations of onActionItemClicked and onPrepareActionMode. */
     inner class ActionModeCallback : RecyclerViewFragment<InventoryItem>.ActionModeCallback() {
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             return when (item.itemId) {

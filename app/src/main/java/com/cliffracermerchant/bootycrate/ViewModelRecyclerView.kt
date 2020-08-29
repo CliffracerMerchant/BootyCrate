@@ -9,7 +9,6 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.content.DialogInterface
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
@@ -31,7 +30,7 @@ import com.google.android.material.snackbar.Snackbar
  *
  *  Because AndroidViewModels are created after views inflated from xml are
  *  created, it is necessary to finish initialization with these required mem-
- *  bers. To do this the function finishInit must be called with an Lifecycle-
+ *  bers. To do this, the function finishInit must be called with an Lifecycle-
  *  Owner and a ViewModel<Entity> instance during runtime, but before any sort
  *  of data access is attempted. An initial sort can also be passed during this
  *  finishInit call.
@@ -60,27 +59,29 @@ import com.google.android.material.snackbar.Snackbar
  *  snackbar will be anchored to the view set as the public property snackBar-
  *  Anchor, in case this needs to be customized, or to the RecyclerView itself
  *  otherwise. */
-abstract class ViewModelRecyclerView<Entity: BootyCrateItem>(
+abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     context: Context,
     attrs: AttributeSet
 ) : RecyclerView(context, attrs) {
 
     abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
-    abstract val adapter: ViewModelAdapter<out ViewHolder>
+    abstract val adapter: ViewModelAdapter<out ViewModelItemViewHolder>
     private lateinit var viewModel: ViewModel<Entity>
     var snackBarAnchor: View? = null
 
-    var sort: BootyCrateItem.Sort? get() = viewModel.sort
+    var sort: ViewModelItem.Sort? get() = viewModel.sort
                                    set(value) { viewModel.sort = value }
     var searchFilter: String? get() = viewModel.searchFilter
                               set(value) { viewModel.searchFilter = value }
 
-    init { ItemTouchHelper(SwipeToDeleteCallback(::deleteItem, context)).attachToRecyclerView(this) }
+    init {
+        ItemTouchHelper(SwipeToDeleteCallback(::deleteItem, context)).attachToRecyclerView(this)
+    }
 
     fun finishInit(
         owner: LifecycleOwner,
         viewModel: ViewModel<Entity>,
-        initialSort: BootyCrateItem.Sort? = null
+        initialSort: ViewModelItem.Sort? = null
     ) {
         setAdapter(adapter)
         this.viewModel = viewModel
@@ -121,7 +122,7 @@ abstract class ViewModelRecyclerView<Entity: BootyCrateItem>(
         builder.show()
     }
 
-    open fun onNewItemInsertion(item: Entity, vh: ViewHolder) =
+    open fun onNewItemInsertion(item: Entity, vh: ViewModelItemViewHolder) =
         smoothScrollToPosition(vh.adapterPosition)
 
     /** A ListAdapter derived RecyclerView.Adapter for ViewModelRecyclerView.
@@ -130,7 +131,7 @@ abstract class ViewModelRecyclerView<Entity: BootyCrateItem>(
      *  ViewHolder) ListAdapter subclass that enforces the use of stable ids,
      *  and is responsible for calling onNewItemInsertion during the binding of
      *  a new item. t*/
-    abstract inner class ViewModelAdapter<VHType: ViewHolder> :
+    abstract inner class ViewModelAdapter<VHType: ViewModelItemViewHolder> :
             ListAdapter<Entity, VHType>(diffUtilCallback) {
         init { setHasStableIds(true) }
 
