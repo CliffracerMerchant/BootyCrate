@@ -20,11 +20,13 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
@@ -64,6 +66,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
     lateinit var checkoutBtn: MaterialButton
+    var cradleLayoutFullWidth = -1
+    var fabWidth = -1
 
     private lateinit var imm: InputMethodManager
     private var blackColor: Int = 0
@@ -87,6 +91,7 @@ class MainActivity : AppCompatActivity() {
         checkoutBtn = checkoutButton
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         blackColor = ContextCompat.getColor(this, android.R.color.black)
+        bottomAppBar.cradleWidth = cradleLayout.width
 
         bottomNavigationBar.setOnNavigationItemSelectedListener { item ->
             item.isChecked = true
@@ -202,32 +207,48 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showHideCheckoutButton(showing: Boolean, animate: Boolean) {
-        val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        cradleLayout.measure(wrapContentSpec, wrapContentSpec)
-        val cradleLayoutFullWidth = cradleLayout.measuredWidth
-        fab.measure(wrapContentSpec, wrapContentSpec)
-        val fabWidth = fab.measuredWidth
+        if (cradleLayoutFullWidth == -1) {
+            val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            cradleLayout.measure(wrapContentSpec, wrapContentSpec)
+            cradleLayoutFullWidth = cradleLayout.measuredWidth
+            fab.measure(wrapContentSpec, wrapContentSpec)
+            fabWidth = fab.measuredWidth
+        }
 
         if (animate && checkoutButtonIsVisible != showing) {
             val cradleLayoutStartWidth = if (showing) fabWidth else cradleLayoutFullWidth
             val cradleLayoutEndWidth =   if (showing) cradleLayoutFullWidth else fabWidth
             val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
-            checkoutBtn.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-            val anim = ValueAnimator.ofFloat(if (showing) 0f else 1f,
-                                             if (showing) 1f else 0f)
+
+            val anim = ValueAnimator.ofInt(cradleLayoutStartWidth, cradleLayoutEndWidth)
             anim.addUpdateListener {
-                checkoutBtn.scaleX = it.animatedValue as Float
-                cradleLayout.layoutParams.width = cradleLayoutStartWidth +
-                        (cradleLayoutWidthChange * it.animatedFraction).toInt()
-                cradleLayout.requestLayout()
+                fab.translationX = cradleLayoutWidthChange / 2f *
+                                   if (showing) (it.animatedFraction - 1)
+                                   else         it.animatedFraction
+                checkoutBtn.scaleX = if (showing) it.animatedFraction
+                                     else         (1 - it.animatedFraction)
+                bottomAppBar.cradleWidth = it.animatedValue as Int
                 bottomAppBar.background.invalidateSelf()
             }
-            anim.doOnEnd { checkoutBtn.setLayerType(View.LAYER_TYPE_NONE, null) }
+            anim.doOnStart {
+                fab.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+                checkoutBtn.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+                checkoutBtn.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+                checkoutBtn.requestLayout()
+            }
+            anim.doOnEnd {
+                fab.setLayerType(View.LAYER_TYPE_NONE, null)
+                checkoutBtn.setLayerType(View.LAYER_TYPE_NONE, null)
+                fab.translationX = 0f
+                if (!showing) checkoutBtn.layoutParams.width = 0
+                checkoutBtn.requestLayout()
+                //bottomAppBar.background.invalidateSelf()
+            }
             anim.start()
         } else {
             checkoutBtn.scaleX = if (showing) 1f else 0f
             cradleLayout.layoutParams.width = if (showing) cradleLayoutFullWidth
-                                               else         fabWidth
+                                              else         fabWidth
             cradleLayout.requestLayout()
             bottomAppBar.background.invalidateSelf()
         }

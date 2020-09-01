@@ -78,7 +78,7 @@
             android:background="@drawable/checkout_button_background"
             app:backgroundTint="@android:color/darker_gray"
             android:textColor="@color/colorTextLightSecondary"
-            android:paddingStart="6dp"
+            android:paddingLeft="6dp"
             android:layout_gravity="bottom"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -95,6 +95,7 @@
             app:layout_constraintTop_toTopOf="parent"
             android:backgroundTint="?attr/colorAccent"
             app:borderWidth="0dp" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

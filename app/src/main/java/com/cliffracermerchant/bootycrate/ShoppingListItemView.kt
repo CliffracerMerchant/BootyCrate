@@ -208,7 +208,7 @@ class ShoppingListItemView(context: Context) :
         if (makingEditable) increaseButton.setOnClickListener { shoppingListAmountEdit.increment() }
         else                increaseButton.setOnClickListener(null)
         val amountEditTranslationX = if (makingEditable) 0f
-                                     else increaseButton.background.intrinsicWidth / 2f
+                                     else increaseButton.background.intrinsicWidth * 2f / 3f
 
         if (!animate) {
             decreaseButton.translationX = amountEditTranslationX
