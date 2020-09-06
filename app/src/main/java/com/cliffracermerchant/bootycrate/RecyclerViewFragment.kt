@@ -66,7 +66,7 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mainActivity = requireActivity() as MainActivity
-        fabIconController = AnimatedIconController.forFloatingActionButton(mainActivity.fab)
+        fabIconController = AnimatedFabIconController(mainActivity.fab)
         recyclerView.snackBarAnchor = mainActivity.bottomAppBar
 
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->

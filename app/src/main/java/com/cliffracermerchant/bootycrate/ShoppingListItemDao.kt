@@ -33,18 +33,19 @@ import androidx.room.*
            "WHERE inventory_item.id IN (:inventoryItemIds) " +
            "AND inventory_item.id NOT IN (SELECT linkedInventoryItemId " +
                                          "FROM shopping_list_item " +
-                                         "WHERE NOT inTrash)")
-    abstract suspend fun insertFromInventoryItems(inventoryItemIds: LongArray)
+                                         "WHERE linkedInventoryItemId NOT NULL " +
+                                         "AND NOT inTrash)")
+    abstract suspend fun addFromInventoryItems(inventoryItemIds: LongArray)
 
     @Transaction
     open suspend fun autoAddFromInventoryItem(inventoryItemId: Long, minAmount: Int) {
-        insertFromInventoryItems(LongArray(0) { inventoryItemId })
+        addFromInventoryItems(LongArray(1) { inventoryItemId })
         setMinimumAmountFromLinkedItem(inventoryItemId, minAmount)
     }
 
     @Query("UPDATE shopping_list_item " +
            "SET name = :name WHERE id = :id")
-    abstract suspend fun updateName(id: Long, name: String)
+    abstract override suspend fun updateName(id: Long, name: String)
 
     @Query("UPDATE shopping_list_item " +
            "SET name = :name " +
@@ -54,27 +55,27 @@ import androidx.room.*
     @Query("UPDATE shopping_list_item " +
            "SET extraInfo = :extraInfo " +
            "WHERE id = :id")
-    abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
-
-    @Query("UPDATE shopping_list_item " +
-           "SET extraInfo = :extraInfo " +
-           "WHERE linkedInventoryItemId = :inventoryItemId")
-    abstract suspend fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String)
+    abstract override suspend fun updateExtraInfo(id: Long, extraInfo: String)
 
     @Query("UPDATE shopping_list_item " +
            "SET color = :color " +
            "WHERE id = :id")
-    abstract suspend fun updateColor(id: Long, color: Int)
+    abstract override suspend fun updateColor(id: Long, color: Int)
+
+    @Query("UPDATE shopping_list_item " +
+            "SET amount = :amount " +
+            "WHERE id = :id")
+    abstract override suspend fun updateAmount(id: Long, amount: Int)
+
+    @Query("UPDATE shopping_list_item " +
+            "SET extraInfo = :extraInfo " +
+            "WHERE linkedInventoryItemId = :inventoryItemId")
+    abstract suspend fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String)
 
     @Query("UPDATE shopping_list_item " +
            "SET isChecked = :isChecked " +
            "WHERE id = :id")
     abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
-
-    @Query("UPDATE shopping_list_item " +
-           "SET amount = :amount " +
-           "WHERE id = :id")
-    abstract suspend fun updateAmount(id: Long, amount: Int)
 
     @Query("UPDATE shopping_list_item " +
            "SET amount = CASE WHEN amount < :minAmount THEN :minAmount " +

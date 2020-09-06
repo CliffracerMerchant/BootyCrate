@@ -44,8 +44,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     protected lateinit var fragmentManager: FragmentManager
     val checkedItems = ShoppingListCheckedItems()
 
-    init { adapter.registerAdapterDataObserver(expandedItem) }
-
     fun finishInit(
         owner: LifecycleOwner,
         shoppingListViewModel: ShoppingListViewModel,
@@ -60,11 +58,11 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     }
 
     fun addNewItem() = newShoppingListItemDialog(context, fragmentManager) { newItem ->
-        if (newItem != null) shoppingListViewModel.insert(newItem)
+        if (newItem != null) shoppingListViewModel.add(newItem)
     }
 
     fun addItemsToInventory(ids: LongArray) =
-        inventoryViewModel.insertFromShoppingListItems(ids)
+        inventoryViewModel.addFromShoppingListItems(ids)
 
     fun checkout() = shoppingListViewModel.checkOut()
 
@@ -166,8 +164,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             view.nameEdit.setOnLongClickListener(onLongClick)
             view.extraInfoEdit.setOnLongClickListener(onLongClick)
             view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
-            view.linkedToEdit.setOnClickListener {
-                selectInventoryItemDialog(
+            view.linkedToEdit.setOnClickListener { selectInventoryItemDialog(
                     context = context,
                     inventoryItems = inventoryViewModel.items.value,
                     initiallySelectedItemId = item.linkedInventoryItemId,
@@ -175,7 +172,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     callback = ::updateLinkedTo)
             }
             view.checkBox.setOnClickListener {
-                shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
+                if (!view.isExpanded)
+                    shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
             }
             view.editButton.setOnClickListener {
                 if (!view.isExpanded) {
@@ -209,7 +207,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             }
             view.shoppingListAmountEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
-                shoppingListViewModel.updateAmountOnList(item.id, value)
+                shoppingListViewModel.updateAmount(item.id, value)
             }
         }
         override fun onExpansionStateChanged(expanding: Boolean, animate: Boolean): Int {

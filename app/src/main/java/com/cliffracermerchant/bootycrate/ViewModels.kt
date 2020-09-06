@@ -24,13 +24,14 @@ import java.util.concurrent.atomic.AtomicLong
  *  retrieving the items.
  *
  *  ViewModel also provides support for treating new items differently through
- *  the public property newlyInsertedItemId. This value will change to match
- *  the id of the most recently inserted item. External entities can compare
- *  this value to the id of items in order to determine the new item. resetNew-
- *  lyInsertedItemId should usually be called after this value is utilized so
- *  that the most recently inserted item will not be treated as new forever
- *  until a new item is inserted. */
+ *  the public property newlyAddedItemId. This value will change to match the
+ *  id of the most recently added item. External entities can compare this
+ *  value to the id of items in order to determine the new item. resetNewly-
+ *  AddedItemId() should usually be called after this value is utilized so that
+ *  the most recently added item will not be treated as new forever until a new
+ *  item is added. */
 abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewModel(app) {
+
     protected abstract val dao: DataAccessObject<Entity>
     private val sortAndFilterLiveData = MutableLiveData(Pair<ViewModelItem.Sort?, String?>(
         ViewModelItem.Sort.Color, ""))
@@ -51,14 +52,14 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
     var searchFilter get() = sortAndFilterLiveData.value?.second
                      set(value) { sortAndFilterLiveData.value = Pair(sort, value) }
 
-    private var _newlyInsertedItemId = AtomicLong()
-    val newlyInsertedItemId: Long get() = _newlyInsertedItemId.get()
-    fun resetNewlyInsertedItemId() = _newlyInsertedItemId.set(0)
+    private var _newlyAddedItemId = AtomicLong()
+    val newlyAddedItemId: Long get() = _newlyAddedItemId.get()
+    fun resetNewlyAddedItemId() = _newlyAddedItemId.set(0)
 
-    fun insert(item: Entity) = viewModelScope.launch {
-        _newlyInsertedItemId.set(dao.insert(item))
+    fun add(item: Entity) = viewModelScope.launch {
+        _newlyAddedItemId.set(dao.insert(item))
     }
-    fun insert(items: Array<Entity>) = viewModelScope.launch {
+    fun add(items: Array<Entity>) = viewModelScope.launch {
         dao.insert(items)
     }
     fun deleteAll() = viewModelScope.launch {
@@ -73,6 +74,18 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
     fun undoDelete() = viewModelScope.launch {
         dao.undoDelete()
     }
+    fun updateName(id: Long, name: String) = viewModelScope.launch {
+        dao.updateName(id, name)
+    }
+    fun updateExtraInfo(id: Long, extraInfo: String) = viewModelScope.launch {
+        dao.updateExtraInfo(id, extraInfo)
+    }
+    fun updateColor(id: Long, color: Int) = viewModelScope.launch {
+        dao.updateColor(id, color)
+    }
+    fun updateAmount(id: Long, amountOnList: Int) = viewModelScope.launch {
+        dao.updateAmount(id, amountOnList)
+    }
 }
 
 /** A ViewModel<ShoppingListItem> subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
@@ -81,33 +94,25 @@ class ShoppingListViewModel(app: Application) : ViewModel<ShoppingListItem>(app)
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun insertFromInventoryItems(ids: LongArray) = viewModelScope.launch {
-        dao.insertFromInventoryItems(ids)
+    fun addFromInventoryItems(ids: LongArray) = viewModelScope.launch {
+        dao.addFromInventoryItems(ids)
     }
     fun autoAddFromInventoryItem(inventoryItemId: Long, minAmount: Int) = viewModelScope.launch {
         dao.autoAddFromInventoryItem(inventoryItemId, minAmount)
     }
-    fun updateName(id: Long, name: String) = viewModelScope.launch {
-        dao.updateName(id, name)
-    }
+
     fun updateNameFromLinkedInventoryItem(inventoryItemId: Long, name: String) = viewModelScope.launch {
         dao.updateNameFromLinkedInventoryItem(inventoryItemId, name)
     }
-    fun updateExtraInfo(id: Long, extraInfo: String) = viewModelScope.launch {
-        dao.updateExtraInfo(id, extraInfo)
-    }
+
     fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String) = viewModelScope.launch {
         dao.updateExtraInfoFromLinkedInventoryItem(inventoryItemId, extraInfo)
     }
-    fun updateColor(id: Long, color: Int) = viewModelScope.launch {
-        dao.updateColor(id, color)
-    }
+
     fun updateIsChecked(id: Long, isChecked: Boolean) = viewModelScope.launch {
         dao.updateIsChecked(id, isChecked)
     }
-    fun updateAmountOnList(id: Long, amountOnList: Int) = viewModelScope.launch {
-        dao.updateAmount(id, amountOnList)
-    }
+
     fun updateAmountOnListFromLinkedItem(inventoryItemId: Long, amount: Int) = viewModelScope.launch {
         dao.updateAmountFromLinkedItem(inventoryItemId, amount)
     }
@@ -127,25 +132,13 @@ class InventoryViewModel(app: Application) : ViewModel<InventoryItem>(app) {
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun insertFromShoppingListItems(shoppingListItemIds: LongArray) = viewModelScope.launch {
+    fun addFromShoppingListItems(shoppingListItemIds: LongArray) = viewModelScope.launch {
         dao.insertFromShoppingListItems(shoppingListItemIds)
     }
-    fun updateName(id: Long, name: String) = viewModelScope.launch {
-        dao.updateName(id, name)
+    fun updateAddToShoppingList(id: Long, addToShoppingList: Boolean) = viewModelScope.launch {
+        dao.updateAddToShoppingList(id, addToShoppingList)
     }
-    fun updateAmount(id: Long, amount: Int) = viewModelScope.launch {
-        dao.updateAmount(id, amount)
-    }
-    fun updateExtraInfo(id: Long, extraInfo: String) = viewModelScope.launch {
-        dao.updateExtraInfo(id, extraInfo)
-    }
-    fun updateAutoAddToShoppingList(id: Long, autoAddToShoppingList: Boolean) = viewModelScope.launch {
-        dao.updateAutoAddToShoppingList(id, autoAddToShoppingList)
-    }
-    fun updateAutoAddToShoppingListTrigger(id: Long, autoAddToShoppingListTrigger: Int) = viewModelScope.launch {
-        dao.updateAutoAddToShoppingListTrigger(id, autoAddToShoppingListTrigger)
-    }
-    fun updateColor(id: Long, color: Int) = viewModelScope.launch {
-        dao.updateColor(id, color)
+    fun updateAddToShoppingListTrigger(id: Long, addToShoppingListTrigger: Int) = viewModelScope.launch {
+        dao.updateAddToShoppingListTrigger(id, addToShoppingListTrigger)
     }
 }

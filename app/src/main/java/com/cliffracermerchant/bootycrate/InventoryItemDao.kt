@@ -37,27 +37,32 @@ import androidx.room.*
     @Query("UPDATE inventory_item " +
            "SET name = :name " +
            "WHERE id = :id")
-    abstract suspend fun updateName(id: Long, name: String)
+    abstract override suspend fun updateName(id: Long, name: String)
+
+    @Query("UPDATE inventory_item " +
+            "SET extraInfo = :extraInfo " +
+            "WHERE id = :id")
+    abstract override suspend fun updateExtraInfo(id: Long, extraInfo: String)
+
+    @Query("UPDATE inventory_item " +
+            "SET color = :color " +
+            "WHERE id = :id")
+    abstract override suspend fun updateColor(id: Long, color: Int)
 
     @Query("UPDATE inventory_item " +
            "SET amount = :amount " +
            "WHERE id = :id")
-    abstract suspend fun updateAmount(id: Long, amount: Int)
-
-    @Query("UPDATE inventory_item " +
-           "SET extraInfo = :extraInfo " +
-           "WHERE id = :id")
-    abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
+    abstract override suspend fun updateAmount(id: Long, amount: Int)
 
     @Query("UPDATE Inventory_item " +
-           "SET autoAddToShoppingList = :autoAddToShoppingList " +
+           "SET addToShoppingList = :addToShoppingList " +
            "WHERE id = :id")
-    abstract suspend fun updateAutoAddToShoppingList(id: Long, autoAddToShoppingList: Boolean)
+    abstract suspend fun updateAddToShoppingList(id: Long, addToShoppingList: Boolean)
 
     @Query("UPDATE inventory_item " +
-           "SET autoAddToShoppingListTrigger = :autoAddToShoppingListTrigger " +
+           "SET addToShoppingListTrigger = :addToShoppingListTrigger " +
            "WHERE id = :id")
-    abstract suspend fun updateAutoAddToShoppingListTrigger(id: Long, autoAddToShoppingListTrigger: Int)
+    abstract suspend fun updateAddToShoppingListTrigger(id: Long, addToShoppingListTrigger: Int)
 
     @Query("DELETE FROM inventory_item")
     abstract override suspend fun deleteAll()
@@ -67,11 +72,6 @@ import androidx.room.*
            "WHERE linkedInventoryItemId in " +
            "(SELECT id FROM inventory_item WHERE inTrash = 1)")
     abstract suspend fun clearShoppingListItemLinks()
-
-    @Query("UPDATE inventory_item " +
-           "SET color = :color " +
-           "WHERE id = :id")
-    abstract suspend fun updateColor(id: Long, color: Int)
 
     @Query("DELETE FROM inventory_item " +
            "WHERE inTrash = 1")

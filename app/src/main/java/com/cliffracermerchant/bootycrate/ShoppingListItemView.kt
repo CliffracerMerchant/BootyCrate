@@ -59,23 +59,22 @@ class ShoppingListItemView(context: Context) :
                                     ViewGroup.LayoutParams.WRAP_CONTENT)
         if (!SharedResources.isInitialized) initSharedResources(context)
 
-        decreaseButtonIconController = AnimatedIconController.forView(shoppingListAmountEdit.decreaseButton)
+        decreaseButtonIconController = AnimatedImageViewController(shoppingListAmountEdit.decreaseButton)
         decreaseButtonIconController.addTransition(
             decreaseButtonIconController.addState("multiply"), decreaseButtonIconController.addState("minus"),
             ContextCompat.getDrawable(context, R.drawable.shopping_list_animated_multiply_to_minus_icon) as AnimatedVectorDrawable,
             ContextCompat.getDrawable(context, R.drawable.shopping_list_animated_minus_to_multiply_icon) as AnimatedVectorDrawable)
-        increaseButtonIconController = AnimatedIconController.forView(shoppingListAmountEdit.increaseButton)
+        increaseButtonIconController = AnimatedImageViewController(shoppingListAmountEdit.increaseButton)
         increaseButtonIconController.addTransition(
             increaseButtonIconController.addState("blank"), increaseButtonIconController.addState("plus"),
             ContextCompat.getDrawable(context, R.drawable.animated_blank_to_plus_icon) as AnimatedVectorDrawable,
             ContextCompat.getDrawable(context, R.drawable.animated_plus_to_blank_icon) as AnimatedVectorDrawable)
-        editButtonIconController = AnimatedIconController.forView(editButton)
+        editButtonIconController = AnimatedImageViewController(editButton)
         editButtonIconController.addTransition(
             editButtonIconController.addState("edit"), editButtonIconController.addState("more_options"),
             ContextCompat.getDrawable(context, R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
             ContextCompat.getDrawable(context, R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
-        checkBoxBackgroundController = AnimatedIconController.forDrawableLayer(
-            checkBox.background as LayerDrawable, R.id.checkBoxBackground)
+        checkBoxBackgroundController = AnimatedDrawableLayer(checkBox.background as LayerDrawable, R.id.checkBoxBackground)
         val checkBoxBackgroundUncheckedIndex = checkBoxBackgroundController.addState("unchecked")
         val checkBoxBackgroundCheckedIndex = checkBoxBackgroundController.addState("checked")
         val checkBoxBackgroundColorEditIndex = checkBoxBackgroundController.addState("edit_color")
@@ -91,8 +90,7 @@ class ShoppingListItemView(context: Context) :
             checkBoxBackgroundCheckedIndex, checkBoxBackgroundColorEditIndex,
             ContextCompat.getDrawable(context, R.drawable.animated_checkbox_checked_background_to_circle) as AnimatedVectorDrawable,
             ContextCompat.getDrawable(context, R.drawable.animated_circle_to_checkbox_checked_background) as AnimatedVectorDrawable)
-        checkBoxCheckmarkController = AnimatedIconController.forDrawableLayer(
-            checkBox.background as LayerDrawable, R.id.checkBoxCheckmark)
+        checkBoxCheckmarkController = AnimatedDrawableLayer(checkBox.background as LayerDrawable, R.id.checkBoxCheckmark)
         checkBoxCheckmarkController.addTransition(
             checkBoxCheckmarkController.addState("unchecked"), checkBoxCheckmarkController.addState("checked"),
             ContextCompat.getDrawable(context, R.drawable.animated_checkbox_unchecked_to_checked_checkmark) as AnimatedVectorDrawable,
@@ -114,11 +112,9 @@ class ShoppingListItemView(context: Context) :
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
         checkBoxBackgroundController.tint = ViewModelItem.Colors[colorIndex]
         shoppingListAmountEdit.initCurrentValue(item.amount)
-//        layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
-        checkBox.setOnCheckedChangeListener(null)
+
         checkBox.isChecked = item.isChecked
-        defaultOnCheckedChange(checked = item.isChecked, animate = false)
-        checkBox.setOnCheckedChangeListener { _, checked -> defaultOnCheckedChange(checked) }
+        if (!item.isChecked) defaultOnCheckedChange(checked = item.isChecked, animate = false)
         updateLinkedStatus(item.linkedInventoryItemId)
 
         if (isExpanded) expand(false)
@@ -184,12 +180,12 @@ class ShoppingListItemView(context: Context) :
             pendingViewPropAnimations.start()
             return collapseAnimAndHeightChange.second
         }
-        return 0
+        return -50
     }
 
     fun defaultOnCheckedChange(checked: Boolean, animate: Boolean = true) {
-        nameEdit.setStrikethroughEnabled(checked, animate)
-        extraInfoEdit.setStrikethroughEnabled(checked, animate)
+        nameEdit.setStrikeThroughEnabled(checked, animate)
+        extraInfoEdit.setStrikeThroughEnabled(checked, animate)
         if (checked) {
             checkBoxCheckmarkController.setState("checked", animate)
             checkBoxBackgroundController.setState("checked", animate)
@@ -207,21 +203,42 @@ class ShoppingListItemView(context: Context) :
         else                decreaseButton.setOnClickListener(null)
         if (makingEditable) increaseButton.setOnClickListener { shoppingListAmountEdit.increment() }
         else                increaseButton.setOnClickListener(null)
-        val amountEditTranslationX = if (makingEditable) 0f
-                                     else increaseButton.background.intrinsicWidth * 2f / 3f
+        val increaseButtonFullWidth = increaseButton.drawable.intrinsicWidth +
+                                      increaseButton.paddingStart + increaseButton.paddingEnd
+        val increaseButtonWidth = if (makingEditable) increaseButtonFullWidth
+                                  else               (increaseButtonFullWidth * 1f / 3f).toInt()
 
         if (!animate) {
-            decreaseButton.translationX = amountEditTranslationX
-            valueEdit.translationX = amountEditTranslationX
+            increaseButton.layoutParams.width = increaseButtonWidth
+            increaseButton.requestLayout()
         } else {
             // The decrease button does not use a graphical layer here because its icon
             // should also be animating at the same time as the translation animation
+            val translationStart = if (!makingEditable) 0f
+                                   else increaseButtonFullWidth * 2f/3f
+            val translationEnd = if (makingEditable) 0f
+                                 else increaseButtonFullWidth * 2f/3f
+
+            decreaseButton.translationX = translationStart
+            valueEdit.translationX = translationStart
+            if (makingEditable) {
+                increaseButton.layoutParams.width = increaseButtonFullWidth
+                increaseButton.requestLayout()
+            }
             pendingViewPropAnimations.add(
-                decreaseButton.animate().translationX(amountEditTranslationX).setDuration(200))
+                decreaseButton.animate().translationX(translationEnd).setDuration(200)
+                    .withEndAction { decreaseButton.translationX = 0f })
             pendingViewPropAnimations.add(
-                valueEdit.animate().translationX(amountEditTranslationX).withLayer().setDuration(200))
+                valueEdit.animate().translationX(translationEnd).withLayer().setDuration(200).withEndAction {
+                    valueEdit.translationX = 0f
+                    if (!makingEditable) {
+                        increaseButton.layoutParams.width = increaseButtonWidth
+                        increaseButton.requestLayout()
+                    }
+                })
         }
     }
+
 
     private fun setExtraInfoVisible(makingVisible: Boolean = true, animate: Boolean = true) {
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)

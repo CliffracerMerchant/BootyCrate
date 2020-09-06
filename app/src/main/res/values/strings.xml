@@ -16,9 +16,9 @@
 
     <string name="inventory_item_name_description">Item name</string>
     <string name="inventory_item_extra_info_description">Item extra info</string>
-    <string name="inventory_item_auto_add_to_shopping_list_checkbox_description">Auto-add to shopping list</string>
-    <string name="inventory_item_auto_add_to_shopping_list_checkbox_text">Auto-add to shopping list under:</string>
-    <string name="inventory_item_auto_add_to_shopping_list_trigger_edit_description">Auto-add to shopping list amount threshold</string>
+    <string name="inventory_item_add_to_shopping_list_checkbox_description">Add to shopping list</string>
+    <string name="inventory_item_add_to_shopping_list_checkbox_text">Add to shopping list under:</string>
+    <string name="inventory_item_add_to_shopping_list_trigger_edit_description">Add to shopping list amount threshold</string>
     <string name="collapse_button_description">Collapse extra item options</string>
     <string name="inventory_item_default_name">New item</string>
     <string name="delete_all_inventory_items_confirmation_message">This will delete all items in the inventory. Are you sure?</string>

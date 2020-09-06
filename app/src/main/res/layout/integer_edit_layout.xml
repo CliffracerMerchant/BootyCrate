@@ -9,14 +9,16 @@
 
     <ImageButton
         android:id="@+id/decreaseButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="35dp"
+        android:layout_height="48dp"
         android:layout_gravity="center_vertical"
-        android:background="@drawable/minus_icon"
+        android:src="@drawable/minus_icon"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/valueEdit"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="9dp"
         android:contentDescription="@string/decrease_button_description" />
 
     <EditText
@@ -31,6 +33,7 @@
         android:maxLines="1"
         android:imeOptions="actionDone|flagNoExtractUi"
         android:gravity="center"
+        android:foregroundGravity="center"
         android:layout_gravity="center_vertical"
         android:inputType="number"
         android:contentDescription="@string/inventory_item_amount_description"
@@ -39,13 +42,15 @@
 
     <ImageButton
         android:id="@+id/increaseButton"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
+        android:layout_width="35dp"
+        android:layout_height="48dp"
         android:layout_gravity="center_vertical"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/valueEdit"
         app:layout_constraintEnd_toEndOf="parent"
-        android:background="@drawable/plus_icon"
+        android:src="@drawable/plus_icon"
+        android:paddingHorizontal="6dp"
+        android:paddingVertical="9dp"
         android:contentDescription="@string/increase_button_description" />
 </merge>

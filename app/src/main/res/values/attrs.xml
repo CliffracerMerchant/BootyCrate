@@ -16,8 +16,6 @@
             <enum name="center" value="1" />
             <enum name="end"    value="2" />
         </attr>
-        <!-- The resource id of the layout to be nested in the BottomAppBar cradle. -->
-        <attr name="cradleLayoutId"           format="reference" />
         <!-- The depth of the BottomAppBar cradle. -->
         <attr name="cradleDepth"              format="dimension" />
         <!-- The radius of the cradle curved top corners. -->
@@ -51,6 +49,6 @@
         <!-- The step size of the increment and decrement buttons. -->
         <attr name="stepSize"     format="integer" />
         <!-- The text size of the IntegerEdit. -->
-        <attr name="textSize"     format="float" />
+        <attr name="textSize"     format="dimension" />
     </declare-styleable>
 </resources>

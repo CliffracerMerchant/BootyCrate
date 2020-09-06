@@ -89,7 +89,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
         viewModel.items.observe(owner, Observer { items -> adapter.submitList(items) })
     }
 
-    open fun addItem(item: Entity) = viewModel.insert(item)
+    open fun addItem(item: Entity) = viewModel.add(item)
 
     open fun deleteItem(pos: Int) = deleteItems(LongArray(1) { adapter.getItemId(pos) })
 
@@ -139,9 +139,9 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
             super.setHasStableIds(true)
 
         override fun onBindViewHolder(holder: VHType, position: Int) {
-            if (getItemId(holder.adapterPosition) == viewModel.newlyInsertedItemId) {
+            if (getItemId(holder.adapterPosition) == viewModel.newlyAddedItemId) {
                 onNewItemInsertion(currentList[holder.adapterPosition], holder)
-                viewModel.resetNewlyInsertedItemId()
+                viewModel.resetNewlyAddedItemId()
             }
         }
 

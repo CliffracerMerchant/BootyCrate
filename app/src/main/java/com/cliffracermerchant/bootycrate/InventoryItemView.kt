@@ -41,13 +41,11 @@ class InventoryItemView(context: Context) :
 
     init {
         inflate(context, R.layout.inventory_item_layout, this)
-        editButtonIconController = AnimatedIconController.forView(editButton)
+        editButtonIconController = AnimatedImageViewController(editButton)
         editButtonIconController.addTransition(
             editButtonIconController.addState("edit"), editButtonIconController.addState("more_options"),
             ContextCompat.getDrawable(context, R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
             ContextCompat.getDrawable(context, R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
-        colorEdit.background = ColoredCircleDrawable(colorEdit.layoutParams.width.toFloat(),
-                                                     0, nameEdit.currentTextColor)
 
         editButton.setOnClickListener {
             if (isExpanded) //TODO Implement more options menu
@@ -60,11 +58,11 @@ class InventoryItemView(context: Context) :
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
-        (colorEdit.background as ColoredCircleDrawable).color = ViewModelItem.Colors[colorIndex]
+        colorEdit.drawable.setTint(ViewModelItem.Colors[colorIndex])
         inventoryAmountEdit.initCurrentValue(item.amount)
 
-        autoAddToShoppingListCheckBox.isChecked = item.autoAddToShoppingList
-        autoAddToShoppingListTriggerEdit.initCurrentValue(item.autoAddToShoppingListTrigger)
+        addToShoppingListCheckBox.isChecked = item.addToShoppingList
+        addToShoppingListTriggerEdit.initCurrentValue(item.addToShoppingListTrigger)
 
         if (isExpanded) expand(false)
         else            collapse(false)
@@ -75,7 +73,7 @@ class InventoryItemView(context: Context) :
         nameEdit.isEditable = true
         inventoryAmountEdit.isEditable = true
         extraInfoEdit.isEditable = true
-        autoAddToShoppingListTriggerEdit.isEditable = true
+        addToShoppingListTriggerEdit.isEditable = true
         editButtonIconController.setState("more_options", animate)
 
         if (extraInfoEdit.text.isNullOrBlank())
@@ -93,14 +91,14 @@ class InventoryItemView(context: Context) :
     fun collapse(animate: Boolean = true): Int {
         if (nameEdit.isFocused || extraInfoEdit.isFocused ||
             inventoryAmountEdit.valueEdit.isFocused ||
-            autoAddToShoppingListTriggerEdit.valueEdit.isFocused)
+            addToShoppingListTriggerEdit.valueEdit.isFocused)
                 imm?.hideSoftInputFromWindow(windowToken, 0)
 
         _isExpanded = false
         nameEdit.isEditable = false
         inventoryAmountEdit.isEditable = false
         extraInfoEdit.isEditable = false
-        autoAddToShoppingListTriggerEdit.isEditable = false
+        addToShoppingListTriggerEdit.isEditable = false
         editButtonIconController.setState("edit", animate)
 
         if (extraInfoEdit.text.isNullOrBlank())

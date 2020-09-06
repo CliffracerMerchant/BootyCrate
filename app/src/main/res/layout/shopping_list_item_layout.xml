@@ -7,11 +7,9 @@
 
     <ToggleButton
         android:id="@+id/checkBox"
-        android:layout_width="28dp"
-        android:layout_height="28dp"
-        android:layout_marginStart="9dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="12dp"
+        android:layout_width="44dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="3dp"
         android:background="@drawable/shopping_list_checkbox_unchecked_to_checked_background"
         android:textOff="@null"
         android:textOn="@null"
@@ -19,7 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.cliffracermerchant.bootycrate.AnimatedStrkethroughTextFieldEdit
+    <com.cliffracermerchant.bootycrate.AnimatedStrikeThroughTextFieldEdit
         android:id="@+id/nameEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -36,7 +34,7 @@
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
         tools:ignore="labelFor" />
 
-    <com.cliffracermerchant.bootycrate.AnimatedStrkethroughTextFieldEdit
+    <com.cliffracermerchant.bootycrate.AnimatedStrikeThroughTextFieldEdit
         android:id="@+id/extraInfoEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -57,22 +55,22 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/shopping_list_item_amount_description"
         app:isEditable="false"
-        app:layout_constraintBottom_toBottomOf="@+id/extraInfoEdit"
         app:layout_constraintEnd_toStartOf="@+id/editButton"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
         app:layout_constraintTop_toTopOf="@id/nameEdit"
+        app:layout_constraintBottom_toBottomOf="@id/extraInfoEdit"
         app:minValue="1"
-        app:textSize="26"
+        app:textSize="26sp"
         app:valueChangedNotificationTimeout="0" />
 
     <ImageButton
         android:id="@+id/editButton"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:background="@drawable/animated_edit_to_more_options_icon"
+        android:layout_width="38dp"
+        android:layout_height="48dp"
+        android:paddingHorizontal="5dp"
+        android:paddingVertical="10dp"
+        android:src="@drawable/animated_edit_to_more_options_icon"
         android:contentDescription="@string/edit_button_description"
-        android:scaleX="0.8"
-        android:scaleY="0.8"
         app:layout_constraintBottom_toBottomOf="@id/shoppingListAmountEdit"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/shoppingListAmountEdit" />

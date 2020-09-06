@@ -12,6 +12,7 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Handler
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -65,8 +66,6 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
 
     var valueChangedNotificationTimeout: Int
     var stepSize: Int
-    var textSize: Float get() = valueEdit.textSize
-                        set(value) = setTextSizePrivate(value)
 
     private var _currentValue get() = try { valueEdit.text.toString().toInt() }
                                       catch (e: Exception) { 0 }
@@ -76,11 +75,11 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
                      set(value) { if (value != _currentValue) updateLiveDataWithDelay()
                                   _currentValue = value }
 
-
-    var isEditable get() = valueEdit.isFocusableInTouchMode
-                   set(editable) { valueEdit.isFocusableInTouchMode = editable
-                                   if (!editable && valueEdit.isFocused) valueEdit.clearFocus()
-                                   invalidate() }
+    var isEditable = false
+        set(editable) { field = editable
+                        valueEdit.isFocusableInTouchMode = editable
+                        if (!editable && valueEdit.isFocused) valueEdit.clearFocus()
+                        invalidate() }
 
     private val _liveData = MutableLiveData(currentValue)
     val liveData: LiveData<Int> get() = _liveData
@@ -97,7 +96,8 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         valueChangedNotificationTimeout = styledAttrs.getInt(
             R.styleable.IntegerEdit_valueChangedNotificationTimeout, 1000)
         stepSize = styledAttrs.getInt(R.styleable.IntegerEdit_stepSize, 1)
-        textSize = styledAttrs.getFloat(R.styleable.IntegerEdit_textSize, 16.0f)
+        val textSize = styledAttrs.getDimension(R.styleable.IntegerEdit_textSize, 1f)
+        valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
         styledAttrs.recycle()
 
         decreaseButton.setOnClickListener { decrement() }
@@ -138,15 +138,6 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     }
 
     fun initCurrentValue(newValue: Int) { _currentValue = newValue }
-
-    private fun setTextSizePrivate(size: Float) {
-        valueEdit.textSize = size
-        valueEdit.setPaddingRelative((size / 4).toInt(), 0, (size / 4).toInt(), 0)
-        decreaseButton.scaleX = size / 32
-        decreaseButton.scaleY = size / 32
-        increaseButton.scaleX = size / 32
-        increaseButton.scaleY = size / 32
-    }
 
     override fun onDraw(canvas: Canvas) {
         if (isEditable) valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG

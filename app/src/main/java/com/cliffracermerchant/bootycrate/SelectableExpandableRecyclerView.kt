@@ -56,7 +56,10 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
     }
 
     override fun deleteItems(ids: LongArray) {
-        for (id in ids) if (selection.contains(id)) selection
+        //TODO: Find out how to get an undeleted view to collapse to prevent visual bugs
+        val expandedItemId = expandedItem.id
+        if (expandedItemId != null && expandedItemId in ids)
+            expandedItem.set(null, animateExpand = false, animateCollapse = false)
         super.deleteItems(ids)
         // Since the items are being removed, no visual deselection change is necessary
         selection.clearWithoutVisualUpdate(ids)
@@ -207,21 +210,23 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
 
     /** A RecyclerView utility that manages the expansion of a single RecyclerView item at a time.
      *
-     *  RecyclerViewExpandedItem is intended to be incorporated into a RecyclerView
-     *  via composition to help it manage the expanded or collapsed state of its
-     *  items. To accomplish this, the RecyclerView's view holder must inherit the
-     *  ExpandableViewHolder interface and implement the function onExpansionState-
-     *  Changed to determine what will happen with the view upon its collapse or
-     *  expansion.
+     *  ExpandedItem is intended to be incorporated into a RecyclerView via compo-
+     *  sition to help it manage the expanded or collapsed state of its items. To
+     *  accomplish this, the RecyclerView's view holder type must inherit from
+     *  ExpandableViewHolder and override the function onExpansionStateChanged to
+     *  determine what will happen with the view upon its collapse or expansion.
      *
      *  The current expanded item and view holder can be queried using the property
      *  id. The property id will return null if there is no expanded item. The
      *  expanded item can be set by view holder instance with the set function, or
      *  can be set to null (no expanded item) by passing null to the set function. */
-    inner class ExpandedItem : RecyclerView.AdapterDataObserver() {
+    inner class ExpandedItem {
         private var _expandedId: Long? = null
         val id get() = _expandedId
         private var expandedViewHolderCache: ExpandableViewHolder? = null
+
+        fun reset() { _expandedId = null
+                      expandedViewHolderCache = null }
 
         fun set(
             newExpandedVh: ExpandableViewHolder?,
@@ -283,8 +288,6 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
                 toBeTranslatedEnd = layoutManager.childCount - 1
             } else if (collapsingViewPos == null || expandingViewPos == null) {
                 throw IllegalStateException("collapsingViewPos and expandingViewPos should not both be null")
-//            } else  {
-//                if (collapsingViewPos < firstChildBindingPosition)
             } else if (expandingViewPos < collapsingViewPos) {
                 // All views in between the expanding and collapsed views should be
                 // slid down. heightChange should already be positive from the return
@@ -331,12 +334,6 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
                                                withEndAction { child.translationY = 0f })
             }
             animSet.start()
-        }
-
-        override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-            for (pos in positionStart until positionStart + itemCount)
-                if (adapter.getItemId(pos) == _expandedId)
-                    _expandedId = null
         }
     }
 }

@@ -54,7 +54,7 @@ fun selectInventoryItemDialog(
     val builder = themedAlertDialogBuilder(context)
     builder.setTitle(context.getString(R.string.link_inventory_item_action_long_description))
     val recyclerView = PopupInventoryRecyclerView(context, inventoryItems,
-                                                   initiallySelectedItemId)
+                                                  initiallySelectedItemId)
     val dialogClickListener = DialogInterface.OnClickListener { _, button ->
         if (button == DialogInterface.BUTTON_POSITIVE)
             callback(recyclerView.selectedItem)
@@ -74,11 +74,14 @@ fun newShoppingListItemDialog(
     val builder = themedAlertDialogBuilder(context)
     builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
-    val colorEdit = itemView.colorEdit.background as ColoredCircleDrawable
-    colorEdit.color = newItem.color
+    val colorEdit = itemView.colorEdit.drawable
+    var colorIndex = 0
+    colorEdit.setTint(ViewModelItem.Colors[colorIndex])
     itemView.colorEdit.setOnClickListener {
-        colorPickerDialog(fragmentManager, newItem.color)
-                         { chosenColor -> colorEdit.setColor(chosenColor) }
+        colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
+            colorEdit.setTint(ViewModelItem.Colors[chosenColorIndex])
+            colorIndex = chosenColorIndex
+        }
     }
     itemView.editButton.isVisible = false
     itemView.collapseButton.isVisible = false
@@ -90,7 +93,7 @@ fun newShoppingListItemDialog(
         if (button == DialogInterface.BUTTON_POSITIVE) {
             newItem.name = itemView.nameEdit.text.toString()
             newItem.extraInfo = itemView.extraInfoEdit.text.toString()
-            newItem.color = colorEdit.color
+            newItem.color = colorIndex
             newItem.amount = itemView.inventoryAmountEdit.currentValue
             callback(newItem)
         }
@@ -117,11 +120,15 @@ fun newInventoryItemDialog(
     val builder = themedAlertDialogBuilder(context)
     builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
-    val colorEdit = itemView.colorEdit.background as ColoredCircleDrawable
+    val colorEdit = itemView.colorEdit.drawable
+    var colorIndex = 0
     itemView.update(newItem, isExpanded = true)
+    //colorEdit.setTint(ViewModelItem.Colors[selectedColorIndex])
     itemView.colorEdit.setOnClickListener {
-        colorPickerDialog(fragmentManager, colorEdit.color)
-                         { chosenColor -> colorEdit.setColor(chosenColor) }
+        colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
+            colorEdit.setTint(ViewModelItem.Colors[chosenColorIndex])
+            colorIndex = chosenColorIndex
+        }
     }
     itemView.editButton.isVisible = false
     itemView.collapseButton.isVisible = false
@@ -129,10 +136,10 @@ fun newInventoryItemDialog(
         if (button == DialogInterface.BUTTON_POSITIVE) {
             newItem.name = itemView.nameEdit.text.toString()
             newItem.extraInfo = itemView.extraInfoEdit.text.toString()
-            newItem.color = colorEdit.color
+            newItem.color = colorIndex
             newItem.amount = itemView.inventoryAmountEdit.currentValue
-            newItem.autoAddToShoppingList = itemView.autoAddToShoppingListCheckBox.isChecked
-            newItem.autoAddToShoppingListTrigger = itemView.autoAddToShoppingListTriggerEdit.currentValue
+            newItem.addToShoppingList = itemView.addToShoppingListCheckBox.isChecked
+            newItem.addToShoppingListTrigger = itemView.addToShoppingListTriggerEdit.currentValue
             callback(newItem)
         }
         else callback(null)

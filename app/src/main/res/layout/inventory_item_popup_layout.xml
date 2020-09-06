@@ -34,7 +34,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
         app:layout_constraintTop_toTopOf="parent"
-        app:textSize="28" />
+        app:textSize="26sp" />
 
     <TextView
         android:id="@+id/extraInfoEdit"

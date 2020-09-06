@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
         checkoutBtn = checkoutButton
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         blackColor = ContextCompat.getColor(this, android.R.color.black)
-        bottomAppBar.cradleWidth = cradleLayout.width
+        bottomAppBar.prepareCradleLayout(cradleLayout)
 
         bottomNavigationBar.setOnNavigationItemSelectedListener { item ->
             item.isChecked = true
@@ -140,6 +140,7 @@ class MainActivity : AppCompatActivity() {
             fab.translationY = 250f
             checkoutBtn.translationY = 250f
         }
+        //Log.d("screensize", "screen scaledDensity = " + resources.displayMetrics.scaledDensity)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -207,6 +208,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showHideCheckoutButton(showing: Boolean, animate: Boolean) {
+        if (checkoutButtonIsVisible == showing) return
+
         if (cradleLayoutFullWidth == -1) {
             val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
             cradleLayout.measure(wrapContentSpec, wrapContentSpec)
@@ -215,7 +218,7 @@ class MainActivity : AppCompatActivity() {
             fabWidth = fab.measuredWidth
         }
 
-        if (animate && checkoutButtonIsVisible != showing) {
+        if (animate) {
             val cradleLayoutStartWidth = if (showing) fabWidth else cradleLayoutFullWidth
             val cradleLayoutEndWidth =   if (showing) cradleLayoutFullWidth else fabWidth
             val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth

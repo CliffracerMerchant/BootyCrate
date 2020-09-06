@@ -23,4 +23,8 @@ import androidx.room.Insert
     abstract suspend fun emptyTrash()
     abstract suspend fun delete(ids: LongArray)
     abstract suspend fun undoDelete()
+    abstract suspend fun updateName(id: Long, name: String)
+    abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
+    abstract suspend fun updateColor(id: Long, color: Int)
+    abstract suspend fun updateAmount(id: Long, amount: Int)
 }

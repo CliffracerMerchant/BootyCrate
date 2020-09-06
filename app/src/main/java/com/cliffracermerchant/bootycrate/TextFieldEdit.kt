@@ -18,6 +18,8 @@ import android.util.AttributeSet
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.AppCompatEditText
+import androidx.core.animation.doOnEnd
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.MutableLiveData
 
 /** A view to edit a single line text field.
@@ -90,39 +92,49 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
 /** A TextFieldEdit subclass that allows the toggling of a strike-through
  *  effect, optionally with an animation, using the public function setStrike-
  *  throughEnabled. */
-class AnimatedStrkethroughTextFieldEdit(context: Context, attrs: AttributeSet) :
+class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
         TextFieldEdit(context, attrs) {
-    private var strikethruLength: Float = 0f
-    private var strikethruAnimationIsReversed = false
+    private var strikeThroughLength: Float? = null
+    private var strikeThroughAnimationIsReversed = false
     private val normalTextColor: Int = currentTextColor
 
-    fun setStrikethroughEnabled(strikethruEnabled: Boolean, animate: Boolean = true) {
-        strikethruAnimationIsReversed = !strikethruEnabled
+    init {
+        doAfterTextChanged { text ->
+            if (strikeThroughLength != null)
+                strikeThroughLength = paint.measureText(text, 0, text?.length ?: 0)
+        }
+    }
+
+    fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean, animate: Boolean = true) {
+        strikeThroughAnimationIsReversed = !strikeThroughEnabled
         val fullLength = paint.measureText(text, 0, text?.length ?: 0)
 
         if (animate) {
             ObjectAnimator.ofArgb(this, "textColor", currentTextColor,
-                                  if (strikethruEnabled) currentHintTextColor
-                                  else                   normalTextColor).start()
+                                  if (strikeThroughEnabled) currentHintTextColor
+                                  else                      normalTextColor).start()
             val anim = ValueAnimator.ofFloat(0f, fullLength)
-            anim.addUpdateListener { strikethruLength = anim.animatedValue as Float; invalidate() }
+            anim.addUpdateListener { strikeThroughLength = anim.animatedValue as Float
+                                     invalidate() }
+            if (!strikeThroughEnabled) anim.doOnEnd { strikeThroughLength = null }
             anim.start()
         } else {
-            strikethruLength = if (strikethruEnabled) fullLength else 0f
-            setTextColor(if (strikethruEnabled) currentHintTextColor
-                         else                   normalTextColor)
+            strikeThroughLength = if (strikeThroughEnabled) fullLength else null
+            setTextColor(if (strikeThroughEnabled) currentHintTextColor
+                         else                      normalTextColor)
         }
     }
     
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (strikethruLength == 0f) return
+        val strikeThroughLength = this.strikeThroughLength ?: return
+
         val fullLength = paint.measureText(text, 0, text?.length ?: 0)
         paint.strokeWidth = textSize / 12
-        val begin = if (!strikethruAnimationIsReversed) 0f
-                    else strikethruLength
-        val end = if (strikethruAnimationIsReversed) fullLength
-                  else strikethruLength
+        val begin = if (!strikeThroughAnimationIsReversed) 0f
+                    else strikeThroughLength
+        val end = if (strikeThroughAnimationIsReversed) fullLength
+                  else strikeThroughLength
         canvas.drawLine(begin, baseline / 1.4f, end, baseline / 1.4f, paint)
     }
 }
