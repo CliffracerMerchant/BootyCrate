@@ -97,6 +97,7 @@
             android:background="@drawable/checkout_button_background"
             android:paddingLeft="6dp"
             android:text="@string/checkout_description"
+            android:textSize="14dp"
             android:textColor="@color/colorTextLightSecondary"
             android:transformPivotX="90dp"
             app:backgroundTint="@android:color/darker_gray"
