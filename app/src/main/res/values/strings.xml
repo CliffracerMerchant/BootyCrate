@@ -39,6 +39,7 @@
     <string name="add_to_shopping_list_description">Add to shopping list</string>
     <string name="delete_all_shopping_list_items_confirmation_message">This will delete all items in the shopping list. Are you sure?</string>
     <string name="checkout_confirm_description">Confirm?</string>
+    <string name="shopping_list_badge_text">+%1$d</string>
 
     <string name="dark_theme_switch_description">Dark theme toggle</string>
     <string name="dark_theme_switch_title">Dark theme</string>

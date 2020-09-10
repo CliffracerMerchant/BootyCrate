@@ -20,7 +20,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
@@ -28,6 +27,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.button.MaterialButton
@@ -59,21 +59,21 @@ class MainActivity : AppCompatActivity() {
     private lateinit var shoppingListFragment: ShoppingListFragment
     private lateinit var inventoryFragment: InventoryFragment
     private lateinit var preferencesFragment: PreferencesFragment
+    private lateinit var imm: InputMethodManager
     private var showingInventory = false
     private var showingPreferences = false
+    private var checkoutButtonIsVisible = true
+    private var shoppingListSize = -1
+    private var shoppingListNumNewItems = 0
 
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
     lateinit var checkoutBtn: MaterialButton
-    var cradleLayoutFullWidth = -1
-    var fabWidth = -1
 
-    private lateinit var imm: InputMethodManager
+    private var cradleLayoutFullWidth = -1
+    private var fabWidth = -1
     private var blackColor: Int = 0
-
-    private var checkoutButtonIsVisible = true
-        set(value) { showHideCheckoutButton(value, true); field = value }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -91,7 +91,6 @@ class MainActivity : AppCompatActivity() {
         checkoutBtn = checkoutButton
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         blackColor = ContextCompat.getColor(this, android.R.color.black)
-        bottomAppBar.prepareCradleLayout(cradleLayout)
 
         bottomNavigationBar.setOnNavigationItemSelectedListener { item ->
             item.isChecked = true
@@ -124,7 +123,7 @@ class MainActivity : AppCompatActivity() {
             add(R.id.fragmentContainer, shoppingListFragment, "shoppingList")
 
         val hiddenFragment1 = if (showingInventory) shoppingListFragment
-        else                  inventoryFragment
+                              else                  inventoryFragment
         val hiddenFragment2 = when { !showingPreferences -> preferencesFragment
                                      showingInventory ->    inventoryFragment
                                      else ->                shoppingListFragment }
@@ -133,13 +132,18 @@ class MainActivity : AppCompatActivity() {
                                      else                  shoppingListFragment.enable()
         }.commit()
 
-        if (showingInventory) showHideCheckoutButton(showing = false, animate = false)
+        if (showingInventory) showCheckoutButton(showing = false, animate = false)
         if (showingPreferences) {
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
             bottomAppBar.translationY = 250f
             fab.translationY = 250f
             checkoutBtn.translationY = 250f
         }
+        bottomAppBar.prepareCradleLayout(cradleLayout)
+
+        shoppingListViewModel.items.observe(this, Observer { newList ->
+            updateShoppingListBadge(newList)
+        })
         //Log.d("screensize", "screen scaledDensity = " + resources.displayMetrics.scaledDensity)
     }
 
@@ -190,7 +194,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun toggleShoppingListInventoryFragments(switchingToInventory: Boolean) {
         showingInventory = switchingToInventory
-        checkoutButtonIsVisible = !switchingToInventory
+        showCheckoutButton(showing = !switchingToInventory)
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
         if (switchingToInventory) {
             shoppingListFragment.disable()
@@ -207,7 +211,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showHideCheckoutButton(showing: Boolean, animate: Boolean) {
+    private fun showCheckoutButton(showing: Boolean, animate: Boolean = true) {
         if (checkoutButtonIsVisible == showing) return
 
         if (cradleLayoutFullWidth == -1) {
@@ -217,10 +221,10 @@ class MainActivity : AppCompatActivity() {
             fab.measure(wrapContentSpec, wrapContentSpec)
             fabWidth = fab.measuredWidth
         }
+        val cradleLayoutStartWidth = if (showing) fabWidth else cradleLayoutFullWidth
+        val cradleLayoutEndWidth =   if (showing) cradleLayoutFullWidth else fabWidth
 
         if (animate) {
-            val cradleLayoutStartWidth = if (showing) fabWidth else cradleLayoutFullWidth
-            val cradleLayoutEndWidth =   if (showing) cradleLayoutFullWidth else fabWidth
             val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
 
             val anim = ValueAnimator.ofInt(cradleLayoutStartWidth, cradleLayoutEndWidth)
@@ -236,24 +240,44 @@ class MainActivity : AppCompatActivity() {
             anim.doOnStart {
                 fab.setLayerType(View.LAYER_TYPE_HARDWARE, null)
                 checkoutBtn.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-                checkoutBtn.layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT
+                checkoutBtn.visibility = View.VISIBLE
                 checkoutBtn.requestLayout()
             }
             anim.doOnEnd {
                 fab.setLayerType(View.LAYER_TYPE_NONE, null)
                 checkoutBtn.setLayerType(View.LAYER_TYPE_NONE, null)
                 fab.translationX = 0f
-                if (!showing) checkoutBtn.layoutParams.width = 0
+                if (!showing) checkoutBtn.visibility = View.GONE
                 checkoutBtn.requestLayout()
-                //bottomAppBar.background.invalidateSelf()
+                bottomAppBar.background.invalidateSelf()
             }
             anim.start()
         } else {
+            checkoutBtn.visibility = if (showing) View.VISIBLE else View.GONE
             checkoutBtn.scaleX = if (showing) 1f else 0f
-            cradleLayout.layoutParams.width = if (showing) cradleLayoutFullWidth
-                                              else         fabWidth
             cradleLayout.requestLayout()
+            bottomAppBar.cradleWidth = cradleLayoutEndWidth
             bottomAppBar.background.invalidateSelf()
+        }
+        checkoutButtonIsVisible = showing
+    }
+
+    private fun updateShoppingListBadge(newShoppingList: List<ShoppingListItem>) {
+        if (shoppingListSize == -1) {
+            if (newShoppingList.isNotEmpty())
+                shoppingListSize = newShoppingList.size
+        } else {
+            val sizeChange = newShoppingList.size - shoppingListSize
+            if (!showingPreferences && showingInventory && sizeChange > 0) {
+                shoppingListNumNewItems += sizeChange
+                shoppingListBadge.text = getString(R.string.shopping_list_badge_text,
+                                                   shoppingListNumNewItems)
+                shoppingListBadge.clearAnimation()
+                shoppingListBadge.alpha = 1f
+                shoppingListBadge.animate().alpha(0f).setDuration(1000).setStartDelay(1500).
+                withLayer().withEndAction { shoppingListNumNewItems = 0 }.start()
+            }
+            shoppingListSize = newShoppingList.size
         }
     }
 
@@ -262,7 +286,7 @@ class MainActivity : AppCompatActivity() {
         outState.putBoolean("showingPreferences", showingPreferences)
         outState.putBoolean("showingInventory", showingInventory)
         supportFragmentManager.putFragment(outState, "shoppingListFragment", shoppingListFragment)
-        supportFragmentManager.putFragment(outState, "inventoryFragment", inventoryFragment)
-        supportFragmentManager.putFragment(outState, "preferencesFragment", preferencesFragment)
+        supportFragmentManager.putFragment(outState, "inventoryFragment",    inventoryFragment)
+        supportFragmentManager.putFragment(outState, "preferencesFragment",  preferencesFragment)
     }
 }

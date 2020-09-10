@@ -84,7 +84,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
 
     override fun onDraw(canvas: Canvas) {
         paintFlags = if (isEditable) paintFlags or Paint.UNDERLINE_TEXT_FLAG
-                     else paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
+                     else            paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
         super.onDraw(canvas)
     }
 }

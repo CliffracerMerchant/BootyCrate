@@ -6,11 +6,13 @@
 
 package com.cliffracermerchant.bootycrate
 
+import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Context
 import android.content.DialogInterface
 import android.util.TypedValue
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
@@ -74,12 +76,14 @@ fun newShoppingListItemDialog(
     val builder = themedAlertDialogBuilder(context)
     builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
+    itemView.background = null
     val colorEdit = itemView.colorEdit.drawable
     var colorIndex = 0
     colorEdit.setTint(ViewModelItem.Colors[colorIndex])
     itemView.colorEdit.setOnClickListener {
         colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
-            colorEdit.setTint(ViewModelItem.Colors[chosenColorIndex])
+            ObjectAnimator.ofArgb(colorEdit, "tint", ViewModelItem.Colors[colorIndex],
+                                  ViewModelItem.Colors[chosenColorIndex]).start()
             colorIndex = chosenColorIndex
         }
     }
@@ -103,6 +107,9 @@ fun newShoppingListItemDialog(
     builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
     builder.setView(itemView)
     val dialog = builder.create()
+    // The dialog dimming is disabled here to prevent
+    // flickering if the color sheet dialog is opened on top.
+    dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
     dialog.setOnShowListener {
         val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
         itemView.nameEdit.requestFocus()
@@ -120,13 +127,15 @@ fun newInventoryItemDialog(
     val builder = themedAlertDialogBuilder(context)
     builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
+    itemView.background = null
+    itemView.collapseButton.visibility = View.GONE
     val colorEdit = itemView.colorEdit.drawable
     var colorIndex = 0
     itemView.update(newItem, isExpanded = true)
-    //colorEdit.setTint(ViewModelItem.Colors[selectedColorIndex])
     itemView.colorEdit.setOnClickListener {
         colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
-            colorEdit.setTint(ViewModelItem.Colors[chosenColorIndex])
+            ObjectAnimator.ofArgb(colorEdit, "tint", ViewModelItem.Colors[colorIndex],
+                                  ViewModelItem.Colors[chosenColorIndex]).start()
             colorIndex = chosenColorIndex
         }
     }
@@ -148,6 +157,9 @@ fun newInventoryItemDialog(
     builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
     builder.setView(itemView)
     val dialog = builder.create()
+    // The dialog dimming is disabled here to prevent
+    // flickering if the color sheet dialog is opened on top.
+    dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
     dialog.setOnShowListener {
         val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
         itemView.nameEdit.requestFocus()
