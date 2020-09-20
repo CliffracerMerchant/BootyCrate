@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+  ~  You may not use this file except in compliance with the Apache License
+  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~  or in the file LICENSE in the project's root directory. -->
+
 <merge
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -7,12 +12,12 @@
 
     <ToggleButton
         android:id="@+id/checkBox"
-        android:layout_width="40dp"
+        android:layout_width="42dp"
         android:layout_height="44dp"
-        android:layout_marginTop="3dp"
         android:background="@drawable/shopping_list_checkbox_unchecked_to_checked_background"
         android:textOff="@null"
         android:textOn="@null"
+        android:layout_marginTop="2dp"
         app:layout_constraintEnd_toStartOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -26,6 +31,7 @@
         android:importantForAutofill="no"
         android:textSize="18sp"
         app:isEditable="false"
+        android:scrollbars="none"
         app:layout_constraintEnd_toStartOf="@id/shoppingListAmountEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintHorizontal_weight="1"

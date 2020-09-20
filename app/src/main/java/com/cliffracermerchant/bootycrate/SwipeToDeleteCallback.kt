@@ -1,9 +1,7 @@
 /* Copyright 2020 Nicholas Hochstetler
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
- * LICENSE in the project's root directory. */
-
+ * You may not use this file except in compliance with the Apache License
+ * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
@@ -27,7 +25,7 @@ class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Cont
         ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
     private val deleteBg = ColorDrawable(ContextCompat.getColor(context, android.R.color.holo_red_light))
-    private val deleteIcon = context.getDrawable(R.drawable.ic_delete_black_24dp)
+    private val deleteIcon = ContextCompat.getDrawable(context, R.drawable.ic_delete_black_24dp)
     private val iconSize = deleteIcon?.intrinsicHeight ?: 0
     private val iconMargin = iconSize / 2
 

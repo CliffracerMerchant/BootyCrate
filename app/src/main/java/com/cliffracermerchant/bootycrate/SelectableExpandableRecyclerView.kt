@@ -1,9 +1,7 @@
 /* Copyright 2020 Nicholas Hochstetler
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
- * LICENSE in the project's root directory. */
-
+ * You may not use this file except in compliance with the Apache License
+ * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
@@ -273,6 +271,7 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
             val toBeTranslatedStart: Int
             val toBeTranslatedEnd: Int
             var translationDistance = heightChange.toFloat()
+            val translationDuration = 200L
 
             if (collapsingViewPos == null && expandingViewPos != null) {
                 // All views starting one below the one being expanding should be slid
@@ -298,7 +297,7 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
                 // Same as above, except that since the collapsing view is on top all
                 // of the views need to be slid up rather than down. Because height-
                 // Change should be positive from the return value of newExpandedVh.-
-                // onExpansionStateChanged(), it is reversed here.
+                // onExpansionStateChanged(), translationDistance is reversed here.
                 if (collapsingViewPos >= firstChildBindingPosition) {
                     toBeTranslatedStart = collapsingViewPos + 1 - firstChildBindingPosition
                     toBeTranslatedEnd = expandingViewPos - 1 - firstChildBindingPosition
@@ -308,7 +307,7 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
                     // manager will not take into account its height change when it collapses.
                     // This causes the items to jump back to their pre-translation position
                     // after their animation. To prevent this the items below the newly
-                    // expanded item are translated down, as if there was no collapsing view.
+                    // expanded item are translated down, as if there were no collapsing view.
                     toBeTranslatedStart = expandingViewPos + 1 - firstChildBindingPosition
                     toBeTranslatedEnd = layoutManager.childCount - 1
                 }
@@ -322,14 +321,16 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
             // should not use a graphical layer.
             if (collapsingViewPos != null && expandingViewPos != null) {
                 val endChild = layoutManager.getChildAt(toBeTranslatedEnd + 1)
-                if (endChild != null) animSet.add(endChild.animate().setDuration(200).
+                if (endChild != null) animSet.add(endChild.animate().
+                                                  setDuration(translationDuration).
                                                   translationY(translationDistance).
                                                   withEndAction{ endChild.translationY = 0f })
             }
 
             for (i in toBeTranslatedStart..toBeTranslatedEnd) {
                 val child = layoutManager.getChildAt(i)
-                if (child != null) animSet.add(child.animate().setDuration(200).withLayer().
+                if (child != null) animSet.add(child.animate().withLayer().
+                                               setDuration(translationDuration).
                                                translationY(translationDistance).
                                                withEndAction { child.translationY = 0f })
             }

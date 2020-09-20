@@ -1,20 +1,47 @@
 /* Copyright 2020 Nicholas Hochstetler
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
- * LICENSE in the project's root directory. */
-
+ * You may not use this file except in compliance with the Apache License
+ * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
+import android.net.Uri
 import android.view.ViewPropertyAnimator
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.io.File
 
-/** A Room database to access the tables shopping_list_item and inventory_item. */
+/** A Room database to access the tables shopping_list_item and inventory_item.
+ *
+ *  BootyCrateDatabase is an implementation of RoomDatabase that provides
+ *  instances of a ShoppingListItemDao and an InventoryItemDao in order to
+ *  query the contents of the shopping_list_item and inventory_item tables.
+ *
+ *  BootyCrateDatabase functions as a singleton, with the current instance
+ *  obtained using the static function get. get also takes an optional boolean
+ *  parameter overwriteExistingDb that, when true, will overwrite the current
+ *  instance with a new one. This might be necessary when, for example, the
+ *  database file is overwritten with another one, and the database needs to be
+ *  reopened.
+ *
+ *  The function backup will export a copy of the current database file to the
+ *  location pointed to by the parameter backupUri.
+ *
+ *  The function replaceWithBackup will overwrite the existing database with
+ *  the one pointed to by the parameter backupUri. Note that when the existing
+ *  database is replaced, activities that have obtained instances of the con-
+ *  tained DAOs will need to retrieve new DAOs, or crashes are likely to occur
+ *  when the old DAOs are used.
+ *
+ *  The function mergeWithBackup will attempt to open the database pointed to
+ *  by the parameter backupUri as a temporary second database, read the shop-
+ *  ping list and inventory items in the database, and then add them to the
+ *  current database. */
 @Database(entities = [ShoppingListItem::class, InventoryItem::class],
           version = 5, exportSchema = false)
 abstract class BootyCrateDatabase : RoomDatabase() {
@@ -25,21 +52,64 @@ abstract class BootyCrateDatabase : RoomDatabase() {
     companion object {
         @Volatile private var instance: BootyCrateDatabase? = null
 
-        fun get(context: Context): BootyCrateDatabase {
-            val instance = this.instance
-            if (instance != null) return instance
-
+        fun get(context: Context, overwriteExistingDb: Boolean = false): BootyCrateDatabase {
+            if (!overwriteExistingDb) {
+                val instance = this.instance
+                if (instance != null) return instance
+            }
             synchronized(this) {
-                val newInstance = Room.databaseBuilder(context.applicationContext,
-                                                       BootyCrateDatabase::class.java,
-                                                       "booty-crate-db").
-                                                       addMigrations(MIGRATION_1_2).
-                                                       addMigrations(MIGRATION_2_3).
-                                                       addMigrations(MIGRATION_3_4).
-                                                       addMigrations(MIGRATION_4_5).build()
+                val newInstance = Room.databaseBuilder(
+                    context.applicationContext, BootyCrateDatabase::class.java, "booty-crate-db").
+                    addMigrations(MIGRATION_1_2).addMigrations(MIGRATION_2_3).
+                    addMigrations(MIGRATION_3_4).addMigrations(MIGRATION_4_5).build()
                 this.instance = newInstance
                 return newInstance
             }
+        }
+
+        fun backup(context: Context, backupUri: Uri) {
+            val db = get(context)
+            val databasePath = db.openHelper.readableDatabase.path
+            db.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)")
+            db.close()
+            val writer = context.contentResolver.openOutputStream(backupUri)
+            writer?.write(File(databasePath).readBytes())
+            writer?.close()
+        }
+
+        fun replaceWithBackup(context: Context, backupUri: Uri) {
+            val importReader = context.contentResolver.openInputStream(backupUri) ?: return
+            val currentDb = get(context)
+            val dbFile = File(currentDb.openHelper.readableDatabase.path)
+            currentDb.close()
+            dbFile.delete()
+            dbFile.writeBytes(importReader.readBytes())
+            get(context, overwriteExistingDb = true) // To make a new instance instead of retaining the old one
+            return
+        }
+
+        fun mergeWithBackup(context: Context, backupUri: Uri) {
+            val importReader = context.contentResolver.openInputStream(backupUri) ?: return
+            val currentDb = get(context)
+
+            // Room can only open databases in the app's database directory,
+            // making it necessary to copy the imported database here first.
+            val tempDbName = "tempDb"
+            val tempDbFile = context.getDatabasePath(tempDbName)
+            tempDbFile.writeBytes(importReader.readBytes())
+
+            val importedDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName).
+                                allowMainThreadQueries().createFromFile(tempDbFile).build()
+            val shoppingListItems = importedDb.shoppingListItemDao().getAllNow()
+            val inventoryItems = importedDb.inventoryItemDao().getAllNow()
+            for (item in inventoryItems) item.id = 0
+            for (item in shoppingListItems) item.id = 0
+            importedDb.close()
+            tempDbFile.delete()
+
+            // Add the imported items to the current database
+            GlobalScope.launch { currentDb.shoppingListItemDao().add(shoppingListItems) }
+            GlobalScope.launch { currentDb.inventoryItemDao().add(inventoryItems) }
         }
 
         private val MIGRATION_1_2 = object: Migration(1, 2) {
@@ -94,18 +164,3 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         }
     }
 }
-
-class ViewPropertyAnimatorSet {
-    private val animators = mutableListOf<ViewPropertyAnimator>()
-
-    fun add(anim: ViewPropertyAnimator) = animators.add(anim)
-
-    fun start() {
-        if (animators.isEmpty()) return
-        animators.removeAt(animators.size - 1).withStartAction {
-            for (anim in animators) anim.start()
-        }.start()
-    }
-}
-
-enum class SelectionState { Selected, NotSelected }

@@ -1,9 +1,7 @@
 /* Copyright 2020 Nicholas Hochstetler
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
- * LICENSE in the project's root directory. */
-
+ * You may not use this file except in compliance with the Apache License
+ * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
 import android.app.Application
@@ -57,10 +55,10 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
     fun resetNewlyAddedItemId() = _newlyAddedItemId.set(0)
 
     fun add(item: Entity) = viewModelScope.launch {
-        _newlyAddedItemId.set(dao.insert(item))
+        _newlyAddedItemId.set(dao.add(item))
     }
-    fun add(items: Array<Entity>) = viewModelScope.launch {
-        dao.insert(items)
+    fun add(items: List<Entity>) = viewModelScope.launch {
+        dao.add(items)
     }
     fun deleteAll() = viewModelScope.launch {
         dao.deleteAll()

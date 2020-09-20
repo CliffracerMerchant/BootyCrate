@@ -1,9 +1,7 @@
 /* Copyright 2020 Nicholas Hochstetler
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
- * LICENSE in the project's root directory. */
-
+ * You may not use this file except in compliance with the Apache License
+ * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
 import android.os.Bundle
@@ -77,6 +75,7 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
             }
         })
     }
+
     open fun enable() {
         fabIconController.setState("add", animate = false)
         mainActivity.fab.setOnClickListener(fabRegularOnClickListener)

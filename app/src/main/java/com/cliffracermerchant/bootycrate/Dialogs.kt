@@ -1,9 +1,7 @@
 /* Copyright 2020 Nicholas Hochstetler
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
- * LICENSE in the project's root directory. */
-
+ * You may not use this file except in compliance with the Apache License
+ * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
@@ -57,12 +55,8 @@ fun selectInventoryItemDialog(
     builder.setTitle(context.getString(R.string.link_inventory_item_action_long_description))
     val recyclerView = PopupInventoryRecyclerView(context, inventoryItems,
                                                   initiallySelectedItemId)
-    val dialogClickListener = DialogInterface.OnClickListener { _, button ->
-        if (button == DialogInterface.BUTTON_POSITIVE)
-            callback(recyclerView.selectedItem)
-    }
-    builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
-    builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
+    builder.setPositiveButton(android.R.string.ok) { _, _ -> callback(recyclerView.selectedItem) }
+    builder.setNegativeButton(android.R.string.cancel) { _, _ -> }
     builder.setView(recyclerView)
     builder.show()
 }
@@ -70,9 +64,8 @@ fun selectInventoryItemDialog(
 fun newShoppingListItemDialog(
     context: Context,
     fragmentManager: FragmentManager,
-    callback: (ShoppingListItem?) -> Unit
+    callback: (ShoppingListItem) -> Unit
 ) {
-    val newItem = ShoppingListItem()
     val builder = themedAlertDialogBuilder(context)
     builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
@@ -93,18 +86,13 @@ fun newShoppingListItemDialog(
     itemView.extraInfoEdit.isEditable = true
     itemView.inventoryAmountEdit.isEditable = true
     itemView.inventoryAmountEdit.minValue = 1
-    val dialogClickListener = DialogInterface.OnClickListener { _, button ->
-        if (button == DialogInterface.BUTTON_POSITIVE) {
-            newItem.name = itemView.nameEdit.text.toString()
-            newItem.extraInfo = itemView.extraInfoEdit.text.toString()
-            newItem.color = colorIndex
-            newItem.amount = itemView.inventoryAmountEdit.currentValue
-            callback(newItem)
-        }
-        else callback(null)
+    builder.setPositiveButton(android.R.string.ok) { _, _ ->
+        callback(ShoppingListItem(name = itemView.nameEdit.text.toString(),
+                                  extraInfo = itemView.extraInfoEdit.text.toString(),
+                                  color = colorIndex,
+                                  amount = itemView.inventoryAmountEdit.currentValue))
     }
-    builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
-    builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
+    builder.setNegativeButton(android.R.string.cancel) { _, _ -> }
     builder.setView(itemView)
     val dialog = builder.create()
     // The dialog dimming is disabled here to prevent
@@ -121,9 +109,8 @@ fun newShoppingListItemDialog(
 fun newInventoryItemDialog(
     context: Context,
     fragmentManager: FragmentManager,
-    callback: (InventoryItem?) -> Unit
+    callback: (InventoryItem) -> Unit
 ) {
-    val newItem = InventoryItem()
     val builder = themedAlertDialogBuilder(context)
     builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
@@ -131,7 +118,8 @@ fun newInventoryItemDialog(
     itemView.collapseButton.visibility = View.GONE
     val colorEdit = itemView.colorEdit.drawable
     var colorIndex = 0
-    itemView.update(newItem, isExpanded = true)
+    colorEdit.setTint(ViewModelItem.Colors[colorIndex])
+    itemView.expand(animate = false)
     itemView.colorEdit.setOnClickListener {
         colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
             ObjectAnimator.ofArgb(colorEdit, "tint", ViewModelItem.Colors[colorIndex],
@@ -141,20 +129,16 @@ fun newInventoryItemDialog(
     }
     itemView.editButton.isVisible = false
     itemView.collapseButton.isVisible = false
-    val dialogClickListener = DialogInterface.OnClickListener { _, button ->
-        if (button == DialogInterface.BUTTON_POSITIVE) {
-            newItem.name = itemView.nameEdit.text.toString()
-            newItem.extraInfo = itemView.extraInfoEdit.text.toString()
-            newItem.color = colorIndex
-            newItem.amount = itemView.inventoryAmountEdit.currentValue
-            newItem.addToShoppingList = itemView.addToShoppingListCheckBox.isChecked
-            newItem.addToShoppingListTrigger = itemView.addToShoppingListTriggerEdit.currentValue
-            callback(newItem)
-        }
-        else callback(null)
+
+    builder.setPositiveButton(android.R.string.ok) { _, _ ->
+        callback(InventoryItem(name = itemView.nameEdit.text.toString(),
+                               extraInfo = itemView.extraInfoEdit.text.toString(),
+                               color = colorIndex,
+                               amount = itemView.inventoryAmountEdit.currentValue,
+                               addToShoppingList = itemView.addToShoppingListCheckBox.isChecked,
+                               addToShoppingListTrigger = itemView.addToShoppingListTriggerEdit.currentValue))
     }
-    builder.setPositiveButton(context.getString(android.R.string.ok), dialogClickListener)
-    builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
+    builder.setNegativeButton(android.R.string.cancel) { _, _ -> }
     builder.setView(itemView)
     val dialog = builder.create()
     // The dialog dimming is disabled here to prevent

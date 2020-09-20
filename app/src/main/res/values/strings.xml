@@ -1,3 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+  ~  You may not use this file except in compliance with the Apache License
+  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~  or in the file LICENSE in the project's root directory. -->
+
 <resources>
     <string name="app_name">BootyCrate</string>
     <string name="inventory_navigation_item_name">Inventory</string>
@@ -21,7 +27,8 @@
     <string name="inventory_item_add_to_shopping_list_trigger_edit_description">Add to shopping list amount threshold</string>
     <string name="collapse_button_description">Collapse extra item options</string>
     <string name="inventory_item_default_name">New item</string>
-    <string name="delete_all_inventory_items_confirmation_message">This will delete all items in the inventory. Are you sure?</string>
+    <string name="delete_all_inventory_items_confirmation_message">
+        This will delete all items in the inventory. Are you sure?</string>
     <string name="add_to_inventory_description">Add to inventory</string>
 
     <string name="shopping_list_item_default_name">New item</string>
@@ -37,12 +44,22 @@
     <string name="empty_inventory_message">Inventory is empty</string>
     <string name="link_inventory_item_action_long_description">Select an item to link to:</string>
     <string name="add_to_shopping_list_description">Add to shopping list</string>
-    <string name="delete_all_shopping_list_items_confirmation_message">This will delete all items in the shopping list. Are you sure?</string>
+    <string name="delete_all_shopping_list_items_confirmation_message">
+        This will delete all items in the shopping list. Are you sure?</string>
     <string name="checkout_confirm_description">Confirm?</string>
     <string name="shopping_list_badge_text">+%1$d</string>
 
     <string name="dark_theme_switch_description">Dark theme toggle</string>
     <string name="dark_theme_switch_title">Dark theme</string>
+    <string name="export_database_description">Export database</string>
+    <string name="import_database_description">Import database</string>
+    <string name="import_database_question_message">
+        Would you like to merge the imported database with the existing one, or overwrite it?</string>
+    <string name="import_database_question_merge_option">Merge</string>
+    <string name="import_database_question_overwrite_option">Overwrite</string>
+    <string name="import_database_overwrite_confirmation_message">
+        Overwriting the existing database is unreversible. Are you sure?</string>
+    <string name="exported_database_default_name">BootyCrateDatabase.sqlite</string>
 
     <string name="search_description">Search</string>
     <string name="change_sorting_description">Change sorting</string>
@@ -53,4 +70,6 @@
     <string name="amount_descending_description">Amount descending</string>
     <string name="edit_color_description">Edit item color</string>
     <string name="checkout_description">Checkout</string>
+
+    <string name="pref_viewmodels_need_cleared">viewModelsNeedCleared</string>
 </resources>

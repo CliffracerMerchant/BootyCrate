@@ -1,9 +1,7 @@
 /* Copyright 2020 Nicholas Hochstetler
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
- * LICENSE in the project's root directory. */
-
+ * You may not use this file except in compliance with the Apache License
+ * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
 import androidx.lifecycle.LiveData
@@ -17,8 +15,8 @@ import androidx.room.Insert
     abstract fun getAllSortedByNameDesc(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByAmountAsc(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByAmountDesc(filter: String): LiveData<List<Entity>>
-    @Insert abstract suspend fun insert(item: Entity): Long
-    @Insert abstract suspend fun insert(items: Array<Entity>)
+    @Insert abstract suspend fun add(item: Entity): Long
+    @Insert abstract suspend fun add(items: List<Entity>)
     abstract suspend fun deleteAll()
     abstract suspend fun emptyTrash()
     abstract suspend fun delete(ids: LongArray)
@@ -27,4 +25,5 @@ import androidx.room.Insert
     abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
     abstract suspend fun updateColor(id: Long, color: Int)
     abstract suspend fun updateAmount(id: Long, amount: Int)
+    abstract fun getAllNow(): List<Entity>
 }

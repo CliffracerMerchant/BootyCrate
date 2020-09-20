@@ -1,13 +1,10 @@
 /* Copyright 2020 Nicholas Hochstetler
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
- * LICENSE in the project's root directory. */
-
+ * You may not use this file except in compliance with the Apache License
+ * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
-import android.content.DialogInterface
 import android.util.AttributeSet
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
@@ -110,15 +107,12 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
 
     open fun deleteAll() {
         val builder = themedAlertDialogBuilder(context)
-        val dialogClickListener = DialogInterface.OnClickListener { _, button ->
-            if (button == DialogInterface.BUTTON_POSITIVE) {
-                viewModel.deleteAll()
-                viewModel.emptyTrash()
-            }
+        builder.setMessage(R.string.delete_all_inventory_items_confirmation_message)
+        builder.setPositiveButton(android.R.string.yes) { _, _ ->
+            viewModel.deleteAll()
+            viewModel.emptyTrash()
         }
-        builder.setPositiveButton(context.getString(android.R.string.yes), dialogClickListener)
-        builder.setNegativeButton(context.getString(android.R.string.cancel), dialogClickListener)
-        builder.setMessage(context.getString(R.string.delete_all_inventory_items_confirmation_message))
+        builder.setNegativeButton(android.R.string.cancel) { _, _ -> }
         builder.show()
     }
 

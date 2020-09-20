@@ -1,9 +1,7 @@
 /* Copyright 2020 Nicholas Hochstetler
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy
- * of the License at http://www.apache.org/licenses/LICENSE-2.0, or in the file
- * LICENSE in the project's root directory. */
-
+ * You may not use this file except in compliance with the Apache License
+ * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
@@ -14,6 +12,7 @@ import android.view.View
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.*
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_popup_layout.view.*
@@ -48,7 +47,7 @@ class PopupInventoryRecyclerView(
     inner class PopupInventoryAdapter(context: Context) :
             RecyclerView.Adapter<PopupInventoryAdapter.InventoryItemViewHolder>() {
         private val layoutInflater = LayoutInflater.from(context)
-        private val multiplyIcon = context.getDrawable(R.drawable.shopping_list_animated_multiply_to_minus_icon)
+        private val multiplyIcon = ContextCompat.getDrawable(context, R.drawable.shopping_list_animated_multiply_to_minus_icon)
         private val selectedColor: Int
 
         init {

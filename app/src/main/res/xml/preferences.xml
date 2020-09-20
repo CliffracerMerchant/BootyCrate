@@ -1,18 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+  ~  You may not use this file except in compliance with the Apache License
+  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~  or in the file LICENSE in the project's root directory. -->
+
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <SwitchPreferenceCompat
-        android:key="@string/pref_dark_theme_active"
-        android:title="@string/dark_theme_switch_title"
-        android:defaultValue="false" />
+    <PreferenceCategory android:title="Visual">
 
-    <CheckBoxPreference
-        android:key="agarg"
-        android:title="dummy checkbox preference"/>
+        <SwitchPreferenceCompat
+            android:key="@string/pref_dark_theme_active"
+            android:title="@string/dark_theme_switch_title"
+            android:defaultValue="false" />
 
-    <EditTextPreference
-        android:key="arnkrtb"
-        android:title="dummy edit text preference"/>
+    </PreferenceCategory>
+
+
+    <PreferenceCategory android:title="Backup and Restore">
+
+        <Preference
+            android:key="@string/pref_export_database"
+            android:title="@string/export_database_description" />
+        <Preference
+            android:key="@string/pref_import_database"
+            android:title="@string/import_database_description" />
+
+    </PreferenceCategory>
 
 </PreferenceScreen>
