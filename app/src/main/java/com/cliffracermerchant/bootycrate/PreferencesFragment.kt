@@ -33,16 +33,12 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<Preference>(getString(R.string.pref_export_database))?.setOnPreferenceClickListener {
-            //val activity = this.activity ?: return@setOnPreferenceClickListener false
-            //exporter.chooseDatabaseExportLocation(activity)
             getExportPath.launch(getString(R.string.exported_database_default_name))
             true
         }
 
         findPreference<Preference>(getString(R.string.pref_import_database))?.setOnPreferenceClickListener {
             getImportPath.launch(arrayOf("*/*"))
-            //val activity = this.activity ?: return@setOnPreferenceClickListener false
-            //exporter.chooseDatabaseImportLocation(activity)
             true
         }
     }

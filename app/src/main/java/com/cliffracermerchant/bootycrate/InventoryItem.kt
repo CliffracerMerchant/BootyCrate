@@ -28,7 +28,7 @@ class InventoryItem(
                this.addToShoppingListTrigger == other.addToShoppingListTrigger
     }
 
-    override fun toString(): String {
+    override fun toDebugString(): String {
         return super.toString() +
                "\nautoAddToShoppingList = $addToShoppingList" +
                "\nautoAddToShoppingListTrigger = $addToShoppingListTrigger"

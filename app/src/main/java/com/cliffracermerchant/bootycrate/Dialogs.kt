@@ -7,13 +7,16 @@ package com.cliffracermerchant.bootycrate
 import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Context
-import android.content.DialogInterface
+import android.content.Intent
+import android.net.Uri
 import android.util.TypedValue
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
+import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
+import androidx.core.view.setPadding
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.snackbar.Snackbar
 import dev.sasikanth.colorsheet.ColorSheet
@@ -152,10 +155,88 @@ fun newInventoryItemDialog(
     dialog.show()
 }
 
-// AlertDialog seems to ignore the theme's alertDialogTheme value, making it
-// necessary to pass it's value in manually to the AlertDialog.builder constructor
-internal fun themedAlertDialogBuilder(context: Context): AlertDialog.Builder {
+fun <Entity: ViewModelItem>exportAsDialog(
+    context: Context,
+    items: List<Entity>,
+    insertBlankLineBetweenColors: Boolean,
+    snackBarAnchor: View
+) {
+    val dialogBuilder = themedAlertDialogBuilder(context)
+    dialogBuilder.setTitle(R.string.export_dialog_title)
+    dialogBuilder.setItems(R.array.export_options) { _, chosenOption ->
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            //
+            type = "HTTP.PLAIN_TEXT_TYPE"
+        }
+        var message = ""
+        if (insertBlankLineBetweenColors) {
+            var currentColorIndex = items.first().color
+            for (item in items) {
+                if (item.color != currentColorIndex) {
+                    message += "\n"
+                    currentColorIndex = item.color
+                }
+                message += item.toString() + "\n"
+            }
+        } else for (item in items)
+            message += item.toString() + "\n"
+
+        when (chosenOption) {
+            0 /* Text message */-> {
+                intent.putExtra("sms_body", message)
+                intent.data = Uri.parse("smsto:")
+            } 1 /* Email */-> {
+            intent.data = Uri.parse("mailto:")
+            val subject = context.getString(R.string.shopping_list_navigation_item_name)
+            intent.putExtra(Intent.EXTRA_SUBJECT, subject)
+            intent.putExtra(Intent.EXTRA_TEXT, message)
+        }
+        }
+        if (intent.resolveActivity(context.packageManager) != null)
+            context.startActivity(intent)
+        else {
+            val snackbar = Snackbar.make(snackBarAnchor, R.string.export_error_message,
+                                         Snackbar.LENGTH_SHORT)
+            snackbar.anchorView = snackBarAnchor
+            snackbar.show()
+        }
+    }
+    val title = themedAlertDialogTitle(context)
+    title.text = context.getString(R.string.export_dialog_title)
+    dialogBuilder.setCustomTitle(title)
+    dialogBuilder.show()
+}
+
+/** Returns an AlertDialog.Builder that uses the current theme's alertDialogTheme.
+ *
+ *  AlertDialog seems to ignore the theme's alertDialogTheme value, making it
+ *  necessary to pass it's value in manually to the AlertDialog.builder constructor.*/
+fun themedAlertDialogBuilder(context: Context): AlertDialog.Builder {
     val typedValue = TypedValue()
     context.theme.resolveAttribute(android.R.attr.alertDialogTheme, typedValue, true)
     return AlertDialog.Builder(context, typedValue.data)
+}
+
+/** Returns a themed TextView for use as a custom title for an AlertDialog.
+ *
+ *  Changing the style of AlertDialog's default title seems to not work when
+ *  done through styles (e.g. with the android:windowTitleStyle attribute).
+ *  themedAlertDialogTitle returns a TextView with a padding, text size, text
+ *  color, and background color suited for use as a custom title for an Alert-
+ *  Dialog (using AlertDialog.setCustomTitle() or AlertDialog.Builder.setCus-
+ *  tomTitle(). The text of the returned text view is not set by default. */
+fun themedAlertDialogTitle(context: Context): TextView {
+    val title = TextView(context)
+    val dm = context.resources.displayMetrics
+    title.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 6f, dm)
+    title.setPadding(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, dm).toInt())
+
+    val typedValue = TypedValue()
+    context.theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
+    val titleBackgroundColor = typedValue.data
+    title.setBackgroundColor(titleBackgroundColor)
+    context.theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
+    title.setTextColor(typedValue.data)
+
+    return title
 }

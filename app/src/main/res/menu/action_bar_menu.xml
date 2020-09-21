@@ -57,9 +57,13 @@
               app:showAsAction="never" />
     </group>
 
+    <item android:id="@+id/export_menu_item"
+          android:title="@string/export_dialog_title"
+          app:showAsAction="never" />
+
     <item android:id="@+id/delete_all_menu_item"
-        android:title="@string/delete_all_description"
-        app:showAsAction="never" />
+          android:title="@string/delete_all_description"
+          app:showAsAction="never" />
 
     <item android:id="@+id/settings_menu_item"
           android:title="@string/settings_description" />

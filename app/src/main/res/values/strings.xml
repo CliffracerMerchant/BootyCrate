@@ -60,6 +60,10 @@
     <string name="import_database_overwrite_confirmation_message">
         Overwriting the existing database is unreversible. Are you sure?</string>
     <string name="exported_database_default_name">BootyCrateDatabase.sqlite</string>
+    <string name="export_dialog_title">Export as…</string>
+    <string name="export_text_message_option">Text message</string>
+    <string name="export_email_option">Email</string>
+    <string name="export_error_message">No app that can send the list was found</string>
 
     <string name="search_description">Search</string>
     <string name="change_sorting_description">Change sorting</string>

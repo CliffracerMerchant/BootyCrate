@@ -28,7 +28,7 @@ class ShoppingListItem(
                this.linkedInventoryItemId == other.linkedInventoryItemId
     }
 
-    override fun toString(): String {
+    override fun toDebugString(): String {
         return super.toString() +
                "\nisChecked = $isChecked" +
                "\nlinkedInventoryItemId = $linkedInventoryItemId"

@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity() {
 
         val prefs = getDefaultSharedPreferences(this)
         /* The activity's ViewModelStore will by default retain instances of the
-           app's viewmodels across activity restarts. In case this is not desired
+           app's view models across activity restarts. In case this is not desired
            (e.g. when the database was replaced with an external one, and the view-
            models therefore need to be reset), setting the shared preference whose
            key is equal to the value of R.string.pref_viewmodels_need_cleared to
@@ -121,9 +121,9 @@ class MainActivity : AppCompatActivity() {
         }
         bottomAppBar.prepareCradleLayout(cradleLayout)
 
-        shoppingListViewModel.items.observe(this, Observer { newList ->
+        shoppingListViewModel.items.observe(this) { newList ->
             updateShoppingListBadge(newList)
-        })
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -310,18 +310,18 @@ class MainActivity : AppCompatActivity() {
 
         val transaction = supportFragmentManager.beginTransaction()
         if (savedInstanceState == null) transaction.
-        add(R.id.fragmentContainer, preferencesFragment, "preferences").
-        add(R.id.fragmentContainer, inventoryFragment, "inventory").
-        add(R.id.fragmentContainer, shoppingListFragment, "shoppingList")
+            add(R.id.fragmentContainer, preferencesFragment, "preferences").
+            add(R.id.fragmentContainer, inventoryFragment, "inventory").
+            add(R.id.fragmentContainer, shoppingListFragment, "shoppingList")
 
         val hiddenFragment1 = if (showingInventory) shoppingListFragment
-        else                  inventoryFragment
+                              else                  inventoryFragment
         val hiddenFragment2 = when { !showingPreferences -> preferencesFragment
-            showingInventory ->    inventoryFragment
-            else ->                shoppingListFragment }
+                                     showingInventory ->    inventoryFragment
+                                     else ->                shoppingListFragment }
         transaction.hide(hiddenFragment1).hide(hiddenFragment2).runOnCommit {
             if (!showingPreferences) if (showingInventory) inventoryFragment.enable()
-            else                  shoppingListFragment.enable()
+                                     else                  shoppingListFragment.enable()
         }.commit()
     }
 }

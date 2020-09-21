@@ -67,13 +67,13 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
         fabIconController = AnimatedFabIconController(mainActivity.fab)
         recyclerView.snackBarAnchor = mainActivity.bottomAppBar
 
-        recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
+        recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
             if (newSize == 0) actionMode?.finish()
             else if (newSize > 0) {
                 actionMode = actionMode ?: mainActivity.startSupportActionMode(actionModeCallback)
                 actionMode?.title = getString(R.string.action_mode_title, newSize)
             }
-        })
+        }
     }
 
     open fun enable() {
@@ -102,6 +102,7 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
             }
         })
     }
+
     override fun onPrepareOptionsMenu(menu: Menu) =
         initOptionsMenuSort(menu)
 
@@ -110,6 +111,12 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
         return when (item.itemId) {
             R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
+            } R.id.export_menu_item -> { exportAsDialog(
+                    context = mainActivity,
+                    items = recyclerView.adapter.currentList,
+                    insertBlankLineBetweenColors = recyclerView.sort == ViewModelItem.Sort.Color,
+                    snackBarAnchor = mainActivity.bottomAppBar)
+                true
             } R.id.color_option -> {
                 recyclerView.sort = ViewModelItem.Sort.Color
                 item.isChecked = true; true

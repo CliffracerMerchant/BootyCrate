@@ -27,12 +27,16 @@ import androidx.room.PrimaryKey
                this.amount == other.amount
     }
 
-    override fun toString() =
+    // For debugging purposes, when all info is desired
+    open fun toDebugString() =
         "\nid = $id" +
         "\nname = $name" +
         "\nextraInfo = $extraInfo" +
         "\ncolor = $color" +
         "\namount = $amount"
+
+    // For a user-facing string representation of the object
+    override fun toString() = "x$amount $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
     override fun hashCode() = id.hashCode()
 
@@ -57,9 +61,9 @@ import androidx.room.PrimaryKey
 
         fun sortFrom(string: String?): Sort {
             return if (string == null) Sort.Color
-            else try { Sort.valueOf(string) }
-            // If sortStr value doesn't match a Sort value
-            catch(e: IllegalArgumentException) { Sort.Color }
+                   else try { Sort.valueOf(string) }
+                        // If string value doesn't match a Sort value
+                        catch(e: IllegalArgumentException) { Sort.Color }
         }
     }
 }
