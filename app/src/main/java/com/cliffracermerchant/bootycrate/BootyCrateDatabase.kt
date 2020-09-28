@@ -6,11 +6,9 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.net.Uri
-import android.view.ViewPropertyAnimator
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -43,7 +41,7 @@ import java.io.File
  *  ping list and inventory items in the database, and then add them to the
  *  current database. */
 @Database(entities = [ShoppingListItem::class, InventoryItem::class],
-          version = 5, exportSchema = false)
+          version = 1, exportSchema = false)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun inventoryItemDao(): InventoryItemDao
@@ -60,8 +58,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             synchronized(this) {
                 val newInstance = Room.databaseBuilder(
                     context.applicationContext, BootyCrateDatabase::class.java, "booty-crate-db").
-                    addMigrations(MIGRATION_1_2).addMigrations(MIGRATION_2_3).
-                    addMigrations(MIGRATION_3_4).addMigrations(MIGRATION_4_5).build()
+                    addCallback(callback).build()
                 this.instance = newInstance
                 return newInstance
             }
@@ -102,8 +99,8 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                                 allowMainThreadQueries().createFromFile(tempDbFile).build()
             val shoppingListItems = importedDb.shoppingListItemDao().getAllNow()
             val inventoryItems = importedDb.inventoryItemDao().getAllNow()
-            for (item in inventoryItems) item.id = 0
-            for (item in shoppingListItems) item.id = 0
+            for (item in shoppingListItems) { item.id = 0; item.linkedItemId = null }
+            for (item in inventoryItems) { item.id = 0; item.linkedItemId = null }
             importedDb.close()
             tempDbFile.delete()
 
@@ -112,55 +109,133 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             GlobalScope.launch { currentDb.inventoryItemDao().add(inventoryItems) }
         }
 
-        private val MIGRATION_1_2 = object: Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("BEGIN TRANSACTION")
-                database.execSQL("ALTER TABLE shopping_list_item ADD `isChecked` INTEGER NOT NULL DEFAULT 0 ")
-                database.execSQL("COMMIT")
+        private val callback = object: Callback() {
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+                db.execSQL("PRAGMA recursive_triggers = false")
+            }
+
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                super.onCreate(db)
+                // Auto link / unlink triggers
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_link_inventory_item`
+                              AFTER INSERT ON shopping_list_item
+                                    WHEN new.linkedItemId NOT NULL
+                              BEGIN UPDATE inventory_item
+                                    SET linkedItemId = new.id
+                                    WHERE id = new.linkedItemId; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_link_shopping_list_item` 
+                              AFTER INSERT ON inventory_item
+                                    WHEN new.linkedItemId NOT NULL
+                              BEGIN UPDATE shopping_list_item 
+                                    SET linkedItemId = new.id
+                                    WHERE id = new.linkedItemId; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_unlink_inventory_item`
+                              AFTER DELETE ON shopping_list_item
+                                    WHEN old.linkedItemId NOT NULL
+                              BEGIN UPDATE inventory_item
+                                    SET linkedItemId = NULL
+                                    WHERE id = old.linkedItemId; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_unlink_shopping_list_item`
+                              AFTER DELETE ON inventory_item
+                                    WHEN old.linkedItemId NOT NULL
+                              BEGIN UPDATE shopping_list_item
+                                    SET linkedItemId = NULL
+                                    WHERE id = old.linkedItemId; END""")
+
+                // Auto update linked item field
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_inventory_item_name`
+                              AFTER UPDATE OF name ON shopping_list_item
+                                    WHEN old.linkedItemId == new.linkedItemId
+                                    AND new.linkedItemId NOT NULL
+                              BEGIN UPDATE inventory_item
+                                    SET name = new.name
+                                    WHERE id = new.linkedItemId; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_shopping_list_item_name`
+                              AFTER UPDATE OF name ON inventory_item
+                                    WHEN old.linkedItemId == new.linkedItemId
+                                    AND new.linkedItemId NOT NULL
+                              BEGIN UPDATE shopping_list_item
+                                    SET name = new.name
+                                    WHERE id = new.linkedItemId; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_inventory_item_extra_info`
+                              AFTER UPDATE OF extraInfo ON shopping_list_item
+                                    WHEN old.linkedItemId == new.linkedItemId
+                                    AND new.linkedItemId NOT NULL
+                              BEGIN UPDATE inventory_item
+                                    SET extraInfo = new.extraInfo
+                                    WHERE id = new.linkedItemId; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_shopping_list_extra_info`
+                              AFTER UPDATE OF extraInfo ON inventory_item
+                                    WHEN old.linkedItemId = new.linkedItemId
+                                    AND new.linkedItemId NOT NULL
+                              BEGIN UPDATE shopping_list_item
+                                    SET extraInfo = new.extraInfo
+                                    WHERE id = new.linkedItemId; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_inventory_item_color`
+                              AFTER UPDATE OF color ON shopping_list_item
+                                    WHEN old.linkedItemId == new.linkedItemId
+                                    AND new.linkedItemId NOT NULL
+                              BEGIN UPDATE inventory_item
+                                    SET color = new.color
+                                    WHERE id = new.linkedItemId; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_shopping_list_item_color`
+                              AFTER UPDATE OF color ON inventory_item
+                                    WHEN old.linkedItemId == new.linkedItemId
+                                    AND new.linkedItemId NOT NULL
+                              BEGIN UPDATE shopping_list_item
+                                    SET color = new.color
+                                    WHERE id = new.linkedItemId; END""")
+
+                // Auto add to shopping list triggers
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_amount_update`
+                              AFTER UPDATE OF amount ON inventory_item
+                                    WHEN new.addToShoppingList == 1
+                                    AND new.amount < new.addToShoppingListTrigger
+                              BEGIN $insertFromInventoryItemStr; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_update`
+                              AFTER UPDATE OF addToShoppingList ON inventory_item
+                                    WHEN new.addToShoppingList == 1
+                                    AND new.amount < new.addToShoppingListTrigger
+                              BEGIN $insertFromInventoryItemStr; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_trigger_update`
+                              AFTER UPDATE OF addToShoppingListTrigger ON inventory_item
+                                    WHEN new.addToShoppingList == 1
+                                    AND new.amount < new.addToShoppingListTrigger
+                              BEGIN $insertFromInventoryItemStr; END""")
             }
         }
 
-        private val MIGRATION_2_3 = object: Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("PRAGMA foreign_keys=off")
-                database.execSQL("BEGIN TRANSACTION")
-                database.execSQL("CREATE TABLE IF NOT EXISTS `shopping_list_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `inTrash` INTEGER NOT NULL DEFAULT 0, `isChecked` INTEGER NOT NULL DEFAULT 0, `amountInCart` INTEGER NOT NULL DEFAULT 0, `linkedInventoryItemId` INTEGER)")
-                database.execSQL("CREATE TABLE IF NOT EXISTS `inventory_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `inTrash` INTEGER NOT NULL DEFAULT 0, `autoAddToShoppingList` INTEGER NOT NULL DEFAULT 0, `autoAddToShoppingListTrigger` INTEGER NOT NULL DEFAULT 1)")
-                database.execSQL("INSERT INTO shopping_list_item_copy (id, name, extraInfo, color, amount, inTrash, isChecked, amountInCart, linkedInventoryItemId) SELECT id, name, extraInfo, color, amountOnList, inTrash, isChecked, amountInCart, linkedInventoryItemId FROM shopping_list_item")
-                database.execSQL("INSERT INTO inventory_item_copy (id, name, extraInfo, color, amount, inTrash, autoAddToShoppingList, autoAddToShoppingListTrigger) SELECT id, name, extraInfo, color, amount, inTrash, autoAddToShoppingList, autoAddToShoppingListTrigger FROM inventory_item")
-                database.execSQL("DROP TABLE shopping_list_item")
-                database.execSQL("DROP TABLE inventory_item")
-                database.execSQL("ALTER TABLE shopping_list_item_copy RENAME TO shopping_list_item")
-                database.execSQL("ALTER TABLE inventory_item_copy RENAME TO inventory_item")
-                database.execSQL("COMMIT")
-                database.execSQL("PRAGMA foreign_keys=on")
-            }
-        }
+        /* Unfortunately SQLite's limitation of not being able to use common
+           table expressions in triggers makes the following less readable than
+           should be. The below query essentially makes a shopping list item
+           with the same name, extraInfo, and color as an inventory item, while
+           also filling in its linkedItemId field to the id of the inventory
+           item it was created from. The new item's amount is the lesser of its
+           current amount (if it already exists) or the minimum amount (i.e.
+           the inventory item it is based on's addToShoppingListAmount minus
+           its current amount). */
+        private val insertFromInventoryItemStr =
+            """INSERT OR REPLACE INTO shopping_list_item (id, name, extraInfo, color, linkedItemId, amount)
+               SELECT new.linkedItemId, new.name, new.extraInfo, new.color, new.id,
+                      CASE WHEN (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) < (SELECT new.addToShoppingListTrigger - new.amount)
+                           THEN (SELECT new.addToShoppingListTrigger - new.amount)
+                           ELSE (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) END"""
 
-        private val MIGRATION_3_4 = object: Migration(3, 4) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("PRAGMA foreign_keys=off")
-                database.execSQL("BEGIN TRANSACTION")
-                database.execSQL("CREATE TABLE IF NOT EXISTS `shopping_list_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `inTrash` INTEGER NOT NULL DEFAULT 0, `isChecked` INTEGER NOT NULL DEFAULT 0, `linkedInventoryItemId` INTEGER)")
-                database.execSQL("INSERT INTO shopping_list_item_copy (id, name, extraInfo, color, amount, inTrash, isChecked, linkedInventoryItemId) SELECT id, name, extraInfo, color, amount, inTrash, isChecked, linkedInventoryItemId FROM shopping_list_item")
-                database.execSQL("DROP TABLE shopping_list_item")
-                database.execSQL("ALTER TABLE shopping_list_item_copy RENAME TO shopping_list_item")
-                database.execSQL("COMMIT")
-                database.execSQL("PRAGMA foreign_keys=on")
-            }
-        }
-
-        private val MIGRATION_4_5 = object: Migration(4, 5) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("PRAGMA foreign_keys=off")
-                database.execSQL("BEGIN TRANSACTION")
-                database.execSQL("CREATE TABLE IF NOT EXISTS `inventory_item_copy` (`addToShoppingList` INTEGER NOT NULL DEFAULT 0, `addToShoppingListTrigger` INTEGER NOT NULL DEFAULT 1, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `inTrash` INTEGER NOT NULL DEFAULT 0)")
-                database.execSQL("INSERT INTO inventory_item_copy (id, name, extraInfo, color, amount, inTrash, addToShoppingList, addToShoppingListTrigger) SELECT id, name, extraInfo, color, amount, inTrash, autoAddToShoppingList, autoAddToShoppingListTrigger FROM inventory_item")
-                database.execSQL("DROP TABLE inventory_item")
-                database.execSQL("ALTER TABLE inventory_item_copy RENAME TO inventory_item")
-                database.execSQL("COMMIT")
-                database.execSQL("PRAGMA foreign_keys=on")
-            }
-        }
+//        private val MIGRATION_5_6 = object: Migration(5, 6) {
+//            override fun migrate(db: SupportSQLiteDatabase) {
+//                db.execSQL("PRAGMA foreign_keys=off")
+//                db.execSQL("BEGIN TRANSACTION")
+//                db.execSQL("CREATE TABLE IF NOT EXISTS `shopping_list_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `linkedItemId` INTEGER, `inTrash` INTEGER NOT NULL DEFAULT 0, `isChecked` INTEGER NOT NULL DEFAULT 0)")
+//                db.execSQL("CREATE TABLE IF NOT EXISTS `inventory_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `linkedItemId` INTEGER, `inTrash` INTEGER NOT NULL DEFAULT 0, `addToShoppingList` INTEGER NOT NULL DEFAULT 0, `addToShoppingListTrigger` INTEGER NOT NULL DEFAULT 1)")
+//                db.execSQL("INSERT INTO shopping_list_item_copy (id, name, extraInfo, color, amount, linkedItemId, inTrash, isChecked) SELECT id, name, extraInfo, color, amount, linkedInventoryItemId, inTrash, isChecked FROM shopping_list_item")
+//                db.execSQL("INSERT INTO inventory_item_copy (id, name, extraInfo, color, amount, linkedItemId, inTrash, addToShoppingList, addToShoppingListTrigger) SELECT id, name, extraInfo, color, amount, (SELECT id FROM shopping_list_item WHERE shopping_list_item.linkedInventoryItemId = inventory_item.id), inTrash, addToShoppingList, addToShoppingListTrigger FROM inventory_item")
+//                db.execSQL("DROP TABLE shopping_list_item")
+//                db.execSQL("DROP TABLE inventory_item")
+//                db.execSQL("ALTER TABLE inventory_item_copy RENAME TO inventory_item")
+//                db.execSQL("ALTER TABLE shopping_list_item_copy RENAME TO shopping_list_item")
+//                db.execSQL("COMMIT")
+//                db.execSQL("PRAGMA foreign_keys=on")
+//            }
     }
 }

@@ -32,20 +32,22 @@ class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Cont
     override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder,
                         target: RecyclerView.ViewHolder) = false
 
-    /* onChildDrawOver has to be overridden instead of onChildDraw to make the
-     * temporary swiping background color visible even when the RecyclerView
-     * item backgrounds are opaque instead of transparent. */
-    override fun onChildDrawOver(canvas: Canvas, recyclerView: RecyclerView,
-                             viewHolder: RecyclerView.ViewHolder,
-                             dX: Float, dY: Float, actionState: Int,
-                             isCurrentlyActive: Boolean) {
+    override fun onChildDraw(
+        c: Canvas,
+        recyclerView: RecyclerView,
+        viewHolder: RecyclerView.ViewHolder,
+        dX: Float, dY: Float,
+        actionState: Int,
+        isCurrentlyActive: Boolean
+    ) {
+        super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
         deleteBg.bounds.left = if (dX > 0) viewHolder.itemView.left
                                else        viewHolder.itemView.right + dX.toInt()
         deleteBg.bounds.top = viewHolder.itemView.top
         deleteBg.bounds.right = if (dX > 0) viewHolder.itemView.left + dX.toInt()
                                 else        viewHolder.itemView.right
         deleteBg.bounds.bottom = viewHolder.itemView.bottom
-        deleteBg.draw(canvas)
+        deleteBg.draw(c)
 
         if (deleteIcon == null) return
         deleteIcon.bounds.left = if (dX > 0) viewHolder.itemView.left + iconMargin
@@ -54,10 +56,7 @@ class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Cont
         deleteIcon.bounds.right = if (dX > 0) viewHolder.itemView.left + iconSize + iconMargin
                                   else        viewHolder.itemView.right - iconMargin
         deleteIcon.bounds.bottom = deleteIcon.bounds.top + iconSize
-        canvas.save()
-        canvas.clipRect(deleteBg.bounds)
-        deleteIcon.draw(canvas)
-        canvas.restore()
+        deleteIcon.draw(c)
     }
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) =

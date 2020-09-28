@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 /** A RecyclerView.ItemDecoration to add spacing between items. */
 class ItemSpacingDecoration(context: Context) :
     RecyclerView.ItemDecoration() {
-    private val spacing = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f,
+    private val spacing = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8f,
                                                     context.resources.displayMetrics).toInt()
 
     override fun getItemOffsets(

@@ -15,7 +15,6 @@ import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.fragment.app.FragmentManager
 import com.google.android.material.snackbar.Snackbar
@@ -73,6 +72,8 @@ fun newShoppingListItemDialog(
     builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
     itemView.background = null
+    itemView.editButton.visibility = View.GONE
+    itemView.inventoryItemDetailsGroup.visibility = View.GONE
     val colorEdit = itemView.colorEdit.drawable
     var colorIndex = 0
     colorEdit.setTint(ViewModelItem.Colors[colorIndex])
@@ -83,8 +84,6 @@ fun newShoppingListItemDialog(
             colorIndex = chosenColorIndex
         }
     }
-    itemView.editButton.isVisible = false
-    itemView.collapseButton.isVisible = false
     itemView.nameEdit.isEditable = true
     itemView.extraInfoEdit.isEditable = true
     itemView.inventoryAmountEdit.isEditable = true
@@ -118,11 +117,14 @@ fun newInventoryItemDialog(
     builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
     itemView.background = null
-    itemView.collapseButton.visibility = View.GONE
+    itemView.expand(animate = false)
+    // Setting collapseButton's visibility to GONE or INVISIBLE doesn't seem to work for some reason
+    itemView.collapseButton.alpha = 0f
+    itemView.collapseButton.setOnClickListener {}
+    itemView.addToShoppingListTriggerEdit.currentValue = itemView.addToShoppingListTriggerEdit.minValue
     val colorEdit = itemView.colorEdit.drawable
     var colorIndex = 0
     colorEdit.setTint(ViewModelItem.Colors[colorIndex])
-    itemView.expand(animate = false)
     itemView.colorEdit.setOnClickListener {
         colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
             ObjectAnimator.ofArgb(colorEdit, "tint", ViewModelItem.Colors[colorIndex],
@@ -130,8 +132,6 @@ fun newInventoryItemDialog(
             colorIndex = chosenColorIndex
         }
     }
-    itemView.editButton.isVisible = false
-    itemView.collapseButton.isVisible = false
 
     builder.setPositiveButton(android.R.string.ok) { _, _ ->
         callback(InventoryItem(name = itemView.nameEdit.text.toString(),

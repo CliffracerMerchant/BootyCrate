@@ -53,6 +53,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         this.inventoryViewModel = inventoryViewModel
         this.fragmentManager = fragmentManager
         finishInit(owner, shoppingListViewModel, initialSort)
+        adapter.registerAdapterDataObserver(selection)
     }
 
     fun addNewItem() = newShoppingListItemDialog(context, fragmentManager) { newItem ->
@@ -62,7 +63,10 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     fun addItemsToInventory(ids: LongArray) =
         inventoryViewModel.addFromShoppingListItems(ids)
 
-    fun checkout() = shoppingListViewModel.checkOut()
+    fun checkout() {
+        checkedItems.removeAllIds()
+        shoppingListViewModel.checkOut()
+    }
 
     override fun deleteItems(ids: LongArray) {
         checkedItems.removeAllIds(ids)
@@ -102,28 +106,31 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 if (payload is EnumSet<*>) {
                     val item = getItem(position)
                     val changes = payload as EnumSet<ShoppingListItem.Field>
-                    if (changes.contains(ShoppingListItem.Field.Name))
-                        holder.view.nameEdit.setText(item.name)
-                    if (changes.contains(ShoppingListItem.Field.ExtraInfo))
-                        holder.view.extraInfoEdit.setText(item.extraInfo)
+                    if (changes.contains(ShoppingListItem.Field.Name) &&
+                        holder.view.nameEdit.text.toString() != item.name)
+                            holder.view.nameEdit.setText(item.name)
+                    if (changes.contains(ShoppingListItem.Field.ExtraInfo) &&
+                        holder.view.extraInfoEdit.text.toString() != item.extraInfo)
+                            holder.view.extraInfoEdit.setText(item.extraInfo)
                     if (changes.contains(ShoppingListItem.Field.IsChecked)) {
-                        if (holder.view.checkBox.isChecked != item.isChecked)
-                            holder.view.checkBox.isChecked = item.isChecked
-                        if (holder.view.checkBox.isChecked) checkedItems.add(position)
-                        else                                checkedItems.remove(position)
+                        holder.view.checkBox.isChecked = item.isChecked
+                        if (item.isChecked) checkedItems.add(position)
+                        else                checkedItems.remove(position)
                     }
-                    if (changes.contains(ShoppingListItem.Field.Amount))
-                        holder.view.shoppingListAmountEdit.currentValue = item.amount
+                    if (changes.contains(ShoppingListItem.Field.Amount) &&
+                        holder.view.shoppingListAmountEdit.currentValue != item.amount)
+                            holder.view.shoppingListAmountEdit.currentValue = item.amount
                     if (changes.contains(ShoppingListItem.Field.LinkedTo))
-                        holder.view.updateLinkedStatus(item.linkedInventoryItemId)
-                    if (changes.contains(ShoppingListItem.Field.Color)) {
-                        holder.view.itemColor = item.color
-                        val itemColor = holder.view.itemColor ?: 0
-                        val startColor = ViewModelItem.Colors[itemColor]
-                        val endColor = ViewModelItem.Colors[item.color]
-                        val anim = ValueAnimator.ofArgb(startColor, endColor)
-                        anim.addUpdateListener { holder.view.checkBoxBackgroundController.tint = it.animatedValue as Int }
-                        anim.start()
+                        holder.view.updateLinkedStatus(item.linkedItemId)
+                    if (changes.contains(ShoppingListItem.Field.Color) &&
+                        holder.view.itemColor != item.color) {
+                            holder.view.itemColor = item.color
+                            val itemColor = holder.view.itemColor ?: 0
+                            val startColor = ViewModelItem.Colors[itemColor]
+                            val endColor = ViewModelItem.Colors[item.color]
+                            val anim = ValueAnimator.ofArgb(startColor, endColor)
+                            anim.addUpdateListener { holder.view.checkBoxBackgroundController.tint = it.animatedValue as Int }
+                            anim.start()
                     }
                 } else unhandledChanges.add(payload)
             }
@@ -165,7 +172,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             view.linkedToEdit.setOnClickListener { selectInventoryItemDialog(
                     context = context,
                     inventoryItems = inventoryViewModel.items.value,
-                    initiallySelectedItemId = item.linkedInventoryItemId,
+                    initiallySelectedItemId = item.linkedItemId,
                     snackBarAnchor = snackBarAnchor ?: itemView,
                     callback = ::updateLinkedTo)
             }
@@ -194,13 +201,13 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             view.nameEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 shoppingListViewModel.updateName(item.id, value)
-                val linkedId = item.linkedInventoryItemId
+                val linkedId = item.linkedItemId
                 if (linkedId != null) inventoryViewModel.updateName(linkedId, value)
             }
             view.extraInfoEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 shoppingListViewModel.updateExtraInfo(item.id, value)
-                val linkedId = item.linkedInventoryItemId
+                val linkedId = item.linkedItemId
                 if (linkedId != null) inventoryViewModel.updateExtraInfo(linkedId, value)
             }
             view.shoppingListAmountEdit.liveData.observeForever { value ->
@@ -224,7 +231,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
                 }
                 view.checkBox.setOnCheckedChangeListener{ _, isChecked ->
-                    view.defaultOnCheckedChange(isChecked)
+                    view.setVisualCheckedState(isChecked)
                 }
                 return view.collapse(animate)
             }
@@ -232,7 +239,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
         private fun updateLinkedTo(newLinkedItem: InventoryItem?) {
             if (newLinkedItem == null || newLinkedItem.id == 0L) return
-            shoppingListViewModel.updateLinkedInventoryItemId(item.id, newLinkedItem)
+            //shoppingListViewModel.updateLinkedInventoryItemId(item.id, newLinkedItem)
         }
     }
 
@@ -271,9 +278,11 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             _sizeLiveData.value = size
         }
 
-        fun removeAllIds(ids: LongArray) {
-            for (id in ids) if (hashSet.contains(id))
-                hashSet.remove(id)
+        fun removeAllIds(ids: LongArray? = null) {
+            if (ids != null)
+                for (id in ids)
+                    hashSet.remove(id)
+            else hashSet.clear()
             _sizeLiveData.value = size
         }
 
@@ -284,6 +293,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             }
             _sizeLiveData.value = size
         }
+
     }
 
     /** Computes a diff between two shopping list items.
@@ -309,8 +319,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             if (newItem.color != oldItem.color)         itemChanges.add(ShoppingListItem.Field.Color)
             if (newItem.amount != oldItem.amount)       itemChanges.add(ShoppingListItem.Field.Amount)
             if (newItem.isChecked != oldItem.isChecked) itemChanges.add(ShoppingListItem.Field.IsChecked)
-            if (newItem.linkedInventoryItemId != oldItem.linkedInventoryItemId)
-                itemChanges.add(ShoppingListItem.Field.LinkedTo)
+            if (newItem.linkedItemId != oldItem.linkedItemId) itemChanges.add(ShoppingListItem.Field.LinkedTo)
 
             if (!itemChanges.isEmpty())
                 listChanges[newItem.id] = EnumSet.copyOf(itemChanges)

@@ -15,23 +15,21 @@ class ShoppingListItem(
     extraInfo: String = "",
     color: Int = 0,
     amount: Int = 1,
+    linkedItemId: Long? = null,
     inTrash: Boolean = false,
-    @ColumnInfo(name = "isChecked", defaultValue = "0") var isChecked: Boolean = false,
-    @ColumnInfo(name = "linkedInventoryItemId")         var linkedInventoryItemId: Long? = null
-) : ViewModelItem(id, name, extraInfo, color, amount, inTrash) {
+    @ColumnInfo(name = "isChecked", defaultValue = "0")
+    var isChecked: Boolean = false
+) : ViewModelItem(id, name, extraInfo, color, amount, linkedItemId, inTrash) {
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
         if (other == null || other !is ShoppingListItem) return false
         return super.equals(other) &&
-               this.isChecked == other.isChecked &&
-               this.linkedInventoryItemId == other.linkedInventoryItemId
+               this.isChecked == other.isChecked
     }
 
     override fun toDebugString(): String {
-        return super.toString() +
-               "\nisChecked = $isChecked" +
-               "\nlinkedInventoryItemId = $linkedInventoryItemId"
+        return super.toString() + "\nisChecked = $isChecked"
     }
 
     /** The enum class Field identifies user facing fields that are potentially
@@ -39,5 +37,5 @@ class ShoppingListItem(
      *  are used as a payload in the adapter notifyItemChanged calls in order
      *  to identify which fields were changed.*/
     enum class Field { Name, ExtraInfo, Color,
-                       Amount, IsChecked, LinkedTo }
+                       Amount, LinkedTo, IsChecked }
 }

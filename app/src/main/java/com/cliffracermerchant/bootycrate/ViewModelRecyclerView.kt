@@ -6,6 +6,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
@@ -83,7 +84,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
         setAdapter(adapter)
         this.viewModel = viewModel
         if (initialSort != null) sort = initialSort
-        viewModel.items.observe(owner, Observer { items -> adapter.submitList(items) })
+        viewModel.items.observe(owner) { items -> adapter.submitList(items); Log.d("checkeditems", "size now ${items.size}") }
     }
 
     open fun addItem(item: Entity) = viewModel.add(item)

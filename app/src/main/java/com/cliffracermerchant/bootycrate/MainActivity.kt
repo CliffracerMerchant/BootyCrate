@@ -199,20 +199,25 @@ class MainActivity : AppCompatActivity() {
         var translationAmount = fragmentContainer.width * 1f
         if (switchingToInventory) translationAmount *= -1f
 
-        inventoryFragment.view?.translationX = if (showingInventory) -translationAmount else 0f
-        val inventoryFragmentAnim = inventoryFragment.view?.animate()?.
-            withLayer()?.translationXBy(translationAmount)?.setDuration(300)
+        val inventoryView = inventoryFragment.view
+        val shoppingListView = shoppingListFragment.view
 
-        shoppingListFragment.view?.translationX = if (showingInventory) 0f else -translationAmount
-        val shoppingListFragmentAnim = shoppingListFragment.view?.animate()?.
-            withLayer()?.translationXBy(translationAmount)?.setDuration(300)
+        val inventoryFragmentAnim = if (inventoryView != null) {
+            inventoryView.translationX = if (showingInventory) -translationAmount else 0f
+            inventoryView.animate().withLayer().translationXBy(translationAmount).setDuration(300)
+        } else null
+
+        val shoppingListFragmentAnim = if (shoppingListView != null) {
+            shoppingListView.translationX = if (showingInventory) 0f else -translationAmount
+            shoppingListView.animate().withLayer().translationXBy(translationAmount).setDuration(300)
+        } else null
 
         if (switchingToInventory) shoppingListFragmentAnim?.withEndAction {
             supportFragmentManager.beginTransaction().hide(shoppingListFragment).commit()
-        }
-        else inventoryFragmentAnim?.withEndAction {
+        } else inventoryFragmentAnim?.withEndAction {
             supportFragmentManager.beginTransaction().hide(inventoryFragment).commit()
         }
+
         if (shoppingListFragmentAnim != null) enterAndExitAnims.add(shoppingListFragmentAnim)
         if (inventoryFragmentAnim != null) enterAndExitAnims.add(inventoryFragmentAnim)
         oldFragment.disable()

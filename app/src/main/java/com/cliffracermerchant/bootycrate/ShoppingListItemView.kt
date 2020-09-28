@@ -99,7 +99,7 @@ class ShoppingListItemView(context: Context) :
             else            expand()
         }
         collapseButton.setOnClickListener { collapse() }
-        checkBox.setOnCheckedChangeListener { _, checked -> defaultOnCheckedChange(checked) }
+        checkBox.setOnCheckedChangeListener { _, checked -> setVisualCheckedState(checked) }
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
     }
 
@@ -112,8 +112,8 @@ class ShoppingListItemView(context: Context) :
         shoppingListAmountEdit.initCurrentValue(item.amount)
 
         checkBox.isChecked = item.isChecked
-        if (!item.isChecked) defaultOnCheckedChange(checked = item.isChecked, animate = false)
-        updateLinkedStatus(item.linkedInventoryItemId)
+        if (!item.isChecked) setVisualCheckedState(checked = false, animate = false)
+        updateLinkedStatus(item.linkedItemId)
 
         if (isExpanded) expand(false)
         else            collapse(false)
@@ -181,7 +181,7 @@ class ShoppingListItemView(context: Context) :
         return -50
     }
 
-    fun defaultOnCheckedChange(checked: Boolean, animate: Boolean = true) {
+    fun setVisualCheckedState(checked: Boolean, animate: Boolean = true) {
         nameEdit.setStrikeThroughEnabled(checked, animate)
         extraInfoEdit.setStrikeThroughEnabled(checked, animate)
         if (checked) {
@@ -233,10 +233,10 @@ class ShoppingListItemView(context: Context) :
                         increaseButton.layoutParams.width = increaseButtonWidth
                         increaseButton.requestLayout()
                     }
-                })
+                }
+            )
         }
     }
-
 
     private fun setExtraInfoVisible(makingVisible: Boolean = true, animate: Boolean = true) {
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)

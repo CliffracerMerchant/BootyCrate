@@ -5,6 +5,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
@@ -68,6 +69,7 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
         recyclerView.snackBarAnchor = mainActivity.bottomAppBar
 
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
+            Log.d("checkeditems", "selection size = $newSize")
             if (newSize == 0) actionMode?.finish()
             else if (newSize > 0) {
                 actionMode = actionMode ?: mainActivity.startSupportActionMode(actionModeCallback)

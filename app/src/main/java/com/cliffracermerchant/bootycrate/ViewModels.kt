@@ -95,30 +95,17 @@ class ShoppingListViewModel(app: Application) : ViewModel<ShoppingListItem>(app)
     fun addFromInventoryItems(ids: LongArray) = viewModelScope.launch {
         dao.addFromInventoryItems(ids)
     }
-    fun autoAddFromInventoryItem(inventoryItemId: Long, minAmount: Int) = viewModelScope.launch {
-        dao.autoAddFromInventoryItem(inventoryItemId, minAmount)
-    }
-
-    fun updateNameFromLinkedInventoryItem(inventoryItemId: Long, name: String) = viewModelScope.launch {
-        dao.updateNameFromLinkedInventoryItem(inventoryItemId, name)
-    }
-
-    fun updateExtraInfoFromLinkedInventoryItem(inventoryItemId: Long, extraInfo: String) = viewModelScope.launch {
-        dao.updateExtraInfoFromLinkedInventoryItem(inventoryItemId, extraInfo)
-    }
-
+//    fun autoAddFromInventoryItem(inventoryItemId: Long, minAmount: Int) = viewModelScope.launch {
+//        dao.autoAddFromInventoryItem(inventoryItemId, minAmount)
+//    }
     fun updateIsChecked(id: Long, isChecked: Boolean) = viewModelScope.launch {
         dao.updateIsChecked(id, isChecked)
     }
-
-    fun updateAmountOnListFromLinkedItem(inventoryItemId: Long, amount: Int) = viewModelScope.launch {
-        dao.updateAmountFromLinkedItem(inventoryItemId, amount)
-    }
-    fun updateLinkedInventoryItemId(id: Long, linkedInventoryItem: InventoryItem) = viewModelScope.launch {
-        dao.updateLinkedInventoryItemId(id, linkedInventoryItem.id,
-                                        linkedInventoryItem.name,
-                                        linkedInventoryItem.extraInfo)
-    }
+//    fun updateLinkedInventoryItemId(id: Long, linkedInventoryItem: InventoryItem) = viewModelScope.launch {
+//        dao.updateLinkedInventoryItemId(id, linkedInventoryItem.id,
+//                                        linkedInventoryItem.name,
+//                                        linkedInventoryItem.extraInfo)
+//    }
     fun checkOut() = viewModelScope.launch {
         dao.checkOut()
     }
@@ -131,7 +118,7 @@ class InventoryViewModel(app: Application) : ViewModel<InventoryItem>(app) {
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
     fun addFromShoppingListItems(shoppingListItemIds: LongArray) = viewModelScope.launch {
-        dao.insertFromShoppingListItems(shoppingListItemIds)
+        dao.addFromShoppingListItems(shoppingListItemIds)
     }
     fun updateAddToShoppingList(id: Long, addToShoppingList: Boolean) = viewModelScope.launch {
         dao.updateAddToShoppingList(id, addToShoppingList)

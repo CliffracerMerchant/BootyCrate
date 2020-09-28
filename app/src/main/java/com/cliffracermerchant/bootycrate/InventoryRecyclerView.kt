@@ -50,6 +50,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         this.shoppingListViewModel = shoppingListViewModel
         this.fragmentManager = fragmentManager
         finishInit(owner, inventoryViewModel, initialSort)
+        adapter.registerAdapterDataObserver(selection)
     }
 
     fun addNewItem() = newInventoryItemDialog(context, fragmentManager) { newItem ->
@@ -58,15 +59,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun addItemsToShoppingList(ids: LongArray) {
         shoppingListViewModel.addFromInventoryItems(ids)
-    }
-
-    fun checkAutoAddToShoppingList(position: Int) {
-        val item = adapter.currentList[position]
-        if (!item.addToShoppingList) return
-        if (item.amount < item.addToShoppingListTrigger) {
-            val minAmount = item.addToShoppingListTrigger - item.amount
-            shoppingListViewModel.autoAddFromInventoryItem(item.id, minAmount)
-        }
     }
 
     /** A RecyclerView.Adapter to display the contents of a list of inventory items.
@@ -101,19 +93,21 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 if (payload is EnumSet<*>) {
                     val item = getItem(position)
                     val changes = payload as EnumSet<InventoryItem.Field>
-                    if (changes.contains(InventoryItem.Field.Name))
-                        holder.view.nameEdit.setText(item.name)
-                    if (changes.contains(InventoryItem.Field.Amount)) {
-                        holder.view.inventoryAmountEdit.currentValue = item.amount
-                        checkAutoAddToShoppingList(holder.adapterPosition) }
-                    if (changes.contains(InventoryItem.Field.ExtraInfo))
-                        holder.view.extraInfoEdit.setText(item.extraInfo)
-                    if (changes.contains(InventoryItem.Field.AddToShoppingList)) {
-                        holder.view.addToShoppingListCheckBox.isChecked = item.addToShoppingList
-                        checkAutoAddToShoppingList(holder.adapterPosition) }
-                    if (changes.contains(InventoryItem.Field.AddToShoppingListTrigger)) {
-                        holder.view.addToShoppingListTriggerEdit.currentValue = item.addToShoppingListTrigger
-                        checkAutoAddToShoppingList(holder.adapterPosition) }
+                    if (changes.contains(InventoryItem.Field.Name) &&
+                        holder.view.nameEdit.text.toString() != item.name)
+                            holder.view.nameEdit.setText(item.name)
+                    if (changes.contains(InventoryItem.Field.Amount) &&
+                        holder.view.inventoryAmountEdit.currentValue != item.amount)
+                            holder.view.inventoryAmountEdit.currentValue = item.amount
+                    if (changes.contains(InventoryItem.Field.ExtraInfo) &&
+                        holder.view.extraInfoEdit.text.toString() != item.extraInfo)
+                            holder.view.extraInfoEdit.setText(item.extraInfo)
+                    if (changes.contains(InventoryItem.Field.AddToShoppingList) &&
+                        holder.view.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
+                            holder.view.addToShoppingListCheckBox.isChecked = item.addToShoppingList
+                    if (changes.contains(InventoryItem.Field.AddToShoppingListTrigger) &&
+                        holder.view.addToShoppingListTriggerEdit.currentValue != item.addToShoppingListTrigger)
+                            holder.view.addToShoppingListTriggerEdit.currentValue = item.addToShoppingListTrigger
                     if (changes.contains(InventoryItem.Field.Color)) {
                         val colorEditBg = holder.view.colorEdit.drawable
                         colorEditBg.setTint(ViewModelItem.Colors[item.color])
@@ -169,7 +163,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             view.nameEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 inventoryViewModel.updateName(item.id, value)
-                shoppingListViewModel.updateNameFromLinkedInventoryItem(item.id, value)
+                //shoppingListViewModel.updateNameFromLinkedInventoryItem(item.id, value)
             }
             view.inventoryAmountEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
@@ -178,7 +172,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             view.extraInfoEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 inventoryViewModel.updateExtraInfo(item.id, value)
-                shoppingListViewModel.updateExtraInfoFromLinkedInventoryItem(item.id, value)
+                //shoppingListViewModel.updateExtraInfoFromLinkedInventoryItem(item.id, value)
             }
             view.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
                 inventoryViewModel.updateAddToShoppingList(item.id, checked)

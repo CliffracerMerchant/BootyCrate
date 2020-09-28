@@ -9,7 +9,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 
 /** A pure abstract class that declares a generic data access object interface. */
-@Dao abstract class DataAccessObject<Entity: ViewModelItem>() {
+@Dao abstract class DataAccessObject<Entity: ViewModelItem> {
+    abstract fun getAllNow(): List<Entity>
     abstract fun getAllSortedByColor(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByNameAsc(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByNameDesc(filter: String): LiveData<List<Entity>>
@@ -25,5 +26,4 @@ import androidx.room.Insert
     abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
     abstract suspend fun updateColor(id: Long, color: Int)
     abstract suspend fun updateAmount(id: Long, amount: Int)
-    abstract fun getAllNow(): List<Entity>
 }

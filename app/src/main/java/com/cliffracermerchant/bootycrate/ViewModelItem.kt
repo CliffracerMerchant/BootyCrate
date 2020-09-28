@@ -10,12 +10,14 @@ import androidx.room.PrimaryKey
 
 @Entity open class ViewModelItem(
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")        var id: Long = 0,
-    @ColumnInfo(name = "name")      var name: String = "",
+    @ColumnInfo(name = "id")                           var id: Long = 0,
+    @ColumnInfo(name = "name")                         var name: String = "",
     @ColumnInfo(name = "extraInfo", defaultValue = "") var extraInfo: String = "",
     @ColumnInfo(name = "color", defaultValue = "0")    var color: Int = 0,
     @ColumnInfo(name = "amount", defaultValue = "1")   var amount: Int = 1,
-    @ColumnInfo(name = "inTrash", defaultValue = "0")  var inTrash: Boolean = false) {
+    @ColumnInfo(name = "linkedItemId")                 var linkedItemId: Long? = null,
+    @ColumnInfo(name = "inTrash", defaultValue = "0")  var inTrash: Boolean = false
+) {
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
@@ -24,27 +26,30 @@ import androidx.room.PrimaryKey
                this.name == other.name &&
                this.extraInfo == other.extraInfo &&
                this.color == other.color &&
-               this.amount == other.amount
+               this.amount == other.amount &&
+               this.linkedItemId == other.linkedItemId
     }
 
     // For debugging purposes, when all info is desired
-    open fun toDebugString() =
-        "\nid = $id" +
-        "\nname = $name" +
-        "\nextraInfo = $extraInfo" +
-        "\ncolor = $color" +
-        "\namount = $amount"
+    open fun toDebugString() ="""
+        id = $id
+        name = $name
+        extraInfo = $extraInfo
+        color = $color
+        amount = $amount
+        linkedItemId = $linkedItemId"""
 
     // For a user-facing string representation of the object
-    override fun toString() = "x$amount $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
+    override fun toString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
     override fun hashCode() = id.hashCode()
 
-    enum class Field { Name, ExtraInfo, Color, Amount }
+    enum class Field { Name, ExtraInfo, Color, Amount, LinkedTo }
 
     enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc }
 
     companion object {
+
         val Colors = intArrayOf(
             -3452848,
             -3437488,
