@@ -50,9 +50,9 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
             ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        menu.setGroupVisible(R.id.inventory_view_menu_group, true)
-        super.onPrepareOptionsMenu(menu)
+    override fun showHideOptionsMenuItems(showing: Boolean) {
+        super.showHideOptionsMenuItems(showing)
+        menu?.setGroupVisible(R.id.inventory_view_menu_group, showing)
     }
 
     /** An ActionMode.Callback for use when the user selects one or more inventory items.
@@ -60,18 +60,26 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
      *  ActionModeCallback overrides RecyclerViewFragment.ActionModeCallback with
      *  new implementations of onActionItemClicked and onPrepareActionMode. */
     inner class ActionModeCallback : RecyclerViewFragment<InventoryItem>.ActionModeCallback() {
+        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+            return if (super.onCreateActionMode(mode, menu)) {
+                menu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
+                true
+            } else false
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode) {
+            menu?.setGroupVisible(R.id.inventory_view_action_mode_menu_group, false)
+            super.onDestroyActionMode(mode)
+        }
+
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             return when (item.itemId) {
                 R.id.add_to_shopping_list_button -> {
                     recyclerView.apply{ addItemsToShoppingList(selection.allSelectedIds()) }
+                    actionMode?.finish()
                     true
-                } else -> onOptionsItemSelected(item)
+                } else -> mainActivity.onOptionsItemSelected(item)
             }
-        }
-        override fun onPrepareActionMode(mode: ActionMode, menu: Menu?): Boolean {
-            menu?.setGroupVisible(R.id.inventory_view_menu_group, true)
-            menu?.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
-            return true
         }
     }
 }

@@ -5,7 +5,9 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+      xmlns:android="http://schemas.android.com/apk/res/android">
+
+<group android:id="@+id/all_action_bar_items_group">
 
     <item android:id="@+id/app_bar_search"
           android:icon="@drawable/ic_search_black_24dp"
@@ -54,17 +56,29 @@
            android:visible="false" >
         <item android:id="@+id/add_to_inventory_button"
               android:title="@string/add_to_inventory_description"
+              android:visible="false"
               app:showAsAction="never" />
     </group>
+</group>
 
+<!-- For some reason wrapping the entire action bar menu in one group, and
+     setting that group to be not visible does not work on the items below.
+     Moving the items below to be above the fragment specific menu groups
+     will cause them to be hidden when the group is set to be not visible,
+     but then they are not in the order they should be. There is therefore
+     another group just for them so that they can be set to be not visible. -->
+<group android:id="@+id/other_action_bar_menu_items">
     <item android:id="@+id/export_menu_item"
-          android:title="@string/export_dialog_title"
-          app:showAsAction="never" />
+        android:title="@string/export_dialog_title"
+        app:showAsAction="never" />
 
     <item android:id="@+id/delete_all_menu_item"
-          android:title="@string/delete_all_description"
-          app:showAsAction="never" />
+        android:title="@string/delete_all_description"
+        app:showAsAction="never" />
 
     <item android:id="@+id/settings_menu_item"
-          android:title="@string/settings_description" />
+        android:title="@string/settings_description"
+        app:showAsAction="never" />
+
+</group>
 </menu>

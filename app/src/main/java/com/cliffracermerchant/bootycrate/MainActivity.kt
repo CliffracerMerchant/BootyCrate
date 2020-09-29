@@ -68,18 +68,15 @@ class MainActivity : AppCompatActivity() {
     private var blackColor: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        //TODO: Use new state manager again once bug causing options menu to not
-        // show up is fixed (https://issuetracker.google.com/issues/168357317)
-        FragmentManager.enableNewStateManager(false)
         super.onCreate(savedInstanceState)
 
         val prefs = getDefaultSharedPreferences(this)
-        /* The activity's ViewModelStore will by default retain instances of the
-           app's view models across activity restarts. In case this is not desired
-           (e.g. when the database was replaced with an external one, and the view-
-           models therefore need to be reset), setting the shared preference whose
-           key is equal to the value of R.string.pref_viewmodels_need_cleared to
-           true will cause MainActivity to call viewModelStore.clear() */
+     /* The activity's ViewModelStore will by default retain instances of the
+        app's view models across activity restarts. In case this is not desired
+        (e.g. when the database was replaced with an external one, and the view-
+        models therefore need to be reset), setting the shared preference whose
+        key is equal to the value of R.string.pref_viewmodels_need_cleared to
+        true will cause MainActivity to call viewModelStore.clear() */
         var prefKey = getString(R.string.pref_viewmodels_need_cleared)
         if (prefs.getBoolean(prefKey, false)) {
             viewModelStore.clear()
@@ -91,9 +88,8 @@ class MainActivity : AppCompatActivity() {
         shoppingListViewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
 
         prefKey = getString(R.string.pref_dark_theme_active)
-        val darkThemeActive = prefs.getBoolean(prefKey, false)
-        setTheme(if (darkThemeActive) R.style.DarkTheme
-                 else                 R.style.LightTheme)
+        setTheme(if (prefs.getBoolean(prefKey, false)) R.style.DarkTheme
+                 else                                  R.style.LightTheme)
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(topActionBar)
@@ -128,6 +124,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.action_bar_menu, menu)
+        preferencesFragment.initOptionsMenu(menu)
         // Setting the SearchView icon color manually is a temporary work-
         // around because setting it in the theme/style did not work.
         val searchView = menu.findItem(R.id.app_bar_search)?.actionView as SearchView?
@@ -190,8 +187,6 @@ class MainActivity : AppCompatActivity() {
         showingInventory = switchingToInventory
         showCheckoutButton(showing = !switchingToInventory)
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
-        val oldFragment = if (switchingToInventory) shoppingListFragment
-                          else                      inventoryFragment
         val newFragment = if (switchingToInventory) inventoryFragment
                           else                      shoppingListFragment
 
@@ -220,8 +215,6 @@ class MainActivity : AppCompatActivity() {
 
         if (shoppingListFragmentAnim != null) enterAndExitAnims.add(shoppingListFragmentAnim)
         if (inventoryFragmentAnim != null) enterAndExitAnims.add(inventoryFragmentAnim)
-        oldFragment.disable()
-        newFragment.enable()
         supportFragmentManager.beginTransaction().show(newFragment).
             runOnCommit{ enterAndExitAnims.start() }.commit()
     }
@@ -324,9 +317,6 @@ class MainActivity : AppCompatActivity() {
         val hiddenFragment2 = when { !showingPreferences -> preferencesFragment
                                      showingInventory ->    inventoryFragment
                                      else ->                shoppingListFragment }
-        transaction.hide(hiddenFragment1).hide(hiddenFragment2).runOnCommit {
-            if (!showingPreferences) if (showingInventory) inventoryFragment.enable()
-                                     else                  shoppingListFragment.enable()
-        }.commit()
+        transaction.hide(hiddenFragment1).hide(hiddenFragment2).commit()
     }
 }

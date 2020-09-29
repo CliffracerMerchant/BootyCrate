@@ -10,7 +10,6 @@ import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.activity_main.*
 
 /** An fragment to display a BootyCrateRecyclerView to the user.
@@ -48,10 +47,10 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  ther enable or disable functionality is required. */
 abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
     protected lateinit var mainActivity: MainActivity
-    protected lateinit var menu: Menu
+    protected var menu: Menu? = null
     abstract val recyclerView: SelectableExpandableRecyclerView<Entity>
 
-    private var actionMode: ActionMode? = null
+    protected var actionMode: ActionMode? = null
     protected open val actionModeCallback = ActionModeCallback()
 
     protected lateinit var fabIconController: AnimatedIconController
@@ -78,35 +77,26 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
         }
     }
 
-    open fun enable() {
-        fabIconController.setState("add", animate = false)
-        mainActivity.fab.setOnClickListener(fabRegularOnClickListener)
-        savedSelectionState?.let { recyclerView.selection.restoreState(it) }
-        savedSelectionState = null
-    }
-
-    open fun disable() {
-        savedSelectionState = recyclerView.selection.currentState()
-        mainActivity.fab.setOnClickListener(null)
-        mainActivity.checkoutBtn.setOnClickListener(null)
-        actionMode?.finish()
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        showHideOptionsMenuItems(showing = !hidden)
+        if (hidden) {
+            savedSelectionState = recyclerView.selection.currentState()
+            mainActivity.fab.setOnClickListener(null)
+            mainActivity.checkoutBtn.setOnClickListener(null)
+            actionMode?.finish()
+        } else {
+            fabIconController.setState("add", animate = false)
+            mainActivity.fab.setOnClickListener(fabRegularOnClickListener)
+            savedSelectionState?.let { recyclerView.selection.restoreState(it) }
+            savedSelectionState = null
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        if (menu.size() == 0) inflater.inflate(R.menu.action_bar_menu, menu)
         this.menu = menu
-        val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
-        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?) = true
-            override fun onQueryTextChange(newText: String?): Boolean {
-                recyclerView.searchFilter = newText
-                return true
-            }
-        })
+        if (!isHidden) showHideOptionsMenuItems(showing = true)
     }
-
-    override fun onPrepareOptionsMenu(menu: Menu) =
-        initOptionsMenuSort(menu)
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.isChecked) return false
@@ -134,23 +124,29 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
             } R.id.amount_descending_option -> {
                 recyclerView.sort = ViewModelItem.Sort.AmountDesc
                 item.isChecked = true; true
-            } else -> mainActivity.onOptionsItemSelected(item)
+            } else -> false//mainActivity.onOptionsItemSelected(item)
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        disable()
-        super.onSaveInstanceState(outState)
-    }
+    protected open fun showHideOptionsMenuItems(showing: Boolean) {
+        val menu = this.menu ?: return
 
-    private fun initOptionsMenuSort(menu: Menu) {
+        val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
+        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?) = true
+            override fun onQueryTextChange(newText: String?): Boolean {
+                recyclerView.searchFilter = newText
+                return true
+        }})
+
         menu.findItem(when (recyclerView.sort) {
             ViewModelItem.Sort.Color ->      R.id.color_option
             ViewModelItem.Sort.NameAsc ->    R.id.name_ascending_option
             ViewModelItem.Sort.NameDesc ->   R.id.name_descending_option
             ViewModelItem.Sort.AmountAsc ->  R.id.amount_ascending_option
             ViewModelItem.Sort.AmountDesc -> R.id.amount_descending_option
-            else ->                           R.id.color_option }).isChecked = true
+            else ->                          R.id.color_option
+        }).isChecked = true
     }
 
     /** The default ActionMode.Callback used by RecyclerViewFragment.
@@ -165,9 +161,9 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
 
         override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
             mode.menuInflater?.inflate(R.menu.action_bar_menu, menu)
+            showHideOptionsMenuItems(showing = true)
             mainActivity.fab.setOnClickListener(fabActionModeOnClickListener)
             fabIconController.setState("delete")
-            initOptionsMenuSort(menu)
             return true
         }
         override fun onPrepareActionMode(mode: ActionMode, menu: Menu?) = false
@@ -176,7 +172,6 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
             recyclerView.selection.clear()
             mainActivity.fab.setOnClickListener(fabRegularOnClickListener)
             fabIconController.setState("add")
-            initOptionsMenuSort(this@RecyclerViewFragment.menu)
             actionMode = null
         }
     }

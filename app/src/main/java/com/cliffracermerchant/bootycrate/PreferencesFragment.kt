@@ -13,12 +13,15 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import androidx.preference.SwitchPreferenceCompat
 
-/** A fragment to display the BootyCrate app settings. */
+/** A fragment to display the BootyCrate app settings.
+ *
+ *  Note: PreferencesFragment is intended to hide the action bar menu when it
+ *  is shown, and show it again when it is hidden. For this to work properly,
+ *  the function initOptionsMenu(menu: Menu) must be called with an instance of
+ *  the app's action bar menu. See the comment before the implementation of
+ *  initOptionsMenu for more information. */
 class PreferencesFragment : PreferenceFragmentCompat() {
-
-    init { setHasOptionsMenu(true) }
-
-    private lateinit var itemDecoration: AlternatingRowBackgroundDecoration
+    private var menu: Menu? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -43,12 +46,21 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         }
     }
 
-    override fun onAttach(context: Context) {
-        itemDecoration = AlternatingRowBackgroundDecoration(context)
-        super.onAttach(context)
+    override fun onHiddenChanged(hidden: Boolean) {
+        menu?.setGroupVisible(R.id.all_action_bar_items_group, hidden)
+        // See R.menu.action_bar_menu source for an explanation of "other_action_bar_menu_items"
+        menu?.setGroupVisible(R.id.other_action_bar_menu_items, hidden)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, menuInflater: MenuInflater) = menu.clear()
+    /* Ideally the PreferenceFragment's menu property would be initialized in an
+       override of onCreateOptionsMenu, so that PreferenceFragment's onHidden-
+       Changed override could properly hide the options menu when it is shown.
+       Unfortunately onCreateOptionsMenu seems to not be called for some reason,
+       even when setHasOptionsMenu(true) is called in the PreferenceFragment's
+       init block. initOptionsMenu() must therefore be called manually by the outer
+       activity, probably in its onCreateOptionsMenu override, so that the options
+       menu is properly hidden when the instance of PreferencesFragment is shown. */
+    fun initOptionsMenu(menu: Menu) { this.menu = menu }
 
     private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
         val context = this.context ?: return@registerForActivityResult

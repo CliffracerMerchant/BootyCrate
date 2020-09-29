@@ -81,35 +81,39 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
             ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
             ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
 
-        recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner, Observer { newSize ->
+        recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
             Log.d("checkeditems", "checked items size = $newSize")
             if (newSize > 0) checkoutButtonIsEnabled = true
             if (newSize == 0) {
                 revertCheckoutButtonToNormalState()
                 checkoutButtonIsEnabled = false
             }
-        })
+        }
     }
-    override fun enable() {
-        super.enable()
-        mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
-        mainActivity.checkoutBtn.setOnClickListener {
-            if (!checkoutButtonIsEnabled) return@setOnClickListener
-            val currentTime = System.currentTimeMillis()
-            if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
-                revertCheckoutButtonToNormalState()
-                recyclerView.checkout()
-            } else {
-                checkoutButtonLastPressTimeStamp = currentTime
-                mainActivity.checkoutBtn.text = checkoutButtonConfirmText
-                handler.removeCallbacks(::revertCheckoutButtonToNormalState)
-                handler.postDelayed(::revertCheckoutButtonToNormalState, 2000)
+
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden) {
+            mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
+            mainActivity.checkoutBtn.setOnClickListener {
+                if (!checkoutButtonIsEnabled) return@setOnClickListener
+                val currentTime = System.currentTimeMillis()
+                if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
+                    revertCheckoutButtonToNormalState()
+                    recyclerView.checkout()
+                } else {
+                    checkoutButtonLastPressTimeStamp = currentTime
+                    mainActivity.checkoutBtn.text = checkoutButtonConfirmText
+                    handler.removeCallbacks(::revertCheckoutButtonToNormalState)
+                    handler.postDelayed(::revertCheckoutButtonToNormalState, 2000)
+                }
             }
         }
     }
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        menu.setGroupVisible(R.id.shopping_list_view_menu_group, true)
-        super.onPrepareOptionsMenu(menu)
+
+    override fun showHideOptionsMenuItems(showing: Boolean) {
+        super.showHideOptionsMenuItems(showing)
+        menu?.setGroupVisible(R.id.shopping_list_view_menu_group, showing)
     }
 
     private fun revertCheckoutButtonToNormalState() {
@@ -135,22 +139,29 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
 
     /** An ActionMode.Callback for use when the user selects one or more shopping list items.
      *
-     *  ActionModeCallback overrides RecyclerViewFragment.ActionModeCallback
-     *  with new implementations of onActionItemClicked and onPrepareAction-
-     *  Mode. */
+     *  ActionModeCallback overrides RecyclerViewFragment.ActionModeCallback with
+     *  new implementations of onActionItemClicked and onPrepareActionMode. */
     inner class ActionModeCallback : RecyclerViewFragment<ShoppingListItem>.ActionModeCallback() {
+        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
+            return if (super.onCreateActionMode(mode, menu)) {
+                menu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
+                true
+            } else false
+        }
+
+        override fun onDestroyActionMode(mode: ActionMode) {
+            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
+            super.onDestroyActionMode(mode)
+        }
+
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             return when (item.itemId) {
                 R.id.add_to_inventory_button -> {
                     recyclerView.apply{ addItemsToInventory(selection.allSelectedIds()) }
+                    actionMode?.finish()
                     true
-                } else -> onOptionsItemSelected(item)
+                } else -> mainActivity.onOptionsItemSelected(item)
             }
-        }
-        override fun onPrepareActionMode(mode: ActionMode, menu: Menu?): Boolean {
-            menu?.setGroupVisible(R.id.shopping_list_view_menu_group, true)
-            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
-            return true
         }
     }
 }
