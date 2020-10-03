@@ -18,8 +18,6 @@ import androidx.appcompat.widget.SearchView
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentManager
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.button.MaterialButton
@@ -102,7 +100,8 @@ class MainActivity : AppCompatActivity() {
             if (item.isChecked) false // Selected item was already selected
             else {
                 item.isChecked = true
-                toggleShoppingListInventoryFragments(switchingToInventory = item.itemId == R.id.inventory_button)
+                if (item.itemId == R.id.inventory_button) switchToInventory()
+                else                                      switchToShoppingList()
                 true
             }
         }
@@ -157,7 +156,10 @@ class MainActivity : AppCompatActivity() {
         } else false
     }
 
-    override fun onBackPressed() { onSupportNavigateUp() }
+    override fun onBackPressed() {
+        if (showingPreferences) togglePreferencesFragment(showing = false)
+        else                    super.onBackPressed()
+    }
 
     private fun togglePreferencesFragment(showing: Boolean) {
         val oldFragment = when { !showing ->         preferencesFragment
@@ -174,49 +176,59 @@ class MainActivity : AppCompatActivity() {
         checkoutBtn.animate().translationY(if (showing) 250f else 0f).withLayer().start()
         val exitAnimation = AnimatorInflater.loadAnimator(this, R.animator.fragment_close_exit)
         exitAnimation.setTarget(oldFragment.view)
-        exitAnimation.doOnStart{ oldFragment.view?.setLayerType(View.LAYER_TYPE_HARDWARE, null) }
+        exitAnimation.doOnStart{
+            oldFragment.view?.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            if (showing) (oldFragment as RecyclerViewFragment<*>).onAboutToBeHidden()
+        }
         exitAnimation.doOnEnd{ oldFragment.view?.setLayerType(View.LAYER_TYPE_NONE, null)
                                supportFragmentManager.beginTransaction().hide(oldFragment).commit() }
         supportFragmentManager.beginTransaction().runOnCommit{ exitAnimation.start() }.
             setCustomAnimations(R.animator.fragment_close_enter, 0).show(newFragment).commit()
     }
 
-    private fun toggleShoppingListInventoryFragments(switchingToInventory: Boolean) {
+    private fun switchToInventory() = toggleMainFragments(switchingToInventory = true)
+    private fun switchToShoppingList() = toggleMainFragments(switchingToInventory = false)
+    private fun toggleMainFragments(switchingToInventory: Boolean) {
         if (showingPreferences) return
 
         showingInventory = switchingToInventory
-        showCheckoutButton(showing = !switchingToInventory)
+        showCheckoutButton(showing = !showingInventory)
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
-        val newFragment = if (switchingToInventory) inventoryFragment
-                          else                      shoppingListFragment
 
-        val enterAndExitAnims = ViewPropertyAnimatorSet()
-        var translationAmount = fragmentContainer.width * 1f
-        if (switchingToInventory) translationAmount *= -1f
-
-        val inventoryView = inventoryFragment.view
-        val shoppingListView = shoppingListFragment.view
-
-        val inventoryFragmentAnim = if (inventoryView != null) {
-            inventoryView.translationX = if (showingInventory) -translationAmount else 0f
-            inventoryView.animate().withLayer().translationXBy(translationAmount).setDuration(300)
-        } else null
-
-        val shoppingListFragmentAnim = if (shoppingListView != null) {
-            shoppingListView.translationX = if (showingInventory) 0f else -translationAmount
-            shoppingListView.animate().withLayer().translationXBy(translationAmount).setDuration(300)
-        } else null
-
-        if (switchingToInventory) shoppingListFragmentAnim?.withEndAction {
-            supportFragmentManager.beginTransaction().hide(shoppingListFragment).commit()
-        } else inventoryFragmentAnim?.withEndAction {
-            supportFragmentManager.beginTransaction().hide(inventoryFragment).commit()
+        val newFragment: RecyclerViewFragment<*>
+        val oldFragment: RecyclerViewFragment<*>
+        val newFragmentTranslationStart: Float
+        val fragmentTranslationAmount: Float
+        if (showingInventory) {
+            newFragment = inventoryFragment
+            oldFragment = shoppingListFragment
+            newFragmentTranslationStart = fragmentContainer.width.toFloat()
+            fragmentTranslationAmount = -fragmentContainer.width.toFloat()
+        } else {
+            newFragment = shoppingListFragment
+            oldFragment = inventoryFragment
+            newFragmentTranslationStart = -fragmentContainer.width.toFloat()
+            fragmentTranslationAmount = fragmentContainer.width.toFloat()
         }
 
-        if (shoppingListFragmentAnim != null) enterAndExitAnims.add(shoppingListFragmentAnim)
-        if (inventoryFragmentAnim != null) enterAndExitAnims.add(inventoryFragmentAnim)
-        supportFragmentManager.beginTransaction().show(newFragment).
-            runOnCommit{ enterAndExitAnims.start() }.commit()
+        val newFragmentView = newFragment.view
+        val newFragmentAnim = newFragmentView?.animate()?.withLayer()?.setDuration(300)?.
+                              translationX(0f)?.withStartAction {
+            newFragmentView.translationX = newFragmentTranslationStart
+        }
+
+        val oldFragmentView = oldFragment.view
+        val oldFragmentAnim = oldFragmentView?.animate()?.withLayer()?.setDuration(300)?.
+                              translationXBy(fragmentTranslationAmount)?.withStartAction {
+            oldFragment.onAboutToBeHidden()
+        }?.withEndAction {
+            supportFragmentManager.beginTransaction().hide(oldFragment).commit()
+        }
+
+        supportFragmentManager.beginTransaction().show(newFragment).runOnCommit {
+            oldFragmentAnim?.start()
+            newFragmentAnim?.start()
+        }.commit()
     }
 
     private fun showCheckoutButton(showing: Boolean, animate: Boolean = true) {
@@ -317,6 +329,10 @@ class MainActivity : AppCompatActivity() {
         val hiddenFragment2 = when { !showingPreferences -> preferencesFragment
                                      showingInventory ->    inventoryFragment
                                      else ->                shoppingListFragment }
-        transaction.hide(hiddenFragment1).hide(hiddenFragment2).commit()
+        val shownFragment = when { showingPreferences -> preferencesFragment
+                                   showingInventory ->   inventoryFragment
+                                   else ->               shoppingListFragment }
+        transaction.hide(hiddenFragment1).hide(hiddenFragment2).
+            runOnCommit{ shownFragment.onHiddenChanged(false) }.commit()
     }
 }

@@ -9,46 +9,52 @@
     <string name="inventory_navigation_item_name">Inventory</string>
     <string name="shopping_list_navigation_item_name">Shopping List</string>
     <string name="settings_description">Settings</string>
-    <string name="action_mode_title">%1$d item(s) selected</string>
+    <string name="search_description">Search</string>
+    <string name="change_sorting_description">Change sorting</string>
+    <string name="name_ascending_description">Name ascending</string>
+    <string name="name_descending_description">Name descending</string>
+    <string name="amount_ascending_description">Amount ascending</string>
+    <string name="amount_descending_description">Amount descending</string>
+
     <string name="add_item_button_name">Add new item</string>
     <string name="delete_item_button_name">Delete item(s)</string>
     <string name="delete_all_description">Delete all</string>
+    <string name="delete_all_items_confirmation_message">
+        This will delete all items in the %1$s. Are you sure?</string>
+    <string name="delete_all_no_items_error_message">The %1$s is empty</string>
     <string name="edit_button_description">Edit item</string>
     <string name="delete_snackbar_text">%1$d item(s) deleted</string>
     <string name="delete_snackbar_undo_text">Undo</string>
-    <string name="inventory_item_amount_description">Amount</string>
+    <string name="action_mode_title">%1$d item(s) selected</string>
+
+    <string name="item_name_description">Item name</string>
+    <string name="item_default_name">New item</string>
+    <string name="item_extra_info_description">Item extra info</string>
+    <string name="color_description">Color</string>
+    <string name="edit_color_description">Edit item color</string>
+    <string name="item_amount_description">Amount</string>
     <string name="decrease_button_description">Decrease amount</string>
     <string name="increase_button_description">Increase amount</string>
-
-    <string name="inventory_item_name_description">Item name</string>
-    <string name="inventory_item_extra_info_description">Item extra info</string>
-    <string name="inventory_item_add_to_shopping_list_checkbox_description">Add to shopping list</string>
-    <string name="inventory_item_add_to_shopping_list_checkbox_text">Add to shopping list under:</string>
-    <string name="inventory_item_add_to_shopping_list_trigger_edit_description">Add to shopping list amount threshold</string>
+    <string name="link_item_action_long_description">Select an item to link to:</string>
+    <string name="linked_item_description">Linked</string>
+    <string name="unlinked_item_description">Not linked</string>
+    <string name="link_item_now_action_description">Link now</string>
+    <string name="change_item_link_action_description">Change</string>
     <string name="collapse_button_description">Collapse extra item options</string>
-    <string name="inventory_item_default_name">New item</string>
-    <string name="delete_all_inventory_items_confirmation_message">
-        This will delete all items in the inventory. Are you sure?</string>
+
+    <string name="inventory_item_collection_name">inventory</string>
     <string name="add_to_inventory_description">Add to inventory</string>
+    <string name="add_to_shopping_list_checkbox_description">Add to shopping list</string>
+    <string name="add_to_shopping_list_checkbox_text">Add to shopping list under:</string>
+    <string name="add_to_shopping_list_trigger_edit_description">Add to shopping list amount threshold</string>
 
-    <string name="shopping_list_item_default_name">New item</string>
-    <string name="shopping_list_item_name_description">Item name</string>
-    <string name="shopping_list_item_extra_info_description">Item extra info</string>
-    <string name="amount_in_cart_edit_label">In cart: </string>
-    <string name="shopping_list_item_amount_in_cart_description">Amount in cart</string>
-    <string name="shopping_list_item_amount_description">Amount on list</string>
-    <string name="linked_shopping_list_item_description">Linked</string>
-    <string name="unlinked_shopping_list_item_description">Not linked</string>
-    <string name="shopping_list_item_link_now_action_description">Link now</string>
-    <string name="shopping_list_item_change_link_action_description">Change</string>
-    <string name="empty_inventory_message">Inventory is empty</string>
-    <string name="link_inventory_item_action_long_description">Select an item to link to:</string>
+    <string name="shopping_list_item_collection_name">shopping list</string>
     <string name="add_to_shopping_list_description">Add to shopping list</string>
-    <string name="delete_all_shopping_list_items_confirmation_message">
-        This will delete all items in the shopping list. Are you sure?</string>
-    <string name="checkout_confirm_description">Confirm?</string>
     <string name="shopping_list_badge_text">+%1$d</string>
+    <string name="checkout_description">Checkout</string>
+    <string name="checkout_confirm_description">Confirm?</string>
 
+    <string name="pref_viewmodels_need_cleared">viewModelsNeedCleared</string>
     <string name="dark_theme_switch_description">Dark theme toggle</string>
     <string name="dark_theme_switch_title">Dark theme</string>
     <string name="export_database_description">Export database</string>
@@ -58,22 +64,10 @@
     <string name="import_database_question_merge_option">Merge</string>
     <string name="import_database_question_overwrite_option">Overwrite</string>
     <string name="import_database_overwrite_confirmation_message">
-        Overwriting the existing database is unreversible. Are you sure?</string>
+        Overwriting the existing database is irreversible. Are you sure?</string>
     <string name="exported_database_default_name">BootyCrateDatabase.sqlite</string>
     <string name="export_dialog_title">Export as…</string>
     <string name="export_text_message_option">Text message</string>
     <string name="export_email_option">Email</string>
     <string name="export_error_message">No app that can send the list was found</string>
-
-    <string name="search_description">Search</string>
-    <string name="change_sorting_description">Change sorting</string>
-    <string name="color_description">Color</string>
-    <string name="name_ascending_description">Name ascending</string>
-    <string name="name_descending_description">Name descending</string>
-    <string name="amount_ascending_description">Amount ascending</string>
-    <string name="amount_descending_description">Amount descending</string>
-    <string name="edit_color_description">Edit item color</string>
-    <string name="checkout_description">Checkout</string>
-
-    <string name="pref_viewmodels_need_cleared">viewModelsNeedCleared</string>
 </resources>

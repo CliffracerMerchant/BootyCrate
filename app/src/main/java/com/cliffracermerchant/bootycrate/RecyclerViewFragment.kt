@@ -9,19 +9,41 @@ import android.util.Log
 import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.activity_main.*
 
-/** An fragment to display a BootyCrateRecyclerView to the user.
+/** A simple Fragment subclass that adds to the onAboutToBeHidden function to the API.
+ *
+ *  In a activity containing multiple fragments that are hidden or shown so
+ *  that only one is visible to the user, a typical use case might be temporar-
+ *  ily showing both fragments in order for a transition animation to be shown,
+ *  and then hiding the exiting fragment. Unfortunately this means that onHid-
+ *  denChanged will be called for the entering fragment right away, but will be
+ *  called for the exiting fragment only after the transition animation is fin-
+ *  ished. BootyCrateFragment adds the function onAboutToBeHidden to the API in
+ *  case the fragment needs to do some kind of work before the other fragment
+ *  is shown (e.g. save some sort of state that will be overwritten by the
+ *  entering fragment.
+ *
+ *  If used as a fragment in MainActivity, MainActivity will call onAboutToBe-
+ *  Hidden on fragments at the start the animation that they will be hidden at
+ *  the end of. */
+open class BootyCrateFragment: Fragment() {
+    open fun onAboutToBeHidden() { }
+}
+
+/** An fragment to display a SelectableExpandableRecyclerView to the user.
  *
  *  RecyclerViewFragment is an abstract fragment whose main purpose is to dis-
- *  play an instance of a BootyCrateRecyclerView to the user. It has an
- *  abstract property recyclerView that must be overridden in subclasses with a
- *  concrete implementation of BootyCrateRecyclerView. Because RecyclerViewFrag-
- *  ment's implementation of onViewCreated references its abstract recyclerView
- *  property, it is important that subclasses override the recyclerView pro-
- *  perty and initialize it before calling super.onViewCreated, or an exception
- *  will occur.
+ *  play an instance of a SelectableExpandableRecyclerView to the user. It has
+ *  an abstract property recyclerView that must be overridden in subclasses
+ *  with a concrete implementation of SelectableExpandableRecyclerView. Because
+ *  RecyclerViewFragment's implementation of onViewCreated references its abs-
+ *  tract recyclerView property, it is important that subclasses override the
+ *  recyclerView property and initialize it before calling super.onViewCreated,
+ *  or an exception will occur.
  *
  *  RecyclerViewFragment starts or finishes an action mode instance according
  *  to the size of the RecyclerView's selection. The ActionMode.Callback used
@@ -36,16 +58,8 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  these visual states are not empty. It also switches the onClickListener of
  *  the FAB between the values of the abstract properties fabRegularOnClickList-
  *  ener and fabActionModeOnClickListener. Override these properties in sub-
- *  classes with the desired functionality.
- *
- *  The interface through which MainActivity interacts with RecyclerViewFrag-
- *  ments consists of the functions enable and disable. Enable will be called
- *  by the MainActivity when the fragment is becoming the active one (i.e.
- *  visible to the user), and disable will be called when the fragment is being
- *  hidden. Both of these functions can be overridden in subclasses (though the
- *  default implementation should always be called in overrides) in case fur-
- *  ther enable or disable functionality is required. */
-abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
+ *  classes with the desired functionality. */
+abstract class RecyclerViewFragment<Entity: ViewModelItem>: BootyCrateFragment() {
     protected lateinit var mainActivity: MainActivity
     protected var menu: Menu? = null
     abstract val recyclerView: SelectableExpandableRecyclerView<Entity>
@@ -57,7 +71,9 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
     protected abstract val fabRegularOnClickListener: View.OnClickListener?
     protected abstract val fabActionModeOnClickListener: View.OnClickListener?
 
-    private var savedSelectionState: List<Pair<Long, Int>>? = null
+    private val savedSelectionStateIdsKey: String get() = "${getString(recyclerView.collectionNameResId)}_selection_state_ids"
+    private val savedSelectionStatePositionsKey: String get() = "${getString(recyclerView.collectionNameResId)}_selection_state_pos"
+    private val wasActiveFragmentKey: String get() = "${getString(recyclerView.collectionNameResId)}_was_active"
 
     init { setHasOptionsMenu(true) }
 
@@ -66,30 +82,27 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
         mainActivity = requireActivity() as MainActivity
         fabIconController = AnimatedFabIconController(mainActivity.fab)
         recyclerView.snackBarAnchor = mainActivity.bottomAppBar
+        recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, actionModeCallback)
 
-        recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
-            Log.d("checkeditems", "selection size = $newSize")
-            if (newSize == 0) actionMode?.finish()
-            else if (newSize > 0) {
-                actionMode = actionMode ?: mainActivity.startSupportActionMode(actionModeCallback)
-                actionMode?.title = getString(R.string.action_mode_title, newSize)
-            }
-        }
+        if (savedInstanceState == null) return
+        val selectionStateIds = savedInstanceState.getLongArray(savedSelectionStateIdsKey) ?: return
+        val selectionStatePositions = savedInstanceState.getIntArray(savedSelectionStatePositionsKey) ?: return
+        val wasActiveFragment = savedInstanceState.getBoolean(wasActiveFragmentKey)
+        if (!wasActiveFragment) actionModeCallback.coupledToSelectionState = false
+        recyclerView.selection.restoreState(selectionStateIds, selectionStatePositions)
+    }
+
+    override fun onAboutToBeHidden() {
+        actionModeCallback.coupledToSelectionState = false
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         showHideOptionsMenuItems(showing = !hidden)
-        if (hidden) {
-            savedSelectionState = recyclerView.selection.currentState()
-            mainActivity.fab.setOnClickListener(null)
-            mainActivity.checkoutBtn.setOnClickListener(null)
-            actionMode?.finish()
-        } else {
+        if (!hidden) {
             fabIconController.setState("add", animate = false)
             mainActivity.fab.setOnClickListener(fabRegularOnClickListener)
-            savedSelectionState?.let { recyclerView.selection.restoreState(it) }
-            savedSelectionState = null
+            actionModeCallback.coupledToSelectionState = true
         }
     }
 
@@ -124,8 +137,17 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
             } R.id.amount_descending_option -> {
                 recyclerView.sort = ViewModelItem.Sort.AmountDesc
                 item.isChecked = true; true
-            } else -> false//mainActivity.onOptionsItemSelected(item)
+            } else -> false
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        if (recyclerView.selection.isEmpty) return
+        outState.putBoolean(wasActiveFragmentKey, !isHidden)
+        val savedSelectionState = recyclerView.selection.currentState()
+        outState.putLongArray(savedSelectionStateIdsKey, savedSelectionState.first)
+        outState.putIntArray(savedSelectionStatePositionsKey, savedSelectionState.second)
     }
 
     protected open fun showHideOptionsMenuItems(showing: Boolean) {
@@ -151,13 +173,29 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
 
     /** The default ActionMode.Callback used by RecyclerViewFragment.
      *
+     *  
+     *
      *  The default action mode callback handles the visual state change and on-
      *  ClickListeners for the FAB in onCreateActionMode and onDestroyAction-
      *  Mode. Subclasses may wish to override ActionModeCallback with implemen-
-     *  tations of onActionItemClicked and onPrepareActionMode.*/
-    open inner class ActionModeCallback : ActionMode.Callback {
+     *  tations of onActionItemClicked and onPrepareActionMode. */
+    open inner class ActionModeCallback : ActionMode.Callback, Observer<Int> {
+        var coupledToSelectionState = true
+            set(value) { field = value
+                         if (value) onChanged(recyclerView.selection.size)
+                         else actionMode?.finish() }
 
-        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean = false
+        override fun onChanged(newSize: Int) {
+            Log.d("checkeditems", "selection size = $newSize")
+            if (!coupledToSelectionState) return
+            if (newSize == 0) actionMode?.finish()
+            else if (newSize > 0) {
+                actionMode = actionMode ?: mainActivity.startSupportActionMode(this)
+                actionMode?.title = getString(R.string.action_mode_title, newSize)
+            }
+        }
+
+        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean =  false
 
         override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
             mode.menuInflater?.inflate(R.menu.action_bar_menu, menu)
@@ -169,7 +207,7 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: Fragment() {
         override fun onPrepareActionMode(mode: ActionMode, menu: Menu?) = false
 
         override fun onDestroyActionMode(mode: ActionMode) {
-            recyclerView.selection.clear()
+            if (coupledToSelectionState) recyclerView.selection.clear()
             mainActivity.fab.setOnClickListener(fabRegularOnClickListener)
             fabIconController.setState("add")
             actionMode = null

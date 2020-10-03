@@ -41,7 +41,7 @@
         android:foregroundGravity="center"
         android:layout_gravity="center_vertical"
         android:inputType="number"
-        android:contentDescription="@string/inventory_item_amount_description"
+        android:contentDescription="@string/item_amount_description"
         android:importantForAutofill="no"
         tools:ignore="LabelFor" />
 

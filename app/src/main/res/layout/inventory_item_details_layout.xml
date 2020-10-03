@@ -36,7 +36,7 @@
         android:layout_width="wrap_content"
         android:layout_height="44dp"
         android:minLines="2"
-        android:text="@string/inventory_item_add_to_shopping_list_checkbox_text"
+        android:text="@string/add_to_shopping_list_checkbox_text"
         app:layout_constraintEnd_toStartOf="@id/addToShoppingListTriggerEdit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/divider"
@@ -52,7 +52,7 @@
         app:layout_constraintStart_toEndOf="@id/addToShoppingListCheckBox"
         app:layout_constraintTop_toTopOf="@id/addToShoppingListCheckBox"
         app:layout_constraintBottom_toBottomOf="@id/addToShoppingListCheckBox"
-        android:contentDescription="@string/inventory_item_add_to_shopping_list_trigger_edit_description"
+        android:contentDescription="@string/add_to_shopping_list_trigger_edit_description"
         app:textSize="22sp"
         app:minValue="1" />
 

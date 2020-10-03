@@ -137,13 +137,13 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
             if (hashMap.isEmpty()) return
             val it = hashMap.iterator()
             while (it.hasNext()) {
-                // If the id for the item at
                 val entry = it.next()
                 val id = entry.component1()
                 val posCache = entry.component2()
                 it.remove()
-                val pos = if (adapter.getItemId(posCache) == id) posCache
-                else findViewHolderForItemId(id).adapterPosition
+                val pos = if (posCache in 0 until adapter.itemCount &&
+                              adapter.getItemId(posCache) == id) posCache
+                          else findViewHolderForItemId(id).adapterPosition
                 adapter.notifyItemChanged(pos, SelectionState.NotSelected)
             }
             _sizeLiveData.value = size
@@ -186,13 +186,14 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
 
         fun allSelectedIds() = hashMap.keys.toLongArray()
 
-        fun currentState() = hashMap.toList()
+        fun currentState() = Pair(hashMap.keys.toLongArray(), hashMap.values.toIntArray())
 
-        fun restoreState(savedState: List<Pair<Long, Int>>) {
+        fun restoreState(savedState: Pair<LongArray, IntArray>) = restoreState(savedState.first, savedState.second)
+        fun restoreState(savedStateIds: LongArray, savedStatePositions: IntArray) {
             hashMap.clear()
-            for (pair in savedState) {
-                hashMap[pair.first] = pair.second
-                adapter.notifyItemChanged(pair.second, SelectionState.Selected)
+            for (i in savedStateIds.indices) {
+                hashMap[savedStateIds[i]] = savedStatePositions[i]
+                adapter.notifyItemChanged(savedStatePositions[i], SelectionState.Selected)
             }
             _sizeLiveData.value = size
         }

@@ -35,6 +35,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         SelectableExpandableRecyclerView<InventoryItem>(context, attrs) {
     override val diffUtilCallback = InventoryItemDiffUtilCallback()
     override val adapter = InventoryAdapter()
+    override val collectionNameResId = R.string.inventory_item_collection_name
     private lateinit var inventoryViewModel: InventoryViewModel
     private lateinit var shoppingListViewModel: ShoppingListViewModel
     private lateinit var fragmentManager: FragmentManager

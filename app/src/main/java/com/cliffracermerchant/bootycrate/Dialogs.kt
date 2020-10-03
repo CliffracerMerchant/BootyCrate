@@ -48,13 +48,15 @@ fun selectInventoryItemDialog(
     callback: (InventoryItem?) -> Unit
 ) {
     if (inventoryItems == null || inventoryItems.isEmpty()) {
-        val string = context.getString(R.string.empty_inventory_message)
+        val string = context.getString(R.string.delete_all_no_items_error_message,
+                                       context.getString(R.string.inventory_item_collection_name))
         val snackBar = Snackbar.make(snackBarAnchor, string, Snackbar.LENGTH_LONG)
+        snackBar.anchorView = snackBarAnchor
         snackBar.show()
         return
     }
     val builder = themedAlertDialogBuilder(context)
-    builder.setTitle(context.getString(R.string.link_inventory_item_action_long_description))
+    builder.setTitle(context.getString(R.string.link_item_action_long_description))
     val recyclerView = PopupInventoryRecyclerView(context, inventoryItems,
                                                   initiallySelectedItemId)
     builder.setPositiveButton(android.R.string.ok) { _, _ -> callback(recyclerView.selectedItem) }
@@ -118,6 +120,7 @@ fun newInventoryItemDialog(
     val itemView = InventoryItemView(context)
     itemView.background = null
     itemView.expand(animate = false)
+    itemView.editButton.visibility = View.GONE
     // Setting collapseButton's visibility to GONE or INVISIBLE doesn't seem to work for some reason
     itemView.collapseButton.alpha = 0f
     itemView.collapseButton.setOnClickListener {}

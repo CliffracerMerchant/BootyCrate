@@ -280,10 +280,10 @@ class ShoppingListItemView(context: Context) :
 
     private fun initSharedResources(context: Context) {
         imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-        linkedItemDescriptionString = context.getString(R.string.linked_shopping_list_item_description)
-        unlinkedItemDescriptionString = context.getString(R.string.unlinked_shopping_list_item_description)
-        linkNowActionString = context.getString(R.string.shopping_list_item_link_now_action_description)
-        changeLinkActionString = context.getString(R.string.shopping_list_item_change_link_action_description)
+        linkedItemDescriptionString = context.getString(R.string.linked_item_description)
+        unlinkedItemDescriptionString = context.getString(R.string.unlinked_item_description)
+        linkNowActionString = context.getString(R.string.link_item_now_action_description)
+        changeLinkActionString = context.getString(R.string.change_item_link_action_description)
         isInitialized = true
     }
 }

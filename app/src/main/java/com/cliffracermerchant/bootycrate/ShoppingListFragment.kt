@@ -37,8 +37,7 @@ import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override lateinit var recyclerView: ShoppingListRecyclerView
     override val actionModeCallback = ActionModeCallback()
-    override val fabRegularOnClickListener = View.OnClickListener {
-        recyclerView.addNewItem() }
+    override val fabRegularOnClickListener = View.OnClickListener { recyclerView.addNewItem() }
     override val fabActionModeOnClickListener = View.OnClickListener {
         recyclerView.deleteItems(recyclerView.selection.allSelectedIds()) }
 
@@ -158,7 +157,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
             return when (item.itemId) {
                 R.id.add_to_inventory_button -> {
                     recyclerView.apply{ addItemsToInventory(selection.allSelectedIds()) }
-                    actionMode?.finish()
+                    recyclerView.selection.clear()
                     true
                 } else -> mainActivity.onOptionsItemSelected(item)
             }

@@ -9,7 +9,6 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -20,11 +19,14 @@ import com.google.android.material.snackbar.Snackbar
  *  RecyclerView interface toward displaying the contents of a ViewModel<
  *  Entity> and updating itself asynchronously using its custom ListAdapter-
  *  derived adapter type. To achieve this, its abstract properties diffUtilCall-
- *  back, adapter, and viewModel must be overridden in subclasses. diffUtilCall-
- *  back must be overridden with an appropriate DiffUtil.ItemCallback<Entity>
- *  for the adapter. adapter must be overridden with a ViewModelAdapter sub-
- *  class that implements onCreateViewHolder. viewModel must be overridden with
- *  a concrete ViewModel<Entity> subclass that implements its abstract methods.
+ *  back, adapter, and collectionNameResId must be overridden in subclasses.
+ *  diffUtilCallback must be overridden with an appropriate DiffUtil.ItemCall-
+ *  back<Entity> for the adapter. adapter must be overridden with a ViewModel-
+ *  Adapter subclass that implements onCreateViewHolder. viewModel must be over-
+ *  ridden with a concrete ViewModel<Entity> subclass that implements its
+ *  abstract methods. collectionNameResId, used in user facing strings regar-
+ *  ding the item collection, should be overridden with a string resource that
+ *  describes the collection of items (e.g. an inventory for inventory items).
  *
  *  Because AndroidViewModels are created after views inflated from xml are
  *  created, it is necessary to finish initialization with these required mem-
@@ -64,6 +66,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
 
     abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
     abstract val adapter: ViewModelAdapter<out ViewModelItemViewHolder>
+    abstract val collectionNameResId: Int
     private lateinit var viewModel: ViewModel<Entity>
     var snackBarAnchor: View? = null
 
@@ -106,9 +109,17 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
 
     open fun undoDelete() { viewModel.undoDelete() }
 
-    open fun deleteAll() {
+    fun deleteAll() {
+        val collectionName = context.getString(collectionNameResId)
+        if (adapter.currentList.isEmpty()) {
+            val message = context.getString(R.string.delete_all_no_items_error_message, collectionName)
+            val snackBar = Snackbar.make(this, message, Snackbar.LENGTH_SHORT)
+            snackBar.anchorView = snackBarAnchor ?: this
+            snackBar.show()
+            return
+        }
         val builder = themedAlertDialogBuilder(context)
-        builder.setMessage(R.string.delete_all_inventory_items_confirmation_message)
+        builder.setMessage(context.getString(R.string.delete_all_items_confirmation_message, collectionName))
         builder.setPositiveButton(android.R.string.yes) { _, _ ->
             viewModel.deleteAll()
             viewModel.emptyTrash()

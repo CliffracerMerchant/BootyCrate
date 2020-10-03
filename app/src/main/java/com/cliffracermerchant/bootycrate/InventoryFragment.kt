@@ -50,6 +50,11 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
             ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
     }
 
+    override fun onHiddenChanged(hidden: Boolean) {
+        super.onHiddenChanged(hidden)
+        if (!hidden) mainActivity.checkoutBtn.setOnClickListener(null)
+    }
+
     override fun showHideOptionsMenuItems(showing: Boolean) {
         super.showHideOptionsMenuItems(showing)
         menu?.setGroupVisible(R.id.inventory_view_menu_group, showing)
@@ -76,7 +81,7 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
             return when (item.itemId) {
                 R.id.add_to_shopping_list_button -> {
                     recyclerView.apply{ addItemsToShoppingList(selection.allSelectedIds()) }
-                    actionMode?.finish()
+                    recyclerView.selection.clear()
                     true
                 } else -> mainActivity.onOptionsItemSelected(item)
             }
