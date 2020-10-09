@@ -54,7 +54,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         this.inventoryViewModel = inventoryViewModel
         this.fragmentManager = fragmentManager
         finishInit(owner, shoppingListViewModel, initialSort)
-        adapter.registerAdapterDataObserver(selection)
     }
 
     fun addNewItem() = newShoppingListItemDialog(context, fragmentManager) { newItem ->
@@ -85,8 +84,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : ShoppingListItemViewHolder {
             val view = ShoppingListItemView(context)
-            view.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                             ViewGroup.LayoutParams.WRAP_CONTENT)
             return ShoppingListItemViewHolder(view)
         }
 
@@ -103,10 +100,12 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             if (payloads.size == 0)
                 return onBindViewHolder(holder, position)
             val unhandledChanges = mutableListOf<Any>()
+
             for (payload in payloads) {
                 if (payload is EnumSet<*>) {
                     val item = getItem(position)
                     val changes = payload as EnumSet<ShoppingListItem.Field>
+
                     if (changes.contains(ShoppingListItem.Field.Name) &&
                         holder.view.nameEdit.text.toString() != item.name)
                             holder.view.nameEdit.setText(item.name)
@@ -133,7 +132,12 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                             anim.addUpdateListener { holder.view.checkBoxBackgroundController.tint = it.animatedValue as Int }
                             anim.start()
                     }
-                } else unhandledChanges.add(payload)
+                }
+
+                else if (payload is ExpansionState)
+                    holder.updateForExpansionState(state = payload)
+
+                else unhandledChanges.add(payload)
             }
             if (unhandledChanges.isNotEmpty())
                 super.onBindViewHolder(holder, position, unhandledChanges)
@@ -154,7 +158,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
      *   ExpandableViewHolder.onExpansionStateChanged calls the corresponding
      *   expand or collapse functions on its ShoppingListItemView instance. */
     inner class ShoppingListItemViewHolder(val view: ShoppingListItemView) :
-            ExpandableViewHolder(view) {
+            ViewModelItemViewHolder(view) {
 
         init {
             // Click & long click listeners
@@ -216,25 +220,26 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 shoppingListViewModel.updateAmount(item.id, value)
             }
         }
-        override fun onExpansionStateChanged(expanding: Boolean, animate: Boolean): Int {
-            if (expanding) {
+
+        fun updateForExpansionState(state: ExpansionState) {
+            if (state == ExpansionState.Expanded) {
                 view.checkBox.setOnClickListener {
                     colorPickerDialog(fragmentManager, item.color) { pickedColor ->
                         shoppingListViewModel.updateColor(item.id, pickedColor)
                     }
                 }
-                view.checkBox.setOnCheckedChangeListener{ checkBox, isChecked ->
+                view.checkBox.setOnCheckedChangeListener { checkBox, isChecked ->
                     checkBox.isChecked = !isChecked
                 }
-                return view.expand(animate)
-            } else {
+                view.expand()
+            } else { //state == ExpansionState.Collapsed
                 view.checkBox.setOnClickListener {
                     shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
                 }
                 view.checkBox.setOnCheckedChangeListener{ _, isChecked ->
                     view.setVisualCheckedState(isChecked)
                 }
-                return view.collapse(animate)
+                view.collapse()
             }
         }
 

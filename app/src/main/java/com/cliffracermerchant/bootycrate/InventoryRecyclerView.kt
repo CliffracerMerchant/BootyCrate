@@ -51,7 +51,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         this.shoppingListViewModel = shoppingListViewModel
         this.fragmentManager = fragmentManager
         finishInit(owner, inventoryViewModel, initialSort)
-        adapter.registerAdapterDataObserver(selection)
     }
 
     fun addNewItem() = newInventoryItemDialog(context, fragmentManager) { newItem ->
@@ -72,8 +71,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : InventoryItemViewHolder {
             val view = InventoryItemView(context)
-            view.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                             ViewGroup.LayoutParams.WRAP_CONTENT)
             return InventoryItemViewHolder(view)
         }
 
@@ -90,10 +87,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             if (payloads.size == 0)
                 return onBindViewHolder(holder, position)
             val unhandledChanges = mutableListOf<Any>()
+
             for (payload in payloads) {
                 if (payload is EnumSet<*>) {
                     val item = getItem(position)
                     val changes = payload as EnumSet<InventoryItem.Field>
+
                     if (changes.contains(InventoryItem.Field.Name) &&
                         holder.view.nameEdit.text.toString() != item.name)
                             holder.view.nameEdit.setText(item.name)
@@ -113,7 +112,15 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                         val colorEditBg = holder.view.colorEdit.drawable
                         colorEditBg.setTint(ViewModelItem.Colors[item.color])
                     }
-                } else unhandledChanges.add(payload)
+                }
+
+                else if (payload is ExpansionState)
+                    if (payload == ExpansionState.Expanded)
+                        holder.view.expand()
+                    else // payload == ExpansionState.Collapsed
+                        holder.view.collapse()
+
+                else unhandledChanges.add(payload)
             }
             if (unhandledChanges.isNotEmpty())
                 super.onBindViewHolder(holder, position, unhandledChanges)
@@ -133,7 +140,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      *   RecyclerViewExpandableItem.set function on itself. Its override of
      *   ExpandableViewHolder.onExpansionStateChanged calls the corresponding
      *   expand or collapse functions on its InventoryItemView instance. */
-    inner class InventoryItemViewHolder(val view: InventoryItemView) : ExpandableViewHolder(view) {
+    inner class InventoryItemViewHolder(val view: InventoryItemView) :
+        ViewModelItemViewHolder(view) {
 
         init {
             // Click & long click listeners
@@ -164,7 +172,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             view.nameEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 inventoryViewModel.updateName(item.id, value)
-                //shoppingListViewModel.updateNameFromLinkedInventoryItem(item.id, value)
             }
             view.inventoryAmountEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
@@ -173,7 +180,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             view.extraInfoEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 inventoryViewModel.updateExtraInfo(item.id, value)
-                //shoppingListViewModel.updateExtraInfoFromLinkedInventoryItem(item.id, value)
             }
             view.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
                 inventoryViewModel.updateAddToShoppingList(item.id, checked)
@@ -182,10 +188,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 if (adapterPosition == -1) return@observeForever
                 inventoryViewModel.updateAddToShoppingListTrigger(item.id, value)
             }
-        }
-        override fun onExpansionStateChanged(expanding: Boolean, animate: Boolean): Int {
-            return if (expanding) view.expand(animate)
-                   else           view.collapse(animate)
         }
     }
 

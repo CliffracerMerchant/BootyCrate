@@ -151,7 +151,8 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
             }
         }
 
-        override fun getItemId(position: Int) = currentList[position].id
+        override fun getItemId(position: Int) = try { currentList[position].id }
+                                                catch(e: ArrayIndexOutOfBoundsException) { -1 }
     }
 
    /** A ViewHolder subclass that provides a simplified way of obtaining the

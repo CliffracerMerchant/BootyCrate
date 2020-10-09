@@ -6,13 +6,10 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.drawable.ClipDrawable
 import android.graphics.drawable.ColorDrawable
-import android.view.Gravity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
-import java.lang.Integer.max
 
 /** A RecyclerView.ItemTouchHelper.SimpleCallback to delete swiped items.
  *

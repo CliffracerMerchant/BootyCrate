@@ -20,3 +20,4 @@ class ViewPropertyAnimatorSet {
 }
 
 enum class SelectionState { Selected, NotSelected }
+enum class ExpansionState { Expanded, Collapsed }

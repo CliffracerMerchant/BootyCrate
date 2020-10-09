@@ -171,17 +171,23 @@ class MainActivity : AppCompatActivity() {
         showingPreferences = showing
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
         supportActionBar?.setDisplayHomeAsUpEnabled(showing)
-        bottomAppBar.animate().translationY(if (showing) 250f else 0f).withLayer().start()
-        fab.animate().translationY(if (showing) 250f else 0f).withLayer().start()
-        checkoutBtn.animate().translationY(if (showing) 250f else 0f).withLayer().start()
+
+        val babAnims = ViewPropertyAnimatorSet()
+        babAnims.add(bottomAppBar.animate().translationY(if (showing) 250f else 0f).withLayer())
+        babAnims.add(fab.animate().translationY(if (showing) 250f else 0f).withLayer())
+        babAnims.add(checkoutBtn.animate().translationY(if (showing) 250f else 0f).withLayer())
+
         val exitAnimation = AnimatorInflater.loadAnimator(this, R.animator.fragment_close_exit)
         exitAnimation.setTarget(oldFragment.view)
         exitAnimation.doOnStart{
+            babAnims.start()
             oldFragment.view?.setLayerType(View.LAYER_TYPE_HARDWARE, null)
             if (showing) (oldFragment as RecyclerViewFragment<*>).onAboutToBeHidden()
         }
-        exitAnimation.doOnEnd{ oldFragment.view?.setLayerType(View.LAYER_TYPE_NONE, null)
-                               supportFragmentManager.beginTransaction().hide(oldFragment).commit() }
+        exitAnimation.doOnEnd{
+            oldFragment.view?.setLayerType(View.LAYER_TYPE_NONE, null)
+            supportFragmentManager.beginTransaction().hide(oldFragment).commit()
+        }
         supportFragmentManager.beginTransaction().runOnCommit{ exitAnimation.start() }.
             setCustomAnimations(R.animator.fragment_close_enter, 0).show(newFragment).commit()
     }
@@ -220,10 +226,10 @@ class MainActivity : AppCompatActivity() {
         val oldFragmentView = oldFragment.view
         val oldFragmentAnim = oldFragmentView?.animate()?.withLayer()?.setDuration(300)?.
                               translationXBy(fragmentTranslationAmount)?.withStartAction {
-            oldFragment.onAboutToBeHidden()
-        }?.withEndAction {
-            supportFragmentManager.beginTransaction().hide(oldFragment).commit()
-        }
+                oldFragment.onAboutToBeHidden()
+            }?.withEndAction {
+                supportFragmentManager.beginTransaction().hide(oldFragment).commit()
+            }
 
         supportFragmentManager.beginTransaction().show(newFragment).runOnCommit {
             oldFragmentAnim?.start()

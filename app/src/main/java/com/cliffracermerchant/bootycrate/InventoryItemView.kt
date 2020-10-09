@@ -4,18 +4,20 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
+import android.animation.LayoutTransition
 import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
+import kotlinx.android.synthetic.main.inventory_item_details_layout.view.collapseButton
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.editButton
 import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
@@ -35,7 +37,6 @@ class InventoryItemView(context: Context) :
     private var _isExpanded = false
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
     private val editButtonIconController: AnimatedIconController
-    private val pendingViewPropAnimations = ViewPropertyAnimatorSet()
 
     init {
         inflate(context, R.layout.inventory_item_layout, this)
@@ -50,6 +51,10 @@ class InventoryItemView(context: Context) :
             else          expand()
         }
         collapseButton.setOnClickListener{ collapse() }
+        layoutTransition = LayoutTransition()
+        layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                                 ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     fun update(item: InventoryItem, isExpanded: Boolean = false) {
@@ -66,27 +71,21 @@ class InventoryItemView(context: Context) :
         else            collapse(false)
     }
 
-    fun expand(animate: Boolean = true): Int {
+    fun expand(animate: Boolean = true) {
         _isExpanded = true
         nameEdit.isEditable = true
         inventoryAmountEdit.isEditable = true
         extraInfoEdit.isEditable = true
         addToShoppingListTriggerEdit.isEditable = true
+
         editButtonIconController.setState("more_options", animate)
 
         if (extraInfoEdit.text.isNullOrBlank())
-            setExtraInfoVisible(true, animate)
-        val expandAnimAndHeightChange = setDetailsVisible(true, animate)
-
-        if (animate) {
-            expandAnimAndHeightChange!!.first.start()
-            pendingViewPropAnimations.start()
-            return expandAnimAndHeightChange.second
-        }
-        return 0
+            extraInfoEdit.visibility = View.VISIBLE
+        inventoryItemDetailsGroup.visibility = View.VISIBLE
     }
 
-    fun collapse(animate: Boolean = true): Int {
+    fun collapse(animate: Boolean = true) {
         if (nameEdit.isFocused || extraInfoEdit.isFocused ||
             inventoryAmountEdit.valueEdit.isFocused ||
             addToShoppingListTriggerEdit.valueEdit.isFocused)
@@ -97,56 +96,11 @@ class InventoryItemView(context: Context) :
         inventoryAmountEdit.isEditable = false
         extraInfoEdit.isEditable = false
         addToShoppingListTriggerEdit.isEditable = false
+
         editButtonIconController.setState("edit", animate)
 
         if (extraInfoEdit.text.isNullOrBlank())
-            setExtraInfoVisible(false, animate)
-        val collapseAnimAndHeightChange = setDetailsVisible(false, animate)
-
-        if (animate) {
-            collapseAnimAndHeightChange!!.first.start()
-            pendingViewPropAnimations.start()
-            return collapseAnimAndHeightChange.second
-        }
-        return 0
-    }
-
-    private fun setExtraInfoVisible(makingVisible: Boolean = true, animate: Boolean = true) {
-        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        extraInfoEdit.measure(wrapContentSpec, wrapContentSpec)
-        val nameEditTranslationY = if (makingVisible) 0f
-        else extraInfoEdit.measuredHeight/ 2.2f
-        if (!animate) {
-            extraInfoEdit.alpha = if (makingVisible) 1f else 0f
-            nameEdit.translationY = nameEditTranslationY
-        } else {
-            pendingViewPropAnimations.add(
-                extraInfoEdit.animate().alpha(if (makingVisible) 1f else 0f).withLayer().setDuration(200))
-            pendingViewPropAnimations.add(
-                nameEdit.animate().translationY(nameEditTranslationY).withLayer().setDuration(200))
-        }
-    }
-
-    private fun setDetailsVisible(
-        makingVisible: Boolean = true,
-        animate: Boolean = true
-    ) : Pair<ObjectAnimator, Int>? {
-        val startHeight = height
-        inventoryItemDetailsGroup.visibility = if (makingVisible) View.VISIBLE
-                                               else               View.GONE
-        if (!animate) return null
-
-        measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED))
-        val heightChange = measuredHeight - startHeight
-        layoutParams.height = startHeight
-        val anim = ObjectAnimator.ofInt(this, "bottom", bottom + heightChange)
-        anim.doOnEnd {
-            if (!makingVisible) inventoryItemDetailsGroup.visibility = View.GONE
-            layoutParams.height = startHeight + heightChange
-            requestLayout()
-        }
-        anim.duration = 200
-        return Pair(anim, heightChange)
+            extraInfoEdit.visibility = View.GONE
+        inventoryItemDetailsGroup.visibility = View.GONE
     }
 }

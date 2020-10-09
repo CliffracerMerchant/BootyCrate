@@ -16,17 +16,17 @@
         android:id="@+id/shoppingListItemDetailsGroup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible"
+        android:visibility="gone"
         app:constraint_referenced_ids="divider, linkedToIndicator, linkedToEdit, collapseButton" />
 
     <View
         android:id="@+id/divider"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="4dp"
         android:background="?android:attr/listDivider"
         android:backgroundTint="?android:attr/textColorPrimary"
-        app:layout_constraintTop_toBottomOf="@id/checkBox"
+        app:layout_constraintTop_toBottomOf="@id/spacer"
         app:layout_constraintBottom_toTopOf="@id/linkedToIndicator"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
