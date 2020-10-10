@@ -51,6 +51,8 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     val cradleAlignmentMode: CradleAlignmentMode
 
     var cradleWidth: Int = 0
+        set(value) { field = value
+                     materialShapeDrawable.invalidateSelf() }
     var cradleDepth: Int
     var cradleTopCornerRadius: Int
     var cradleBottomCornerRadius: Int
@@ -82,6 +84,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     fun prepareCradleLayout(cradleLayout: ViewGroup) {
         if (cradleLayout.parent !is CoordinatorLayout)
             throw IllegalStateException("The cradle layout should have a CoordinatorLayout as a parent.")
+
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         (cradleLayout.layoutParams as CoordinatorLayout.LayoutParams).apply {
             when (cradleAlignmentMode) {

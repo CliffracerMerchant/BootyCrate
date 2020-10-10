@@ -48,7 +48,7 @@ class InventoryItemView(context: Context) :
 
         editButton.setOnClickListener {
             if (isExpanded) //TODO Implement more options menu
-            else          expand()
+            else            expand()
         }
         collapseButton.setOnClickListener{ collapse() }
         layoutTransition = LayoutTransition()

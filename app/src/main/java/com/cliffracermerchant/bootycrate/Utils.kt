@@ -4,19 +4,24 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.view.ViewPropertyAnimator
+import android.animation.LayoutTransition
+import android.view.View
+import android.view.ViewGroup
 
-class ViewPropertyAnimatorSet {
-    private val animators = mutableListOf<ViewPropertyAnimator>()
-
-    fun add(anim: ViewPropertyAnimator) = animators.add(anim)
-
-    fun start() {
-        if (animators.isEmpty()) return
-        animators.removeAt(animators.size - 1).withStartAction {
-            for (anim in animators) anim.start()
-        }.start()
-    }
+fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
+                              container: ViewGroup, view: View,
+                              transitionType: Int) -> Unit = {_, _, _, _ -> }) {
+    addTransitionListener(object: LayoutTransition.TransitionListener {
+        override fun startTransition(
+            transition: LayoutTransition,
+            container: ViewGroup,
+            view: View,
+            transitionType: Int
+        ) {
+            onStart(transition, container, view, transitionType)
+        }
+        override fun endTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) { }
+    })
 }
 
 enum class SelectionState { Selected, NotSelected }

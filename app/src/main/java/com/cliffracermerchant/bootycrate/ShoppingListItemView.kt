@@ -95,7 +95,7 @@ class ShoppingListItemView(context: Context) :
 
         editButton.setOnClickListener {
             if (_isExpanded) //TODO: Implement more options menu
-            else            layoutTransition.enableTransitionType(LayoutTransition.CHANGING); expand()
+            else             expand()
         }
         collapseButton.setOnClickListener { collapse() }
         checkBox.setOnCheckedChangeListener { _, checked -> setVisualCheckedState(checked) }

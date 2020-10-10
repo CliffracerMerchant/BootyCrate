@@ -4,13 +4,15 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.AnimatorInflater
-import android.animation.ValueAnimator
+import android.animation.*
 import android.app.Activity
+import android.graphics.Rect
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
@@ -55,15 +57,12 @@ class MainActivity : AppCompatActivity() {
     private var checkoutButtonIsVisible = true
     private var shoppingListSize = -1
     private var shoppingListNumNewItems = 0
+    private var pendingBabAnim: Animator? = null
 
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
     lateinit var checkoutBtn: MaterialButton
-
-    private var cradleLayoutFullWidth = -1
-    private var fabWidth = -1
-    private var blackColor: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,7 +93,10 @@ class MainActivity : AppCompatActivity() {
         fab = floatingActionButton
         checkoutBtn = checkoutButton
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-        blackColor = ContextCompat.getColor(this, android.R.color.black)
+        cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
+            pendingBabAnim?.start()
+            pendingBabAnim = null
+        }
 
         bottomNavigationBar.setOnNavigationItemSelectedListener { item ->
             if (item.isChecked) false // Selected item was already selected
@@ -128,7 +130,7 @@ class MainActivity : AppCompatActivity() {
         // around because setting it in the theme/style did not work.
         val searchView = menu.findItem(R.id.app_bar_search)?.actionView as SearchView?
         (searchView?.findViewById(androidx.appcompat.R.id.search_close_btn) as ImageView).
-            setColorFilter(blackColor)
+            setColorFilter(ContextCompat.getColor(this, android.R.color.black))
         return true
     }
 
@@ -172,15 +174,14 @@ class MainActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
         supportActionBar?.setDisplayHomeAsUpEnabled(showing)
 
-        val babAnims = ViewPropertyAnimatorSet()
-        babAnims.add(bottomAppBar.animate().translationY(if (showing) 250f else 0f).withLayer())
-        babAnims.add(fab.animate().translationY(if (showing) 250f else 0f).withLayer())
-        babAnims.add(checkoutBtn.animate().translationY(if (showing) 250f else 0f).withLayer())
-
+        val translationAmount = (bottomAppBar.bottom - cradleLayout.top).toFloat()
         val exitAnimation = AnimatorInflater.loadAnimator(this, R.animator.fragment_close_exit)
+
         exitAnimation.setTarget(oldFragment.view)
         exitAnimation.doOnStart{
-            babAnims.start()
+            bottomAppBar.animate().translationY(if (showing) translationAmount else 0f).withLayer().start()
+            fab.animate().translationY(if (showing) translationAmount else 0f).withLayer().start()
+            checkoutBtn.animate().translationY(if (showing) translationAmount else 0f).withLayer().start()
             oldFragment.view?.setLayerType(View.LAYER_TYPE_HARDWARE, null)
             if (showing) (oldFragment as RecyclerViewFragment<*>).onAboutToBeHidden()
         }
@@ -239,52 +240,31 @@ class MainActivity : AppCompatActivity() {
 
     private fun showCheckoutButton(showing: Boolean, animate: Boolean = true) {
         if (checkoutButtonIsVisible == showing) return
-
-        if (cradleLayoutFullWidth == -1) {
-            val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            cradleLayout.measure(wrapContentSpec, wrapContentSpec)
-            cradleLayoutFullWidth = cradleLayout.measuredWidth
-            fab.measure(wrapContentSpec, wrapContentSpec)
-            fabWidth = fab.measuredWidth
-        }
-        val cradleLayoutStartWidth = if (showing) fabWidth else cradleLayoutFullWidth
-        val cradleLayoutEndWidth =   if (showing) cradleLayoutFullWidth else fabWidth
+        checkoutBtn.visibility = if (showing) View.VISIBLE else View.GONE
+        val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        cradleLayout.measure(wrapContentSpec, wrapContentSpec)
+        fab.measure(wrapContentSpec, wrapContentSpec)
+        val cradleEndWidth = if (showing) cradleLayout.measuredWidth else fab.measuredWidth
 
         if (animate) {
-            val cradleLayoutWidthChange = cradleLayoutEndWidth - cradleLayoutStartWidth
-
-            val anim = ValueAnimator.ofInt(cradleLayoutStartWidth, cradleLayoutEndWidth)
+            // Settings the checkout button's clip bounds prevents the
+            // right corners of the checkout button from sticking out
+            // underneath the FAB during the show / hide animation.
+            val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutBtn.height)
+            val anim = ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth)
+            anim.interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
+            anim.duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
             anim.addUpdateListener {
-                fab.translationX = cradleLayoutWidthChange / 2f *
-                        if (showing) (it.animatedFraction - 1)
-                        else         it.animatedFraction
-                checkoutBtn.scaleX = if (showing) it.animatedFraction
-                                     else         (1 - it.animatedFraction)
-                bottomAppBar.cradleWidth = it.animatedValue as Int
-                bottomAppBar.background.invalidateSelf()
+                checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - fab.measuredWidth / 2
+                checkoutBtn.clipBounds = checkoutBtnClipBounds
             }
-            anim.doOnStart {
-                fab.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-                checkoutBtn.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-                checkoutBtn.visibility = View.VISIBLE
-                checkoutBtn.requestLayout()
-            }
-            anim.doOnEnd {
-                fab.setLayerType(View.LAYER_TYPE_NONE, null)
-                checkoutBtn.setLayerType(View.LAYER_TYPE_NONE, null)
-                fab.translationX = 0f
-                if (!showing) checkoutBtn.visibility = View.GONE
-                checkoutBtn.requestLayout()
-                bottomAppBar.background.invalidateSelf()
-            }
-            anim.start()
-        } else {
-            checkoutBtn.visibility = if (showing) View.VISIBLE else View.GONE
-            checkoutBtn.scaleX = if (showing) 1f else 0f
-            cradleLayout.requestLayout()
-            bottomAppBar.cradleWidth = cradleLayoutEndWidth
-            bottomAppBar.background.invalidateSelf()
+            // The anim is stored here and started in the cradle layout's
+            // layoutTransition's transition listener transitionStart override
+            // so that the animation is synced with the layout transition.
+            pendingBabAnim = anim
         }
+        else bottomAppBar.cradleWidth = cradleEndWidth
+
         checkoutButtonIsVisible = showing
     }
 

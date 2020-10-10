@@ -77,6 +77,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:layout_gravity="bottom|center_horizontal"
+        android:animateLayoutChanges="true"
         tools:layout_marginBottom="10dp" >
 
         <com.google.android.material.button.MaterialButton
@@ -90,7 +91,7 @@
             android:text="@string/checkout_description"
             android:textSize="14dp"
             android:textColor="@color/colorTextLightSecondary"
-            android:transformPivotX="90dp"
+            android:transformPivotX="120dp"
             app:backgroundTint="@android:color/darker_gray"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
