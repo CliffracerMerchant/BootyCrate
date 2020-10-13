@@ -114,7 +114,7 @@ class ShoppingListItemView(context: Context) :
         shoppingListAmountEdit.initCurrentValue(item.amount)
 
         checkBox.isChecked = item.isChecked
-        if (!item.isChecked) setVisualCheckedState(checked = false, animate = false)
+        setVisualCheckedState(checked = false, animate = false)
         updateLinkedStatus(item.linkedItemId)
 
         if (isExpanded) expand(false)

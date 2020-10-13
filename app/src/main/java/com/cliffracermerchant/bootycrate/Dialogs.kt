@@ -55,14 +55,13 @@ fun selectInventoryItemDialog(
         snackBar.show()
         return
     }
-    val builder = themedAlertDialogBuilder(context)
-    builder.setTitle(context.getString(R.string.link_item_action_long_description))
     val recyclerView = PopupInventoryRecyclerView(context, inventoryItems,
                                                   initiallySelectedItemId)
-    builder.setPositiveButton(android.R.string.ok) { _, _ -> callback(recyclerView.selectedItem) }
-    builder.setNegativeButton(android.R.string.cancel) { _, _ -> }
-    builder.setView(recyclerView)
-    builder.show()
+    themedAlertDialogBuilder(context).
+        setTitle(context.getString(R.string.link_item_action_long_description)).
+        setPositiveButton(android.R.string.ok) { _, _ -> callback(recyclerView.selectedItem) }.
+        setNegativeButton(android.R.string.cancel) { _, _ -> }.
+        setView(recyclerView).show()
 }
 
 fun newShoppingListItemDialog(
@@ -70,8 +69,6 @@ fun newShoppingListItemDialog(
     fragmentManager: FragmentManager,
     callback: (ShoppingListItem) -> Unit
 ) {
-    val builder = themedAlertDialogBuilder(context)
-    builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
     itemView.background = null
     itemView.editButton.visibility = View.GONE
@@ -90,15 +87,16 @@ fun newShoppingListItemDialog(
     itemView.extraInfoEdit.isEditable = true
     itemView.inventoryAmountEdit.isEditable = true
     itemView.inventoryAmountEdit.minValue = 1
-    builder.setPositiveButton(android.R.string.ok) { _, _ ->
-        callback(ShoppingListItem(name = itemView.nameEdit.text.toString(),
-                                  extraInfo = itemView.extraInfoEdit.text.toString(),
-                                  color = colorIndex,
-                                  amount = itemView.inventoryAmountEdit.currentValue))
-    }
-    builder.setNegativeButton(android.R.string.cancel) { _, _ -> }
-    builder.setView(itemView)
-    val dialog = builder.create()
+
+    val dialog = themedAlertDialogBuilder(context).
+        setTitle(context.getString(R.string.add_item_button_name)).
+        setPositiveButton(android.R.string.ok) { _, _ ->
+            callback(ShoppingListItem(name = itemView.nameEdit.text.toString(),
+                                      extraInfo = itemView.extraInfoEdit.text.toString(),
+                                      color = colorIndex,
+                                      amount = itemView.inventoryAmountEdit.currentValue))
+        }.setNegativeButton(android.R.string.cancel) { _, _ -> }.
+        setView(itemView).create()
     // The dialog dimming is disabled here to prevent
     // flickering if the color sheet dialog is opened on top.
     dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
@@ -115,8 +113,6 @@ fun newInventoryItemDialog(
     fragmentManager: FragmentManager,
     callback: (InventoryItem) -> Unit
 ) {
-    val builder = themedAlertDialogBuilder(context)
-    builder.setTitle(context.getString(R.string.add_item_button_name))
     val itemView = InventoryItemView(context)
     itemView.background = null
     itemView.expand(animate = false)
@@ -136,17 +132,17 @@ fun newInventoryItemDialog(
         }
     }
 
-    builder.setPositiveButton(android.R.string.ok) { _, _ ->
-        callback(InventoryItem(name = itemView.nameEdit.text.toString(),
-                               extraInfo = itemView.extraInfoEdit.text.toString(),
-                               color = colorIndex,
-                               amount = itemView.inventoryAmountEdit.currentValue,
-                               addToShoppingList = itemView.addToShoppingListCheckBox.isChecked,
-                               addToShoppingListTrigger = itemView.addToShoppingListTriggerEdit.currentValue))
-    }
-    builder.setNegativeButton(android.R.string.cancel) { _, _ -> }
-    builder.setView(itemView)
-    val dialog = builder.create()
+    val dialog = themedAlertDialogBuilder(context).
+        setTitle(context.getString(R.string.add_item_button_name)).
+        setPositiveButton(android.R.string.ok) { _, _ ->
+            callback(InventoryItem(name = itemView.nameEdit.text.toString(),
+                                   extraInfo = itemView.extraInfoEdit.text.toString(),
+                                   color = colorIndex,
+                                   amount = itemView.inventoryAmountEdit.currentValue,
+                                   addToShoppingList = itemView.addToShoppingListCheckBox.isChecked,
+                                   addToShoppingListTrigger = itemView.addToShoppingListTriggerEdit.currentValue))
+        }.setNegativeButton(android.R.string.cancel) { _, _ -> }.
+        setView(itemView).create()
     // The dialog dimming is disabled here to prevent
     // flickering if the color sheet dialog is opened on top.
     dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
@@ -164,50 +160,48 @@ fun <Entity: ViewModelItem>exportAsDialog(
     insertBlankLineBetweenColors: Boolean,
     snackBarAnchor: View
 ) {
-    val dialogBuilder = themedAlertDialogBuilder(context)
-    dialogBuilder.setTitle(R.string.export_dialog_title)
-    dialogBuilder.setItems(R.array.export_options) { _, chosenOption ->
-        val intent = Intent(Intent.ACTION_SENDTO).apply {
-            //
-            type = "HTTP.PLAIN_TEXT_TYPE"
-        }
-        var message = ""
-        if (insertBlankLineBetweenColors) {
-            var currentColorIndex = items.first().color
-            for (item in items) {
-                if (item.color != currentColorIndex) {
-                    message += "\n"
-                    currentColorIndex = item.color
-                }
-                message += item.toString() + "\n"
-            }
-        } else for (item in items)
-            message += item.toString() + "\n"
+    val titleText = context.getString(R.string.export_dialog_title)
+    val titleView = themedAlertDialogTitle(context, titleText)
 
-        when (chosenOption) {
-            0 /* Text message */-> {
-                intent.putExtra("sms_body", message)
-                intent.data = Uri.parse("smsto:")
-            } 1 /* Email */-> {
-            intent.data = Uri.parse("mailto:")
-            val subject = context.getString(R.string.shopping_list_navigation_item_name)
-            intent.putExtra(Intent.EXTRA_SUBJECT, subject)
-            intent.putExtra(Intent.EXTRA_TEXT, message)
-        }
-        }
-        if (intent.resolveActivity(context.packageManager) != null)
-            context.startActivity(intent)
-        else {
-            val snackbar = Snackbar.make(snackBarAnchor, R.string.export_error_message,
-                                         Snackbar.LENGTH_SHORT)
-            snackbar.anchorView = snackBarAnchor
-            snackbar.show()
-        }
-    }
-    val title = themedAlertDialogTitle(context)
-    title.text = context.getString(R.string.export_dialog_title)
-    dialogBuilder.setCustomTitle(title)
-    dialogBuilder.show()
+    themedAlertDialogBuilder(context).
+        setCustomTitle(titleView).
+        setItems(R.array.export_options) { _, chosenOption ->
+            val intent = Intent(Intent.ACTION_SENDTO)
+            intent.type = "HTTP.PLAIN_TEXT_TYPE"
+            var message = ""
+
+            if (insertBlankLineBetweenColors) {
+                var currentColorIndex = items.first().color
+                for (item in items) {
+                    if (item.color != currentColorIndex) {
+                        message += "\n"
+                        currentColorIndex = item.color
+                    }
+                    message += item.toString() + "\n"
+                }
+            } else for (item in items)
+                message += item.toString() + "\n"
+
+            when (chosenOption) {
+                0 /* Text message */-> {
+                    intent.putExtra("sms_body", message)
+                    intent.data = Uri.parse("smsto:")
+                } 1 /* Email */-> {
+                    intent.data = Uri.parse("mailto:")
+                    val subject = context.getString(R.string.shopping_list_navigation_item_name)
+                    intent.putExtra(Intent.EXTRA_SUBJECT, subject)
+                    intent.putExtra(Intent.EXTRA_TEXT, message)
+                }
+            }
+            if (intent.resolveActivity(context.packageManager) != null)
+                context.startActivity(intent)
+            else {
+                val snackbar = Snackbar.make(snackBarAnchor, R.string.export_error_message,
+                                             Snackbar.LENGTH_SHORT)
+                snackbar.anchorView = snackBarAnchor
+                snackbar.show()
+            }
+        }.show()
 }
 
 /** Returns an AlertDialog.Builder that uses the current theme's alertDialogTheme.
@@ -228,18 +222,18 @@ fun themedAlertDialogBuilder(context: Context): AlertDialog.Builder {
  *  color, and background color suited for use as a custom title for an Alert-
  *  Dialog (using AlertDialog.setCustomTitle() or AlertDialog.Builder.setCus-
  *  tomTitle(). The text of the returned text view is not set by default. */
-fun themedAlertDialogTitle(context: Context): TextView {
-    val title = TextView(context)
+fun themedAlertDialogTitle(context: Context, title: String): TextView {
+    val titleView = TextView(context)
     val dm = context.resources.displayMetrics
-    title.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 6f, dm)
-    title.setPadding(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, dm).toInt())
+    titleView.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 6f, dm)
+    titleView.setPadding(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, dm).toInt())
 
     val typedValue = TypedValue()
     context.theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
     val titleBackgroundColor = typedValue.data
-    title.setBackgroundColor(titleBackgroundColor)
+    titleView.setBackgroundColor(titleBackgroundColor)
     context.theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
-    title.setTextColor(typedValue.data)
-
-    return title
+    titleView.setTextColor(typedValue.data)
+    titleView.text = title
+    return titleView
 }

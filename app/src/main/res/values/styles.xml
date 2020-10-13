@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2020 Nicholas Hochstetler
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright 2020 Nicholas Hochstetler
   ~  You may not use this file except in compliance with the Apache License
   ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
+
     <style name="LightTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:colorBackground">@color/colorPrimaryRowLight</item>
         <item name="recyclerViewItemColor">@color/colorCardBackground</item>
@@ -113,10 +113,12 @@
 
     <style name="LightThemeAlertDialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
         <item name="android:windowBackground">@color/colorPrimaryRowLight</item>
+        <item name="android:textColorPrimary">@color/colorTextDark</item>
     </style>
 
     <style name="DarkThemeAlertDialog" parent="Theme.MaterialComponents.Dialog.Alert">
         <item name="android:windowBackground">@color/colorPrimaryRowDark</item>
+        <item name="android:textColorPrimary">@color/colorTextLight</item>
     </style>
 
     <style name="RecyclerViewItemStyle">
@@ -127,5 +129,14 @@
         <item name="android:paddingTop">4dp</item>
         <item name="android:paddingBottom">4dp</item>
     </style>
+
+    <style name="LightTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="LightTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="LightTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
 </resources>

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2020 Nicholas Hochstetler
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright 2020 Nicholas Hochstetler
   ~  You may not use this file except in compliance with the Apache License
   ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
   ~  or in the file LICENSE in the project's root directory. -->
@@ -70,4 +69,21 @@
     <string name="export_text_message_option">Text message</string>
     <string name="export_email_option">Email</string>
     <string name="export_error_message">No app that can send the list was found</string>
+    <string name="backup_and_restore_preference_category_name">Backup and Restore</string>
+    <string name="about_preference_category_name">About</string>
+    <string name="visual_preference_category_name">Visual</string>
+    <string name="open_source_libraries_used_description">Open source libraries used</string>
+    <string name="pref_open_source_libraries_used">open_source_libraries_used</string>
+    <string name="about_app_description">About BootyCrate</string>
+    <string name="pref_about_app">about_app</string>
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="about_app_text">
+        Copyright 2020 Nicholas Hochstetler. \nBootyCrate is an open-source shopping list and
+        inventory management app, licensed under the terms of the Apache License, version 2.0.
+        View the source code at: https://github.com/NicholasHochstetler/BootyCrate</string>
 </resources>

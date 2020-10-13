@@ -14,7 +14,6 @@ import android.util.Log
 import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 

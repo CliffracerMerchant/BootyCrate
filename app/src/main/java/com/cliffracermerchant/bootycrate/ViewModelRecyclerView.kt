@@ -118,14 +118,13 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
             snackBar.show()
             return
         }
-        val builder = themedAlertDialogBuilder(context)
-        builder.setMessage(context.getString(R.string.delete_all_items_confirmation_message, collectionName))
-        builder.setPositiveButton(android.R.string.yes) { _, _ ->
-            viewModel.deleteAll()
-            viewModel.emptyTrash()
-        }
-        builder.setNegativeButton(android.R.string.cancel) { _, _ -> }
-        builder.show()
+        themedAlertDialogBuilder(context).
+            setMessage(context.getString(R.string.delete_all_items_confirmation_message, collectionName)).
+            setPositiveButton(android.R.string.yes) { _, _ ->
+                viewModel.deleteAll()
+                viewModel.emptyTrash()
+            }.setNegativeButton(android.R.string.cancel) { _, _ -> }.
+            show()
     }
 
     open fun onNewItemInsertion(item: Entity, vh: ViewModelItemViewHolder) =

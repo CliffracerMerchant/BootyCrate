@@ -7,25 +7,31 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="Visual">
-
+    <PreferenceCategory android:title="@string/visual_preference_category_name">
         <SwitchPreferenceCompat
             android:key="@string/pref_dark_theme_active"
             android:title="@string/dark_theme_switch_title"
             android:defaultValue="false" />
-
     </PreferenceCategory>
 
 
-    <PreferenceCategory android:title="Backup and Restore">
-
+    <PreferenceCategory android:title="@string/backup_and_restore_preference_category_name">
         <Preference
             android:key="@string/pref_export_database"
             android:title="@string/export_database_description" />
         <Preference
             android:key="@string/pref_import_database"
             android:title="@string/import_database_description" />
+    </PreferenceCategory>
 
+
+    <PreferenceCategory android:title="@string/about_preference_category_name">
+        <Preference
+            android:key="@string/pref_about_app"
+            android:title="@string/about_app_description" />
+        <Preference
+            android:key="@string/pref_open_source_libraries_used"
+            android:title="@string/open_source_libraries_used_description" />
     </PreferenceCategory>
 
 </PreferenceScreen>

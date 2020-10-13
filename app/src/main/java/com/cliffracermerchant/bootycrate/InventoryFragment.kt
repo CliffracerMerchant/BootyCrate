@@ -4,11 +4,9 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.graphics.drawable.AnimatedVectorDrawable
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.view.ActionMode
-import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
 
@@ -43,11 +41,6 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
                                 mainActivity.shoppingListViewModel,
                                 mainActivity.supportFragmentManager, initialSort)
         super.onViewCreated(view, savedInstanceState)
-
-        fabIconController.addTransition(
-            fabIconController.addState("add"), fabIconController.addState("delete"),
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
     }
 
     override fun onHiddenChanged(hidden: Boolean) {

@@ -4,12 +4,13 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.graphics.drawable.AnimatedVectorDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
-import androidx.core.view.isVisible
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import kotlinx.android.synthetic.main.activity_main.*
@@ -84,11 +85,18 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: BootyCrateFragment()
         recyclerView.snackBarAnchor = mainActivity.bottomAppBar
         recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, actionModeCallback)
 
+        fabIconController.addTransition(fabIconController.addState("add"), fabIconController.addState("delete"),
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
+            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
+
         if (savedInstanceState == null) return
+
+        val wasActiveFragment = savedInstanceState.getBoolean(wasActiveFragmentKey)
+        if (wasActiveFragment) onHiddenChanged(false)
+        else actionModeCallback.coupledToSelectionState = false
+
         val selectionStateIds = savedInstanceState.getLongArray(savedSelectionStateIdsKey) ?: return
         val selectionStatePositions = savedInstanceState.getIntArray(savedSelectionStatePositionsKey) ?: return
-        val wasActiveFragment = savedInstanceState.getBoolean(wasActiveFragmentKey)
-        if (!wasActiveFragment) actionModeCallback.coupledToSelectionState = false
         recyclerView.selection.restoreState(selectionStateIds, selectionStatePositions)
     }
 
@@ -143,8 +151,9 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: BootyCrateFragment()
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        if (recyclerView.selection.isEmpty) return
         outState.putBoolean(wasActiveFragmentKey, !isHidden)
+
+        if (recyclerView.selection.isEmpty) return
         val savedSelectionState = recyclerView.selection.currentState()
         outState.putLongArray(savedSelectionStateIdsKey, savedSelectionState.first)
         outState.putIntArray(savedSelectionStatePositionsKey, savedSelectionState.second)
