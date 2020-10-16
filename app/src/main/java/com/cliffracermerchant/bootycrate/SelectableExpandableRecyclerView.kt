@@ -43,11 +43,6 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
         layoutManager = LinearLayoutManager(context)
     }
 
-    override fun onNewItemInsertion(item: Entity, vh: ViewModelItemViewHolder) {
-        super.onNewItemInsertion(item, vh)
-        expandedItem.set(vh)
-    }
-
     override fun deleteItems(ids: LongArray) {
         //TODO: Find out how to get an undeleted view to collapse to prevent visual bugs
         val expandedItemId = expandedItem.id
@@ -69,7 +64,6 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
             ViewModelAdapter<VHType>() {
 
         override fun onBindViewHolder(holder: VHType, position: Int) {
-            super.onBindViewHolder(holder, position)
             val isSelected = selection.contains(getItemId(position))
             holder.itemView.background.setTint(if (isSelected) selectedColor
                                                else itemNormalBackgroundColor)

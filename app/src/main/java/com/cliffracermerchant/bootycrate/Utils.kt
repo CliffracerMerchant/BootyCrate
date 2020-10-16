@@ -8,6 +8,17 @@ import android.animation.LayoutTransition
 import android.view.View
 import android.view.ViewGroup
 
+enum class SelectionState { Selected, NotSelected }
+enum class ExpansionState { Expanded, Collapsed }
+
+fun delaylessLayoutTransition() = LayoutTransition().apply{
+    setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
+    setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+    setStartDelay(LayoutTransition.APPEARING, 0)
+    setStartDelay(LayoutTransition.DISAPPEARING, 0)
+    setStartDelay(LayoutTransition.CHANGING, 0)
+}
+
 fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
                               container: ViewGroup, view: View,
                               transitionType: Int) -> Unit = {_, _, _, _ -> }) {
@@ -23,6 +34,3 @@ fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
         override fun endTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) { }
     })
 }
-
-enum class SelectionState { Selected, NotSelected }
-enum class ExpansionState { Expanded, Collapsed }

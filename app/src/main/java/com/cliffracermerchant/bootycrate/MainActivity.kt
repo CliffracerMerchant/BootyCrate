@@ -90,6 +90,8 @@ class MainActivity : AppCompatActivity() {
         fab = floatingActionButton
         checkoutBtn = checkoutButton
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+
+        cradleLayout.layoutTransition = delaylessLayoutTransition()
         cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
             pendingBabAnim?.start()
             pendingBabAnim = null

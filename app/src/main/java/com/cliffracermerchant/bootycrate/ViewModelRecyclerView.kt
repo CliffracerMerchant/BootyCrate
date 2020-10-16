@@ -113,9 +113,8 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
         val collectionName = context.getString(collectionNameResId)
         if (adapter.currentList.isEmpty()) {
             val message = context.getString(R.string.delete_all_no_items_error_message, collectionName)
-            val snackBar = Snackbar.make(this, message, Snackbar.LENGTH_SHORT)
-            snackBar.anchorView = snackBarAnchor ?: this
-            snackBar.show()
+            Snackbar.make(this, message, Snackbar.LENGTH_SHORT).
+                setAnchorView(snackBarAnchor ?: this).show()
             return
         }
         themedAlertDialogBuilder(context).

@@ -115,10 +115,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 }
 
                 else if (payload is ExpansionState)
-                    if (payload == ExpansionState.Expanded)
-                        holder.view.expand()
-                    else // payload == ExpansionState.Collapsed
-                        holder.view.collapse()
+                    holder.view.setExpanded(payload == ExpansionState.Expanded)
 
                 else unhandledChanges.add(payload)
             }

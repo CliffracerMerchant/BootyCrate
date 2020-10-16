@@ -88,8 +88,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         }
 
         override fun onBindViewHolder(holder: ShoppingListItemViewHolder, position: Int) {
-            super.onBindViewHolder(holder, position)
             holder.view.update(holder.item, isExpanded = getItemId(position) == expandedItem.id)
+            super.onBindViewHolder(holder, position)
         }
 
         override fun onBindViewHolder(

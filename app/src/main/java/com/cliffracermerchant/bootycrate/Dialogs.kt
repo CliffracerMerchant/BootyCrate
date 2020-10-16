@@ -115,7 +115,7 @@ fun newInventoryItemDialog(
 ) {
     val itemView = InventoryItemView(context)
     itemView.background = null
-    itemView.expand(animate = false)
+    itemView.expand()
     itemView.editButton.visibility = View.GONE
     // Setting collapseButton's visibility to GONE or INVISIBLE doesn't seem to work for some reason
     itemView.collapseButton.alpha = 0f

@@ -13,8 +13,7 @@
         android:id="@+id/spacer"
         android:layout_height="50dp"
         android:layout_width="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/shoppingListItemDetails" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/colorEdit"
@@ -25,8 +24,9 @@
         app:layout_constraintTop_toTopOf="@id/spacer"
         app:layout_constraintBottom_toBottomOf="@id/spacer"
         android:src="@drawable/animated_circle_to_checkbox_checked_background"
-        android:padding="10dp"
+        android:paddingVertical="10dp"
         android:paddingStart="8dp"
+        android:paddingEnd="10dp"
         android:contentDescription="@string/edit_color_description" />
 
     <com.cliffracermerchant.bootycrate.TextFieldEdit

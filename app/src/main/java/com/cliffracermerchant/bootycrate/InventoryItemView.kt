@@ -51,7 +51,8 @@ class InventoryItemView(context: Context) :
             else            expand()
         }
         collapseButton.setOnClickListener{ collapse() }
-        layoutTransition = LayoutTransition()
+
+        layoutTransition = delaylessLayoutTransition()
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                  ViewGroup.LayoutParams.WRAP_CONTENT
         )
@@ -67,40 +68,40 @@ class InventoryItemView(context: Context) :
         addToShoppingListCheckBox.isChecked = item.addToShoppingList
         addToShoppingListTriggerEdit.initCurrentValue(item.addToShoppingListTrigger)
 
-        if (isExpanded) expand(false)
-        else            collapse(false)
+        setExpanded(isExpanded)
     }
 
-    fun expand(animate: Boolean = true) {
-        _isExpanded = true
-        nameEdit.isEditable = true
-        inventoryAmountEdit.isEditable = true
-        extraInfoEdit.isEditable = true
-        addToShoppingListTriggerEdit.isEditable = true
-
-        editButtonIconController.setState("more_options", animate)
-
-        if (extraInfoEdit.text.isNullOrBlank())
-            extraInfoEdit.visibility = View.VISIBLE
-        inventoryItemDetailsGroup.visibility = View.VISIBLE
-    }
-
-    fun collapse(animate: Boolean = true) {
-        if (nameEdit.isFocused || extraInfoEdit.isFocused ||
+    fun expand() = setExpanded(true)
+    fun collapse() = setExpanded(false)
+    fun setExpanded(expanded: Boolean = true) {
+        if (!expanded && nameEdit.isFocused || extraInfoEdit.isFocused ||
             inventoryAmountEdit.valueEdit.isFocused ||
             addToShoppingListTriggerEdit.valueEdit.isFocused)
                 imm?.hideSoftInputFromWindow(windowToken, 0)
 
-        _isExpanded = false
-        nameEdit.isEditable = false
-        inventoryAmountEdit.isEditable = false
-        extraInfoEdit.isEditable = false
-        addToShoppingListTriggerEdit.isEditable = false
+        _isExpanded = expanded
+        nameEdit.isEditable = expanded
+        inventoryAmountEdit.isEditable = expanded
+        extraInfoEdit.isEditable = expanded
+        addToShoppingListTriggerEdit.isEditable = expanded
 
-        editButtonIconController.setState("edit", animate)
+        editButtonIconController.setState(if (expanded) "more_options" else "edit")
 
+        val newVisibility = if (expanded) View.VISIBLE
+                            else          View.GONE
+        inventoryItemDetailsGroup.visibility = newVisibility
         if (extraInfoEdit.text.isNullOrBlank())
-            extraInfoEdit.visibility = View.GONE
-        inventoryItemDetailsGroup.visibility = View.GONE
+            extraInfoEdit.visibility = newVisibility
+
+        // For some reason, expanding an inventory item whose extra info is not blank
+        // was causing a flicker. Shopping list items seemed to be okay regardless of
+        // whether its extra info was blank. The difference was tracked down to Shop-
+        // pingListItem's setAmountEditable. It appears that changing the layout params
+        // of a view and requesting a layout for it stops this flicker from occurring.
+        // Given that the bug seems to originate from somewhere deep in Android code,
+        // having this useless layout parameter changing and requested layout is an
+        // easy and performance negligible way to prevent the bug.
+        spacer.layoutParams.width = if (expanded) 1 else 0
+        spacer.requestLayout()
     }
 }

@@ -77,7 +77,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:layout_gravity="bottom|center_horizontal"
-        android:animateLayoutChanges="true"
         tools:layout_marginBottom="10dp" >
 
         <com.google.android.material.button.MaterialButton

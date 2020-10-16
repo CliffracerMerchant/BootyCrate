@@ -19,15 +19,19 @@ import java.lang.IllegalArgumentException
  *  with as many types of drawable attributes as possible (e.g. a view's back-
  *  ground, an ImageView's image resource, or a layer of a LayerDrawable),
  *  AnimatedIconController is abstract. Subclasses must implement the abstract
- *  methods
+ *  methods getDrawable and setDrawable to obtain and set the drawable of the
+ *  target view.
  *
  *  Any number of states can be added using the addState function. An optional
  *  string label can be passed to addState if referring to states by a label
- *  is preferred over referring to them by index. The label of a newly added
- *  state will be returned from addState. If only two states are desired, a
- *  useful idiom to add both states and the transitions between them is:
- *      addTransition(addState("state1label"), addState("state2label"),
- *                    1to2animatedVectorDrawable, 2to1animatedVectorDrawable)
+ *  is preferred over referring to them by index. Transitions between states
+ *  are added by passing two state indexes or labels along with the forward
+ *  and reverse AnimatedVectorDrawables to the function addTransition.
+ *
+ *  Because the function addState returns the index of the newly added state,
+ *  a useful idiom if only two states are desired is:
+ *    addTransition(addState("state1label"), addState("state2label"),
+ *                  1to2animatedVectorDrawable, 2to1animatedVectorDrawable)
  *
  *  The state of the managed background is altered using the function setState(
  *  targetState), where targetState is either the index or label of the desired
@@ -47,9 +51,9 @@ abstract class AnimatedIconController {
                    set(value) { _tint = value; setTint(value) }
 
     /* Due to AnimatedVectorDrawable.reset() not being present in lower API
-     * levels, TwoStateAnimatedIconController keeps track of whether or not each
-     * drawable has been animated at least once so that it can set the drawable
-     * properly for a non-animated state change. */
+     * levels, AnimatedIconController keeps track of whether or not each drawable
+     * has been animated at least once so that it can set the drawable properly
+     * for a non-animated state change. */
     data class State(val index: Int, val label: String)
     data class Transition(var drawable: AnimatedVectorDrawable,
                           var hasBeenAnimated: Boolean = false)
@@ -87,6 +91,7 @@ abstract class AnimatedIconController {
 
     fun setState(targetStateIndex: Int, animate: Boolean = true) {
         if (currentStateIndex == targetStateIndex) return
+
         val fromToTransition = transitions[Pair(currentStateIndex, targetStateIndex)] ?:
             throw IllegalArgumentException("No transition between states $currentStateIndex and $targetStateIndex has been added.")
         val newBg = if (animate || fromToTransition.hasBeenAnimated)
@@ -131,18 +136,20 @@ abstract class AnimatedIconController {
 }
 
 class AnimatedFabIconController(private val fab: FloatingActionButton) : AnimatedIconController() {
-    override fun getDrawable(): AnimatedVectorDrawable = fab.drawable as AnimatedVectorDrawable
+    override fun getDrawable() = fab.drawable as AnimatedVectorDrawable
     override fun setDrawable(newDrawable: AnimatedVectorDrawable) = fab.setImageDrawable(newDrawable)
 }
 
 class AnimatedImageViewController(private val imageView: ImageView) : AnimatedIconController() {
-    override fun getDrawable(): AnimatedVectorDrawable = imageView.drawable as AnimatedVectorDrawable
+    override fun getDrawable() = imageView.drawable as AnimatedVectorDrawable
     override fun setDrawable(newDrawable: AnimatedVectorDrawable) = imageView.setImageDrawable(newDrawable)
 }
 
 class AnimatedDrawableLayer(private val layerDrawable: LayerDrawable, private val layerId: Int) :
         AnimatedIconController() {
-    override fun getDrawable(): AnimatedVectorDrawable = layerDrawable.findDrawableByLayerId(layerId) as AnimatedVectorDrawable
-    override fun setDrawable(newDrawable: AnimatedVectorDrawable) { layerDrawable.setDrawableByLayerId(layerId, newDrawable) }
+    override fun getDrawable() = layerDrawable.findDrawableByLayerId(layerId) as AnimatedVectorDrawable
+    override fun setDrawable(newDrawable: AnimatedVectorDrawable) {
+        layerDrawable.setDrawableByLayerId(layerId, newDrawable)
+    }
 }
 

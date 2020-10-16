@@ -14,8 +14,7 @@
         android:id="@+id/spacer"
         android:layout_height="50dp"
         android:layout_width="0dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/shoppingListItemDetails" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ToggleButton
         android:id="@+id/checkBox"
@@ -90,8 +89,6 @@
         app:layout_constraintTop_toTopOf="@id/shoppingListAmountEdit"
         app:layout_constraintBottom_toBottomOf="@id/shoppingListAmountEdit" />
 
-    <include layout="@layout/shopping_list_item_details_layout"
-        android:id="@+id/shoppingListItemDetails"
-        android:visibility="gone"/>
+    <include layout="@layout/shopping_list_item_details_layout" />
 
 </merge>

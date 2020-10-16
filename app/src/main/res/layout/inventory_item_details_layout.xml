@@ -16,7 +16,7 @@
         android:id="@+id/inventoryItemDetailsGroup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="visible"
+        android:visibility="gone"
         app:constraint_referenced_ids="divider, addToShoppingListCheckBox, addToShoppingListTriggerEdit, collapseButton" />
 
     <View

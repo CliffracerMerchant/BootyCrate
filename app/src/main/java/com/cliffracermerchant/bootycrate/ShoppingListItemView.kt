@@ -100,7 +100,8 @@ class ShoppingListItemView(context: Context) :
         collapseButton.setOnClickListener { collapse() }
         checkBox.setOnCheckedChangeListener { _, checked -> setVisualCheckedState(checked) }
         linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-        layoutTransition = LayoutTransition()
+
+        layoutTransition = delaylessLayoutTransition()
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
     }
@@ -117,8 +118,7 @@ class ShoppingListItemView(context: Context) :
         setVisualCheckedState(checked = false, animate = false)
         updateLinkedStatus(item.linkedItemId)
 
-        if (isExpanded) expand(false)
-        else            collapse(false)
+        setExpanded(isExpanded)
     }
 
     fun updateLinkedStatus(newLinkedId: Long?) {
@@ -131,44 +131,39 @@ class ShoppingListItemView(context: Context) :
         }
     }
 
-    fun expand(animate: Boolean = true) {
-        _isExpanded = true
-        nameEdit.isEditable = true
-        shoppingListAmountEdit.isEditable = true
-        extraInfoEdit.isEditable = true
-
-        editButtonIconController.setState("more_options", animate)
-        checkBoxBackgroundController.setState("edit_color", animate)
-        if (checkBox.isChecked)
-            checkBoxCheckmarkController.setState("unchecked", animate)
-
-        setAmountEditable(true, animate)
-        if (extraInfoEdit.text.isNullOrBlank())
-            extraInfoEdit.visibility = View.VISIBLE
-        shoppingListItemDetailsGroup.visibility = View.VISIBLE
-    }
-
-    fun collapse(animate: Boolean = true) {
-        if (nameEdit.isFocused || extraInfoEdit.isFocused ||
+    fun expand() = setExpanded(true)
+    fun collapse() = setExpanded(false)
+    fun setExpanded(expanded: Boolean = true) {
+        if (!expanded && nameEdit.isFocused || extraInfoEdit.isFocused ||
             shoppingListAmountEdit.valueEdit.isFocused)
                 imm.hideSoftInputFromWindow(windowToken, 0)
 
-        _isExpanded = false
-        nameEdit.isEditable = false
-        shoppingListAmountEdit.isEditable = false
-        extraInfoEdit.isEditable = false
+        _isExpanded = expanded
+        nameEdit.isEditable = expanded
+        shoppingListAmountEdit.isEditable = expanded
+        extraInfoEdit.isEditable = expanded
+        setAmountEditable(expanded)
 
-        editButtonIconController.setState("edit", animate)
-        if (checkBox.isChecked) {
-            checkBoxCheckmarkController.setState("checked", animate)
-            checkBoxBackgroundController.setState("checked", animate)
+        if (expanded) {
+            editButtonIconController.setState("more_options")
+            checkBoxBackgroundController.setState("edit_color")
+            if (checkBox.isChecked)
+                checkBoxCheckmarkController.setState("unchecked")
+        } else {
+            editButtonIconController.setState("edit")
+            if (checkBox.isChecked) {
+                checkBoxCheckmarkController.setState("checked")
+                checkBoxBackgroundController.setState("checked")
+            } else {
+                checkBoxCheckmarkController.setState("unchecked")
+                checkBoxBackgroundController.setState("unchecked")
+            }
         }
-        else checkBoxBackgroundController.setState("unchecked", animate)
-
-        setAmountEditable(false, animate)
+        val newVisibility = if (expanded) View.VISIBLE
+                            else          View.GONE
+        shoppingListItemDetailsGroup.visibility = newVisibility
         if (extraInfoEdit.text.isNullOrBlank())
-            extraInfoEdit.visibility = View.GONE
-        shoppingListItemDetailsGroup.visibility = View.GONE
+            extraInfoEdit.visibility = newVisibility
     }
 
     fun setVisualCheckedState(checked: Boolean, animate: Boolean = true) {
@@ -183,9 +178,9 @@ class ShoppingListItemView(context: Context) :
         }
     }
 
-    private fun setAmountEditable(makingEditable: Boolean = true, animate: Boolean = true) {
-        decreaseButtonIconController.setState(if (makingEditable) "minus" else "multiply", animate)
-        increaseButtonIconController.setState(if (makingEditable) "plus" else "blank", animate)
+    private fun setAmountEditable(makingEditable: Boolean = true) {
+        decreaseButtonIconController.setState(if (makingEditable) "minus" else "multiply")
+        increaseButtonIconController.setState(if (makingEditable) "plus" else "blank")
 
         if (makingEditable) decreaseButton.setOnClickListener { shoppingListAmountEdit.decrement() }
         else                decreaseButton.setOnClickListener(null)

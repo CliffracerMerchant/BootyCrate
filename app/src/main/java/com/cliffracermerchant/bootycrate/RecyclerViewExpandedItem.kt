@@ -57,6 +57,7 @@ class RecyclerViewExpandedItem(private val recyclerView: RecyclerView) {
             throw IllegalStateException("The recycler view passed to RecyclerViewExpanded" +
                                         "Item must have an adapter that uses stable IDs.")
 
+
         // Return early if new expanded item is the same as the old one
         val newExpandedId = if (newExpandedVh == null) null
                             else adapter.getItemId(newExpandedVh.adapterPosition)
@@ -86,7 +87,7 @@ class RecyclerViewExpandedItem(private val recyclerView: RecyclerView) {
      *  RecyclerView that uses a RecyclerViewExpandedItem member to easily animate the
      *  expanding and collapsing of its items. */
     inner class ExpandableItemAnimator : DefaultItemAnimator() {
-        val pendingAnims = mutableListOf<Animator>()
+        val pendingAnimations = mutableListOf<Animator>()
 
         /* The DefaultItemAnimator animations start playing in runPendingAnimations,
          * rather than in animateChange. If these custom animations are started here in
@@ -94,9 +95,9 @@ class RecyclerViewExpandedItem(private val recyclerView: RecyclerView) {
          * tions and the default ones due to the slight delay before runPendingAnimations
          * is called. But if the expanding/collapsing animations are started in runPending-
          * Animations, the view's final state will be briefly visible before the expan-
-         * ding/collapsing animation is started, causing a flicker effect. To prevent this
+         * ding/collapsing animation is started, causing a flicker effect. To prevent this,
          * the expanding/collapsing animation and the possible translation animation are
-         * "started" here in animateChange, but paused immediately. They are then resumed
+         * started here in animateChange, but paused immediately. They are then resumed
          * in runPendingAnimations when the DefaultItemAnimator animations start. */
         override fun animateChange(
             oldHolder: RecyclerView.ViewHolder,
@@ -116,15 +117,16 @@ class RecyclerViewExpandedItem(private val recyclerView: RecyclerView) {
             val startHeight = preInfo.bottom - preInfo.top
 
             val expandCollapseAnim = ValueAnimator.ofInt(0, heightChange)
-            expandCollapseAnim.addUpdateListener { view.bottom = view.top + startHeight +
-                                                                 it.animatedValue as Int }
-            expandCollapseAnim.duration = changeDuration
+            expandCollapseAnim.addUpdateListener {
+                view.bottom = view.top + startHeight + it.animatedValue as Int
+            }
+            expandCollapseAnim.duration = moveDuration
             expandCollapseAnim.doOnStart {
                 dispatchChangeStarting(newHolder, true)
                 expandCollapseAnim.pause()
             }
             expandCollapseAnim.doOnEnd { dispatchChangeFinished(newHolder, true) }
-            pendingAnims.add(expandCollapseAnim)
+            pendingAnimations.add(expandCollapseAnim)
             expandCollapseAnim.start()
 
             // If another view is expanding as this one is collapsing,
@@ -138,9 +140,9 @@ class RecyclerViewExpandedItem(private val recyclerView: RecyclerView) {
                 if (viewIsOnBottom) {
                     view.translationY = heightChange.toFloat()
                     val translationAnim = ObjectAnimator.ofFloat(view, "translationY", 0f)
-                    translationAnim.duration = changeDuration
+                    translationAnim.duration = moveDuration
                     translationAnim.doOnStart { translationAnim.pause() }
-                    pendingAnims.add(translationAnim)
+                    pendingAnimations.add(translationAnim)
                     translationAnim.start()
                 }
             }
@@ -149,8 +151,8 @@ class RecyclerViewExpandedItem(private val recyclerView: RecyclerView) {
 
         override fun runPendingAnimations() {
             super.runPendingAnimations()
-            for (anim in pendingAnims) anim.resume()
-            pendingAnims.clear()
+            for (anim in pendingAnimations) anim.resume()
+            pendingAnimations.clear()
         }
     }
 
