@@ -48,8 +48,8 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
         if (!hidden) mainActivity.checkoutBtn.setOnClickListener(null)
     }
 
-    override fun showHideOptionsMenuItems(showing: Boolean) {
-        super.showHideOptionsMenuItems(showing)
+    override fun setOptionsMenuItemsVisible(showing: Boolean) {
+        super.setOptionsMenuItemsVisible(showing)
         menu?.setGroupVisible(R.id.inventory_view_menu_group, showing)
     }
 
@@ -63,11 +63,6 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
                 menu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
                 true
             } else false
-        }
-
-        override fun onDestroyActionMode(mode: ActionMode) {
-            menu?.setGroupVisible(R.id.inventory_view_action_mode_menu_group, false)
-            super.onDestroyActionMode(mode)
         }
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {

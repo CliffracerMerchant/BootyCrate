@@ -109,8 +109,8 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         }
     }
 
-    override fun showHideOptionsMenuItems(showing: Boolean) {
-        super.showHideOptionsMenuItems(showing)
+    override fun setOptionsMenuItemsVisible(showing: Boolean) {
+        super.setOptionsMenuItemsVisible(showing)
         menu?.setGroupVisible(R.id.shopping_list_view_menu_group, showing)
     }
 
@@ -145,11 +145,6 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
                 menu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
                 true
             } else false
-        }
-
-        override fun onDestroyActionMode(mode: ActionMode) {
-            menu?.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
-            super.onDestroyActionMode(mode)
         }
 
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {

@@ -60,6 +60,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var fab: FloatingActionButton
     lateinit var checkoutBtn: MaterialButton
+    lateinit var menu: Menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -126,12 +127,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.action_bar_menu, menu)
+        this.menu = menu
         // Setting the SearchView icon color manually is a temporary work-
         // around because setting it in the theme/style did not work.
         val searchView = menu.findItem(R.id.app_bar_search)?.actionView as SearchView?
         (searchView?.findViewById(androidx.appcompat.R.id.search_close_btn) as ImageView).
             setColorFilter(ContextCompat.getColor(this, android.R.color.black))
-        return true
+
+        shoppingListFragment.initOptionsMenu(menu)
+        inventoryFragment.initOptionsMenu(menu)
+
+        return super.onCreateOptionsMenu(menu)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

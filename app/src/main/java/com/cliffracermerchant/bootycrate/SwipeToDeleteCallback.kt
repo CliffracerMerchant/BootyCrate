@@ -56,6 +56,10 @@ class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Cont
         deleteIcon.draw(c)
     }
 
-    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) =
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         deleteFunc(viewHolder.adapterPosition)
+        // On some platforms the deleteBg remains visible after swiping
+        // an item. Calling setEmpty on deleteBg prevents this.
+        deleteBg.bounds.setEmpty()
+    }
 }
