@@ -99,7 +99,6 @@ class ShoppingListItemView(context: Context) :
         }
         collapseButton.setOnClickListener { collapse() }
         checkBox.setOnCheckedChangeListener { _, checked -> setVisualCheckedState(checked) }
-        linkedToEdit.paintFlags = linkedToEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
 
         layoutTransition = delaylessLayoutTransition()
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -116,19 +115,8 @@ class ShoppingListItemView(context: Context) :
 
         checkBox.isChecked = item.isChecked
         setVisualCheckedState(checked = false, animate = false)
-        updateLinkedStatus(item.linkedItemId)
 
         setExpanded(isExpanded)
-    }
-
-    fun updateLinkedStatus(newLinkedId: Long?) {
-        if (newLinkedId != null) {
-            linkedToIndicator.text = linkedItemDescriptionString
-            linkedToEdit.text = changeLinkActionString
-        } else {
-            linkedToIndicator.text = unlinkedItemDescriptionString
-            linkedToEdit.text = linkNowActionString
-        }
     }
 
     fun expand() = setExpanded(true)

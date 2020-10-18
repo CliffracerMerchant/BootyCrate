@@ -48,7 +48,6 @@ abstract class SelectableExpandableRecyclerView<Entity: ViewModelItem>(
         val expandedItemId = expandedItem.id
         if (expandedItemId != null && expandedItemId in ids)
             expandedItem.reset()
-            //expandedItem.set(null, animateExpand = false, animateCollapse = false)
         super.deleteItems(ids)
         // Since the items are being removed, no visual deselection change is necessary
         selection.removeIdsWithoutVisualUpdate(ids)

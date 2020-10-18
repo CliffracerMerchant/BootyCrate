@@ -120,8 +120,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(ShoppingListItem.Field.Amount) &&
                         holder.view.shoppingListAmountEdit.currentValue != item.amount)
                             holder.view.shoppingListAmountEdit.currentValue = item.amount
-                    if (changes.contains(ShoppingListItem.Field.LinkedTo))
-                        holder.view.updateLinkedStatus(item.linkedItemId)
                     if (changes.contains(ShoppingListItem.Field.Color) &&
                         holder.view.itemColor != item.color) {
                             holder.view.itemColor = item.color
@@ -133,7 +131,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                             anim.start()
                     }
                 }
-
                 else if (payload is ExpansionState)
                     holder.updateForExpansionState(state = payload)
 
@@ -174,13 +171,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             view.nameEdit.setOnLongClickListener(onLongClick)
             view.extraInfoEdit.setOnLongClickListener(onLongClick)
             view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
-            view.linkedToEdit.setOnClickListener { selectInventoryItemDialog(
-                    context = context,
-                    inventoryItems = inventoryViewModel.items.value,
-                    initiallySelectedItemId = item.linkedItemId,
-                    snackBarAnchor = snackBarAnchor ?: itemView,
-                    callback = ::updateLinkedTo)
-            }
             view.checkBox.setOnClickListener {
                 if (!view.isExpanded)
                     shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
@@ -241,11 +231,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 }
                 view.collapse()
             }
-        }
-
-        private fun updateLinkedTo(newLinkedItem: InventoryItem?) {
-            if (newLinkedItem == null || newLinkedItem.id == 0L) return
-            //shoppingListViewModel.updateLinkedInventoryItemId(item.id, newLinkedItem)
         }
     }
 
@@ -325,7 +310,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             if (newItem.color != oldItem.color)         itemChanges.add(ShoppingListItem.Field.Color)
             if (newItem.amount != oldItem.amount)       itemChanges.add(ShoppingListItem.Field.Amount)
             if (newItem.isChecked != oldItem.isChecked) itemChanges.add(ShoppingListItem.Field.IsChecked)
-            if (newItem.linkedItemId != oldItem.linkedItemId) itemChanges.add(ShoppingListItem.Field.LinkedTo)
 
             if (!itemChanges.isEmpty())
                 listChanges[newItem.id] = EnumSet.copyOf(itemChanges)

@@ -40,30 +40,6 @@ fun colorPickerDialog(
     colorPicker.show(fragmentManager)
 }
 
-fun selectInventoryItemDialog(
-    context: Context,
-    inventoryItems: List<InventoryItem>?,
-    initiallySelectedItemId: Long?,
-    snackBarAnchor: View,
-    callback: (InventoryItem?) -> Unit
-) {
-    if (inventoryItems == null || inventoryItems.isEmpty()) {
-        val string = context.getString(R.string.delete_all_no_items_error_message,
-                                       context.getString(R.string.inventory_item_collection_name))
-        val snackBar = Snackbar.make(snackBarAnchor, string, Snackbar.LENGTH_LONG)
-        snackBar.anchorView = snackBarAnchor
-        snackBar.show()
-        return
-    }
-    val recyclerView = PopupInventoryRecyclerView(context, inventoryItems,
-                                                  initiallySelectedItemId)
-    themedAlertDialogBuilder(context).
-        setTitle(context.getString(R.string.link_item_action_long_description)).
-        setPositiveButton(android.R.string.ok) { _, _ -> callback(recyclerView.selectedItem) }.
-        setNegativeButton(android.R.string.cancel) { _, _ -> }.
-        setView(recyclerView).show()
-}
-
 fun newShoppingListItemDialog(
     context: Context,
     fragmentManager: FragmentManager,

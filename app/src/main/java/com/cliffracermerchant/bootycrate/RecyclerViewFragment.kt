@@ -38,7 +38,7 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  the FAB between the values of the abstract properties fabRegularOnClickList-
  *  ener and fabActionModeOnClickListener. Override these properties in sub-
  *  classes with the desired functionality. */
-abstract class RecyclerViewFragment<Entity: ViewModelItem>: BootyCrateFragment() {
+abstract class RecyclerViewFragment<Entity: ViewModelItem>: HideableFragment() {
     protected lateinit var mainActivity: MainActivity
 
     abstract val recyclerView: SelectableExpandableRecyclerView<Entity>

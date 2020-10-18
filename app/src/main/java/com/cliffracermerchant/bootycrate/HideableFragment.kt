@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment
  *  The main fragments in BootyCrate are designed to be alternatively shown and
  *  hidden when they are used, rather than replaced. Unfortunately androidx.-
  *  fragment.app.Fragment's API is somewhat limited when used in this way.
- *  BootyCrateFragment adds the functions onAboutToBeHidden and setOptionsMenu-
+ *  HideableFragment adds the functions onAboutToBeHidden and setOptionsMenu-
  *  ItemsVisible to the API to make them easier to use in this way.
  *
  *  In a activity containing multiple fragments that are hidden or shown so
@@ -41,10 +41,10 @@ import androidx.fragment.app.Fragment
  *  Because onCreateOptionsMenu is typically called after the activities and /
  *  or fragments containing the menu are visible, the function initOptionsMenu
  *  should be called with an instance of the menu when it is ready. It is up
- *  to the activities and / or fragment manager subclasses that use BootyCrate-
+ *  to the activities and / or fragment manager subclasses that use Hideable-
  *  Fragments to call initOptionsMenu and onAboutToBeHidden at the appropriate
  *  times. */
-open class BootyCrateFragment: Fragment() {
+open class HideableFragment: Fragment() {
     protected var menu: Menu? = null
 
     open fun onAboutToBeHidden() {
