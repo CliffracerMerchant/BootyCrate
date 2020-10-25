@@ -87,7 +87,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
         setAdapter(adapter)
         this.viewModel = viewModel
         if (initialSort != null) sort = initialSort
-        viewModel.items.observe(owner) { items -> adapter.submitList(items); Log.d("checkeditems", "size now ${items.size}") }
+        viewModel.items.observe(owner) { items -> adapter.submitList(items) }
     }
 
     open fun addItem(item: Entity) = viewModel.add(item)

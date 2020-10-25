@@ -112,6 +112,8 @@ class ShoppingListItemView(context: Context) :
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
         checkBoxBackgroundController.tint = ViewModelItem.Colors[colorIndex]
         shoppingListAmountEdit.initCurrentValue(item.amount)
+        linkedToIndicator.text = if (item.linkedItemId != null) linkedItemDescriptionString
+                                 else                           unlinkedItemDescriptionString
 
         checkBox.isChecked = item.isChecked
         setVisualCheckedState(checked = false, animate = false)

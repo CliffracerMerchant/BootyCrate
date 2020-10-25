@@ -100,7 +100,7 @@ import androidx.room.*
      *  appropriately. For non-linked shopping list items, which are simply
      *  removed from the list, the checkout function acts no differently than
      *  removing them via swiping or the delete button. */
-    @Transaction open suspend fun checkOut() {
+    @Transaction open suspend fun checkout() {
         updateInventoryItemAmountsFromShoppingList()
         deleteCheckedItems()
     }

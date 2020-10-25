@@ -95,19 +95,13 @@ class ShoppingListViewModel(app: Application) : ViewModel<ShoppingListItem>(app)
     fun addFromInventoryItems(ids: LongArray) = viewModelScope.launch {
         dao.addFromInventoryItems(ids)
     }
-//    fun autoAddFromInventoryItem(inventoryItemId: Long, minAmount: Int) = viewModelScope.launch {
-//        dao.autoAddFromInventoryItem(inventoryItemId, minAmount)
-//    }
+
     fun updateIsChecked(id: Long, isChecked: Boolean) = viewModelScope.launch {
         dao.updateIsChecked(id, isChecked)
     }
-//    fun updateLinkedInventoryItemId(id: Long, linkedInventoryItem: InventoryItem) = viewModelScope.launch {
-//        dao.updateLinkedInventoryItemId(id, linkedInventoryItem.id,
-//                                        linkedInventoryItem.name,
-//                                        linkedInventoryItem.extraInfo)
-//    }
-    fun checkOut() = viewModelScope.launch {
-        dao.checkOut()
+
+    fun checkout() = viewModelScope.launch {
+        dao.checkout()
     }
 }
 

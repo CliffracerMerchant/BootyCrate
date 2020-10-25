@@ -7,6 +7,8 @@ package com.cliffracermerchant.bootycrate
 import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
+import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.*
@@ -65,7 +67,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun checkout() {
         checkedItems.removeAllIds()
-        shoppingListViewModel.checkOut()
+        shoppingListViewModel.checkout()
     }
 
     override fun deleteItems(ids: LongArray) {
@@ -160,6 +162,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         init {
             // Click & long click listeners
             val onClick = OnClickListener {
+                Log.d("clicky", "shopping list item clicked")
                 if (!selection.isEmpty) selection.toggle(adapterPosition) }
             view.setOnClickListener(onClick)
             view.nameEdit.setOnClickListener(onClick)

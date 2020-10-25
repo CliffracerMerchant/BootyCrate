@@ -57,7 +57,6 @@ class RecyclerViewExpandedItem(private val recyclerView: RecyclerView) {
             throw IllegalStateException("The recycler view passed to RecyclerViewExpanded" +
                                         "Item must have an adapter that uses stable IDs.")
 
-
         // Return early if new expanded item is the same as the old one
         val newExpandedId = if (newExpandedVh == null) null
                             else adapter.getItemId(newExpandedVh.adapterPosition)

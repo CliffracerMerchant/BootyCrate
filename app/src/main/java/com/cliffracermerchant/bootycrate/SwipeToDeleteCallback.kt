@@ -61,5 +61,6 @@ class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Cont
         // On some platforms the deleteBg remains visible after swiping
         // an item. Calling setEmpty on deleteBg prevents this.
         deleteBg.bounds.setEmpty()
+        deleteBg.invalidateSelf()
     }
 }
