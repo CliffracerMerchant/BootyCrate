@@ -4,12 +4,10 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ValueAnimator
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
-import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.DiffUtil
@@ -20,23 +18,23 @@ import java.util.*
 
 /** A RecyclerView to display the data provided by a ShoppingListViewModel.
  *
- *  ShoppingListRecyclerView is a BootyCrateRecyclerView subclass specialized
- *  for displaying the contents of a shopping list. Several of ShoppingList-
- *  RecyclerView's necessary fields can not be obtained when it is inflated
- *  from XML, such as its viewmodels. To finish initialization with these
- *  required members, the function finishInit MUST be called during runtime,
- *  but before any sort of data access is attempted. The activity's Fragment-
- *  Manager is also required in this finish init function to use as a depend-
- *  ency for the color edit popup.
-
+ *  ShoppingListRecyclerView is a ExpandableSelectableRecyclerView subclass
+ *  specialized for displaying the contents of a shopping list. Several of
+ *  ShoppingListRecyclerView's necessary fields can not be obtained when it
+ *  is inflated from XML, such as its viewmodels. To finish initialization with
+ *  these required members, the function finishInit MUST be called during run-
+ *  time, but before any sort of data access is attempted. ShoppingListRecycler-
+ *  View's version of finishInit will call ExpandableSelectableRecyclerView's
+ *  version to prevent the implementing activity or fragment from needing to
+ *  call both.
+ *
  *  Adding or removing shopping list items is accomplished using the ViewModel-
- *  RecyclerView functions and the new function addNewItem. ShoppingListRecy-
- *  clerView also provides a function for adding new inventory items based on
- *  existing shopping list items, addItemsToInventory, and a function to allow
- *  the user to "checkout." For more information about the functionality of
- *  checkout, see the ShoppingListItemDao documentation.*/
+ *  RecyclerView and ExpandableSelectableRecyclerView functions and the new
+ *  function addNewItem. ShoppingListRecyclerView also provides a function to
+ *  allow the user to "checkout." For more information about the functionality
+ *  of checkout, see the ShoppingListItemDao documentation.*/
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
-        SelectableExpandableRecyclerView<ShoppingListItem>(context, attrs) {
+        ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs) {
     override val diffUtilCallback = ShoppingListDiffUtilCallback()
     override val adapter = ShoppingListAdapter()
     override val collectionNameResId = R.string.shopping_list_item_collection_name
@@ -62,9 +60,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         shoppingListViewModel.add(newItem)
     }
 
-    fun addItemsToInventory(ids: LongArray) =
-        inventoryViewModel.addFromShoppingListItems(ids)
-
     fun checkout() {
         checkedItems.removeAllIds()
         shoppingListViewModel.checkout()
@@ -82,7 +77,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
      *  overrides of onBindViewHolder make use of the ShoppingListItem.Field
      *  values passed by ShoppingListItemDiffUtilCallback to support partial
      *  binding. */
-    inner class ShoppingListAdapter : SelectableItemAdapter<ShoppingListItemViewHolder>() {
+    inner class ShoppingListAdapter : ExpandableSelectableItemAdapter<ShoppingListItemViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : ShoppingListItemViewHolder {
             val view = ShoppingListItemView(context)
@@ -90,7 +85,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         }
 
         override fun onBindViewHolder(holder: ShoppingListItemViewHolder, position: Int) {
-            holder.view.update(holder.item, isExpanded = getItemId(position) == expandedItem.id)
+            holder.view.update(holder.item)
             super.onBindViewHolder(holder, position)
         }
 
@@ -114,28 +109,22 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(ShoppingListItem.Field.ExtraInfo) &&
                         holder.view.extraInfoEdit.text.toString() != item.extraInfo)
                             holder.view.extraInfoEdit.setText(item.extraInfo)
+                    if (changes.contains(ShoppingListItem.Field.Color) &&
+                        holder.view.checkBoxColor != item.color)
+                            holder.view.checkBoxColor = item.color
+                    if (changes.contains(ShoppingListItem.Field.Amount) &&
+                        holder.view.shoppingListAmountEdit.currentValue != item.amount)
+                            holder.view.shoppingListAmountEdit.currentValue = item.amount
+                    if (changes.contains(ShoppingListItem.Field.IsExpanded))
+                        holder.updateForExpansionState(item.isExpanded)
+                    if (changes.contains(ShoppingListItem.Field.IsSelected))
+                        holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(ShoppingListItem.Field.IsChecked)) {
                         holder.view.checkBox.isChecked = item.isChecked
                         if (item.isChecked) checkedItems.add(position)
                         else                checkedItems.remove(position)
                     }
-                    if (changes.contains(ShoppingListItem.Field.Amount) &&
-                        holder.view.shoppingListAmountEdit.currentValue != item.amount)
-                            holder.view.shoppingListAmountEdit.currentValue = item.amount
-                    if (changes.contains(ShoppingListItem.Field.Color) &&
-                        holder.view.itemColor != item.color) {
-                            holder.view.itemColor = item.color
-                            val itemColor = holder.view.itemColor ?: 0
-                            val startColor = ViewModelItem.Colors[itemColor]
-                            val endColor = ViewModelItem.Colors[item.color]
-                            val anim = ValueAnimator.ofArgb(startColor, endColor)
-                            anim.addUpdateListener { holder.view.checkBoxBackgroundController.tint = it.animatedValue as Int }
-                            anim.start()
-                    }
                 }
-                else if (payload is ExpansionState)
-                    holder.updateForExpansionState(state = payload)
-
                 else unhandledChanges.add(payload)
             }
             if (unhandledChanges.isNotEmpty())
@@ -157,56 +146,60 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
      *   ExpandableViewHolder.onExpansionStateChanged calls the corresponding
      *   expand or collapse functions on its ShoppingListItemView instance. */
     inner class ShoppingListItemViewHolder(val view: ShoppingListItemView) :
-            ViewModelItemViewHolder(view) {
+            ExpandableSelectableItemViewHolder(view) {
+
+        private val checkBoxExpandedOnClick = OnClickListener {
+            colorPickerDialog(fragmentManager, item.color) { pickedColor ->
+                shoppingListViewModel.updateColor(item.id, pickedColor)
+            }
+        }
+        private val checkBoxCollapsedOnClick = OnClickListener {
+            shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
+        }
+        private val checkBoxExpandedOnCheckedChange = CompoundButton.OnCheckedChangeListener { checkBox, isChecked ->
+            checkBox.isChecked = !isChecked
+        }
+        private val checkBoxCollapsedOnCheckedChange = CompoundButton.OnCheckedChangeListener { _, isChecked ->
+            view.setVisualCheckedState(isChecked)
+        }
 
         init {
             // Click & long click listeners
-            val onClick = OnClickListener {
-                Log.d("clicky", "shopping list item clicked")
-                if (!selection.isEmpty) selection.toggle(adapterPosition) }
+            val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }
             view.setOnClickListener(onClick)
             view.nameEdit.setOnClickListener(onClick)
             view.extraInfoEdit.setOnClickListener(onClick)
             view.shoppingListAmountEdit.valueEdit.setOnClickListener(onClick)
 
-            val onLongClick = OnLongClickListener { selection.toggle(adapterPosition); true }
+            val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
             view.setOnLongClickListener(onLongClick)
             view.nameEdit.setOnLongClickListener(onLongClick)
             view.extraInfoEdit.setOnLongClickListener(onLongClick)
             view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
+
             view.checkBox.setOnClickListener {
                 if (!view.isExpanded)
                     shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
             }
             view.editButton.setOnClickListener {
-                if (!view.isExpanded) {
-                    expandedItem.set(this)
-                    view.checkBox.setOnClickListener {
-                        colorPickerDialog(fragmentManager, item.color) { pickedColor ->
-                            shoppingListViewModel.updateColor(item.id, pickedColor)
-                        }
-                    }
-                }
+                if (!view.isExpanded) setExpandedItem(adapterPosition)
             }
-            view.collapseButton.setOnClickListener {
-                expandedItem.set(null)
-                view.checkBox.setOnClickListener {
-                    shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
-                }
-            }
+            view.collapseButton.setOnClickListener { setExpandedItem(null) }
 
             // Data change listeners
             view.nameEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 shoppingListViewModel.updateName(item.id, value)
                 val linkedId = item.linkedItemId
-                if (linkedId != null) inventoryViewModel.updateName(linkedId, value)
+                if (linkedId != null)
+                    inventoryViewModel.updateName(linkedId, value)
             }
             view.extraInfoEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 shoppingListViewModel.updateExtraInfo(item.id, value)
                 val linkedId = item.linkedItemId
-                if (linkedId != null) inventoryViewModel.updateExtraInfo(linkedId, value)
+                if (linkedId != null)
+                    inventoryViewModel.updateExtraInfo(linkedId, value)
             }
             view.shoppingListAmountEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
@@ -214,26 +207,15 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             }
         }
 
-        fun updateForExpansionState(state: ExpansionState) {
-            if (state == ExpansionState.Expanded) {
-                view.checkBox.setOnClickListener {
-                    colorPickerDialog(fragmentManager, item.color) { pickedColor ->
-                        shoppingListViewModel.updateColor(item.id, pickedColor)
-                    }
-                }
-                view.checkBox.setOnCheckedChangeListener { checkBox, isChecked ->
-                    checkBox.isChecked = !isChecked
-                }
-                view.expand()
-            } else { //state == ExpansionState.Collapsed
-                view.checkBox.setOnClickListener {
-                    shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
-                }
-                view.checkBox.setOnCheckedChangeListener{ _, isChecked ->
-                    view.setVisualCheckedState(isChecked)
-                }
-                view.collapse()
+        fun updateForExpansionState(isExpanded: Boolean) {
+            if (isExpanded) {
+                view.checkBox.setOnClickListener(checkBoxExpandedOnClick)
+                view.checkBox.setOnCheckedChangeListener(checkBoxExpandedOnCheckedChange)
+            } else { //!isExpanded
+                view.checkBox.setOnClickListener(checkBoxCollapsedOnClick)
+                view.checkBox.setOnCheckedChangeListener(checkBoxCollapsedOnCheckedChange)
             }
+            view.setExpanded(isExpanded)
         }
     }
 
@@ -308,11 +290,13 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         override fun areContentsTheSame(oldItem: ShoppingListItem,
                                         newItem: ShoppingListItem): Boolean {
             itemChanges.clear()
-            if (newItem.name != oldItem.name)           itemChanges.add(ShoppingListItem.Field.Name)
-            if (newItem.extraInfo != oldItem.extraInfo) itemChanges.add(ShoppingListItem.Field.ExtraInfo)
-            if (newItem.color != oldItem.color)         itemChanges.add(ShoppingListItem.Field.Color)
-            if (newItem.amount != oldItem.amount)       itemChanges.add(ShoppingListItem.Field.Amount)
-            if (newItem.isChecked != oldItem.isChecked) itemChanges.add(ShoppingListItem.Field.IsChecked)
+            if (newItem.name != oldItem.name)             itemChanges.add(ShoppingListItem.Field.Name)
+            if (newItem.extraInfo != oldItem.extraInfo)   itemChanges.add(ShoppingListItem.Field.ExtraInfo)
+            if (newItem.color != oldItem.color)           itemChanges.add(ShoppingListItem.Field.Color)
+            if (newItem.amount != oldItem.amount)         itemChanges.add(ShoppingListItem.Field.Amount)
+            if (newItem.isExpanded != oldItem.isExpanded) itemChanges.add(ShoppingListItem.Field.IsExpanded)
+            if (newItem.isSelected != oldItem.isSelected) itemChanges.add(ShoppingListItem.Field.IsSelected)
+            if (newItem.isChecked != oldItem.isChecked)   itemChanges.add(ShoppingListItem.Field.IsChecked)
 
             if (!itemChanges.isEmpty())
                 listChanges[newItem.id] = EnumSet.copyOf(itemChanges)

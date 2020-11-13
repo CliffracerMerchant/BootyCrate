@@ -27,23 +27,16 @@ import kotlinx.android.synthetic.main.activity_main.*
  *
  *  Instead of switching between activities, nearly everything in BootyCrate is
  *  accomplished in the ShoppingListFragment, InventoryFragment, or the Preferences-
- *  Fragment. Instances of these fragments are instantiated on app startup, and
- *  hidden/shown by the fragment manager as appropriate. The active fragment can be
- *  determined via the boolean members showingInventory and showingPreferences as
- *  follows:
+ *  Fragment. Instances of ShoppingListFragment and InventoryFragment are created
+ *  on app startup, and hidden/shown by the fragment manager as appropriate. The
+ *  active fragment can be determined via the boolean members showingInventory and
+ *  showingPreferences asfollows:
  *  Active fragment = if (showingPreferences)    PreferencesFragment
  *                    else if (showingInventory) InventoryFragment
  *                    else                       ShoppingListFragment
  *  If showingPreferences is true, the value of showingInventory determines the
  *  fragment "under" the preferences (i.e. the one that will be returned to on a
- *  back button press or a navigate up).
- *
- *  Both ShoppingListFragment and InventoryFragment are expected to have an
- *  enable() and a disable() function to be called when they are shown or hidden,
- *  respectively. These functions should prepare the main activity's UI for that
- *  fragment, e.g. by setting the floating action button's on click listener or
- *  icon.
- */
+ *  back button press or a navigate up). */
 class MainActivity : AppCompatActivity() {
     private lateinit var shoppingListFragment: ShoppingListFragment
     private lateinit var inventoryFragment: InventoryFragment
@@ -56,8 +49,8 @@ class MainActivity : AppCompatActivity() {
     private var shoppingListNumNewItems = 0
     private var pendingBabAnim: Animator? = null
 
-    lateinit var inventoryViewModel: InventoryViewModel
     lateinit var shoppingListViewModel: ShoppingListViewModel
+    lateinit var inventoryViewModel: InventoryViewModel
     lateinit var fab: FloatingActionButton
     lateinit var checkoutBtn: MaterialButton
     lateinit var menu: Menu
@@ -79,8 +72,8 @@ class MainActivity : AppCompatActivity() {
             editor.putBoolean(prefKey, false)
             editor.apply()
         }
-        inventoryViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
         shoppingListViewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
+        inventoryViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
 
         prefKey = getString(R.string.pref_dark_theme_active)
         setTheme(if (prefs.getBoolean(prefKey, false)) R.style.DarkTheme
@@ -145,7 +138,6 @@ class MainActivity : AppCompatActivity() {
         outState.putBoolean("showingInventory", showingInventory)
         supportFragmentManager.putFragment(outState, "shoppingListFragment", shoppingListFragment)
         supportFragmentManager.putFragment(outState, "inventoryFragment",    inventoryFragment)
-
         outState.putBoolean("showingPreferences", showingPreferences)
     }
 
@@ -213,40 +205,34 @@ class MainActivity : AppCompatActivity() {
     private fun switchToShoppingList() = toggleMainFragments(switchingToInventory = false)
     private fun toggleMainFragments(switchingToInventory: Boolean) {
         if (showingPreferences) return
-
+        //Log.d("expandedItem", "shopping list expandedItemPos = ${shoppingListFragment.recyclerView.itemAnimator.expandedItemPos}")
+        //Log.d("expandedItem", "inventory expandedItemPos = ${inventoryFragment.recyclerView.itemAnimator.expandedItemPos}")
         showingInventory = switchingToInventory
         showCheckoutButton(showing = !showingInventory)
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
 
-        val newFragment: RecyclerViewFragment<*>
-        val oldFragment: RecyclerViewFragment<*>
-        val newFragmentTranslationStart: Float
-        val fragmentTranslationAmount: Float
-        if (showingInventory) {
-            newFragment = inventoryFragment
-            oldFragment = shoppingListFragment
-            newFragmentTranslationStart = fragmentContainer.width.toFloat()
-            fragmentTranslationAmount = -fragmentContainer.width.toFloat()
-        } else {
-            newFragment = shoppingListFragment
-            oldFragment = inventoryFragment
-            newFragmentTranslationStart = -fragmentContainer.width.toFloat()
-            fragmentTranslationAmount = fragmentContainer.width.toFloat()
-        }
+        val newFragment = if (showingInventory) inventoryFragment
+                          else                  shoppingListFragment
+        val oldFragment = if (showingInventory) shoppingListFragment
+                          else                  inventoryFragment
+        val newFragmentTranslationStart = fragmentContainer.width * if (showingInventory) 1f else -1f
+        val fragmentTranslationAmount = fragmentContainer.width * if (showingInventory) -1f else 1f
 
         val newFragmentView = newFragment.view
+        newFragmentView?.translationX = newFragmentTranslationStart
+        newFragmentView?.visibility = View.VISIBLE
         val newFragmentAnim = newFragmentView?.animate()?.
-            translationX(0f)?.setDuration(300)?.
-            withLayer()?.withStartAction { newFragmentView.translationX = newFragmentTranslationStart }
+            translationX(0f)?.setDuration(300)//withLayer()
 
         val oldFragmentView = oldFragment.view
         val oldFragmentAnim = oldFragmentView?.animate()?.
             translationXBy(fragmentTranslationAmount)?.
-            withLayer()?.setDuration(300)?.
-            withStartAction { oldFragment.onAboutToBeHidden() }?.
-            withEndAction { supportFragmentManager.beginTransaction().hide(oldFragment).commit() }
+            setDuration(300)?.//withLayer()?.
+            withEndAction { oldFragmentView.visibility = View.GONE }
 
         supportFragmentManager.beginTransaction().show(newFragment).runOnCommit {
+            oldFragment.isActive = false
+            newFragment.isActive = true
             oldFragmentAnim?.start()
             newFragmentAnim?.start()
         }.commit()
@@ -297,7 +283,7 @@ class MainActivity : AppCompatActivity() {
                 shoppingListBadge.clearAnimation()
                 shoppingListBadge.alpha = 1f
                 shoppingListBadge.animate().alpha(0f).setDuration(1000).setStartDelay(1500).
-                withLayer().withEndAction { shoppingListNumNewItems = 0 }.start()
+                    withLayer().withEndAction { shoppingListNumNewItems = 0 }.start()
             }
             shoppingListSize = newShoppingList.size
         }
@@ -312,25 +298,18 @@ class MainActivity : AppCompatActivity() {
                 savedInstanceState, "shoppingListFragment") as ShoppingListFragment
             inventoryFragment = supportFragmentManager.getFragment(
                 savedInstanceState, "inventoryFragment") as InventoryFragment
+
             if (showingPreferences) {
                 showBottomAppBar(false)
                 supportActionBar?.setDisplayHomeAsUpEnabled(true)
             }
-        } else {
-            shoppingListFragment = ShoppingListFragment()
-            inventoryFragment = InventoryFragment()
-            val shownFragment = if (showingInventory) inventoryFragment
-                                else                  shoppingListFragment
-            val hiddenFragment = if (showingInventory) shoppingListFragment
-                                 else                  inventoryFragment
-            hiddenFragment.onAboutToBeHidden()
 
+        } else {
+            shoppingListFragment = ShoppingListFragment(isActive = !showingInventory)
+            inventoryFragment = InventoryFragment(isActive = showingInventory)
             supportFragmentManager.beginTransaction().
-                add(R.id.fragmentContainer, inventoryFragment, "inventory").
                 add(R.id.fragmentContainer, shoppingListFragment, "shoppingList").
-                hide(if (showingInventory) shoppingListFragment
-                     else                  inventoryFragment).
-                runOnCommit { shownFragment.onHiddenChanged(false) }.
+                add(R.id.fragmentContainer, inventoryFragment, "inventory").
                 commit()
         }
     }

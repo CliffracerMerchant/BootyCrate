@@ -6,7 +6,6 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.*
@@ -26,7 +25,8 @@ import com.google.android.material.snackbar.Snackbar
  *  ridden with a concrete ViewModel<Entity> subclass that implements its
  *  abstract methods. collectionNameResId, used in user facing strings regar-
  *  ding the item collection, should be overridden with a string resource that
- *  describes the collection of items (e.g. an inventory for inventory items).
+ *  describes the collection of items (e.g. inventory for a collection of inv-
+ *  entory items).
  *
  *  Because AndroidViewModels are created after views inflated from xml are
  *  created, it is necessary to finish initialization with these required mem-
@@ -97,14 +97,13 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     open fun deleteItems(ids: LongArray) {
         viewModel.delete(ids)
         val text = context.getString(R.string.delete_snackbar_text, ids.size)
-        val snackBar = Snackbar.make(this, text, Snackbar.LENGTH_LONG)
-        snackBar.anchorView = snackBarAnchor ?: this
-        snackBar.setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
-        snackBar.addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-            override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                viewModel.emptyTrash()
-        }})
-        snackBar.show()
+        Snackbar.make(this, text, Snackbar.LENGTH_LONG).
+            setAnchorView(snackBarAnchor ?: this).
+            setAction(R.string.delete_snackbar_undo_text) { undoDelete() }.
+            addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    viewModel.emptyTrash()
+            }}).show()
     }
 
     open fun undoDelete() { viewModel.undoDelete() }
@@ -132,9 +131,8 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     /** A ListAdapter derived RecyclerView.Adapter for ViewModelRecyclerView.
      *
      *  ViewModelAdapter is an abstract (because it does not implement onCreate-
-     *  ViewHolder) ListAdapter subclass that enforces the use of stable ids,
-     *  and is responsible for calling onNewItemInsertion during the binding of
-     *  a new item. t*/
+     *  ViewHolder) ListAdapter subclass that enforces the use of stable ids
+     *  and calls onNewItemInsertion for newly inserted items. */
     abstract inner class ViewModelAdapter<VHType: ViewModelItemViewHolder> :
             ListAdapter<Entity, VHType>(diffUtilCallback) {
         init { setHasStableIds(true) }
@@ -149,8 +147,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
             }
         }
 
-        override fun getItemId(position: Int) = try { currentList[position].id }
-                                                catch(e: ArrayIndexOutOfBoundsException) { -1 }
+        override fun getItemId(position: Int) = currentList[position].id
     }
 
    /** A ViewHolder subclass that provides a simplified way of obtaining the

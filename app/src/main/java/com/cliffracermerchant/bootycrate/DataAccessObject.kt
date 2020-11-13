@@ -7,8 +7,9 @@ package com.cliffracermerchant.bootycrate
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.Transaction
 
-/** A pure abstract class that declares a generic data access object interface. */
+/** A pure abstract class that declares a generic data access object interface for ViewModelItems. */
 @Dao abstract class DataAccessObject<Entity: ViewModelItem> {
     abstract fun getAllNow(): List<Entity>
     abstract fun getAllSortedByColor(filter: String): LiveData<List<Entity>>
@@ -26,4 +27,25 @@ import androidx.room.Insert
     abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
     abstract suspend fun updateColor(id: Long, color: Int)
     abstract suspend fun updateAmount(id: Long, amount: Int)
+}
+
+/** An abstract DAO subclass of DataAccessObject<Entity> that extends the interface with
+ *  operations related to the expanding/collapsing of items and the selection of items. */
+@Dao abstract class ExpandableSelectableItemDao<Entity: ExpandableSelectableItem> : DataAccessObject<Entity>() {
+    protected abstract suspend fun updateIsExpanded(id: Long, isExpanded: Boolean)
+    @Transaction open suspend fun setExpandedItem(id: Long?) {
+        clearExpandedItem()
+        if (id != null) updateIsExpanded(id, true)
+    }
+    abstract fun getSelectionSize(): LiveData<Int>
+    abstract suspend fun updateIsSelected(id: Long, isSelected: Boolean)
+    abstract suspend fun toggleIsSelected(id: Long)
+    abstract suspend fun deleteSelected()
+
+    abstract suspend fun clearExpandedItem()
+    abstract suspend fun clearSelection()
+    @Transaction open suspend fun resetExpandedItemAndSelection() {
+        clearExpandedItem()
+        clearSelection()
+    }
 }

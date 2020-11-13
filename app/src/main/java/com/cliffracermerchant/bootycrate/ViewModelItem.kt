@@ -72,3 +72,23 @@ import androidx.room.PrimaryKey
         }
     }
 }
+
+/** An extension of ViewModelItem that adds two fields, isExpanded and isSelected. */
+@Entity open class ExpandableSelectableItem(
+    id: Long = 0,
+    name: String = "",
+    extraInfo: String = "",
+    color: Int = 0,
+    amount: Int = 1,
+    linkedItemId: Long? = null,
+    inTrash: Boolean = false,
+    @ColumnInfo(name="isExpanded", defaultValue = "0") var isExpanded: Boolean = false,
+    @ColumnInfo(name="isSelected", defaultValue = "0") var isSelected: Boolean = false
+) : ViewModelItem(id, name, extraInfo, color, amount, linkedItemId, inTrash) {
+
+    override fun toDebugString() = super.toString() +
+            "\nisExpanded = $isExpanded\nisSelected = $isSelected"
+
+    enum class Field { Name, ExtraInfo, Color, Amount,
+                       LinkedTo, isExpanded, isSelected }
+}

@@ -16,9 +16,9 @@ import kotlinx.android.synthetic.main.activity_main.*
 /** An fragment to display a SelectableExpandableRecyclerView to the user.
  *
  *  RecyclerViewFragment is an abstract fragment whose main purpose is to dis-
- *  play an instance of a SelectableExpandableRecyclerView to the user. It has
+ *  play an instance of a ExpandableSelectableRecyclerView to the user. It has
  *  an abstract property recyclerView that must be overridden in subclasses
- *  with a concrete implementation of SelectableExpandableRecyclerView. Because
+ *  with a concrete implementation of ExpandableSelectableRecyclerView. Because
  *  RecyclerViewFragment's implementation of onViewCreated references its abs-
  *  tract recyclerView property, it is important that subclasses override the
  *  recyclerView property and initialize it before calling super.onViewCreated,
@@ -27,8 +27,8 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  RecyclerViewFragment starts or finishes an action mode instance according
  *  to the size of the RecyclerView's selection. The ActionMode.Callback used
  *  with this action mode is the value of its property actionModeCallback. This
- *  property defaults to an instance of its own ActionModeCallback, but is open
- *  in case subclasses need to override the callback with their own.
+ *  property defaults to an instance of its own ActionModeCallback inner class,
+ *  but is open in case subclasses need to override the callback with their own.
  *
  *  RecyclerViewFragment manages the visual state of the floating action button
  *  and its onClickListeners according to whether an action mode is ongoing.
@@ -38,10 +38,11 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  the FAB between the values of the abstract properties fabRegularOnClickList-
  *  ener and fabActionModeOnClickListener. Override these properties in sub-
  *  classes with the desired functionality. */
-abstract class RecyclerViewFragment<Entity: ViewModelItem>: HideableFragment() {
-    protected lateinit var mainActivity: MainActivity
+abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: Boolean = false) :
+        MainActivityFragment(isActive) {
 
-    abstract val recyclerView: SelectableExpandableRecyclerView<Entity>
+    protected lateinit var activity: MainActivity
+    abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>
 
     protected var actionMode: ActionMode? = null
     protected open val actionModeCallback = ActionModeCallback()
@@ -50,47 +51,31 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: HideableFragment() {
     protected abstract val fabRegularOnClickListener: View.OnClickListener?
     protected abstract val fabActionModeOnClickListener: View.OnClickListener?
 
-    private val savedSelectionStateIdsKey: String get() = "${getString(recyclerView.collectionNameResId)}_selection_state_ids"
-    private val savedSelectionStatePositionsKey: String get() = "${getString(recyclerView.collectionNameResId)}_selection_state_pos"
-    private val wasActiveFragmentKey: String get() = "${getString(recyclerView.collectionNameResId)}_was_active"
-
     init { setHasOptionsMenu(true) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        mainActivity = requireActivity() as MainActivity
-        fabIconController = AnimatedFabIconController(mainActivity.fab)
-        recyclerView.snackBarAnchor = mainActivity.bottomAppBar
-        recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, actionModeCallback)
-
+        activity = requireActivity() as MainActivity
+        fabIconController = AnimatedFabIconController(activity.fab)
         fabIconController.addTransition(fabIconController.addState("add"), fabIconController.addState("delete"),
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
-
-        if (savedInstanceState == null) return
-
-        val wasActiveFragment = savedInstanceState.getBoolean(wasActiveFragmentKey)
-        if (wasActiveFragment) onHiddenChanged(false)
-        else actionModeCallback.clearSelectionOnExit = false
-
-        val selectionStateIds = savedInstanceState.getLongArray(savedSelectionStateIdsKey) ?: return
-        val selectionStatePositions = savedInstanceState.getIntArray(savedSelectionStatePositionsKey) ?: return
-        recyclerView.selection.restoreState(selectionStateIds, selectionStatePositions)
+            ContextCompat.getDrawable(activity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
+            ContextCompat.getDrawable(activity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
+        recyclerView.snackBarAnchor = activity.bottomAppBar
+        recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, actionModeCallback)
+        super.onViewCreated(view, savedInstanceState)
     }
 
-    override fun onAboutToBeHidden() {
-        super.onAboutToBeHidden()
-        actionModeCallback.clearSelectionOnExit = false
-        actionMode?.finish()
-    }
-
-    override fun onHiddenChanged(hidden: Boolean) {
-        super.onHiddenChanged(hidden)
-        if (!hidden) {
+    override fun onActiveStateChanged(active: Boolean) {
+        super.onActiveStateChanged(active)
+        if (active) {
             fabIconController.setState("add", animate = false)
-            mainActivity.fab.setOnClickListener(fabRegularOnClickListener)
+            activity.fab.setOnClickListener(fabRegularOnClickListener)
             actionModeCallback.clearSelectionOnExit = true
-            actionModeCallback.onChanged(recyclerView.selection.size)
+            val selectionSize = recyclerView.selection.size
+            if (selectionSize != null)
+                actionModeCallback.onChanged(selectionSize)
+        } else {
+            actionModeCallback.clearSelectionOnExit = false
+            actionMode?.finish()
         }
     }
 
@@ -121,11 +106,11 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: HideableFragment() {
         return when (item.itemId) {
             R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
-            } R.id.export_menu_item -> { exportAsDialog(
-                    context = mainActivity,
-                    items = recyclerView.adapter.currentList,
-                    insertBlankLineBetweenColors = recyclerView.sort == ViewModelItem.Sort.Color,
-                    snackBarAnchor = mainActivity.bottomAppBar)
+            } R.id.export_menu_item -> {
+                exportAsDialog(context = activity,
+                               items = recyclerView.adapter.currentList,
+                               insertBlankLineBetweenColors = recyclerView.sort == ViewModelItem.Sort.Color,
+                               snackBarAnchor = activity.bottomAppBar)
                 true
             } R.id.color_option -> {
                 recyclerView.sort = ViewModelItem.Sort.Color
@@ -146,16 +131,6 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: HideableFragment() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putBoolean(wasActiveFragmentKey, !isHidden)
-
-        if (recyclerView.selection.isEmpty) return
-        val savedSelectionState = recyclerView.selection.currentState()
-        outState.putLongArray(savedSelectionStateIdsKey, savedSelectionState.first)
-        outState.putIntArray(savedSelectionStatePositionsKey, savedSelectionState.second)
-    }
-
     /** The default ActionMode.Callback used by RecyclerViewFragment.
      *
      *  ActionModeCallback implements Observer<Int>, and is intended to be used as an
@@ -172,9 +147,9 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: HideableFragment() {
 
         override fun onChanged(newSize: Int) {
             if (newSize == 0) actionMode?.finish()
-            else if (newSize > 0) {
-                actionMode = actionMode ?: mainActivity.startSupportActionMode(this)
-                actionMode?.title = getString(R.string.action_mode_title, newSize)
+            else if (newSize > 0 && isActive) {
+                actionMode = actionMode ?: activity.startSupportActionMode(this)
+                actionMode?.title = activity.getString(R.string.action_mode_title, newSize)
             }
         }
 
@@ -184,7 +159,7 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: HideableFragment() {
             mode.menuInflater?.inflate(R.menu.action_bar_menu, menu)
             menu.findItem(R.id.app_bar_search).isVisible = false
             menu.findItem(R.id.change_sorting_menu_item).isVisible = false
-            mainActivity.fab.setOnClickListener(fabActionModeOnClickListener)
+            activity.fab.setOnClickListener(fabActionModeOnClickListener)
             fabIconController.setState("delete")
             return true
         }
@@ -192,8 +167,9 @@ abstract class RecyclerViewFragment<Entity: ViewModelItem>: HideableFragment() {
         override fun onPrepareActionMode(mode: ActionMode, menu: Menu?) = false
 
         override fun onDestroyActionMode(mode: ActionMode) {
-            if (clearSelectionOnExit) recyclerView.selection.clear()
-            mainActivity.fab.setOnClickListener(fabRegularOnClickListener)
+            if (clearSelectionOnExit)
+                recyclerView.selection.clear()
+            activity.fab.setOnClickListener(fabRegularOnClickListener)
             fabIconController.setState("add")
             actionMode = null
         }

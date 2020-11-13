@@ -58,6 +58,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             synchronized(this) {
                 val newInstance = Room.databaseBuilder(
                     context.applicationContext, BootyCrateDatabase::class.java, "booty-crate-db").
+                    //addMigrations(MIGRATION_1_2).
                     addCallback(callback).build()
                 this.instance = newInstance
                 return newInstance
@@ -96,7 +97,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             tempDbFile.writeBytes(importReader.readBytes())
 
             val importedDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName).
-                                allowMainThreadQueries().createFromFile(tempDbFile).build()
+                    allowMainThreadQueries().createFromFile(tempDbFile).build()
             val shoppingListItems = importedDb.shoppingListItemDao().getAllNow()
             val inventoryItems = importedDb.inventoryItemDao().getAllNow()
             for (item in shoppingListItems) { item.id = 0; item.linkedItemId = null }
@@ -112,6 +113,8 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         private val callback = object: Callback() {
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
+                db.execSQL("UPDATE shopping_list_item SET isSelected = 0, isExpanded = 0")
+                db.execSQL("UPDATE inventory_item SET isSelected = 0, isExpanded = 0")
                 db.execSQL("PRAGMA recursive_triggers = false")
             }
 
@@ -208,34 +211,23 @@ abstract class BootyCrateDatabase : RoomDatabase() {
 
         /* Unfortunately SQLite's limitation of not being able to use common
            table expressions in triggers makes the following less readable than
-           should be. The below query essentially makes a shopping list item
+           should be. The query below essentially makes a shopping list item
            with the same name, extraInfo, and color as an inventory item, while
            also filling in its linkedItemId field to the id of the inventory
            item it was created from. The new item's amount is the lesser of its
            current amount (if it already exists) or the minimum amount (i.e.
            the inventory item it is based on's addToShoppingListAmount minus
-           its current amount). */
+           its current amount). It also*/
         private val insertFromInventoryItemStr =
-            """INSERT OR REPLACE INTO shopping_list_item (id, name, extraInfo, color, linkedItemId, amount)
+            """INSERT OR REPLACE INTO shopping_list_item (id, name, extraInfo, color, linkedItemId,
+                                                          amount, isExpanded, isSelected, isChecked)
                SELECT new.linkedItemId, new.name, new.extraInfo, new.color, new.id,
-                      CASE WHEN (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) < (SELECT new.addToShoppingListTrigger - new.amount)
+                      CASE WHEN (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) <
+                                (SELECT new.addToShoppingListTrigger - new.amount)
                            THEN (SELECT new.addToShoppingListTrigger - new.amount)
-                           ELSE (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) END"""
-
-//        private val MIGRATION_5_6 = object: Migration(5, 6) {
-//            override fun migrate(db: SupportSQLiteDatabase) {
-//                db.execSQL("PRAGMA foreign_keys=off")
-//                db.execSQL("BEGIN TRANSACTION")
-//                db.execSQL("CREATE TABLE IF NOT EXISTS `shopping_list_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `linkedItemId` INTEGER, `inTrash` INTEGER NOT NULL DEFAULT 0, `isChecked` INTEGER NOT NULL DEFAULT 0)")
-//                db.execSQL("CREATE TABLE IF NOT EXISTS `inventory_item_copy` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `amount` INTEGER NOT NULL DEFAULT 1, `linkedItemId` INTEGER, `inTrash` INTEGER NOT NULL DEFAULT 0, `addToShoppingList` INTEGER NOT NULL DEFAULT 0, `addToShoppingListTrigger` INTEGER NOT NULL DEFAULT 1)")
-//                db.execSQL("INSERT INTO shopping_list_item_copy (id, name, extraInfo, color, amount, linkedItemId, inTrash, isChecked) SELECT id, name, extraInfo, color, amount, linkedInventoryItemId, inTrash, isChecked FROM shopping_list_item")
-//                db.execSQL("INSERT INTO inventory_item_copy (id, name, extraInfo, color, amount, linkedItemId, inTrash, addToShoppingList, addToShoppingListTrigger) SELECT id, name, extraInfo, color, amount, (SELECT id FROM shopping_list_item WHERE shopping_list_item.linkedInventoryItemId = inventory_item.id), inTrash, addToShoppingList, addToShoppingListTrigger FROM inventory_item")
-//                db.execSQL("DROP TABLE shopping_list_item")
-//                db.execSQL("DROP TABLE inventory_item")
-//                db.execSQL("ALTER TABLE inventory_item_copy RENAME TO inventory_item")
-//                db.execSQL("ALTER TABLE shopping_list_item_copy RENAME TO shopping_list_item")
-//                db.execSQL("COMMIT")
-//                db.execSQL("PRAGMA foreign_keys=on")
-//            }
+                           ELSE (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) END,
+                      (SELECT isExpanded FROM shopping_list_item WHERE id == new.linkedItemId),
+                      (SELECT isSelected FROM shopping_list_item WHERE id == new.linkedItemId),
+                      (SELECT isChecked FROM shopping_list_item WHERE id == new.linkedItemId)"""
     }
 }

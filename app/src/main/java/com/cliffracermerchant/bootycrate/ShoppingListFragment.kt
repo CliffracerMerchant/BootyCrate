@@ -5,12 +5,8 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
-import android.content.res.ColorStateList
-import android.graphics.drawable.AnimatedVectorDrawable
 import android.os.Bundle
 import android.os.Handler
-import android.util.Log
 import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
@@ -33,12 +29,13 @@ import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
  *  state to safeguard the user from checking out accidentally. If the user
  *  does not press the button again within two seconds, it will revert to its
  *  normal state. */
-class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
+class ShoppingListFragment(isActive: Boolean = false) :
+        RecyclerViewFragment<ShoppingListItem>(isActive) {
+
     override lateinit var recyclerView: ShoppingListRecyclerView
     override val actionModeCallback = ActionModeCallback()
     override val fabRegularOnClickListener = View.OnClickListener { recyclerView.addNewItem() }
-    override val fabActionModeOnClickListener = View.OnClickListener {
-        recyclerView.deleteItems(recyclerView.selection.allSelectedIds()) }
+    override val fabActionModeOnClickListener = View.OnClickListener { recyclerView.deleteSelectedItems() }
 
     private val handler = Handler()
     private var checkoutButtonLastPressTimeStamp = 0L
@@ -62,12 +59,11 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(mainActivity.getString(R.string.pref_shopping_list_sort),
-            ViewModelItem.Sort.Color.toString())
+                                      ViewModelItem.Sort.Color.toString())
         val initialSort = ViewModelItem.sortFrom(sortStr)
         recyclerView.finishInit(viewLifecycleOwner, mainActivity.shoppingListViewModel,
                                 mainActivity.inventoryViewModel,
                                 mainActivity.supportFragmentManager, initialSort)
-        super.onViewCreated(view, savedInstanceState)
 
         darkGrayColor = ContextCompat.getColor(mainActivity, R.color.colorTextLightSecondary)
         lightGrayColor = ContextCompat.getColor(mainActivity, android.R.color.darker_gray)
@@ -75,25 +71,22 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         yellowColor = ContextCompat.getColor(mainActivity, R.color.checkoutButtonEnabledColor)
         checkoutButtonNormalText = getString(R.string.checkout_description)
         checkoutButtonConfirmText = getString(R.string.checkout_confirm_description)
-        fabIconController.addTransition(fabIconController.addState("add"), fabIconController.addState("delete"),
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(mainActivity, R.drawable.fab_animated_delete_to_add_icon) as AnimatedVectorDrawable)
 
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
-            Log.d("checkeditems", "checked items size = $newSize")
-            if (newSize > 0) checkoutButtonIsEnabled = true
+            if (newSize > 0)
+                checkoutButtonIsEnabled = true
             if (newSize == 0) {
                 revertCheckoutButtonToNormalState()
                 checkoutButtonIsEnabled = false
             }
         }
+        super.onViewCreated(view, savedInstanceState)
     }
 
-    override fun onHiddenChanged(hidden: Boolean) {
-        super.onHiddenChanged(hidden)
-        if (!hidden) {
-            mainActivity.fab.setOnClickListener { recyclerView.addNewItem() }
-            mainActivity.checkoutBtn.setOnClickListener {
+    override fun onActiveStateChanged(active: Boolean) {
+        super.onActiveStateChanged(active)
+        if (active) {
+            activity.checkoutBtn.setOnClickListener {
                 if (!checkoutButtonIsEnabled) return@setOnClickListener
                 val currentTime = System.currentTimeMillis()
                 if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
@@ -101,7 +94,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
                     recyclerView.checkout()
                 } else {
                     checkoutButtonLastPressTimeStamp = currentTime
-                    mainActivity.checkoutBtn.text = checkoutButtonConfirmText
+                    activity.checkoutBtn.text = checkoutButtonConfirmText
                     handler.removeCallbacks(::revertCheckoutButtonToNormalState)
                     handler.postDelayed(::revertCheckoutButtonToNormalState, 2000)
                 }
@@ -115,21 +108,19 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     }
 
     private fun revertCheckoutButtonToNormalState() {
-        mainActivity.checkoutBtn.text = checkoutButtonNormalText
+        activity.checkoutBtn.text = checkoutButtonNormalText
         checkoutButtonLastPressTimeStamp = 0
     }
 
     private fun enableCheckoutButton(enabling: Boolean) {
         if (checkoutButtonIsEnabled == enabling) return
 
-        val bgColorAnim = ValueAnimator.ofArgb(if (enabling) lightGrayColor else yellowColor,
-            if (enabling) yellowColor else lightGrayColor)
-        bgColorAnim.addUpdateListener {
-            mainActivity.checkoutBtn.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int)
-        }
+        val bgColorAnim = ObjectAnimator.ofArgb(activity.checkoutBtn.background, "tint",
+                                                if (enabling) lightGrayColor else yellowColor,
+                                                if (enabling) yellowColor else lightGrayColor)
         bgColorAnim.duration = 200
         bgColorAnim.start()
-        val textColorAnim = ObjectAnimator.ofArgb(mainActivity.checkoutBtn, "textColor",
+        val textColorAnim = ObjectAnimator.ofArgb(activity.checkoutBtn, "textColor",
                                                   if (enabling) blackColor else darkGrayColor)
         textColorAnim.duration = 200
         textColorAnim.start()
@@ -150,10 +141,9 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             return when (item.itemId) {
                 R.id.add_to_inventory_button -> {
-                    recyclerView.apply{ addItemsToInventory(selection.allSelectedIds()) }
-                    recyclerView.selection.clear()
+                    activity.inventoryViewModel.addFromSelectedShoppingListItems()
                     true
-                } else -> mainActivity.onOptionsItemSelected(item)
+                } else -> activity.onOptionsItemSelected(item)
             }
         }
     }

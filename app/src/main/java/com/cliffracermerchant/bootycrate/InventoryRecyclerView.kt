@@ -15,24 +15,27 @@ import androidx.recyclerview.widget.DiffUtil
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
+import kotlinx.android.synthetic.main.inventory_item_layout.view.editButton
+import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
+import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
 import java.util.*
 
 /** A RecyclerView to display the data provided by an InventoryViewModel.
  *
- *  InventoryRecyclerView is a RecyclerView subclass specialized for displaying
- *  the contents of an inventory. Several of InventoryRecyclerView's necessary
- *  fields can not be obtained when it is inflated from XML, such as its view-
- *  models. To finish initialization with these required members, the function
- *  finishInit MUST be called during runtime, but before any sort of data
- *  access is attempted. The activity's FragmentManager is also required in
- *  this finish init function to use as a dependency for the color edit popup.
+ *  InventoryRecyclerView is a ExpandableSelectableRecyclerView subclass spec-
+ *  ialized for displaying the contents of an inventory. Several of Inventory-
+ *  RecyclerView's necessary fields can not be obtained when it is inflated
+ *  from XML, such as its viewmodels. To finish initialization with these
+ *  required members, the function finishInit MUST be called during runtime,
+ *  but before any sort of data access is attempted. InventoryRecyclerView's
+ *  version of finishInit will call ExpandableSelectableRecyclerView's version
+ *  to prevent the implementing activity or fragment from needing to call both.
  *
  *  Adding or removing inventory items is accomplished using the ViewModel-
- *  RecyclerView functions and the new function addNewItem. InventoryRecycler-
- *  View also provides a new function, addItemsToShoppingList, to add new shop-
- *  ping list items from existing inventory items. */
+ *  RecyclerView and ExpandableSelectableRecyclerView functions and the new
+ *  function addNewItem. */
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
-        SelectableExpandableRecyclerView<InventoryItem>(context, attrs) {
+        ExpandableSelectableRecyclerView<InventoryItem>(context, attrs) {
     override val diffUtilCallback = InventoryItemDiffUtilCallback()
     override val adapter = InventoryAdapter()
     override val collectionNameResId = R.string.inventory_item_collection_name
@@ -57,17 +60,13 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         inventoryViewModel.add(newItem)
     }
 
-    fun addItemsToShoppingList(ids: LongArray) {
-        shoppingListViewModel.addFromInventoryItems(ids)
-    }
-
     /** A RecyclerView.Adapter to display the contents of a list of inventory items.
      *
      *  InventoryAdapter is a subclass of BootyCrateAdapter using InventoryItem-
      *  InventoryItemViewHolder instances to represent inventory items. Its
      *  overrides of onBindViewHolder make use of the InventoryItem.Field val-
      *  ues passed by InventoryItemDiffUtilCallback to support partial binding. */
-    inner class InventoryAdapter : SelectableItemAdapter<InventoryItemViewHolder>() {
+    inner class InventoryAdapter : ExpandableSelectableItemAdapter<InventoryItemViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : InventoryItemViewHolder {
             val view = InventoryItemView(context)
@@ -75,7 +74,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         }
 
         override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int) {
-            holder.view.update(holder.item, isExpanded = getItemId(position) == expandedItem.id)
+            holder.view.update(holder.item)
             super.onBindViewHolder(holder, position)
         }
 
@@ -96,27 +95,27 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.Name) &&
                         holder.view.nameEdit.text.toString() != item.name)
                             holder.view.nameEdit.setText(item.name)
-                    if (changes.contains(InventoryItem.Field.Amount) &&
-                        holder.view.inventoryAmountEdit.currentValue != item.amount)
-                            holder.view.inventoryAmountEdit.currentValue = item.amount
                     if (changes.contains(InventoryItem.Field.ExtraInfo) &&
                         holder.view.extraInfoEdit.text.toString() != item.extraInfo)
                             holder.view.extraInfoEdit.setText(item.extraInfo)
+                    if (changes.contains(InventoryItem.Field.Color)) {
+                        val colorEditBg = holder.view.colorEdit.drawable
+                        colorEditBg.setTint(ViewModelItem.Colors[item.color])
+                    }
+                    if (changes.contains(InventoryItem.Field.Amount) &&
+                        holder.view.inventoryAmountEdit.currentValue != item.amount)
+                            holder.view.inventoryAmountEdit.currentValue = item.amount
+                    if (changes.contains(InventoryItem.Field.IsExpanded))
+                        holder.view.setExpanded(item.isExpanded)
+                    if (changes.contains(InventoryItem.Field.IsSelected))
+                        holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(InventoryItem.Field.AddToShoppingList) &&
                         holder.view.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
                             holder.view.addToShoppingListCheckBox.isChecked = item.addToShoppingList
                     if (changes.contains(InventoryItem.Field.AddToShoppingListTrigger) &&
                         holder.view.addToShoppingListTriggerEdit.currentValue != item.addToShoppingListTrigger)
                             holder.view.addToShoppingListTriggerEdit.currentValue = item.addToShoppingListTrigger
-                    if (changes.contains(InventoryItem.Field.Color)) {
-                        val colorEditBg = holder.view.colorEdit.drawable
-                        colorEditBg.setTint(ViewModelItem.Colors[item.color])
-                    }
                 }
-
-                else if (payload is ExpansionState)
-                    holder.view.setExpanded(payload == ExpansionState.Expanded)
-
                 else unhandledChanges.add(payload)
             }
             if (unhandledChanges.isNotEmpty())
@@ -138,45 +137,43 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      *   ExpandableViewHolder.onExpansionStateChanged calls the corresponding
      *   expand or collapse functions on its InventoryItemView instance. */
     inner class InventoryItemViewHolder(val view: InventoryItemView) :
-        ViewModelItemViewHolder(view) {
+        ExpandableSelectableItemViewHolder(view) {
 
         init {
             // Click & long click listeners
-            val onClick = OnClickListener {
-                if (!selection.isEmpty) selection.toggle(adapterPosition)
-            }
+            val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }
             view.setOnClickListener(onClick)
             view.nameEdit.setOnClickListener(onClick)
-            view.inventoryAmountEdit.valueEdit.setOnClickListener(onClick)
             view.extraInfoEdit.setOnClickListener(onClick)
+            view.inventoryAmountEdit.valueEdit.setOnClickListener(onClick)
 
-            val onLongClick = OnLongClickListener {
-                selection.toggle(adapterPosition); true
-            }
+            val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
             view.setOnLongClickListener(onLongClick)
             view.nameEdit.setOnLongClickListener(onLongClick)
-            view.inventoryAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
             view.extraInfoEdit.setOnLongClickListener(onLongClick)
+            view.inventoryAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
 
             view.colorEdit.setOnClickListener {
                 colorPickerDialog(fragmentManager, item.color) { chosenColor ->
                     inventoryViewModel.updateColor(item.id, chosenColor) }
             }
-            view.editButton.setOnClickListener { expandedItem.set(this) }
-            view.collapseButton.setOnClickListener { expandedItem.set(null) }
+            view.editButton.setOnClickListener {
+                if (!view.isExpanded) setExpandedItem(adapterPosition)
+            }
+            view.collapseButton.setOnClickListener { setExpandedItem(null) }
 
             // Data change listeners
             view.nameEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 inventoryViewModel.updateName(item.id, value)
             }
-            view.inventoryAmountEdit.liveData.observeForever { value ->
-                if (adapterPosition == -1) return@observeForever
-                inventoryViewModel.updateAmount(item.id, value)
-            }
             view.extraInfoEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 inventoryViewModel.updateExtraInfo(item.id, value)
+            }
+            view.inventoryAmountEdit.liveData.observeForever { value ->
+                if (adapterPosition == -1) return@observeForever
+                inventoryViewModel.updateAmount(item.id, value)
             }
             view.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
                 inventoryViewModel.updateAddToShoppingList(item.id, checked)
@@ -205,14 +202,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         override fun areContentsTheSame(oldItem: InventoryItem,
                                         newItem: InventoryItem): Boolean {
             itemChanges.clear()
-            if (newItem.name != oldItem.name)
-                itemChanges.add(InventoryItem.Field.Name)
-            if (newItem.extraInfo != oldItem.extraInfo)
-                itemChanges.add(InventoryItem.Field.ExtraInfo)
-            if (newItem.color != oldItem.color)
-                itemChanges.add(InventoryItem.Field.Color)
-            if (newItem.amount != oldItem.amount)
-                itemChanges.add(InventoryItem.Field.Amount)
+            if (newItem.name != oldItem.name)             itemChanges.add(InventoryItem.Field.Name)
+            if (newItem.extraInfo != oldItem.extraInfo)   itemChanges.add(InventoryItem.Field.ExtraInfo)
+            if (newItem.color != oldItem.color)           itemChanges.add(InventoryItem.Field.Color)
+            if (newItem.amount != oldItem.amount)         itemChanges.add(InventoryItem.Field.Amount)
+            if (newItem.isExpanded != oldItem.isExpanded) itemChanges.add(InventoryItem.Field.IsExpanded)
+            if (newItem.isSelected != oldItem.isSelected) itemChanges.add(InventoryItem.Field.IsSelected)
             if (newItem.addToShoppingList != oldItem.addToShoppingList)
                 itemChanges.add(InventoryItem.Field.AddToShoppingList)
             if (newItem.addToShoppingListTrigger != oldItem.addToShoppingListTrigger)

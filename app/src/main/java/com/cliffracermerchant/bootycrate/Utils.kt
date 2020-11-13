@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 
 enum class SelectionState { Selected, NotSelected }
-enum class ExpansionState { Expanded, Collapsed }
 
 fun delaylessLayoutTransition() = LayoutTransition().apply{
     setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
@@ -20,17 +19,32 @@ fun delaylessLayoutTransition() = LayoutTransition().apply{
 }
 
 fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
-                              container: ViewGroup, view: View,
-                              transitionType: Int) -> Unit = {_, _, _, _ -> }) {
+                                         container: ViewGroup, view: View,
+                                         transitionType: Int) -> Unit = {_, _, _, _ -> }) {
     addTransitionListener(object: LayoutTransition.TransitionListener {
-        override fun startTransition(
-            transition: LayoutTransition,
-            container: ViewGroup,
-            view: View,
-            transitionType: Int
-        ) {
+        override fun startTransition(transition: LayoutTransition, container: ViewGroup,
+                                     view: View, transitionType: Int) {
             onStart(transition, container, view, transitionType)
         }
         override fun endTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) { }
     })
+}
+
+/** For a given position in a range, returns the position after a move opera-
+ *  ation on one or more items is performed.
+ *  @param pos: The before move position whose position after the move is desired.
+ *  @param moveStartPos: The start position of the to-be-moved range before the move.
+ *  @param moveEndPos: The start position of the to-be-moved range after the move.
+ *  @param moveCount: The number of items being moved.
+ *  @return: The new position of the pos parameter after the move. */
+fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, moveCount: Int): Int {
+    val oldRange = moveStartPos until moveStartPos + moveCount
+    val newRange = moveEndPos until moveEndPos + moveCount
+    return if (pos in oldRange)
+         pos + moveEndPos - moveStartPos
+    else if (pos < oldRange.first && pos >= newRange.first)
+        pos + moveCount
+    else if (pos > oldRange.last && pos <= newRange.first)
+        pos - moveCount
+    else pos
 }

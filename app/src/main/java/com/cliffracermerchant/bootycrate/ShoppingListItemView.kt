@@ -4,18 +4,15 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.LayoutTransition
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
-import android.graphics.Paint
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.LayerDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.appcompat.view.ContextThemeWrapper
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
@@ -24,12 +21,14 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 
 /** A layout to display the contents of a shopping list item.
  *
- *  ShoppingListItemView is a ConstraintLayout subclass that inflates a layout
- *  to display the data of a ShoppingListItem instance. Its update function
- *  updates the contained views with the information of the provided Shopping-
- *  ListItem. Its expand and collapse functions allow for an optional animation. */
+ *  ShoppingListItemView is a ExpandableSelectableItemView subclass that
+ *  inflates a layout resource to display the data of a ShoppingListItem
+ *  instance. Its update override updates the contained views with the informa-
+ *  tion of the provided ShoppingListItem. It also overrides the setExpanded
+ *  function with an implementation that shows or hides the shopping list
+ *  item's extra details. */
 class ShoppingListItemView(context: Context) :
-    ConstraintLayout(ContextThemeWrapper(context, R.style.RecyclerViewItemStyle))
+    ExpandableSelectableItemView<ShoppingListItem>(context)
 {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
@@ -38,7 +37,6 @@ class ShoppingListItemView(context: Context) :
     val editButtonIconController: AnimatedIconController
     val checkBoxBackgroundController: AnimatedIconController
     val checkBoxCheckmarkController: AnimatedIconController
-    var itemColor: Int? = null
 
     // This companion object stores resources common to all ShoppingListItemViews.
     private companion object SharedResources {
@@ -46,8 +44,6 @@ class ShoppingListItemView(context: Context) :
         private lateinit var imm: InputMethodManager
         private lateinit var linkedItemDescriptionString: String
         private lateinit var unlinkedItemDescriptionString: String
-        private lateinit var linkNowActionString: String
-        private lateinit var changeLinkActionString: String
     }
 
     init {
@@ -105,25 +101,21 @@ class ShoppingListItemView(context: Context) :
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
-    fun update(item: ShoppingListItem, isExpanded: Boolean = false) {
+    override fun update(item: ShoppingListItem) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
-        itemColor = item.color
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
-        checkBoxBackgroundController.tint = ViewModelItem.Colors[colorIndex]
+        checkBoxColor = ViewModelItem.Colors[colorIndex]
         shoppingListAmountEdit.initCurrentValue(item.amount)
         linkedToIndicator.text = if (item.linkedItemId != null) linkedItemDescriptionString
                                  else                           unlinkedItemDescriptionString
 
         checkBox.isChecked = item.isChecked
         setVisualCheckedState(checked = false, animate = false)
-
-        setExpanded(isExpanded)
+        super.update(item)
     }
 
-    fun expand() = setExpanded(true)
-    fun collapse() = setExpanded(false)
-    fun setExpanded(expanded: Boolean = true) {
+    override fun setExpanded(expanded: Boolean) {
         if (!expanded && nameEdit.isFocused || extraInfoEdit.isFocused ||
             shoppingListAmountEdit.valueEdit.isFocused)
                 imm.hideSoftInputFromWindow(windowToken, 0)
@@ -168,6 +160,17 @@ class ShoppingListItemView(context: Context) :
         }
     }
 
+    var checkBoxColor get() = checkBoxBackgroundController.tint
+                      set(value) = setCheckboxColor(value)
+    private fun setCheckboxColor(color: Int?, animate: Boolean = true) {
+        if (!animate) checkBoxBackgroundController.tint = color
+        else {
+            val anim = ValueAnimator.ofArgb(checkBoxBackgroundController.tint ?: 0, color ?: 0)
+            anim.addUpdateListener { checkBoxBackgroundController.tint = anim.animatedValue as Int }
+            anim.start()
+        }
+    }
+
     private fun setAmountEditable(makingEditable: Boolean = true) {
         decreaseButtonIconController.setState(if (makingEditable) "minus" else "multiply")
         increaseButtonIconController.setState(if (makingEditable) "plus" else "blank")
@@ -189,8 +192,6 @@ class ShoppingListItemView(context: Context) :
         imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
         linkedItemDescriptionString = context.getString(R.string.linked_item_description)
         unlinkedItemDescriptionString = context.getString(R.string.unlinked_item_description)
-        linkNowActionString = context.getString(R.string.link_item_now_action_description)
-        changeLinkActionString = context.getString(R.string.change_item_link_action_description)
         isInitialized = true
     }
 }

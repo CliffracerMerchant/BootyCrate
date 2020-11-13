@@ -8,7 +8,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.*
 
 /** A Room DAO for BootyCrateDatabase's inventory_item table. */
-@Dao abstract class InventoryItemDao : DataAccessObject<InventoryItem>() {
+@Dao abstract class InventoryItemDao : ExpandableSelectableItemDao<InventoryItem>() {
 
     @Query("SELECT * FROM inventory_item")
     abstract override fun getAllNow(): List<InventoryItem>
@@ -33,13 +33,24 @@ import androidx.room.*
               AND name LIKE :filter AND extraInfo LIKE :filter ORDER BY amount DESC""")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
 
+    @Query("SELECT COUNT(*) FROM inventory_item WHERE isSelected")
+    abstract override fun getSelectionSize(): LiveData<Int>
+
     @Query("""INSERT INTO inventory_item (name, extraInfo, color, linkedItemId)
               SELECT name, extraInfo, color, id
               FROM shopping_list_item
-              WHERE id IN (:shoppingListItemIds)
+              WHERE isSelected
               AND inTrash = 0
               AND linkedItemId IS NULL""")
-    abstract suspend fun addFromShoppingListItems(shoppingListItemIds: LongArray)
+    protected abstract suspend fun _addFromSelectedShoppingListItems()
+
+    @Query("UPDATE shopping_list_item SET isSelected = 0")
+    protected abstract suspend fun clearShoppingListSelection()
+
+    @Transaction open suspend fun addFromSelectedShoppingListItems() {
+        _addFromSelectedShoppingListItems()
+        clearShoppingListSelection()
+    }
 
     @Query("""UPDATE inventory_item
               SET name = :name
@@ -61,6 +72,35 @@ import androidx.room.*
               WHERE id = :id""")
     abstract override suspend fun updateAmount(id: Long, amount: Int)
 
+    @Query("""UPDATE inventory_item
+              SET isExpanded = :isExpanded
+              WHERE id = :id""")
+    abstract override suspend fun updateIsExpanded(id: Long, isExpanded: Boolean)
+
+    @Query("UPDATE inventory_item SET isExpanded = 0")
+    abstract override suspend fun clearExpandedItem()
+
+    @Query("""UPDATE inventory_item
+              SET isSelected = :isSelected
+              WHERE id = :id""")
+    abstract override suspend fun updateIsSelected(id: Long, isSelected: Boolean)
+
+    @Query("""UPDATE inventory_item
+              SET isSelected = CASE WHEN isSelected THEN 0
+                                    ELSE 1 END
+              WHERE id = :id""")
+    abstract override suspend fun toggleIsSelected(id: Long)
+
+    @Query("""UPDATE inventory_item
+              SET inTrash = 1,
+                  isExpanded = 0,
+                  isSelected = 0
+              WHERE isSelected""")
+    abstract override suspend fun deleteSelected()
+
+    @Query("UPDATE inventory_item SET isSelected = 0")
+    abstract override suspend fun clearSelection()
+
     @Query("""UPDATE Inventory_item
               SET addToShoppingList = :addToShoppingList
               WHERE id = :id""")
@@ -75,7 +115,9 @@ import androidx.room.*
     abstract override suspend fun deleteAll()
 
     @Query("""UPDATE inventory_item
-              SET inTrash = 1
+              SET inTrash = 1,
+                  isExpanded = 0,
+                  isSelected = 0
               WHERE id IN (:ids)""")
     abstract override suspend fun delete(ids: LongArray)
 

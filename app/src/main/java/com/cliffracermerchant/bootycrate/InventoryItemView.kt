@@ -4,15 +4,12 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.LayoutTransition
 import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.appcompat.view.ContextThemeWrapper
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
@@ -25,13 +22,13 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
 
 /** A layout to display the contents of an inventory item.
  *
- *  InventoryItemView is a ConstraintLayout subclass that inflates a layout to
- *  display the data of an InventoryItem instance. Its update(InventoryItem)
- *  function updates the contained views with the information of the Inventory-
- *  Item instance. Its expand and collapse functions allow for an optional anim-
- *  ation. */
+ *  InventoryItemView is a ExpandableSelectableItemView subclass that inflates
+ *  a layout resource to display the data of an InventoryItem instance. Its
+ *  update override updates the contained views with the information of the
+ *  InventoryItem instance. It also overrides the setExpanded function with an
+ *  implementation that shows or hides the inventory item's extra details. */
 class InventoryItemView(context: Context) :
-    ConstraintLayout(ContextThemeWrapper(context, R.style.RecyclerViewItemStyle))
+    ExpandableSelectableItemView<InventoryItem>(context)
 {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
@@ -54,11 +51,10 @@ class InventoryItemView(context: Context) :
 
         layoutTransition = delaylessLayoutTransition()
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                                 ViewGroup.LayoutParams.WRAP_CONTENT
-        )
+                                                 ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
-    fun update(item: InventoryItem, isExpanded: Boolean = false) {
+    override fun update(item: InventoryItem) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
@@ -67,13 +63,10 @@ class InventoryItemView(context: Context) :
 
         addToShoppingListCheckBox.isChecked = item.addToShoppingList
         addToShoppingListTriggerEdit.initCurrentValue(item.addToShoppingListTrigger)
-
-        setExpanded(isExpanded)
+        super.update(item)
     }
 
-    fun expand() = setExpanded(true)
-    fun collapse() = setExpanded(false)
-    fun setExpanded(expanded: Boolean = true) {
+    override fun setExpanded(expanded: Boolean) {
         if (!expanded && nameEdit.isFocused || extraInfoEdit.isFocused ||
             inventoryAmountEdit.valueEdit.isFocused ||
             addToShoppingListTriggerEdit.valueEdit.isFocused)
@@ -94,13 +87,11 @@ class InventoryItemView(context: Context) :
             extraInfoEdit.visibility = newVisibility
 
         // For some reason, expanding an inventory item whose extra info is not blank
-        // was causing a flicker. Shopping list items seemed to be okay regardless of
-        // whether its extra info was blank. The difference was tracked down to Shop-
-        // pingListItem's setAmountEditable. It appears that changing the layout params
-        // of a view and requesting a layout for it stops this flicker from occurring.
-        // Given that the bug seems to originate from somewhere deep in Android code,
-        // having this useless layout parameter changing and requested layout is an
-        // easy and performance negligible way to prevent the bug.
+        // causes a flicker. It appears that changing the layout params of a view and
+        // requesting a layout for it stops this flicker from occurring. Given that
+        // the bug seems to originate from somewhere deep in Android code, having
+        // this useless layout parameter changing and requested layout is an easy and
+        // performance negligible way to prevent the bug.
         spacer.layoutParams.width = if (expanded) 1 else 0
         spacer.requestLayout()
     }

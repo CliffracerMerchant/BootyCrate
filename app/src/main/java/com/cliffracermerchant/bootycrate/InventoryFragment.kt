@@ -17,12 +17,12 @@ import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
  *  different from RecyclerViewFragment apart from implementing its abstract
  *  properties with values suitable for display of an InventoryRecyclerView,
  *  and using its own action mode callback. */
-class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
+class InventoryFragment(isActive: Boolean = false) :
+        RecyclerViewFragment<InventoryItem>(isActive) {
     override lateinit var recyclerView: InventoryRecyclerView
     override val actionModeCallback = ActionModeCallback()
     override val fabRegularOnClickListener = View.OnClickListener { recyclerView.addNewItem() }
-    override val fabActionModeOnClickListener = View.OnClickListener {
-        recyclerView.deleteItems(recyclerView.selection.allSelectedIds()) }
+    override val fabActionModeOnClickListener = View.OnClickListener { recyclerView.deleteSelectedItems() }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -43,9 +43,9 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
         super.onViewCreated(view, savedInstanceState)
     }
 
-    override fun onHiddenChanged(hidden: Boolean) {
-        super.onHiddenChanged(hidden)
-        if (!hidden) mainActivity.checkoutBtn.setOnClickListener(null)
+    override fun onActiveStateChanged(active: Boolean) {
+        super.onActiveStateChanged(active)
+        if (active) activity.checkoutBtn.setOnClickListener(null)
     }
 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
@@ -65,13 +65,16 @@ class InventoryFragment : RecyclerViewFragment<InventoryItem>() {
             } else false
         }
 
+        override fun onDestroyActionMode(mode: ActionMode) {
+            super.onDestroyActionMode(mode)
+        }
+
         override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
             return when (item.itemId) {
                 R.id.add_to_shopping_list_button -> {
-                    recyclerView.apply{ addItemsToShoppingList(selection.allSelectedIds()) }
-                    recyclerView.selection.clear()
+                    activity.shoppingListViewModel.addFromSelectedInventoryItems()
                     true
-                } else -> mainActivity.onOptionsItemSelected(item)
+                } else -> activity.onOptionsItemSelected(item)
             }
         }
     }

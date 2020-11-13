@@ -8,7 +8,7 @@ import androidx.lifecycle.LiveData
 import androidx.room.*
 
 /** A Room DAO for BootyCrateDatabase's shopping_list_item table. */
-@Dao abstract class ShoppingListItemDao : DataAccessObject<ShoppingListItem>() {
+@Dao abstract class ShoppingListItemDao : ExpandableSelectableItemDao<ShoppingListItem>() {
 
     @Query("SELECT * FROM shopping_list_item")
     abstract override fun getAllNow(): List<ShoppingListItem>
@@ -33,13 +33,24 @@ import androidx.room.*
               AND name LIKE :filter AND extraInfo LIKE :filter ORDER BY amount DESC""")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
+    @Query("SELECT COUNT(*) FROM shopping_list_item WHERE isSelected = 1")
+    abstract override fun getSelectionSize(): LiveData<Int>
+
     @Query("""INSERT INTO shopping_list_item (name, extraInfo, color, linkedItemId)
               SELECT name, extraInfo, color, id
               FROM inventory_item
-              WHERE id IN (:inventoryItemIds)
+              WHERE isSelected
               AND inTrash = 0
               AND linkedItemId IS NULL""")
-    abstract suspend fun addFromInventoryItems(inventoryItemIds: LongArray)
+    protected abstract suspend fun _addFromSelectedInventoryItems()
+
+    @Query("UPDATE inventory_item SET isSelected = 0")
+    protected abstract suspend fun clearInventorySelection()
+
+    @Transaction open suspend fun addFromSelectedInventoryItems() {
+        _addFromSelectedInventoryItems()
+        clearInventorySelection()
+    }
 
     @Query("""UPDATE shopping_list_item
               SET name = :name
@@ -62,15 +73,46 @@ import androidx.room.*
     abstract override suspend fun updateAmount(id: Long, amount: Int)
 
     @Query("""UPDATE shopping_list_item
+              SET isExpanded = :isExpanded
+              WHERE id = :id""")
+    abstract override suspend fun updateIsExpanded(id: Long, isExpanded: Boolean)
+
+    @Query("UPDATE shopping_list_item SET isExpanded = 0")
+    abstract override suspend fun clearExpandedItem()
+
+    @Query("""UPDATE shopping_list_item
+              SET isSelected = :isSelected
+              WHERE id = :id""")
+    abstract override suspend fun updateIsSelected(id: Long, isSelected: Boolean)
+
+    @Query("""UPDATE shopping_list_item
+              SET isSelected = CASE WHEN isSelected THEN 0
+                                    ELSE 1 END
+              WHERE id = :id""")
+    abstract override suspend fun toggleIsSelected(id: Long)
+
+    @Query("""UPDATE shopping_list_item
+              SET inTrash = 1,
+                  isExpanded = 0,
+                  isSelected = 0
+              WHERE isSelected""")
+    abstract override suspend fun deleteSelected()
+
+    @Query("UPDATE shopping_list_item SET isSelected = 0")
+    abstract override suspend fun clearSelection()
+
+    @Query("""UPDATE shopping_list_item
               SET isChecked = :isChecked
               WHERE id = :id""")
     abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
 
-    @Query("""DELETE FROM shopping_list_item""")
+    @Query("DELETE FROM shopping_list_item")
     abstract override suspend fun deleteAll()
 
     @Query("""UPDATE shopping_list_item
-              SET inTrash = 1
+              SET inTrash = 1,
+                  isExpanded = 0,
+                  isSelected = 0
               WHERE id IN (:ids)""")
     abstract override suspend fun delete(ids: LongArray)
 
@@ -83,9 +125,9 @@ import androidx.room.*
     abstract override suspend fun emptyTrash()
 
     @Query("""WITH bought_amounts AS (SELECT linkedItemId, amount
-                                     FROM shopping_list_item
-                                     WHERE linkedItemId IS NOT NULL
-                                     AND isChecked = 1)
+                                      FROM shopping_list_item
+                                      WHERE linkedItemId IS NOT NULL
+                                      AND isChecked = 1)
               UPDATE inventory_item
               SET amount = amount + (SELECT amount FROM bought_amounts
                                      WHERE linkedItemId = inventory_item.id)

@@ -17,9 +17,12 @@ class ShoppingListItem(
     amount: Int = 1,
     linkedItemId: Long? = null,
     inTrash: Boolean = false,
+    isExpanded: Boolean = false,
+    isSelected: Boolean = false,
     @ColumnInfo(name = "isChecked", defaultValue = "0")
     var isChecked: Boolean = false
-) : ViewModelItem(id, name, extraInfo, color, amount, linkedItemId, inTrash) {
+) : ExpandableSelectableItem(id, name, extraInfo, color, amount, linkedItemId,
+                             inTrash, isExpanded, isSelected) {
 
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
@@ -28,14 +31,12 @@ class ShoppingListItem(
                this.isChecked == other.isChecked
     }
 
-    override fun toDebugString(): String {
-        return super.toString() + "\nisChecked = $isChecked"
-    }
+    override fun toDebugString() = super.toString() + "\nisChecked = $isChecked"
 
     /** The enum class Field identifies user facing fields that are potentially
      *  editable by the user. Field values (in the form of an EnumSet<Field>)
      *  are used as a payload in the adapter notifyItemChanged calls in order
      *  to identify which fields were changed.*/
-    enum class Field { Name, ExtraInfo, Color,
-                       Amount, LinkedTo, IsChecked }
+    enum class Field { Name, ExtraInfo, Color, Amount, LinkedTo,
+                       IsExpanded, IsSelected, IsChecked }
 }

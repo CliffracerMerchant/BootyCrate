@@ -5,11 +5,9 @@
 package com.cliffracermerchant.bootycrate
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 /** An abstract AndroidViewModel that provides an asynchronous interface for DataAccessObject<Entity> functions.
@@ -86,33 +84,61 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
     }
 }
 
+/** An extension of ViewModel that provides access to ExpandableSelectableItemDao methods.
+ *
+ *  ExpandableSelectableItemViewModel overrides ViewModel's dao property with
+ *  an instance of ExpandableSelectableItemDao, and provides methods for acces-
+ *  sing ExpandableSelectableItemDao's methods. */
+abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableItem>(app: Application) :
+        ViewModel<Entity>(app) {
+    abstract override val dao : ExpandableSelectableItemDao<Entity>
+    val selectionSize: LiveData<Int> by lazy { dao.getSelectionSize() }
+
+    fun resetExpandedItemAndSelection() = viewModelScope.launch {
+        dao.resetExpandedItemAndSelection()
+    }
+    fun setExpandedId(id: Long?) = viewModelScope.launch {
+        dao.setExpandedItem(id)
+    }
+    fun updateIsSelected(id: Long, isSelected: Boolean) = viewModelScope.launch {
+        dao.updateIsSelected(id, isSelected)
+    }
+    fun toggleIsSelected(id: Long) = viewModelScope.launch {
+        dao.toggleIsSelected(id)
+    }
+    fun deleteSelected() = viewModelScope.launch {
+        dao.deleteSelected()
+    }
+    fun clearSelection() = viewModelScope.launch {
+        dao.clearSelection()
+    }
+}
+
 /** A ViewModel<ShoppingListItem> subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
-class ShoppingListViewModel(app: Application) : ViewModel<ShoppingListItem>(app) {
+class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewModel<ShoppingListItem>(app) {
     override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun addFromInventoryItems(ids: LongArray) = viewModelScope.launch {
-        dao.addFromInventoryItems(ids)
+    fun addFromSelectedInventoryItems() = viewModelScope.launch {
+        dao.addFromSelectedInventoryItems()
     }
-
     fun updateIsChecked(id: Long, isChecked: Boolean) = viewModelScope.launch {
         dao.updateIsChecked(id, isChecked)
     }
-
     fun checkout() = viewModelScope.launch {
         dao.checkout()
     }
 }
 
 /** A ViewModel<InventoryItem> subclass that provides functions to asynchronously execute InventoryItemDao's functions. */
-class InventoryViewModel(app: Application) : ViewModel<InventoryItem>(app) {
+class InventoryViewModel(app: Application) : ExpandableSelectableItemViewModel<InventoryItem>(app) {
     override val dao = BootyCrateDatabase.get(app).inventoryItemDao()
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun addFromShoppingListItems(shoppingListItemIds: LongArray) = viewModelScope.launch {
-        dao.addFromShoppingListItems(shoppingListItemIds)
+    fun addFromSelectedShoppingListItems() = viewModelScope.launch {
+        dao.addFromSelectedShoppingListItems()
     }
     fun updateAddToShoppingList(id: Long, addToShoppingList: Boolean) = viewModelScope.launch {
         dao.updateAddToShoppingList(id, addToShoppingList)
