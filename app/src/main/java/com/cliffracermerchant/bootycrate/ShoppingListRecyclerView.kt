@@ -41,7 +41,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     private lateinit var shoppingListViewModel: ShoppingListViewModel
     private lateinit var inventoryViewModel: InventoryViewModel
     protected lateinit var fragmentManager: FragmentManager
-    val checkedItems = ShoppingListCheckedItems()
+    val checkedItems = CheckedItems()
 
     fun finishInit(
         owner: LifecycleOwner,
@@ -60,15 +60,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         shoppingListViewModel.add(newItem)
     }
 
-    fun checkout() {
-        checkedItems.removeAllIds()
-        shoppingListViewModel.checkout()
-    }
-
-    override fun deleteItems(ids: LongArray) {
-        checkedItems.removeAllIds(ids)
-        super.deleteItems(ids)
-    }
+    fun checkout() = shoppingListViewModel.checkout()
 
     /** A RecyclerView.Adapter to display the contents of a list of shopping list items.
      *
@@ -121,8 +113,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(ShoppingListItem.Field.IsChecked)) {
                         holder.view.checkBox.isChecked = item.isChecked
-                        if (item.isChecked) checkedItems.add(position)
-                        else                checkedItems.remove(position)
+//                        if (item.isChecked) checkedItems.add(position)
+//                        else                checkedItems.remove(position)
                     }
                 }
                 else unhandledChanges.add(payload)
@@ -219,57 +211,12 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         }
     }
 
-    /** A utility to keep track of checked items in the shopping list.
-     *
-     *  ShoppingListCheckedItems functions similarly to a RecyclerViewSelection
-     *  in that it keeps track of a set of items, in this case ones that are
-     *  checked. Items that are inserted already checked and items that are
-     *  removed while checked should be automatically added or removed by the
-     *  RecyclerView.AdapterDataObserver overrides. Changes to the checked
-     *  status of an already existing item must be recorded via use of the add
-     *  or remove functions.
-     *
-     *  A LiveData<Int> member is provided in sizeLiveData to allow external
-     *  entities to respond to changes in the number of checked shopping list
-     *  items. */
-    inner class ShoppingListCheckedItems : AdapterDataObserver() {
-        private val hashSet = HashSet<Long>()
-        private val _sizeLiveData = MutableLiveData(hashSet.size)
-
-        val size: Int get() = hashSet.size
-        val sizeLiveData: LiveData<Int> = _sizeLiveData
-        val isEmpty get() = hashSet.isEmpty()
-
-        init { adapter.registerAdapterDataObserver(this) }
-
-        fun add(pos: Int) {
-            if (pos !in 0 until adapter.itemCount) return
-            hashSet.add(adapter.getItemId(pos))
-            _sizeLiveData.value = size
-        }
-
-        fun remove(pos: Int) {
-            if (pos !in 0 until adapter.itemCount) return
-            hashSet.remove(adapter.getItemId(pos))
-            _sizeLiveData.value = size
-        }
-
-        fun removeAllIds(ids: LongArray? = null) {
-            if (ids != null)
-                for (id in ids)
-                    hashSet.remove(id)
-            else hashSet.clear()
-            _sizeLiveData.value = size
-        }
-
-        override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-            for (pos in positionStart until positionStart + itemCount) {
-                val item = adapter.currentList[pos]
-                if (item.isChecked) hashSet.add(item.id)
-            }
-            _sizeLiveData.value = size
-        }
-
+    /** A memberless class to make accessing the checked items of the shopping list more idiomatic. */
+    inner class CheckedItems {
+        val sizeLiveData get() = shoppingListViewModel.checkedItemsSize
+        val size get() = sizeLiveData.value
+        val isEmpty get() = size == 0
+        fun clear() = shoppingListViewModel.uncheckAll()
     }
 
     /** Computes a diff between two shopping list items.

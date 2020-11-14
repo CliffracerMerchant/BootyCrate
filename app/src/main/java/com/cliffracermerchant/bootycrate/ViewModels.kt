@@ -29,11 +29,11 @@ import java.util.concurrent.atomic.AtomicLong
 abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewModel(app) {
 
     protected abstract val dao: DataAccessObject<Entity>
-    private val sortAndFilterLiveData = MutableLiveData(Pair<ViewModelItem.Sort?, String?>(
-        ViewModelItem.Sort.Color, ""))
+    private val sortAndFilterLiveData =
+        MutableLiveData(Pair<ViewModelItem.Sort?, String?>(ViewModelItem.Sort.Color, ""))
 
     val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
-        val filter = '%' + (sortAndFilter.second ?: "") + '%'
+        val filter = "%${sortAndFilter.second ?: ""}%"
         when (sortAndFilter.first) {
             null -> dao.getAllSortedByColor(filter)
             ViewModelItem.Sort.Color -> dao.getAllSortedByColor(filter)
@@ -117,6 +117,7 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 /** A ViewModel<ShoppingListItem> subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
 class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewModel<ShoppingListItem>(app) {
     override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
+    val checkedItemsSize = dao.getCheckedItemsSize()
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
@@ -125,6 +126,9 @@ class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewMode
     }
     fun updateIsChecked(id: Long, isChecked: Boolean) = viewModelScope.launch {
         dao.updateIsChecked(id, isChecked)
+    }
+    fun uncheckAll() = viewModelScope.launch {
+        dao.uncheckAll()
     }
     fun checkout() = viewModelScope.launch {
         dao.checkout()

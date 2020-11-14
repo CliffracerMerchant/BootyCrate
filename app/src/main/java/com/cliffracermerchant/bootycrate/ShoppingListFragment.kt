@@ -5,6 +5,8 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.view.*
@@ -114,13 +116,15 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
     private fun enableCheckoutButton(enabling: Boolean) {
         if (checkoutButtonIsEnabled == enabling) return
-
-        val bgColorAnim = ObjectAnimator.ofArgb(activity.checkoutBtn.background, "tint",
-                                                if (enabling) lightGrayColor else yellowColor,
-                                                if (enabling) yellowColor else lightGrayColor)
+        val bgColorAnim = ValueAnimator.ofArgb(if (enabling) lightGrayColor else yellowColor,
+                                               if (enabling) yellowColor else lightGrayColor)
         bgColorAnim.duration = 200
+        bgColorAnim.addUpdateListener {
+            activity.checkoutBtn.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int)
+        }
         bgColorAnim.start()
         val textColorAnim = ObjectAnimator.ofArgb(activity.checkoutBtn, "textColor",
+                                                  if (enabling) darkGrayColor else blackColor,
                                                   if (enabling) blackColor else darkGrayColor)
         textColorAnim.duration = 200
         textColorAnim.start()

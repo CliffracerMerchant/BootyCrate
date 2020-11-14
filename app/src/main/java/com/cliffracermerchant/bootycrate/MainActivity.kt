@@ -121,15 +121,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.action_bar_menu, menu)
         this.menu = menu
-        // Setting the SearchView icon color manually is a temporary work-
-        // around because setting it in the theme/style did not work.
-        val searchView = menu.findItem(R.id.app_bar_search)?.actionView as SearchView?
-        (searchView?.findViewById(androidx.appcompat.R.id.search_close_btn) as ImageView).
-            setColorFilter(ContextCompat.getColor(this, android.R.color.black))
-
         shoppingListFragment.initOptionsMenu(menu)
         inventoryFragment.initOptionsMenu(menu)
-
         return super.onCreateOptionsMenu(menu)
     }
 

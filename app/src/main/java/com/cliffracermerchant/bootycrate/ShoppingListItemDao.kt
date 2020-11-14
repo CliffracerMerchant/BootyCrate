@@ -33,7 +33,7 @@ import androidx.room.*
               AND name LIKE :filter AND extraInfo LIKE :filter ORDER BY amount DESC""")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT COUNT(*) FROM shopping_list_item WHERE isSelected = 1")
+    @Query("SELECT COUNT(*) FROM shopping_list_item WHERE isSelected")
     abstract override fun getSelectionSize(): LiveData<Int>
 
     @Query("""INSERT INTO shopping_list_item (name, extraInfo, color, linkedItemId)
@@ -105,6 +105,12 @@ import androidx.room.*
               SET isChecked = :isChecked
               WHERE id = :id""")
     abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
+
+    @Query("UPDATE shopping_list_item SET isChecked = 0")
+    abstract suspend fun uncheckAll()
+
+    @Query("SELECT COUNT(*) FROM shopping_list_item WHERE isChecked")
+    abstract fun getCheckedItemsSize() : LiveData<Int>
 
     @Query("DELETE FROM shopping_list_item")
     abstract override suspend fun deleteAll()
