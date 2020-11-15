@@ -78,6 +78,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
         override fun onBindViewHolder(holder: ShoppingListItemViewHolder, position: Int) {
             holder.view.update(holder.item)
+            holder.updateOnClickListeners()
             super.onBindViewHolder(holder, position)
         }
 
@@ -108,13 +109,11 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.shoppingListAmountEdit.currentValue != item.amount)
                             holder.view.shoppingListAmountEdit.currentValue = item.amount
                     if (changes.contains(ShoppingListItem.Field.IsExpanded))
-                        holder.updateForExpansionState(item.isExpanded)
+                        holder.view.setExpanded(item.isExpanded)
                     if (changes.contains(ShoppingListItem.Field.IsSelected))
                         holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(ShoppingListItem.Field.IsChecked)) {
                         holder.view.checkBox.isChecked = item.isChecked
-//                        if (item.isChecked) checkedItems.add(position)
-//                        else                checkedItems.remove(position)
                     }
                 }
                 else unhandledChanges.add(payload)
@@ -132,7 +131,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
      *  erences from BootyCrateViewHolder are:
      * - It sets the on click listeners of each of the sub views in the Shop-
      *   pingListItemView to permit the user to select/deselect items, and to
-     *   edit the displayed data when allowed.
+     *   edit the displayed data when allowed. This function can be repeated
+     *   via the function updateOnClickListeners(), in case these are over-
+     *   written.
      * - Its override of the expand details button's onClickListener calls the
      *   RecyclerViewExpandedItem.set function on itself. Its override of
      *   ExpandableViewHolder.onExpansionStateChanged calls the corresponding
@@ -140,45 +141,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     inner class ShoppingListItemViewHolder(val view: ShoppingListItemView) :
             ExpandableSelectableItemViewHolder(view) {
 
-        private val checkBoxExpandedOnClick = OnClickListener {
-            colorPickerDialog(fragmentManager, item.color) { pickedColor ->
-                shoppingListViewModel.updateColor(item.id, pickedColor)
-            }
-        }
-        private val checkBoxCollapsedOnClick = OnClickListener {
-            shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
-        }
-        private val checkBoxExpandedOnCheckedChange = CompoundButton.OnCheckedChangeListener { checkBox, isChecked ->
-            checkBox.isChecked = !isChecked
-        }
-        private val checkBoxCollapsedOnCheckedChange = CompoundButton.OnCheckedChangeListener { _, isChecked ->
-            view.setVisualCheckedState(isChecked)
-        }
-
         init {
-            // Click & long click listeners
-            val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }
-            view.setOnClickListener(onClick)
-            view.nameEdit.setOnClickListener(onClick)
-            view.extraInfoEdit.setOnClickListener(onClick)
-            view.shoppingListAmountEdit.valueEdit.setOnClickListener(onClick)
+            updateOnClickListeners()
 
-            val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
-            view.setOnLongClickListener(onLongClick)
-            view.nameEdit.setOnLongClickListener(onLongClick)
-            view.extraInfoEdit.setOnLongClickListener(onLongClick)
-            view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
-
-            view.checkBox.setOnClickListener {
-                if (!view.isExpanded)
-                    shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
-            }
-            view.editButton.setOnClickListener {
-                if (!view.isExpanded) setExpandedItem(adapterPosition)
-            }
-            view.collapseButton.setOnClickListener { setExpandedItem(null) }
-
-            // Data change listeners
             view.nameEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 shoppingListViewModel.updateName(item.id, value)
@@ -199,15 +164,34 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             }
         }
 
-        fun updateForExpansionState(isExpanded: Boolean) {
-            if (isExpanded) {
-                view.checkBox.setOnClickListener(checkBoxExpandedOnClick)
-                view.checkBox.setOnCheckedChangeListener(checkBoxExpandedOnCheckedChange)
-            } else { //!isExpanded
-                view.checkBox.setOnClickListener(checkBoxCollapsedOnClick)
-                view.checkBox.setOnCheckedChangeListener(checkBoxCollapsedOnCheckedChange)
+        fun updateOnClickListeners() {
+            val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }
+            view.setOnClickListener(onClick)
+            view.nameEdit.setOnClickListener(onClick)
+            view.extraInfoEdit.setOnClickListener(onClick)
+            view.shoppingListAmountEdit.valueEdit.setOnClickListener(onClick)
+
+            val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
+            view.setOnLongClickListener(onLongClick)
+            view.nameEdit.setOnLongClickListener(onLongClick)
+            view.extraInfoEdit.setOnLongClickListener(onLongClick)
+            view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
+
+            view.checkBox.setOnClickListener {
+                if (item.isExpanded) colorPickerDialog(fragmentManager, item.color) { pickedColor ->
+                    shoppingListViewModel.updateColor(item.id, pickedColor)
+                }
+                else shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
             }
-            view.setExpanded(isExpanded)
+            view.checkBox.setOnCheckedChangeListener { checkBox, isChecked ->
+                if (item.isExpanded) checkBox.isChecked = !isChecked
+                else view.setVisualCheckedState(isChecked)
+            }
+            view.editButton.setOnClickListener {
+                if (!view.isExpanded) setExpandedItem(adapterPosition)
+            }
+            view.collapseButton.setOnClickListener { setExpandedItem(null) }
+
         }
     }
 

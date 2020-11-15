@@ -13,6 +13,7 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.text.*
 import android.util.AttributeSet
+import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.AppCompatEditText
@@ -106,7 +107,6 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
     fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean, animate: Boolean = true) {
         strikeThroughAnimationIsReversed = !strikeThroughEnabled
         val fullLength = paint.measureText(text, 0, text?.length ?: 0)
-
         if (animate) {
             ObjectAnimator.ofArgb(this, "textColor", currentTextColor,
                                   if (strikeThroughEnabled) currentHintTextColor

@@ -94,7 +94,6 @@ class ShoppingListItemView(context: Context) :
             else             expand()
         }
         collapseButton.setOnClickListener { collapse() }
-        checkBox.setOnCheckedChangeListener { _, checked -> setVisualCheckedState(checked) }
 
         layoutTransition = delaylessLayoutTransition()
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -110,8 +109,10 @@ class ShoppingListItemView(context: Context) :
         linkedToIndicator.text = if (item.linkedItemId != null) linkedItemDescriptionString
                                  else                           unlinkedItemDescriptionString
 
+        checkBox.setOnCheckedChangeListener(null)
         checkBox.isChecked = item.isChecked
-        setVisualCheckedState(checked = false, animate = false)
+        checkBox.setOnCheckedChangeListener { _, checked -> setVisualCheckedState(checked) }
+        setVisualCheckedState(checked = item.isChecked, animate = false)
         super.update(item)
     }
 
