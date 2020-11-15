@@ -95,7 +95,7 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         TextFieldEdit(context, attrs) {
     private var strikeThroughLength: Float? = null
     private var strikeThroughAnimationIsReversed = false
-    private val normalTextColor: Int = currentTextColor
+    private val normalTextColor = currentTextColor
 
     init {
         doAfterTextChanged { text ->

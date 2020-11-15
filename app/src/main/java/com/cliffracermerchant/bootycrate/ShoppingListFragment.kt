@@ -12,7 +12,6 @@ import android.os.Handler
 import android.view.*
 import androidx.appcompat.view.ActionMode
 import androidx.core.content.ContextCompat
-import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 
 /** A fragment to display and modify the user's shopping list.
@@ -58,15 +57,10 @@ class ShoppingListFragment(isActive: Boolean = false) :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerView = shoppingListRecyclerView
         val mainActivity = requireActivity() as MainActivity
-
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        val sortStr = prefs.getString(mainActivity.getString(R.string.pref_shopping_list_sort),
-                                      ViewModelItem.Sort.Color.toString())
-        val initialSort = ViewModelItem.sortFrom(sortStr)
-        recyclerView.finishInit(viewLifecycleOwner, mainActivity.shoppingListViewModel,
+        recyclerView.finishInit(viewLifecycleOwner,
+                                mainActivity.shoppingListViewModel,
                                 mainActivity.inventoryViewModel,
-                                mainActivity.supportFragmentManager, initialSort)
-
+                                mainActivity.supportFragmentManager)
         darkGrayColor = ContextCompat.getColor(mainActivity, R.color.colorTextLightSecondary)
         lightGrayColor = ContextCompat.getColor(mainActivity, android.R.color.darker_gray)
         blackColor = ContextCompat.getColor(mainActivity, android.R.color.black)

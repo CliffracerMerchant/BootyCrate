@@ -7,7 +7,6 @@ package com.cliffracermerchant.bootycrate
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.view.ActionMode
-import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
 
 /** A fragment to display and modify the user's inventory.
@@ -32,14 +31,10 @@ class InventoryFragment(isActive: Boolean = false) :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerView = inventoryRecyclerView
         val mainActivity = requireActivity() as MainActivity
-
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        val sortStr = prefs.getString(mainActivity.getString(R.string.pref_inventory_sort),
-            ViewModelItem.Sort.Color.toString())
-        val initialSort = ViewModelItem.sortFrom(sortStr)
-        recyclerView.finishInit(viewLifecycleOwner, mainActivity.inventoryViewModel,
+        recyclerView.finishInit(viewLifecycleOwner,
+                                mainActivity.inventoryViewModel,
                                 mainActivity.shoppingListViewModel,
-                                mainActivity.supportFragmentManager, initialSort)
+                                mainActivity.supportFragmentManager)
         super.onViewCreated(view, savedInstanceState)
     }
 

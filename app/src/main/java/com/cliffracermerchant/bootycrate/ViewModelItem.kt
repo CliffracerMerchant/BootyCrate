@@ -46,7 +46,15 @@ import androidx.room.PrimaryKey
 
     enum class Field { Name, ExtraInfo, Color, Amount, LinkedTo }
 
-    enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc }
+    enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
+        companion object {
+            fun fromString(string: String?): Sort =
+                if (string == null) Color
+                else try { valueOf(string) }
+                     // If string value doesn't match a Sort value
+                     catch(e: IllegalArgumentException) { Color }
+        }
+    }
 
     companion object {
 
@@ -63,13 +71,6 @@ import androidx.room.PrimaryKey
             -7581493,
             -3452725,
             -3452788)
-
-        fun sortFrom(string: String?): Sort {
-            return if (string == null) Sort.Color
-                   else try { Sort.valueOf(string) }
-                        // If string value doesn't match a Sort value
-                        catch(e: IllegalArgumentException) { Sort.Color }
-        }
     }
 }
 

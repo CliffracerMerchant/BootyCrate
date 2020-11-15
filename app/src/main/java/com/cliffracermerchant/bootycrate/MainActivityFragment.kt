@@ -63,9 +63,8 @@ open class MainActivityFragment(isActive: Boolean = false): Fragment() {
         outState.putBoolean("wasActiveFragment", isActive)
     }
 
-    protected open fun onActiveStateChanged(active: Boolean) {
-        if (active) setOptionsMenuItemsVisible(true)
-    }
+    protected open fun onActiveStateChanged(active: Boolean) =
+        setOptionsMenuItemsVisible(active)
 
     fun initOptionsMenu(menu: Menu) {
         if (this.menu != null) return

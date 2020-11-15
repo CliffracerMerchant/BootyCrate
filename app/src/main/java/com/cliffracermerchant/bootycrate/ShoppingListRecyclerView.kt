@@ -47,13 +47,12 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         owner: LifecycleOwner,
         shoppingListViewModel: ShoppingListViewModel,
         inventoryViewModel: InventoryViewModel,
-        fragmentManager: FragmentManager,
-        initialSort: ViewModelItem.Sort? = null
+        fragmentManager: FragmentManager
     ) {
         this.shoppingListViewModel = shoppingListViewModel
         this.inventoryViewModel = inventoryViewModel
         this.fragmentManager = fragmentManager
-        finishInit(owner, shoppingListViewModel, initialSort)
+        finishInit(owner, shoppingListViewModel)
     }
 
     fun addNewItem() = newShoppingListItemDialog(context, fragmentManager) { newItem ->

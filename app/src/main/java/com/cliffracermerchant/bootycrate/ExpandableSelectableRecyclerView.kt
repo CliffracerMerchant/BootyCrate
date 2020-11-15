@@ -49,14 +49,10 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         setItemAnimator(itemAnimator)
     }
 
-    fun finishInit(
-        owner: LifecycleOwner,
-        viewModel: ExpandableSelectableItemViewModel<Entity>,
-        initialSort: ViewModelItem.Sort? = null
-    ) {
+    fun finishInit(owner: LifecycleOwner, viewModel: ExpandableSelectableItemViewModel<Entity>) {
         this.viewModel = viewModel
         adapter.registerAdapterDataObserver(itemAnimator.observer)
-        super.finishInit(owner, viewModel, initialSort)
+        super.finishInit(owner, viewModel)
     }
 
     open fun deleteSelectedItems() {

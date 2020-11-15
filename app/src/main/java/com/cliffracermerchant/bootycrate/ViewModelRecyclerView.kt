@@ -79,14 +79,9 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
         ItemTouchHelper(SwipeToDeleteCallback(::deleteItem, context)).attachToRecyclerView(this)
     }
 
-    fun finishInit(
-        owner: LifecycleOwner,
-        viewModel: ViewModel<Entity>,
-        initialSort: ViewModelItem.Sort? = null
-    ) {
+    fun finishInit(owner: LifecycleOwner, viewModel: ViewModel<Entity> ) {
         setAdapter(adapter)
         this.viewModel = viewModel
-        if (initialSort != null) sort = initialSort
         viewModel.items.observe(owner) { items -> adapter.submitList(items) }
     }
 

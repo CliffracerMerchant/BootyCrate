@@ -6,11 +6,14 @@ package com.cliffracermerchant.bootycrate
 
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.view.ActionMode
 import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
 
 /** An fragment to display a SelectableExpandableRecyclerView to the user.
@@ -43,6 +46,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
 
     protected lateinit var activity: MainActivity
     abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>
+    protected lateinit var sortPrefKey: String
 
     protected var actionMode: ActionMode? = null
     protected open val actionModeCallback = ActionModeCallback()
@@ -55,6 +59,10 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         activity = requireActivity() as MainActivity
+        sortPrefKey = activity.getString(R.string.pref_sort, activity.getString(recyclerView.collectionNameResId))
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val sortStr = prefs.getString(sortPrefKey, ViewModelItem.Sort.Color.toString())
+        recyclerView.sort = ViewModelItem.Sort.fromString(sortStr)
         fabIconController = AnimatedFabIconController(activity.fab)
         fabIconController.addTransition(fabIconController.addState("add"), fabIconController.addState("delete"),
             ContextCompat.getDrawable(activity, R.drawable.fab_animated_add_to_delete_icon) as AnimatedVectorDrawable,
@@ -90,7 +98,6 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
                 recyclerView.searchFilter = newText
                 return true
             }})
-
         menu.findItem(when (recyclerView.sort) {
             ViewModelItem.Sort.Color ->      R.id.color_option
             ViewModelItem.Sort.NameAsc ->    R.id.name_ascending_option
@@ -102,7 +109,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.isChecked) return false
+        if (item.isChecked || !isActive) return false
         return when (item.itemId) {
             R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
@@ -114,21 +121,33 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
                 true
             } R.id.color_option -> {
                 recyclerView.sort = ViewModelItem.Sort.Color
-                item.isChecked = true; true
+                item.isChecked = true
+                saveSortingOption(); true
             } R.id.name_ascending_option -> {
                 recyclerView.sort = ViewModelItem.Sort.NameAsc
-                item.isChecked = true; true
+                item.isChecked = true
+                saveSortingOption(); true
             } R.id.name_descending_option -> {
                 recyclerView.sort = ViewModelItem.Sort.NameDesc
-                item.isChecked = true; true
+                item.isChecked = true
+                saveSortingOption(); true
             } R.id.amount_ascending_option -> {
                 recyclerView.sort = ViewModelItem.Sort.AmountAsc
-                item.isChecked = true; true
+                item.isChecked = true
+                saveSortingOption(); true
             } R.id.amount_descending_option -> {
                 recyclerView.sort = ViewModelItem.Sort.AmountDesc
-                item.isChecked = true; true
+                item.isChecked = true
+                saveSortingOption(); true
             } else -> false
         }
+    }
+
+    private fun saveSortingOption() {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(activity)
+        val editor = prefs.edit()
+        editor.putString(sortPrefKey, recyclerView.sort.toString())
+        editor.apply()
     }
 
     /** The default ActionMode.Callback used by RecyclerViewFragment.
