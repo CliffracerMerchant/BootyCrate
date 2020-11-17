@@ -33,6 +33,10 @@
         <attr name="cradleContentsMargin"     format="dimension" />
         <!-- The background tint of the BottomAppBar. -->
         <attr name="backgroundTint"           format="color" />
+        <!-- The initial width of the indicator. -->
+        <attr name="indicatorWidth"           format="dimension" />
+        <!-- The initial color of the indicator. -->
+        <attr name="indicatorColor"           format="color" />
     </declare-styleable>
 
     <declare-styleable name="TextFieldEdit">

@@ -32,11 +32,11 @@ fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
 
 /** For a given position in a range, returns the position after a move opera-
  *  ation on one or more items is performed.
- *  @param pos: The before move position whose position after the move is desired.
- *  @param moveStartPos: The start position of the to-be-moved range before the move.
- *  @param moveEndPos: The start position of the to-be-moved range after the move.
- *  @param moveCount: The number of items being moved.
- *  @return: The new position of the pos parameter after the move. */
+ *  @param pos The before move position whose position after the move is desired.
+ *  @param moveStartPos The start position of the to-be-moved range before the move.
+ *  @param moveEndPos The start position of the to-be-moved range after the move.
+ *  @param moveCount The number of items being moved.
+ *  @return The new position of the pos parameter after the move. */
 fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, moveCount: Int): Int {
     val oldRange = moveStartPos until moveStartPos + moveCount
     val newRange = moveEndPos until moveEndPos + moveCount

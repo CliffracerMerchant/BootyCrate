@@ -68,8 +68,6 @@
 
         </com.google.android.material.bottomnavigation.BottomNavigationView>
 
-
-
     </com.cliffracermerchant.bootycrate.BottomAppBar>
 
     <androidx.constraintlayout.widget.ConstraintLayout

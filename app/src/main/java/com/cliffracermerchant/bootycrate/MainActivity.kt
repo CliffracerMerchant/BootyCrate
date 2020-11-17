@@ -4,7 +4,9 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.*
+import android.animation.Animator
+import android.animation.LayoutTransition
+import android.animation.ObjectAnimator
 import android.app.Activity
 import android.graphics.Rect
 import android.os.Bundle
@@ -12,13 +14,12 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SearchView
-import androidx.core.content.ContextCompat
+import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.android.synthetic.main.activity_main.*
@@ -30,7 +31,7 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  Fragment. Instances of ShoppingListFragment and InventoryFragment are created
  *  on app startup, and hidden/shown by the fragment manager as appropriate. The
  *  active fragment can be determined via the boolean members showingInventory and
- *  showingPreferences asfollows:
+ *  showingPreferences as follows:
  *  Active fragment = if (showingPreferences)    PreferencesFragment
  *                    else if (showingInventory) InventoryFragment
  *                    else                       ShoppingListFragment
@@ -91,15 +92,8 @@ class MainActivity : AppCompatActivity() {
             pendingBabAnim = null
         }
 
-        bottomNavigationBar.setOnNavigationItemSelectedListener { item ->
-            if (item.isChecked) false // Selected item was already selected
-            else {
-                item.isChecked = true
-                if (item.itemId == R.id.inventory_button) switchToInventory()
-                else                                      switchToShoppingList()
-                true
-            }
-        }
+        bottomAppBar.indicatorWidth = 3 * bottomNavigationBar.itemIconSize
+        bottomNavigationBar.setOnNavigationItemSelectedListener(onNavigationItemSelected)
 
         supportFragmentManager.addOnBackStackChangedListener {
             if (supportFragmentManager.backStackEntryCount == 0) {
@@ -109,6 +103,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         initFragments(savedInstanceState)
+        findViewById<View>(if (showingInventory) R.id.inventory_button
+                           else                  R.id.shopping_list_button).doOnNextLayout {
+            bottomAppBar.indicatorXPos = (it.width - bottomAppBar.indicatorWidth) / 2 + it.left }
 
         if (showingInventory) showCheckoutButton(showing = false, animate = false)
         bottomAppBar.prepareCradleLayout(cradleLayout)
@@ -246,20 +243,21 @@ class MainActivity : AppCompatActivity() {
             // right corners of the checkout button from sticking out
             // underneath the FAB during the show / hide animation.
             val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutBtn.background.intrinsicHeight)
-            val anim = ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth)
-            anim.interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
-            anim.duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
-            anim.addUpdateListener {
-                checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - fab.measuredWidth / 2
-                checkoutBtn.clipBounds = checkoutBtnClipBounds
+            ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth).apply {
+                interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
+                duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
+                addUpdateListener {
+                    checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - fab.measuredWidth / 2
+                    checkoutBtn.clipBounds = checkoutBtnClipBounds
+                }
+                doOnEnd { checkoutBtn.clipBounds = null }
+                // The anim is stored here and started in the cradle layout's
+                // layoutTransition's transition listener's transitionStart override
+                // so that the animation is synced with the layout transition.
+                pendingBabAnim = this
             }
-            // The anim is stored here and started in the cradle layout's
-            // layoutTransition's transition listener's transitionStart override
-            // so that the animation is synced with the layout transition.
-            pendingBabAnim = anim
         }
         else bottomAppBar.cradleWidth = cradleEndWidth
-
         checkoutButtonIsVisible = showing
     }
 
@@ -304,6 +302,24 @@ class MainActivity : AppCompatActivity() {
                 add(R.id.fragmentContainer, shoppingListFragment, "shoppingList").
                 add(R.id.fragmentContainer, inventoryFragment, "inventory").
                 commit()
+        }
+    }
+
+    private val onNavigationItemSelected = BottomNavigationView.OnNavigationItemSelectedListener { item ->
+        if (item.isChecked) false // Selected item was already selected
+        else {
+            item.isChecked = true
+            toggleMainFragments(switchingToInventory = item.itemId == R.id.inventory_button)
+
+            val newIcon = findViewById<View>(
+                if (item.itemId == R.id.inventory_button) R.id.inventory_button
+                else                                      R.id.shopping_list_button)
+            val indicatorNewXPos = (newIcon.width - bottomAppBar.indicatorWidth) / 2 + newIcon.left
+            ObjectAnimator.ofInt(bottomAppBar, "indicatorXPos", indicatorNewXPos).apply {
+                duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
+                start()
+            }
+            true
         }
     }
 }
