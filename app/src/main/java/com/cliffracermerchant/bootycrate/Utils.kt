@@ -10,7 +10,7 @@ import android.view.ViewGroup
 
 enum class SelectionState { Selected, NotSelected }
 
-fun delaylessLayoutTransition() = LayoutTransition().apply{
+fun delaylessLayoutTransition() = LayoutTransition().apply {
     setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
     setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
     setStartDelay(LayoutTransition.APPEARING, 0)
@@ -30,8 +30,8 @@ fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
     })
 }
 
-/** For a given position in a range, returns the position after a move opera-
- *  ation on one or more items is performed.
+/** For a given position in a range, returns the position after a move
+ *  operation on one or more items is performed.
  *  @param pos The before move position whose position after the move is desired.
  *  @param moveStartPos The start position of the to-be-moved range before the move.
  *  @param moveEndPos The start position of the to-be-moved range after the move.

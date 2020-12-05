@@ -8,39 +8,53 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/coordinator_layout"
+    android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity" >
+    tools:context=".MainActivity">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.cliffracermerchant.bootycrate.GradientToolbar
         android:id="@+id/topActionBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
         app:menu="@menu/action_bar_menu"
-        app:titleTextColor="@android:color/black" />
+        app:borderMode="bottom"
+        app:borderThickness="4dp"
+        android:logo="@drawable/animated_collapse_to_edit_icon"
+        app:titleTextAppearance="@style/ActionBarTextAppearance"
+        app:titleTextColor="@color/colorPrimary" >
+
+        <TextView
+            android:id="@+id/customTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:text="@string/app_name"
+            android:gravity="center_vertical"
+            android:textSize="19sp"
+            android:fontFamily="@font/comfortaa" />
+
+    </com.cliffracermerchant.bootycrate.GradientToolbar>
 
     <FrameLayout
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize" >
-    </FrameLayout>
+        android:layout_marginTop="?attr/actionBarSize"/>
 
     <com.cliffracermerchant.bootycrate.BottomAppBar
         android:id="@+id/bottomAppBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_gravity="bottom"
-        app:backgroundTint="@color/colorPrimary"
+        app:backgroundTint="?attr/recyclerViewItemColor"
+        app:contentInsetStart="0dp"
         app:cradleAlignmentMode="center"
-        app:cradleContentsMargin="7dp"
-        app:cradleTopCornerRadius="25dp"
         app:cradleBottomCornerRadius="34dp"
+        app:cradleContentsMargin="7dp"
         app:cradleDepth="52dp"
-        app:contentInsetStart="0dp" >
+        app:cradleTopCornerRadius="25dp"
+        app:indicatorColor="@color/colorTextDark">
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigationBar"
@@ -48,23 +62,22 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:background="@drawable/transparent_rectangle_background"
+            app:itemIconTint="@color/bottom_navigation_view_item_color"
             app:itemTextColor="@color/bottom_navigation_view_item_color"
             app:labelVisibilityMode="labeled"
-            app:itemIconTint="@color/bottom_navigation_view_item_color"
-            app:menu="@menu/bottom_navigation_bar_menu" >
+            app:menu="@menu/bottom_navigation_bar_menu">
 
             <TextView
                 android:id="@+id/shoppingListBadge"
-                android:textSize="22dp"
-                android:paddingHorizontal="4dp"
-                android:textStyle="bold"
-                android:alpha="0"
-                android:layout_marginTop="2dp"
-                android:layout_marginStart="60dp"
-                android:textColor="@android:color/holo_green_dark"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                />
+                android:layout_marginStart="60dp"
+                android:layout_marginTop="2dp"
+                android:alpha="0"
+                android:paddingHorizontal="4dp"
+                android:textColor="@android:color/holo_green_dark"
+                android:textSize="22dp"
+                android:textStyle="bold" />
 
         </com.google.android.material.bottomnavigation.BottomNavigationView>
 
@@ -75,7 +88,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:layout_gravity="bottom|center_horizontal"
-        tools:layout_marginBottom="10dp" >
+        tools:layout_marginBottom="10dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/checkoutButton"
@@ -86,8 +99,8 @@
             android:background="@drawable/checkout_button_background"
             android:paddingLeft="6dp"
             android:text="@string/checkout_description"
-            android:textSize="14dp"
             android:textColor="@color/colorTextLightSecondary"
+            android:textSize="14dp"
             android:transformPivotX="120dp"
             app:backgroundTint="@android:color/darker_gray"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -98,7 +111,7 @@
             android:id="@+id/floatingActionButton"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:backgroundTint="?attr/colorAccent"
+            android:backgroundTint="@color/colorInBetweenPrimaryAccent1"
             app:borderWidth="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

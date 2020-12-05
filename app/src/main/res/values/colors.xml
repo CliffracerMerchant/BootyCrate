@@ -5,21 +5,25 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <color name="colorPrimary">#FF8765</color>
-    <color name="colorPrimaryDark">#C14B26</color>
-    <color name="colorAccent">#FF4F70</color>
-    <color name="colorAccentDark">#D53150</color>
-    <color name="colorButtonDark">#353535</color>
+    <color name="colorPrimary">#CB8C50</color>
+    <color name="colorPrimaryDark">#3D0E5C</color>
+    <color name="colorInBetweenPrimaryAccent1">#CB5050</color>
+    <color name="colorInBetweenPrimaryAccent2">#CB508C</color>
+    <color name="colorAccent">#8C50CB</color>
+    <color name="colorAccentDark">#3D0E5C</color>
+    <color name="colorButtonDark">#FF7043</color>
     <color name="colorButtonLight">#CCCCCC</color>
     <color name="colorForeground">#000000</color>
-    <color name="colorPrimaryRowLight">#DEDEDE</color>
-    <color name="colorCardBackground">#FFFFFF</color>
-    <color name="colorPrimaryRowDark">#202020</color>
-    <color name="colorAlternateRowDark">#303030</color>
+    <color name="colorWindowBackgroundLight">#FFFFFF</color>
+    <color name="colorWindowBackgroundDark">#252525</color>
+    <color name="colorRecyclerViewItemLight">#DEDEDE</color>
+    <color name="colorRecyclerViewItemDark">#353535</color>
+    <color name="colorActionBarLight">#CDCDCD</color>
+    <color name="colorActionBarDark">#404040</color>
     <color name="colorTextLight">#BBBBBB</color>
     <color name="colorTextLightSecondary">#808080</color>
     <color name="colorTextDark">#202020</color>
     <color name="colorTextDarkSecondary">#353535</color>
     <color name="colorTextLink">#00BCD4</color>
-    <color name="checkoutButtonEnabledColor">#FF9F46</color>
+    <color name="checkoutButtonEnabledColor">#CB6C50</color>
 </resources>

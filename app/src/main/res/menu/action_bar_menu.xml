@@ -10,14 +10,14 @@
 <group android:id="@+id/all_action_bar_items_group">
 
     <item android:id="@+id/app_bar_search"
-          android:icon="@drawable/ic_search_black_24dp"
           android:title="@string/search_description"
+          android:icon="@drawable/ic_search_black_24dp"
           app:actionViewClass="androidx.appcompat.widget.SearchView"
           app:showAsAction="ifRoom|collapseActionView" />
 
     <item android:id="@+id/change_sorting_menu_item"
-          android:icon="@drawable/ic_bx_sort_down"
           android:title="@string/change_sorting_description"
+          android:icon="@drawable/ic_bx_sort_down"
           app:showAsAction="always" >
         <menu android:id="@+id/change_sorting_menu">
             <group android:id="@+id/sorting_options_group"

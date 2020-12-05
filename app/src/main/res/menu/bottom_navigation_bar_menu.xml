@@ -4,12 +4,11 @@
   ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
   ~  or in the file LICENSE in the project's root directory. -->
 
-<menu
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item android:id="@+id/shopping_list_button"
           android:title="@string/shopping_list_navigation_item_name"
-          android:icon="@drawable/ic_shopping_cart_black_24dp" />
+          android:icon="@drawable/shopping_cart_icon" />
 
     <item android:enabled="false"
           android:title="" />
@@ -19,5 +18,5 @@
 
     <item android:id="@+id/inventory_button"
           android:title="@string/inventory_navigation_item_name"
-          android:icon="@drawable/ic_format_list_bulleted_black_24dp" />
+          android:icon="@drawable/inventory_icon" />
 </menu>

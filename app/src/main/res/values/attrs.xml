@@ -5,8 +5,10 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <!-- Used as the alternate row color in AlternatingRowBackgroundDecoration. -->
-    <attr name="recyclerViewItemColor" format="color" />
+    <!-- Used to indicate that a theme is a dark theme. -->
+    <attr name="isDarkTheme"            format="boolean" />
+    <!-- Used as the background color for recycler view items. -->
+    <attr name="recyclerViewItemColor"  format="color" />
     <!-- Used as the background color of an item selected in a RecyclerView. -->
     <attr name="colorSelected"          format="color" />
     <!-- A text color. Used in some places instead of @android.attr.textColor
@@ -59,5 +61,33 @@
         <attr name="stepSize"     format="integer" />
         <!-- The text size of the IntegerEdit. -->
         <attr name="textSize"     format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="GradientToolbar">
+        <!-- The thickness of the optional border. -->
+        <attr name="borderThickness" format="dimension" />
+        <!-- Whether to draw the optional border on the top side, bottom side, both sides, or have no border. -->
+        <attr name="borderMode"      format="enum">
+            <enum name="top"       value="0"/>
+            <enum name="bottom"    value="1"/>
+            <enum name="topBottom" value="2"/>
+            <enum name="none"      value="3"/>
+        </attr>
+    </declare-styleable>
+
+    <!-- Due to the project's target API level of 21's inability to inflate custom
+         drawables from XML, these attributes are never used, but are provided in
+         case the target API level is ever increased to 24 or above. -->
+    <declare-styleable name="GradientVectorDrawable">
+        <!-- The string containing the path data to use for the button's icon. -->
+        <attr name="pathData" format="string" />
+        <!-- The intrinsic width of the icon. -->
+        <attr name="width" format="dimension"/>
+        <!-- The intrinsic height of the icon. -->
+        <attr name="height" format="dimension"/>
+        <!-- The width of the canvas the path is drawn on. -->
+        <attr name="viewportWidth" format="float"/>
+        <!-- The height of the canvas the path is drawn  on. -->
+        <attr name="viewportHeight" format="float"/>
     </declare-styleable>
 </resources>

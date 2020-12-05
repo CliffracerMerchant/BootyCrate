@@ -14,6 +14,11 @@
     <string name="name_descending_description">Name descending</string>
     <string name="amount_ascending_description">Amount ascending</string>
     <string name="amount_descending_description">Amount descending</string>
+    <string name="search_icon_path_data">M15.5,14h-0.79l-0.28,-0.27C15.41,12.59 16,11.11 16,9.5 16,5.91 13.09,3 9.5,3S3,5.91 3,9.5 5.91,16 9.5,16c1.61,0 3.09,-0.59 4.23,-1.57l0.27,0.28v0.79l5,4.99L20.49,19l-4.99,-5zM9.5,14C7.01,14 5,11.99 5,9.5S7.01,5 9.5,5 14,7.01 14,9.5 11.99,14 9.5,14z</string>
+    <string name="sort_icon_path_data">M6,20l4,-4L7,16L7,4L5,4v12L2,16zM11,8h9v2h-9zM11,12h7v2h-7zM11,4h11v2L11,6zM11,16h5v2h-5z</string>
+    <string name="overflow_icon_path_data">M12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,10c-1.1,0 -2,0.9 -2,2s0.9,2 2,2 2,-0.9 2,-2 -0.9,-2 -2,-2zM12,16c-1.1,0 -2,0.9 -2,2s0.9,2 2,2 2,-0.9 2,-2 -0.9,-2 -2,-2z</string>
+    <string name="home_as_up_indicator_icon_path_data">M20,11H7.83l5.59,-5.59L12,4l-8,8 8,8 1.41,-1.41L7.83,13H20v-2z</string>
+    <string name="close_icon_path_data">M19,6.41L17.59,5 12,10.59 6.41,5 5,6.41 10.59,12 5,17.59 6.41,19 12,13.41 17.59,19 19,17.59 13.41,12z</string>
 
     <string name="add_item_button_name">Add new item</string>
     <string name="delete_item_button_name">Delete item(s)</string>
@@ -69,19 +74,13 @@
     <string name="export_text_message_option">Text message</string>
     <string name="export_email_option">Email</string>
     <string name="export_error_message">No app that can send the list was found</string>
+    <string name="visual_preference_category_name">Visual</string>
     <string name="backup_and_restore_preference_category_name">Backup and Restore</string>
     <string name="about_preference_category_name">About</string>
-    <string name="visual_preference_category_name">Visual</string>
     <string name="open_source_libraries_used_description">Open source libraries used</string>
     <string name="pref_open_source_libraries_used">open_source_libraries_used</string>
     <string name="about_app_description">About BootyCrate</string>
     <string name="pref_about_app">about_app</string>
-    <!-- Strings used for fragments for navigation -->
-    <string name="first_fragment_label">First Fragment</string>
-    <string name="second_fragment_label">Second Fragment</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
-
     <string name="about_app_text">
         Copyright 2020 Nicholas Hochstetler. \nBootyCrate is an open-source shopping list and
         inventory management app, licensed under the terms of the Apache License, version 2.0.

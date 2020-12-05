@@ -10,9 +10,11 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.ViewGroup
-import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.graphics.withClip
 import com.google.android.material.shape.*
+
+
 
 /** A custom toolbar that has a cutout in its top edge to hold the contents of a layout.
  *
@@ -33,9 +35,7 @@ import com.google.android.material.shape.*
  *  manually set in pixels using the property indicatorXPos. The width (also in
  *  pixels) can be set via the XML attribute indicatorWidth, or at runtime using
  *  the property of the same name. The indicator color can be set using the XML
- *  property indicatorColor, but the Paint object used to draw the indicator is
- *  exposed through the property indicatorPaint in case more elaborate changes
- *  to the indicator drawing are desired.
+ *  property indicatorColor.
  *
  *  XML attributes:
  *  - cradleAlignmentMode: CradleAlignmentMode = CradleAlignmentMode.Center:
@@ -49,7 +49,7 @@ import com.google.android.material.shape.*
  *  - backgroundTint: color = 0: The color ID of the color to use for the BottomAppBar's background.
  *  - indicatorWidth: dimension = 0: The width of the indicator.
  *  - indicatorColor: color = 0: The color of the indicator. */
-class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
+class BottomAppBar(context: Context, attrs: AttributeSet) : GradientToolbar(context, attrs) {
     private val arcQuarter = 90f
     private val angleRight = 0f
     private val angleDown = 90f
@@ -72,12 +72,14 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
         get() = materialShapeDrawable.tintList?.defaultColor
         set(value) { materialShapeDrawable.tintList = ColorStateList.valueOf(value ?: 0) }
 
+    private val outlinePath = Path()
     private val topEdgePath = Path()
     var indicatorXPos = 0
     var indicatorWidth = 0
-    val indicatorPaint = Paint()
+    private val indicatorPaint = Paint()
 
     init {
+        setWillNotDraw(false)
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
         cradleAlignmentMode = CradleAlignmentMode.values()[
             a.getInt(R.styleable.BottomAppBar_cradleAlignmentMode, CradleAlignmentMode.Center.ordinal)]
@@ -94,22 +96,19 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
         materialShapeDrawable.shapeAppearanceModel = ShapeAppearanceModel.builder().
                                                      setTopEdge(CradleTopEdgeTreatment()).build()
         background = materialShapeDrawable
-        setWillNotDraw(false)
         indicatorPaint.style = Paint.Style.STROKE
-        // Note that the indicator drawing operation is clipped to the top edge
-        // path. The apparent indicatorPaint.strokeWidth value will therefore
-        // effectively be half of its set value due to half of the width being
-        // drawn outside the clipped area.
-        indicatorPaint.strokeWidth = 16f
+        borderPaint.style = Paint.Style.STROKE
+        borderPaint.strokeWidth = 10f
+        indicatorPaint.strokeWidth = 10f
     }
 
     override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
         if (canvas == null) return
-        canvas.save()
-        canvas.clipRect(indicatorXPos, 0, indicatorXPos + indicatorWidth, bottom)
-        canvas.drawPath(topEdgePath, indicatorPaint)
-        canvas.restore()
+        canvas.drawPath(outlinePath, backgroundPaint)
+        canvas.drawPath(topEdgePath, borderPaint)
+        canvas.withClip(indicatorXPos, 0, indicatorXPos + indicatorWidth, bottom) {
+            drawPath(topEdgePath, indicatorPaint)
+        }
     }
 
     fun prepareCradleLayout(cradleLayout: ViewGroup) {
@@ -200,6 +199,14 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
 
             topEdgePath.rewind()
             shapePath.applyToPath(Matrix(), topEdgePath)
+            // topEdgePath and outlinePath need to be offset by half of their corresponding
+            // paint objects' strokewidth values to ensure that they are drawn entirely
+            // within the canvas.
+            topEdgePath.offset(0f, borderPaint.strokeWidth / 2f)
+            outlinePath.set(topEdgePath)
+            outlinePath.lineTo(length, height.toFloat())
+            outlinePath.lineTo(0f, height.toFloat())
+            outlinePath.close()
         }
     }
 }

@@ -10,12 +10,19 @@ import android.animation.ObjectAnimator
 import android.app.Activity
 import android.graphics.Rect
 import android.os.Bundle
+import android.os.Handler
+import android.util.TypedValue
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.core.animation.doOnEnd
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnNextLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
@@ -44,6 +51,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imm: InputMethodManager
     private var showingInventory = false
     private var showingPreferences = false
+    private val handler = Handler()
 
     private var checkoutButtonIsVisible = true
     private var shoppingListSize = -1
@@ -55,6 +63,9 @@ class MainActivity : AppCompatActivity() {
     lateinit var fab: FloatingActionButton
     lateinit var checkoutBtn: MaterialButton
     lateinit var menu: Menu
+
+    val backgroundGradientBuilder = GradientBuilder()
+    val foregroundGradientBuilder = GradientBuilder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +93,9 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(topActionBar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+        initGradients()
+
         fab = floatingActionButton
         checkoutBtn = checkoutButton
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -105,8 +119,8 @@ class MainActivity : AppCompatActivity() {
         initFragments(savedInstanceState)
         findViewById<View>(if (showingInventory) R.id.inventory_button
                            else                  R.id.shopping_list_button).doOnNextLayout {
-            bottomAppBar.indicatorXPos = (it.width - bottomAppBar.indicatorWidth) / 2 + it.left }
-
+            bottomAppBar.indicatorXPos = (it.width - bottomAppBar.indicatorWidth) / 2 + it.left
+        }
         if (showingInventory) showCheckoutButton(showing = false, animate = false)
         bottomAppBar.prepareCradleLayout(cradleLayout)
 
@@ -117,10 +131,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.action_bar_menu, menu)
+        super.onCreateOptionsMenu(menu)
         this.menu = menu
+        initOptionsMenuIcons()
         shoppingListFragment.initOptionsMenu(menu)
         inventoryFragment.initOptionsMenu(menu)
-        return super.onCreateOptionsMenu(menu)
+        return true
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -158,7 +174,6 @@ class MainActivity : AppCompatActivity() {
         showBottomAppBar(false)
 
         val enterAnimResId = if (animate) R.animator.fragment_close_enter else 0
-
         supportFragmentManager.beginTransaction().
             setCustomAnimations(enterAnimResId, R.animator.fragment_close_exit,
                                 enterAnimResId, R.animator.fragment_close_exit).
@@ -181,7 +196,6 @@ class MainActivity : AppCompatActivity() {
             }
             return
         }
-
         val translationAmount = screenHeight - cradleLayout.top
         val translationStart = if (show) translationAmount else 0f
         val translationEnd =   if (show) 0f else translationAmount
@@ -195,8 +209,7 @@ class MainActivity : AppCompatActivity() {
     private fun switchToShoppingList() = toggleMainFragments(switchingToInventory = false)
     private fun toggleMainFragments(switchingToInventory: Boolean) {
         if (showingPreferences) return
-        //Log.d("expandedItem", "shopping list expandedItemPos = ${shoppingListFragment.recyclerView.itemAnimator.expandedItemPos}")
-        //Log.d("expandedItem", "inventory expandedItemPos = ${inventoryFragment.recyclerView.itemAnimator.expandedItemPos}")
+
         showingInventory = switchingToInventory
         showCheckoutButton(showing = !showingInventory)
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
@@ -320,6 +333,111 @@ class MainActivity : AppCompatActivity() {
                 start()
             }
             true
+        }
+    }
+
+    private fun initGradients() {
+        val screenWidth = resources.displayMetrics.widthPixels
+        val typedValue = TypedValue()
+        theme.resolveAttribute(R.attr.actionBarSize, typedValue, true)
+        val actionBarHeight = typedValue.getDimension(resources.displayMetrics)
+
+        val colors = IntArray(4)
+        colors[0] = ContextCompat.getColor(this, R.color.colorPrimary)
+        colors[1] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1)
+        colors[2] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2)
+        colors[3] = ContextCompat.getColor(this, R.color.colorAccent)
+
+        foregroundGradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight).
+                                  setX2(screenWidth * 0.6f).setY2(actionBarHeight * 1.5f).
+                                  setColors(colors)
+        // Colors are more easily visible on dark backgrounds compared to light ones,
+        // so the alpha value is lower when a dark theme is used and higher when a
+        // light theme is used. This will make the background gradient visible on
+        // both types of themes without being overpowering.
+        theme.resolveAttribute(R.attr.isDarkTheme, typedValue, true)
+        val usingDarkTheme = typedValue.data == -1
+        val alpha = if (usingDarkTheme) 90 else 125
+        val dimmedColors = IntArray(4) { ColorUtils.setAlphaComponent(colors[it], alpha) }
+        backgroundGradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight).
+                                  setX2(screenWidth * 0.6f).setY2(actionBarHeight * 1.5f).
+                                  setColors(dimmedColors)
+
+        val foregroundGradient = foregroundGradientBuilder.buildRadialGradient()
+        topActionBar.setBackgroundGradient(backgroundGradientBuilder.buildRadialGradient())
+        customTitle.paint.shader = foregroundGradient
+        //titleAndSearchView.setShader(foregroundGradientFactory)
+        topActionBar.setBorderGradient(foregroundGradient)
+
+        foregroundGradientBuilder.setY1(actionBarHeight / 4f)
+        backgroundGradientBuilder.setY1(actionBarHeight / 4f)
+        bottomAppBar.setBackgroundGradient(backgroundGradientBuilder.buildRadialGradient())
+        bottomAppBar.setBorderGradient(foregroundGradientBuilder.buildRadialGradient())
+
+    }
+
+    private fun initOptionsMenuIcons() {
+     /* Because the action bar's items are set to have instances of GradientVectorDrawable
+        as icons, and because GradientVectorDrawable needs to know the on screen position
+        of the view that uses it in order to offset the gradient used as a background by
+        the opposite amount, the views that contain the menu items must be initialized
+        when this work is done. Unfortunately this is sometimes not the case when onCreate-
+        OptionsMenu, which calls this function, is called. According to this SO answer
+        https://stackoverflow.com/a/33337827/9653167 this happens because the view init-
+        ialization is added to the message queue, and consequently is not performed imm-
+        ediately. Posting the following work to the message queue should result in it
+        being performed after the menu view initialization is finished. */
+        handler.post {
+            val rect = Rect()
+            val iconSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                                                     24f, resources.displayMetrics)
+
+            // Home as up icon
+            // The home as up indicator icon should be close enough to the top left of
+            // the screen that we can assume its position is 0,0.
+            var pathData = getString(R.string.home_as_up_indicator_icon_path_data)
+            var icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder, 0f, 0f)
+            supportActionBar?.setHomeAsUpIndicator(icon)
+            topActionBar.collapseIcon = icon
+
+
+            // Search view
+            val menuItem = menu.findItem(R.id.app_bar_search)
+            val searchView = menuItem.actionView as SearchView
+            val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
+            searchEditText.paint.shader = foregroundGradientBuilder.buildRadialGradient()
+
+            val searchButton = topActionBar.findViewById<View>(R.id.app_bar_search) ?: return@post
+            searchButton.getGlobalVisibleRect(rect)
+            pathData = getString(R.string.search_icon_path_data)
+            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
+                                          rect.left.toFloat(), rect.top.toFloat())
+            menuItem.icon = icon
+
+            val searchClose = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
+            pathData = getString(R.string.close_icon_path_data)
+            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
+                                          rect.left.toFloat(), rect.top.toFloat())
+            searchClose.setImageDrawable(icon)
+
+
+            // Change sort icon
+            val changeSortButton = topActionBar.findViewById<View>(R.id.change_sorting_menu_item) ?: return@post
+            changeSortButton.getGlobalVisibleRect(rect)
+            pathData = getString(R.string.sort_icon_path_data)
+            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
+                                          rect.left.toFloat(), rect.top.toFloat())
+            menu.findItem(R.id.change_sorting_menu_item).icon = icon
+
+
+            // Overflow icon
+            // It's hard to get the view that holds the overflow icon, so we just shift the
+            // change_sorting_menu_item rect over by its width, which should give a decent
+            // approximation of the overflow icon's position
+            pathData = getString(R.string.overflow_icon_path_data)
+            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
+                                          rect.left.toFloat() + rect.width(), rect.top.toFloat())
+            topActionBar.overflowIcon = icon
         }
     }
 }
