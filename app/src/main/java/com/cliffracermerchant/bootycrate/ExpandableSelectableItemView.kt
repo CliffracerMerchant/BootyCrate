@@ -6,9 +6,12 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
 import android.content.Context
-import android.util.TypedValue
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 
 /** A ConstraintLayout subclass that provides an interface for a selectable and expandable view.
  *
@@ -28,15 +31,26 @@ import androidx.constraintlayout.widget.ConstraintLayout
 abstract class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(context: Context) :
     ConstraintLayout(ContextThemeWrapper(context, R.style.RecyclerViewItemStyle))
 {
-    private var selectedColor = 0
-    private var itemNormalBackgroundColor = 0
+    var animationDuration = 200L
 
     init {
-        val typedValue = TypedValue()
-        context.theme.resolveAttribute(R.attr.colorSelected, typedValue, true)
-        selectedColor = typedValue.data
-        context.theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
-        itemNormalBackgroundColor = typedValue.data
+        setWillNotDraw(false)
+        val selectedBackground = (background as LayerDrawable).getDrawable(1) as LayerDrawable
+        val gradientOutline = selectedBackground.getDrawable(0) as GradientDrawable
+        gradientOutline.setTintList(null)
+
+        val colors = IntArray(7)
+        // colorAccent at the ends looked a little too purple, so we'll use a
+        // value half way between colorAccent and colorInBetweenPrimaryAccent2
+        // as the first color instead
+        colors[1] = ContextCompat.getColor(context, R.color.colorInBetweenPrimaryAccent2)
+        colors[0] = ColorUtils.blendARGB(ContextCompat.getColor(context, R.color.colorAccent), colors[1], 0.5f)
+        colors[2] = ContextCompat.getColor(context, R.color.colorInBetweenPrimaryAccent1)
+        colors[3] = ContextCompat.getColor(context, R.color.colorPrimary)
+        colors[4] = colors[2]
+        colors[5] = colors[1]
+        colors[6] = colors[0]
+        gradientOutline.colors = colors
     }
 
     open fun update(item: Entity) {
@@ -51,13 +65,16 @@ abstract class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(co
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        val bgColor = if (selected) selectedColor
-                      else itemNormalBackgroundColor
-        if (!animate) background.setTint(bgColor)
-        else {
-            val startColor = if (selected) itemNormalBackgroundColor
-                             else          selectedColor
-            ObjectAnimator.ofArgb(background, "tint", startColor, bgColor).start()
+        val selectedBackground = (background as LayerDrawable).getDrawable(1) as LayerDrawable
+        val gradientOutline = selectedBackground.getDrawable(0) as GradientDrawable
+        if (animate) {
+            ObjectAnimator.ofInt(gradientOutline, "alpha",
+                                 if (selected) 0 else 255,
+                                 if (selected) 255 else 0).apply {
+                duration = animationDuration
+                start()
+            }
         }
+        else gradientOutline.alpha = if (selected) 255 else 0
     }
 }
