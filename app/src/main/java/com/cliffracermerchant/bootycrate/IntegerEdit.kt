@@ -50,7 +50,11 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
  *    the corresponding button is pressed.
  *  - Float textSize = 16.0f: The text display size for the central EditText
  *    member. When this is set, the scale of the decrease and increase buttons
- *    will be adjusted to match the new text size. */
+ *    will be adjusted to match the new text size.
+ *  - valueIsDirectlyEditable: Boolean = false: Whether the user can input the
+ *    value directly instead of through the decrease / increase buttons.
+ *  - buttonsAreEnabled: Boolean = false: Whether the increase / decrease
+ *    buttons are enabled. When they are disabled */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
     // currentValue = currentValue is not pointless due
@@ -73,11 +77,16 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
                      set(value) { if (value != _currentValue) updateLiveDataWithDelay()
                                   _currentValue = value }
 
-    var isEditable = false
+    var valueIsDirectlyEditable = false
         set(editable) { field = editable
                         valueEdit.isFocusableInTouchMode = editable
-                        if (!editable && valueEdit.isFocused) valueEdit.clearFocus()
+                        if (!editable && valueEdit.isFocused)
+                            valueEdit.clearFocus()
                         invalidate() }
+
+    var buttonsAreEnabled = true
+        set(value) { field = value
+                     isActivated = !value }
 
     private val _liveData = MutableLiveData(currentValue)
     val liveData: LiveData<Int> get() = _liveData
@@ -87,16 +96,19 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
 
     init {
         LayoutInflater.from(context).inflate(R.layout.integer_edit_layout, this, true)
-        val styledAttrs = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
-        _currentValue = styledAttrs.getInt(R.styleable.IntegerEdit_initialValue, 0)
-        _minValue = styledAttrs.getInt(R.styleable.IntegerEdit_minValue, 0)
-        _maxValue = styledAttrs.getInt(R.styleable.IntegerEdit_maxValue, 99)
-        valueChangedNotificationTimeout = styledAttrs.getInt(
+        val a = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
+        _currentValue = a.getInt(R.styleable.IntegerEdit_initialValue, 0)
+        _minValue = a.getInt(R.styleable.IntegerEdit_minValue, 0)
+        _maxValue = a.getInt(R.styleable.IntegerEdit_maxValue, 99)
+        valueChangedNotificationTimeout = a.getInt(
             R.styleable.IntegerEdit_valueChangedNotificationTimeout, 1000)
-        stepSize = styledAttrs.getInt(R.styleable.IntegerEdit_stepSize, 1)
-        val textSize = styledAttrs.getDimension(R.styleable.IntegerEdit_textSize, 1f)
+        stepSize = a.getInt(R.styleable.IntegerEdit_stepSize, 1)
+        val textSize = a.getDimension(R.styleable.IntegerEdit_textSize, 1f)
         valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
-        styledAttrs.recycle()
+
+        valueIsDirectlyEditable = a.getBoolean(R.styleable.IntegerEdit_valueIsDirectlyEditable, false)
+        buttonsAreEnabled = a.getBoolean(R.styleable.IntegerEdit_buttonsAreEnabled, true)
+        a.recycle()
 
         decreaseButton.setOnClickListener { decrement() }
         increaseButton.setOnClickListener { increment() }
@@ -138,7 +150,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     fun initCurrentValue(newValue: Int) { _currentValue = newValue }
 
     override fun onDraw(canvas: Canvas) {
-        if (isEditable) valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+        if (valueIsDirectlyEditable) valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
         else            valueEdit.paintFlags = valueEdit.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
         super.onDraw(canvas)
     }

@@ -33,16 +33,9 @@ class InventoryItemView(context: Context) :
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-    private val editButtonIconController: AnimatedIconController
 
     init {
         inflate(context, R.layout.inventory_item_layout, this)
-        editButtonIconController = AnimatedImageViewController(editButton)
-        editButtonIconController.addTransition(
-            editButtonIconController.addState("edit"), editButtonIconController.addState("more_options"),
-            ContextCompat.getDrawable(context, R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(context, R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
-
         editButton.setOnClickListener {
             if (isExpanded) //TODO Implement more options menu
             else            expand()
@@ -74,11 +67,10 @@ class InventoryItemView(context: Context) :
 
         _isExpanded = expanded
         nameEdit.isEditable = expanded
-        inventoryAmountEdit.isEditable = expanded
+        inventoryAmountEdit.valueIsDirectlyEditable = expanded
         extraInfoEdit.isEditable = expanded
-        addToShoppingListTriggerEdit.isEditable = expanded
-
-        editButtonIconController.setState(if (expanded) "more_options" else "edit")
+        addToShoppingListTriggerEdit.valueIsDirectlyEditable = expanded
+        editButton.isActivated = expanded
 
         val newVisibility = if (expanded) View.VISIBLE
                             else          View.GONE

@@ -7,7 +7,6 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
-import android.widget.CompoundButton
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.DiffUtil
@@ -102,8 +101,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.extraInfoEdit.text.toString() != item.extraInfo)
                             holder.view.extraInfoEdit.setText(item.extraInfo)
                     if (changes.contains(ShoppingListItem.Field.Color) &&
-                        holder.view.checkBoxColor != item.color)
-                            holder.view.checkBoxColor = item.color
+                        holder.view.checkBox.color != ViewModelItem.Colors[item.color])
+                            holder.view.checkBox.color = ViewModelItem.Colors[item.color]
                     if (changes.contains(ShoppingListItem.Field.Amount) &&
                         holder.view.shoppingListAmountEdit.currentValue != item.amount)
                             holder.view.shoppingListAmountEdit.currentValue = item.amount
@@ -180,11 +179,10 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 if (item.isExpanded) colorPickerDialog(fragmentManager, item.color) { pickedColor ->
                     shoppingListViewModel.updateColor(item.id, pickedColor)
                 }
-                else shoppingListViewModel.updateIsChecked(item.id, view.checkBox.isChecked)
+                else shoppingListViewModel.updateIsChecked(item.id, !view.checkBox.isChecked)
             }
-            view.checkBox.setOnCheckedChangeListener { checkBox, isChecked ->
-                if (item.isExpanded) checkBox.isChecked = !isChecked
-                else view.setVisualCheckedState(isChecked)
+            view.checkBox.onCheckedChangedListener = { checked ->
+                view.setStrikeThroughEnabled(checked)
             }
             view.editButton.setOnClickListener {
                 if (!view.isExpanded) setExpandedItem(adapterPosition)

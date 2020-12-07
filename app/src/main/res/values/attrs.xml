@@ -16,8 +16,8 @@
          color based on the android attribute. -->
     <attr name="textColor"              format="color" />
 
-    <!-- Where the cradle is drawn on the BottomAppBar. -->
     <declare-styleable name="BottomAppBar">
+        <!-- Where the cradle is drawn on the BottomAppBar. -->
         <attr name="cradleAlignmentMode" format="enum" >
             <enum name="start"  value="0" />
             <enum name="center" value="1" />
@@ -61,6 +61,10 @@
         <attr name="stepSize"     format="integer" />
         <!-- The text size of the IntegerEdit. -->
         <attr name="textSize"     format="dimension" />
+        <!-- Whether the user is able to directly input the value -->
+        <attr name="valueIsDirectlyEditable" format="boolean" />
+        <!-- Whether the decrease / increase buttons are enabled -->
+        <attr name="buttonsAreEnabled" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="GradientToolbar">

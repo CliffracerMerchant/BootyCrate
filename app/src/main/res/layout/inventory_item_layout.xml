@@ -80,7 +80,7 @@
         android:id="@+id/editButton"
         android:layout_width="32dp"
         android:layout_height="44dp"
-        android:src="@drawable/animated_edit_to_more_options_icon"
+        android:src="@drawable/edit_and_more_options_icon"
         android:contentDescription="@string/edit_button_description"
         android:paddingVertical="8dp"
         android:paddingHorizontal="2dp"

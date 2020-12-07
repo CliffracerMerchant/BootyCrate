@@ -4,11 +4,9 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.AnimatedVectorDrawable
-import android.graphics.drawable.LayerDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,11 +30,6 @@ class ShoppingListItemView(context: Context) :
 {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
-    val decreaseButtonIconController: AnimatedIconController
-    val increaseButtonIconController: AnimatedIconController
-    val editButtonIconController: AnimatedIconController
-    val checkBoxBackgroundController: AnimatedIconController
-    val checkBoxCheckmarkController: AnimatedIconController
 
     // This companion object stores resources common to all ShoppingListItemViews.
     private companion object SharedResources {
@@ -51,43 +44,6 @@ class ShoppingListItemView(context: Context) :
         layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.WRAP_CONTENT)
         if (!SharedResources.isInitialized) initSharedResources(context)
-
-        decreaseButtonIconController = AnimatedImageViewController(shoppingListAmountEdit.decreaseButton)
-        decreaseButtonIconController.addTransition(
-            decreaseButtonIconController.addState("multiply"), decreaseButtonIconController.addState("minus"),
-            ContextCompat.getDrawable(context, R.drawable.shopping_list_animated_multiply_to_minus_icon) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(context, R.drawable.shopping_list_animated_minus_to_multiply_icon) as AnimatedVectorDrawable)
-        increaseButtonIconController = AnimatedImageViewController(shoppingListAmountEdit.increaseButton)
-        increaseButtonIconController.addTransition(
-            increaseButtonIconController.addState("blank"), increaseButtonIconController.addState("plus"),
-            ContextCompat.getDrawable(context, R.drawable.animated_blank_to_plus_icon) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(context, R.drawable.animated_plus_to_blank_icon) as AnimatedVectorDrawable)
-        editButtonIconController = AnimatedImageViewController(editButton)
-        editButtonIconController.addTransition(
-            editButtonIconController.addState("edit"), editButtonIconController.addState("more_options"),
-            ContextCompat.getDrawable(context, R.drawable.animated_edit_to_more_options_icon) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(context, R.drawable.animated_more_options_to_edit_icon) as AnimatedVectorDrawable)
-        checkBoxBackgroundController = AnimatedDrawableLayer(checkBox.background as LayerDrawable, R.id.checkBoxBackground)
-        val checkBoxBackgroundUncheckedIndex = checkBoxBackgroundController.addState("unchecked")
-        val checkBoxBackgroundCheckedIndex = checkBoxBackgroundController.addState("checked")
-        val checkBoxBackgroundColorEditIndex = checkBoxBackgroundController.addState("edit_color")
-        checkBoxBackgroundController.addTransition(
-            checkBoxBackgroundUncheckedIndex, checkBoxBackgroundCheckedIndex,
-            ContextCompat.getDrawable(context, R.drawable.animated_checkbox_unchecked_to_checked_background) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(context, R.drawable.animated_checkbox_checked_to_unchecked_background) as AnimatedVectorDrawable)
-        checkBoxBackgroundController.addTransition(
-            checkBoxBackgroundUncheckedIndex, checkBoxBackgroundColorEditIndex,
-            ContextCompat.getDrawable(context, R.drawable.animated_checkbox_unchecked_background_to_circle) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(context, R.drawable.animated_circle_to_checkbox_unchecked_background) as AnimatedVectorDrawable)
-        checkBoxBackgroundController.addTransition(
-            checkBoxBackgroundCheckedIndex, checkBoxBackgroundColorEditIndex,
-            ContextCompat.getDrawable(context, R.drawable.animated_checkbox_checked_background_to_circle) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(context, R.drawable.animated_circle_to_checkbox_checked_background) as AnimatedVectorDrawable)
-        checkBoxCheckmarkController = AnimatedDrawableLayer(checkBox.background as LayerDrawable, R.id.checkBoxCheckmark)
-        checkBoxCheckmarkController.addTransition(
-            checkBoxCheckmarkController.addState("unchecked"), checkBoxCheckmarkController.addState("checked"),
-            ContextCompat.getDrawable(context, R.drawable.animated_checkbox_unchecked_to_checked_checkmark) as AnimatedVectorDrawable,
-            ContextCompat.getDrawable(context, R.drawable.animated_checkbox_checked_to_unchecked_checkmark) as AnimatedVectorDrawable)
 
         editButton.setOnClickListener {
             if (_isExpanded) //TODO: Implement more options menu
@@ -104,15 +60,14 @@ class ShoppingListItemView(context: Context) :
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
-        checkBoxColor = ViewModelItem.Colors[colorIndex]
+        checkBox.setColorWithoutAnimation(ViewModelItem.Colors[colorIndex])
         shoppingListAmountEdit.initCurrentValue(item.amount)
         linkedToIndicator.text = if (item.linkedItemId != null) linkedItemDescriptionString
                                  else                           unlinkedItemDescriptionString
-
-        checkBox.setOnCheckedChangeListener(null)
+        checkBox.onCheckedChangedListener = null
         checkBox.isChecked = item.isChecked
-        checkBox.setOnCheckedChangeListener { _, checked -> setVisualCheckedState(checked) }
-        setVisualCheckedState(checked = item.isChecked, animate = false)
+        checkBox.onCheckedChangedListener = { checked -> setStrikeThroughEnabled(checked) }
+        setStrikeThroughEnabled(checked = item.isChecked, animate = false)
         super.update(item)
     }
 
@@ -123,25 +78,13 @@ class ShoppingListItemView(context: Context) :
 
         _isExpanded = expanded
         nameEdit.isEditable = expanded
-        shoppingListAmountEdit.isEditable = expanded
+        shoppingListAmountEdit.valueIsDirectlyEditable = expanded
         extraInfoEdit.isEditable = expanded
+        checkBox.isEditable = expanded
         setAmountEditable(expanded)
-
-        if (expanded) {
-            editButtonIconController.setState("more_options")
-            checkBoxBackgroundController.setState("edit_color")
-            if (checkBox.isChecked)
-                checkBoxCheckmarkController.setState("unchecked")
-        } else {
-            editButtonIconController.setState("edit")
-            if (checkBox.isChecked) {
-                checkBoxCheckmarkController.setState("checked")
-                checkBoxBackgroundController.setState("checked")
-            } else {
-                checkBoxCheckmarkController.setState("unchecked")
-                checkBoxBackgroundController.setState("unchecked")
-            }
-        }
+        editButton.isActivated = expanded
+        //editButtonIconController.setState(if (expanded) "more_options"
+        //                                  else          "edit")
         val newVisibility = if (expanded) View.VISIBLE
                             else          View.GONE
         shoppingListItemDetailsGroup.visibility = newVisibility
@@ -149,32 +92,14 @@ class ShoppingListItemView(context: Context) :
             extraInfoEdit.visibility = newVisibility
     }
 
-    fun setVisualCheckedState(checked: Boolean, animate: Boolean = true) {
+    fun setStrikeThroughEnabled(checked: Boolean, animate: Boolean = true) {
         nameEdit.setStrikeThroughEnabled(checked, animate)
         extraInfoEdit.setStrikeThroughEnabled(checked, animate)
-        if (checked) {
-            checkBoxCheckmarkController.setState("checked", animate)
-            checkBoxBackgroundController.setState("checked", animate)
-        } else {
-            checkBoxCheckmarkController.setState("unchecked", animate)
-            checkBoxBackgroundController.setState("unchecked", animate)
-        }
-    }
-
-    var checkBoxColor get() = checkBoxBackgroundController.tint
-                      set(value) = setCheckboxColor(value)
-    private fun setCheckboxColor(color: Int?, animate: Boolean = true) {
-        if (!animate) checkBoxBackgroundController.tint = color
-        else {
-            val anim = ValueAnimator.ofArgb(checkBoxBackgroundController.tint ?: 0, color ?: 0)
-            anim.addUpdateListener { checkBoxBackgroundController.tint = anim.animatedValue as Int }
-            anim.start()
-        }
     }
 
     private fun setAmountEditable(makingEditable: Boolean = true) {
-        decreaseButtonIconController.setState(if (makingEditable) "minus" else "multiply")
-        increaseButtonIconController.setState(if (makingEditable) "plus" else "blank")
+        shoppingListAmountEdit.buttonsAreEnabled = makingEditable
+        shoppingListAmountEdit.valueIsDirectlyEditable = makingEditable
 
         if (makingEditable) decreaseButton.setOnClickListener { shoppingListAmountEdit.decrement() }
         else                decreaseButton.setOnClickListener(null)

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2020 Nicholas Hochstetler
+  ~ You may not use this file except in compliance with the Apache License
+  ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~ or in the file LICENSE in the project's root directory.
+  -->
+
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/more_options_icon"
+        android:state_activated="true"
+        android:drawable="@drawable/animated_more_options_to_edit_icon" />
+    <item android:id="@+id/edit_icon"
+        android:drawable="@drawable/animated_edit_to_more_options_icon" />
+
+    <transition
+        android:fromId="@id/edit_icon"
+        android:toId="@id/more_options_icon"
+        android:drawable="@drawable/animated_edit_to_more_options_icon" />
+    <transition
+        android:fromId="@id/more_options_icon"
+        android:toId="@id/edit_icon"
+        android:drawable="@drawable/animated_more_options_to_edit_icon" />
+</animated-selector>

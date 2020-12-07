@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item android:id="@+id/checkbox_circle_background"
+        android:state_activated="true"
+        android:drawable="@drawable/animated_circle_to_checkbox_unchecked_background"/>
+    <item android:id="@+id/checkbox_checked_background"
+        android:state_checked="true"
+        android:drawable="@drawable/animated_checkbox_checked_background_to_circle" />
+    <item android:id="@+id/checkbox_unchecked_background"
+        android:drawable="@drawable/animated_checkbox_unchecked_to_checked_background" />
+
+    <transition
+        android:fromId="@id/checkbox_circle_background"
+        android:toId="@id/checkbox_checked_background"
+        android:drawable="@drawable/animated_circle_to_checkbox_checked_background"/>
+    <transition
+        android:fromId="@id/checkbox_circle_background"
+        android:toId="@id/checkbox_unchecked_background"
+        android:drawable="@drawable/animated_circle_to_checkbox_unchecked_background"/>
+
+    <transition
+        android:fromId="@id/checkbox_checked_background"
+        android:toId="@id/checkbox_circle_background"
+        android:drawable="@drawable/animated_checkbox_checked_background_to_circle"/>
+    <transition
+        android:fromId="@id/checkbox_checked_background"
+        android:toId="@id/checkbox_unchecked_background"
+        android:drawable="@drawable/animated_checkbox_checked_to_unchecked_background"/>
+
+    <transition
+        android:fromId="@id/checkbox_unchecked_background"
+        android:toId="@id/checkbox_circle_background"
+        android:drawable="@drawable/animated_checkbox_unchecked_background_to_circle"/>
+    <transition
+        android:fromId="@id/checkbox_unchecked_background"
+        android:toId="@id/checkbox_checked_background"
+        android:drawable="@drawable/animated_checkbox_unchecked_to_checked_background"/>
+</animated-selector>

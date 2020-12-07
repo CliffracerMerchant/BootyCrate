@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item android:id="@+id/checkbox_unchecked_checkmark"
+        android:state_activated="true"
+        android:drawable="@drawable/animated_checkbox_unchecked_to_checked_checkmark" />
+    <item android:id="@+id/checkbox_checked_checkmark"
+        android:state_checked="true"
+        android:drawable="@drawable/animated_checkbox_checked_to_unchecked_checkmark" />
+    <item android:id="@id/checkbox_unchecked_checkmark"
+        android:drawable="@drawable/animated_checkbox_unchecked_to_checked_checkmark" />
+
+    <transition
+        android:fromId="@id/checkbox_checked_checkmark"
+        android:toId="@id/checkbox_unchecked_checkmark"
+        android:drawable="@drawable/animated_checkbox_checked_to_unchecked_checkmark" />
+    <transition
+        android:fromId="@id/checkbox_unchecked_checkmark"
+        android:toId="@id/checkbox_checked_checkmark"
+        android:drawable="@drawable/animated_checkbox_unchecked_to_checked_checkmark" />
+</animated-selector>

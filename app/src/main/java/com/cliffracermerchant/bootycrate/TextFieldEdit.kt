@@ -13,7 +13,6 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.text.*
 import android.util.AttributeSet
-import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.AppCompatEditText

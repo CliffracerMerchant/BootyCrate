@@ -61,7 +61,7 @@ fun newShoppingListItemDialog(
     }
     itemView.nameEdit.isEditable = true
     itemView.extraInfoEdit.isEditable = true
-    itemView.inventoryAmountEdit.isEditable = true
+    itemView.inventoryAmountEdit.valueIsDirectlyEditable = true
     itemView.inventoryAmountEdit.minValue = 1
 
     val dialog = themedAlertDialogBuilder(context).
