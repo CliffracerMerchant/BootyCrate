@@ -10,7 +10,10 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.view.*
+import android.widget.TextView
+import androidx.appcompat.app.ActionBar
 import androidx.appcompat.view.ActionMode
+import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 
@@ -34,9 +37,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
         RecyclerViewFragment<ShoppingListItem>(isActive) {
 
     override lateinit var recyclerView: ShoppingListRecyclerView
-    override val actionModeCallback = ActionModeCallback()
-    override val fabRegularOnClickListener = View.OnClickListener { recyclerView.addNewItem() }
-    override val fabActionModeOnClickListener = View.OnClickListener { recyclerView.deleteSelectedItems() }
+    override val actionMode = ShoppingListActionMode()
 
     private val handler = Handler()
     private var checkoutButtonLastPressTimeStamp = 0L
@@ -82,6 +83,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
     override fun onActiveStateChanged(active: Boolean) {
         super.onActiveStateChanged(active)
         if (active) {
+            activity.fab.setOnClickListener{ recyclerView.addNewItem() }
             activity.checkoutBtn.setOnClickListener {
                 if (!checkoutButtonIsEnabled) return@setOnClickListener
                 val currentTime = System.currentTimeMillis()
@@ -96,6 +98,15 @@ class ShoppingListFragment(isActive: Boolean = false) :
                 }
             }
         }
+        else activity.fab.setOnClickListener(null)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return if (item.itemId == R.id.add_to_inventory_button) {
+            activity.inventoryViewModel.addFromSelectedShoppingListItems()
+            actionMode.finishAndClearSelection()
+            true
+        } else super.onOptionsItemSelected(item)
     }
 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
@@ -124,25 +135,16 @@ class ShoppingListFragment(isActive: Boolean = false) :
         textColorAnim.start()
     }
 
-    /** An ActionMode.Callback for use when the user selects one or more shopping list items.
-     *
-     *  ActionModeCallback overrides RecyclerViewFragment.ActionModeCallback with
-     *  new implementations of onActionItemClicked and onPrepareActionMode. */
-    inner class ActionModeCallback : RecyclerViewFragment<ShoppingListItem>.ActionModeCallback() {
-        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
-            return if (super.onCreateActionMode(mode, menu)) {
-                menu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
-                true
-            } else false
+    /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */
+    inner class ShoppingListActionMode() : RecyclerViewFragment<ShoppingListItem>.RecyclerViewActionMode() {
+        override fun onStart(actionBar: ActionBar, menu: Menu, titleView: TextView?) {
+            super.onStart(actionBar, menu, titleView)
+            menu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
         }
 
-        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-            return when (item.itemId) {
-                R.id.add_to_inventory_button -> {
-                    activity.inventoryViewModel.addFromSelectedShoppingListItems()
-                    true
-                } else -> activity.onOptionsItemSelected(item)
-            }
+        override fun onFinish(actionBar: ActionBar, menu: Menu, titleView: TextView?) {
+            super.onFinish(actionBar, menu, titleView)
+            menu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
         }
     }
 }

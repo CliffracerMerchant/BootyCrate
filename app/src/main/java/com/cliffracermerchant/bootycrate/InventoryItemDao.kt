@@ -14,26 +14,31 @@ import androidx.room.*
     abstract override fun getAllNow(): List<InventoryItem>
 
     @Query("""SELECT * FROM inventory_item WHERE NOT inTrash
-              AND name LIKE :filter OR extraInfo LIKE :filter ORDER BY color""")
+              AND (name LIKE :filter OR extraInfo LIKE :filter)
+              ORDER BY color""")
     abstract override fun getAllSortedByColor(filter: String): LiveData<List<InventoryItem>>
 
     @Query("""SELECT * FROM inventory_item WHERE NOT inTrash
-              AND name LIKE :filter OR extraInfo LIKE :filter ORDER BY name COLLATE NOCASE ASC""")
+              AND (name LIKE :filter OR extraInfo LIKE :filter)
+              ORDER BY name COLLATE NOCASE ASC""")
     abstract override fun getAllSortedByNameAsc(filter: String): LiveData<List<InventoryItem>>
 
     @Query("""SELECT * FROM inventory_item WHERE NOT inTrash
-              AND name LIKE :filter OR extraInfo LIKE :filter ORDER BY name COLLATE NOCASE DESC""")
+              AND (name LIKE :filter OR extraInfo LIKE :filter)
+              ORDER BY name COLLATE NOCASE DESC""")
     abstract override fun getAllSortedByNameDesc(filter: String): LiveData<List<InventoryItem>>
 
     @Query("""SELECT * FROM inventory_item WHERE NOT inTrash
-              AND name LIKE :filter OR extraInfo LIKE :filter ORDER BY amount ASC""")
+              AND (name LIKE :filter OR extraInfo LIKE :filter)
+              ORDER BY amount ASC""")
     abstract override fun getAllSortedByAmountAsc(filter: String): LiveData<List<InventoryItem>>
 
     @Query("""SELECT * FROM inventory_item WHERE NOT inTrash
-              AND name LIKE :filter OR extraInfo LIKE :filter ORDER BY amount DESC""")
+              AND (name LIKE :filter OR extraInfo LIKE :filter)
+              ORDER BY amount DESC""")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
 
-    @Query("SELECT COUNT(*) FROM inventory_item WHERE isSelected")
+    @Query("SELECT COUNT(*) FROM inventory_item WHERE isSelected AND NOT inTrash")
     abstract override fun getSelectionSize(): LiveData<Int>
 
     @Query("""INSERT INTO inventory_item (name, extraInfo, color, linkedItemId)

@@ -51,12 +51,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imm: InputMethodManager
     private var showingInventory = false
     private var showingPreferences = false
-    private val handler = Handler()
+    val activeFragment get() = if (showingInventory) inventoryFragment
+                               else                  shoppingListFragment
 
     private var checkoutButtonIsVisible = true
     private var shoppingListSize = -1
     private var shoppingListNumNewItems = 0
     private var pendingBabAnim: Animator? = null
+    private val handler = Handler()
+    private var menuIconInitializationErrors = 0
 
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var inventoryViewModel: InventoryViewModel
@@ -114,6 +117,7 @@ class MainActivity : AppCompatActivity() {
                 showBottomAppBar()
                 showingPreferences = false
                 supportActionBar?.setDisplayHomeAsUpEnabled(false)
+                activeFragment.isActive = true
             }
         }
         initFragments(savedInstanceState)
@@ -121,7 +125,8 @@ class MainActivity : AppCompatActivity() {
                            else                  R.id.shopping_list_button).doOnNextLayout {
             bottomAppBar.indicatorXPos = (it.width - bottomAppBar.indicatorWidth) / 2 + it.left
         }
-        if (showingInventory) showCheckoutButton(showing = false, animate = false)
+        if (showingInventory)
+            showCheckoutButton(showing = false, animate = false)
         bottomAppBar.prepareCradleLayout(cradleLayout)
 
         shoppingListViewModel.items.observe(this) { newList ->
@@ -155,11 +160,14 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        return if (showingPreferences) {
+    override fun onSupportNavigateUp() = when {
+        showingPreferences -> {
             supportFragmentManager.popBackStack()
             true
-        } else false
+        } activeFragment.actionMode.isStarted -> {
+            activeFragment.actionMode.finishAndClearSelection()
+            true
+        } else -> false
     }
 
     override fun onBackPressed() {
@@ -170,16 +178,44 @@ class MainActivity : AppCompatActivity() {
     private fun showPreferencesFragment(animate: Boolean = true) {
         showingPreferences = true
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         showBottomAppBar(false)
+        activeFragment.isActive = false
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         val enterAnimResId = if (animate) R.animator.fragment_close_enter else 0
         supportFragmentManager.beginTransaction().
             setCustomAnimations(enterAnimResId, R.animator.fragment_close_exit,
                                 enterAnimResId, R.animator.fragment_close_exit).
-            hide(if (showingInventory) inventoryFragment else shoppingListFragment).
+            hide(activeFragment).
             add(R.id.fragmentContainer, PreferencesFragment()).
             addToBackStack(null).commit()
+    }
+
+    private fun switchToInventory() = toggleMainFragments(switchingToInventory = true)
+    private fun switchToShoppingList() = toggleMainFragments(switchingToInventory = false)
+    private fun toggleMainFragments(switchingToInventory: Boolean) {
+        if (showingPreferences) return
+
+        val oldFragment = activeFragment
+        showingInventory = switchingToInventory
+        showCheckoutButton(showing = !showingInventory)
+        imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
+
+        val newFragmentTranslationStart = fragmentContainer.width * if (showingInventory) 1f else -1f
+        val fragmentTranslationAmount = fragmentContainer.width * if (showingInventory) -1f else 1f
+
+        oldFragment.isActive = false
+        val oldFragmentView = oldFragment.view
+        oldFragmentView?.animate()?.translationXBy(fragmentTranslationAmount)?.
+                                    setDuration(300)?.//withLayer()?.
+                                    withEndAction { oldFragmentView.visibility = View.GONE }?.
+                                    start()
+
+        activeFragment.isActive = true
+        val newFragmentView = activeFragment.view
+        newFragmentView?.translationX = newFragmentTranslationStart
+        newFragmentView?.visibility = View.VISIBLE
+        newFragmentView?.animate()?.translationX(0f)?.setDuration(300)?.start()//withLayer()
     }
 
     private fun showBottomAppBar(show: Boolean = true) {
@@ -203,42 +239,6 @@ class MainActivity : AppCompatActivity() {
             view.translationY = translationStart
             view.animate().withLayer().translationY(translationEnd).start()
         }
-    }
-
-    private fun switchToInventory() = toggleMainFragments(switchingToInventory = true)
-    private fun switchToShoppingList() = toggleMainFragments(switchingToInventory = false)
-    private fun toggleMainFragments(switchingToInventory: Boolean) {
-        if (showingPreferences) return
-
-        showingInventory = switchingToInventory
-        showCheckoutButton(showing = !showingInventory)
-        imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
-
-        val newFragment = if (showingInventory) inventoryFragment
-                          else                  shoppingListFragment
-        val oldFragment = if (showingInventory) shoppingListFragment
-                          else                  inventoryFragment
-        val newFragmentTranslationStart = fragmentContainer.width * if (showingInventory) 1f else -1f
-        val fragmentTranslationAmount = fragmentContainer.width * if (showingInventory) -1f else 1f
-
-        val newFragmentView = newFragment.view
-        newFragmentView?.translationX = newFragmentTranslationStart
-        newFragmentView?.visibility = View.VISIBLE
-        val newFragmentAnim = newFragmentView?.animate()?.
-            translationX(0f)?.setDuration(300)//withLayer()
-
-        val oldFragmentView = oldFragment.view
-        val oldFragmentAnim = oldFragmentView?.animate()?.
-            translationXBy(fragmentTranslationAmount)?.
-            setDuration(300)?.//withLayer()?.
-            withEndAction { oldFragmentView.visibility = View.GONE }
-
-        supportFragmentManager.beginTransaction().show(newFragment).runOnCommit {
-            oldFragment.isActive = false
-            newFragment.isActive = true
-            oldFragmentAnim?.start()
-            newFragmentAnim?.start()
-        }.commit()
     }
 
     private fun showCheckoutButton(showing: Boolean, animate: Boolean = true) {
@@ -386,7 +386,13 @@ class MainActivity : AppCompatActivity() {
         https://stackoverflow.com/a/33337827/9653167 this happens because the view init-
         ialization is added to the message queue, and consequently is not performed imm-
         ediately. Posting the following work to the message queue should result in it
-        being performed after the menu view initialization is finished. */
+        being performed after the menu view initialization is finished.
+
+        EDIT: This method sometimes still does not work (only sometimes during activity
+        recreations?). Using menuIconInitializationErrors as a counter, the initialization
+        work is attempted up to three times, and is aborted thereafter to prevent the
+        execution from getting stuck in a loop.*/
+        var finished = false
         handler.post {
             val rect = Rect()
             val iconSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
@@ -400,11 +406,10 @@ class MainActivity : AppCompatActivity() {
             supportActionBar?.setHomeAsUpIndicator(icon)
             topActionBar.collapseIcon = icon
 
-
             // Search view
             val menuItem = menu.findItem(R.id.app_bar_search)
             val searchView = menuItem.actionView as SearchView
-            val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
+            val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text) ?: return@post
             searchEditText.paint.shader = foregroundGradientBuilder.buildRadialGradient()
 
             val searchButton = topActionBar.findViewById<View>(R.id.app_bar_search) ?: return@post
@@ -414,7 +419,7 @@ class MainActivity : AppCompatActivity() {
                                           rect.left.toFloat(), rect.top.toFloat())
             menuItem.icon = icon
 
-            val searchClose = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn)
+            val searchClose = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn) ?: return@post
             pathData = getString(R.string.close_icon_path_data)
             icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
                                           rect.left.toFloat(), rect.top.toFloat())
@@ -430,6 +435,15 @@ class MainActivity : AppCompatActivity() {
             menu.findItem(R.id.change_sorting_menu_item).icon = icon
 
 
+            // Delete icon
+            pathData = getString(R.string.delete_icon_path_data)
+            // When the action mode is active, the delete button should appear where
+            // the change sort button is normally, so we'll just reuse the rect.
+            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
+                                          rect.left.toFloat(), rect.top.toFloat())
+            menu.findItem(R.id.delete_selected_menu_item).icon = icon
+
+
             // Overflow icon
             // It's hard to get the view that holds the overflow icon, so we just shift the
             // change_sorting_menu_item rect over by its width, which should give a decent
@@ -438,6 +452,10 @@ class MainActivity : AppCompatActivity() {
             icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
                                           rect.left.toFloat() + rect.width(), rect.top.toFloat())
             topActionBar.overflowIcon = icon
+            finished = true
         }
+        if (!finished && ++menuIconInitializationErrors < 3)
+            handler.post { initOptionsMenuIcons() }
+        else menuIconInitializationErrors = 0
     }
 }

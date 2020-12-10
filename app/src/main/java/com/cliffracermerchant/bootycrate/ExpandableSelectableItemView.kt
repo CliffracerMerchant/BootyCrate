@@ -8,8 +8,10 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
+import android.view.View
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 
@@ -68,10 +70,12 @@ abstract class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(co
         val selectedBackground = (background as LayerDrawable).getDrawable(1) as LayerDrawable
         val gradientOutline = selectedBackground.getDrawable(0) as GradientDrawable
         if (animate) {
+            setLayerType(View.LAYER_TYPE_HARDWARE, null)
             ObjectAnimator.ofInt(gradientOutline, "alpha",
                                  if (selected) 0 else 255,
                                  if (selected) 255 else 0).apply {
                 duration = animationDuration
+                doOnEnd { setLayerType(View.LAYER_TYPE_NONE, null) }
                 start()
             }
         }

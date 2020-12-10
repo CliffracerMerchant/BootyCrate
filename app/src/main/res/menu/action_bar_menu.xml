@@ -36,6 +36,12 @@
         </menu>
     </item>
 
+    <item android:id="@+id/delete_selected_menu_item"
+          android:title="@string/delete_selected_items_description"
+          android:icon="@drawable/ic_delete_black_24dp"
+          app:showAsAction="always"
+          android:visible="false" />
+
     <group android:id="@+id/inventory_view_menu_group"
            android:visible="false" >
     </group>
@@ -65,8 +71,9 @@
      setting that group to be not visible does not work on the items below.
      Moving the items below to be above the fragment specific menu groups
      will cause them to be hidden when the group is set to be not visible,
-     but then they are not in the order they should be. There is therefore
-     another group just for them so that they can be set to be not visible. -->
+     but then they are not in the order they should be. other_action_bar_-
+     menu_items is another group just for these menu items so that they can
+     be set to be not visible as a group. -->
 <group android:id="@+id/other_action_bar_menu_items">
     <item android:id="@+id/export_menu_item"
         android:title="@string/export_dialog_title"

@@ -10,7 +10,6 @@ import android.text.SpannableString
 import android.text.method.LinkMovementMethod
 import android.text.util.Linkify
 import android.view.Menu
-import android.view.MenuInflater
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.preference.Preference
@@ -31,24 +30,17 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
     init { setHasOptionsMenu(true) }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        this.menu = menu
-        menu.setGroupVisible(R.id.all_action_bar_items_group, false)
-        // See R.menu.action_bar_menu source for an explanation of "other_action_bar_menu_items"
-        menu.setGroupVisible(R.id.other_action_bar_menu_items, false)
-    }
-
-    override fun onDestroyOptionsMenu() {
-        menu?.setGroupVisible(R.id.all_action_bar_items_group, true)
-        menu?.setGroupVisible(R.id.other_action_bar_menu_items, true)
-        super.onDestroyOptionsMenu()
-    }
-
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
 
         val darkThemeActivePref = findPreference<SwitchPreferenceCompat>(getString(R.string.pref_dark_theme_active))
         darkThemeActivePref?.isPersistent = true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        super.onPrepareOptionsMenu(menu)
+        menu.setGroupVisible(R.id.all_action_bar_items_group, false)
+        menu.setGroupVisible(R.id.other_action_bar_menu_items, false)
     }
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {

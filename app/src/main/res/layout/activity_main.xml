@@ -112,6 +112,8 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:backgroundTint="@color/colorInBetweenPrimaryAccent1"
+            android:src="@android:drawable/ic_input_add"
+            app:maxImageSize="28dp"
             app:borderWidth="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

@@ -8,23 +8,21 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
-import android.util.Log
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 
 /** A button that acts as a checkbox with easily an customizable color.
  *
- *  SometimesEditableTintedCheckbox acts as a checkbox with a tintable (via the
- *  property color) background. When the property isEditable is set to false,
- *  the checkbox will change to a circle tinted the same color as the checkbox
- *  background and its checkable state can not be changed until isEditable is
+ *  ToggleableTintedCheckbox acts as a checkbox with a tintable (via the color
+ *  property) background. When the property isEditable is set to false, the
+ *  checkbox will change to a circle tinted the same color as the checkbox back-
+ *  ground and its checkable state can not be changed until isEditable is
  *  changed back to true. */
-class SometimesEditableTintedCheckbox(context: Context, attrs: AttributeSet) :
+class ToggleableTintedCheckbox(context: Context, attrs: AttributeSet) :
     AppCompatImageButton(context, attrs)
 {
     var isEditable get() = isActivated
@@ -40,7 +38,8 @@ class SometimesEditableTintedCheckbox(context: Context, attrs: AttributeSet) :
     var color get() = _color
         set(value) { val checkboxBackground = (drawable as LayerDrawable).getDrawable(0)
                      ObjectAnimator.ofArgb(checkboxBackground, "tint", color, value).apply {
-                         if (value == 0) doOnEnd { checkboxBackground.setTintList(null) }
+                         if (value == 0)
+                             doOnEnd { checkboxBackground.setTintList(null) }
                          start()
                      }
                      _color = value

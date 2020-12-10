@@ -6,8 +6,12 @@ package com.cliffracermerchant.bootycrate
 
 import android.os.Bundle
 import android.view.*
+import android.widget.TextView
+import androidx.appcompat.app.ActionBar
 import androidx.appcompat.view.ActionMode
+import androidx.appcompat.widget.Toolbar
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
+import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 
 /** A fragment to display and modify the user's inventory.
  *
@@ -19,9 +23,7 @@ import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
 class InventoryFragment(isActive: Boolean = false) :
         RecyclerViewFragment<InventoryItem>(isActive) {
     override lateinit var recyclerView: InventoryRecyclerView
-    override val actionModeCallback = ActionModeCallback()
-    override val fabRegularOnClickListener = View.OnClickListener { recyclerView.addNewItem() }
-    override val fabActionModeOnClickListener = View.OnClickListener { recyclerView.deleteSelectedItems() }
+    override val actionMode = InventoryActionMode()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -40,7 +42,19 @@ class InventoryFragment(isActive: Boolean = false) :
 
     override fun onActiveStateChanged(active: Boolean) {
         super.onActiveStateChanged(active)
-        if (active) activity.checkoutBtn.setOnClickListener(null)
+        if (active) {
+            activity.fab.setOnClickListener{ recyclerView.addNewItem() }
+            activity.checkoutBtn.setOnClickListener(null)
+        }
+        else activity.fab.setOnClickListener(null)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return if (item.itemId == R.id.add_to_shopping_list_button) {
+            activity.shoppingListViewModel.addFromSelectedInventoryItems()
+            actionMode.finishAndClearSelection()
+            true
+        } else super.onOptionsItemSelected(item)
     }
 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
@@ -48,29 +62,16 @@ class InventoryFragment(isActive: Boolean = false) :
         menu?.setGroupVisible(R.id.inventory_view_menu_group, showing)
     }
 
-    /** An ActionMode.Callback for use when the user selects one or more inventory items.
-     *
-     *  ActionModeCallback overrides RecyclerViewFragment.ActionModeCallback with
-     *  new implementations of onActionItemClicked and onPrepareActionMode. */
-    inner class ActionModeCallback : RecyclerViewFragment<InventoryItem>.ActionModeCallback() {
-        override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
-            return if (super.onCreateActionMode(mode, menu)) {
-                menu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
-                true
-            } else false
+    /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */
+    inner class InventoryActionMode() : RecyclerViewFragment<InventoryItem>.RecyclerViewActionMode() {
+        override fun onStart(actionBar: ActionBar, menu: Menu, titleView: TextView?) {
+            super.onStart(actionBar, menu, titleView)
+            menu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
         }
 
-        override fun onDestroyActionMode(mode: ActionMode) {
-            super.onDestroyActionMode(mode)
-        }
-
-        override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-            return when (item.itemId) {
-                R.id.add_to_shopping_list_button -> {
-                    activity.shoppingListViewModel.addFromSelectedInventoryItems()
-                    true
-                } else -> activity.onOptionsItemSelected(item)
-            }
+        override fun onFinish(actionBar: ActionBar, menu: Menu, titleView: TextView?) {
+            super.onFinish(actionBar, menu, titleView)
+            menu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, false)
         }
     }
 }
