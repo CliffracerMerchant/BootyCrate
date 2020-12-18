@@ -7,6 +7,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.view.View
 import androidx.core.graphics.PathParser
 import androidx.core.graphics.withSave
 
@@ -30,15 +31,16 @@ import androidx.core.graphics.withSave
  *  the required parameters (besides the gradient builder and the parent coor-
  *  dinates, which are unknowable before runtime and would have to be set using
  *  setGradient) are provided in res/attrs.xml. */
-class GradientVectorDrawable(
+class GradientVectorDrawable private constructor(
     private val width: Float,
     private val height: Float,
-    private val viewportWidth: Float,
-    private val viewportHeight: Float,
+    private val pathWidth: Float,
+    private val pathHeight: Float,
     pathData: String,
-    gradientBuilder: GradientBuilder,
-    parentX: Float,
-    parentY: Float
+    gradientBuilder: Gradient.Builder,
+    parent: View? = null,
+    posX: Float = 0f,
+    posY: Float = 0f
 ) : Drawable() {
 
     var pathData: String = ""
@@ -46,31 +48,58 @@ class GradientVectorDrawable(
     private val paint = Paint()
     private var path = Path()
 
-    // A secondary constructor in case the size and viewport size are squares.
-    constructor(size: Float, viewPortSize: Float, pathData: String,
-                gradientBuilder: GradientBuilder, parentX: Float, parentY: Float) :
-        this(size, size, viewPortSize, viewPortSize, pathData, gradientBuilder, parentX, parentY)
+    companion object {
+        fun forParent(
+            width: Float, height: Float,
+            pathWidth: Float, pathHeight: Float,
+            pathData: String,
+            gradientBuilder: Gradient.Builder,
+            parent: View
+        ) = GradientVectorDrawable(width, height, pathWidth, pathHeight,
+                                   pathData, gradientBuilder, parent)
+
+        fun forParent(
+            size: Float,
+            pathSize: Float,
+            pathData: String,
+            gradientBuilder: Gradient.Builder,
+            parent: View
+        ) = GradientVectorDrawable(size, size, pathSize, pathSize,
+                                   pathData, gradientBuilder, parent)
+
+        fun atPos(
+            width: Float, height: Float,
+            pathWidth: Float, pathHeight: Float,
+            pathData: String,
+            gradientBuilder: Gradient.Builder,
+            xPos: Float, yPos: Float
+        ) = GradientVectorDrawable(width, height, pathWidth, pathHeight,
+                                   pathData, gradientBuilder, null, xPos, yPos)
+
+        fun atPos(
+            size: Float,
+            pathSize: Float,
+            pathData: String,
+            gradientBuilder: Gradient.Builder,
+            xPos: Float, yPos: Float
+        ) = GradientVectorDrawable(size, size, pathSize, pathSize,
+                                   pathData, gradientBuilder, null, xPos, yPos)
+    }
 
     init {
-        paint.strokeWidth = 0f
         paint.style = Paint.Style.FILL
-        bounds = Rect(0, 0, width.toInt(), height.toInt())
         this.pathData = pathData
-        setShader(gradientBuilder, parentX, parentY)
+
+        paint.shader =
+            if (parent != null) Gradient.radialWithParentOffset(gradientBuilder, parent)
+            else                Gradient.radialWithOffset(gradientBuilder, posX, posY)
     }
 
-    fun setShader(gradientBuilder: GradientBuilder, xOffset: Float, yOffset: Float) {
-        val originalX1 = gradientBuilder.x1
-        val originalY1 = gradientBuilder.y1
-        paint.shader = gradientBuilder.setX1(originalX1 - xOffset).
-                                       setY1(originalY1 - yOffset).
-                                       buildRadialGradient()
-        gradientBuilder.setX1(originalX1).setY1(originalY1)
-    }
+    fun setGradient(gradient: Shader) { paint.shader = gradient }
 
     override fun draw(canvas: Canvas) {
-        val xScale = width / viewportWidth
-        val yScale = height / viewportHeight
+        val xScale = width / pathWidth
+        val yScale = height / pathHeight
         canvas.withSave {
             scale(xScale, yScale)
             drawPath(path, paint)

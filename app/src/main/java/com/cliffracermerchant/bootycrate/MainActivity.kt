@@ -28,7 +28,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.android.synthetic.main.activity_main.*
 
 /** The primary activity for BootyCrate
@@ -63,12 +62,14 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var inventoryViewModel: InventoryViewModel
-    lateinit var fab: FloatingActionButton
+    lateinit var fab: RoundGradientButton
     lateinit var checkoutBtn: MaterialButton
     lateinit var menu: Menu
 
-    val backgroundGradientBuilder = GradientBuilder()
-    val foregroundGradientBuilder = GradientBuilder()
+    val topBgGradientBuilder = Gradient.Builder()
+    val topFgGradientBuilder = Gradient.Builder()
+    val bottomBgGradientBuilder = Gradient.Builder()
+    val bottomFgGradientBuilder = Gradient.Builder()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,11 +98,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(topActionBar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-        initGradients()
-
         fab = floatingActionButton
         checkoutBtn = checkoutButton
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+        initGradients()
 
         cradleLayout.layoutTransition = delaylessLayoutTransition()
         cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
@@ -121,8 +121,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         initFragments(savedInstanceState)
-        findViewById<View>(if (showingInventory) R.id.inventory_button
-                           else                  R.id.shopping_list_button).doOnNextLayout {
+        val navButton = findViewById<View>(if (showingInventory) R.id.inventory_button
+                                           else                  R.id.shopping_list_button)
+        navButton.doOnNextLayout {
             bottomAppBar.indicatorXPos = (it.width - bottomAppBar.indicatorWidth) / 2 + it.left
         }
         if (showingInventory)
@@ -256,7 +257,7 @@ class MainActivity : AppCompatActivity() {
             // right corners of the checkout button from sticking out
             // underneath the FAB during the show / hide animation.
             val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutBtn.background.intrinsicHeight)
-            ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth).apply {
+            ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth).run {
                 interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
                 duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
                 addUpdateListener {
@@ -338,19 +339,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun initGradients() {
         val screenWidth = resources.displayMetrics.widthPixels
+        val screenHeight = resources.displayMetrics.heightPixels
         val typedValue = TypedValue()
         theme.resolveAttribute(R.attr.actionBarSize, typedValue, true)
         val actionBarHeight = typedValue.getDimension(resources.displayMetrics)
 
+        val topGradientYOffset = actionBarHeight * 3f/2f
+        val bottomGradientYOffset = screenHeight - actionBarHeight * 3f / 4f
+
+        // Foreground colors
         val colors = IntArray(4)
         colors[0] = ContextCompat.getColor(this, R.color.colorPrimary)
         colors[1] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1)
         colors[2] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2)
         colors[3] = ContextCompat.getColor(this, R.color.colorAccent)
 
-        foregroundGradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight).
-                                  setX2(screenWidth * 0.6f).setY2(actionBarHeight * 1.5f).
-                                  setColors(colors)
+        // Background colors
         // Colors are more easily visible on dark backgrounds compared to light ones,
         // so the alpha value is lower when a dark theme is used and higher when a
         // light theme is used. This will make the background gradient visible on
@@ -358,22 +362,44 @@ class MainActivity : AppCompatActivity() {
         theme.resolveAttribute(R.attr.isDarkTheme, typedValue, true)
         val usingDarkTheme = typedValue.data == -1
         val alpha = if (usingDarkTheme) 90 else 125
-        val dimmedColors = IntArray(4) { ColorUtils.setAlphaComponent(colors[it], alpha) }
-        backgroundGradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight).
-                                  setX2(screenWidth * 0.6f).setY2(actionBarHeight * 1.5f).
-                                  setColors(dimmedColors)
+        theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
+        val blendColor = ContextCompat.getColor(this, R.color.colorRecyclerViewItemDark)
+        val dimmedColors = IntArray(4) { ColorUtils.compositeColors(ColorUtils.setAlphaComponent(colors[it], alpha), blendColor) }
 
-        val foregroundGradient = foregroundGradientBuilder.buildRadialGradient()
-        topActionBar.setBackgroundGradient(backgroundGradientBuilder.buildRadialGradient())
-        customTitle.paint.shader = foregroundGradient
-        //titleAndSearchView.setShader(foregroundGradientFactory)
-        topActionBar.setBorderGradient(foregroundGradient)
+        topFgGradientBuilder.setX1(screenWidth / 2f).setY1(topGradientYOffset).
+                             setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f).
+                             setColors(colors)
+        topBgGradientBuilder.setX1(screenWidth / 2f).setY1(topGradientYOffset).
+                             setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f).
+                             setColors(dimmedColors)
+        bottomFgGradientBuilder.setColors(colors)
+        bottomBgGradientBuilder.setColors(dimmedColors)
 
-        foregroundGradientBuilder.setY1(actionBarHeight / 4f)
-        backgroundGradientBuilder.setY1(actionBarHeight / 4f)
-        bottomAppBar.setBackgroundGradient(backgroundGradientBuilder.buildRadialGradient())
-        bottomAppBar.setBorderGradient(foregroundGradientBuilder.buildRadialGradient())
+        topActionBar.doOnNextLayout {
+            topActionBar.setBackgroundGradient(Gradient.radialWithParentOffset(topBgGradientBuilder, topActionBar))
+            topActionBar.setBorderGradient(Gradient.radialWithParentOffset(topFgGradientBuilder, topActionBar))
+            customTitle.paint.shader = Gradient.radialWithParentOffset(topFgGradientBuilder, customTitle)
+        }
 
+        bottomAppBar.doOnNextLayout {
+            bottomFgGradientBuilder.setX1(screenWidth / 2f).setY1(bottomGradientYOffset).
+                                    setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f)
+            bottomBgGradientBuilder.setX1(screenWidth / 2f).setY1(bottomGradientYOffset).
+                                    setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f)
+            bottomAppBar.setBackgroundGradient(Gradient.radialWithParentOffset(bottomBgGradientBuilder, bottomAppBar))
+            bottomAppBar.setBorderGradient(Gradient.radialWithParentOffset(bottomFgGradientBuilder, bottomAppBar))
+        }
+
+        fab.doOnNextLayout {
+            val rect = Rect()
+            fab.getGlobalVisibleRect(rect)
+            val fabMiddle = rect.left + rect.width() / 2f
+            bottomFgGradientBuilder.setX1(fabMiddle).setY1(bottomGradientYOffset).
+                                    setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f)
+            bottomBgGradientBuilder.setX1(fabMiddle).setY1(bottomGradientYOffset).
+                                    setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f)
+            fab.setGradients(bottomFgGradientBuilder, bottomBgGradientBuilder)
+        }
     }
 
     private fun initOptionsMenuIcons() {
@@ -394,64 +420,70 @@ class MainActivity : AppCompatActivity() {
         execution from getting stuck in a loop.*/
         var finished = false
         handler.post {
-            val rect = Rect()
             val iconSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                                                      24f, resources.displayMetrics)
+            val iconPathSize = 24f
+
 
             // Home as up icon
             // The home as up indicator icon should be close enough to the top left of
             // the screen that we can assume its position is 0,0.
             var pathData = getString(R.string.home_as_up_indicator_icon_path_data)
-            var icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder, 0f, 0f)
-            supportActionBar?.setHomeAsUpIndicator(icon)
-            topActionBar.collapseIcon = icon
+            val backIcon = GradientVectorDrawable.forParent(
+                iconSize, iconPathSize, pathData, topFgGradientBuilder, topActionBar)
+            supportActionBar?.setHomeAsUpIndicator(backIcon)
+            topActionBar.collapseIcon = backIcon
+
 
             // Search view
-            val menuItem = menu.findItem(R.id.app_bar_search)
+            var menuItem = menu.findItem(R.id.app_bar_search)
             val searchView = menuItem.actionView as SearchView
-            val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text) ?: return@post
-            searchEditText.paint.shader = foregroundGradientBuilder.buildRadialGradient()
+            val searchEditText = searchView.findViewById<EditText>(
+                androidx.appcompat.R.id.search_src_text) ?: return@post
+            searchEditText.paint.shader =
+                Gradient.radialWithParentOffset(topFgGradientBuilder, customTitle)
 
             val searchButton = topActionBar.findViewById<View>(R.id.app_bar_search) ?: return@post
-            searchButton.getGlobalVisibleRect(rect)
             pathData = getString(R.string.search_icon_path_data)
-            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
-                                          rect.left.toFloat(), rect.top.toFloat())
-            menuItem.icon = icon
+            menuItem.icon = GradientVectorDrawable.forParent(
+                iconSize, iconPathSize, pathData, topFgGradientBuilder, searchButton)
 
-            val searchClose = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_close_btn) ?: return@post
+            val searchClose = searchView.findViewById<ImageView>(
+                androidx.appcompat.R.id.search_close_btn) ?: return@post
             pathData = getString(R.string.close_icon_path_data)
-            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
-                                          rect.left.toFloat(), rect.top.toFloat())
-            searchClose.setImageDrawable(icon)
+            searchClose.setImageDrawable(GradientVectorDrawable.forParent(
+                iconSize, iconPathSize, pathData, topFgGradientBuilder, searchClose))
 
 
             // Change sort icon
-            val changeSortButton = topActionBar.findViewById<View>(R.id.change_sorting_menu_item) ?: return@post
-            changeSortButton.getGlobalVisibleRect(rect)
+            val changeSortButton = topActionBar.findViewById<View>(
+                R.id.change_sorting_menu_item) ?: return@post
             pathData = getString(R.string.sort_icon_path_data)
-            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
-                                          rect.left.toFloat(), rect.top.toFloat())
-            menu.findItem(R.id.change_sorting_menu_item).icon = icon
+            menuItem = menu.findItem(R.id.change_sorting_menu_item)
+            menuItem.icon = GradientVectorDrawable.forParent(
+                iconSize, iconPathSize, pathData, topFgGradientBuilder, changeSortButton)
 
 
             // Delete icon
             pathData = getString(R.string.delete_icon_path_data)
-            // When the action mode is active, the delete button should appear where
-            // the change sort button is normally, so we'll just reuse the rect.
-            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
-                                          rect.left.toFloat(), rect.top.toFloat())
-            menu.findItem(R.id.delete_selected_menu_item).icon = icon
+            // When the action mode is active, the delete button should
+            // appear where the change sort button is normally, so we'll
+            // just use the change sort button as the parent.
+            menuItem = menu.findItem(R.id.delete_selected_menu_item)
+            menuItem.icon = GradientVectorDrawable.forParent(
+                iconSize, iconPathSize, pathData, topFgGradientBuilder, changeSortButton)
 
 
             // Overflow icon
-            // It's hard to get the view that holds the overflow icon, so we just shift the
-            // change_sorting_menu_item rect over by its width, which should give a decent
-            // approximation of the overflow icon's position
+            // It's hard to get the view that holds the overflow icon, so we just
+            // shift the change_sorting_menu_item rect over by its width, which
+            // should give a decent approximation of the overflow icon's position.
             pathData = getString(R.string.overflow_icon_path_data)
-            icon = GradientVectorDrawable(iconSize, 24f, pathData, foregroundGradientBuilder,
-                                          rect.left.toFloat() + rect.width(), rect.top.toFloat())
-            topActionBar.overflowIcon = icon
+            val rect = Rect()
+            changeSortButton.getGlobalVisibleRect(rect)
+            topActionBar.overflowIcon = GradientVectorDrawable.atPos(
+                iconSize, iconPathSize, pathData, topFgGradientBuilder, rect.left * 1f, rect.top * 1f)
+
             finished = true
         }
         if (!finished && ++menuIconInitializationErrors < 3)

@@ -47,14 +47,14 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_gravity="bottom"
-        app:backgroundTint="?attr/recyclerViewItemColor"
         app:contentInsetStart="0dp"
         app:cradleAlignmentMode="center"
-        app:cradleBottomCornerRadius="34dp"
-        app:cradleContentsMargin="7dp"
-        app:cradleDepth="52dp"
         app:cradleTopCornerRadius="25dp"
-        app:indicatorColor="@color/colorTextDark">
+        app:cradleBottomCornerRadius="34dp"
+        app:cradleDepth="52dp"
+        app:cradleContentsMargin="6dp"
+        app:indicatorColor="@color/colorTextDark"
+        app:borderThickness="4dp" >
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigationBar"
@@ -107,14 +107,16 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
+        <com.cliffracermerchant.bootycrate.RoundGradientButton
             android:id="@+id/floatingActionButton"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:backgroundTint="@color/colorInBetweenPrimaryAccent1"
-            android:src="@android:drawable/ic_input_add"
-            app:maxImageSize="28dp"
-            app:borderWidth="0dp"
+            app:maxImageSize="56dp"
+            android:padding="14dp"
+            app:iconPathSize="24"
+            app:borderThickness="4dp"
+            app:iconPathData="@string/add_icon_path_data"
+            android:elevation="3dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

@@ -6,7 +6,8 @@
 
 <resources>
     <color name="colorPrimary">#CB8C50</color>
-    <color name="colorPrimaryDark">#3D0E5C</color>
+    <color name="colorPrimaryDimmed">#88CB8C50</color>
+    <color name="colorPrimaryDark">#653485</color>
     <color name="colorInBetweenPrimaryAccent1">#CB5050</color>
     <color name="colorInBetweenPrimaryAccent2">#CB508C</color>
     <color name="colorAccent">#8C50CB</color>

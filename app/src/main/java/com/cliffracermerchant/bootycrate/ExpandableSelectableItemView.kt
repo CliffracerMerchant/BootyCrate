@@ -40,13 +40,13 @@ abstract class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(co
         val selectedBackground = (background as LayerDrawable).getDrawable(1) as LayerDrawable
         val gradientOutline = selectedBackground.getDrawable(0) as GradientDrawable
         gradientOutline.setTintList(null)
-
+        gradientOutline.orientation = GradientDrawable.Orientation.LEFT_RIGHT
         val colors = IntArray(7)
         // colorAccent at the ends looked a little too purple, so we'll use a
         // value half way between colorAccent and colorInBetweenPrimaryAccent2
         // as the first color instead
         colors[1] = ContextCompat.getColor(context, R.color.colorInBetweenPrimaryAccent2)
-        colors[0] = ColorUtils.blendARGB(ContextCompat.getColor(context, R.color.colorAccent), colors[1], 0.5f)
+        colors[0] = ColorUtils.blendARGB(ContextCompat.getColor(context, R.color.colorAccent), colors[1], 0.6f)
         colors[2] = ContextCompat.getColor(context, R.color.colorInBetweenPrimaryAccent1)
         colors[3] = ContextCompat.getColor(context, R.color.colorPrimary)
         colors[4] = colors[2]

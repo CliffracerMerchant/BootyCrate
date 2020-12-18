@@ -33,8 +33,6 @@
         <attr name="cradleStartEndMargin"     format="dimension" />
         <!-- The margin in between the cradle and the cradle layout contents. -->
         <attr name="cradleContentsMargin"     format="dimension" />
-        <!-- The background tint of the BottomAppBar. -->
-        <attr name="backgroundTint"           format="color" />
         <!-- The initial width of the indicator. -->
         <attr name="indicatorWidth"           format="dimension" />
         <!-- The initial color of the indicator. -->
@@ -83,15 +81,22 @@
          drawables from XML, these attributes are never used, but are provided in
          case the target API level is ever increased to 24 or above. -->
     <declare-styleable name="GradientVectorDrawable">
-        <!-- The string containing the path data to use for the button's icon. -->
+        <!-- The string containing the path data to use for the drawable. -->
         <attr name="pathData" format="string" />
-        <!-- The intrinsic width of the icon. -->
-        <attr name="width" format="dimension"/>
-        <!-- The intrinsic height of the icon. -->
-        <attr name="height" format="dimension"/>
+        <!-- The intrinsic width of the drawable. -->
+        <attr name="width" format="dimension" />
+        <!-- The intrinsic height of the drawable. -->
+        <attr name="height" format="dimension" />
         <!-- The width of the canvas the path is drawn on. -->
-        <attr name="viewportWidth" format="float"/>
+        <attr name="pathWidth" format="float" />
         <!-- The height of the canvas the path is drawn  on. -->
-        <attr name="viewportHeight" format="float"/>
+        <attr name="pathHeight" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="RoundGradientButton">
+        <!-- The string containing the path data to use for the button's icon. -->
+        <attr name="iconPathData"   format="string" />
+        <!-- The side length of the square canvas the icon path is drawn on. -->
+        <attr name="iconPathSize"   format="float" />
     </declare-styleable>
 </resources>
