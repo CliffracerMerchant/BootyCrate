@@ -6,12 +6,10 @@ package com.cliffracermerchant.bootycrate
 
 import android.app.Activity
 import android.content.Context
-import android.graphics.drawable.AnimatedVectorDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.shopping_list_item_details_layout.view.*
@@ -28,8 +26,11 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
 class ShoppingListItemView(context: Context) :
     ExpandableSelectableItemView<ShoppingListItem>(context)
 {
-    val isExpanded get() = _isExpanded
-    private var _isExpanded = false
+    var color get() = checkBox.color
+        set(value) { checkBox.color = value }
+    var colorIndex get() = ViewModelItem.Colors.indexOf(color)
+                   set(value) { val index = value.coerceIn(ViewModelItem.Colors.indices)
+                                checkBox.color = ViewModelItem.Colors[index] }
 
     // This companion object stores resources common to all ShoppingListItemViews.
     private companion object SharedResources {
@@ -46,7 +47,7 @@ class ShoppingListItemView(context: Context) :
         if (!SharedResources.isInitialized) initSharedResources(context)
 
         editButton.setOnClickListener {
-            if (_isExpanded) //TODO: Implement more options menu
+            if (isExpanded) //TODO: Implement more options menu
             else             expand()
         }
         collapseButton.setOnClickListener { collapse() }
@@ -60,8 +61,8 @@ class ShoppingListItemView(context: Context) :
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
-        checkBox.setColorWithoutAnimation(ViewModelItem.Colors[colorIndex])
-        shoppingListAmountEdit.initCurrentValue(item.amount)
+        checkBox.setColor(ViewModelItem.Colors[colorIndex], animate = false)
+        shoppingListAmountEdit.initValue(item.amount)
         linkedToIndicator.text = if (item.linkedItemId != null) linkedItemDescriptionString
                                  else                           unlinkedItemDescriptionString
         checkBox.onCheckedChangedListener = null
@@ -72,19 +73,17 @@ class ShoppingListItemView(context: Context) :
     }
 
     override fun setExpanded(expanded: Boolean) {
+        super.setExpanded(expanded)
         if (!expanded && nameEdit.isFocused || extraInfoEdit.isFocused ||
             shoppingListAmountEdit.valueEdit.isFocused)
                 imm.hideSoftInputFromWindow(windowToken, 0)
 
-        _isExpanded = expanded
         nameEdit.isEditable = expanded
         shoppingListAmountEdit.valueIsDirectlyEditable = expanded
         extraInfoEdit.isEditable = expanded
         checkBox.isEditable = expanded
         setAmountEditable(expanded)
         editButton.isActivated = expanded
-        //editButtonIconController.setState(if (expanded) "more_options"
-        //                                  else          "edit")
         val newVisibility = if (expanded) View.VISIBLE
                             else          View.GONE
         shoppingListItemDetailsGroup.visibility = newVisibility

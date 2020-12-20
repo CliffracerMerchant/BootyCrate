@@ -8,10 +8,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.ActionBar
-import androidx.appcompat.view.ActionMode
-import androidx.appcompat.widget.Toolbar
 import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
-import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 
 /** A fragment to display and modify the user's inventory.
  *
@@ -46,7 +43,6 @@ class InventoryFragment(isActive: Boolean = false) :
             activity.fab.setOnClickListener{ recyclerView.addNewItem() }
             activity.checkoutBtn.setOnClickListener(null)
         }
-        else activity.fab.setOnClickListener(null)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

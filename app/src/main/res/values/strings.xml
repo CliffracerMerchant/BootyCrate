@@ -88,5 +88,6 @@
         Copyright 2020 Nicholas Hochstetler. \nBootyCrate is an open-source shopping list and
         inventory management app, licensed under the terms of the Apache License, version 2.0.
         View the source code at: https://github.com/NicholasHochstetler/BootyCrate</string>
+    <string name="add_another_item_button_description">Add another</string>
 
 </resources>

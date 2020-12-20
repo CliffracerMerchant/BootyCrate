@@ -19,6 +19,8 @@ import androidx.room.PrimaryKey
     @ColumnInfo(name = "inTrash", defaultValue = "0")  var inTrash: Boolean = false
 ) {
 
+    init { color.coerceIn(Colors.indices) }
+
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
         if (other == null || other !is ViewModelItem) return false

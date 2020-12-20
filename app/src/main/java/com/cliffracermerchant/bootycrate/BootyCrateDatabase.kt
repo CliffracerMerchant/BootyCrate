@@ -57,9 +57,10 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             }
             synchronized(this) {
                 val newInstance = Room.databaseBuilder(
-                    context.applicationContext, BootyCrateDatabase::class.java, "booty-crate-db").
-                    //addMigrations(MIGRATION_1_2).
-                    addCallback(callback).build()
+                    context.applicationContext,
+                    BootyCrateDatabase::class.java,
+                    "booty-crate-db"
+                ).addCallback(callback).build()
                 this.instance = newInstance
                 return newInstance
             }

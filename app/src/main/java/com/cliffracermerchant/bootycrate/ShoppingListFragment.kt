@@ -12,8 +12,6 @@ import android.os.Handler
 import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.ActionBar
-import androidx.appcompat.view.ActionMode
-import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 
@@ -98,7 +96,6 @@ class ShoppingListFragment(isActive: Boolean = false) :
                 }
             }
         }
-        else activity.fab.setOnClickListener(null)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

@@ -4,13 +4,13 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
-import android.graphics.drawable.AnimatedVectorDrawable
+import android.content.res.ColorStateList
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
@@ -30,9 +30,12 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
 class InventoryItemView(context: Context) :
     ExpandableSelectableItemView<InventoryItem>(context)
 {
-    val isExpanded get() = _isExpanded
-    private var _isExpanded = false
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+
+    var color get() = colorEdit.imageTintList?.defaultColor ?: 0
+              set(value) = setColor(value)
+    var colorIndex get() = ViewModelItem.Colors.indexOf(color)
+                   set(value) = setColorIndex(value)
 
     init {
         inflate(context, R.layout.inventory_item_layout, this)
@@ -50,22 +53,20 @@ class InventoryItemView(context: Context) :
     override fun update(item: InventoryItem) {
         nameEdit.setText(item.name)
         extraInfoEdit.setText(item.extraInfo)
-        val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
-        colorEdit.drawable.setTint(ViewModelItem.Colors[colorIndex])
-        inventoryAmountEdit.initCurrentValue(item.amount)
-
+        setColorIndex(item.color, animate = false)
+        inventoryAmountEdit.initValue(item.amount)
         addToShoppingListCheckBox.isChecked = item.addToShoppingList
-        addToShoppingListTriggerEdit.initCurrentValue(item.addToShoppingListTrigger)
+        addToShoppingListTriggerEdit.initValue(item.addToShoppingListTrigger)
         super.update(item)
     }
 
     override fun setExpanded(expanded: Boolean) {
+        super.setExpanded(expanded)
         if (!expanded && nameEdit.isFocused || extraInfoEdit.isFocused ||
             inventoryAmountEdit.valueEdit.isFocused ||
             addToShoppingListTriggerEdit.valueEdit.isFocused)
                 imm?.hideSoftInputFromWindow(windowToken, 0)
 
-        _isExpanded = expanded
         nameEdit.isEditable = expanded
         inventoryAmountEdit.valueIsDirectlyEditable = expanded
         extraInfoEdit.isEditable = expanded
@@ -86,5 +87,22 @@ class InventoryItemView(context: Context) :
         // performance negligible way to prevent the bug.
         spacer.layoutParams.width = if (expanded) 1 else 0
         spacer.requestLayout()
+    }
+
+    fun setColor(color: Int, animate: Boolean = true) {
+        if (!animate) {
+            colorEdit.imageTintList = ColorStateList.valueOf(color)
+            return
+        }
+        ValueAnimator.ofArgb(colorEdit.imageTintList?.defaultColor ?: 0, color).run {
+            addUpdateListener {
+                colorEdit.imageTintList = ColorStateList.valueOf(it.animatedValue as Int)
+            }
+            duration = 200L
+            start()
+        }}
+    fun setColorIndex(colorIndex: Int, animate: Boolean = true) {
+        val index = colorIndex.coerceIn(ViewModelItem.Colors.indices)
+        setColor(ViewModelItem.Colors[index], animate)
     }
 }

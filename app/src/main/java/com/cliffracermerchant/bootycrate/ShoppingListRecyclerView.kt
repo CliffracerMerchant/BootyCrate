@@ -104,8 +104,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.checkBox.color != ViewModelItem.Colors[item.color])
                             holder.view.checkBox.color = ViewModelItem.Colors[item.color]
                     if (changes.contains(ShoppingListItem.Field.Amount) &&
-                        holder.view.shoppingListAmountEdit.currentValue != item.amount)
-                            holder.view.shoppingListAmountEdit.currentValue = item.amount
+                        holder.view.shoppingListAmountEdit.value != item.amount)
+                            holder.view.shoppingListAmountEdit.value = item.amount
                     if (changes.contains(ShoppingListItem.Field.IsExpanded))
                         holder.view.setExpanded(item.isExpanded)
                     if (changes.contains(ShoppingListItem.Field.IsSelected))

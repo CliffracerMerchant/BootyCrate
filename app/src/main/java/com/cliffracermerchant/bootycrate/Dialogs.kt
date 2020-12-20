@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -20,11 +19,7 @@ import androidx.fragment.app.FragmentManager
 import com.google.android.material.snackbar.Snackbar
 import dev.sasikanth.colorsheet.ColorSheet
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
-import kotlinx.android.synthetic.main.inventory_item_details_layout.view.collapseButton
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
-import kotlinx.android.synthetic.main.inventory_item_layout.view.editButton
-import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
-import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
 
 fun colorPickerDialog(
     fragmentManager: FragmentManager,
@@ -45,43 +40,54 @@ fun newShoppingListItemDialog(
     fragmentManager: FragmentManager,
     callback: (ShoppingListItem) -> Unit
 ) {
+    val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
     val itemView = InventoryItemView(context)
-    itemView.background = null
-    itemView.editButton.visibility = View.GONE
-    itemView.inventoryItemDetailsGroup.visibility = View.GONE
-    val colorEdit = itemView.colorEdit.drawable
-    var colorIndex = 0
-    colorEdit.setTint(ViewModelItem.Colors[colorIndex])
-    itemView.colorEdit.setOnClickListener {
-        colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
-            ObjectAnimator.ofArgb(colorEdit, "tint", ViewModelItem.Colors[colorIndex],
-                                  ViewModelItem.Colors[chosenColorIndex]).start()
-            colorIndex = chosenColorIndex
+    itemView.apply {
+        background = null
+        editButton.visibility = View.GONE
+        inventoryItemDetailsGroup.visibility = View.GONE
+        setColorIndex(0, animate = false)
+        colorEdit.setOnClickListener {
+            colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
+                itemView.colorIndex = chosenColorIndex
+            }
         }
+        nameEdit.isEditable = true
+        extraInfoEdit.isEditable = true
+        inventoryAmountEdit.valueIsDirectlyEditable = true
+        inventoryAmountEdit.minValue = 1
     }
-    itemView.nameEdit.isEditable = true
-    itemView.extraInfoEdit.isEditable = true
-    itemView.inventoryAmountEdit.valueIsDirectlyEditable = true
-    itemView.inventoryAmountEdit.minValue = 1
-
     val dialog = themedAlertDialogBuilder(context).
         setTitle(context.getString(R.string.add_item_button_name)).
+        setNeutralButton(android.R.string.cancel) { _, _ -> }.
+        setNegativeButton(context.getString(R.string.add_another_item_button_description)) { _, _ ->}.
         setPositiveButton(android.R.string.ok) { _, _ ->
-            callback(ShoppingListItem(name = itemView.nameEdit.text.toString(),
-                                      extraInfo = itemView.extraInfoEdit.text.toString(),
-                                      color = colorIndex,
-                                      amount = itemView.inventoryAmountEdit.currentValue))
-        }.setNegativeButton(android.R.string.cancel) { _, _ -> }.
-        setView(itemView).create()
-    // The dialog dimming is disabled here to prevent
-    // flickering if the color sheet dialog is opened on top.
-    dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-    dialog.setOnShowListener {
-        val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-        itemView.nameEdit.requestFocus()
-        imm?.showSoftInput(itemView.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+            callback(shoppingListItemFromItemView(itemView))
+        }.setView(itemView).create()
+    dialog.apply {
+        // The dialog dimming is disabled here to prevent
+        // flickering if the color sheet dialog is opened on top.
+        window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        setOnShowListener {
+            // Override the add another button's default on click listener
+            // to prevent it from closing the dialog when clicked
+            getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
+                callback(shoppingListItemFromItemView(itemView))
+                itemView.apply {
+                    nameEdit.text?.clear()
+                    extraInfoEdit.text?.clear()
+                    inventoryAmountEdit.apply { value = minValue }
+                    // We'll leave the color edit set to whichever color it was on previously,
+                    // in case the user wants to items with like colors consecutively.
+                    nameEdit.requestFocus()
+                    imm?.showSoftInput(nameEdit, InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
+            itemView.nameEdit.requestFocus()
+            imm?.showSoftInput(itemView.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+        }
+        dialog.show()
     }
-    dialog.show()
 }
 
 fun newInventoryItemDialog(
@@ -89,45 +95,58 @@ fun newInventoryItemDialog(
     fragmentManager: FragmentManager,
     callback: (InventoryItem) -> Unit
 ) {
+    val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
     val itemView = InventoryItemView(context)
-    itemView.background = null
-    itemView.expand()
-    itemView.editButton.visibility = View.GONE
-    // Setting collapseButton's visibility to GONE or INVISIBLE doesn't seem to work for some reason
-    itemView.collapseButton.alpha = 0f
-    itemView.collapseButton.setOnClickListener {}
-    itemView.addToShoppingListTriggerEdit.currentValue = itemView.addToShoppingListTriggerEdit.minValue
-    val colorEdit = itemView.colorEdit.drawable
-    var colorIndex = 0
-    colorEdit.setTint(ViewModelItem.Colors[colorIndex])
-    itemView.colorEdit.setOnClickListener {
-        colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
-            ObjectAnimator.ofArgb(colorEdit, "tint", ViewModelItem.Colors[colorIndex],
-                                  ViewModelItem.Colors[chosenColorIndex]).start()
-            colorIndex = chosenColorIndex
+    itemView.apply {
+        setSelectedState(selected = false, animate = false)
+        background = null
+        expand()
+        editButton.visibility = View.GONE
+        // Setting collapseButton's visibility to GONE or INVISIBLE doesn't seem to work for some reason
+        collapseButton.alpha = 0f
+        collapseButton.setOnClickListener {}
+        addToShoppingListTriggerEdit.value = itemView.addToShoppingListTriggerEdit.minValue
+        setColorIndex(0, animate = false)
+        colorEdit.setOnClickListener {
+            colorPickerDialog(fragmentManager, ViewModelItem.Colors[0]) { chosenColorIndex ->
+                itemView.colorIndex = chosenColorIndex
+            }
         }
     }
-
     val dialog = themedAlertDialogBuilder(context).
         setTitle(context.getString(R.string.add_item_button_name)).
+        setNeutralButton(android.R.string.cancel) { _, _ -> }.
+        setNegativeButton(R.string.add_another_item_button_description) { _, _ ->}.
         setPositiveButton(android.R.string.ok) { _, _ ->
-            callback(InventoryItem(name = itemView.nameEdit.text.toString(),
-                                   extraInfo = itemView.extraInfoEdit.text.toString(),
-                                   color = colorIndex,
-                                   amount = itemView.inventoryAmountEdit.currentValue,
-                                   addToShoppingList = itemView.addToShoppingListCheckBox.isChecked,
-                                   addToShoppingListTrigger = itemView.addToShoppingListTriggerEdit.currentValue))
-        }.setNegativeButton(android.R.string.cancel) { _, _ -> }.
-        setView(itemView).create()
-    // The dialog dimming is disabled here to prevent
-    // flickering if the color sheet dialog is opened on top.
-    dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-    dialog.setOnShowListener {
-        val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-        itemView.nameEdit.requestFocus()
-        imm?.showSoftInput(itemView.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+            callback(inventoryItemFromItemView(itemView))
+        }.setView(itemView).create()
+    dialog.apply {
+        // The dialog dimming is disabled here to prevent
+        // flickering if the color sheet dialog is opened on top.
+        window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+
+        setOnShowListener {
+            // Override the add another button's default on click listener
+            // to prevent it from closing the dialog when clicked
+            getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
+                callback(inventoryItemFromItemView(itemView))
+                itemView.apply {
+                    nameEdit.text?.clear()
+                    extraInfoEdit.text?.clear()
+                    inventoryAmountEdit.apply { value = minValue }
+                    addToShoppingListCheckBox.isChecked = false
+                    addToShoppingListTriggerEdit.apply { value = minValue }
+                    // We'll leave the color edit set to whichever color it was on previously,
+                    // in case the user wants to items with like colors consecutively.
+                    nameEdit.requestFocus()
+                    imm?.showSoftInput(nameEdit, InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
+            itemView.nameEdit.requestFocus()
+            imm?.showSoftInput(itemView.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+        }
+        show()
     }
-    dialog.show()
 }
 
 fun <Entity: ViewModelItem>exportAsDialog(

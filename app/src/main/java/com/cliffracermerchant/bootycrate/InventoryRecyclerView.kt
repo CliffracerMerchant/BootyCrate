@@ -102,8 +102,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                         colorEditBg.setTint(ViewModelItem.Colors[item.color])
                     }
                     if (changes.contains(InventoryItem.Field.Amount) &&
-                        holder.view.inventoryAmountEdit.currentValue != item.amount)
-                            holder.view.inventoryAmountEdit.currentValue = item.amount
+                        holder.view.inventoryAmountEdit.value != item.amount)
+                            holder.view.inventoryAmountEdit.value = item.amount
                     if (changes.contains(InventoryItem.Field.IsExpanded))
                         holder.view.setExpanded(item.isExpanded)
                     if (changes.contains(InventoryItem.Field.IsSelected))
@@ -112,8 +112,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
                             holder.view.addToShoppingListCheckBox.isChecked = item.addToShoppingList
                     if (changes.contains(InventoryItem.Field.AddToShoppingListTrigger) &&
-                        holder.view.addToShoppingListTriggerEdit.currentValue != item.addToShoppingListTrigger)
-                            holder.view.addToShoppingListTriggerEdit.currentValue = item.addToShoppingListTrigger
+                        holder.view.addToShoppingListTriggerEdit.value != item.addToShoppingListTrigger)
+                            holder.view.addToShoppingListTriggerEdit.value = item.addToShoppingListTrigger
                 }
                 else unhandledChanges.add(payload)
             }

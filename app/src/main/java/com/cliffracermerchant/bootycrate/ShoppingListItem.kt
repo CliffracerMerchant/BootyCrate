@@ -6,6 +6,7 @@ package com.cliffracermerchant.bootycrate
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 
 /** A Room entity that represents an shopping list item in the user's shopping list. */
 @Entity(tableName = "shopping_list_item")
@@ -40,3 +41,9 @@ class ShoppingListItem(
     enum class Field { Name, ExtraInfo, Color, Amount, LinkedTo,
                        IsExpanded, IsSelected, IsChecked }
 }
+
+fun shoppingListItemFromItemView(view: InventoryItemView) = ShoppingListItem(
+    name = view.nameEdit.text.toString(),
+    extraInfo = view.extraInfoEdit.text.toString(),
+    color = ViewModelItem.Colors.indexOf(view.colorEdit.imageTintList?.defaultColor ?: 0),
+    amount = view.inventoryAmountEdit.value)

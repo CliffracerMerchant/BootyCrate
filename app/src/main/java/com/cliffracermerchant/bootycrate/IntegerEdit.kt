@@ -57,25 +57,26 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
  *    buttons are enabled. When they are disabled */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
-    // currentValue = currentValue is not pointless due
-    // to currentValue's custom getter and setter
+    // this.value = this.value is not pointless due
+    // to value's custom getter and setter
     private var _minValue = 0
     var minValue get() = _minValue
-                 set(value) { _minValue = value; currentValue = currentValue }
+                 set(value) { _minValue = value; this.value = this.value }
     private var _maxValue = 0
     var maxValue get() = _maxValue
-                 set(value) { _maxValue = value; currentValue = currentValue }
+                 set(value) { _maxValue = value; this.value = this.value }
 
     var valueChangedNotificationTimeout: Int
     var stepSize: Int
 
-    private var _currentValue get() = try { valueEdit.text.toString().toInt() }
-                                      catch (e: Exception) { 0 }
-                              set(value) { valueEdit.setText(value.coerceIn(
-                                            minValue, maxValue).toString()) }
-    var currentValue get() = _currentValue
-                     set(value) { if (value != _currentValue) updateLiveDataWithDelay()
-                                  _currentValue = value }
+    private var _value get() = try { valueEdit.text.toString().toInt() }
+                               catch (e: Exception) { 0 }
+                       set(value) { val newValue = value.coerceIn(minValue, maxValue)
+                                    valueEdit.setText(newValue.toString()) }
+    var value get() = _value
+              set(value) { if (value != _value)
+                               updateLiveDataWithDelay()
+                           _value = value }
 
     var valueIsDirectlyEditable = false
         set(editable) { field = editable
@@ -88,7 +89,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         set(value) { field = value
                      isActivated = !value }
 
-    private val _liveData = MutableLiveData(currentValue)
+    private val _liveData = MutableLiveData(value)
     val liveData: LiveData<Int> get() = _liveData
 
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
@@ -97,7 +98,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     init {
         LayoutInflater.from(context).inflate(R.layout.integer_edit_layout, this, true)
         val a = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
-        _currentValue = a.getInt(R.styleable.IntegerEdit_initialValue, 0)
+        _value = a.getInt(R.styleable.IntegerEdit_initialValue, 0)
         _minValue = a.getInt(R.styleable.IntegerEdit_minValue, 0)
         _maxValue = a.getInt(R.styleable.IntegerEdit_maxValue, 99)
         valueChangedNotificationTimeout = a.getInt(
@@ -116,14 +117,14 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 clearFocus()
                 imm?.hideSoftInputFromWindow(windowToken, 0)
-                currentValue = currentValue // To enforce min/max value
+                value = value // To enforce min/max value
                 updateLiveDataWithDelay()
             }
             actionId == EditorInfo.IME_ACTION_DONE
         }
         valueEdit.setOnFocusChangeListener { _, focused ->
             if (!focused) {
-                currentValue = currentValue // To enforce min/max value
+                value = value // To enforce min/max value
                 updateLiveDataWithDelay()
             }
         }
@@ -134,7 +135,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     fun increment() = modifyValue(stepSize)
     fun decrement() = modifyValue(-stepSize)
 
-    private fun updateLiveData() { _liveData.value = currentValue }
+    private fun updateLiveData() { _liveData.value = value }
 
     private fun updateLiveDataWithDelay() {
         _handler.removeCallbacks(::updateLiveData)
@@ -142,12 +143,12 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     }
 
     private fun modifyValue(stepSize: Int) {
-        val oldValue = currentValue
-        currentValue += stepSize
-        if (currentValue != oldValue) updateLiveDataWithDelay()
+        val oldValue = value
+        value += stepSize
+        if (value != oldValue) updateLiveDataWithDelay()
     }
 
-    fun initCurrentValue(newValue: Int) { _currentValue = newValue }
+    fun initValue(newValue: Int) { _value = newValue }
 
     override fun onDraw(canvas: Canvas) {
         if (valueIsDirectlyEditable) valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG

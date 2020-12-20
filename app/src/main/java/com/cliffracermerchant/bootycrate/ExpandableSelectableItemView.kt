@@ -17,23 +17,29 @@ import androidx.core.graphics.ColorUtils
 
 /** A ConstraintLayout subclass that provides an interface for a selectable and expandable view.
  *
- *  ExpandableSelectableItemView is an abstract class that provides an inter-
- *  face for visual selection and deselection via the functions select(),
- *  deselect(), and setSelectedState. These functions will set the background
- *  color of the view to either the value of the attr colorSelected or null
- *  depending on the item's selection state. Likewise, the interface for item
- *  expansion consists of expand(), collapse(), and setExpanded. Because the
- *  class is abstract, subclasses will have to override setExpanded with an
- *  implementation that expands or collapses the appropriate child views.
+ *  ExpandableSelectableItemView will display the information of an instance of
+ *  ExpandableSelectableItem, while also providing an interface for expansion
+ *  and selection. The function update will update the view to reflect the data
+ *  contained in the instance of Entity passed to it. The default implementa-
+ *  tion takes care of initialization of the selected and expanded states, so
+ *  derived classes should always call the super implementation of update when
+ *  defining their own.
  *
- *  Update will update the view to reflect the data contained in the instance
- *  of Entity passed to it. The default implementation takes care of initial-
- *  ization of the selected and expanded states, so derived classes should
- *  always call the super implementation of update when defining their own.*/
-abstract class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(context: Context) :
+ *  The interface for selection and deselection consists of the functions
+ *  select, deselect, and setSelectedState. These functions will give the view
+ *  a surrounding gradient outline or hide the outline depending on the item's
+ *  selection state.
+ *
+ *  Likewise, the interface for item expansion consists of expand, collapse,
+ *  and setExpanded. While ExpandableSelectableItemView is not abstract, sub-
+ *  classes will want to override setExpanded with an implementation that
+ *  expands or collapses the appropriate child views. */
+open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(context: Context) :
     ConstraintLayout(ContextThemeWrapper(context, R.style.RecyclerViewItemStyle))
 {
-    var animationDuration = 200L
+    var expandAnimationDuration = 200L
+    val isExpanded get() = _isExpanded
+    private var _isExpanded = false
 
     init {
         setWillNotDraw(false)
@@ -62,7 +68,9 @@ abstract class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(co
 
     fun expand() = setExpanded(true)
     fun collapse() = setExpanded(false)
-    abstract fun setExpanded(expanded: Boolean = true)
+    open fun setExpanded(expanded: Boolean = true) {
+        _isExpanded = expanded
+    }
 
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
@@ -74,7 +82,7 @@ abstract class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(co
             ObjectAnimator.ofInt(gradientOutline, "alpha",
                                  if (selected) 0 else 255,
                                  if (selected) 255 else 0).apply {
-                duration = animationDuration
+                duration = expandAnimationDuration
                 doOnEnd { setLayerType(View.LAYER_TYPE_NONE, null) }
                 start()
             }

@@ -25,6 +25,6 @@
     <color name="colorTextLightSecondary">#808080</color>
     <color name="colorTextDark">#202020</color>
     <color name="colorTextDarkSecondary">#353535</color>
-    <color name="colorTextLink">#00BCD4</color>
+    <color name="colorTextLink">#58ECFF</color>
     <color name="checkoutButtonEnabledColor">#CB6C50</color>
 </resources>

@@ -36,14 +36,7 @@ class ToggleableTintedCheckbox(context: Context, attrs: AttributeSet) :
 
     private var _color = 0
     var color get() = _color
-        set(value) { val checkboxBackground = (drawable as LayerDrawable).getDrawable(0)
-                     ObjectAnimator.ofArgb(checkboxBackground, "tint", color, value).apply {
-                         if (value == 0)
-                             doOnEnd { checkboxBackground.setTintList(null) }
-                         start()
-                     }
-                     _color = value
-        }
+              set(value) { setColor(value) }
 
     init {
         setImageDrawable(ContextCompat.getDrawable(context, R.drawable.shopping_list_checkbox_icon))
@@ -52,9 +45,12 @@ class ToggleableTintedCheckbox(context: Context, attrs: AttributeSet) :
         setOnClickListener { if (isEditable) isChecked = !isChecked }
     }
 
-    fun setColorWithoutAnimation(newColor: Int) {
+    fun setColor(color: Int, animate: Boolean = false) {
         val checkboxBackground = (drawable as LayerDrawable).getDrawable(0)
-        checkboxBackground.setTint(newColor)
-        _color = newColor
+        if (!animate)
+            checkboxBackground.setTint(color)
+        else ObjectAnimator.ofArgb(checkboxBackground, "tint",
+                                   this.color, color).start()
+        _color = color
     }
 }
