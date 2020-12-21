@@ -99,4 +99,15 @@
         <!-- The side length of the square canvas the icon path is drawn on. -->
         <attr name="iconPathSize"   format="float" />
     </declare-styleable>
+
+    <declare-styleable name="TintableForegroundButton">
+        <!-- The drawable to use for the background. -->
+        <attr name="backgroundDrawable" format="reference" />
+        <!-- The drawable to use for the foreground. -->
+        <attr name="foregroundDrawable" format="reference" />
+        <!-- The tint to use for the background. -->
+        <attr name="backgroundTint" format="color" />
+        <!-- The tint to use for the foreground. -->
+        <attr name="foregroundTint" format="color" />
+    </declare-styleable>
 </resources>

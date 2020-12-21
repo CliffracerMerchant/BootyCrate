@@ -4,9 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
-import android.content.res.ColorStateList
+import android.animation.AnimatorInflater
 import android.os.Bundle
 import android.os.Handler
 import android.view.*
@@ -118,18 +116,11 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
     private fun enableCheckoutButton(enabling: Boolean) {
         if (checkoutButtonIsEnabled == enabling) return
-        val bgColorAnim = ValueAnimator.ofArgb(if (enabling) lightGrayColor else yellowColor,
-                                               if (enabling) yellowColor else lightGrayColor)
-        bgColorAnim.duration = 200
-        bgColorAnim.addUpdateListener {
-            activity.checkoutBtn.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int)
-        }
-        bgColorAnim.start()
-        val textColorAnim = ObjectAnimator.ofArgb(activity.checkoutBtn, "textColor",
-                                                  if (enabling) darkGrayColor else blackColor,
-                                                  if (enabling) blackColor else darkGrayColor)
-        textColorAnim.duration = 200
-        textColorAnim.start()
+        val resId = if (enabling) R.animator.checkout_button_disabled_to_enabled_animation
+                    else          R.animator.checkout_button_enabled_to_disabled_animation
+        val anim = AnimatorInflater.loadAnimator(context, resId)
+        anim.setTarget(activity.checkoutBtn)
+        anim.start()
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */

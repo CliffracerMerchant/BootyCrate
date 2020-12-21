@@ -6,21 +6,19 @@
 
 <resources>
     <color name="colorPrimary">#CB8C50</color>
-    <color name="colorPrimaryDimmed">#88CB8C50</color>
-    <color name="colorPrimaryDark">#653485</color>
+    <color name="colorPrimaryDimmed">#704040</color>
+    <!-- Because it is used as the status bar color and the action bar has a gradient
+         background that ends on the top end with colorAccent, colorPrimaryDark is
+         actually a darker version of colorAccent rather than colorPrimary -->
+    <color name="colorPrimaryDark">#CC803485</color>
     <color name="colorInBetweenPrimaryAccent1">#CB5050</color>
     <color name="colorInBetweenPrimaryAccent2">#CB508C</color>
     <color name="colorAccent">#8C50CB</color>
     <color name="colorAccentDark">#3D0E5C</color>
-    <color name="colorButtonDark">#FF7043</color>
-    <color name="colorButtonLight">#CCCCCC</color>
-    <color name="colorForeground">#000000</color>
     <color name="colorWindowBackgroundLight">#FFFFFF</color>
     <color name="colorWindowBackgroundDark">#252525</color>
     <color name="colorRecyclerViewItemLight">#DEDEDE</color>
     <color name="colorRecyclerViewItemDark">#353535</color>
-    <color name="colorActionBarLight">#CDCDCD</color>
-    <color name="colorActionBarDark">#404040</color>
     <color name="colorTextLight">#BBBBBB</color>
     <color name="colorTextLightSecondary">#808080</color>
     <color name="colorTextDark">#202020</color>

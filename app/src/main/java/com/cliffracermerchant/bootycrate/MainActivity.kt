@@ -27,7 +27,6 @@ import androidx.core.view.doOnNextLayout
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.button.MaterialButton
 import kotlinx.android.synthetic.main.activity_main.*
 
 /** The primary activity for BootyCrate
@@ -63,7 +62,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var fab: RoundGradientButton
-    lateinit var checkoutBtn: MaterialButton
+    lateinit var checkoutBtn: TintableForegroundButton
     lateinit var menu: Menu
 
     val topBgGradientBuilder = Gradient.Builder()
