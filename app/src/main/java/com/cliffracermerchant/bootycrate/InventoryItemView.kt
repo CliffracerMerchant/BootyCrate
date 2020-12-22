@@ -4,7 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ValueAnimator
+import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
@@ -14,11 +14,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
-import kotlinx.android.synthetic.main.inventory_item_details_layout.view.collapseButton
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
-import kotlinx.android.synthetic.main.inventory_item_layout.view.editButton
-import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
-import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
 
 /** A layout to display the contents of an inventory item.
  *
@@ -94,13 +90,15 @@ class InventoryItemView(context: Context) :
             colorEdit.imageTintList = ColorStateList.valueOf(color)
             return
         }
-        ValueAnimator.ofArgb(colorEdit.imageTintList?.defaultColor ?: 0, color).run {
+        //ValueAnimator.ofArgb(colorEdit.imageTintList?.defaultColor ?: 0, color).apply {
+        ObjectAnimator.ofArgb(colorEdit, "tint", color).apply {
+            duration = 200L
             addUpdateListener {
                 colorEdit.imageTintList = ColorStateList.valueOf(it.animatedValue as Int)
             }
-            duration = 200L
-            start()
-        }}
+        }.start()
+    }
+
     fun setColorIndex(colorIndex: Int, animate: Boolean = true) {
         val index = colorIndex.coerceIn(ViewModelItem.Colors.indices)
         setColor(ViewModelItem.Colors[index], animate)

@@ -222,9 +222,6 @@ class MainActivity : AppCompatActivity() {
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
         val views = arrayOf<View>(bottomAppBar, fab, checkoutBtn)
 
-        // The views' heights might be zero here if they haven't been laid out.
-        // In this case we wait until the first layout is finished before setting
-        // the translationY.
         if (!show && bottomAppBar.height == 0) {
             bottomAppBar.doOnNextLayout {
                 val translationAmount = screenHeight - cradleLayout.top
@@ -244,6 +241,7 @@ class MainActivity : AppCompatActivity() {
     private fun showCheckoutButton(showing: Boolean, animate: Boolean = true) {
         if (checkoutButtonIsVisible == showing) return
 
+        checkoutButtonIsVisible = showing
         checkoutBtn.visibility = if (showing) View.VISIBLE else View.GONE
 
         val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -251,27 +249,27 @@ class MainActivity : AppCompatActivity() {
         fab.measure(wrapContentSpec, wrapContentSpec)
         val cradleEndWidth = if (showing) cradleLayout.measuredWidth else fab.measuredWidth
 
-        if (animate) {
-            // Settings the checkout button's clip bounds prevents the
-            // right corners of the checkout button from sticking out
-            // underneath the FAB during the show / hide animation.
-            val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutBtn.background.intrinsicHeight)
-            ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth).run {
-                interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
-                duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
-                addUpdateListener {
-                    checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - fab.measuredWidth / 2
-                    checkoutBtn.clipBounds = checkoutBtnClipBounds
-                }
-                doOnEnd { checkoutBtn.clipBounds = null }
-                // The anim is stored here and started in the cradle layout's
-                // layoutTransition's transition listener's transitionStart override
-                // so that the animation is synced with the layout transition.
-                pendingBabAnim = this
-            }
+        if (!animate) {
+            bottomAppBar.cradleWidth = cradleEndWidth
+            return
         }
-        else bottomAppBar.cradleWidth = cradleEndWidth
-        checkoutButtonIsVisible = showing
+        // Settings the checkout button's clip bounds prevents the
+        // right corners of the checkout button from sticking out
+        // underneath the FAB during the show / hide animation.
+        val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutBtn.background.intrinsicHeight)
+        ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth).apply {
+            interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
+            duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
+            addUpdateListener {
+                checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - fab.measuredWidth / 2
+                checkoutBtn.clipBounds = checkoutBtnClipBounds
+            }
+            doOnEnd { checkoutBtn.clipBounds = null }
+            // The anim is stored here and started in the cradle layout's
+            // layoutTransition's transition listener's transitionStart override
+            // so that the animation is synced with the layout transition.
+            pendingBabAnim = this
+        }
     }
 
     private fun updateShoppingListBadge(newShoppingList: List<ShoppingListItem>) {
@@ -330,8 +328,7 @@ class MainActivity : AppCompatActivity() {
             val indicatorNewXPos = (newIcon.width - bottomAppBar.indicatorWidth) / 2 + newIcon.left
             ObjectAnimator.ofInt(bottomAppBar, "indicatorXPos", indicatorNewXPos).apply {
                 duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
-                start()
-            }
+            }.start()
             true
         }
     }

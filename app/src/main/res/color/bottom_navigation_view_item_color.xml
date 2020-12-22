@@ -6,6 +6,6 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_checked="true"
-          android:color="@color/colorTextDark" />
+          android:color="@color/colorInBetweenPrimaryAccent1" />
     <item android:color="#736060" />
 </selector>

@@ -93,7 +93,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : GradientToolbar(cont
         indicatorPaint.style = Paint.Style.STROKE
         borderPaint.style = Paint.Style.STROKE
         borderPaint.strokeWidth = borderThickness
-        indicatorPaint.strokeWidth = borderThickness
+        indicatorPaint.strokeWidth = 2.5f * borderThickness
     }
 
     fun setIndicatorGradient(gradient: Shader) { indicatorPaint.shader = gradient }

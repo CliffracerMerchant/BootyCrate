@@ -92,9 +92,13 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
  *  throughEnabled. */
 class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
         TextFieldEdit(context, attrs) {
+
     private var strikeThroughLength: Float? = null
     private var strikeThroughAnimationIsReversed = false
     private val normalTextColor = currentTextColor
+
+    // So the property can be named in an object animator
+    fun setStrikeThroughLength(length: Float) { strikeThroughLength = length }
 
     init {
         doAfterTextChanged { text ->
@@ -110,13 +114,14 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
             ObjectAnimator.ofArgb(this, "textColor", currentTextColor,
                                   if (strikeThroughEnabled) currentHintTextColor
                                   else                      normalTextColor).start()
-            val anim = ValueAnimator.ofFloat(0f, fullLength)
-            anim.addUpdateListener { strikeThroughLength = anim.animatedValue as Float
-                                     invalidate() }
-            if (!strikeThroughEnabled) anim.doOnEnd { strikeThroughLength = null }
-            anim.start()
+            ObjectAnimator.ofFloat(this, "strikeThroughLength", 0f, fullLength).apply {
+                addUpdateListener { invalidate() }
+                if (!strikeThroughEnabled)
+                    doOnEnd { strikeThroughLength = null }
+            }.start()
         } else {
-            strikeThroughLength = if (strikeThroughEnabled) fullLength else null
+            strikeThroughLength = if (strikeThroughEnabled) fullLength
+                                  else                      null
             setTextColor(if (strikeThroughEnabled) currentHintTextColor
                          else                      normalTextColor)
         }

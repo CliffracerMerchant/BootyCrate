@@ -53,7 +53,7 @@
         app:cradleBottomCornerRadius="34dp"
         app:cradleDepth="52dp"
         app:cradleContentsMargin="6dp"
-        app:indicatorColor="@color/colorTextDark"
+        app:indicatorColor="@color/colorInBetweenPrimaryAccent1"
         app:borderThickness="4dp" >
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
