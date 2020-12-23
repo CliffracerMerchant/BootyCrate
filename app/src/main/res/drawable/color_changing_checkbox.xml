@@ -5,6 +5,6 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/shopping_list_checkbox_background_icon" />
-    <item android:drawable="@drawable/shopping_list_checkbox_checkmark_icon" />
+    <item android:drawable="@drawable/color_changing_checkbox_background" />
+    <item android:drawable="@drawable/color_changing_checkbox_checkmark" />
 </layer-list>

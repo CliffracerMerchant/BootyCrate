@@ -4,10 +4,11 @@
    ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
    ~ or in the file LICENSE in the project's root directory. -->
 
-<animated-selector xmlns:android="http://schemas.android.com/apk/res/android" >
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" >
 
     <item android:id="@+id/checkbox_unchecked_checkmark"
-        android:state_activated="true"
+        app:state_edit_color="true"
         android:drawable="@drawable/animated_checkbox_unchecked_to_checked_checkmark" />
     <item android:id="@+id/checkbox_checked_checkmark"
         android:state_checked="true"

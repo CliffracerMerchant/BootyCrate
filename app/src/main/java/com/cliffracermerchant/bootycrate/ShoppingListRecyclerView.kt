@@ -6,8 +6,9 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View.OnClickListener
+import android.view.View.OnLongClickListener
 import android.view.ViewGroup
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.DiffUtil
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
@@ -39,22 +40,19 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     override val collectionNameResId = R.string.shopping_list_item_collection_name
     private lateinit var shoppingListViewModel: ShoppingListViewModel
     private lateinit var inventoryViewModel: InventoryViewModel
-    protected lateinit var fragmentManager: FragmentManager
     val checkedItems = CheckedItems()
 
     fun finishInit(
         owner: LifecycleOwner,
         shoppingListViewModel: ShoppingListViewModel,
-        inventoryViewModel: InventoryViewModel,
-        fragmentManager: FragmentManager
+        inventoryViewModel: InventoryViewModel
     ) {
         this.shoppingListViewModel = shoppingListViewModel
         this.inventoryViewModel = inventoryViewModel
-        this.fragmentManager = fragmentManager
         finishInit(owner, shoppingListViewModel)
     }
 
-    fun addNewItem() = newShoppingListItemDialog(context, fragmentManager) { newItem ->
+    fun addNewItem() = Dialog.newShoppingListItem(context) { newItem ->
         shoppingListViewModel.add(newItem)
     }
 
@@ -101,8 +99,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.extraInfoEdit.text.toString() != item.extraInfo)
                             holder.view.extraInfoEdit.setText(item.extraInfo)
                     if (changes.contains(ShoppingListItem.Field.Color) &&
-                        holder.view.checkBox.color != ViewModelItem.Colors[item.color])
-                            holder.view.checkBox.color = ViewModelItem.Colors[item.color]
+                        holder.view.colorIndex != item.color)
+                            holder.view.colorIndex = item.color
                     if (changes.contains(ShoppingListItem.Field.Amount) &&
                         holder.view.shoppingListAmountEdit.value != item.amount)
                             holder.view.shoppingListAmountEdit.value = item.amount
@@ -175,13 +173,11 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             view.extraInfoEdit.setOnLongClickListener(onLongClick)
             view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
 
-            view.checkBox.setOnClickListener {
-                if (item.isExpanded) colorPickerDialog(fragmentManager, item.color) { pickedColor ->
-                    shoppingListViewModel.updateColor(item.id, pickedColor)
-                }
-                else shoppingListViewModel.updateIsChecked(item.id, !view.checkBox.isChecked)
+            view.checkBox.onColorChangedListener = { color ->
+                shoppingListViewModel.updateColor(item.id, ViewModelItem.Colors.indexOf(color))
             }
             view.checkBox.onCheckedChangedListener = { checked ->
+                shoppingListViewModel.updateIsChecked(item.id, checked)
                 view.setStrikeThroughEnabled(checked)
             }
             view.editButton.setOnClickListener {

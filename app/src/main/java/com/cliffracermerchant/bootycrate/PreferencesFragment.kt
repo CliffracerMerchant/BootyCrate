@@ -76,12 +76,12 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         // Styles the repo link as a link
         Linkify.addLinks(text, Linkify.WEB_URLS)
 
-        val dialog = themedAlertDialogBuilder(context).
-                     setTitle(R.string.app_name).
-                     setMessage(text).show()
+        val dialog = Dialog.themedAlertBuilder(context).
+            setTitle(R.string.app_name).
+            setMessage(text).show()
         // Makes the link actually clickable
-        (dialog.findViewById(android.R.id.message) as? TextView)?.
-            movementMethod = LinkMovementMethod.getInstance()
+        val message = dialog.findViewById(android.R.id.message) as? TextView
+        message?.movementMethod = LinkMovementMethod.getInstance()
     }
 
     private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
@@ -91,28 +91,27 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
     private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val context = this.context ?: return@registerForActivityResult
-        if (uri != null) {
-            themedAlertDialogBuilder(context).
-                setMessage(R.string.import_database_question_message).
-                setNeutralButton(android.R.string.cancel) { _, _ -> }.
-                setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
-                    BootyCrateDatabase.mergeWithBackup(context, uri)
-                }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
-                    themedAlertDialogBuilder(context).
-                        setMessage(R.string.import_database_overwrite_confirmation_message).
-                        setNegativeButton(android.R.string.no) { _, _ -> }.
-                        setPositiveButton(android.R.string.yes) { _, _ ->
-                            BootyCrateDatabase.replaceWithBackup(context, uri)
-                            // The pref pref_viewmodels_need_cleared needs to be set to true so that
-                            // when the MainActivity is recreated, it will clear its ViewModelStore
-                            // and use the DAOs of the new database instead of the old one.
-                            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-                            val editor = prefs.edit()
-                            editor.putBoolean(context.getString(R.string.pref_viewmodels_need_cleared), true)
-                            editor.apply()
-                            activity?.recreate()
-                        }.show()
+        if (uri != null)
+            Dialog.themedAlertBuilder(context).
+            setMessage(R.string.import_database_question_message).
+            setNeutralButton(android.R.string.cancel) { _, _ -> }.
+            setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
+                BootyCrateDatabase.mergeWithBackup(context, uri)
+            }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
+                Dialog.themedAlertBuilder(context).
+                    setMessage(R.string.import_database_overwrite_confirmation_message).
+                    setNegativeButton(android.R.string.no) { _, _ -> }.
+                    setPositiveButton(android.R.string.yes) { _, _ ->
+                        BootyCrateDatabase.replaceWithBackup(context, uri)
+                        // The pref pref_viewmodels_need_cleared needs to be set to true so that
+                        // when the MainActivity is recreated, it will clear its ViewModelStore
+                        // and use the DAOs of the new database instead of the old one.
+                        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+                        val editor = prefs.edit()
+                        editor.putBoolean(context.getString(R.string.pref_viewmodels_need_cleared), true)
+                        editor.apply()
+                        activity?.recreate()
                 }.show()
-        }
+            }.show()
     }
 }

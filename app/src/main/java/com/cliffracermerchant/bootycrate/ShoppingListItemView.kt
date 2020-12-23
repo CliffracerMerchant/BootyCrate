@@ -62,6 +62,7 @@ class ShoppingListItemView(context: Context) :
         extraInfoEdit.setText(item.extraInfo)
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
         checkBox.setColor(ViewModelItem.Colors[colorIndex], animate = false)
+
         shoppingListAmountEdit.initValue(item.amount)
         linkedToIndicator.text = if (item.linkedItemId != null) linkedItemDescriptionString
                                  else                           unlinkedItemDescriptionString
@@ -81,7 +82,7 @@ class ShoppingListItemView(context: Context) :
         nameEdit.isEditable = expanded
         shoppingListAmountEdit.valueIsDirectlyEditable = expanded
         extraInfoEdit.isEditable = expanded
-        checkBox.isEditable = expanded
+        checkBox.inColorEditMode = expanded
         setAmountEditable(expanded)
         editButton.isActivated = expanded
         val newVisibility = if (expanded) View.VISIBLE

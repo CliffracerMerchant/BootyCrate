@@ -59,7 +59,6 @@ import androidx.room.PrimaryKey
     }
 
     companion object {
-
         val Colors = intArrayOf(
             -3452848,
             -3437488,

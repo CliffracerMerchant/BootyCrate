@@ -56,8 +56,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
         val mainActivity = requireActivity() as MainActivity
         recyclerView.finishInit(viewLifecycleOwner,
                                 mainActivity.shoppingListViewModel,
-                                mainActivity.inventoryViewModel,
-                                mainActivity.supportFragmentManager)
+                                mainActivity.inventoryViewModel)
         darkGrayColor = ContextCompat.getColor(mainActivity, R.color.colorTextLightSecondary)
         lightGrayColor = ContextCompat.getColor(mainActivity, android.R.color.darker_gray)
         blackColor = ContextCompat.getColor(mainActivity, android.R.color.black)

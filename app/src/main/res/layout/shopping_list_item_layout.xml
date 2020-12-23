@@ -8,7 +8,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout" >
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
+    android:background="@drawable/recycler_view_item_background">
 
     <Space
         android:id="@+id/spacer"
@@ -16,7 +17,7 @@
         android:layout_width="0dp"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.cliffracermerchant.bootycrate.ToggleableTintedCheckbox
+    <com.cliffracermerchant.bootycrate.CheckboxAndColorEdit
         android:id="@+id/checkBox"
         android:layout_width="42dp"
         android:layout_height="44dp"
@@ -28,7 +29,8 @@
         app:layout_constraintEnd_toStartOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/spacer"
-        app:layout_constraintBottom_toBottomOf="@id/spacer" />
+        app:layout_constraintBottom_toBottomOf="@id/spacer"
+        tools:tint="@color/colorInBetweenPrimaryAccent1"/>
 
     <com.cliffracermerchant.bootycrate.AnimatedStrikeThroughTextFieldEdit
         android:id="@+id/nameEdit"
@@ -62,7 +64,8 @@
         app:layout_constraintBottom_toBottomOf="@id/checkBox"
         app:layout_constraintEnd_toEndOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="@id/nameEdit"
-        app:layout_constraintTop_toBottomOf="@id/nameEdit" />
+        app:layout_constraintTop_toBottomOf="@id/nameEdit"
+        tools:text="Extra info" />
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
         android:id="@+id/shoppingListAmountEdit"
@@ -92,6 +95,6 @@
         app:layout_constraintTop_toTopOf="@id/shoppingListAmountEdit"
         app:layout_constraintBottom_toBottomOf="@id/shoppingListAmountEdit" />
 
-    <include layout="@layout/shopping_list_item_details_layout" />
+    <include layout="@layout/shopping_list_item_details_layout"/>
 
 </merge>

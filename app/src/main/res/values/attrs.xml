@@ -110,4 +110,8 @@
         <!-- The tint to use for the foreground. -->
         <attr name="foregroundTint" format="color" />
     </declare-styleable>
+
+    <declare-styleable name="ToggleableTintedCheckbox">
+        <attr name="state_edit_color" format="boolean" />
+    </declare-styleable>
 </resources>

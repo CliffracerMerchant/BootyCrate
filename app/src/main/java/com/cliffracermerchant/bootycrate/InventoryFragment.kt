@@ -32,8 +32,7 @@ class InventoryFragment(isActive: Boolean = false) :
         val mainActivity = requireActivity() as MainActivity
         recyclerView.finishInit(viewLifecycleOwner,
                                 mainActivity.inventoryViewModel,
-                                mainActivity.shoppingListViewModel,
-                                mainActivity.supportFragmentManager)
+                                mainActivity.shoppingListViewModel)
         super.onViewCreated(view, savedInstanceState)
     }
 

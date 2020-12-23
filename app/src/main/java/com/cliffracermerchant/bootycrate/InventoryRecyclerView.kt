@@ -9,15 +9,11 @@ import android.util.AttributeSet
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
-import kotlinx.android.synthetic.main.inventory_item_layout.view.editButton
-import kotlinx.android.synthetic.main.inventory_item_layout.view.extraInfoEdit
-import kotlinx.android.synthetic.main.inventory_item_layout.view.nameEdit
 import java.util.*
 
 /** A RecyclerView to display the data provided by an InventoryViewModel.
@@ -41,21 +37,18 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     override val collectionNameResId = R.string.inventory_item_collection_name
     private lateinit var inventoryViewModel: InventoryViewModel
     private lateinit var shoppingListViewModel: ShoppingListViewModel
-    private lateinit var fragmentManager: FragmentManager
 
     fun finishInit(
         owner: LifecycleOwner,
         inventoryViewModel: InventoryViewModel,
-        shoppingListViewModel: ShoppingListViewModel,
-        fragmentManager: FragmentManager
+        shoppingListViewModel: ShoppingListViewModel
     ) {
         this.inventoryViewModel = inventoryViewModel
         this.shoppingListViewModel = shoppingListViewModel
-        this.fragmentManager = fragmentManager
         finishInit(owner, inventoryViewModel)
     }
 
-    fun addNewItem() = newInventoryItemDialog(context, fragmentManager) { newItem ->
+    fun addNewItem() = Dialog.newInventoryItem(context) { newItem ->
         inventoryViewModel.add(newItem)
     }
 
@@ -153,9 +146,9 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             view.inventoryAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
 
             view.colorEdit.setOnClickListener {
-                colorPickerDialog(fragmentManager, item.color) { chosenColor ->
-                    inventoryViewModel.updateColor(item.id, chosenColor) }
-            }
+                Dialog.colorPicker(item.color) { chosenColor ->
+                    inventoryViewModel.updateColor(item.id, chosenColor)
+            }}
             view.editButton.setOnClickListener {
                 if (!view.isExpanded) setExpandedItem(adapterPosition)
             }

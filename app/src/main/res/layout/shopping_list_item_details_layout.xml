@@ -17,6 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
+        tools:visibility="visible"
         app:constraint_referenced_ids="divider, linkedToIndicator, collapseButton" />
 
     <View
@@ -38,6 +39,7 @@
         android:layout_marginEnd="8dp"
         android:gravity="center_vertical"
         android:textSize="14sp"
+        tools:text="Linked / Not Linked"
         app:layout_constraintTop_toBottomOf="@id/divider"
         app:layout_constraintStart_toStartOf="@id/nameEdit" />
 
