@@ -13,7 +13,6 @@ import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.TypedValue
 import androidx.appcompat.widget.AppCompatImageView
-import androidx.core.content.ContextCompat
 import androidx.core.view.doOnNextLayout
 
 /** A round button that draws its icon, border, and background with a gradient.
@@ -27,6 +26,7 @@ class RoundGradientButton(context: Context, attrs: AttributeSet) :
     AppCompatImageView(context, attrs)
 {
     private val iconPathData: String
+    private val iconSize: Float
     private val iconPathSize: Float
     private val borderPath = Path()
     private val borderPaint = Paint()
@@ -34,13 +34,13 @@ class RoundGradientButton(context: Context, attrs: AttributeSet) :
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.RoundGradientButton)
         iconPathData = a.getString(R.styleable.RoundGradientButton_iconPathData) ?: ""
+        iconSize = a.getDimensionPixelSize(R.styleable.RoundGradientButton_iconSize, 0).toFloat()
         iconPathSize = a.getFloat(R.styleable.RoundGradientButton_iconPathSize, 0f)
         a.recycle()
 
         borderPaint.style = Paint.Style.STROKE
         borderPaint.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4f,
                                                             context.resources.displayMetrics)
-        borderPaint.color = ContextCompat.getColor(context, R.color.colorAccent)
 
         doOnNextLayout {
             val rect = Rect()
@@ -68,7 +68,7 @@ class RoundGradientButton(context: Context, attrs: AttributeSet) :
     private fun setGradientsPrivate(foregroundGradient: Gradient.Builder,
                                     backgroundGradient: Gradient.Builder) {
         setImageDrawable(GradientVectorDrawable.forParent(
-            1f, iconPathSize, iconPathData, foregroundGradient, this))
+            iconSize, iconPathSize, iconPathData, foregroundGradient, this))
         // bgPathData describes a round path with a radius equal to the button's width
         val bgPathData = "M 1,0 A 1 1 0 1 1 1, 2 A 1 1 0 1 1 1, 0"
         val bgPathSize = 2f

@@ -113,6 +113,7 @@
             app:maxImageSize="56dp"
             android:padding="14dp"
             app:iconPathSize="24"
+            app:iconSize="24dp"
             app:borderThickness="4dp"
             app:iconPathData="@string/add_icon_path_data"
             android:elevation="3dp"

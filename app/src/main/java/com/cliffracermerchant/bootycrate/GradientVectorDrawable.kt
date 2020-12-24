@@ -9,7 +9,6 @@ import android.graphics.*
 import android.graphics.drawable.Drawable
 import android.view.View
 import androidx.core.graphics.PathParser
-import androidx.core.graphics.withSave
 
 /** A vector drawable that strokes a path supplied in the constructor with a gradient background.
  *
@@ -34,21 +33,20 @@ import androidx.core.graphics.withSave
 class GradientVectorDrawable private constructor(
     private val width: Float,
     private val height: Float,
-    private val pathWidth: Float,
-    private val pathHeight: Float,
+    pathWidth: Float,
+    pathHeight: Float,
     pathData: String,
     gradientBuilder: Gradient.Builder,
     parent: View? = null,
     posX: Float = 0f,
     posY: Float = 0f
 ) : Drawable() {
-
-    var pathData: String = ""
-        set(value) { field = value; path = PathParser.createPathFromPathData(value) }
     private val paint = Paint()
     private var path = Path()
 
     companion object {
+        val matrix = Matrix()
+
         fun forParent(
             width: Float, height: Float,
             pathWidth: Float, pathHeight: Float,
@@ -88,23 +86,22 @@ class GradientVectorDrawable private constructor(
 
     init {
         paint.style = Paint.Style.FILL
-        this.pathData = pathData
-
         paint.shader =
             if (parent != null) Gradient.radialWithParentOffset(gradientBuilder, parent)
             else                Gradient.radialWithOffset(gradientBuilder, posX, posY)
+        setPathData(pathData, pathWidth, pathHeight)
     }
 
     fun setGradient(gradient: Shader) { paint.shader = gradient }
 
-    override fun draw(canvas: Canvas) {
-        val xScale = width / pathWidth
-        val yScale = height / pathHeight
-        canvas.withSave {
-            scale(xScale, yScale)
-            drawPath(path, paint)
-        }
+    fun setPathData(pathData: String, pathWidth: Float, pathHeight: Float) {
+        path = PathParser.createPathFromPathData(pathData)
+        matrix.reset()
+        matrix.setScale(width / pathWidth, height / pathHeight)
+        path.transform(matrix)
     }
+
+    override fun draw(canvas: Canvas) = canvas.drawPath(path, paint)
 
     override fun getIntrinsicWidth(): Int = width.toInt()
     override fun getIntrinsicHeight(): Int = height.toInt()
