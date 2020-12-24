@@ -111,7 +111,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
                 setAnchorView(snackBarAnchor ?: this).show()
             return
         }
-        Dialog.themedAlertBuilder(context).
+        Dialog.themedAlertBuilder().
             setMessage(context.getString(R.string.delete_all_items_confirmation_message, collectionName)).
             setPositiveButton(android.R.string.yes) { _, _ ->
                 viewModel.deleteAll()

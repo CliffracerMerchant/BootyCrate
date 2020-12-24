@@ -48,7 +48,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         finishInit(owner, inventoryViewModel)
     }
 
-    fun addNewItem() = Dialog.newInventoryItem(context) { newItem ->
+    fun addNewItem() = Dialog.newInventoryItem { newItem ->
         inventoryViewModel.add(newItem)
     }
 

@@ -76,7 +76,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         // Styles the repo link as a link
         Linkify.addLinks(text, Linkify.WEB_URLS)
 
-        val dialog = Dialog.themedAlertBuilder(context).
+        val dialog = Dialog.themedAlertBuilder().
             setTitle(R.string.app_name).
             setMessage(text).show()
         // Makes the link actually clickable
@@ -91,14 +91,13 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
     private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val context = this.context ?: return@registerForActivityResult
-        if (uri != null)
-            Dialog.themedAlertBuilder(context).
+        if (uri != null) Dialog.themedAlertBuilder().
             setMessage(R.string.import_database_question_message).
             setNeutralButton(android.R.string.cancel) { _, _ -> }.
             setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
                 BootyCrateDatabase.mergeWithBackup(context, uri)
             }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
-                Dialog.themedAlertBuilder(context).
+                Dialog.themedAlertBuilder().
                     setMessage(R.string.import_database_overwrite_confirmation_message).
                     setNegativeButton(android.R.string.no) { _, _ -> }.
                     setPositiveButton(android.R.string.yes) { _, _ ->

@@ -52,7 +52,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         finishInit(owner, shoppingListViewModel)
     }
 
-    fun addNewItem() = Dialog.newShoppingListItem(context) { newItem ->
+    fun addNewItem() = Dialog.newShoppingListItem { newItem ->
         shoppingListViewModel.add(newItem)
     }
 
