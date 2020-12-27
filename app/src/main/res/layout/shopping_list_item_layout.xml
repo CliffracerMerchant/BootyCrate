@@ -73,7 +73,6 @@
         android:layout_height="wrap_content"
         android:contentDescription="@string/item_amount_description"
         app:isEditable="false"
-        app:buttonsAreEnabled="false"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
         app:layout_constraintEnd_toStartOf="@+id/editButton"
         app:layout_constraintTop_toTopOf="@id/checkBox"

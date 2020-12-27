@@ -89,9 +89,14 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
  *  ExpandableSelectableItemViewModel overrides ViewModel's dao property with
  *  an instance of ExpandableSelectableItemDao, and provides methods for acces-
  *  sing ExpandableSelectableItemDao's methods. */
-abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableItem>(app: Application) :
-        ViewModel<Entity>(app) {
+abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableItem>(
+    app: Application
+) : ViewModel<Entity>(app) {
+
     abstract override val dao : ExpandableSelectableItemDao<Entity>
+    /* Selection size is initialized lazily to prevent getSelectionSize from
+     * being accessed during initialization of ExpandableSelectableItemViewModel,
+     * before it is overridden in the descendant class. */
     val selectionSize: LiveData<Int> by lazy { dao.getSelectionSize() }
 
     fun resetExpandedItemAndSelection() = viewModelScope.launch {

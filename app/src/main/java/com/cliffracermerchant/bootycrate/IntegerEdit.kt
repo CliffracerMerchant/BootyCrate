@@ -52,9 +52,7 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
  *    member. When this is set, the scale of the decrease and increase buttons
  *    will be adjusted to match the new text size.
  *  - valueIsDirectlyEditable: Boolean = false: Whether the user can input the
- *    value directly instead of through the decrease / increase buttons.
- *  - buttonsAreEnabled: Boolean = false: Whether the increase / decrease
- *    buttons are enabled. When they are disabled */
+ *    value directly instead of through the decrease / increase buttons. */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
     // this.value = this.value is not pointless due
@@ -85,10 +83,6 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
                             valueEdit.clearFocus()
                         invalidate() }
 
-    var buttonsAreEnabled = true
-        set(value) { field = value
-                     isActivated = !value }
-
     private val _liveData = MutableLiveData(value)
     val liveData: LiveData<Int> get() = _liveData
 
@@ -106,9 +100,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         stepSize = a.getInt(R.styleable.IntegerEdit_stepSize, 1)
         val textSize = a.getDimension(R.styleable.IntegerEdit_textSize, 1f)
         valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
-
         valueIsDirectlyEditable = a.getBoolean(R.styleable.IntegerEdit_valueIsDirectlyEditable, false)
-        buttonsAreEnabled = a.getBoolean(R.styleable.IntegerEdit_buttonsAreEnabled, true)
         a.recycle()
 
         decreaseButton.setOnClickListener { decrement() }
@@ -151,8 +143,10 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     fun initValue(newValue: Int) { _value = newValue }
 
     override fun onDraw(canvas: Canvas) {
-        if (valueIsDirectlyEditable) valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-        else            valueEdit.paintFlags = valueEdit.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
+        if (valueIsDirectlyEditable)
+            valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+        else
+            valueEdit.paintFlags = valueEdit.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
         super.onDraw(canvas)
     }
 }

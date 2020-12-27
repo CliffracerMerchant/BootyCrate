@@ -83,35 +83,27 @@ class ShoppingListItemView(context: Context) :
         shoppingListAmountEdit.valueIsDirectlyEditable = expanded
         extraInfoEdit.isEditable = expanded
         checkBox.inColorEditMode = expanded
-        setAmountEditable(expanded)
+        shoppingListAmountEdit.valueIsDirectlyEditable = expanded
         editButton.isActivated = expanded
         val newVisibility = if (expanded) View.VISIBLE
                             else          View.GONE
         shoppingListItemDetailsGroup.visibility = newVisibility
         if (extraInfoEdit.text.isNullOrBlank())
             extraInfoEdit.visibility = newVisibility
+
+        // For some reason, expanding an shopping list item whose extra info is not
+        // blank causes a flicker. It appears that changing the layout params of a view
+        // and requesting a layout for it stops this flicker from occurring. Given that
+        // the bug seems to originate from somewhere deep in Android code, having this
+        // useless layout parameter changing and requested layout is an easy and per-
+        // formance negligible way to prevent the bug.
+        spacer.layoutParams.width = if (expanded) 1 else 0
+        spacer.requestLayout()
     }
 
     fun setStrikeThroughEnabled(checked: Boolean, animate: Boolean = true) {
         nameEdit.setStrikeThroughEnabled(checked, animate)
         extraInfoEdit.setStrikeThroughEnabled(checked, animate)
-    }
-
-    private fun setAmountEditable(makingEditable: Boolean = true) {
-        shoppingListAmountEdit.buttonsAreEnabled = makingEditable
-        shoppingListAmountEdit.valueIsDirectlyEditable = makingEditable
-
-        if (makingEditable) decreaseButton.setOnClickListener { shoppingListAmountEdit.decrement() }
-        else                decreaseButton.setOnClickListener(null)
-        if (makingEditable) increaseButton.setOnClickListener { shoppingListAmountEdit.increment() }
-        else                increaseButton.setOnClickListener(null)
-        val increaseButtonFullWidth = increaseButton.drawable.intrinsicWidth +
-                                      increaseButton.paddingStart + increaseButton.paddingEnd
-        val increaseButtonWidth = if (makingEditable) increaseButtonFullWidth
-                                  else               (increaseButtonFullWidth * 1f / 3f).toInt()
-
-        increaseButton.layoutParams.width = increaseButtonWidth
-        increaseButton.requestLayout()
     }
 
     private fun initSharedResources(context: Context) {

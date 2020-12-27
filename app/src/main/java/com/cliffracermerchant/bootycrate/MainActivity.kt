@@ -35,11 +35,11 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  accomplished in the ShoppingListFragment, InventoryFragment, or the Preferences-
  *  Fragment. Instances of ShoppingListFragment and InventoryFragment are created
  *  on app startup, and hidden/shown by the fragment manager as appropriate. The
- *  active fragment can be determined via the boolean members showingInventory and
- *  showingPreferences as follows:
- *  Active fragment = if (showingPreferences)    PreferencesFragment
- *                    else if (showingInventory) InventoryFragment
- *                    else                       ShoppingListFragment
+ *  currently shown fragment can be determined via the boolean members showing-
+ *  Inventory and showingPreferences as follows:
+ *  Shown fragment = if (showingPreferences)    PreferencesFragment
+ *                   else if (showingInventory) InventoryFragment
+ *                   else                       ShoppingListFragment
  *  If showingPreferences is true, the value of showingInventory determines the
  *  fragment "under" the preferences (i.e. the one that will be returned to on a
  *  back button press or a navigate up). */

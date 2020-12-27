@@ -34,11 +34,13 @@ object Dialog {
         fragmentManager = activity.supportFragmentManager
     }
 
-    /** Displays a color picker dialog to choose from one of ViewModelItem's twelve
-     *  colors. Note that the initial color parameter and the return value are the
+    /** Display a color picker dialog to choose from one of ViewModelItem's twelve colors.
+     *
+     *  Note that the initial color parameter and the return value are the
      *  indices of the chosen color, not the Android color value for the color. */
     fun colorPicker(initialColorIndex: Int = 0, callback: (Int) -> Unit) {
-        val initialColor = ViewModelItem.Colors[initialColorIndex.coerceIn(ViewModelItem.Colors.indices)]
+        val index = initialColorIndex.coerceIn(ViewModelItem.Colors.indices)
+        val initialColor = ViewModelItem.Colors[index]
         val colorPicker = ColorSheet().colorPicker(ViewModelItem.Colors, initialColor,
                                                    noColorOption = false) { color ->
             val colorIndex = ViewModelItem.Colors.indexOf(color)
@@ -47,7 +49,7 @@ object Dialog {
         colorPicker.show(fragmentManager)
     }
 
-    /** Displays a dialog to export the list of items */
+    /** Display a dialog to provide options to export the list of items */
     fun <Entity: ViewModelItem>exportAs(items: List<Entity>, snackBarAnchor: View) {
         themedAlertBuilder().
             setCustomTitle(themedAlertTitle(R.string.export_dialog_title)).
@@ -80,7 +82,7 @@ object Dialog {
             }.show()
     }
 
-    /** Returns an AlertDialog.Builder that uses the current theme's alertDialogTheme. */
+    /** Return an AlertDialog.Builder that uses the current theme's alertDialogTheme. */
     fun themedAlertBuilder(): AlertDialog.Builder {
         // AlertDialog seems to ignore the theme's alertDialogTheme value, making it
         // necessary to pass it's value in manually to the AlertDialog.builder constructor.
@@ -89,7 +91,7 @@ object Dialog {
         return AlertDialog.Builder(context, typedValue.data)
     }
 
-    /** Returns a themed TextView for use as a custom title for an AlertDialog.
+    /** Return a themed TextView for use as a custom title in an AlertDialog.
      *
      *  Changing the style of AlertDialog's default title seems to not work when
      *  done through styles (e.g. with the android:windowTitleStyle attribute).
@@ -115,11 +117,11 @@ object Dialog {
     }
     fun themedAlertTitle(titleResId: Int) = themedAlertTitle(context.getString(titleResId))
 
-    /** Opens a dialog to create a new shopping list item, and invokes @param callback on the new item. */
+    /** Open a dialog to create a new shopping list item, and invoke @param callback on the new item. */
     fun newShoppingListItem(callback: (ShoppingListItem) -> Unit) =
         newItem<ShoppingListItem>(callback, isShoppingListItem = true)
 
-    /** Opens a dialog to create a new inventory item, and invokes @param callback on the new item. */
+    /** Open a dialog to create a new inventory item, and invoke @param callback on the new item. */
     fun newInventoryItem(callback: (InventoryItem) -> Unit) =
         newItem<InventoryItem>(callback, isShoppingListItem = false)
 
@@ -151,7 +153,7 @@ object Dialog {
                         extraInfoEdit.text?.clear()
                         inventoryAmountEdit.apply { value = minValue }
                         // We'll leave the color edit set to whichever color it was on previously,
-                        // in case the user wants to items with like colors consecutively.
+                        // in case the user wants to add items with like colors consecutively.
                         nameEdit.requestFocus()
                         imm?.showSoftInput(nameEdit, InputMethodManager.SHOW_IMPLICIT)
                     }

@@ -61,8 +61,6 @@
         <attr name="textSize"     format="dimension" />
         <!-- Whether the user is able to directly input the value -->
         <attr name="valueIsDirectlyEditable" format="boolean" />
-        <!-- Whether the decrease / increase buttons are enabled -->
-        <attr name="buttonsAreEnabled" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="GradientToolbar">
