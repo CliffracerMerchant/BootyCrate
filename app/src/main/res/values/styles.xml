@@ -4,7 +4,6 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-
     <style name="LightTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="isDarkTheme">false</item>
         <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
@@ -13,21 +12,18 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="imageButtonStyle">@style/LightThemeImageButton</item>
-        <item name="android:textViewStyle">@style/LightThemeTextAppearance</item>
-        <item name="editTextStyle">@style/LightThemeEditTextStyle</item>
-        <item name="checkboxStyle">@style/LightThemeCheckBoxStyle</item>
+        <item name="imageButtonStyle">@style/ImageButton</item>
+        <item name="android:textViewStyle">@style/TextAppearance</item>
+        <item name="editTextStyle">@style/TextAppearance</item>
+        <item name="checkboxStyle">@style/CheckBox</item>
         <item name="popupMenuBackground">@color/colorWindowBackgroundLight</item>
-        <item name="windowActionModeOverlay">true</item>
-        <item name="actionModeStyle">@style/ActionModeStyle</item>
-        <item name="android:alertDialogTheme">@style/LightThemeAlertDialog</item>
-        <item name="android:homeAsUpIndicator">@drawable/ic_arrow_back_black_24dp</item>
-        <item name="actionOverflowButtonStyle">@style/OverflowButtonStyle</item>
-        <item name="android:textColorPrimary">@color/colorTextDark</item>
+        <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
+        <item name="android:textColorPrimary">@android:color/black</item>
+        <item name="android:textColorSecondary">@color/colorTextDarkSecondary</item>
+        <item name="android:textColorHint">@color/colorTextDarkSecondary</item>
         <item name="snackbarStyle">@style/SnackbarStyle</item>
-        <item name="snackbarTextViewStyle">@style/LightThemeTextAppearance</item>
+        <item name="snackbarTextViewStyle">?android:attr/textViewStyle</item>
         <item name="snackbarButtonStyle">@style/SnackbarActionTextAppearance</item>
-        <item name="android:windowTitleBackgroundStyle">@color/colorAccent</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">
@@ -35,83 +31,48 @@
         <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
         <item name="recyclerViewItemColor">@color/colorRecyclerViewItemDark</item>
         <item name="colorSelected">@android:color/holo_blue_dark</item>
-        <item name="imageButtonStyle">@style/DarkThemeImageButton</item>
-        <item name="android:textViewStyle">@style/DarkThemeTextAppearance</item>
-        <item name="editTextStyle">@style/DarkThemeEditTextStyle</item>
-        <item name="checkboxStyle">@style/DarkThemeCheckBoxStyle</item>
         <item name="popupMenuBackground">@color/colorWindowBackgroundDark</item>
-        <item name="android:alertDialogTheme">@style/DarkThemeAlertDialog</item>
-        <item name="android:editTextColor">@android:color/black</item>
+        <item name="materialAlertDialogTheme">@style/DarkAlertDialog</item>
         <item name="android:textColorPrimary">@color/colorTextLight</item>
-        <item name="snackbarTextViewStyle">@style/DarkThemeTextAppearance</item>
-    </style>
-
-    <style name="OverflowButtonStyle" parent="Widget.AppCompat.ActionButton.Overflow">
-        <item name="android:tint">@color/colorPrimary</item>
-    </style>
-
-    <style name="ActionModeStyle" parent="Widget.AppCompat.ActionMode">
-        <item name="android:textColor">@color/colorPrimary</item>
-        <item name="android:textColorPrimary">@color/colorPrimary</item>
-    </style>
-
-    <style name="ActionBarTextAppearance" parent="android:TextAppearance">
-        <item name="android:fontFamily">@font/comfortaa</item>
-        <item name="android:textColor">@color/colorPrimary</item>
-        <item name="android:textSize">20sp</item>
-    </style>
-
-    <style name="LightThemeTextAppearance" parent="TextAppearance.AppCompat">
-        <item name="android:textColor">@color/colorTextDark</item>
-    </style>
-
-    <style name="DarkThemeTextAppearance" parent="TextAppearance.AppCompat">
-        <item name="android:textColor">@color/colorTextLight</item>
-    </style>
-
-    <style name="LightThemeEditTextStyle" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
-        <item name="android:textColor">@color/colorTextDark</item>
-        <item name="android:textColorHint">@color/colorTextDarkSecondary</item>
-    </style>
-
-    <style name="DarkThemeEditTextStyle" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
-        <item name="android:textColor">@color/colorTextLight</item>
+        <item name="android:textColorSecondary">@color/colorTextLightSecondary</item>
         <item name="android:textColorHint">@color/colorTextLightSecondary</item>
     </style>
 
-    <style name="LightThemeCheckBoxStyle" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
+    <style name="TextAppearance" parent="TextAppearance.AppCompat">
+        <item name="android:textColorPrimary">?android:attr/textColorPrimary</item>
+        <item name="android:textColorSecondary">?android:attr/textColorSecondary</item>
+        <item name="android:textColorHint">?android:attr/textColorHint</item>
+    </style>
+
+    <style name="CheckBox" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="android:minHeight">0dp</item>
+    </style>
+
+    <style name="ImageButton" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">?android:attr/textColorPrimary</item>
+        <item name="tint">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="LightAlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="shapeAppearanceOverlay">@style/DialogCorners</item>
+        <item name="colorPrimary">@color/colorAccent</item>
+        <item name="android:background">@color/colorWindowBackgroundLight</item>
         <item name="android:textColor">@color/colorTextDark</item>
-        <item name="android:minHeight">0dp</item>
     </style>
 
-    <style name="DarkThemeCheckBoxStyle" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
+    <style name="DarkAlertDialog" parent="LightAlertDialog">
+        <item name="android:background">@color/colorWindowBackgroundDark</item>
         <item name="android:textColor">@color/colorTextLight</item>
-        <item name="android:minHeight">0dp</item>
     </style>
 
-    <style name="LightThemeImageButton" parent="Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@color/colorTextDark</item>
-        <item name="tint">@color/colorTextDark</item>
-    </style>
-
-    <style name="DarkThemeImageButton" parent="Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@color/colorTextLight</item>
-        <item name="tint">@color/colorTextLight</item>
-    </style>
-
-    <style name="LightThemeAlertDialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
-        <item name="android:windowBackground">@color/colorWindowBackgroundLight</item>
-        <item name="android:textColorPrimary">@color/colorTextDark</item>
-    </style>
-
-    <style name="DarkThemeAlertDialog" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
-        <item name="android:windowBackground">@color/colorWindowBackgroundDark</item>
-        <item name="android:textColorPrimary">@color/colorTextLight</item>
+    <style name="DialogCorners">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">5dp</item>
     </style>
 
     <style name="RecyclerViewItemStyle">
         <item name="android:background">@drawable/recycler_view_item_background</item>
-        <item name="android:backgroundTint">?attr/recyclerViewItemColor</item>
         <item name="android:paddingStart">4dp</item>
         <item name="android:paddingEnd">4dp</item>
         <item name="android:paddingTop">4dp</item>

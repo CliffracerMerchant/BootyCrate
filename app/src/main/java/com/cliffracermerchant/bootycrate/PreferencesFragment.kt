@@ -50,12 +50,9 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                 // the theme to ensure that all fragments use the new theme.
                 activity?.recreate()
             }
-            getString(R.string.pref_export_database) ->
-                getExportPath.launch(getString(R.string.exported_database_default_name))
-            getString(R.string.pref_import_database) ->
-                getImportPath.launch(arrayOf("*/*"))
-            getString(R.string.pref_about_app) ->
-                showAboutAppDialog()
+            getString(R.string.pref_export_database) -> getExportPath.launch(getString(R.string.exported_database_default_name))
+            getString(R.string.pref_import_database) -> getImportPath.launch(arrayOf("*/*"))
+            getString(R.string.pref_about_app) ->       Dialog.aboutApp()
             getString(R.string.pref_open_source_libraries_used) -> {
                 val context = activity ?: return false
                 startActivity(Intent(context, OssLicensesMenuActivity::class.java))
@@ -68,20 +65,6 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         menu?.setGroupVisible(R.id.all_action_bar_items_group, hidden)
         // See R.menu.action_bar_menu source for an explanation of "other_action_bar_menu_items"
         menu?.setGroupVisible(R.id.other_action_bar_menu_items, hidden)
-    }
-
-    private fun showAboutAppDialog() {
-        val context = this.context ?: return
-        val text = SpannableString(context.getString(R.string.about_app_text))
-        // Styles the repo link as a link
-        Linkify.addLinks(text, Linkify.WEB_URLS)
-
-        val dialog = Dialog.themedAlertBuilder().
-            setTitle(R.string.app_name).
-            setMessage(text).show()
-        // Makes the link actually clickable
-        val message = dialog.findViewById(android.R.id.message) as? TextView
-        message?.movementMethod = LinkMovementMethod.getInstance()
     }
 
     private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->

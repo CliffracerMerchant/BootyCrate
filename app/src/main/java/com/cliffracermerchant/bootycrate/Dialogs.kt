@@ -16,10 +16,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.setPadding
 import androidx.fragment.app.FragmentManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dev.sasikanth.colorsheet.ColorSheet
 import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
 import kotlinx.android.synthetic.main.inventory_item_layout.view.*
+import kotlinx.android.synthetic.main.share_dialog.*
 
 /** An object that contains functions to open dialogs.
  *
@@ -49,46 +51,71 @@ object Dialog {
         colorPicker.show(fragmentManager)
     }
 
-    /** Display a dialog to provide options to export the list of items */
-    fun <Entity: ViewModelItem>exportAs(items: List<Entity>, snackBarAnchor: View) {
-        themedAlertBuilder().
-            setCustomTitle(themedAlertTitle(R.string.export_dialog_title)).
-            setItems(R.array.export_options) { _, chosenOption ->
-                val intent = Intent(Intent.ACTION_SENDTO)
-                intent.type = "HTTP.PLAIN_TEXT_TYPE"
-
-                var message = ""
-                for (item in items)
-                    message += item.toString() + "\n"
-
-                when (chosenOption) {
-                    0 /* Text message */-> {
-                        intent.putExtra("sms_body", message)
-                        intent.data = Uri.parse("smsto:")
-                    } 1 /* Email */-> {
-                        intent.data = Uri.parse("mailto:")
-                        val subject = context.getString(R.string.shopping_list_navigation_item_name)
-                        intent.putExtra(Intent.EXTRA_SUBJECT, subject)
-                        intent.putExtra(Intent.EXTRA_TEXT, message)
-                    }
+    private enum class ShareOption { TextMessage, Email }
+    /** Display a dialog to provide options to share the list of items */
+    fun <Entity: ViewModelItem>shareList(items: List<Entity>, snackBarAnchor: View) {
+        themedAlertBuilder().setView(R.layout.share_dialog).create().apply {
+            setOnShowListener {
+                shareTextMessageOption.setOnClickListener {
+                    shareList(items, snackBarAnchor, ShareOption.TextMessage)
+                    dismiss()
                 }
-                if (intent.resolveActivity(context.packageManager) != null)
-                    context.startActivity(intent)
-                else Snackbar.make(snackBarAnchor,
-                                   R.string.export_error_message,
-                                   Snackbar.LENGTH_SHORT).
-                                   setAnchorView(snackBarAnchor).
-                                   show()
-            }.show()
+                shareEmailOption.setOnClickListener {
+                    shareList(items, snackBarAnchor, ShareOption.Email)
+                    dismiss()
+                }
+            }
+        }.show()
     }
 
+    /** Export the list of items via the selected share option. */
+    private fun <Entity: ViewModelItem>shareList(
+        items: List<Entity>,
+        snackBarAnchor: View,
+        shareOption: ShareOption
+    ) {
+        val intent = Intent(Intent.ACTION_SENDTO)
+        intent.type = "HTTP.PLAIN_TEXT_TYPE"
+
+        var message = ""
+        for (item in items)
+            message += item.toString() + "\n"
+        message.removeSuffix("\n")
+
+        when (shareOption) {
+            ShareOption.TextMessage -> {
+                intent.putExtra("sms_body", message)
+                intent.data = Uri.parse("smsto:")
+            } ShareOption.Email -> {
+                intent.data = Uri.parse("mailto:")
+                val subject = context.getString(R.string.shopping_list_navigation_item_name)
+                intent.putExtra(Intent.EXTRA_SUBJECT, subject)
+                intent.putExtra(Intent.EXTRA_TEXT, message)
+            }
+        }
+        if (intent.resolveActivity(context.packageManager) != null)
+            context.startActivity(intent)
+        else Snackbar.make(snackBarAnchor, R.string.share_error_message, Snackbar.LENGTH_SHORT).
+                      setAnchorView(snackBarAnchor).show()
+    }
+
+    fun aboutApp() { themedAlertBuilder().setView(R.layout.about_app_dialog).show() }
+
+    /** Open a dialog to create a new shopping list item, and invoke @param callback on the new item. */
+    fun newShoppingListItem(callback: (ShoppingListItem) -> Unit) =
+        newItem<ShoppingListItem>(callback, isShoppingListItem = true)
+
+    /** Open a dialog to create a new inventory item, and invoke @param callback on the new item. */
+    fun newInventoryItem(callback: (InventoryItem) -> Unit) =
+        newItem<InventoryItem>(callback, isShoppingListItem = false)
+
     /** Return an AlertDialog.Builder that uses the current theme's alertDialogTheme. */
-    fun themedAlertBuilder(): AlertDialog.Builder {
+    fun themedAlertBuilder(): MaterialAlertDialogBuilder {
         // AlertDialog seems to ignore the theme's alertDialogTheme value, making it
         // necessary to pass it's value in manually to the AlertDialog.builder constructor.
         val typedValue = TypedValue()
-        context.theme.resolveAttribute(android.R.attr.alertDialogTheme, typedValue, true)
-        return AlertDialog.Builder(context, typedValue.data)
+        context.theme.resolveAttribute(R.attr.materialAlertDialogTheme, typedValue, true)
+        return MaterialAlertDialogBuilder(context, typedValue.data)
     }
 
     /** Return a themed TextView for use as a custom title in an AlertDialog.
@@ -99,31 +126,20 @@ object Dialog {
      *  color, and background color suited for use as a custom title for an Alert-
      *  Dialog (using AlertDialog.setCustomTitle() or AlertDialog.Builder.setCus-
      *  tomTitle(). */
-    fun themedAlertTitle(title: String): TextView {
+    private fun themedAlertTitle(title: String): TextView {
         val titleView = TextView(context)
         val dm = context.resources.displayMetrics
         titleView.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 7f, dm)
         titleView.setPadding(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, dm).toInt())
 
         val typedValue = TypedValue()
-        context.theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
-        titleView.setBackgroundColor(typedValue.data)
-
         context.theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
         titleView.setTextColor(typedValue.data)
 
         titleView.text = title
         return titleView
     }
-    fun themedAlertTitle(titleResId: Int) = themedAlertTitle(context.getString(titleResId))
-
-    /** Open a dialog to create a new shopping list item, and invoke @param callback on the new item. */
-    fun newShoppingListItem(callback: (ShoppingListItem) -> Unit) =
-        newItem<ShoppingListItem>(callback, isShoppingListItem = true)
-
-    /** Open a dialog to create a new inventory item, and invoke @param callback on the new item. */
-    fun newInventoryItem(callback: (InventoryItem) -> Unit) =
-        newItem<InventoryItem>(callback, isShoppingListItem = false)
+    private fun themedAlertTitle(titleResId: Int) = themedAlertTitle(context.getString(titleResId))
 
     private fun <Entity: ExpandableSelectableItem>newItem(
         callback: (Entity) -> Unit,
@@ -139,7 +155,7 @@ object Dialog {
             setNegativeButton(context.getString(R.string.add_another_item_button_description)) { _, _ ->}.
             setPositiveButton(android.R.string.ok) { _, _ ->
                 callback((if (isShoppingListItem) shoppingListItemFromItemView(view)
-                else                    inventoryItemFromItemView(view)) as Entity)
+                          else                    inventoryItemFromItemView(view)) as Entity)
             }.setView(view).create()
         dialog.apply {
             setOnShowListener {
@@ -182,7 +198,6 @@ object Dialog {
     }
 
     private fun InventoryItemView.prepForNewInventoryItem() {
-        setSelectedState(selected = false, animate = false)
         background = null
         expand()
         editButton.visibility = View.GONE

@@ -39,6 +39,7 @@
         android:importantForAutofill="no"
         android:textSize="18sp"
         app:isEditable="false"
+        tools:text="Item name"
         app:layout_goneMarginBottom="3dp"
         app:layout_constraintStart_toEndOf="@id/colorEdit"
         app:layout_constraintEnd_toStartOf="@id/inventoryAmountEdit"

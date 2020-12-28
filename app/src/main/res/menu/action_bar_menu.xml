@@ -76,7 +76,7 @@
      be set to be not visible as a group. -->
 <group android:id="@+id/other_action_bar_menu_items">
     <item android:id="@+id/export_menu_item"
-        android:title="@string/export_dialog_title"
+        android:title="@string/share_description"
         app:showAsAction="never" />
 
     <item android:id="@+id/delete_all_menu_item"

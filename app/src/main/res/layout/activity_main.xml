@@ -50,7 +50,7 @@
         app:cradleTopCornerRadius="25dp"
         app:cradleBottomCornerRadius="34dp"
         app:cradleDepth="52dp"
-        app:cradleContentsMargin="6dp"
+        app:cradleContentsMargin="5dp"
         app:indicatorColor="@color/colorInBetweenPrimaryAccent1"
         app:borderThickness="4dp" >
 

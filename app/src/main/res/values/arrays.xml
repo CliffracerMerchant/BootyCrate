@@ -19,9 +19,4 @@
         <item>-3452725</item><!-- CB, 50, CB-->
         <item>-3452788</item><!-- CB, 50, 8C-->
     </integer-array>
-
-    <string-array name="export_options">
-        <item>@string/export_text_message_option</item>
-        <item>@string/export_email_option</item>
-    </string-array>
 </resources>

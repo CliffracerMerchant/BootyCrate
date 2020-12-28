@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+  ~  You may not use this file except in compliance with the Apache License
+  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~  or in the file LICENSE in the project's root directory. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp" >
+
+    <TextView
+        android:id="@+id/shareDialogTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="@string/share_dialog_title"
+        android:textSize="18sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/shareTextMessageOption"
+        android:layout_marginBottom="6dp"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/shareTextMessageOption"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@android:color/transparent"
+        android:drawableLeft="@drawable/ic_outline_message_24"
+        android:text="@string/share_text_message_option"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="16sp"
+        android:gravity="start"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toTopOf="@id/shareEmailOption"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/shareDialogTitle"
+        style="@style/Widget.AppCompat.Button.Borderless"/>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/shareEmailOption"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@android:color/transparent"
+        android:drawableLeft="@drawable/ic_baseline_mail_outline_24"
+        android:gravity="start"
+        android:text="@string/share_email_option"
+        android:textAllCaps="false"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/shareTextMessageOption"
+        style="@style/Widget.AppCompat.Button.Borderless"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
