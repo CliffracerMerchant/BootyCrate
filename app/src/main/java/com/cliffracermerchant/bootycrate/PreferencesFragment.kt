@@ -73,27 +73,6 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     }
 
     private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        val context = this.context ?: return@registerForActivityResult
-        if (uri != null) Dialog.themedAlertBuilder().
-            setMessage(R.string.import_database_question_message).
-            setNeutralButton(android.R.string.cancel) { _, _ -> }.
-            setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
-                BootyCrateDatabase.mergeWithBackup(context, uri)
-            }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
-                Dialog.themedAlertBuilder().
-                    setMessage(R.string.import_database_overwrite_confirmation_message).
-                    setNegativeButton(android.R.string.no) { _, _ -> }.
-                    setPositiveButton(android.R.string.yes) { _, _ ->
-                        BootyCrateDatabase.replaceWithBackup(context, uri)
-                        // The pref pref_viewmodels_need_cleared needs to be set to true so that
-                        // when the MainActivity is recreated, it will clear its ViewModelStore
-                        // and use the DAOs of the new database instead of the old one.
-                        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-                        val editor = prefs.edit()
-                        editor.putBoolean(context.getString(R.string.pref_viewmodels_need_cleared), true)
-                        editor.apply()
-                        activity?.recreate()
-                }.show()
-            }.show()
+        Dialog.importDatabaseFromUri(uri, activity)
     }
 }

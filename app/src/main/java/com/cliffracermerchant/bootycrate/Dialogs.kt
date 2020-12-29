@@ -15,7 +15,9 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.setPadding
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import dev.sasikanth.colorsheet.ColorSheet
@@ -108,6 +110,32 @@ object Dialog {
     /** Open a dialog to create a new inventory item, and invoke @param callback on the new item. */
     fun newInventoryItem(callback: (InventoryItem) -> Unit) =
         newItem<InventoryItem>(callback, isShoppingListItem = false)
+
+    /** Open a dialog to ask the user to the type of database import they want (merge existing or overwrite, and recreate the given activity if the import requires it. */
+    fun importDatabaseFromUri(maybeUri: Uri?, activity: FragmentActivity?)  {
+        val uri = maybeUri ?: return
+        themedAlertBuilder().
+            setMessage(R.string.import_database_question_message).
+            setNeutralButton(android.R.string.cancel) { _, _ -> }.
+            setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
+                BootyCrateDatabase.mergeWithBackup(context, uri)
+            }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
+                themedAlertBuilder().
+                    setMessage(R.string.import_database_overwrite_confirmation_message).
+                    setNegativeButton(android.R.string.no) { _, _ -> }.
+                    setPositiveButton(android.R.string.yes) { _, _ ->
+                        BootyCrateDatabase.replaceWithBackup(context, uri)
+                        // The pref pref_viewmodels_need_cleared needs to be set to true so that
+                        // when the MainActivity is recreated, it will clear its ViewModelStore
+                        // and use the DAOs of the new database instead of the old one.
+                        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+                        val editor = prefs.edit()
+                        editor.putBoolean(context.getString(R.string.pref_viewmodels_need_cleared), true)
+                        editor.apply()
+                        activity?.recreate()
+                    }.show()
+            }.show()
+    }
 
     /** Return an AlertDialog.Builder that uses the current theme's alertDialogTheme. */
     fun themedAlertBuilder(): MaterialAlertDialogBuilder {
