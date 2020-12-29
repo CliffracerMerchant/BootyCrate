@@ -174,7 +174,7 @@ object Dialog {
         isShoppingListItem: Boolean
     ) {
         val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-        val view = InventoryItemView(context)
+        val view = InventoryItemView(context, null)
         if (isShoppingListItem) view.prepForNewShoppingListItem()
         else                    view.prepForNewInventoryItem()
         val dialog = themedAlertBuilder().

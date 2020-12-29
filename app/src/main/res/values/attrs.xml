@@ -53,12 +53,8 @@
         <attr name="minValue"     format="integer" />
         <!-- The maximum value the IntegerEdit can hold. -->
         <attr name="maxValue"     format="integer" />
-        <!-- The delay, in milliseconds, after which the IntegerEdit will update its LiveData member. -->
-        <attr name="valueChangedNotificationTimeout" format="integer" />
         <!-- The step size of the increment and decrement buttons. -->
         <attr name="stepSize"     format="integer" />
-        <!-- The text size of the IntegerEdit. -->
-        <attr name="textSize"     format="dimension" />
         <!-- Whether the user is able to directly input the value -->
         <attr name="valueIsDirectlyEditable" format="boolean" />
     </declare-styleable>

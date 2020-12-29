@@ -8,40 +8,57 @@
         <item name="isDarkTheme">false</item>
         <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
         <item name="recyclerViewItemColor">@color/colorRecyclerViewItemLight</item>
-        <item name="colorSelected">@android:color/holo_blue_light</item>
+        <item name="popupMenuBackground">@color/colorWindowBackgroundLight</item>
+        <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
+        <item name="snackbarStyle">@style/SnackbarStyle</item>
+
+        <item name="textColor">@color/colorTextDark</item>
+        <item name="android:textColorPrimary">@color/colorTextDark</item>
+        <item name="android:textColorSecondary">@color/colorTextDarkSecondary</item>
+        <item name="android:textColorHint">@color/colorTextDarkSecondary</item>
+
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="imageButtonStyle">@style/ImageButton</item>
         <item name="android:textViewStyle">@style/TextAppearance</item>
-        <item name="editTextStyle">@style/TextAppearance</item>
+        <item name="editTextStyle">?android:attr/textAppearance</item>
         <item name="checkboxStyle">@style/CheckBox</item>
-        <item name="popupMenuBackground">@color/colorWindowBackgroundLight</item>
-        <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
-        <item name="android:textColorPrimary">@android:color/black</item>
-        <item name="android:textColorSecondary">@color/colorTextDarkSecondary</item>
-        <item name="android:textColorHint">@color/colorTextDarkSecondary</item>
-        <item name="snackbarStyle">@style/SnackbarStyle</item>
         <item name="snackbarTextViewStyle">?android:attr/textViewStyle</item>
         <item name="snackbarButtonStyle">@style/SnackbarActionTextAppearance</item>
+        <item name="android:textAppearance">@style/TextAppearance</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">
         <item name="isDarkTheme">true</item>
         <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
         <item name="recyclerViewItemColor">@color/colorRecyclerViewItemDark</item>
-        <item name="colorSelected">@android:color/holo_blue_dark</item>
         <item name="popupMenuBackground">@color/colorWindowBackgroundDark</item>
         <item name="materialAlertDialogTheme">@style/DarkAlertDialog</item>
+
+        <item name="textColor">@color/colorTextLight</item>
         <item name="android:textColorPrimary">@color/colorTextLight</item>
         <item name="android:textColorSecondary">@color/colorTextLightSecondary</item>
         <item name="android:textColorHint">@color/colorTextLightSecondary</item>
     </style>
 
     <style name="TextAppearance" parent="TextAppearance.AppCompat">
-        <item name="android:textColorPrimary">?android:attr/textColorPrimary</item>
-        <item name="android:textColorSecondary">?android:attr/textColorSecondary</item>
+        <item name="android:textColor">?android:textColorPrimary</item>
+        <item name="android:textColorPrimary">?android:textColorPrimary</item>
+        <item name="android:textColorSecondary">?android:textColorSecondary</item>
         <item name="android:textColorHint">?android:attr/textColorHint</item>
+    </style>
+
+    <style name="TitleTextAppearance" parent="TextAppearance">
+        <item name="android:textSize">20sp</item>
+    </style>
+
+    <style name="NormalTextAppearance" parent="TextAppearance">
+        <item name="android:textSize">18sp</item>
+    </style>
+
+    <style name="SecondaryTextAppearance" parent="TextAppearance">
+        <item name="android:textSize">15sp</item>
     </style>
 
     <style name="CheckBox" parent="Widget.MaterialComponents.CompoundButton.CheckBox">
@@ -71,20 +88,18 @@
         <item name="cornerSize">5dp</item>
     </style>
 
-    <style name="RecyclerViewItemStyle">
-        <item name="android:background">@drawable/recycler_view_item_background</item>
-        <item name="android:paddingStart">4dp</item>
-        <item name="android:paddingEnd">4dp</item>
-        <item name="android:paddingTop">4dp</item>
-        <item name="android:paddingBottom">4dp</item>
+    <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
+        <item name="android:background">?attr/recyclerViewItemColor</item>
     </style>
 
     <style name="SnackbarActionTextAppearance" parent="Widget.MaterialComponents.Button.TextButton.Snackbar">
-        <item name="android:textColor">@color/colorTextLink</item>
+        <item name="android:textColor">?android:attr/textColorLink</item>
     </style>
 
-    <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
-        <item name="android:background">?attr/recyclerViewItemColor</item>
+    <style name="AboutAppBody" parent="@style/SecondaryTextAppearance">
+        <item name="android:autoLink">web</item>
+        <item name="android:linksClickable">true</item>
+        <item name="android:text">@string/about_app_body</item>
     </style>
 
 </resources>

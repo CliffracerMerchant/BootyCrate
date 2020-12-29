@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+  ~  You may not use this file except in compliance with the Apache License
+  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~  or in the file LICENSE in the project's root directory. -->
+
+<resources>
+    <style name="RecyclerViewItemStyle">
+        <item name="android:background">@drawable/recycler_view_item_background</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <style name="ViewModelItemColorEdit">
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+    </style>
+
+    <style name="ViewModelItemNameEdit" parent="@style/NormalTextAppearance">
+        <item name="android:hint">@string/item_name_description</item>
+        <item name="android:ellipsize">end</item>
+        <item name="isEditable">false</item>
+    </style>
+
+    <style name="ViewModelItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
+        <item name="editableHint">@string/item_extra_info_description</item>
+        <item name="android:textColor">@color/colorTextLightSecondary</item>
+        <item name="android:ellipsize">end</item>
+        <item name="isEditable">false</item>
+    </style>
+
+    <style name="ViewModelItemAmountEdit" parent="@style/NormalTextAppearance">
+        <item name="minValue">1</item>
+        <item name="isEditable">false</item>
+    </style>
+
+    <style name="ViewModelItemEditButton">
+        <item name="android:src">@drawable/edit_and_more_options_icon</item>
+        <item name="android:paddingStart">4dp</item>
+        <item name="android:paddingEnd">4dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+    </style>
+
+    <style name="ExpandableSelectableItemDivider">
+        <item name="android:background">?android:attr/listDivider</item>
+        <item name="android:backgroundTint">?attr/textColor</item>
+    </style>
+
+    <style name="ExpandableSelectableItemCollapseButton">
+        <item name="android:src">@drawable/ic_expand_less_black_24dp</item>
+        <item name="android:padding">9dp</item>
+    </style>
+
+    <style name="ShoppingListItemLinkedToIndicator" parent="@style/SecondaryTextAppearance">
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="InventoryItemColorEdit" parent="@style/ViewModelItemColorEdit">
+        <item name="android:src">@drawable/animated_circle_to_checkbox_checked_background</item>
+    </style>
+
+    <style name="InventoryItemAmountEdit" parent="@style/ViewModelItemAmountEdit">
+        <item name="minValue">0</item>
+    </style>
+
+    <style name="InventoryItemAddToShoppingListCheckbox" parent="@style/SecondaryTextAppearance">
+        <item name="android:text">@string/add_to_shopping_list_checkbox_text</item>
+    </style>
+
+    <style name="InventoryItemAddToShoppingListTriggerEdit" parent="@style/ViewModelItemAmountEdit">
+        <item name="isEditable">true</item>
+    </style>
+
+</resources>

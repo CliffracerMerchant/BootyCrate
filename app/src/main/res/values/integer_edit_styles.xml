@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+  ~  You may not use this file except in compliance with the Apache License
+  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~  or in the file LICENSE in the project's root directory. -->
+
+<resources>
+    <style name="IntegerEditButton">
+        <item name="android:paddingTop">9dp</item>
+        <item name="android:paddingBottom">9dp</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingEnd">6dp</item>
+    </style>
+
+    <style name="IntegerEditDecreaseButton" parent="@style/IntegerEditButton">
+        <item name="android:src">@drawable/minus_icon</item>
+    </style>
+
+    <style name="IntegerEditIncreaseButton" parent="@style/IntegerEditButton">
+        <item name="android:src">@drawable/plus_icon</item>
+    </style>
+
+    <style name="IntegerEditValue">
+        <item name="android:focusableInTouchMode">false</item>
+        <item name="android:imeOptions">actionDone|flagNoExtractUi</item>
+        <item name="android:gravity">center</item>
+        <item name="android:inputType">number</item>
+        <item name="android:contentDescription">@string/item_amount_description</item>
+    </style>
+</resources>

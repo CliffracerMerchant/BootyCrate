@@ -6,11 +6,8 @@ package com.cliffracermerchant.bootycrate
 
 import android.app.Activity
 import android.content.Context
-import android.graphics.Canvas
 import android.graphics.Paint
-import android.os.Handler
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -26,13 +23,6 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
  *  increase buttons. IntegerEdit provides a publicly accessible LiveData mem-
  *  ber to allow external entities to react to a change in its data.
  *
- *  Because a user might click on the provided decrease or increase buttons
- *  rapidly when intending to change the value by a large amount, and because
- *  external entities most likely don't want to deal with a rapid succession of
- *  intermediate states, IntegerEdit will only change its LiveData member after
- *  a change is made and no further change to the value is made within the
- *  valueChangedNotificationTimeout interval.
- *
  *  The EditText is by default not focusable in touch mode, but this can be
  *  changed by setting the member isEditable. If set to true, the user can edit
  *  the value directly (rather than through the use of the decrease / increase
@@ -43,14 +33,8 @@ import kotlinx.android.synthetic.main.integer_edit_layout.view.*
  *  - Int initialValue = 0: The starting value
  *  - Int minValue = 0: The minimum value that the IntegerEdit can hold.
  *  - Int maxValue = 99: The maximum value that the IntegerEdit can hold.
- *  - Int valueChangedNotificationTimeout = 1000: The delay in milliseconds
- *    after the last change to the value before the LiveData member will be
- *    updated.
  *  - Int stepSize = 1: The amount to decrease or increase the value by when
  *    the corresponding button is pressed.
- *  - Float textSize = 16.0f: The text display size for the central EditText
- *    member. When this is set, the scale of the decrease and increase buttons
- *    will be adjusted to match the new text size.
  *  - valueIsDirectlyEditable: Boolean = false: Whether the user can input the
  *    value directly instead of through the decrease / increase buttons. */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
@@ -64,7 +48,6 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     var maxValue get() = _maxValue
                  set(value) { _maxValue = value; this.value = this.value }
 
-    var valueChangedNotificationTimeout: Int
     var stepSize: Int
 
     private var _value get() = try { valueEdit.text.toString().toInt() }
@@ -72,35 +55,30 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
                        set(value) { val newValue = value.coerceIn(minValue, maxValue)
                                     valueEdit.setText(newValue.toString()) }
     var value get() = _value
-              set(value) { if (value != _value)
-                               updateLiveDataWithDelay()
-                           _value = value }
+              set(newValue) { _value = newValue
+                              _liveData.value = value }
 
-    var valueIsDirectlyEditable = false
-        set(editable) { field = editable
-                        valueEdit.isFocusableInTouchMode = editable
-                        if (!editable && valueEdit.isFocused)
-                            valueEdit.clearFocus()
-                        invalidate() }
+    var valueIsDirectlyEditable get() = valueEdit.isFocusableInTouchMode
+                                set(editable) { setEditable(editable) }
 
     private val _liveData = MutableLiveData(value)
     val liveData: LiveData<Int> get() = _liveData
 
-    private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-    private val _handler = Handler()
+    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
 
     init {
         LayoutInflater.from(context).inflate(R.layout.integer_edit_layout, this, true)
-        val a = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
+        var a = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
         _value = a.getInt(R.styleable.IntegerEdit_initialValue, 0)
         _minValue = a.getInt(R.styleable.IntegerEdit_minValue, 0)
         _maxValue = a.getInt(R.styleable.IntegerEdit_maxValue, 99)
-        valueChangedNotificationTimeout = a.getInt(
-            R.styleable.IntegerEdit_valueChangedNotificationTimeout, 1000)
         stepSize = a.getInt(R.styleable.IntegerEdit_stepSize, 1)
-        val textSize = a.getDimension(R.styleable.IntegerEdit_textSize, 1f)
-        valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
         valueIsDirectlyEditable = a.getBoolean(R.styleable.IntegerEdit_valueIsDirectlyEditable, false)
+
+        a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.textSize))
+        // For some reason the text size appears larger than it should be;
+        // the division by 2 is an approximation to correct this.
+        valueEdit.textSize = a.getDimensionPixelSize(0, 0) / 2f
         a.recycle()
 
         decreaseButton.setOnClickListener { decrement() }
@@ -110,43 +88,25 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
                 clearFocus()
                 imm?.hideSoftInputFromWindow(windowToken, 0)
                 value = value // To enforce min/max value
-                updateLiveDataWithDelay()
             }
             actionId == EditorInfo.IME_ACTION_DONE
         }
         valueEdit.setOnFocusChangeListener { _, focused ->
-            if (!focused) {
-                value = value // To enforce min/max value
-                updateLiveDataWithDelay()
-            }
+            if (!focused) { value = value } // To enforce min/max value
         }
-        setWillNotDraw(false)
-        clipChildren = false
-    }
-
-    fun increment() = modifyValue(stepSize)
-    fun decrement() = modifyValue(-stepSize)
-
-    private fun updateLiveData() { _liveData.value = value }
-
-    private fun updateLiveDataWithDelay() {
-        _handler.removeCallbacks(::updateLiveData)
-        _handler.postDelayed(::updateLiveData, valueChangedNotificationTimeout.toLong())
-    }
-
-    private fun modifyValue(stepSize: Int) {
-        val oldValue = value
-        value += stepSize
-        if (value != oldValue) updateLiveDataWithDelay()
     }
 
     fun initValue(newValue: Int) { _value = newValue }
+    fun increment() = modifyValue(stepSize)
+    fun decrement() = modifyValue(-stepSize)
+    private fun modifyValue(stepSize: Int) { value += stepSize }
 
-    override fun onDraw(canvas: Canvas) {
-        if (valueIsDirectlyEditable)
-            valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-        else
-            valueEdit.paintFlags = valueEdit.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
-        super.onDraw(canvas)
+    private fun setEditable(editable: Boolean) {
+        valueEdit.isFocusableInTouchMode = editable
+        if (!editable && valueEdit.isFocused)
+            valueEdit.clearFocus()
+        if (editable) valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+        else          valueEdit.paintFlags = valueEdit.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
+        invalidate()
     }
 }

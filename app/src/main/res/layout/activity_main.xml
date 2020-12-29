@@ -18,19 +18,14 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:minHeight="?attr/actionBarSize"
-        app:menu="@menu/action_bar_menu"
-        app:borderMode="bottom"
-        app:borderThickness="4dp" >
+        style="@style/TopActionBar" >
 
         <TextView
             android:id="@+id/customTitle"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="@string/app_name"
             tools:textColor="@color/colorPrimary"
-            android:gravity="center_vertical"
-            android:textSize="19sp"
-            android:fontFamily="@font/comfortaa" />
+            style="@style/CustomTitle" />
 
     </com.cliffracermerchant.bootycrate.GradientToolbar>
 
@@ -45,25 +40,14 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:layout_gravity="bottom"
-        app:contentInsetStart="0dp"
-        app:cradleAlignmentMode="center"
-        app:cradleTopCornerRadius="25dp"
-        app:cradleBottomCornerRadius="34dp"
-        app:cradleDepth="52dp"
-        app:cradleContentsMargin="5dp"
-        app:indicatorColor="@color/colorInBetweenPrimaryAccent1"
-        app:borderThickness="4dp" >
+        style="@style/BottomAppBar" >
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigationBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
-            android:background="@drawable/transparent_rectangle_background"
-            app:itemIconTint="@color/bottom_navigation_view_item_color"
-            app:itemTextColor="@color/bottom_navigation_view_item_color"
-            app:labelVisibilityMode="labeled"
-            app:menu="@menu/bottom_navigation_bar_menu">
+            style="@style/BottomNavigationView">
 
             <TextView
                 android:id="@+id/shoppingListBadge"
@@ -71,11 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="60dp"
                 android:layout_marginTop="2dp"
-                android:alpha="0"
-                android:paddingHorizontal="4dp"
-                android:textColor="@android:color/holo_green_dark"
-                android:textSize="22dp"
-                android:textStyle="bold" />
+                style="@style/ShoppingListBadge" />
 
         </com.google.android.material.bottomnavigation.BottomNavigationView>
 
@@ -94,31 +74,18 @@
             android:layout_height="46dp"
             android:layout_gravity="bottom"
             android:layout_marginEnd="44dp"
-            app:backgroundDrawable="@drawable/checkout_button_background"
-            app:foregroundDrawable="@drawable/checkout_button_foreground"
-            app:backgroundTint="@android:color/darker_gray"
-            app:foregroundTint="@color/colorTextLightSecondary"
-            android:paddingRight="10dp"
-            android:text="@string/checkout_description"
-            android:textSize="15dp"
-            android:transformPivotX="120dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            style="@style/CheckoutButton" />
 
         <com.cliffracermerchant.bootycrate.RoundGradientButton
             android:id="@+id/floatingActionButton"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            app:maxImageSize="56dp"
-            android:padding="14dp"
-            app:iconPathSize="24"
-            app:iconSize="24dp"
-            app:borderThickness="4dp"
-            app:iconPathData="@string/add_icon_path_data"
-            android:elevation="3dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            style="@style/FloatingActionButton" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

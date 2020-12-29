@@ -8,7 +8,7 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
-import android.view.View
+import android.util.AttributeSet
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
@@ -34,21 +34,20 @@ import androidx.core.graphics.ColorUtils
  *  and setExpanded. While ExpandableSelectableItemView is not abstract, sub-
  *  classes will want to override setExpanded with an implementation that
  *  expands or collapses the appropriate child views. */
-open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(context: Context) :
-    ConstraintLayout(ContextThemeWrapper(context, R.style.RecyclerViewItemStyle))
-{
-    var expandAnimationDuration = 200L
+open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
+    context: Context,
+    attrs: AttributeSet? = null
+) : ConstraintLayout(ContextThemeWrapper(context, R.style.RecyclerViewItemStyle), attrs) {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
 
     init {
-        setWillNotDraw(false)
         val selectedBackground = (background as LayerDrawable).getDrawable(1) as LayerDrawable
         val gradientOutline = selectedBackground.getDrawable(0) as GradientDrawable
         gradientOutline.setTintList(null)
         gradientOutline.orientation = GradientDrawable.Orientation.LEFT_RIGHT
         val colors = IntArray(7)
-        // colorAccent at the ends looked a little too purple, so we'll use a
+        // colorAccent at the ends looks a little too purple, so we'll use a
         // value half way between colorAccent and colorInBetweenPrimaryAccent2
         // as the first color instead
         colors[1] = ContextCompat.getColor(context, R.color.colorInBetweenPrimaryAccent2)
@@ -78,12 +77,12 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(contex
         val selectedBackground = (background as LayerDrawable).getDrawable(1) as LayerDrawable
         val gradientOutline = selectedBackground.getDrawable(0) as GradientDrawable
         if (animate) {
-            setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            setLayerType(LAYER_TYPE_HARDWARE, null)
             ObjectAnimator.ofInt(gradientOutline, "alpha",
                                  if (selected) 0 else 255,
                                  if (selected) 255 else 0).apply {
-                duration = expandAnimationDuration
-                doOnEnd { setLayerType(View.LAYER_TYPE_NONE, null) }
+                duration = 200L
+                doOnEnd { setLayerType(LAYER_TYPE_NONE, null) }
                 start()
             }
         }

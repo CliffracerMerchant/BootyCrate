@@ -17,14 +17,12 @@
         android:layout_width="34dp"
         android:layout_height="44dp"
         android:layout_gravity="center_vertical"
-        android:src="@drawable/minus_icon"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/valueEdit"
-        android:paddingHorizontal="6dp"
-        android:paddingVertical="9dp"
-        android:contentDescription="@string/decrease_button_description" />
+        android:contentDescription="@string/decrease_button_description"
+        style="@style/IntegerEditDecreaseButton" />
 
     <EditText
         android:id="@+id/valueEdit"
@@ -34,16 +32,11 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/decreaseButton"
         app:layout_constraintEnd_toStartOf="@id/increaseButton"
-        android:focusableInTouchMode="false"
-        android:maxLines="1"
-        android:imeOptions="actionDone|flagNoExtractUi"
-        android:gravity="center"
-        android:foregroundGravity="center"
-        android:layout_gravity="center_vertical"
-        android:inputType="number"
-        android:contentDescription="@string/item_amount_description"
         android:importantForAutofill="no"
-        tools:ignore="LabelFor" />
+        tools:ignore="LabelFor"
+        tools:text="0"
+        tools:textSize="22sp"
+        style="@style/IntegerEditValue" />
 
     <ImageButton
         android:id="@+id/increaseButton"
@@ -54,8 +47,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/valueEdit"
         app:layout_constraintEnd_toEndOf="parent"
-        android:src="@drawable/plus_icon"
-        android:paddingHorizontal="6dp"
-        android:paddingVertical="11dp"
-        android:contentDescription="@string/increase_button_description" />
+        android:contentDescription="@string/increase_button_description"
+        style="@style/IntegerEditIncreaseButton" />
 </merge>

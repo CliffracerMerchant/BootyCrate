@@ -6,6 +6,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.app.Activity
 import android.content.Context
+import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,8 +24,8 @@ import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
  *  tion of the provided ShoppingListItem. It also overrides the setExpanded
  *  function with an implementation that shows or hides the shopping list
  *  item's extra details. */
-class ShoppingListItemView(context: Context) :
-    ExpandableSelectableItemView<ShoppingListItem>(context)
+class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
+    ExpandableSelectableItemView<ShoppingListItem>(context, attrs)
 {
     var color get() = checkBox.color
         set(value) { checkBox.color = value }

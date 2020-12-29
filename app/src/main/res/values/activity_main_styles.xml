@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+  ~  You may not use this file except in compliance with the Apache License
+  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~  or in the file LICENSE in the project's root directory. -->
+
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="TopActionBar">
+        <item name="menu">@menu/action_bar_menu</item>
+        <item name="borderMode">bottom</item>
+        <item name="borderThickness">4dp</item>
+    </style>
+
+    <style name="CustomTitle">
+        <item name="android:text">@string/app_name</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textAppearance">@style/TextAppearance</item>
+        <item name="android:textSize">19sp</item>
+        <item name="android:fontFamily">@font/comfortaa</item>
+    </style>
+
+    <style name="BottomAppBar">
+        <item name="contentInsetStart">0dp</item>
+        <item name="cradleAlignmentMode">center</item>
+        <item name="cradleTopCornerRadius">25dp</item>
+        <item name="cradleBottomCornerRadius">34dp</item>
+        <item name="cradleDepth">52dp</item>
+        <item name="cradleContentsMargin">5dp</item>
+        <item name="indicatorColor">@color/colorInBetweenPrimaryAccent1</item>
+        <item name="borderThickness">4dp</item>
+    </style>
+
+    <style name="BottomNavigationView">
+        <item name="itemIconTint">@color/bottom_navigation_view_item_color</item>
+        <item name="itemTextColor">@color/bottom_navigation_view_item_color</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <!-- Unless its background is set explicitly, BottomNavigationView will
+           ~ create its own background, covering up BottomAppBar's background.
+           ~ Setting the background to a transparent rectangle is used to prevent this. -->
+        <item name="android:background">@drawable/transparent_rectangle_background</item>
+        <item name="menu">@menu/bottom_navigation_bar_menu</item>
+    </style>
+
+    <style name="ShoppingListBadge">
+        <item name="android:alpha">0</item>
+        <item name="android:paddingLeft">4dp</item>
+        <item name="android:paddingRight">4dp</item>
+        <item name="android:textColor">@android:color/holo_green_dark</item>
+        <item name="android:textSize" tools:ignore="SpUsage">22dp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CheckoutButton">
+        <item name="backgroundDrawable">@drawable/checkout_button_background</item>
+        <item name="foregroundDrawable">@drawable/checkout_button_foreground</item>
+        <item name="backgroundTint">@android:color/darker_gray</item>
+        <item name="foregroundTint">@color/colorTextLightSecondary</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:text">@string/checkout_description</item>
+        <item name="android:textSize" tools:ignore="SpUsage">15dp</item>
+        <item name="android:transformPivotX">120dp</item>
+    </style>
+
+    <style name="FloatingActionButton">
+        <item name="android:padding">14dp</item>
+        <item name="iconPathSize">24</item>
+        <item name="iconSize">24dp</item>
+        <item name="borderThickness">4dp</item>
+        <item name="iconPathData">@string/add_icon_path_data</item>
+        <item name="android:elevation">3dp</item>
+    </style>
+
+    <style name="RecyclerViewFragment">
+        <item name="android:clipToPadding">false</item>
+        <item name="android:paddingBottom">?attr/actionBarSize</item>
+        <item name="android:paddingTop">4dp</item>
+    </style>
+
+</resources>

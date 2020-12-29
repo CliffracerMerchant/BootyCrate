@@ -8,6 +8,7 @@ import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
+import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
@@ -23,8 +24,8 @@ import kotlinx.android.synthetic.main.inventory_item_layout.view.*
  *  update override updates the contained views with the information of the
  *  InventoryItem instance. It also overrides the setExpanded function with an
  *  implementation that shows or hides the inventory item's extra details. */
-class InventoryItemView(context: Context) :
-    ExpandableSelectableItemView<InventoryItem>(context)
+class InventoryItemView(context: Context, attrs: AttributeSet? = null) :
+    ExpandableSelectableItemView<InventoryItem>(context, attrs)
 {
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
 

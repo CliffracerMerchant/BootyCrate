@@ -9,7 +9,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
-    android:background="@drawable/recycler_view_item_background">
+    style="@style/RecyclerViewItemStyle" >
 
     <Space
         android:id="@+id/spacer"
@@ -21,27 +21,17 @@
         android:id="@+id/checkBox"
         android:layout_width="42dp"
         android:layout_height="44dp"
-        android:paddingVertical="10dp"
-        android:paddingStart="8dp"
-        android:paddingEnd="10dp"
-        android:textOff="@null"
-        android:textOn="@null"
         app:layout_constraintEnd_toStartOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/spacer"
         app:layout_constraintBottom_toBottomOf="@id/spacer"
-        tools:tint="@color/colorInBetweenPrimaryAccent1"/>
+        tools:tint="@color/colorInBetweenPrimaryAccent1"
+        style="@style/ViewModelItemColorEdit"/>
 
     <com.cliffracermerchant.bootycrate.AnimatedStrikeThroughTextFieldEdit
         android:id="@+id/nameEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:hint="@string/item_name_description"
-        android:importantForAutofill="no"
-        android:textSize="18sp"
-        app:isEditable="false"
-        android:scrollbars="none"
         app:layout_goneMarginBottom="3dp"
         app:layout_constraintStart_toEndOf="@id/checkBox"
         app:layout_constraintEnd_toStartOf="@id/shoppingListAmountEdit"
@@ -49,50 +39,41 @@
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintHorizontal_weight="1"
-        tools:ignore="labelFor" />
+        tools:text="Item Name"
+        style="@style/ViewModelItemNameEdit"
+/>
 
     <com.cliffracermerchant.bootycrate.AnimatedStrikeThroughTextFieldEdit
         android:id="@+id/extraInfoEdit"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:contentDescription="@string/item_extra_info_description"
-        android:importantForAutofill="no"
-        android:textColor="@color/colorTextLightSecondary"
-        android:textSize="14sp"
-        app:editableHint="@string/item_extra_info_description"
-        app:isEditable="false"
         app:layout_constraintBottom_toBottomOf="@id/checkBox"
         app:layout_constraintEnd_toEndOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="@id/nameEdit"
         app:layout_constraintTop_toBottomOf="@id/nameEdit"
-        tools:text="Extra info" />
+        tools:text="Extra info"
+        style="@style/ViewModelItemExtraInfoEdit"/>
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
         android:id="@+id/shoppingListAmountEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="@string/item_amount_description"
-        app:isEditable="false"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
         app:layout_constraintEnd_toStartOf="@+id/editButton"
         app:layout_constraintTop_toTopOf="@id/checkBox"
         app:layout_constraintBottom_toBottomOf="@id/checkBox"
-        app:minValue="1"
-        app:textSize="22sp"
-        app:valueChangedNotificationTimeout="0" />
+        style="@style/ViewModelItemAmountEdit" />
 
     <ImageButton
         android:id="@+id/editButton"
-        android:layout_width="32dp"
+        android:layout_width="36dp"
         android:layout_height="44dp"
-        android:paddingHorizontal="2dp"
-        android:paddingVertical="8dp"
-        android:src="@drawable/edit_and_more_options_icon"
-        android:contentDescription="@string/edit_button_description"
         app:layout_constraintStart_toEndOf="@id/shoppingListAmountEdit"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/shoppingListAmountEdit"
-        app:layout_constraintBottom_toBottomOf="@id/shoppingListAmountEdit" />
+        app:layout_constraintBottom_toBottomOf="@id/shoppingListAmountEdit"
+        android:contentDescription="@string/edit_button_description"
+        style="@style/ViewModelItemEditButton" />
 
     <include layout="@layout/shopping_list_item_details_layout"/>
 
