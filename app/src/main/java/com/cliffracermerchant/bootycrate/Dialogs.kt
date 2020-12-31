@@ -14,6 +14,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.setPadding
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
@@ -33,9 +34,11 @@ import kotlinx.android.synthetic.main.share_dialog.*
 object Dialog {
     private lateinit var context: Context
     private lateinit var fragmentManager: FragmentManager
-    fun init(activity: AppCompatActivity) {
+    private lateinit var snackBarParent: CoordinatorLayout
+    fun init(activity: AppCompatActivity, snackBarParent: CoordinatorLayout) {
         context = activity
         fragmentManager = activity.supportFragmentManager
+        this.snackBarParent = snackBarParent
     }
 
     /** Display a color picker dialog to choose from one of ViewModelItem's twelve colors.
@@ -55,15 +58,15 @@ object Dialog {
 
     private enum class ShareOption { TextMessage, Email }
     /** Display a dialog to provide options to share the list of items */
-    fun <Entity: ViewModelItem>shareList(items: List<Entity>, snackBarAnchor: View) {
+    fun <Entity: ViewModelItem>shareList(items: List<Entity>) {
         themedAlertBuilder().setView(R.layout.share_dialog).create().apply {
             setOnShowListener {
                 shareTextMessageOption.setOnClickListener {
-                    shareList(items, snackBarAnchor, ShareOption.TextMessage)
+                    shareList(items, ShareOption.TextMessage)
                     dismiss()
                 }
                 shareEmailOption.setOnClickListener {
-                    shareList(items, snackBarAnchor, ShareOption.Email)
+                    shareList(items, ShareOption.Email)
                     dismiss()
                 }
             }
@@ -71,11 +74,7 @@ object Dialog {
     }
 
     /** Export the list of items via the selected share option. */
-    private fun <Entity: ViewModelItem>shareList(
-        items: List<Entity>,
-        snackBarAnchor: View,
-        shareOption: ShareOption
-    ) {
+    private fun <Entity: ViewModelItem>shareList(items: List<Entity>, shareOption: ShareOption) {
         val intent = Intent(Intent.ACTION_SENDTO)
         intent.type = "HTTP.PLAIN_TEXT_TYPE"
 
@@ -97,8 +96,8 @@ object Dialog {
         }
         if (intent.resolveActivity(context.packageManager) != null)
             context.startActivity(intent)
-        else Snackbar.make(snackBarAnchor, R.string.share_error_message, Snackbar.LENGTH_SHORT).
-                      setAnchorView(snackBarAnchor).show()
+        else Snackbar.make(snackBarParent, R.string.share_error_message, Snackbar.LENGTH_SHORT).
+                      setAnchorView(snackBarParent).show()
     }
 
     fun aboutApp() { themedAlertBuilder().setView(R.layout.about_app_dialog).show() }
@@ -111,9 +110,9 @@ object Dialog {
     fun newInventoryItem(callback: (InventoryItem) -> Unit) =
         newItem<InventoryItem>(callback, isShoppingListItem = false)
 
-    /** Open a dialog to ask the user to the type of database import they want (merge existing or overwrite, and recreate the given activity if the import requires it. */
-    fun importDatabaseFromUri(maybeUri: Uri?, activity: FragmentActivity?)  {
-        val uri = maybeUri ?: return
+    /** Open a dialog to ask the user to the type of database import they want (merge
+     *  existing or overwrite, and recreate the given activity if the import requires it. */
+    fun importDatabaseFromUri(uri: Uri, activity: FragmentActivity?)  {
         themedAlertBuilder().
             setMessage(R.string.import_database_question_message).
             setNeutralButton(android.R.string.cancel) { _, _ -> }.
@@ -137,37 +136,33 @@ object Dialog {
             }.show()
     }
 
+    fun <Entity: ViewModelItem>deleteAllFromViewModel(
+        viewModel: ViewModel<Entity>,
+        collectionName: String
+    ) {
+        if (viewModel.items.value?.isEmpty() == true) {
+            val message = context.getString(R.string.delete_all_no_items_error_message, collectionName)
+            Snackbar.make(snackBarParent, message, Snackbar.LENGTH_SHORT).
+                     setAnchorView(snackBarParent).show()
+            return
+        }
+        themedAlertBuilder().
+            setMessage(context.getString(R.string.delete_all_items_confirmation_message, collectionName)).
+            setPositiveButton(android.R.string.yes) { _, _ ->
+                viewModel.deleteAll()
+                //viewModel.emptyTrash()
+            }.setNegativeButton(android.R.string.cancel) { _, _ -> }.
+            show()
+    }
+
     /** Return an AlertDialog.Builder that uses the current theme's alertDialogTheme. */
-    fun themedAlertBuilder(): MaterialAlertDialogBuilder {
+    private fun themedAlertBuilder(): MaterialAlertDialogBuilder {
         // AlertDialog seems to ignore the theme's alertDialogTheme value, making it
         // necessary to pass it's value in manually to the AlertDialog.builder constructor.
         val typedValue = TypedValue()
         context.theme.resolveAttribute(R.attr.materialAlertDialogTheme, typedValue, true)
         return MaterialAlertDialogBuilder(context, typedValue.data)
     }
-
-    /** Return a themed TextView for use as a custom title in an AlertDialog.
-     *
-     *  Changing the style of AlertDialog's default title seems to not work when
-     *  done through styles (e.g. with the android:windowTitleStyle attribute).
-     *  themedAlertDialogTitle returns a TextView with a padding, text size, text
-     *  color, and background color suited for use as a custom title for an Alert-
-     *  Dialog (using AlertDialog.setCustomTitle() or AlertDialog.Builder.setCus-
-     *  tomTitle(). */
-    private fun themedAlertTitle(title: String): TextView {
-        val titleView = TextView(context)
-        val dm = context.resources.displayMetrics
-        titleView.textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 7f, dm)
-        titleView.setPadding(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, dm).toInt())
-
-        val typedValue = TypedValue()
-        context.theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
-        titleView.setTextColor(typedValue.data)
-
-        titleView.text = title
-        return titleView
-    }
-    private fun themedAlertTitle(titleResId: Int) = themedAlertTitle(context.getString(titleResId))
 
     private fun <Entity: ExpandableSelectableItem>newItem(
         callback: (Entity) -> Unit,
@@ -178,7 +173,9 @@ object Dialog {
         if (isShoppingListItem) view.prepForNewShoppingListItem()
         else                    view.prepForNewInventoryItem()
         val dialog = themedAlertBuilder().
-            setCustomTitle(themedAlertTitle(R.string.add_item_button_name)).
+            // The inventory view is a little squashed with the default margins
+            setBackgroundInsetStart(0). setBackgroundInsetEnd(0).
+            setTitle(R.string.add_item_button_name).
             setNeutralButton(android.R.string.cancel) { _, _ -> }.
             setNegativeButton(context.getString(R.string.add_another_item_button_description)) { _, _ ->}.
             setPositiveButton(android.R.string.ok) { _, _ ->

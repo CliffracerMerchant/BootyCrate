@@ -37,7 +37,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs) {
     override val diffUtilCallback = ShoppingListDiffUtilCallback()
     override val adapter = ShoppingListAdapter()
-    override val collectionNameResId = R.string.shopping_list_item_collection_name
+    override val collectionName = context.getString(R.string.shopping_list_item_collection_name)
     private lateinit var shoppingListViewModel: ShoppingListViewModel
     private lateinit var inventoryViewModel: InventoryViewModel
     val checkedItems = CheckedItems()
@@ -52,9 +52,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         finishInit(owner, shoppingListViewModel)
     }
 
-    fun addNewItem() = Dialog.newShoppingListItem { newItem ->
-        shoppingListViewModel.add(newItem)
-    }
+    fun addNewItem() = Dialog.newShoppingListItem { newItem -> addItem(newItem) }
 
     fun checkout() = shoppingListViewModel.checkout()
 

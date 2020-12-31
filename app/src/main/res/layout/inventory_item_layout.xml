@@ -56,11 +56,11 @@
         android:id="@+id/inventoryAmountEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="@string/item_amount_description"
         app:layout_constraintStart_toEndOf="@id/nameEdit"
         app:layout_constraintEnd_toStartOf="@id/editButton"
         app:layout_constraintTop_toTopOf="@id/colorEdit"
         app:layout_constraintBottom_toBottomOf="@id/colorEdit"
+        android:contentDescription="@string/item_amount_description"
         style="@style/InventoryItemAmountEdit" />
 
     <ImageButton

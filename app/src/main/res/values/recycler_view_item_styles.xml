@@ -33,9 +33,10 @@
         <item name="isEditable">false</item>
     </style>
 
-    <style name="ViewModelItemAmountEdit" parent="@style/NormalTextAppearance">
+    <style name="ViewModelItemAmountEdit" parent="@style/TextAppearance">
         <item name="minValue">1</item>
         <item name="isEditable">false</item>
+        <item name="android:textSize">22sp</item>
     </style>
 
     <style name="ViewModelItemEditButton">

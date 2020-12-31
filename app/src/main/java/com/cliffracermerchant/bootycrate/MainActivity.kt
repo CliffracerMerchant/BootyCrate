@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         bottomAppBar.indicatorWidth = 3 * bottomNavigationBar.itemIconSize
         bottomNavigationBar.setOnNavigationItemSelectedListener(onNavigationItemSelected)
 
-        Dialog.init(activity = this)
+        Dialog.init(activity = this, snackBarParent = coordinatorLayout)
         supportFragmentManager.addOnBackStackChangedListener {
             if (supportFragmentManager.backStackEntryCount == 0) {
                 showBottomAppBar()

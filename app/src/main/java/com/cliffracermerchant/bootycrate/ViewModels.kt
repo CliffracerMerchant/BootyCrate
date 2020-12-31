@@ -19,15 +19,14 @@ import java.util.concurrent.atomic.AtomicLong
  *  ter allow the view model user to modify the sorting or filtering used in
  *  retrieving the items.
  *
- *  ViewModel also provides support for treating new items differently through
- *  the public property newlyAddedItemId. This value will change to match the
- *  id of the most recently added item. External entities can compare this
- *  value to the id of items in order to determine the new item. resetNewly-
- *  AddedItemId() should usually be called after this value is utilized so that
- *  the most recently added item will not be treated as new forever until a new
- *  item is added. */
+ *  ViewModel provides support for treating new items differently through the
+ *  public property newlyAddedItemId. This value will change to match the id of
+ *  the most recently added item. External entities can compare this value to
+ *  the id of items in order to determine the new item. resetNewlyAddedItemId()
+ *  should usually be called after this value is utilized so that the most
+ *  recently added item will not be treated as new forever until a new item is
+ *  added. */
 abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewModel(app) {
-
     protected abstract val dao: DataAccessObject<Entity>
     private val sortAndFilterLiveData =
         MutableLiveData(Pair<ViewModelItem.Sort?, String?>(ViewModelItem.Sort.Color, ""))

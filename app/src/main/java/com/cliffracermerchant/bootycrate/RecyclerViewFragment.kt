@@ -53,7 +53,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         activity = requireActivity() as MainActivity
-        sortModePrefKey = activity.getString(R.string.pref_sort, activity.getString(recyclerView.collectionNameResId))
+        sortModePrefKey = activity.getString(R.string.pref_sort, recyclerView.collectionName)
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(sortModePrefKey, ViewModelItem.Sort.Color.toString())
         recyclerView.sort = ViewModelItem.Sort.fromString(sortStr)
@@ -104,8 +104,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
             } R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
             } R.id.export_menu_item -> {
-                Dialog.shareList(items = recyclerView.adapter.currentList,
-                                 snackBarAnchor = activity.bottomAppBar)
+                Dialog.shareList(items = recyclerView.adapter.currentList)
                 true
             } R.id.color_option -> {
                 recyclerView.sort = ViewModelItem.Sort.Color

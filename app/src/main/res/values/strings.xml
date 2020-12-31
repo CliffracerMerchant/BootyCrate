@@ -34,6 +34,7 @@
     <string name="delete_snackbar_undo_text">Undo</string>
     <string name="action_mode_title">%1$d item(s) selected</string>
 
+    <string name="item_collection_name">items</string>
     <string name="item_name_description">Item name</string>
     <string name="item_default_name">New item</string>
     <string name="item_extra_info_description">Item extra info</string>

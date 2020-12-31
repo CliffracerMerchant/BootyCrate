@@ -18,22 +18,21 @@ import com.google.android.material.snackbar.Snackbar
  *  RecyclerView interface toward displaying the contents of a ViewModel<
  *  Entity> and updating itself asynchronously using its custom ListAdapter-
  *  derived adapter type. To achieve this, its abstract properties diffUtilCall-
- *  back, adapter, and collectionNameResId must be overridden in subclasses.
- *  diffUtilCallback must be overridden with an appropriate DiffUtil.ItemCall-
- *  back<Entity> for the adapter. adapter must be overridden with a ViewModel-
- *  Adapter subclass that implements onCreateViewHolder. viewModel must be over-
- *  ridden with a concrete ViewModel<Entity> subclass that implements its
- *  abstract methods. collectionNameResId, used in user facing strings regar-
- *  ding the item collection, should be overridden with a string resource that
- *  describes the collection of items (e.g. inventory for a collection of inv-
- *  entory items).
+ *  back and adapter must be overridden in subclasses. diffUtilCallback must be
+ *  overridden with an appropriate DiffUtil.ItemCallback<Entity> for the adap-
+ *  ter. adapter must be overridden with a ViewModelAdapter subclass that imple-
+ *  ments onCreateViewHolder. While it is not abstract, the viewModel property
+ *  should probably be overridden with a concrete ViewModel<Entity> subclass
+ *  that implements its abstract methods. collectionName, used in user facing
+ *  strings regarding the item collection, should be overridden with a string
+ *  that describes the collection of items (e.g. inventory for a collection of
+ *  inventory items).
  *
  *  Because AndroidViewModels are created after views inflated from xml are
  *  created, it is necessary to finish initialization with these required mem-
  *  bers. To do this, the function finishInit must be called with an Lifecycle-
  *  Owner and a ViewModel<Entity> instance during runtime, but before any sort
- *  of data access is attempted. An initial sort can also be passed during this
- *  finishInit call.
+ *  of data access is attempted.
  *
  *  ViewModelRecyclerView has two public properties, sort and searchFilter,
  *  that mirror these properties from the view model from which it obtains its
@@ -42,8 +41,7 @@ import com.google.android.material.snackbar.Snackbar
  *
  *  To utilize ViewModel<Entity>'s support for treating new items differently,
  *  ViewModelRecyclerView has an open function onNewItemInsertion. onNewItem-
- *  Insertion smooth scrolls to the new item by default, but can be overridden
- *  in subclasses to change this.
+ *  Insertion smooth scrolls to the new item by default.
  *
  *  ViewModelRecyclerView provides public functions to execute most of View-
  *  Model<Entity>'s public functions such as add, delete, deleteAll, and undo-
@@ -66,7 +64,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
 
     abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
     abstract val adapter: ViewModelAdapter<out ViewModelItemViewHolder>
-    abstract val collectionNameResId: Int
+    abstract val collectionName: String
     private lateinit var viewModel: ViewModel<Entity>
     var snackBarAnchor: View? = null
 
@@ -104,20 +102,13 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     open fun undoDelete() { viewModel.undoDelete() }
 
     fun deleteAll() {
-        val collectionName = context.getString(collectionNameResId)
         if (adapter.currentList.isEmpty()) {
             val message = context.getString(R.string.delete_all_no_items_error_message, collectionName)
             Snackbar.make(this, message, Snackbar.LENGTH_SHORT).
                 setAnchorView(snackBarAnchor ?: this).show()
             return
         }
-        Dialog.themedAlertBuilder().
-            setMessage(context.getString(R.string.delete_all_items_confirmation_message, collectionName)).
-            setPositiveButton(android.R.string.yes) { _, _ ->
-                viewModel.deleteAll()
-                viewModel.emptyTrash()
-            }.setNegativeButton(android.R.string.cancel) { _, _ -> }.
-            show()
+        Dialog.deleteAllFromViewModel(viewModel, collectionName)
     }
 
     open fun onNewItemInsertion(item: Entity, vh: ViewModelItemViewHolder) =

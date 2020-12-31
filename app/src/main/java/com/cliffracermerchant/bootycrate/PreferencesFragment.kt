@@ -68,6 +68,6 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     }
 
     private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        Dialog.importDatabaseFromUri(uri, activity)
+        if (uri != null) Dialog.importDatabaseFromUri(uri, activity)
     }
 }

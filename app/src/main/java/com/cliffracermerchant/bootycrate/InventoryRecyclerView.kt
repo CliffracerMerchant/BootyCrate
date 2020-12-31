@@ -34,7 +34,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<InventoryItem>(context, attrs) {
     override val diffUtilCallback = InventoryItemDiffUtilCallback()
     override val adapter = InventoryAdapter()
-    override val collectionNameResId = R.string.inventory_item_collection_name
+    override val collectionName = context.getString(R.string.inventory_item_collection_name)
     private lateinit var inventoryViewModel: InventoryViewModel
     private lateinit var shoppingListViewModel: ShoppingListViewModel
 
@@ -48,9 +48,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         finishInit(owner, inventoryViewModel)
     }
 
-    fun addNewItem() = Dialog.newInventoryItem { newItem ->
-        inventoryViewModel.add(newItem)
-    }
+    fun addNewItem() = Dialog.newInventoryItem { newItem -> addItem(newItem) }
 
     /** A RecyclerView.Adapter to display the contents of a list of inventory items.
      *

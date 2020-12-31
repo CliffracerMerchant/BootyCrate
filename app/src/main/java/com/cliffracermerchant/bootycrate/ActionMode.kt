@@ -14,8 +14,8 @@ import androidx.appcompat.app.ActionBar
  *  ActionMode is intended to be a replacement for an androidx.appcompat.view.-
  *  ActionMode that reuses the action bar instead of replacing it. This can be
  *  useful when, for example, a toolbar with custom painting is being used as
- *  the action bar and you would like to reuse so that the look of the custom
- *  toolbar is preserved when in the action mode.
+ *  the action bar so that the look of the custom toolbar is preserved when the
+ *  action mode is started.
  *
  *  The ActionMode requires the activity of the fragment using it's action bar,
  *  the options menu, and optionally a custom title view. These are passed to

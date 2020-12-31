@@ -76,6 +76,7 @@
         <item name="colorPrimary">@color/colorAccent</item>
         <item name="android:background">@color/colorWindowBackgroundLight</item>
         <item name="android:textColor">@color/colorTextDark</item>
+        <item name="android:windowTitleStyle">@style/TitleTextAppearance</item>
     </style>
 
     <style name="DarkAlertDialog" parent="LightAlertDialog">
@@ -100,6 +101,10 @@
         <item name="android:autoLink">web</item>
         <item name="android:linksClickable">true</item>
         <item name="android:text">@string/about_app_body</item>
+    </style>
+
+    <style name="AddNewItemTitle" parent="@style/TitleTextAppearance">
+        <item name="android:text">@string/add_item_button_name</item>
     </style>
 
 </resources>

@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -76,9 +77,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         valueIsDirectlyEditable = a.getBoolean(R.styleable.IntegerEdit_valueIsDirectlyEditable, false)
 
         a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.textSize))
-        // For some reason the text size appears larger than it should be;
-        // the division by 2 is an approximation to correct this.
-        valueEdit.textSize = a.getDimensionPixelSize(0, 0) / 2f
+        valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimension(0, 0f))
         a.recycle()
 
         decreaseButton.setOnClickListener { decrement() }
