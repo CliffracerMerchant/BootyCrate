@@ -93,10 +93,10 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 ) : ViewModel<Entity>(app) {
 
     abstract override val dao : ExpandableSelectableItemDao<Entity>
-    /* Selection size is initialized lazily to prevent getSelectionSize from
-     * being accessed during initialization of ExpandableSelectableItemViewModel,
-     * before it is overridden in the descendant class. */
-    val selectionSize: LiveData<Int> by lazy { dao.getSelectionSize() }
+    /* Selection size is initialized lazily to prevent getSelectedItems() from
+     * being called on the dao during initialization of ExpandableSelectable-
+     * ItemViewModel, before it is overridden in the descendant class. */
+    val selectedItems: LiveData<List<Entity>> by lazy { dao.getSelectedItems() }
 
     fun resetExpandedItemAndSelection() = viewModelScope.launch {
         dao.resetExpandedItemAndSelection()

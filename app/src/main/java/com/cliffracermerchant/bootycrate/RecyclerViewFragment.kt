@@ -58,7 +58,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         val sortStr = prefs.getString(sortModePrefKey, ViewModelItem.Sort.Color.toString())
         recyclerView.sort = ViewModelItem.Sort.fromString(sortStr)
         recyclerView.snackBarAnchor = activity.bottomAppBar
-        recyclerView.selection.sizeLiveData.observe(viewLifecycleOwner, actionMode)
+        recyclerView.selection.itemsLiveData.observe(viewLifecycleOwner, actionMode)
         super.onViewCreated(view, savedInstanceState)
     }
 
@@ -73,8 +73,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         val actionBar = activity.supportActionBar
         actionBar?.run {
             actionMode.init(this, menu, activity.topActionBar.customTitle)
-            if (!recyclerView.selection.isEmpty)
-                actionMode.onChanged(recyclerView.selection.size ?: 0)
+            if (recyclerView.selection.isNotEmpty)
+                actionMode.onChanged(recyclerView.selection.items!!)
         }
 
         val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
@@ -99,12 +99,13 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         return when (item.itemId) {
             R.id.delete_selected_menu_item -> {
                 recyclerView.deleteSelectedItems()
-                //actionMode.finishAndClearSelection()
                 true
             } R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
             } R.id.export_menu_item -> {
-                Dialog.shareList(items = recyclerView.adapter.currentList)
+                Dialog.shareList(items = if (recyclerView.selection.size != 0)
+                                             recyclerView.selection.items!!
+                                         else recyclerView.adapter.currentList)
                 true
             } R.id.color_option -> {
                 recyclerView.sort = ViewModelItem.Sort.Color
@@ -149,12 +150,12 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
      *  but not the selection is desired. To clear the selection and end the action
      *  mode, either clear the selection manually, which will end the action mode, or
      *  call finishAndClearSelection. */
-    open inner class RecyclerViewActionMode() : ActionMode(), Observer<Int> {
+    open inner class RecyclerViewActionMode() : ActionMode(), Observer<List<Entity>> {
 
-        override fun onChanged(newSize: Int) {
-            if (newSize == 0) actionMode.finish()
-            else if (newSize > 0 && isActive) {
-                actionMode.title = activity.getString(R.string.action_mode_title, newSize)
+        override fun onChanged(newList: List<Entity>) {
+            if (newList.isEmpty()) actionMode.finish()
+            else if (newList.isNotEmpty() && isActive) {
+                actionMode.title = activity.getString(R.string.action_mode_title, newList.size)
                 actionMode.start()
             }
         }

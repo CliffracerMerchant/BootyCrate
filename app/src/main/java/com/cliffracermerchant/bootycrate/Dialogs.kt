@@ -79,9 +79,10 @@ object Dialog {
         intent.type = "HTTP.PLAIN_TEXT_TYPE"
 
         var message = ""
-        for (item in items)
-            message += item.toString() + "\n"
-        message.removeSuffix("\n")
+        for (i in 0 until items.size - 1)
+            message += items[i].toString() + "\n"
+        if (items.isNotEmpty())
+            message += items.last().toString()
 
         when (shareOption) {
             ShareOption.TextMessage -> {
@@ -193,6 +194,8 @@ object Dialog {
                         nameEdit.text?.clear()
                         extraInfoEdit.text?.clear()
                         inventoryAmountEdit.apply { value = minValue }
+                        addToShoppingListCheckBox.isChecked = false
+                        addToShoppingListTriggerEdit.apply { value = minValue }
                         // We'll leave the color edit set to whichever color it was on previously,
                         // in case the user wants to add items with like colors consecutively.
                         nameEdit.requestFocus()

@@ -38,8 +38,8 @@ import androidx.room.*
               ORDER BY amount DESC""")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT COUNT(*) FROM shopping_list_item WHERE isSelected AND NOT inTrash")
-    abstract override fun getSelectionSize(): LiveData<Int>
+    @Query("SELECT * FROM shopping_list_item WHERE isSelected AND NOT inTrash")
+    abstract override fun getSelectedItems(): LiveData<List<ShoppingListItem>>
 
     @Query("""INSERT INTO shopping_list_item (name, extraInfo, color, linkedItemId)
               SELECT name, extraInfo, color, id

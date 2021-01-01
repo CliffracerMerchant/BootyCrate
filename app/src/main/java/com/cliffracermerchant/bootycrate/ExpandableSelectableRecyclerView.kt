@@ -39,7 +39,6 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
     private lateinit var viewModel: ExpandableSelectableItemViewModel<Entity>
     private val itemAnimator = ExpandableItemAnimator()
 
-    val selectionSize get() = viewModel.selectionSize.value
     val selection = Selection()
 
     init {
@@ -87,9 +86,12 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
      *  stable id of the item being operated on. The function clear will erase
      *  the selection entirely. */
     inner class Selection {
-        val sizeLiveData get() = viewModel.selectionSize
-        val size get() = viewModel.selectionSize.value
+        val itemsLiveData get() = viewModel.selectedItems
+        val items get() = itemsLiveData.value
+        val size get() = items?.size ?: 0
         val isEmpty get() = size == 0
+        val isNotEmpty get() = size != 0
+
         fun add(id: Long) = viewModel.updateIsSelected(id, true)
         fun remove(id: Long) = viewModel.updateIsSelected(id, false)
         fun toggle(id: Long) = viewModel.toggleIsSelected(id)

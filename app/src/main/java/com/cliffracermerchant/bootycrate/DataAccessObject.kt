@@ -37,7 +37,7 @@ import androidx.room.Transaction
         clearExpandedItem()
         if (id != null) updateIsExpanded(id, true)
     }
-    abstract fun getSelectionSize(): LiveData<Int>
+    abstract fun getSelectedItems(): LiveData<List<Entity>>
     abstract suspend fun updateIsSelected(id: Long, isSelected: Boolean)
     abstract suspend fun toggleIsSelected(id: Long)
     abstract suspend fun deleteSelected()
