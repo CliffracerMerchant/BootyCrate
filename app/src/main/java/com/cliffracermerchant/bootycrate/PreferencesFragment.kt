@@ -45,8 +45,8 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                 // the theme to ensure that all fragments use the new theme.
                 activity?.recreate()
             }
-            getString(R.string.pref_export_database) -> getExportPath.launch(getString(R.string.exported_database_default_name))
-            getString(R.string.pref_import_database) -> getImportPath.launch(arrayOf("*/*"))
+//            getString(R.string.pref_export_database) -> getExportPath.launch(getString(R.string.exported_database_default_name))
+//            getString(R.string.pref_import_database) -> getImportPath.launch(arrayOf("*/*"))
             getString(R.string.pref_about_app) ->       Dialog.aboutApp()
             getString(R.string.pref_open_source_libraries_used) -> {
                 val context = activity ?: return false
@@ -62,12 +62,12 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         menu?.setGroupVisible(R.id.other_action_bar_menu_items, hidden)
     }
 
-    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
-        val context = this.context ?: return@registerForActivityResult
-        if (uri != null) BootyCrateDatabase.backup(context, uri)
-    }
-
-    private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) Dialog.importDatabaseFromUri(uri, activity)
-    }
+//    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
+//        val context = this.context ?: return@registerForActivityResult
+//        if (uri != null) BootyCrateDatabase.backup(context, uri)
+//    }
+//
+//    private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+//        if (uri != null) Dialog.importDatabaseFromUri(uri, activity)
+//    }
 }
