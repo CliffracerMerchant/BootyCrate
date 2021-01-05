@@ -40,12 +40,11 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
 ) : ConstraintLayout(ContextThemeWrapper(context, R.style.RecyclerViewItemStyle), attrs) {
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
+    private val gradientOutline get() = ((background as? LayerDrawable)?.getDrawable(1) as? LayerDrawable)?.getDrawable(0) as? GradientDrawable
 
     init {
-        val selectedBackground = (background as LayerDrawable).getDrawable(1) as LayerDrawable
-        val gradientOutline = selectedBackground.getDrawable(0) as GradientDrawable
-        gradientOutline.setTintList(null)
-        gradientOutline.orientation = GradientDrawable.Orientation.LEFT_RIGHT
+        gradientOutline?.setTintList(null)
+        gradientOutline?.orientation = GradientDrawable.Orientation.LEFT_RIGHT
         val colors = IntArray(7)
         // colorAccent at the ends looks a little too purple, so we'll use a
         // value half way between colorAccent and colorInBetweenPrimaryAccent2
@@ -57,7 +56,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         colors[4] = colors[2]
         colors[5] = colors[1]
         colors[6] = colors[0]
-        gradientOutline.colors = colors
+        gradientOutline?.colors = colors
     }
 
     open fun update(item: Entity) {
@@ -74,8 +73,6 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        val selectedBackground = (background as LayerDrawable).getDrawable(1) as LayerDrawable
-        val gradientOutline = selectedBackground.getDrawable(0) as GradientDrawable
         if (animate) {
             setLayerType(LAYER_TYPE_HARDWARE, null)
             ObjectAnimator.ofInt(gradientOutline, "alpha",
@@ -86,6 +83,6 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
                 start()
             }
         }
-        else gradientOutline.alpha = if (selected) 255 else 0
+        else gradientOutline?.alpha = if (selected) 255 else 0
     }
 }

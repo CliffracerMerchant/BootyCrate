@@ -45,7 +45,7 @@
         <item name="android:alpha">0</item>
         <item name="android:paddingLeft">4dp</item>
         <item name="android:paddingRight">4dp</item>
-        <item name="android:textColor">@android:color/holo_green_dark</item>
+        <item name="android:textColor">@color/colorInBetweenPrimaryAccent2</item>
         <item name="android:textSize" tools:ignore="SpUsage">22dp</item>
         <item name="android:textStyle">bold</item>
     </style>

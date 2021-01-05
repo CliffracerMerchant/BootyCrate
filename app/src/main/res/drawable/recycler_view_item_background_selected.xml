@@ -14,7 +14,12 @@
         android:left="3dp"
         android:top="3dp"
         android:right="3dp"
-        android:bottom="3dp"
-        android:drawable="@drawable/recycler_view_item_background_base" />
+        android:bottom="3dp">
+        <shape
+            android:shape="rectangle">
+            <solid android:color="?attr/recyclerViewItemColor" />
+            <corners android:radius="7dp"/>
+        </shape>
+    </item>
 </layer-list>
 

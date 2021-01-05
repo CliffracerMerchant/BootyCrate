@@ -279,7 +279,7 @@ class MainActivity : AppCompatActivity() {
                 shoppingListSize = newShoppingList.size
         } else {
             val sizeChange = newShoppingList.size - shoppingListSize
-            if (showingPreferences && showingInventory && sizeChange > 0) {
+            if (activeFragment == inventoryFragment && sizeChange > 0) {
                 shoppingListNumNewItems += sizeChange
                 shoppingListBadge.text = getString(R.string.shopping_list_badge_text,
                                                    shoppingListNumNewItems)
