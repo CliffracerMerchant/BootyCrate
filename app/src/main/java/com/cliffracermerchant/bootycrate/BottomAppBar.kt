@@ -103,8 +103,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : GradientToolbar(cont
         canvas.drawPath(outlinePath, backgroundPaint)
         canvas.drawPath(topEdgePath, borderPaint)
         canvas.withClip(indicatorXPos, 0, indicatorXPos + indicatorWidth, bottom) {
-            drawPath(topEdgePath, indicatorPaint)
-        }
+            drawPath(topEdgePath, indicatorPaint) }
     }
 
     fun prepareCradleLayout(cradleLayout: ViewGroup) {
@@ -117,13 +116,11 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : GradientToolbar(cont
                 CradleAlignmentMode.Start -> {
                     gravity = Gravity.BOTTOM or Gravity.START
                     marginStart = cradleStartEndMargin + cradleContentsMargin
-                }
-                CradleAlignmentMode.Center -> {
+                } CradleAlignmentMode.Center -> {
                     gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
                     this@BottomAppBar.measure(wrapContentSpec, wrapContentSpec)
                     bottomMargin = this@BottomAppBar.measuredHeight + cradleContentsMargin - cradleDepth
-                }
-                CradleAlignmentMode.End -> {
+                } CradleAlignmentMode.End -> {
                     gravity = Gravity.BOTTOM or Gravity.END
                     marginEnd = cradleStartEndMargin + cradleContentsMargin
                 }
@@ -143,7 +140,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : GradientToolbar(cont
      *  accomplish this, and is therefore not usable outside its outer class.
      *
      *  CradleTopEdgeTreatment does not support the interpolation feature of
-     *  EdgeTreament. */
+     *  EdgeTreatment. */
     inner class CradleTopEdgeTreatment : EdgeTreatment() {
         override fun getEdgePath(
             length: Float,
@@ -183,39 +180,45 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : GradientToolbar(cont
                 (arcOffset.toFloat() - arcQuarter).coerceAtLeast(-90f)
             } else -arcQuarter
 
-            shapePath.lineTo(0f, pathOffset)
-            shapePath.lineTo(start - cradleTopCornerRadius, pathOffset)
-            shapePath.addArc(/*left*/       start - 2 * cradleTopCornerRadius,
-                             /*top*/        pathOffset,
-                             /*right*/      start,
-                             /*bottom*/     2f * cradleTopCornerRadius + pathOffset,
-                             /*startAngle*/ angleUp,
-                             /*sweepAngle*/ topCornerArc)
-            if (cradleVerticalSideLength > 0)
-                shapePath.lineTo(start, cradleDepth - cradleBottomCornerRadius + pathOffset)
-            shapePath.addArc(/*left*/       start,
-                             /*top*/        cradleDepth - 2 * cradleBottomCornerRadius + pathOffset,
-                             /*right*/      start + 2 * cradleBottomCornerRadius,
-                             /*bottom*/     cradleDepth + pathOffset,
-                             /*startAngle*/ angleDown + topCornerArc,
-                             /*sweepAngle*/ bottomCornerArc)
-            shapePath.lineTo(end - cradleBottomCornerRadius, cradleDepth + pathOffset)
-            shapePath.addArc(/*left*/       end - 2 * cradleBottomCornerRadius,
-                             /*top*/        cradleDepth - 2 * cradleBottomCornerRadius + pathOffset,
-                             /*right*/      end,
-                             /*bottom*/     cradleDepth + pathOffset,
-                             /*startAngle*/ angleDown,
-                             /*sweepAngle*/ bottomCornerArc)
-            if (cradleVerticalSideLength > 0)
-                shapePath.lineTo(end, cradleDepth - cradleBottomCornerRadius + pathOffset)
-            shapePath.addArc(/*left*/       end,
-                             /*top*/        pathOffset,
-                             /*right*/      end + 2 * cradleTopCornerRadius,
-                             /*bottom*/     2 * cradleTopCornerRadius + pathOffset,
-                             /*startAngle*/ angleUp + bottomCornerArc,
-                             /*sweepAngle*/ topCornerArc)
-            shapePath.lineTo(length, pathOffset)
-
+            shapePath.apply {
+                lineTo(0f, pathOffset)
+                lineTo(start - cradleTopCornerRadius, pathOffset)
+                addArc(/*left*/       start - 2 * cradleTopCornerRadius,
+                       /*top*/        pathOffset,
+                       /*right*/      start,
+                       /*bottom*/     2f * cradleTopCornerRadius + pathOffset,
+                       /*startAngle*/ angleUp,
+                       /*sweepAngle*/ topCornerArc)
+                if (cradleVerticalSideLength > 0)
+                    lineTo(start, cradleDepth - cradleBottomCornerRadius + pathOffset)
+                addArc(/*left*/       start,
+                       /*top*/        cradleDepth - 2 * cradleBottomCornerRadius + pathOffset,
+                       /*right*/      start + 2 * cradleBottomCornerRadius,
+                       /*bottom*/     cradleDepth + pathOffset,
+                       /*startAngle*/ angleDown + topCornerArc,
+                       /*sweepAngle*/ bottomCornerArc)
+                lineTo(end - cradleBottomCornerRadius, cradleDepth + pathOffset)
+                addArc(/*left*/       end - 2 * cradleBottomCornerRadius,
+                       /*top*/        cradleDepth - 2 * cradleBottomCornerRadius + pathOffset,
+                       /*right*/      end,
+                       /*bottom*/     cradleDepth + pathOffset,
+                       /*startAngle*/ angleDown,
+                       /*sweepAngle*/ bottomCornerArc)
+                if (cradleVerticalSideLength > 0)
+                    lineTo(end, cradleDepth - cradleBottomCornerRadius + pathOffset)
+                addArc(/*left*/       end,
+                       /*top*/        pathOffset,
+                       /*right*/      end + 2 * cradleTopCornerRadius,
+                       /*bottom*/     2 * cradleTopCornerRadius + pathOffset,
+                       /*startAngle*/ angleUp + bottomCornerArc,
+                       /*sweepAngle*/ topCornerArc)
+                // There seems to be some slight miscalculation in the topCornerArc, or
+                // elsewhere, that causes the y value after the above arc to be slightly
+                // off. This will cause a tilt in the final horizontal line. The follo-
+                // wing lineTo puts the current y at pathOffset, where it should be.
+                lineTo(endX, pathOffset)
+                lineTo(width.toFloat(), pathOffset)
+            }
             // Copy the shapePath to topEdgePath and outlinePath, and additionally
             // finish the outlinePath so that it goes all the way around the view.
             topEdgePath.rewind()
