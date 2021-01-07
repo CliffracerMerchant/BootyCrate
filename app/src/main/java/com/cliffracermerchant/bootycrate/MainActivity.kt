@@ -361,7 +361,7 @@ class MainActivity : AppCompatActivity() {
         val blendColor = ContextCompat.getColor(this, R.color.colorRecyclerViewItemDark)
         val dimmedColors = IntArray(4) { ColorUtils.compositeColors(ColorUtils.setAlphaComponent(colors[it], alpha), blendColor) }
 
-        val gradientBuilder = Gradient.Builder()
+        val gradientBuilder = GradientBuilder()
         topFgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight * 1.25f).
                                         setX2(screenWidth * 0.9f).setY2(actionBarHeight * 1.5f).
                                         setColors(colors).buildRadialGradient()

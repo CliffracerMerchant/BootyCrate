@@ -7,7 +7,6 @@ package com.cliffracermerchant.bootycrate
 
 import android.graphics.*
 import android.graphics.drawable.Drawable
-import android.view.View
 import androidx.core.graphics.PathParser
 
 /** A vector drawable that strokes a path supplied in the constructor with a gradient background.
@@ -30,65 +29,24 @@ import androidx.core.graphics.PathParser
  *  the required parameters (besides the gradient builder and the parent coor-
  *  dinates, which are unknowable before runtime and would have to be set using
  *  setGradient) are provided in res/attrs.xml. */
-class GradientVectorDrawable private constructor(
-    private val width: Float,
-    private val height: Float,
+class GradientVectorDrawable(
+    private val width: Int,
+    private val height: Int,
     pathWidth: Float,
     pathHeight: Float,
     pathData: String,
-    gradientBuilder: Gradient.Builder,
-    parent: View? = null,
-    posX: Float = 0f,
-    posY: Float = 0f
+    gradient: Shader
 ) : Drawable() {
     private val paint = Paint()
     private var path = Path()
 
-    companion object {
-        val matrix = Matrix()
-
-        fun forParent(
-            width: Float, height: Float,
-            pathWidth: Float, pathHeight: Float,
-            pathData: String,
-            gradientBuilder: Gradient.Builder,
-            parent: View
-        ) = GradientVectorDrawable(width, height, pathWidth, pathHeight,
-                                   pathData, gradientBuilder, parent)
-
-        fun forParent(
-            size: Float,
-            pathSize: Float,
-            pathData: String,
-            gradientBuilder: Gradient.Builder,
-            parent: View
-        ) = GradientVectorDrawable(size, size, pathSize, pathSize,
-                                   pathData, gradientBuilder, parent)
-
-        fun atPos(
-            width: Float, height: Float,
-            pathWidth: Float, pathHeight: Float,
-            pathData: String,
-            gradientBuilder: Gradient.Builder,
-            xPos: Float, yPos: Float
-        ) = GradientVectorDrawable(width, height, pathWidth, pathHeight,
-                                   pathData, gradientBuilder, null, xPos, yPos)
-
-        fun atPos(
-            size: Float,
-            pathSize: Float,
-            pathData: String,
-            gradientBuilder: Gradient.Builder,
-            xPos: Float, yPos: Float
-        ) = GradientVectorDrawable(size, size, pathSize, pathSize,
-                                   pathData, gradientBuilder, null, xPos, yPos)
-    }
+    // For when the size and pathSize are both squares.
+    constructor(size: Int, pathSize: Float, pathData: String, gradient: Shader) :
+        this(size, size, pathSize, pathSize, pathData, gradient)
 
     init {
         paint.style = Paint.Style.FILL
-        paint.shader =
-            if (parent != null) Gradient.radialWithParentOffset(gradientBuilder, parent)
-            else                Gradient.radialWithOffset(gradientBuilder, posX, posY)
+        paint.shader = gradient
         setPathData(pathData, pathWidth, pathHeight)
     }
 
@@ -96,15 +54,15 @@ class GradientVectorDrawable private constructor(
 
     fun setPathData(pathData: String, pathWidth: Float, pathHeight: Float) {
         path = PathParser.createPathFromPathData(pathData)
-        matrix.reset()
+        val matrix = Matrix()
         matrix.setScale(width / pathWidth, height / pathHeight)
         path.transform(matrix)
     }
 
     override fun draw(canvas: Canvas) = canvas.drawPath(path, paint)
 
-    override fun getIntrinsicWidth(): Int = width.toInt()
-    override fun getIntrinsicHeight(): Int = height.toInt()
+    override fun getIntrinsicWidth() = width
+    override fun getIntrinsicHeight() = height
 
     override fun setAlpha(alpha: Int) { paint.alpha = alpha }
 
