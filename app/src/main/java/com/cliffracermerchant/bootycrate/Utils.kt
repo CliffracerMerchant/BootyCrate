@@ -5,6 +5,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.LayoutTransition
+import android.graphics.Bitmap
 import android.view.View
 import android.view.ViewGroup
 
@@ -30,8 +31,8 @@ fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
     })
 }
 
-/** For a given position in a range, returns the position after a move
- *  operation on one or more items is performed.
+/** For a given position in a range, return the position after
+ *  a move operation on one or more items is performed.
  *  @param pos The before move position whose position after the move is desired.
  *  @param moveStartPos The start position of the to-be-moved range before the move.
  *  @param moveEndPos The start position of the to-be-moved range after the move.
@@ -48,3 +49,7 @@ fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, move
         pos - moveCount
     else pos
 }
+
+/** Return the color of the pixel located at the center of the given view. */
+fun Bitmap.getPixelAtViewCenter(view: View) = getPixel(view.left + view.width / 2,
+                                                       view.top + view.height / 2)

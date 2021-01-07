@@ -8,7 +8,7 @@ import android.animation.Animator
 import android.animation.LayoutTransition
 import android.animation.ObjectAnimator
 import android.app.Activity
-import android.graphics.Rect
+import android.graphics.*
 import android.os.Bundle
 import android.os.Handler
 import android.util.TypedValue
@@ -65,10 +65,12 @@ class MainActivity : AppCompatActivity() {
     lateinit var checkoutBtn: TintableForegroundButton
     lateinit var menu: Menu
 
-    val topBgGradientBuilder = Gradient.Builder()
-    val topFgGradientBuilder = Gradient.Builder()
-    val bottomBgGradientBuilder = Gradient.Builder()
-    val bottomFgGradientBuilder = Gradient.Builder()
+    lateinit var topFgGradientBitmap: Bitmap
+    lateinit var bottomFgGradientBitmap: Bitmap
+    lateinit var topBgGradient: Shader
+    lateinit var topFgGradient: Shader
+    lateinit var bottomBgGradient: Shader
+    lateinit var bottomFgGradient: Shader
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -336,13 +338,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun initGradients() {
         val screenWidth = resources.displayMetrics.widthPixels
-        val screenHeight = resources.displayMetrics.heightPixels
         val typedValue = TypedValue()
         theme.resolveAttribute(R.attr.actionBarSize, typedValue, true)
         val actionBarHeight = typedValue.getDimension(resources.displayMetrics)
-
-        val topGradientYOffset = actionBarHeight * 3f/2f
-        val bottomGradientYOffset = screenHeight - actionBarHeight * 3f / 4f
 
         // Foreground colors
         val colors = IntArray(4)
@@ -363,40 +361,37 @@ class MainActivity : AppCompatActivity() {
         val blendColor = ContextCompat.getColor(this, R.color.colorRecyclerViewItemDark)
         val dimmedColors = IntArray(4) { ColorUtils.compositeColors(ColorUtils.setAlphaComponent(colors[it], alpha), blendColor) }
 
-        topFgGradientBuilder.setX1(screenWidth / 2f).setY1(topGradientYOffset).
-                             setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f).
-                             setColors(colors)
-        topBgGradientBuilder.setX1(screenWidth / 2f).setY1(topGradientYOffset).
-                             setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f).
-                             setColors(dimmedColors)
-        bottomFgGradientBuilder.setColors(colors)
-        bottomBgGradientBuilder.setColors(dimmedColors)
+        val gradientBuilder = Gradient.Builder()
+        topFgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight * 1.25f).
+                                        setX2(screenWidth * 0.9f).setY2(actionBarHeight * 1.5f).
+                                        setColors(colors).buildRadialGradient()
+        topBgGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
+        bottomBgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(0f).buildRadialGradient()
+        bottomFgGradient = gradientBuilder.setColors(colors).buildRadialGradient()
 
-        topActionBar.doOnNextLayout {
-            topActionBar.setBackgroundGradient(Gradient.radialWithParentOffset(topBgGradientBuilder, topActionBar))
-            topActionBar.setBorderGradient(Gradient.radialWithParentOffset(topFgGradientBuilder, topActionBar))
-            customTitle.paint.shader = Gradient.radialWithParentOffset(topFgGradientBuilder, customTitle)
-        }
+        topFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+        bottomFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(topFgGradientBitmap)
+        val paint = Paint()
+        paint.style = Paint.Style.FILL
+        paint.shader = topFgGradient
+        canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
-        bottomAppBar.doOnNextLayout {
-            bottomFgGradientBuilder.setX1(screenWidth / 2f).setY1(bottomGradientYOffset).
-                                    setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f)
-            bottomBgGradientBuilder.setX1(screenWidth / 2f).setY1(bottomGradientYOffset).
-                                    setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f)
-            bottomAppBar.setBackgroundGradient(Gradient.radialWithParentOffset(bottomBgGradientBuilder, bottomAppBar))
-            bottomAppBar.setBorderGradient(Gradient.radialWithParentOffset(bottomFgGradientBuilder, bottomAppBar))
-        }
+        canvas.setBitmap(bottomFgGradientBitmap)
+        paint.shader = bottomFgGradient
+        canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
-        fab.doOnNextLayout {
-            val rect = Rect()
-            fab.getGlobalVisibleRect(rect)
-            val fabMiddle = rect.left + rect.width() / 2f
-            bottomFgGradientBuilder.setX1(fabMiddle).setY1(bottomGradientYOffset).
-                                    setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f)
-            bottomBgGradientBuilder.setX1(fabMiddle).setY1(bottomGradientYOffset).
-                                    setX2(screenWidth * 0.7f).setY2(actionBarHeight * 1.5f)
-            fab.setGradients(bottomFgGradientBuilder, bottomBgGradientBuilder)
-        }
+        topActionBar.setBackgroundGradient(topBgGradient)
+        topActionBar.setBorderGradient(topFgGradient)
+        customTitle.paint.shader = topFgGradient
+
+        //bottomAppBar.background = BitmapDrawable(resources, bottomBgGradientBitmap)
+        bottomAppBar.setBackgroundGradient(bottomBgGradient)
+        bottomAppBar.setBorderGradient(bottomFgGradient)
+        bottomAppBar.setIndicatorGradient(bottomFgGradient)
+        gradientBuilder.setX1(fab.width / 2f).setY1(fab.height / 2f)
+        fab.setForegroundGradient(gradientBuilder.buildRadialGradient())
+        fab.setBackgroundGradient(gradientBuilder.setColors(dimmedColors).buildRadialGradient())
     }
 
     private fun initOptionsMenuIcons() {
@@ -417,69 +412,52 @@ class MainActivity : AppCompatActivity() {
         execution from getting stuck in a loop.*/
         var finished = false
         handler.post {
-            val iconSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                                     24f, resources.displayMetrics)
-            val iconPathSize = 24f
-
-
             // Home as up icon
-            // The home as up indicator icon should be close enough to the top left of
-            // the screen that we can assume its position is 0,0.
-            var pathData = getString(R.string.home_as_up_indicator_icon_path_data)
-            val backIcon = GradientVectorDrawable.forParent(
-                iconSize, iconPathSize, pathData, topFgGradientBuilder, topActionBar)
-            supportActionBar?.setHomeAsUpIndicator(backIcon)
-            topActionBar.collapseIcon = backIcon
-
+            ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_black_24dp)?.apply {
+                setTint(topFgGradientBitmap.getPixel(topActionBar.height / 2, topActionBar.height / 2))
+                supportActionBar?.setHomeAsUpIndicator(this)
+                topActionBar.collapseIcon = this
+            }
 
             // Search view
             var menuItem = menu.findItem(R.id.app_bar_search)
             val searchView = menuItem.actionView as SearchView
             val searchEditText = searchView.findViewById<EditText>(
                 androidx.appcompat.R.id.search_src_text) ?: return@post
-            searchEditText.paint.shader =
-                Gradient.radialWithParentOffset(topFgGradientBuilder, customTitle)
+            val colors = intArrayOf(ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1),
+                                    ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2))
+            searchEditText.paint.shader = LinearGradient(0f, searchEditText.height.toFloat(),
+                                                         0f, 0f, colors, null, Shader.TileMode.CLAMP)
 
             val searchButton = topActionBar.findViewById<View>(R.id.app_bar_search) ?: return@post
-            pathData = getString(R.string.search_icon_path_data)
-            menuItem.icon = GradientVectorDrawable.forParent(
-                iconSize, iconPathSize, pathData, topFgGradientBuilder, searchButton)
+            menuItem.icon.setTint(topFgGradientBitmap.getPixelAtViewCenter(searchButton))
 
             val searchClose = searchView.findViewById<ImageView>(
                 androidx.appcompat.R.id.search_close_btn) ?: return@post
-            pathData = getString(R.string.close_icon_path_data)
-            searchClose.setImageDrawable(GradientVectorDrawable.forParent(
-                iconSize, iconPathSize, pathData, topFgGradientBuilder, searchClose))
+            searchClose.drawable.setTint(topFgGradientBitmap.getPixelAtViewCenter(searchButton))
 
 
             // Change sort icon
             val changeSortButton = topActionBar.findViewById<View>(
                 R.id.change_sorting_menu_item) ?: return@post
-            pathData = getString(R.string.sort_icon_path_data)
             menuItem = menu.findItem(R.id.change_sorting_menu_item)
-            menuItem.icon = GradientVectorDrawable.forParent(
-                iconSize, iconPathSize, pathData, topFgGradientBuilder, changeSortButton)
+            menuItem.icon.setTint(topFgGradientBitmap.getPixelAtViewCenter(changeSortButton))
 
 
             // Delete icon
-            pathData = getString(R.string.delete_icon_path_data)
             // When the action mode is active, the delete button should
             // appear where the change sort button is normally, so we'll
             // just use the change sort button as the parent.
             menuItem = menu.findItem(R.id.delete_selected_menu_item)
-            menuItem.icon = GradientVectorDrawable.forParent(
-                iconSize, iconPathSize, pathData, topFgGradientBuilder, changeSortButton)
+            menuItem.icon.setTint(topFgGradientBitmap.getPixelAtViewCenter(changeSortButton))
 
 
             // Overflow icon
             // It's hard to get the view that holds the overflow icon, so we just
             // shift the change_sorting_menu_item rect over by its width, which
             // should give a decent approximation of the overflow icon's position.
-            pathData = getString(R.string.overflow_icon_path_data)
-            val rect = Rect()
-            changeSortButton.getGlobalVisibleRect(rect)
-            topActionBar.overflowIcon = GradientVectorDrawable.atPos(
-                iconSize, iconPathSize, pathData, topFgGradientBuilder, rect.left * 1f, rect.top * 1f)
+            topActionBar.overflowIcon?.setTint(topFgGradientBitmap.getPixel(
+                topActionBar.width - topActionBar.height / 2, topActionBar.height / 2))
 
             finished = true
         }

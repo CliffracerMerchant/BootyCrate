@@ -33,7 +33,8 @@ import kotlin.math.atan
  *  manually set in pixels using the property indicatorXPos. The width (also in
  *  pixels) can be set via the XML attribute indicatorWidth, or at runtime using
  *  the property of the same name. The indicator color can be set using the XML
- *  property indicatorColor.
+ *  property indicatorColor. The indicator can also have a paint shader applied
+ *  as well using setIndicatorGradient.
  *
  *  XML attributes:
  *  - cradleAlignmentMode: CradleAlignmentMode = CradleAlignmentMode.Center:
