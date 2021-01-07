@@ -13,6 +13,7 @@ import android.graphics.Paint
 import android.graphics.Shader
 import android.util.AttributeSet
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.doOnNextLayout
 
 /** A toolbar that allows for setting a gradient as a background and / or border.
  *
@@ -57,5 +58,30 @@ open class GradientToolbar(context: Context, attrs: AttributeSet) : Toolbar(cont
         if (borderMode == BorderMode.Bottom || borderMode == BorderMode.TopBottom)
             canvas.drawRect(left * 1f, bottom  - borderThickness,
                             left + width * 1f, bottom * 1f, borderPaint)
+    }
+}
+
+class TopActionBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
+    init {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.TopActionBar)
+        val borderWidth = a.getDimension(R.styleable.TopActionBar_bottomBorderWidth, 0f)
+        a.recycle()
+        doOnNextLayout {
+            val backgroundPathData = "L $width,0 L $width,$height L 0,$height Z"
+            val borderPathData = "M 0, ${height - borderWidth / 2f} L $width,${height - borderWidth / 2f}"
+            background = BackgroundForegroundGradientVectorDrawable.create(
+                width, height, width.toFloat(), height.toFloat(),
+                backgroundPathData, borderPathData, null, null
+            ).apply {
+                foregroundLayer.style = Paint.Style.STROKE
+                foregroundLayer.strokeWidth = borderWidth
+            }
+        }
+    }
+    fun initGradients(backgroundGradient: Shader, borderGradient: Shader) = doOnNextLayout {
+        (background as BackgroundForegroundGradientVectorDrawable).apply {
+            setBackgroundGradient(backgroundGradient)
+            setForegroundGradient(borderGradient)
+        }
     }
 }

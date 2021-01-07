@@ -11,6 +11,7 @@
         <item name="popupMenuBackground">@color/colorWindowBackgroundLight</item>
         <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
         <item name="snackbarStyle">@style/SnackbarStyle</item>
+        <item name="borderWidth">4dp</item>
 
         <item name="textColor">@color/colorTextDark</item>
         <item name="android:textColorPrimary">@color/colorTextDark</item>

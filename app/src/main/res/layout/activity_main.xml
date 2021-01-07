@@ -13,11 +13,10 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.cliffracermerchant.bootycrate.GradientToolbar
+    <com.cliffracermerchant.bootycrate.TopActionBar
         android:id="@+id/topActionBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:minHeight="?attr/actionBarSize"
         style="@style/TopActionBar" >
 
         <TextView
@@ -27,7 +26,7 @@
             tools:textColor="@color/colorPrimary"
             style="@style/CustomTitle" />
 
-    </com.cliffracermerchant.bootycrate.GradientToolbar>
+    </com.cliffracermerchant.bootycrate.TopActionBar>
 
     <FrameLayout
         android:id="@+id/fragmentContainer"

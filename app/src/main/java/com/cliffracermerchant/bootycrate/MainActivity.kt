@@ -381,11 +381,9 @@ class MainActivity : AppCompatActivity() {
         paint.shader = bottomFgGradient
         canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
-        topActionBar.setBackgroundGradient(topBgGradient)
-        topActionBar.setBorderGradient(topFgGradient)
+        topActionBar.initGradients(topBgGradient, topFgGradient)
         customTitle.paint.shader = topFgGradient
 
-        //bottomAppBar.background = BitmapDrawable(resources, bottomBgGradientBitmap)
         bottomAppBar.setBackgroundGradient(bottomBgGradient)
         bottomAppBar.setBorderGradient(bottomFgGradient)
         bottomAppBar.setIndicatorGradient(bottomFgGradient)

@@ -7,6 +7,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.graphics.*
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.LayerDrawable
 import androidx.core.graphics.PathParser
 
 /** A vector drawable that strokes a path supplied in the constructor with a gradient background.
@@ -35,13 +36,19 @@ class GradientVectorDrawable(
     pathWidth: Float,
     pathHeight: Float,
     pathData: String,
-    gradient: Shader
+    gradient: Shader? = null
 ) : Drawable() {
     private val paint = Paint()
     private var path = Path()
+    var style get() = paint.style
+              set(value) { paint.style = value }
+    var strokeWidth get() = paint.strokeWidth
+                    set(value) { paint.strokeWidth = value }
+    var gradient get() = paint.shader
+                 set(value) { paint.shader = value }
 
     // For when the size and pathSize are both squares.
-    constructor(size: Int, pathSize: Float, pathData: String, gradient: Shader) :
+    constructor(size: Int, pathSize: Float, pathData: String, gradient: Shader?) :
         this(size, size, pathSize, pathSize, pathData, gradient)
 
     init {
@@ -49,8 +56,6 @@ class GradientVectorDrawable(
         paint.shader = gradient
         setPathData(pathData, pathWidth, pathHeight)
     }
-
-    fun setGradient(gradient: Shader) { paint.shader = gradient }
 
     fun setPathData(pathData: String, pathWidth: Float, pathHeight: Float) {
         path = PathParser.createPathFromPathData(pathData)
@@ -71,4 +76,32 @@ class GradientVectorDrawable(
     override fun getOpacity(): Int = when (paint.alpha) { 0    -> PixelFormat.TRANSPARENT
                                                           255  -> PixelFormat.OPAQUE
                                                           else -> PixelFormat.TRANSLUCENT }
+}
+
+class BackgroundForegroundGradientVectorDrawable(backgroundDrawable: GradientVectorDrawable,
+                                                 foregroundDrawable: GradientVectorDrawable) :
+    LayerDrawable(arrayOf(backgroundDrawable, foregroundDrawable))
+{
+    val backgroundLayer get() = getDrawable(0) as GradientVectorDrawable
+    val foregroundLayer get() = getDrawable(1) as GradientVectorDrawable
+
+    fun setBackgroundGradient(gradient: Shader) { backgroundLayer.gradient = gradient }
+    fun setForegroundGradient(gradient: Shader) { foregroundLayer.gradient = gradient }
+
+    companion object {
+        fun create(width: Int, height: Int,
+                   pathWidth: Float, pathHeight: Float,
+                   bgPathData: String, fgPathData: String,
+                   bgGradient: Shader?, fgGradient: Shader?) =
+            BackgroundForegroundGradientVectorDrawable(
+                GradientVectorDrawable(width, height, pathWidth, pathHeight, bgPathData, bgGradient),
+                GradientVectorDrawable(width, height, pathWidth, pathHeight, fgPathData, fgGradient))
+
+        fun create(size: Int, pathSize: Float,
+                   bgPathData: String, fgPathData: String,
+                   bgGradient: Shader?, fgGradient: Shader?) =
+            BackgroundForegroundGradientVectorDrawable(
+                GradientVectorDrawable(size, pathSize, bgPathData, bgGradient),
+                GradientVectorDrawable(size, pathSize, fgPathData, fgGradient))
+    }
 }
