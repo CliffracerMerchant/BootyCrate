@@ -61,11 +61,6 @@
     </style>
 
     <style name="FloatingActionButton">
-        <item name="android:padding">14dp</item>
-        <item name="iconPathSize">24</item>
-        <item name="iconSize">24dp</item>
-        <item name="borderThickness">4dp</item>
-        <item name="iconPathData">@string/add_icon_path_data</item>
         <item name="android:elevation">3dp</item>
     </style>
 

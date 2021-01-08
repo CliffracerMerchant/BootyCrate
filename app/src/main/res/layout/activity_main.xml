@@ -78,7 +78,7 @@
             app:layout_constraintStart_toStartOf="parent"
             style="@style/CheckoutButton" />
 
-        <com.cliffracermerchant.bootycrate.RoundGradientButton
+        <com.cliffracermerchant.bootycrate.AddButton
             android:id="@+id/floatingActionButton"
             android:layout_width="56dp"
             android:layout_height="56dp"

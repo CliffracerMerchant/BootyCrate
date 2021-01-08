@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
 
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var inventoryViewModel: InventoryViewModel
-    lateinit var fab: RoundGradientButton
+    lateinit var fab: AddButton
     lateinit var checkoutBtn: TintableForegroundButton
     lateinit var menu: Menu
 
@@ -388,8 +388,8 @@ class MainActivity : AppCompatActivity() {
         bottomAppBar.setBorderGradient(bottomFgGradient)
         bottomAppBar.setIndicatorGradient(bottomFgGradient)
         gradientBuilder.setX1(fab.width / 2f).setY1(fab.height / 2f)
-        fab.setForegroundGradient(gradientBuilder.buildRadialGradient())
-        fab.setBackgroundGradient(gradientBuilder.setColors(dimmedColors).buildRadialGradient())
+        fab.initGradients(gradientBuilder.setColors(dimmedColors).buildRadialGradient(),
+                          gradientBuilder.setColors(colors).buildRadialGradient())
     }
 
     private fun initOptionsMenuIcons() {

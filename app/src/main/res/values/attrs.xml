@@ -92,15 +92,6 @@
         <attr name="pathHeight" format="float" />
     </declare-styleable>
 
-    <declare-styleable name="RoundGradientButton">
-        <!-- The string containing the path data to use for the button's icon. -->
-        <attr name="iconPathData"   format="string" />
-        <!-- The side length of the square icon. -->
-        <attr name="iconSize"       format="dimension" />
-        <!-- The side length of the square canvas the icon path is drawn on. -->
-        <attr name="iconPathSize"   format="float" />
-    </declare-styleable>
-
     <declare-styleable name="TintableForegroundButton">
         <!-- The drawable to use for the background. -->
         <attr name="backgroundDrawable" format="reference" />
