@@ -48,7 +48,7 @@ class GradientVectorDrawable(
                  set(value) { paint.shader = value }
 
     // For when the size and pathSize are both squares.
-    constructor(size: Int, pathSize: Float, pathData: String, gradient: Shader?) :
+    constructor(size: Int, pathSize: Float, pathData: String, gradient: Shader? = null) :
         this(size, size, pathSize, pathSize, pathData, gradient)
 
     init {
@@ -76,32 +76,4 @@ class GradientVectorDrawable(
     override fun getOpacity(): Int = when (paint.alpha) { 0    -> PixelFormat.TRANSPARENT
                                                           255  -> PixelFormat.OPAQUE
                                                           else -> PixelFormat.TRANSLUCENT }
-}
-
-class BackgroundForegroundGradientVectorDrawable(backgroundDrawable: GradientVectorDrawable,
-                                                 foregroundDrawable: GradientVectorDrawable) :
-    LayerDrawable(arrayOf(backgroundDrawable, foregroundDrawable))
-{
-    val backgroundLayer get() = getDrawable(0) as GradientVectorDrawable
-    val foregroundLayer get() = getDrawable(1) as GradientVectorDrawable
-
-    fun setBackgroundGradient(gradient: Shader) { backgroundLayer.gradient = gradient }
-    fun setForegroundGradient(gradient: Shader) { foregroundLayer.gradient = gradient }
-
-    companion object {
-        fun create(width: Int, height: Int,
-                   pathWidth: Float, pathHeight: Float,
-                   bgPathData: String, fgPathData: String,
-                   bgGradient: Shader?, fgGradient: Shader?) =
-            BackgroundForegroundGradientVectorDrawable(
-                GradientVectorDrawable(width, height, pathWidth, pathHeight, bgPathData, bgGradient),
-                GradientVectorDrawable(width, height, pathWidth, pathHeight, fgPathData, fgGradient))
-
-        fun create(size: Int, pathSize: Float,
-                   bgPathData: String, fgPathData: String,
-                   bgGradient: Shader?, fgGradient: Shader?) =
-            BackgroundForegroundGradientVectorDrawable(
-                GradientVectorDrawable(size, pathSize, bgPathData, bgGradient),
-                GradientVectorDrawable(size, pathSize, fgPathData, fgGradient))
-    }
 }

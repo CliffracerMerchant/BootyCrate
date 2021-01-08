@@ -249,8 +249,8 @@ class MainActivity : AppCompatActivity() {
 
         val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         cradleLayout.measure(wrapContentSpec, wrapContentSpec)
-        fab.measure(wrapContentSpec, wrapContentSpec)
-        val cradleEndWidth = if (showing) cradleLayout.measuredWidth else fab.measuredWidth
+        val cradleEndWidth = if (showing) cradleLayout.measuredWidth
+                             else         fab.layoutParams.width
 
         if (!animate) {
             bottomAppBar.cradleWidth = cradleEndWidth
