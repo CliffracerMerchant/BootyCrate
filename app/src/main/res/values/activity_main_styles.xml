@@ -26,7 +26,6 @@
         <item name="cradleDepth">52dp</item>
         <item name="cradleContentsMargin">5dp</item>
         <item name="indicatorColor">@color/colorInBetweenPrimaryAccent1</item>
-        <item name="borderThickness">4dp</item>
     </style>
 
     <style name="BottomNavigationView">

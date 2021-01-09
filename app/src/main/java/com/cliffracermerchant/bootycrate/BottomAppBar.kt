@@ -7,8 +7,10 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
+import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.graphics.withClip
 import com.google.android.material.shape.*
@@ -47,7 +49,7 @@ import kotlin.math.atan
  *  - cradleContentsMargin: dimension = 0: The margin between the cradle and its nested layout
  *  - indicatorWidth: dimension = 0: The width of the indicator.
  *  - indicatorColor: color = 0: The color of the indicator. */
-class BottomAppBar(context: Context, attrs: AttributeSet) : GradientToolbar(context, attrs) {
+class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
     private val arcQuarter = 90f
     private val angleRight = 0f
     private val angleDown = 90f
@@ -65,14 +67,18 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : GradientToolbar(cont
     var cradleStartEndMargin: Int
     var cradleContentsMargin: Int
 
-    private val materialShapeDrawable = MaterialShapeDrawable()
-    private val outlinePath = Path()
-    private val topEdgePath = Path()
     var indicatorXPos = 0
     var indicatorWidth = 0
     var indicatorColor: Int get() = indicatorPaint.color
                             set(value) { indicatorPaint.color = value }
-    private val indicatorPaint = Paint()
+
+    private val materialShapeDrawable = MaterialShapeDrawable()
+    private val outlinePath = Path()
+    private val topEdgePath = Path()
+
+    protected val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
+    protected val borderPaint = Paint().apply { style = Paint.Style.STROKE }
+    private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
 
     init {
         setWillNotDraw(false)
@@ -91,10 +97,14 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : GradientToolbar(cont
         materialShapeDrawable.shapeAppearanceModel = ShapeAppearanceModel.builder().
                                                      setTopEdge(CradleTopEdgeTreatment()).build()
         background = materialShapeDrawable
-        indicatorPaint.style = Paint.Style.STROKE
-        borderPaint.style = Paint.Style.STROKE
-        borderPaint.strokeWidth = borderThickness
-        indicatorPaint.strokeWidth = 2.5f * borderThickness
+
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(R.attr.borderWidth, typedValue, true)
+        val borderWidth = TypedValue.complexToDimension(
+            typedValue.data, context.resources.displayMetrics)
+
+        borderPaint.strokeWidth = borderWidth
+        indicatorPaint.strokeWidth = 2.5f * borderWidth
     }
 
     fun setIndicatorGradient(gradient: Shader) { indicatorPaint.shader = gradient }
