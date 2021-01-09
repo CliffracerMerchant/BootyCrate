@@ -13,7 +13,7 @@
         android:theme="@style/LightTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <activity
-            android:name=".MainActivity"
+            android:name=".GradientStyledMainActivity"
             android:label="@string/app_name"
             android:launchMode="standard">
             <intent-filter>
