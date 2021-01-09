@@ -52,11 +52,6 @@ import kotlin.math.atan
  *  - indicatorWidth: dimension = 0: The width of the indicator.
  *  - indicatorColor: color = 0: The color of the indicator. */
 class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
-    private val arcQuarter = 90f
-    private val angleRight = 0f
-    private val angleDown = 90f
-    private val angleLeft = 180f
-    private val angleUp = 270f
 
     enum class CradleAlignmentMode { Start, Center, End }
     val cradleAlignmentMode: CradleAlignmentMode
@@ -74,6 +69,13 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     var indicatorColor: Int get() = indicatorPaint.color
                             set(value) { indicatorPaint.color = value }
 
+    var backgroundGradient get() = backgroundPaint.shader
+                           set(gradient) { backgroundPaint.shader = gradient }
+    var borderGradient get() = borderPaint.shader
+                       set(gradient) { borderPaint.shader = gradient }
+    var indicatorGradient get() = indicatorPaint.shader
+                          set(gradient) { indicatorPaint.shader = gradient }
+
     private val materialShapeDrawable = MaterialShapeDrawable()
     private val outlinePath = Path()
     private val topEdgePath = Path()
@@ -81,12 +83,12 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     private val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
     private val borderPaint = Paint().apply { style = Paint.Style.STROKE }
     private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
-    var backgroundGradient get() = backgroundPaint.shader
-                          set(gradient) { backgroundPaint.shader = gradient }
-    var borderGradient get() = borderPaint.shader
-                       set(gradient) { borderPaint.shader = gradient }
-    var indicatorGradient get() = indicatorPaint.shader
-                          set(gradient) { indicatorPaint.shader = gradient }
+
+    private val arcQuarter = 90f
+    private val angleRight = 0f
+    private val angleDown = 90f
+    private val angleLeft = 180f
+    private val angleUp = 270f
 
     init {
         setWillNotDraw(false)

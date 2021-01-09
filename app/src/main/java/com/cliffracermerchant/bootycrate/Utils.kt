@@ -6,6 +6,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.LayoutTransition
 import android.graphics.Bitmap
+import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
 
@@ -49,7 +50,3 @@ fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, move
         pos - moveCount
     else pos
 }
-
-/** Return the color of the pixel located at the center of the given view. */
-fun Bitmap.getPixelAtViewCenter(view: View) = getPixel(view.left + view.width / 2,
-                                                       view.top + view.height / 2)
