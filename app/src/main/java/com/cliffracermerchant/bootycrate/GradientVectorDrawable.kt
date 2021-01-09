@@ -7,7 +7,6 @@ package com.cliffracermerchant.bootycrate
 
 import android.graphics.*
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.LayerDrawable
 import androidx.core.graphics.PathParser
 
 /** A vector drawable that strokes a path supplied in the constructor with a gradient background.

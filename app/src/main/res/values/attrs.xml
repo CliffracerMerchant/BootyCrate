@@ -61,17 +61,6 @@
         <attr name="valueIsDirectlyEditable" format="boolean" />
     </declare-styleable>
 
-    <declare-styleable name="GradientToolbar">
-        <!-- The thickness of the optional border. -->
-        <attr name="borderThickness" format="dimension" />
-        <!-- Whether to draw the optional border on the top side, bottom side, both sides, or have no border. -->
-        <attr name="borderMode"      format="enum">
-            <enum name="top"       value="0"/>
-            <enum name="bottom"    value="1"/>
-            <enum name="topBottom" value="2"/>
-            <enum name="none"      value="3"/>
-        </attr>
-    </declare-styleable>
     <declare-styleable name="TopActionBar">
         <attr name="bottomBorderWidth" format="dimension" />
     </declare-styleable>

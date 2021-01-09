@@ -14,16 +14,9 @@
     <string name="name_descending_description">Name descending</string>
     <string name="amount_ascending_description">Amount ascending</string>
     <string name="amount_descending_description">Amount descending</string>
-    <string name="search_icon_path_data">M15.5,14h-0.79l-0.28,-0.27C15.41,12.59 16,11.11 16,9.5 16,5.91 13.09,3 9.5,3S3,5.91 3,9.5 5.91,16 9.5,16c1.61,0 3.09,-0.59 4.23,-1.57l0.27,0.28v0.79l5,4.99L20.49,19l-4.99,-5zM9.5,14C7.01,14 5,11.99 5,9.5S7.01,5 9.5,5 14,7.01 14,9.5 11.99,14 9.5,14z</string>
-    <string name="sort_icon_path_data">M6,20l4,-4L7,16L7,4L5,4v12L2,16zM11,8h9v2h-9zM11,12h7v2h-7zM11,4h11v2L11,6zM11,16h5v2h-5z</string>
-    <string name="overflow_icon_path_data">M12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,10c-1.1,0 -2,0.9 -2,2s0.9,2 2,2 2,-0.9 2,-2 -0.9,-2 -2,-2zM12,16c-1.1,0 -2,0.9 -2,2s0.9,2 2,2 2,-0.9 2,-2 -0.9,-2 -2,-2z</string>
-    <string name="home_as_up_indicator_icon_path_data">M20,11H7.83l5.59,-5.59L12,4l-8,8 8,8 1.41,-1.41L7.83,13H20v-2z</string>
-    <string name="close_icon_path_data">M19,6.41L17.59,5 12,10.59 6.41,5 5,6.41 10.59,12 5,17.59 6.41,19 12,13.41 17.59,19 19,17.59 13.41,12z</string>
-    <string name="delete_icon_path_data">M6,19c0,1.1 0.9,2 2,2h8c1.1,0 2,-0.9 2,-2V7H6v12zM19,4h-3.5l-1,-1h-5l-1,1H5v2h14V4z</string>
-    <string name="add_icon_path_data">M 20 14 L 14 14 L 14 20 L 10 20 L 10 14 L 4 14 L 4 10 L 10 10 L 10 4 L 14 4 L 14 10 L 20 10 L 20 14 Z</string>
-    <string name="circle_path_data">M 12,0 A 12 12 0 12 12 12,24 A 12 12 0 12 12 12,0</string>
 
     <string name="add_item_button_name">Add new item</string>
+    <string name="add_another_item_button_description">Add another</string>
     <string name="delete_item_button_name">Delete item(s)</string>
     <string name="delete_selected_items_description">Delete selected items</string>
     <string name="delete_all_description">Delete all</string>
@@ -44,11 +37,8 @@
     <string name="item_amount_description">Amount</string>
     <string name="decrease_button_description">Decrease amount</string>
     <string name="increase_button_description">Increase amount</string>
-    <string name="link_item_action_long_description">Select an item to link to:</string>
     <string name="linked_item_description">Linked</string>
     <string name="unlinked_item_description">Not linked</string>
-    <string name="link_item_now_action_description">Link now</string>
-    <string name="change_item_link_action_description">Change</string>
     <string name="collapse_button_description">Collapse extra item options</string>
 
     <string name="inventory_item_collection_name">inventory</string>
@@ -91,6 +81,5 @@
         Copyright 2020 Nicholas Hochstetler. \nBootyCrate is an open-source shopping list and
         inventory management app, licensed under the terms of the Apache License, version 2.0.
         View the source code at: https://github.com/NicholasHochstetler/BootyCrate</string>
-    <string name="add_another_item_button_description">Add another</string>
 
 </resources>

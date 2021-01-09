@@ -69,4 +69,3 @@ data class GradientBuilder(
     override fun hashCode() =
         Triple(super.hashCode(), colors.hashCode(), stops.hashCode()).hashCode()
 }
-

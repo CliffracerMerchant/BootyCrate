@@ -15,18 +15,17 @@ import androidx.core.view.doOnNextLayout
 
 /** A round add button that draws its icon, border, and background with a gradient.
  *
- *  AddButton uses a foreground and background gradient that are passed to it via
- *  the function initGradients. The foreground gradient is used to draw its outline
- *  border and its vector add icon. The background gradient is used for filling its
- *  round background. */
-class AddButton(context: Context, attrs: AttributeSet) :
-    AppCompatImageButton(context, attrs)
-{
+ *  AddButton uses a foreground and background gradient that are passed to it
+ *  via the function initGradients. The foreground gradient is used to draw its
+ *  outline border and its add icon. The background gradient is used for fill-
+ *  ing its circular background. */
+class AddButton(context: Context, attrs: AttributeSet) : AppCompatImageButton(context, attrs) {
     init {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(R.attr.borderWidth, typedValue, true)
         val borderWidth = TypedValue.complexToDimension(
             typedValue.data, context.resources.displayMetrics)
+        
         doOnNextLayout {
             // The background circle is inset by half of the border thickness
             // to make sure it draws entirely inside the button's bounds.
