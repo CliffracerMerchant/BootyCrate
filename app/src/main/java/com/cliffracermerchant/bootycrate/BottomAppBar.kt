@@ -34,8 +34,11 @@ import kotlin.math.atan
  *  manually set in pixels using the property indicatorXPos. The width (also in
  *  pixels) can be set via the XML attribute indicatorWidth, or at runtime using
  *  the property of the same name. The indicator color can be set using the XML
- *  property indicatorColor. The indicator can also have a paint shader applied
- *  as well using setIndicatorGradient.
+ *  property indicatorColor.
+ *
+ *  The gradients used for the background, border, and indicator can be set
+ *  through the public properties backgroundGradient, borderGradient, and indi-
+ *  catorGradient, respectively.
  *
  *  XML attributes:
  *  - cradleAlignmentMode: CradleAlignmentMode = CradleAlignmentMode.Center:
@@ -75,9 +78,15 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     private val outlinePath = Path()
     private val topEdgePath = Path()
 
-    protected val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
-    protected val borderPaint = Paint().apply { style = Paint.Style.STROKE }
+    private val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
+    private val borderPaint = Paint().apply { style = Paint.Style.STROKE }
     private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
+    var backgroundGradient get() = backgroundPaint.shader
+                          set(gradient) { backgroundPaint.shader = gradient }
+    var borderGradient get() = borderPaint.shader
+                       set(gradient) { borderPaint.shader = gradient }
+    var indicatorGradient get() = indicatorPaint.shader
+                          set(gradient) { indicatorPaint.shader = gradient }
 
     init {
         setWillNotDraw(false)
@@ -105,10 +114,6 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
         borderPaint.strokeWidth = borderWidth
         indicatorPaint.strokeWidth = 2.5f * borderWidth
     }
-
-    fun setIndicatorGradient(gradient: Shader) { indicatorPaint.shader = gradient }
-    fun setBackgroundGradient(gradient: Shader) { backgroundPaint.shader = gradient }
-    fun setBorderGradient(gradient: Shader) { borderPaint.shader = gradient }
 
     override fun onDraw(canvas: Canvas?) {
         if (canvas == null) return

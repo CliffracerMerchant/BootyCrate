@@ -384,9 +384,9 @@ class MainActivity : AppCompatActivity() {
         topActionBar.initGradients(topBgGradient, topFgGradient)
         customTitle.paint.shader = topFgGradient
 
-        bottomAppBar.setBackgroundGradient(bottomBgGradient)
-        bottomAppBar.setBorderGradient(bottomFgGradient)
-        bottomAppBar.setIndicatorGradient(bottomFgGradient)
+        bottomAppBar.backgroundGradient = bottomBgGradient
+        bottomAppBar.borderGradient = bottomFgGradient
+        bottomAppBar.indicatorGradient = bottomFgGradient
         gradientBuilder.setX1(fab.width / 2f).setY1(fab.height / 2f)
         fab.initGradients(gradientBuilder.setColors(dimmedColors).buildRadialGradient(),
                           gradientBuilder.setColors(colors).buildRadialGradient())
