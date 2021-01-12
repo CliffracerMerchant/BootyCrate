@@ -78,7 +78,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
     override fun onActiveStateChanged(active: Boolean) {
         super.onActiveStateChanged(active)
         if (active) {
-            activity.fab.setOnClickListener{ recyclerView.addNewItem() }
+            activity.addButton.setOnClickListener{ recyclerView.addNewItem() }
             activity.checkoutBtn.setOnClickListener {
                 if (!checkoutButtonIsEnabled) return@setOnClickListener
                 val currentTime = System.currentTimeMillis()

@@ -52,8 +52,8 @@ open class MainActivity : AppCompatActivity() {
 
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var inventoryViewModel: InventoryViewModel
-    lateinit var fab: AddButton
-    lateinit var checkoutBtn: TintableForegroundButton
+    lateinit var addButton: AddButton
+    lateinit var checkoutBtn: OutlinedGradientButton
     lateinit var menu: Menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,7 +83,7 @@ open class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(topActionBar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-        fab = floatingActionButton
+        addButton = floatingActionButton
         checkoutBtn = checkoutButton
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
 
@@ -205,7 +205,7 @@ open class MainActivity : AppCompatActivity() {
 
     private fun showBottomAppBar(show: Boolean = true) {
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
-        val views = arrayOf<View>(bottomAppBar, fab, checkoutBtn)
+        val views = arrayOf<View>(bottomAppBar, addButton, checkoutBtn)
 
         if (!show && bottomAppBar.height == 0) {
             bottomAppBar.doOnNextLayout {
@@ -232,7 +232,7 @@ open class MainActivity : AppCompatActivity() {
         val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         cradleLayout.measure(wrapContentSpec, wrapContentSpec)
         val cradleEndWidth = if (showing) cradleLayout.measuredWidth
-                             else         fab.layoutParams.width
+                             else         addButton.layoutParams.width
 
         if (!animate) {
             bottomAppBar.cradleWidth = cradleEndWidth
@@ -246,7 +246,7 @@ open class MainActivity : AppCompatActivity() {
             interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
             duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
             addUpdateListener {
-                checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - fab.measuredWidth / 2
+                checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - addButton.measuredWidth / 2
                 checkoutBtn.clipBounds = checkoutBtnClipBounds
             }
             doOnEnd { checkoutBtn.clipBounds = null }

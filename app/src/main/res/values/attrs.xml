@@ -17,6 +17,10 @@
     <attr name="textColor"              format="color" />
     <!-- The width of borders that are used in several places within the UI. -->
     <attr name="borderWidth"            format="dimension" />
+    <!-- The width of the canvas a path is drawn on. -->
+    <attr name="pathWidth" format="float" />
+    <!-- The height of the canvas a path is drawn  on. -->
+    <attr name="pathHeight" format="float" />
 
     <declare-styleable name="BottomAppBar">
         <!-- Where the cradle is drawn on the BottomAppBar. -->
@@ -75,21 +79,15 @@
         <attr name="width" format="dimension" />
         <!-- The intrinsic height of the drawable. -->
         <attr name="height" format="dimension" />
-        <!-- The width of the canvas the path is drawn on. -->
-        <attr name="pathWidth" format="float" />
-        <!-- The height of the canvas the path is drawn  on. -->
-        <attr name="pathHeight" format="float" />
     </declare-styleable>
 
-    <declare-styleable name="TintableForegroundButton">
-        <!-- The drawable to use for the background. -->
-        <attr name="backgroundDrawable" format="reference" />
-        <!-- The drawable to use for the foreground. -->
-        <attr name="foregroundDrawable" format="reference" />
-        <!-- The tint to use for the background. -->
-        <attr name="backgroundTint" format="color" />
-        <!-- The tint to use for the foreground. -->
-        <attr name="foregroundTint" format="color" />
+    <declare-styleable name="OutlinedGradientButton">
+        <!-- The path data to use for the vector background. -->
+        <attr name="backgroundPathData" format="string" />
+        <!-- The path data to use for the vector outline. -->
+        <attr name="outlinePathData"    format="string" />
+        <!-- The stroke width of the outline. -->
+        <attr name="outlineStrokeWidth" format="float" />
     </declare-styleable>
 
     <declare-styleable name="ToggleableTintedCheckbox">

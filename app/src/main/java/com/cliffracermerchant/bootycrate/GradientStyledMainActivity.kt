@@ -99,9 +99,15 @@ class GradientStyledMainActivity : MainActivity() {
         bottomAppBar.backgroundGradient = bottomBgGradient
         bottomAppBar.borderGradient = bottomFgGradient
         bottomAppBar.indicatorGradient = bottomFgGradient
-        gradientBuilder.setX1(fab.width / 2f)
-        fab.initGradients(gradientBuilder.setColors(dimmedColors).buildRadialGradient(),
-            gradientBuilder.setColors(colors).buildRadialGradient())
+        gradientBuilder.setX1(addButton.width / 2f)
+        addButton.initGradients(gradientBuilder.setColors(dimmedColors).buildRadialGradient(),
+                                gradientBuilder.setColors(colors).buildRadialGradient())
+
+        val rect = Rect()
+        checkoutBtn.getGlobalVisibleRect(rect)
+        gradientBuilder.setX1(screenWidth / 2f - bottomAppBar.cradleWidth / 2f)
+        checkoutBtn.initGradients(gradientBuilder.setColors(dimmedColors).buildRadialGradient(),
+                                  gradientBuilder.setColors(colors).buildRadialGradient())
     }
 
     private fun initOptionsMenuIcons() {

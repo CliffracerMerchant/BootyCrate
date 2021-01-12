@@ -15,6 +15,9 @@
     <string name="amount_ascending_description">Amount ascending</string>
     <string name="amount_descending_description">Amount descending</string>
 
+    <string name="checkout_button_background_path_data">M130,0 h-112 A 19 19 0 0 0 0,18.5 A 28 28 0 0 0 28,46 h102 Z</string>
+    <string name="checkout_button_outline_path_data">M128,2 h-105 v0.2 A 19 19 0 0 0 2,18 A 25 25 0 0 0 27,44 h101 Z</string>
+
     <string name="add_item_button_name">Add new item</string>
     <string name="add_another_item_button_description">Add another</string>
     <string name="delete_item_button_name">Delete item(s)</string>
