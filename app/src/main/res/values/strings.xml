@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Copyright 2020 Nicholas Hochstetler
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
   ~  You may not use this file except in compliance with the Apache License
   ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
   ~  or in the file LICENSE in the project's root directory. -->
@@ -17,6 +18,9 @@
 
     <string name="checkout_button_background_path_data">M130,0 h-112 A 19 19 0 0 0 0,18.5 A 28 28 0 0 0 28,46 h102 Z</string>
     <string name="checkout_button_outline_path_data">M128,2 h-105 v0.2 A 19 19 0 0 0 2,18 A 25 25 0 0 0 27,44 h101 Z</string>
+    <string name="add_button_background_path_data">M 28,0 A 28,28 0 1 1 28,56 A 28,28 0 1 1 28,0</string>
+    <string name="add_button_outline_and_plus_path_data">M 28,2 A 26,26 0 1 1 28,54 A 26,26 0 1 1 28,2
+                                                         M 28,19 L 28,37 M 19,28 L 37,27</string>
 
     <string name="add_item_button_name">Add new item</string>
     <string name="add_another_item_button_description">Add another</string>

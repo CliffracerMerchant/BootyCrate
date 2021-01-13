@@ -52,8 +52,8 @@ open class MainActivity : AppCompatActivity() {
 
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var inventoryViewModel: InventoryViewModel
-    lateinit var addButton: AddButton
-    lateinit var checkoutBtn: OutlinedGradientButton
+    lateinit var addButton: OutlinedGradientButton
+    lateinit var checkoutButton: OutlinedGradientButton
     lateinit var menu: Menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,8 +83,8 @@ open class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(topActionBar)
         supportActionBar?.setDisplayShowTitleEnabled(false)
-        addButton = floatingActionButton
-        checkoutBtn = checkoutButton
+        addButton = add_button
+        checkoutButton = checkout_button
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
 
         cradleLayout.layoutTransition = delaylessLayoutTransition()
@@ -205,7 +205,7 @@ open class MainActivity : AppCompatActivity() {
 
     private fun showBottomAppBar(show: Boolean = true) {
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
-        val views = arrayOf<View>(bottomAppBar, addButton, checkoutBtn)
+        val views = arrayOf<View>(bottomAppBar, addButton, checkoutButton)
 
         if (!show && bottomAppBar.height == 0) {
             bottomAppBar.doOnNextLayout {
@@ -227,7 +227,7 @@ open class MainActivity : AppCompatActivity() {
         if (checkoutButtonIsVisible == showing) return
 
         checkoutButtonIsVisible = showing
-        checkoutBtn.visibility = if (showing) View.VISIBLE else View.GONE
+        checkoutButton.visibility = if (showing) View.VISIBLE else View.GONE
 
         val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         cradleLayout.measure(wrapContentSpec, wrapContentSpec)
@@ -241,15 +241,15 @@ open class MainActivity : AppCompatActivity() {
         // Settings the checkout button's clip bounds prevents the
         // right corners of the checkout button from sticking out
         // underneath the FAB during the show / hide animation.
-        val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutBtn.background.intrinsicHeight)
+        val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutButton.background.intrinsicHeight)
         ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth).apply {
             interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
             duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
             addUpdateListener {
                 checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - addButton.measuredWidth / 2
-                checkoutBtn.clipBounds = checkoutBtnClipBounds
+                checkoutButton.clipBounds = checkoutBtnClipBounds
             }
-            doOnEnd { checkoutBtn.clipBounds = null }
+            doOnEnd { checkoutButton.clipBounds = null }
             // The anim is stored here and started in the cradle layout's
             // layoutTransition's transition listener's transitionStart override
             // so that the animation is synced with the layout transition.

@@ -60,8 +60,13 @@
         <item name="outlineStrokeWidth">?attr/borderWidth</item>
     </style>
 
-    <style name="FloatingActionButton">
+    <style name="AddButton">
         <item name="android:elevation">3dp</item>
+        <item name="backgroundPathData">@string/add_button_background_path_data</item>
+        <item name="outlinePathData">@string/add_button_outline_and_plus_path_data</item>
+        <item name="pathWidth">56.0</item>
+        <item name="pathHeight">56.0</item>
+        <item name="outlineStrokeWidth">?attr/borderWidth</item>
     </style>
 
     <style name="RecyclerViewFragment">

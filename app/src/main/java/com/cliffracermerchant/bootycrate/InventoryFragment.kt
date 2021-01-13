@@ -40,7 +40,7 @@ class InventoryFragment(isActive: Boolean = false) :
         super.onActiveStateChanged(active)
         if (active) {
             activity.addButton.setOnClickListener{ recyclerView.addNewItem() }
-            activity.checkoutBtn.setOnClickListener(null)
+            activity.checkoutButton.setOnClickListener(null)
         }
     }
 

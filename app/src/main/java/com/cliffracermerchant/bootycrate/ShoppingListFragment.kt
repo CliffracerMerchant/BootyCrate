@@ -79,7 +79,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
         super.onActiveStateChanged(active)
         if (active) {
             activity.addButton.setOnClickListener{ recyclerView.addNewItem() }
-            activity.checkoutBtn.setOnClickListener {
+            activity.checkoutButton.setOnClickListener {
                 if (!checkoutButtonIsEnabled) return@setOnClickListener
                 val currentTime = System.currentTimeMillis()
                 if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
@@ -87,7 +87,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
                     recyclerView.checkout()
                 } else {
                     checkoutButtonLastPressTimeStamp = currentTime
-                    activity.checkoutBtn.text = checkoutButtonConfirmText
+                    activity.checkoutButton.text = checkoutButtonConfirmText
                     handler.removeCallbacks(::revertCheckoutButtonToNormalState)
                     handler.postDelayed(::revertCheckoutButtonToNormalState, 2000)
                 }
@@ -109,7 +109,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
     }
 
     private fun revertCheckoutButtonToNormalState() {
-        activity.checkoutBtn.text = checkoutButtonNormalText
+        activity.checkoutButton.text = checkoutButtonNormalText
         checkoutButtonLastPressTimeStamp = 0
     }
 
@@ -118,7 +118,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
         val resId = if (enabling) R.animator.checkout_button_disabled_to_enabled_animation
                     else          R.animator.checkout_button_enabled_to_disabled_animation
         val anim = AnimatorInflater.loadAnimator(context, resId)
-        anim.setTarget(activity.checkoutBtn)
+        anim.setTarget(activity.checkoutButton)
         anim.start()
     }
 
