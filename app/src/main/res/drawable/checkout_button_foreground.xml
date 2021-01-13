@@ -5,11 +5,11 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="140dp"
+    android:width="120dp"
     android:height="46dp"
-    android:viewportWidth="140"
+    android:viewportWidth="120"
     android:viewportHeight="46">
     <path android:strokeColor="#000000"
         android:strokeWidth="4"
-        android:pathData="M128,2 h-105 v0.2 A 19 19 0 0 0 2,18 A 25 25 0 0 0 27,44 h101 Z" />
+        android:pathData="M106,2 h-86 A 18 18 0 0 0 2,18 A 26 26 0 0 0 28,44 h85 M136,52 A 34,34 0 0 1 107,0" />
 </vector>

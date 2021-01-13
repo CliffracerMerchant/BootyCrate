@@ -29,7 +29,7 @@ import androidx.core.graphics.PathParser
  *  the required parameters (besides the gradient builder and the parent coor-
  *  dinates, which are unknowable before runtime and would have to be set using
  *  setGradient) are provided in res/attrs.xml. */
-class GradientVectorDrawable(
+open class GradientVectorDrawable(
     private val width: Int,
     private val height: Int,
     pathWidth: Float,
@@ -75,4 +75,21 @@ class GradientVectorDrawable(
     override fun getOpacity(): Int = when (paint.alpha) { 0    -> PixelFormat.TRANSPARENT
                                                           255  -> PixelFormat.OPAQUE
                                                           else -> PixelFormat.TRANSLUCENT }
+}
+
+class ClippedGradientVectorDrawable(
+    width: Int,
+    height: Int,
+    pathWidth: Float,
+    pathHeight: Float,
+    pathData: String,
+    private val clip: RectF
+) : GradientVectorDrawable(width, height, pathWidth, pathHeight, pathData) {
+
+    override fun draw(canvas: Canvas) {
+        canvas.save()
+        canvas.clipRect(clip, Region.Op.DIFFERENCE)
+        super.draw(canvas)
+        canvas.restore()
+    }
 }

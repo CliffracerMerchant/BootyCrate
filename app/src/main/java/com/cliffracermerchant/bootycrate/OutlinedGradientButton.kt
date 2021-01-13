@@ -47,23 +47,17 @@ open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
                         set(value) { outlineDrawable?.gradient = value
                                      paint.shader = value }
 
-    protected val backgroundPathData: String
-    protected val outlinePathData: String
-    protected val outlineStrokeWidth: Float
-    protected val pathWidth: Float
-    protected val pathHeight: Float
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.OutlinedGradientButton)
-        backgroundPathData = a.getString(R.styleable.OutlinedGradientButton_backgroundPathData) ?: ""
-        outlinePathData = a.getString(R.styleable.OutlinedGradientButton_outlinePathData) ?: ""
-        outlineStrokeWidth = a.getDimension(R.styleable.OutlinedGradientButton_outlineStrokeWidth, 0f)
-        // Apparently if attrs are retrieved with a manual IntArray,
-        // they must be in numerical id order to work.
+        val backgroundPathData = a.getString(R.styleable.OutlinedGradientButton_backgroundPathData) ?: ""
+        val outlinePathData = a.getString(R.styleable.OutlinedGradientButton_outlinePathData) ?: ""
+        val outlineStrokeWidth = a.getDimension(R.styleable.OutlinedGradientButton_outlineStrokeWidth, 0f)
+        // Apparently if attrs are retrieved with a manual IntArray, they must be in numerical id order to work.
         // Log.d("", "R.attr.pathWidth = ${R.attr.pathWidth}, R.attr.pathHeight=${R.attr.pathHeight}")
         a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.pathHeight, R.attr.pathWidth))
-        pathHeight = a.getFloat(0, 0f)
-        pathWidth = a.getFloat(1, 0f)
+        val pathHeight = a.getFloat(0, 0f)
+        val pathWidth = a.getFloat(1, 0f)
         a.recycle()
 
         doOnNextLayout {

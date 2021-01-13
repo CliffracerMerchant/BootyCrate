@@ -67,12 +67,12 @@
         tools:layout_gravity="bottom|center_horizontal"
         tools:layout_marginBottom="10dp">
 
-        <com.cliffracermerchant.bootycrate.OutlinedGradientButton
+        <com.cliffracermerchant.bootycrate.CheckoutButton
             android:id="@+id/checkout_button"
-            android:layout_width="130dp"
+            android:layout_width="120dp"
             android:layout_height="46dp"
             android:layout_gravity="bottom"
-            android:layout_marginEnd="24dp"
+            android:layout_marginEnd="44dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
