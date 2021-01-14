@@ -75,10 +75,10 @@ class GradientStyledMainActivity : MainActivity() {
 
         val gradientBuilder = GradientBuilder()
         topFgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight).
-        setX2(screenWidth * 0.9f).setY2(actionBarHeight * 1.5f).
+        setX2(screenWidth * 0.8f).setY2(actionBarHeight * 1.25f).
         setColors(colors).buildRadialGradient()
         topBgGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
-        bottomBgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(0f).buildRadialGradient()
+        bottomBgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight * 0.25f).buildRadialGradient()
         bottomFgGradient = gradientBuilder.setColors(colors).buildRadialGradient()
 
         topFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
@@ -93,21 +93,22 @@ class GradientStyledMainActivity : MainActivity() {
         paint.shader = bottomFgGradient
         canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
-        topActionBar.initGradients(topBgGradient, topFgGradient)
+        topActionBar.backgroundGradient = topBgGradient
+        topActionBar.borderGradient = topFgGradient
         customTitle.paint.shader = topFgGradient
 
         bottomAppBar.backgroundGradient = bottomBgGradient
         bottomAppBar.borderGradient = bottomFgGradient
         bottomAppBar.indicatorGradient = bottomFgGradient
         gradientBuilder.setX1(addButton.width / 2f)
-        addButton.initGradients(gradientBuilder.setColors(dimmedColors).buildRadialGradient(),
-                                gradientBuilder.setColors(colors).buildRadialGradient())
+        addButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
+        addButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
 
         val rect = Rect()
         checkoutButton.getGlobalVisibleRect(rect)
         gradientBuilder.setX1(screenWidth / 2f - bottomAppBar.cradleWidth / 2f)
-        checkoutButton.initGradients(gradientBuilder.setColors(dimmedColors).buildRadialGradient(),
-                                     gradientBuilder.setColors(colors).buildRadialGradient())
+        checkoutButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
+        checkoutButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
     }
 
     private fun initOptionsMenuIcons() {

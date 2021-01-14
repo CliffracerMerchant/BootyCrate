@@ -13,32 +13,23 @@ import androidx.core.graphics.PathParser
  *
  *  GradientVectorDrawable is a custom drawable that draws a vector based on
  *  the path data supplied to its constructor with a gradient background. The
- *  gradient is passed to the GradientVectorDrawable in the form of a Gradient-
- *  Builder along with the coordinates of the drawable's parent so that the
- *  drawable can offset the gradient supplied by the parent's position.
+ *  gradient used is set through the public property gradient.
  *
  *  While the same effect of having a VectorDrawable with a gradient background
  *  is achievable using the Android API's native VectorDrawable, GradientVector-
- *  Drawable is different in that it can take a gradient in global coordinates
- *  and offset it by the drawable's position to achieve an effect that the nat-
- *  ive VectorDrawable cannot.
- *
- *  NOTE: Due to the project's target API level of 21's inability to inflate
- *  custom drawables from XML, GradientVectorDrawable does not have an XML
- *  constructor. In case this is changed in the future, attributes for all of
- *  the required parameters (besides the gradient builder and the parent coor-
- *  dinates, which are unknowable before runtime and would have to be set using
- *  setGradient) are provided in res/attrs.xml. */
+ *  Drawable makes it easier to achieve certain effects (such a global back-
+ *  ground gradient that "shows through" certain UI components) due to its use
+ *  of the paint.shader property. */
 open class GradientVectorDrawable(
-    private val width: Int,
-    private val height: Int,
-    pathWidth: Float,
-    pathHeight: Float,
-    pathData: String,
-    gradient: Shader? = null
+    protected val pathWidth: Float,
+    protected val pathHeight: Float,
+    pathData: String
 ) : Drawable() {
-    private val paint = Paint()
-    private var path = Path()
+    protected val paint = Paint().apply { style = Paint.Style.FILL }
+    protected val originalPath = PathParser.createPathFromPathData(pathData)
+    protected var path = Path()
+    protected val matrix = Matrix()
+
     var style get() = paint.style
               set(value) { paint.style = value }
     var strokeWidth get() = paint.strokeWidth
@@ -46,27 +37,17 @@ open class GradientVectorDrawable(
     var gradient get() = paint.shader
                  set(value) { paint.shader = value }
 
-    // For when the size and pathSize are both squares.
-    constructor(size: Int, pathSize: Float, pathData: String, gradient: Shader? = null) :
-        this(size, size, pathSize, pathSize, pathData, gradient)
+    // For when pathSize is a square.
+    constructor(pathSize: Float, pathData: String) : this(pathSize, pathSize, pathData)
 
-    init {
-        paint.style = Paint.Style.FILL
-        paint.shader = gradient
-        setPathData(pathData, pathWidth, pathHeight)
-    }
-
-    fun setPathData(pathData: String, pathWidth: Float, pathHeight: Float) {
-        path = PathParser.createPathFromPathData(pathData)
-        val matrix = Matrix()
-        matrix.setScale(width / pathWidth, height / pathHeight)
+    override fun onBoundsChange(bounds: Rect?) {
+        path.set(originalPath)
+        matrix.setScale((bounds?.width() ?: 0) / pathWidth,
+                        (bounds?.height() ?: 0) / pathHeight)
         path.transform(matrix)
     }
 
     override fun draw(canvas: Canvas) = canvas.drawPath(path, paint)
-
-    override fun getIntrinsicWidth() = width
-    override fun getIntrinsicHeight() = height
 
     override fun setAlpha(alpha: Int) { paint.alpha = alpha }
 
@@ -77,18 +58,25 @@ open class GradientVectorDrawable(
                                                           else -> PixelFormat.TRANSLUCENT }
 }
 
+/** A GradientVectorDrawable that additionally takes a cliPathData parameter to describe a clip region. */
 class ClippedGradientVectorDrawable(
-    width: Int,
-    height: Int,
     pathWidth: Float,
     pathHeight: Float,
     pathData: String,
-    private val clip: RectF
-) : GradientVectorDrawable(width, height, pathWidth, pathHeight, pathData) {
+    clipPathData: String
+) : GradientVectorDrawable(pathWidth, pathHeight, pathData) {
+    private val originalClipPath = PathParser.createPathFromPathData(clipPathData)
+    private var clipPath = Path()
+
+    override fun onBoundsChange(bounds: Rect?) {
+        super.onBoundsChange(bounds)
+        clipPath.set(originalClipPath)
+        clipPath.transform(matrix)
+    }
 
     override fun draw(canvas: Canvas) {
         canvas.save()
-        canvas.clipRect(clip, Region.Op.DIFFERENCE)
+        canvas.clipPath(clipPath, Region.Op.DIFFERENCE)
         super.draw(canvas)
         canvas.restore()
     }

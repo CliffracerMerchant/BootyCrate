@@ -60,17 +60,10 @@ open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
         val pathWidth = a.getFloat(1, 0f)
         a.recycle()
 
-        doOnNextLayout {
-            val background = GradientVectorDrawable(width, height, pathWidth, pathHeight, backgroundPathData )
-            val outline = GradientVectorDrawable(width, height, pathWidth, pathHeight, outlinePathData)
-            outline.strokeWidth = outlineStrokeWidth
-            outline.style = Paint.Style.STROKE
-            this.background = LayerDrawable(arrayOf(background, outline))
-        }
-    }
-
-    fun initGradients(backgroundGradient: Shader, outlineGradient: Shader) = doOnNextLayout {
-        this.backgroundGradient = backgroundGradient
-        this.outlineGradient = outlineGradient
+        val background = GradientVectorDrawable(pathWidth, pathHeight, backgroundPathData )
+        val outline = GradientVectorDrawable(pathWidth, pathHeight, outlinePathData)
+        outline.strokeWidth = outlineStrokeWidth
+        outline.style = Paint.Style.STROKE
+        this.background = LayerDrawable(arrayOf(background, outline))
     }
 }

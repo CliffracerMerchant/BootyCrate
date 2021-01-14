@@ -6,21 +6,21 @@
 
 <resources>
     <!-- Used to indicate that a theme is a dark theme. -->
-    <attr name="isDarkTheme"            format="boolean" />
+    <attr name="isDarkTheme"   format="boolean" />
     <!-- Used as the background color for recycler view items. -->
     <attr name="recyclerViewItemColor"  format="color" />
     <!-- Used as the background color of an item selected in a RecyclerView. -->
-    <attr name="colorSelected"          format="color" />
+    <attr name="colorSelected" format="color" />
     <!-- A text color. Used in some places instead of @android.attr.textColor
          due to dev.sasikanth.colorsheet.ColorSheet picking its background
          color based on the android attribute. -->
-    <attr name="textColor"              format="color" />
+    <attr name="textColor"     format="color" />
     <!-- The width of borders that are used in several places within the UI. -->
-    <attr name="borderWidth"            format="dimension" />
+    <attr name="borderWidth"   format="dimension" />
     <!-- The width of the canvas a path is drawn on. -->
-    <attr name="pathWidth" format="float" />
+    <attr name="pathWidth"     format="float" />
     <!-- The height of the canvas a path is drawn  on. -->
-    <attr name="pathHeight" format="float" />
+    <attr name="pathHeight"    format="float" />
 
     <declare-styleable name="BottomAppBar">
         <!-- Where the cradle is drawn on the BottomAppBar. -->
@@ -75,10 +75,6 @@
     <declare-styleable name="GradientVectorDrawable">
         <!-- The string containing the path data to use for the drawable. -->
         <attr name="pathData" format="string" />
-        <!-- The intrinsic width of the drawable. -->
-        <attr name="width" format="dimension" />
-        <!-- The intrinsic height of the drawable. -->
-        <attr name="height" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="OutlinedGradientButton">
