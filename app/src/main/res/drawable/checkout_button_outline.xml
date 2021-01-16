@@ -12,6 +12,9 @@
     <path android:strokeColor="@android:color/darker_gray"
         android:strokeWidth="4"
         android:pathData="@string/checkout_button_outline_path_data"
-        android:trimPathEnd="0.837" />
+        android:trimPathEnd="0.863"
+        android:trimPathStart="0.135"
+
+        />
 
 </vector>
