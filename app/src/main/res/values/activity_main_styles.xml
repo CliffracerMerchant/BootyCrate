@@ -59,7 +59,6 @@
 
     <style name="DisabledCheckoutButton">
         <item name="android:background">@drawable/checkout_button</item>
-        <item name="android:elevation">3dp</item>
         <item name="android:paddingRight">10dp</item>
         <item name="android:text">@string/checkout_description</item>
         <item name="android:textSize" tools:ignore="SpUsage">15dp</item>
@@ -68,7 +67,6 @@
     </style>
 
     <style name="AddButton">
-        <item name="android:elevation">10dp</item>
         <item name="backgroundPathData">@string/add_button_background_path_data</item>
         <item name="outlinePathData">@string/add_button_outline_and_plus_path_data</item>
         <item name="pathWidth">56.0</item>

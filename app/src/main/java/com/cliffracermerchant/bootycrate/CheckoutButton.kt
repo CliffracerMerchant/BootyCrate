@@ -27,7 +27,7 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
     var isDisabled = false
         set(disabled) { field = disabled
                         disabledOverlayView?.visibility = if (disabled) View.VISIBLE
-                                                          else          View.INVISIBLE }
+                                                          else          View.GONE }
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.CheckoutButton)
@@ -53,6 +53,7 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
 
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
         super.onVisibilityChanged(changedView, visibility)
+        if (!isDisabled) return
         val disabledOverlay = disabledOverlayView ?: return
         disabledOverlay.visibility = when { visibility == View.GONE -> View.GONE
                                             isDisabled ->              View.VISIBLE

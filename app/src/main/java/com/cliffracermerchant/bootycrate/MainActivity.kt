@@ -89,8 +89,12 @@ open class MainActivity : AppCompatActivity() {
 
         cradleLayout.layoutTransition = delaylessLayoutTransition()
         cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
-            disabled_checkout_button.alpha = if (checkoutButton.isDisabled) 1f
-                                             else 0f
+            // These z values seem not to stick when set in XML, so we have to
+            // set them here every time to ensure that the addButton remains on
+            // top of the others.
+            addButton.z = 1f
+            checkoutButton.z = -2f
+            disabled_checkout_button.z = -1f
             pendingCradleAnim?.start()
             pendingCradleAnim = null
         }
