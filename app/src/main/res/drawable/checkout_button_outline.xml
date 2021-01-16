@@ -9,7 +9,9 @@
     android:height="46dp"
     android:viewportWidth="120"
     android:viewportHeight="46">
-    <path android:strokeColor="#000000"
+    <path android:strokeColor="@android:color/darker_gray"
         android:strokeWidth="4"
-        android:pathData="M106,2 h-86 A 18 18 0 0 0 2,18 A 26 26 0 0 0 28,44 h85 M136,52 A 34,34 0 0 1 107,0" />
+        android:pathData="@string/checkout_button_outline_path_data"
+        android:trimPathEnd="0.837" />
+
 </vector>

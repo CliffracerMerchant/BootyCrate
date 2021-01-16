@@ -86,6 +86,11 @@
         <attr name="outlineStrokeWidth" format="float" />
     </declare-styleable>
 
+    <declare-styleable name="CheckoutButton">
+        <!-- A reference to the view that will appear over the checkout button to indicate that it is disabled. -->
+        <attr name="disabledOverlayResId" format="reference" />
+    </declare-styleable>
+
     <declare-styleable name="ToggleableTintedCheckbox">
         <attr name="state_edit_color" format="boolean" />
     </declare-styleable>

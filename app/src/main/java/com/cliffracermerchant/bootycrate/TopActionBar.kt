@@ -5,6 +5,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
+import android.graphics.Shader
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import androidx.appcompat.widget.Toolbar
@@ -22,12 +23,16 @@ import java.lang.IndexOutOfBoundsException
  *  border gradients can be set independently of each other through the prop-
  *  erties backgroundGradient and borderGradient. */
 class TopActionBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
-    private val backgroundLayer = getDrawableLayer(0)
-    private val borderLayer = getDrawableLayer(1)
-    var backgroundGradient get() = backgroundLayer?.gradient
-                           set(value) { backgroundLayer?.gradient = value }
-    var borderGradient get() = borderLayer?.gradient
-                       set(value) { borderLayer?.gradient = value }
+    private fun getDrawableLayer(index: Int) =
+        try { ((background as? LayerDrawable)?.getDrawable(index) as? GradientVectorDrawable) }
+        catch (e: IndexOutOfBoundsException) { null }
+    val backgroundDrawable = getDrawableLayer(0)
+    val borderDrawable = getDrawableLayer(1)
+
+    var backgroundGradient: Shader? = null
+        set(value) { field = value; backgroundDrawable?.gradient = value }
+    var borderGradient: Shader? = null
+        set(value) { field = value; borderDrawable?.gradient = value }
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.TopActionBar)
@@ -47,9 +52,10 @@ class TopActionBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
         val borderDrawable = GradientVectorDrawable(width * 1f, height * 1f, borderPathData)
 
         background = LayerDrawable(arrayOf(backgroundDrawable, borderDrawable))
+        // These lines are not redundant due to these properties' custom setters;
+        // They will ensure that if the gradients are set before the background
+        // was initialized they will still be used.
+        backgroundGradient = backgroundGradient
+        borderGradient = borderGradient
     }
-
-    private fun getDrawableLayer(index: Int) =
-        try { ((background as? LayerDrawable)?.getDrawable(index) as? GradientVectorDrawable) }
-        catch (e: IndexOutOfBoundsException) { null }
 }

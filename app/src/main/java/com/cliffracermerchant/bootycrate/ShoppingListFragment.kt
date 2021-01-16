@@ -4,13 +4,11 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.AnimatorInflater
 import android.os.Bundle
 import android.os.Handler
 import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.ActionBar
-import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
 
 /** A fragment to display and modify the user's shopping list.
@@ -37,15 +35,6 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
     private val handler = Handler()
     private var checkoutButtonLastPressTimeStamp = 0L
-    private var darkGrayColor: Int = 0
-    private var lightGrayColor: Int = 0
-    private var blackColor: Int = 0
-    private var yellowColor: Int = 0
-    private lateinit var checkoutButtonNormalText: String
-    private lateinit var checkoutButtonConfirmText: String
-
-    private var checkoutButtonIsEnabled = false
-        set(value) { enableCheckoutButton(value); field = value }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? =
@@ -57,20 +46,10 @@ class ShoppingListFragment(isActive: Boolean = false) :
         recyclerView.finishInit(viewLifecycleOwner,
                                 mainActivity.shoppingListViewModel,
                                 mainActivity.inventoryViewModel)
-        darkGrayColor = ContextCompat.getColor(mainActivity, R.color.colorTextLightSecondary)
-        lightGrayColor = ContextCompat.getColor(mainActivity, android.R.color.darker_gray)
-        blackColor = ContextCompat.getColor(mainActivity, android.R.color.black)
-        yellowColor = ContextCompat.getColor(mainActivity, R.color.checkoutButtonEnabledColor)
-        checkoutButtonNormalText = getString(R.string.checkout_description)
-        checkoutButtonConfirmText = getString(R.string.checkout_confirm_description)
 
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
-            if (newSize > 0)
-                checkoutButtonIsEnabled = true
-            if (newSize == 0) {
-                revertCheckoutButtonToNormalState()
-                checkoutButtonIsEnabled = false
-            }
+            activity.checkoutButton.isDisabled = newSize == 0
+            if (newSize == 0) revertCheckoutButtonToNormalState()
         }
         super.onViewCreated(view, savedInstanceState)
     }
@@ -80,14 +59,13 @@ class ShoppingListFragment(isActive: Boolean = false) :
         if (active) {
             activity.addButton.setOnClickListener{ recyclerView.addNewItem() }
             activity.checkoutButton.setOnClickListener {
-                if (!checkoutButtonIsEnabled) return@setOnClickListener
+                if (activity.checkoutButton.isDisabled) return@setOnClickListener
                 val currentTime = System.currentTimeMillis()
                 if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
                     revertCheckoutButtonToNormalState()
                     recyclerView.checkout()
                 } else {
                     checkoutButtonLastPressTimeStamp = currentTime
-                    activity.checkoutButton.text = checkoutButtonConfirmText
                     handler.removeCallbacks(::revertCheckoutButtonToNormalState)
                     handler.postDelayed(::revertCheckoutButtonToNormalState, 2000)
                 }
@@ -109,17 +87,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
     }
 
     private fun revertCheckoutButtonToNormalState() {
-        activity.checkoutButton.text = checkoutButtonNormalText
         checkoutButtonLastPressTimeStamp = 0
-    }
-
-    private fun enableCheckoutButton(enabling: Boolean) {
-        if (checkoutButtonIsEnabled == enabling) return
-        val resId = if (enabling) R.animator.checkout_button_disabled_to_enabled_animation
-                    else          R.animator.checkout_button_enabled_to_disabled_animation
-        val anim = AnimatorInflater.loadAnimator(context, resId)
-        anim.setTarget(activity.checkoutButton)
-        anim.start()
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */

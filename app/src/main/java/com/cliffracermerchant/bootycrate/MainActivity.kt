@@ -48,12 +48,12 @@ open class MainActivity : AppCompatActivity() {
     private var checkoutButtonIsVisible = true
     private var shoppingListSize = -1
     private var shoppingListNumNewItems = 0
-    private var pendingBabAnim: Animator? = null
+    private var pendingCradleAnim: Animator? = null
 
     lateinit var shoppingListViewModel: ShoppingListViewModel
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var addButton: OutlinedGradientButton
-    lateinit var checkoutButton: OutlinedGradientButton
+    lateinit var checkoutButton: CheckoutButton
     lateinit var menu: Menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,8 +89,10 @@ open class MainActivity : AppCompatActivity() {
 
         cradleLayout.layoutTransition = delaylessLayoutTransition()
         cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
-            pendingBabAnim?.start()
-            pendingBabAnim = null
+            disabled_checkout_button.alpha = if (checkoutButton.isDisabled) 1f
+                                             else 0f
+            pendingCradleAnim?.start()
+            pendingCradleAnim = null
         }
 
         bottomAppBar.indicatorWidth = 3 * bottomNavigationBar.itemIconSize
@@ -241,19 +243,21 @@ open class MainActivity : AppCompatActivity() {
         // Settings the checkout button's clip bounds prevents the
         // right corners of the checkout button from sticking out
         // underneath the FAB during the show / hide animation.
-        val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutButton.background.intrinsicHeight)
+        val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutButton.height)
         ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth).apply {
             interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
             duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
             addUpdateListener {
                 checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - addButton.measuredWidth / 2
                 checkoutButton.clipBounds = checkoutBtnClipBounds
+                disabled_checkout_button.clipBounds = checkoutBtnClipBounds
             }
-            doOnEnd { checkoutButton.clipBounds = null }
+            doOnEnd { checkoutButton.clipBounds = null
+                      disabled_checkout_button.clipBounds = null }
             // The anim is stored here and started in the cradle layout's
             // layoutTransition's transition listener's transitionStart override
             // so that the animation is synced with the layout transition.
-            pendingBabAnim = this
+            pendingCradleAnim = this
         }
     }
 
