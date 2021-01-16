@@ -21,25 +21,15 @@ import androidx.appcompat.widget.AppCompatButton
  *  outline, the outlineGradient property will also be used as the shader for
  *  any text. In order for the path data to be interpreted correctly, the XML
  *  properties pathWidth and pathHeight must also be set in XML. The stroke
- *  width of the outline can be set through the XML property outlineStrokeWidth.
- *
- *  The properties backgroundGradient and outlineGradient internally use
- *  assumptions about the background that will cause them to no longer function
- *  properly if the background is changed. They are consequently open in case
- *  sub-classes would like to change the background without breaking the func-
- *  tionality of thess properties.*/
+ *  width of the outline can be set through the XML property outlineStrokeWidth. */
 @SuppressLint("ResourceType")
 open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
     AppCompatButton(context, attrs)
 {
-    val backgroundDrawable get() = getDrawableLayer(backgroundLayer = true)
-    val outlineDrawable get() = getDrawableLayer(backgroundLayer = false)
-
-    open var backgroundGradient get() = getDrawableLayer(backgroundLayer = true)?.gradient
-                           set(value) { getDrawableLayer(backgroundLayer = true)?.gradient = value }
-    open var outlineGradient get() = getDrawableLayer(backgroundLayer = false)?.gradient
-                        set(value) { getDrawableLayer(backgroundLayer = false)?.gradient = value
-                                     paint.shader = value }
+    val backgroundDrawable get() = _backgroundDrawable
+    val outlineDrawable get() = _outlineDrawable
+    protected var _backgroundDrawable: GradientVectorDrawable
+    protected var _outlineDrawable: GradientVectorDrawable
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.OutlinedGradientButton)
@@ -54,15 +44,10 @@ open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
         val pathWidth = a.getFloat(1, 0f)
         a.recycle()
 
-        val background = GradientVectorDrawable(pathWidth, pathHeight, backgroundPathData )
-        val outline = GradientVectorDrawable(pathWidth, pathHeight, outlinePathData)
-        outline.strokeWidth = outlineStrokeWidth
-        outline.style = Paint.Style.STROKE
-        this.background = LayerDrawable(arrayOf(background, outline))
+        _backgroundDrawable = GradientVectorDrawable(pathWidth, pathHeight, backgroundPathData )
+        _outlineDrawable = GradientVectorDrawable(pathWidth, pathHeight, outlinePathData)
+        outlineDrawable.strokeWidth = outlineStrokeWidth
+        outlineDrawable.style = Paint.Style.STROKE
+        this.background = LayerDrawable(arrayOf(backgroundDrawable, outlineDrawable))
     }
-
-    private fun getDrawableLayer(backgroundLayer: Boolean) = try {
-        val index = if (backgroundLayer) 0 else 1
-        ((background as? LayerDrawable)?.getDrawable(index) as? GradientVectorDrawable)
-    } catch (e: IndexOutOfBoundsException) { null }
 }

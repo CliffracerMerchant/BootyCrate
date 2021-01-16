@@ -15,40 +15,35 @@ import androidx.core.view.doOnNextLayout
 class CheckoutButton(context: Context, attrs: AttributeSet) :
     OutlinedGradientButton(context, attrs)
 {
-    override var backgroundGradient get() = getDrawableLayer(backgroundLayer = true)?.gradient
-                                    set(value) { getDrawableLayer(backgroundLayer = true)?.gradient = value }
-    override var outlineGradient get() = getDrawableLayer(backgroundLayer = false)?.gradient
-                                 set(value) { getDrawableLayer(backgroundLayer = false)?.gradient = value
-                                              paint.shader = value }
     private val normalText = context.getString(R.string.checkout_description)
     private val confirmText = context.getString(R.string.checkout_confirm_description)
     private var disabledOverlayView: View? = null
 
+    // isDisabled violates the usual rule of not naming boolean variables
+    // in the negative to avoid conflicting with View.isEnabled.
     var isDisabled = false
         set(disabled) { field = disabled
                         disabledOverlayView?.visibility = if (disabled) View.VISIBLE
                                                           else          View.GONE }
 
     init {
+        text = normalText
         val a = context.obtainStyledAttributes(attrs, R.styleable.CheckoutButton)
         val disabledOverlayViewId = a.getResourceId(R.styleable.CheckoutButton_disabledOverlayResId, 0)
         a.recycle()
-        text = normalText
-        val strokeWidth = outlineDrawable?.strokeWidth ?: 0f
-        val background = GradientVectorDrawable(
-            120f, 46f, context.getString(R.string.checkout_button_background_path_data))
-        val outline = ClippedGradientVectorDrawable(120f, 46f,
-            context.getString(R.string.checkout_button_outline_path_data),
-            context.getString(R.string.checkout_button_outline_clip_path_data))
-
-        outline.strokeWidth = strokeWidth
-        outline.style = Paint.Style.STROKE
-        this.background = LayerDrawable(arrayOf(background, outline))
-
         doOnNextLayout {
             disabledOverlayView = rootView.findViewById(disabledOverlayViewId)
-            if (isEnabled) disabledOverlayView?.alpha = 0f
+            if (!isDisabled) disabledOverlayView?.alpha = 0f
         }
+
+        val strokeWidth = outlineDrawable.strokeWidth
+        _outlineDrawable = ClippedGradientVectorDrawable(120f, 46f,
+            context.getString(R.string.checkout_button_outline_path_data),
+            context.getString(R.string.checkout_button_outline_clip_path_data))
+        outlineDrawable.strokeWidth = strokeWidth
+        outlineDrawable.style = Paint.Style.STROKE
+        (this.background as LayerDrawable).setId(1, 1)
+        (this.background as LayerDrawable).setDrawableByLayerId(1, outlineDrawable)
     }
 
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
@@ -59,10 +54,4 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
                                             isDisabled ->              View.VISIBLE
                                             else ->                    View.INVISIBLE }
     }
-
-    private fun getDrawableLayer(backgroundLayer: Boolean) = try {
-        val index = if (backgroundLayer) 0 else 1
-        val background = this.background as? LayerDrawable
-        (background?.getDrawable(index) as? GradientVectorDrawable)
-    } catch (e: IndexOutOfBoundsException) { null }
 }

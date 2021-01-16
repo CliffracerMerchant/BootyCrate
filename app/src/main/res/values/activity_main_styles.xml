@@ -49,6 +49,9 @@
     </style>
 
     <style name="CheckoutButton">
+        <item name="backgroundPathData">@string/checkout_button_background_path_data</item>
+        <item name="pathWidth">120</item>
+        <item name="pathHeight">46</item>
         <item name="android:paddingRight">10dp</item>
         <item name="android:text">@string/checkout_description</item>
         <item name="android:textSize" tools:ignore="SpUsage">15dp</item>
