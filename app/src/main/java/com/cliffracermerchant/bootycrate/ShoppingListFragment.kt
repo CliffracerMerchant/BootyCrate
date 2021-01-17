@@ -65,7 +65,6 @@ class ShoppingListFragment(isActive: Boolean = false) :
         checkoutButtonNormalText = getString(R.string.checkout_description)
         checkoutButtonConfirmText = getString(R.string.checkout_confirm_description)
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
-            Log.d("pgag", "checkedItems.size now ${newSize}")
             if (newSize > 0)
                 checkoutButtonIsEnabled = true
             if (newSize == 0) {

@@ -54,8 +54,7 @@ open class MainActivityFragment(isActive: Boolean = false): Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         isActive = savedInstanceState?.getBoolean("wasActiveFragment") ?: isActive
-        //onActiveStateChanged(isActive)
-        if (!isActive) view.visibility = View.GONE
+        if (!isActive) view.visibility = View.INVISIBLE
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
