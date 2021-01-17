@@ -114,7 +114,7 @@ import androidx.room.*
     @Query("UPDATE shopping_list_item SET isChecked = 0")
     abstract suspend fun uncheckAll()
 
-    @Query("SELECT COUNT(*) FROM shopping_list_item WHERE isChecked")
+    @Query("SELECT COUNT(*) FROM shopping_list_item WHERE isChecked AND NOT inTrash")
     abstract fun getCheckedItemsSize() : LiveData<Int>
 
     @Query("DELETE FROM shopping_list_item")

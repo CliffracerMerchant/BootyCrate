@@ -7,6 +7,7 @@ package com.cliffracermerchant.bootycrate
 import android.animation.AnimatorInflater
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.ActionBar
@@ -63,8 +64,8 @@ class ShoppingListFragment(isActive: Boolean = false) :
         yellowColor = ContextCompat.getColor(mainActivity, R.color.checkoutButtonEnabledColor)
         checkoutButtonNormalText = getString(R.string.checkout_description)
         checkoutButtonConfirmText = getString(R.string.checkout_confirm_description)
-
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
+            Log.d("pgag", "checkedItems.size now ${newSize}")
             if (newSize > 0)
                 checkoutButtonIsEnabled = true
             if (newSize == 0) {
