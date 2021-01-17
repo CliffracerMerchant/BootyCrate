@@ -33,9 +33,6 @@ class ShoppingListFragment(isActive: Boolean = false) :
     override lateinit var recyclerView: ShoppingListRecyclerView
     override val actionMode = ShoppingListActionMode()
 
-    private val handler = Handler()
-    private var checkoutButtonLastPressTimeStamp = 0L
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? =
         inflater.inflate(R.layout.shopping_list_fragment_layout, container, false)
@@ -57,19 +54,8 @@ class ShoppingListFragment(isActive: Boolean = false) :
     override fun onActiveStateChanged(active: Boolean) {
         super.onActiveStateChanged(active)
         if (active) {
-            activity.addButton.setOnClickListener{ recyclerView.addNewItem() }
-            activity.checkoutButton.setOnClickListener {
-                if (activity.checkoutButton.isDisabled) return@setOnClickListener
-                val currentTime = System.currentTimeMillis()
-                if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
-                    revertCheckoutButtonToNormalState()
-                    recyclerView.checkout()
-                } else {
-                    checkoutButtonLastPressTimeStamp = currentTime
-                    handler.removeCallbacks(::revertCheckoutButtonToNormalState)
-                    handler.postDelayed(::revertCheckoutButtonToNormalState, 2000)
-                }
-            }
+            activity.addButton.setOnClickListener { recyclerView.addNewItem() }
+            activity.checkoutButton.checkoutCallback = { recyclerView.checkout() }
         }
     }
 
@@ -84,10 +70,6 @@ class ShoppingListFragment(isActive: Boolean = false) :
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
         super.setOptionsMenuItemsVisible(showing)
         menu?.setGroupVisible(R.id.shopping_list_view_menu_group, showing)
-    }
-
-    private fun revertCheckoutButtonToNormalState() {
-        checkoutButtonLastPressTimeStamp = 0
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */

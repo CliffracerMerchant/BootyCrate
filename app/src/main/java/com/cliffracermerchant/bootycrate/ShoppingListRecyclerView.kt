@@ -54,7 +54,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun addNewItem() = Dialog.newShoppingListItem { newItem -> addItem(newItem) }
 
-    fun checkout() = shoppingListViewModel.checkout()
+    fun checkout() { shoppingListViewModel.checkout() }
 
     /** A RecyclerView.Adapter to display the contents of a list of shopping list items.
      *

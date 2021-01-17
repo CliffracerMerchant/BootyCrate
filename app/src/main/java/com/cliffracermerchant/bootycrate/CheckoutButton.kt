@@ -18,11 +18,14 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
     private val normalText = context.getString(R.string.checkout_description)
     private val confirmText = context.getString(R.string.checkout_confirm_description)
     private var disabledOverlayView: View? = null
+    private var checkoutButtonLastPressTimeStamp = 0L
+    var checkoutCallback: (() -> Unit)? = null
 
     // isDisabled violates the usual rule of not naming boolean variables
     // in the negative to avoid conflicting with View.isEnabled.
     var isDisabled = false
         set(disabled) { field = disabled
+                        if (disabled) exitConfirmatoryState()
                         disabledOverlayView?.visibility = if (disabled) View.VISIBLE
                                                           else          View.GONE }
 
@@ -33,7 +36,7 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
         a.recycle()
         doOnNextLayout {
             disabledOverlayView = rootView.findViewById(disabledOverlayViewId)
-            if (!isDisabled) disabledOverlayView?.alpha = 0f
+            if (!isDisabled) disabledOverlayView?.visibility = View.GONE
         }
 
         val strokeWidth = outlineDrawable.strokeWidth
@@ -44,6 +47,25 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
         outlineDrawable.style = Paint.Style.STROKE
         (this.background as LayerDrawable).setId(1, 1)
         (this.background as LayerDrawable).setDrawableByLayerId(1, outlineDrawable)
+
+        setOnClickListener {
+            if (isDisabled) return@setOnClickListener
+            val currentTime = System.currentTimeMillis()
+            if (currentTime < checkoutButtonLastPressTimeStamp + 2000) {
+                exitConfirmatoryState()
+                checkoutCallback?.invoke()
+            } else {
+                text = confirmText
+                checkoutButtonLastPressTimeStamp = currentTime
+                handler.removeCallbacks(::exitConfirmatoryState)
+                handler.postDelayed(::exitConfirmatoryState, 2000)
+            }
+        }
+    }
+
+    private fun exitConfirmatoryState() {
+        checkoutButtonLastPressTimeStamp = 0
+        text = normalText
     }
 
     override fun onVisibilityChanged(changedView: View, visibility: Int) {
