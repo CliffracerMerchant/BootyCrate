@@ -5,7 +5,6 @@
 package com.cliffracermerchant.bootycrate
 
 import android.os.Bundle
-import android.os.Handler
 import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.ActionBar
@@ -46,7 +45,6 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
             activity.checkoutButton.isDisabled = newSize == 0
-            if (newSize == 0) revertCheckoutButtonToNormalState()
         }
         super.onViewCreated(view, savedInstanceState)
     }

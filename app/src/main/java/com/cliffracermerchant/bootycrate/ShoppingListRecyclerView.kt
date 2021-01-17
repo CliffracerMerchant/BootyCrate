@@ -106,9 +106,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.setExpanded(item.isExpanded)
                     if (changes.contains(ShoppingListItem.Field.IsSelected))
                         holder.view.setSelectedState(item.isSelected)
-                    if (changes.contains(ShoppingListItem.Field.IsChecked)) {
-                        holder.view.checkBox.isChecked = item.isChecked
-                    }
+                    if (changes.contains(ShoppingListItem.Field.IsChecked) &&
+                        holder.view.checkBox.isChecked != item.isChecked)
+                            holder.view.checkBox.isChecked = item.isChecked
                 }
                 else unhandledChanges.add(payload)
             }
