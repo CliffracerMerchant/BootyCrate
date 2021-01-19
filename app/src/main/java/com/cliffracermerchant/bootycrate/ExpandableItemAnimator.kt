@@ -7,7 +7,6 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.view.View
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
@@ -29,8 +28,11 @@ import androidx.recyclerview.widget.RecyclerView
  *  ExpandableItemAnimator also has an observer member that, when registered as
  *  an adapter data observer for the adapter using the ExpandableItemAnimator
  *  instance as its item animator, will automatically update the expanded item
- *  position so that this doesn't need to be done manually.*/
-class ExpandableItemAnimator : DefaultItemAnimator() {
+ *  position so that this doesn't need to be done manually. ExpandableItemAnim-
+ *  ator will attempt to do this automatically, but if the parent recycler view
+ *  does not have an adapter when ExpandableItemAnimator is constructed this
+ *  will have to be done manually. */
+class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultItemAnimator() {
     private val pendingAnimations = mutableListOf<Animator>()
     val expandedItemPos get() = _expandedItemPos
     private var _expandedItemPos: Int? = null
@@ -40,13 +42,12 @@ class ExpandableItemAnimator : DefaultItemAnimator() {
         private var initialized = false
 
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-            if (!initialized) {
-                initialized = true
-                return
+            if (!initialized) initialized = true
+            else {
+                val expandingPos = expandedItemPos ?: return
+                if (expandingPos >= positionStart)
+                    _expandedItemPos = expandingPos + itemCount
             }
-            val expandingPos = expandedItemPos ?: return
-            if (expandingPos >= positionStart)
-                _expandedItemPos = expandingPos + itemCount
         }
         override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
             val expandingPos = expandedItemPos ?: return
@@ -58,6 +59,8 @@ class ExpandableItemAnimator : DefaultItemAnimator() {
                 _expandedItemPos = null
         }
     }
+
+    init { recyclerView.adapter?.registerAdapterDataObserver(observer) }
 
     fun notifyExpandedItemChanged(newlyExpandedItemPos: Int?) {
         collapsingItemPos = expandedItemPos
@@ -86,24 +89,19 @@ class ExpandableItemAnimator : DefaultItemAnimator() {
         // Animate the height change of the view
         val view = newHolder.itemView
         val pos = newHolder.adapterPosition
-        val startHeight = preInfo.bottom - preInfo.top
-
-        val expandCollapseAnim = ValueAnimator.ofInt(0, heightChange)
-        expandCollapseAnim.addUpdateListener {
-            view.bottom = view.top + startHeight + it.animatedValue as Int
-        }
-        expandCollapseAnim.duration = moveDuration
-        expandCollapseAnim.doOnStart {
-            dispatchChangeStarting(newHolder, true)
-            expandCollapseAnim.pause()
-        }
-        expandCollapseAnim.doOnEnd {
-            dispatchChangeFinished(newHolder, true)
-            if (pos == collapsingItemPos)
-                collapsingItemPos = null
-        }
-        pendingAnimations.add(expandCollapseAnim)
-        expandCollapseAnim.start()
+        ObjectAnimator.ofInt(view, "bottom", preInfo.bottom, postInfo.bottom).apply {
+            duration = moveDuration
+            doOnStart {
+                dispatchChangeStarting(newHolder, true)
+                pause()
+            }
+            doOnEnd {
+                dispatchChangeFinished(newHolder, true)
+                if (pos == collapsingItemPos)
+                    collapsingItemPos = null
+            }
+            pendingAnimations.add(this)
+        }.start()
 
         // If another view is expanding as this one is collapsing,
         // the view on bottom must be translated by the same amount
@@ -112,15 +110,13 @@ class ExpandableItemAnimator : DefaultItemAnimator() {
         val expandingPos = expandedItemPos
         if (collapsingPos != null && expandingPos != null) {
             val viewIsOnBottom = if (collapsingPos == pos) collapsingPos > expandingPos
-            else                      expandingPos > collapsingPos
-            if (viewIsOnBottom) {
-                view.translationY = heightChange.toFloat()
-                val translationAnim = ObjectAnimator.ofFloat(view, "translationY", 0f)
-                translationAnim.duration = moveDuration
-                translationAnim.doOnStart { translationAnim.pause() }
-                pendingAnimations.add(translationAnim)
-                translationAnim.start()
-            }
+                                 else                      expandingPos > collapsingPos
+            if (viewIsOnBottom)
+                ObjectAnimator.ofFloat(view, "translationY", heightChange * 1f, 0f).apply {
+                    duration = moveDuration
+                    doOnStart { pause() }
+                    pendingAnimations.add(this)
+                }.start()
         }
         return true
     }
@@ -131,11 +127,13 @@ class ExpandableItemAnimator : DefaultItemAnimator() {
     override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
         val view = holder?.itemView ?: return false
         view.animate().alpha(0f).setDuration(removeDuration).withLayer().
-        withEndAction { dispatchChangeFinished(holder, true) }.
-        withStartAction {
-            view.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-            dispatchChangeStarting(holder, true)
-        }.start()
+            withStartAction {
+                dispatchRemoveStarting(holder)
+                view.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+            }.withEndAction {
+                dispatchRemoveFinished(holder)
+                recyclerView.layoutManager?.removeView(view)
+            }.start()
         return true
     }
 

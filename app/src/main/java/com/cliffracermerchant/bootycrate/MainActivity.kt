@@ -199,7 +199,7 @@ open class MainActivity : AppCompatActivity() {
         val oldFragmentView = oldFragment.view
         oldFragmentView?.animate()?.translationXBy(fragmentTranslationAmount)?.
                                     setDuration(300)?.//withLayer()?.
-                                    withEndAction { oldFragmentView.visibility = View.GONE }?.
+                                    withEndAction { oldFragmentView.visibility = View.INVISIBLE }?.
                                     start()
 
         activeFragment.isActive = true
