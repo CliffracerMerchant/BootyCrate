@@ -16,20 +16,24 @@ import androidx.appcompat.widget.AppCompatButton
  *
  *  OutlinedGradientButton is a button that accepts two paths that define its
  *  vector background and outline, backgroundPathData and outlinePathData. Both
- *  of these paths' gradient shaders can be set independently of each other via
- *  the properties backgroundGradient and outlineGradient. In addition to the
- *  outline, the outlineGradient property will also be used as the shader for
- *  any text. In order for the path data to be interpreted correctly, the XML
- *  properties pathWidth and pathHeight must also be set in XML. The stroke
- *  width of the outline can be set through the XML property outlineStrokeWidth. */
+ *  of these paths' gradients can be set independently of each other via the
+ *  properties backgroundGradient and outlineGradient. In addition to the out-
+ *  line, the outlineGradient property will also be used as the shader for any
+ *  text. In order for the path data to be interpreted correctly, the XML prop-
+ *  erties pathWidth and pathHeight must also be set in XML. The stroke width
+ *  of the outline can be set through the XML property outlineStrokeWidth. */
 @SuppressLint("ResourceType")
 open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
     AppCompatButton(context, attrs)
 {
-    val backgroundDrawable get() = _backgroundDrawable
-    val outlineDrawable get() = _outlineDrawable
-    protected var _backgroundDrawable: GradientVectorDrawable
-    protected var _outlineDrawable: GradientVectorDrawable
+    var backgroundGradient get() = backgroundDrawable.gradient
+        set(gradient) { backgroundDrawable.gradient = gradient }
+    var outlineGradient get() = outlineDrawable.gradient
+        set(gradient) { outlineDrawable.gradient = gradient
+                        paint.shader = gradient }
+
+    protected var backgroundDrawable: GradientVectorDrawable
+    protected var outlineDrawable: GradientVectorDrawable
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.OutlinedGradientButton)
@@ -44,8 +48,8 @@ open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
         val pathWidth = a.getFloat(1, 0f)
         a.recycle()
 
-        _backgroundDrawable = GradientVectorDrawable(pathWidth, pathHeight, backgroundPathData )
-        _outlineDrawable = GradientVectorDrawable(pathWidth, pathHeight, outlinePathData)
+        backgroundDrawable = GradientVectorDrawable(pathWidth, pathHeight, backgroundPathData )
+        outlineDrawable = GradientVectorDrawable(pathWidth, pathHeight, outlinePathData)
         outlineDrawable.strokeWidth = outlineStrokeWidth
         outlineDrawable.style = Paint.Style.STROKE
         this.background = LayerDrawable(arrayOf(backgroundDrawable, outlineDrawable))
