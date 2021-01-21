@@ -89,12 +89,6 @@ open class MainActivity : AppCompatActivity() {
 
         cradleLayout.layoutTransition = delaylessLayoutTransition()
         cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
-            // These z values seem not to stick when set in XML, so we have to
-            // set them here every time to ensure that the addButton remains on
-            // top of the others.
-            addButton.z = 1f
-            checkoutButton.z = -2f
-            disabled_checkout_button.z = -1f
             pendingCradleAnim?.start()
             pendingCradleAnim = null
         }
@@ -240,6 +234,11 @@ open class MainActivity : AppCompatActivity() {
         val cradleEndWidth = if (showing) cradleLayout.measuredWidth
                              else         addButton.layoutParams.width
 
+        // These z values seem not to stick when set in XML, so we have to
+        // set them here every time to ensure that the addButton remains on
+        // top of the others.
+        addButton.elevation = 5f
+        checkoutButton.elevation = -10f
         if (!animate) {
             bottomAppBar.cradleWidth = cradleEndWidth
             return
@@ -254,10 +253,8 @@ open class MainActivity : AppCompatActivity() {
             addUpdateListener {
                 checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - addButton.measuredWidth / 2
                 checkoutButton.clipBounds = checkoutBtnClipBounds
-                disabled_checkout_button.clipBounds = checkoutBtnClipBounds
             }
-            doOnEnd { checkoutButton.clipBounds = null
-                      disabled_checkout_button.clipBounds = null }
+            doOnEnd { checkoutButton.clipBounds = null }
             // The anim is stored here and started in the cradle layout's
             // layoutTransition's transition listener's transitionStart override
             // so that the animation is synced with the layout transition.

@@ -30,12 +30,12 @@ open class GradientVectorDrawable(
     protected var path = Path()
     protected val matrix = Matrix()
 
-    var style get() = paint.style
-              set(value) { paint.style = value }
+    var style: Paint.Style get() = paint.style
+                           set(value) { paint.style = value }
     var strokeWidth get() = paint.strokeWidth
                     set(value) { paint.strokeWidth = value }
-    var gradient get() = paint.shader
-                 set(value) { paint.shader = value }
+    var gradient: Shader? get() = paint.shader
+                          set(value) { paint.shader = value }
 
     // For when pathSize is a square.
     constructor(pathSize: Float, pathData: String) : this(pathSize, pathSize, pathData)
@@ -46,6 +46,8 @@ open class GradientVectorDrawable(
                         (bounds?.height() ?: 0) / pathHeight)
         path.transform(matrix)
     }
+
+    override fun setTint(tintColor: Int) { paint.color = tintColor }
 
     override fun draw(canvas: Canvas) = canvas.drawPath(path, paint)
 
@@ -58,7 +60,7 @@ open class GradientVectorDrawable(
                                                           else -> PixelFormat.TRANSLUCENT }
 }
 
-/** A GradientVectorDrawable that additionally takes a cliPathData parameter to describe a clip region. */
+/** A GradientVectorDrawable that additionally takes a clipPathData parameter to describe a clip region. */
 class ClippedGradientVectorDrawable(
     pathWidth: Float,
     pathHeight: Float,

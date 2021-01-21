@@ -87,8 +87,10 @@
     </declare-styleable>
 
     <declare-styleable name="CheckoutButton">
-        <!-- A reference to the view that will appear over the checkout button to indicate that it is disabled. -->
-        <attr name="disabledOverlayResId" format="reference" />
+        <!-- The tint that will be used for the disabled overlay background. -->
+        <attr name="disabledBackgroundTint" format="color" />
+        <!-- The tint that will be used for the disabled overlay outline and text. -->
+        <attr name="disabledOutlineAndTextTint" format="color" />
     </declare-styleable>
 
     <declare-styleable name="ToggleableTintedCheckbox">

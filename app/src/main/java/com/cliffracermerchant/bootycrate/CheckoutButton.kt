@@ -5,11 +5,13 @@
 
 package com.cliffracermerchant.bootycrate
 
+import android.animation.ObjectAnimator
 import android.content.Context
-import android.graphics.Paint
+import android.graphics.*
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
-import android.view.View
 import androidx.core.view.doOnNextLayout
 
 /** An OutlinedGradientButton with a custom shape, disable/enable functionality, and a double tap to use functionality.
@@ -43,7 +45,7 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
 {
     private val normalText = context.getString(R.string.checkout_description)
     private val confirmText = context.getString(R.string.checkout_confirm_description)
-    private var disabledOverlayView: View? = null
+    private var disabledOverlay: Drawable? = null
     private var checkoutButtonLastPressTimeStamp = 0L
     private val confirmTimeout = 2000L
     var checkoutCallback: (() -> Unit)? = null
@@ -51,20 +53,22 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
     // isDisabled violates the usual rule of not naming boolean variables
     // in the negative to avoid conflicting with View.isEnabled.
     var isDisabled = false
-        set(disabled) { field = disabled
+        set(disabled) { if (field == disabled) return
+                        field = disabled
                         if (disabled) exitConfirmatoryState()
-                        disabledOverlayView?.visibility = if (disabled) View.VISIBLE
-                                                          else          View.GONE }
+                        val disabledOverlay = this.disabledOverlay ?: return
+                        val startAlpha = if (disabled) 0 else 255
+                        val endAlpha = if (disabled) 255 else 0
+                        ObjectAnimator.ofInt(disabledOverlay, "alpha", startAlpha, endAlpha).apply {
+                            addUpdateListener{ invalidate() }
+                        }.start() }
 
     init {
         text = normalText
         val a = context.obtainStyledAttributes(attrs, R.styleable.CheckoutButton)
-        val disabledOverlayViewId = a.getResourceId(R.styleable.CheckoutButton_disabledOverlayResId, 0)
+        val disabledBackgroundTint = a.getColor(R.styleable.CheckoutButton_disabledBackgroundTint, 0)
+        val disabledOutlineAndTextTint = a.getColor(R.styleable.CheckoutButton_disabledOutlineAndTextTint, 0)
         a.recycle()
-        doOnNextLayout {
-            disabledOverlayView = rootView.findViewById(disabledOverlayViewId)
-            if (!isDisabled) disabledOverlayView?.visibility = View.GONE
-        }
 
         val strokeWidth = outlineDrawable.strokeWidth
         outlineDrawable = ClippedGradientVectorDrawable(120f, 46f,
@@ -88,19 +92,35 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
                 handler.postDelayed(::exitConfirmatoryState, confirmTimeout)
             }
         }
+
+        doOnNextLayout {
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+
+            val backupBackgroundGradient = backgroundGradient
+            val backupOutlineGradient = outlineGradient
+            backgroundGradient = null
+            outlineGradient = null
+            ((background as LayerDrawable).getDrawable(0) as GradientVectorDrawable).setTint(disabledBackgroundTint)
+            ((background as LayerDrawable).getDrawable(1) as GradientVectorDrawable).setTint(disabledOutlineAndTextTint)
+            setTextColor(disabledOutlineAndTextTint)
+
+            draw(canvas)
+            disabledOverlay = BitmapDrawable(context.resources, bitmap).apply {
+                alpha = if (isDisabled) 255 else 0
+                bounds = background.bounds }
+            backgroundGradient = backupBackgroundGradient
+            outlineGradient = backupOutlineGradient
+        }
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        if (canvas != null) disabledOverlay?.draw(canvas)
     }
 
     private fun exitConfirmatoryState() {
         checkoutButtonLastPressTimeStamp = 0
         text = normalText
-    }
-
-    override fun onVisibilityChanged(changedView: View, visibility: Int) {
-        super.onVisibilityChanged(changedView, visibility)
-        if (!isDisabled) return
-        val disabledOverlay = disabledOverlayView ?: return
-        disabledOverlay.visibility = when { visibility == View.GONE -> View.GONE
-                                            isDisabled ->              View.VISIBLE
-                                            else ->                    View.INVISIBLE }
     }
 }
