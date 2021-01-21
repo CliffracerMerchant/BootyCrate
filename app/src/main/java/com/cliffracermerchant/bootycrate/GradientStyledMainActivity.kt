@@ -68,9 +68,9 @@ class GradientStyledMainActivity : MainActivity() {
         // both types of themes without being overpowering.
         theme.resolveAttribute(R.attr.isDarkTheme, typedValue, true)
         val usingDarkTheme = typedValue.data == -1
-        val alpha = if (usingDarkTheme) 90 else 125
+        val alpha = if (usingDarkTheme) 125 else 150
         theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
-        val blendColor = ContextCompat.getColor(this, R.color.colorRecyclerViewItemDark)
+        val blendColor = typedValue.data
         val dimmedColors = IntArray(4) { ColorUtils.compositeColors(ColorUtils.setAlphaComponent(colors[it], alpha), blendColor) }
 
         val gradientBuilder = GradientBuilder()

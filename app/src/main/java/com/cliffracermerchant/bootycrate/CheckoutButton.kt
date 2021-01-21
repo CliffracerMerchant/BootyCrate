@@ -9,9 +9,9 @@ import android.graphics.*
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 
-/** An OutlinedGradientButton with a custom shape and a double tap to use functionality.
+/** An button with a custom shape and a double tap to use functionality.
  *
- *  CheckoutButton is an DisableableOutlinedGradientButton with extra function-
+ *  CheckoutButton is a DisableableOutlinedGradientButton with extra function-
  *  ality that is intended to be used as the button to execute the shopping
  *  list checkout function (see ShoppingListItemDao.checkout() for more infor-
  *  mation). Its normal text reads checkout, but when tapped its text will
