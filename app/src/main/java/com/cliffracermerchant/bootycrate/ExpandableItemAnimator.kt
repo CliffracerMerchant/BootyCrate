@@ -89,7 +89,11 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
         // Animate the height change of the view
         val view = newHolder.itemView
         val pos = newHolder.adapterPosition
-        ObjectAnimator.ofInt(view, "bottom", preInfo.bottom, postInfo.bottom).apply {
+
+        // preInfo.top won't necessarily be the correct start value
+        // if the view is on bottom and also needs to be translated.
+        val start = view.top + preInfo.bottom - preInfo.top
+        ObjectAnimator.ofInt(view, "bottom", start, postInfo.bottom).apply {
             duration = moveDuration
             doOnStart {
                 dispatchChangeStarting(newHolder, true)
