@@ -43,9 +43,8 @@ class ShoppingListFragment(isActive: Boolean = false) :
                                 mainActivity.shoppingListViewModel,
                                 mainActivity.inventoryViewModel)
 
-        recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner) { newSize ->
-            activity.checkoutButton.isDisabled = newSize == 0
-        }
+        recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner)
+            { newSize -> activity.checkoutButton.isEnabled = newSize != 0 }
         super.onViewCreated(view, savedInstanceState)
     }
 

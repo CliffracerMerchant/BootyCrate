@@ -86,7 +86,7 @@
         <attr name="outlineStrokeWidth" format="float" />
     </declare-styleable>
 
-    <declare-styleable name="CheckoutButton">
+    <declare-styleable name="DisableableOutlinedGradientButton">
         <!-- The tint that will be used for the disabled overlay background. -->
         <attr name="disabledBackgroundTint" format="color" />
         <!-- The tint that will be used for the disabled overlay outline and text. -->
