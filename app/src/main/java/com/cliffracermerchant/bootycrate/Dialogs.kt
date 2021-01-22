@@ -35,9 +35,13 @@ object Dialog {
     private lateinit var context: Context
     private lateinit var fragmentManager: FragmentManager
     private lateinit var snackBarParent: CoordinatorLayout
-    fun init(activity: AppCompatActivity, snackBarParent: CoordinatorLayout) {
+    private lateinit var shoppingListViewModel: ShoppingListViewModel
+    private lateinit var inventoryViewModel: InventoryViewModel
+    fun init(activity: MainActivity, snackBarParent: CoordinatorLayout) {
         context = activity
         fragmentManager = activity.supportFragmentManager
+        this.shoppingListViewModel = activity.shoppingListViewModel
+        this.inventoryViewModel = activity.inventoryViewModel
         this.snackBarParent = snackBarParent
     }
 
@@ -103,13 +107,11 @@ object Dialog {
 
     fun aboutApp() { themedAlertBuilder().setView(R.layout.about_app_dialog).show() }
 
-    /** Open a dialog to create a new shopping list item, and invoke @param callback on the new item. */
-    fun newShoppingListItem(callback: (ShoppingListItem) -> Unit) =
-        newItem<ShoppingListItem>(callback, isShoppingListItem = true)
+    /** Open a dialog to create a new shopping list item. */
+    fun newShoppingListItem() = newItem<ShoppingListItem>(isShoppingListItem = true)
 
-    /** Open a dialog to create a new inventory item, and invoke @param callback on the new item. */
-    fun newInventoryItem(callback: (InventoryItem) -> Unit) =
-        newItem<InventoryItem>(callback, isShoppingListItem = false)
+    /** Open a dialog to create a new inventory item. */
+    fun newInventoryItem() = newItem<InventoryItem>(isShoppingListItem = false)
 
     /** Open a dialog to ask the user to the type of database import they want (merge
      *  existing or overwrite, and recreate the given activity if the import requires it. */
@@ -149,10 +151,8 @@ object Dialog {
         }
         themedAlertBuilder().
             setMessage(context.getString(R.string.delete_all_items_confirmation_message, collectionName)).
-            setPositiveButton(android.R.string.yes) { _, _ ->
-                viewModel.deleteAll()
-                //viewModel.emptyTrash()
-            }.setNegativeButton(android.R.string.cancel) { _, _ -> }.
+            setPositiveButton(android.R.string.yes) { _, _ -> viewModel.deleteAll() }.
+            setNegativeButton(android.R.string.cancel) { _, _ -> }.
             show()
     }
 
@@ -165,31 +165,30 @@ object Dialog {
         return MaterialAlertDialogBuilder(context, typedValue.data)
     }
 
-    private fun <Entity: ExpandableSelectableItem>newItem(
-        callback: (Entity) -> Unit,
-        isShoppingListItem: Boolean
-    ) {
+    private fun <Entity: ExpandableSelectableItem>newItem(isShoppingListItem: Boolean) {
         val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+        /* Because a shopping list item should not be able to be checked before it is added,
+         * an InventoryItemView is well suited for displaying a shopping list item as long
+         * as the extra details are collapsed. */
         val view = InventoryItemView(context, null)
-        if (isShoppingListItem) view.prepForNewShoppingListItem()
-        else                    view.prepForNewInventoryItem()
+        view.prepForNewItem<Entity>(isShoppingListItem)
+        val addItem: () -> Unit = {
+            if (isShoppingListItem) shoppingListViewModel.add(shoppingListItemFromItemView(view))
+            else                    inventoryViewModel.add(inventoryItemFromItemView(view)) }
         val dialog = themedAlertBuilder().
-            // The inventory view is a little squashed with the default margins
+            // The inventory view is a little squashed with the default margins.
             setBackgroundInsetStart(0). setBackgroundInsetEnd(0).
             setTitle(R.string.add_item_button_name).
             setNeutralButton(android.R.string.cancel) { _, _ -> }.
             setNegativeButton(context.getString(R.string.add_another_item_button_description)) { _, _ ->}.
-            setPositiveButton(android.R.string.ok) { _, _ ->
-                callback((if (isShoppingListItem) shoppingListItemFromItemView(view)
-                          else                    inventoryItemFromItemView(view)) as Entity)
-            }.setView(view).create()
+            setPositiveButton(android.R.string.ok) { _, _ -> addItem() }.
+            setView(view).create()
         dialog.apply {
             setOnShowListener {
                 // Override the add another button's default on click listener
                 // to prevent it from closing the dialog when clicked
                 getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
-                    callback((if (isShoppingListItem) shoppingListItemFromItemView(view)
-                              else                    inventoryItemFromItemView(view)) as Entity)
+                    addItem()
                     view.apply {
                         nameEdit.text?.clear()
                         extraInfoEdit.text?.clear()
@@ -209,35 +208,29 @@ object Dialog {
         }
     }
 
-    private fun InventoryItemView.prepForNewShoppingListItem() {
+    private fun <Entity: ExpandableSelectableItem> InventoryItemView.prepForNewItem(
+        shoppingListItem: Boolean
+    ) {
         background = null
         editButton.visibility = View.GONE
-        inventoryItemDetailsGroup.visibility = View.GONE
         setColorIndex(0, animate = false)
         colorEdit.setOnClickListener {
-            colorPicker(ViewModelItem.Colors[0]) { chosenColorIndex ->
-                colorIndex = chosenColorIndex
-            }
+            colorPicker(ViewModelItem.Colors[0])
+                { chosenColorIndex -> colorIndex = chosenColorIndex }
         }
-        nameEdit.isEditable = true
-        extraInfoEdit.isEditable = true
-        inventoryAmountEdit.valueIsDirectlyEditable = true
-        inventoryAmountEdit.minValue = 1
-    }
-
-    private fun InventoryItemView.prepForNewInventoryItem() {
-        background = null
-        expand()
-        editButton.visibility = View.GONE
-        // Setting collapseButton's visibility to GONE or INVISIBLE doesn't seem to work for some reason
-        collapseButton.alpha = 0f
-        collapseButton.setOnClickListener { }
-        addToShoppingListTriggerEdit.value = addToShoppingListTriggerEdit.minValue
-        setColorIndex(0, animate = false)
-        colorEdit.setOnClickListener {
-            colorPicker(ViewModelItem.Colors[0]) { chosenColorIndex ->
-                colorIndex = chosenColorIndex
-            }
+        if (shoppingListItem) {
+            inventoryItemDetailsGroup.visibility = View.GONE
+            nameEdit.isEditable = true
+            extraInfoEdit.isEditable = true
+            inventoryAmountEdit.valueIsDirectlyEditable = true
+            inventoryAmountEdit.minValue = 1
+        } else {
+            expand()
+            // Setting collapseButton's visibility to GONE or INVISIBLE
+            // doesn't seem to work for some reason, even with a layout.
+            collapseButton.alpha = 0f
+            collapseButton.setOnClickListener { }
+            addToShoppingListTriggerEdit.value = addToShoppingListTriggerEdit.minValue
         }
     }
 }

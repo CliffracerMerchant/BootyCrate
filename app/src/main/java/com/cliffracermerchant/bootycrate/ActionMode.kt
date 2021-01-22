@@ -27,7 +27,7 @@ import androidx.appcompat.app.ActionBar
  *  title will be restored when the ActionMode is finished. Updating the prop-
  *  erty title while the ActionMode is already started will also update the
  *  displayed title. The function finish can be called when desired to end the
- *  ActionMode
+ *  ActionMode.
  *
  *  Sub classes should override onStart and onFinish to make the desired
  *  changes to the UI while the ActionMode is started. Because the action bar's
