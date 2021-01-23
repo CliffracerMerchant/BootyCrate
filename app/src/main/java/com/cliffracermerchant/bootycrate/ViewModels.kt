@@ -7,7 +7,6 @@ package com.cliffracermerchant.bootycrate
 import android.app.Application
 import androidx.lifecycle.*
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 /** An abstract AndroidViewModel that provides an asynchronous interface for DataAccessObject<Entity> functions.
@@ -28,9 +27,13 @@ import java.util.concurrent.atomic.AtomicLong
  *  added. */
 abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewModel(app) {
     protected abstract val dao: DataAccessObject<Entity>
+
+    var sort get() = sortAndFilterLiveData.value?.first
+        set(value) { sortAndFilterLiveData.value = Pair(value, searchFilter) }
+    var searchFilter get() = sortAndFilterLiveData.value?.second
+        set(value) { sortAndFilterLiveData.value = Pair(sort, value) }
     private val sortAndFilterLiveData =
         MutableLiveData(Pair<ViewModelItem.Sort?, String?>(ViewModelItem.Sort.Color, ""))
-
     val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
         val filter = "%${sortAndFilter.second ?: ""}%"
         when (sortAndFilter.first) {
@@ -42,10 +45,16 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
             ViewModelItem.Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
         }
     }
-    var sort get() = sortAndFilterLiveData.value?.first
-             set(value) { sortAndFilterLiveData.value = Pair(value, searchFilter) }
-    var searchFilter get() = sortAndFilterLiveData.value?.second
-                     set(value) { sortAndFilterLiveData.value = Pair(sort, value) }
+
+    var newItemName get() = newItemNameLiveData.value?.first
+        set(value) { newItemNameLiveData.value = Pair(value, newItemExtraInfo) }
+    var newItemExtraInfo get() = newItemNameLiveData.value?.second
+        set(value) { newItemNameLiveData.value = Pair(newItemName, value) }
+    private val newItemNameLiveData = MutableLiveData(Pair<String?, String?>("", ""))
+    val newItemNameIsAlreadyUsed = Transformations.map(newItemNameLiveData) { newItemNameAndExtraInfo ->
+        dao.itemWithNameAlreadyExists(newItemNameAndExtraInfo.first ?: "",
+                                      newItemNameAndExtraInfo.second ?: "")
+    }
 
     private var _newlyAddedItemId = AtomicLong()
     val newlyAddedItemId: Long get() = _newlyAddedItemId.get()

@@ -11,11 +11,9 @@ import android.net.Uri
 import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.setPadding
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.preference.PreferenceManager
@@ -171,18 +169,20 @@ object Dialog {
          * an InventoryItemView is well suited for displaying a shopping list item as long
          * as the extra details are collapsed. */
         val view = InventoryItemView(context, null)
-        view.prepForNewItem<Entity>(isShoppingListItem)
+        view.prepForNewItemDialog<Entity>(isShoppingListItem)
+
         val addItem: () -> Unit = {
             if (isShoppingListItem) shoppingListViewModel.add(shoppingListItemFromItemView(view))
             else                    inventoryViewModel.add(inventoryItemFromItemView(view)) }
-        val dialog = themedAlertBuilder().
+        val dialog = themedAlertBuilder()
             // The inventory view is a little squashed with the default margins.
-            setBackgroundInsetStart(0). setBackgroundInsetEnd(0).
-            setTitle(R.string.add_item_button_name).
-            setNeutralButton(android.R.string.cancel) { _, _ -> }.
-            setNegativeButton(context.getString(R.string.add_another_item_button_description)) { _, _ ->}.
-            setPositiveButton(android.R.string.ok) { _, _ -> addItem() }.
-            setView(view).create()
+            .setBackgroundInsetStart(0)
+            .setBackgroundInsetEnd(0)
+            .setTitle(R.string.add_item_button_name)
+            .setNeutralButton(android.R.string.cancel) { _, _ -> }
+            .setNegativeButton(context.getString(R.string.add_another_item_button_description)) { _, _ -> }
+            .setPositiveButton(android.R.string.ok) { _, _ -> addItem() }
+            .setView(view).create()
         dialog.apply {
             setOnShowListener {
                 // Override the add another button's default on click listener
@@ -208,17 +208,27 @@ object Dialog {
         }
     }
 
-    private fun <Entity: ExpandableSelectableItem> InventoryItemView.prepForNewItem(
-        shoppingListItem: Boolean
+    private fun <Entity: ExpandableSelectableItem> InventoryItemView.prepForNewItemDialog(
+        isShoppingListItem: Boolean,
     ) {
         background = null
         editButton.visibility = View.GONE
         setColorIndex(0, animate = false)
         colorEdit.setOnClickListener {
-            colorPicker(ViewModelItem.Colors[0])
-                { chosenColorIndex -> colorIndex = chosenColorIndex }
+            colorPicker(ViewModelItem.Colors[0]) { chosenColorIndex ->
+                colorIndex = chosenColorIndex
+            }
         }
-        if (shoppingListItem) {
+
+        val viewModel = if (isShoppingListItem) shoppingListViewModel
+                        else                    inventoryViewModel
+        nameEdit.doOnTextChanged { text, _, _, _ ->
+            viewModel.newItemName = text.toString()
+        }
+        extraInfoEdit.doOnTextChanged { text, _, _, _ ->
+            viewModel.newItemExtraInfo = text.toString()
+        }
+        if (isShoppingListItem) {
             inventoryItemDetailsGroup.visibility = View.GONE
             nameEdit.isEditable = true
             extraInfoEdit.isEditable = true

@@ -17,6 +17,7 @@ import androidx.room.Transaction
     abstract fun getAllSortedByNameDesc(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByAmountAsc(filter: String): LiveData<List<Entity>>
     abstract fun getAllSortedByAmountDesc(filter: String): LiveData<List<Entity>>
+    abstract fun itemWithNameAlreadyExists(name: String, extraInfo: String): LiveData<Boolean>
     @Insert abstract suspend fun add(item: Entity): Long
     @Insert abstract suspend fun add(items: List<Entity>)
     abstract suspend fun deleteAll()
