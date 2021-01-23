@@ -16,6 +16,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -164,6 +165,9 @@ object Dialog {
     }
 
     private fun <Entity: ExpandableSelectableItem>newItem(isShoppingListItem: Boolean) {
+        val viewModel = if (isShoppingListItem) shoppingListViewModel
+                        else                    inventoryViewModel
+        viewModel.resetNewItemName()
         val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
         /* Because a shopping list item should not be able to be checked before it is added,
          * an InventoryItemView is well suited for displaying a shopping list item as long
@@ -184,7 +188,12 @@ object Dialog {
             .setPositiveButton(android.R.string.ok) { _, _ -> addItem() }
             .setView(view).create()
         dialog.apply {
+            val observer = Observer<Boolean> { newItemNameIsAlreadyUsed ->
+                setMessage(if (!newItemNameIsAlreadyUsed) ""
+                           else "Warning: Name is already in use.")
+            }
             setOnShowListener {
+                viewModel.newItemNameIsAlreadyUsed.observeForever(observer)
                 // Override the add another button's default on click listener
                 // to prevent it from closing the dialog when clicked
                 getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
@@ -204,8 +213,11 @@ object Dialog {
                 view.nameEdit.requestFocus()
                 imm?.showSoftInput(view.nameEdit, InputMethodManager.SHOW_IMPLICIT)
             }
-            dialog.show()
-        }
+            setOnDismissListener {
+                viewModel.newItemNameIsAlreadyUsed.removeObserver(observer)
+                viewModel.resetNewItemName()
+            }
+        }.show()
     }
 
     private fun <Entity: ExpandableSelectableItem> InventoryItemView.prepForNewItemDialog(

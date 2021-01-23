@@ -51,10 +51,12 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
     var newItemExtraInfo get() = newItemNameLiveData.value?.second
         set(value) { newItemNameLiveData.value = Pair(newItemName, value) }
     private val newItemNameLiveData = MutableLiveData(Pair<String?, String?>("", ""))
-    val newItemNameIsAlreadyUsed = Transformations.map(newItemNameLiveData) { newItemNameAndExtraInfo ->
-        dao.itemWithNameAlreadyExists(newItemNameAndExtraInfo.first ?: "",
-                                      newItemNameAndExtraInfo.second ?: "")
+    val newItemNameIsAlreadyUsed =
+        Transformations.switchMap(newItemNameLiveData) { newItemNameAndExtraInfo ->
+            dao.itemWithNameAlreadyExists(newItemNameAndExtraInfo.first ?: "",
+                                          newItemNameAndExtraInfo.second ?: "")
     }
+    fun resetNewItemName() { newItemName = null; newItemExtraInfo = null }
 
     private var _newlyAddedItemId = AtomicLong()
     val newlyAddedItemId: Long get() = _newlyAddedItemId.get()

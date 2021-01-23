@@ -38,9 +38,9 @@ import androidx.room.*
               ORDER BY amount DESC""")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
 
-    @Query("""SELECT COUNT(*) FROM inventory_item
-              WHERE (name = :name AND extraInfo = :extraInfo)
-              AND NOT inTrash""")
+    @Query("""SELECT EXISTS(SELECT COUNT(*) FROM inventory_item
+                            WHERE (name = :name AND extraInfo = :extraInfo)
+                            AND NOT inTrash)""")
     abstract override fun itemWithNameAlreadyExists(name: String, extraInfo: String): LiveData<Boolean>
 
     @Query("SELECT * FROM inventory_item WHERE isSelected AND NOT inTrash")
