@@ -48,12 +48,3 @@ class InventoryItem(
                        IsExpanded, IsSelected, AddToShoppingList,
                        AddToShoppingListTrigger }
 }
-
-fun inventoryItemFromItemView(view: InventoryItemView) = InventoryItem(
-        name = view.nameEdit.text.toString(),
-        extraInfo = view.extraInfoEdit.text.toString(),
-        color = ViewModelItem.Colors.indexOf(view.colorEdit.imageTintList?.defaultColor ?: 0),
-        amount = view.inventoryAmountEdit.value,
-        addToShoppingList = view.addToShoppingListCheckBox.isChecked,
-        addToShoppingListTrigger = view.addToShoppingListTriggerEdit.value)
-

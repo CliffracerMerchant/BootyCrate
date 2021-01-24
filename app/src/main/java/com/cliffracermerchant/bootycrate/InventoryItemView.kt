@@ -9,13 +9,14 @@ import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.RecyclerView
+import com.cliffracermerchant.bootycrate.databinding.InventoryItemDetailsLayoutBinding
+import com.cliffracermerchant.bootycrate.databinding.InventoryItemLayoutBinding
 import kotlinx.android.synthetic.main.integer_edit_layout.view.*
-import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
-import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 
 /** A layout to display the contents of an inventory item.
  *
@@ -28,19 +29,20 @@ class InventoryItemView(context: Context, attrs: AttributeSet? = null) :
     ExpandableSelectableItemView<InventoryItem>(context, attrs)
 {
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+    val ui = InventoryItemLayoutBinding.inflate(LayoutInflater.from(context), this)
+    val detailsUi = InventoryItemDetailsLayoutBinding.bind(ui.root)
 
-    var color get() = colorEdit.imageTintList?.defaultColor ?: 0
+    var color get() = ui.colorEdit.imageTintList?.defaultColor ?: 0
               set(value) = setColor(value)
     var colorIndex get() = ViewModelItem.Colors.indexOf(color)
                    set(value) = setColorIndex(value)
 
     init {
-        inflate(context, R.layout.inventory_item_layout, this)
-        editButton.setOnClickListener {
+        ui.editButton.setOnClickListener {
             if (isExpanded) //TODO Implement more options menu
             else            expand()
         }
-        collapseButton.setOnClickListener{ collapse() }
+        detailsUi.collapseButton.setOnClickListener{ collapse() }
 
         layoutTransition = delaylessLayoutTransition()
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -48,33 +50,33 @@ class InventoryItemView(context: Context, attrs: AttributeSet? = null) :
     }
 
     override fun update(item: InventoryItem) {
-        nameEdit.setText(item.name)
-        extraInfoEdit.setText(item.extraInfo)
+        ui.nameEdit.setText(item.name)
+        ui.extraInfoEdit.setText(item.extraInfo)
         setColorIndex(item.color, animate = false)
-        inventoryAmountEdit.initValue(item.amount)
-        addToShoppingListCheckBox.isChecked = item.addToShoppingList
-        addToShoppingListTriggerEdit.initValue(item.addToShoppingListTrigger)
+        ui.inventoryAmountEdit.initValue(item.amount)
+        detailsUi.addToShoppingListCheckBox.isChecked = item.addToShoppingList
+        detailsUi.addToShoppingListTriggerEdit.initValue(item.addToShoppingListTrigger)
         super.update(item)
     }
 
     override fun setExpanded(expanded: Boolean) {
         super.setExpanded(expanded)
-        if (!expanded && nameEdit.isFocused || extraInfoEdit.isFocused ||
-            inventoryAmountEdit.valueEdit.isFocused ||
-            addToShoppingListTriggerEdit.valueEdit.isFocused)
+        if (!expanded && ui.nameEdit.isFocused || ui.extraInfoEdit.isFocused ||
+            ui.inventoryAmountEdit.valueEdit.isFocused ||
+            detailsUi.addToShoppingListTriggerEdit.valueEdit.isFocused)
                 imm?.hideSoftInputFromWindow(windowToken, 0)
 
-        nameEdit.isEditable = expanded
-        inventoryAmountEdit.valueIsDirectlyEditable = expanded
-        extraInfoEdit.isEditable = expanded
-        addToShoppingListTriggerEdit.valueIsDirectlyEditable = expanded
-        editButton.isActivated = expanded
+        ui.nameEdit.isEditable = expanded
+        ui.inventoryAmountEdit.valueIsDirectlyEditable = expanded
+        ui.extraInfoEdit.isEditable = expanded
+        detailsUi.addToShoppingListTriggerEdit.valueIsDirectlyEditable = expanded
+        ui.editButton.isActivated = expanded
 
         val newVisibility = if (expanded) View.VISIBLE
                             else          View.GONE
-        inventoryItemDetailsGroup.visibility = newVisibility
-        if (extraInfoEdit.text.isNullOrBlank())
-            extraInfoEdit.visibility = newVisibility
+        detailsUi.inventoryItemDetailsGroup.visibility = newVisibility
+        if (ui.extraInfoEdit.text.isNullOrBlank())
+            ui.extraInfoEdit.visibility = newVisibility
 
         // For some reason, expanding an inventory item whose extra info is not blank
         // causes a flicker. It appears that changing the layout params of a view and
@@ -82,20 +84,19 @@ class InventoryItemView(context: Context, attrs: AttributeSet? = null) :
         // the bug seems to originate from somewhere deep in Android code, having
         // this useless layout parameter changing and requested layout is an easy and
         // performance negligible way to prevent the bug.
-        spacer.layoutParams.width = if (expanded) 1 else 0
-        spacer.requestLayout()
+        ui.spacer.layoutParams.width = if (expanded) 1 else 0
+        ui.spacer.requestLayout()
     }
 
     fun setColor(color: Int, animate: Boolean = true) {
         if (!animate) {
-            colorEdit.imageTintList = ColorStateList.valueOf(color)
+            ui.colorEdit.imageTintList = ColorStateList.valueOf(color)
             return
         }
-        //ValueAnimator.ofArgb(colorEdit.imageTintList?.defaultColor ?: 0, color).apply {
-        ObjectAnimator.ofArgb(colorEdit, "tint", color).apply {
+        ObjectAnimator.ofArgb(ui.colorEdit, "tint", color).apply {
             duration = 200L
             addUpdateListener {
-                colorEdit.imageTintList = ColorStateList.valueOf(it.animatedValue as Int)
+                ui.colorEdit.imageTintList = ColorStateList.valueOf(it.animatedValue as Int)
             }
         }.start()
     }

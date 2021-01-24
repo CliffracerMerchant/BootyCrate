@@ -55,11 +55,11 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
         Transformations.switchMap(newItemNameLiveData) { newItemNameAndExtraInfo ->
             dao.itemWithNameAlreadyExists(newItemNameAndExtraInfo.first ?: "",
                                           newItemNameAndExtraInfo.second ?: "")
-    }
+        }
     fun resetNewItemName() { newItemName = null; newItemExtraInfo = null }
 
     private var _newlyAddedItemId = AtomicLong()
-    val newlyAddedItemId: Long get() = _newlyAddedItemId.get()
+    val newlyAddedItemId get() = _newlyAddedItemId.get()
     fun resetNewlyAddedItemId() = _newlyAddedItemId.set(0)
 
     fun add(item: Entity) = viewModelScope.launch {

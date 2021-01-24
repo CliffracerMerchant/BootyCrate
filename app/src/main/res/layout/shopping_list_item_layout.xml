@@ -9,7 +9,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
-    style="@style/RecyclerViewItemStyle" >
+    tools:style="@style/RecyclerViewItemStyle" >
 
     <Space
         android:id="@+id/spacer"

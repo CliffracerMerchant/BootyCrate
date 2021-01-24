@@ -51,18 +51,20 @@ class ShoppingListFragment(isActive: Boolean = false) :
     override fun onActiveStateChanged(active: Boolean) {
         super.onActiveStateChanged(active)
         if (active) {
-            activity.addButton.setOnClickListener { recyclerView.addNewItem() }
+            activity.addButton.setOnClickListener {
+                NewShoppingListItemDialog(activity, activity.shoppingListViewModel)
+                    .show(activity.supportFragmentManager, null)
+            }
             activity.checkoutButton.checkoutCallback = { recyclerView.checkout() }
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return if (item.itemId == R.id.add_to_inventory_button) {
+    override fun onOptionsItemSelected(item: MenuItem) =
+        if (item.itemId == R.id.add_to_inventory_button) {
             activity.inventoryViewModel.addFromSelectedShoppingListItems()
             actionMode.finishAndClearSelection()
             true
         } else super.onOptionsItemSelected(item)
-    }
 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
         super.setOptionsMenuItemsVisible(showing)

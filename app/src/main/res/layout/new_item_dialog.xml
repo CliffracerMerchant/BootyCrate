@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    android:animateLayoutChanges="true" >
+
+    <com.cliffracermerchant.bootycrate.InventoryItemView
+        android:id="@+id/newItemView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/duplicateNameWarning" />
+
+    <TextView
+        android:id="@+id/duplicateNameWarning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/newItemView"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:visibility="visible"
+        style="@style/AddNewItemDialogDuplicateNameMessage" />
+
+    <TextView
+        android:id="@+id/noNameError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/newItemView"
+        app:layout_constraintBottom_toBottomOf="parent"
+        style="@style/AddNewItemDialogNameRequiredMessage" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

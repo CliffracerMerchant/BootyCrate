@@ -39,7 +39,10 @@ class InventoryFragment(isActive: Boolean = false) :
     override fun onActiveStateChanged(active: Boolean) {
         super.onActiveStateChanged(active)
         if (active) {
-            activity.addButton.setOnClickListener{ recyclerView.addNewItem() }
+            activity.addButton.setOnClickListener {
+                NewInventoryItemDialog(activity, activity.inventoryViewModel)
+                    .show(activity.supportFragmentManager, null)
+            }
             activity.checkoutButton.checkoutCallback = null
         }
     }

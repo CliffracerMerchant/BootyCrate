@@ -108,4 +108,20 @@
         <item name="android:text">@string/add_item_button_name</item>
     </style>
 
+    <style name="AddNewItemDialogMessage" parent="@style/SecondaryTextAppearance">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:drawablePadding">6dp</item>
+        <item name="android:visibility">invisible</item>
+    </style>
+
+    <style name="AddNewItemDialogDuplicateNameMessage" parent="@style/AddNewItemDialogMessage">
+        <item name="android:text">@string/new_item_duplicate_name_warning</item>
+        <item name="android:drawableStart">@drawable/ic_round_warning_24</item>
+    </style>
+
+    <style name="AddNewItemDialogNameRequiredMessage" parent="@style/AddNewItemDialogMessage">
+        <item name="android:text">Item must have a name</item>
+        <item name="android:drawableStart">@drawable/ic_baseline_error_24</item>
+    </style>
+
 </resources>

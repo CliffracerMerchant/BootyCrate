@@ -41,9 +41,3 @@ class ShoppingListItem(
     enum class Field { Name, ExtraInfo, Color, Amount, LinkedTo,
                        IsExpanded, IsSelected, IsChecked }
 }
-
-fun shoppingListItemFromItemView(view: InventoryItemView) = ShoppingListItem(
-    name = view.nameEdit.text.toString(),
-    extraInfo = view.extraInfoEdit.text.toString(),
-    color = ViewModelItem.Colors.indexOf(view.colorEdit.imageTintList?.defaultColor ?: 0),
-    amount = view.inventoryAmountEdit.value)
