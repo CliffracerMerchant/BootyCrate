@@ -50,6 +50,8 @@
         <attr name="isEditable"   format="boolean" />
         <!-- The hint that will appear when the TextFieldEdit is editable. -->
         <attr name="editableHint" format="string" />
+        <!-- Whether the text field can be blank. -->
+        <attr name="canBeBlank"   format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="IntegerEdit">

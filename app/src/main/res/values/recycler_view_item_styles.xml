@@ -24,6 +24,7 @@
         <item name="android:hint">@string/item_name_description</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
+        <item name="canBeBlank">false</item>
     </style>
 
     <style name="ViewModelItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">

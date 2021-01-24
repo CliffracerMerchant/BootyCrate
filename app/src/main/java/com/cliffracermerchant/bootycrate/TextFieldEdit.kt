@@ -21,20 +21,23 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.MutableLiveData
 
 /** A view to edit a single line text field.
- *
- *  TextFieldEdit is an AppCompatEditText optimized for toggleable editing
- *  of a single line. When isEditable is false, the TextFieldEdit will present
- *  itself as a normal single line TextView. When isEditable is true, TextField-
- *  Edit will request focus when it is tapped and display a soft input. If the
- *  user presses the done action on the soft input or if the focus is changed,
- *  the TextFieldEdit's liveData member's value will be set. Changes to the dis-
- *  played field can be listened to through this live data member.
- *
- *  When in editable mode, TextFieldEdit will underline it's text to indicate
- *  this to the user. If the TextFieldEdit is empty, it will instead draw its
- *  underlined editableHint (like TextView.hint except that it is not displayed
- *  when not editable). If editable hint is null, the TextFieldEdit will use
- *  TextView's hint as normal (displayed all the time when empty). */
+  *
+  * TextFieldEdit is an AppCompatEditText optimized for toggleable editing
+  * of a single line. When isEditable is false, the TextFieldEdit will present
+  * itself as a normal single line TextView. When isEditable is true, TextField-
+  * Edit will request focus when it is tapped and display a soft input. If the
+  * user presses the done action on the soft input or if the focus is changed,
+  * the changes can be listened to through the member liveData. If the proposed
+  * change would leave the field empty and the property canBeEmpty is false,
+  * the value will instead be reverted to its previous value. Note that if the
+  * canBeEmpty property is changed to false when the field is already empty,
+  * it will not be enforced until the value is changed to a non-blank value.
+  *
+  * When in editable mode, TextFieldEdit will underline it's text to indicate
+  * this to the user. If the TextFieldEdit is empty, it will instead draw its
+  * underlined editableHint (like TextView.hint except that it is not displayed
+  * when not editable). If editable hint is null, the TextFieldEdit will use
+  * TextView's hint as normal (displayed all the time when empty). */
 open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         AppCompatEditText(context, attrs) {
     val liveData = MutableLiveData<String>()
@@ -44,11 +47,16 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     var isEditable: Boolean get() = isFocusableInTouchMode
                             set(editable) = setEditablePrivate(editable)
 
+    var canBeEmpty: Boolean
+    private var valueCache: String? = null
+
     init {
-        val styledAttrs = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
-        isEditable = styledAttrs.getBoolean(R.styleable.TextFieldEdit_isEditable, false)
-        editableHint = styledAttrs.getString(R.styleable.TextFieldEdit_editableHint)
-        styledAttrs.recycle()
+        val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
+        isEditable = a.getBoolean(R.styleable.TextFieldEdit_isEditable, false)
+        editableHint = a.getString(R.styleable.TextFieldEdit_editableHint)
+        canBeEmpty = a.getBoolean(R.styleable.TextFieldEdit_canBeBlank, true)
+        a.recycle()
+
         maxLines = 1
         imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
         ellipsize = TextUtils.TruncateAt.END
@@ -69,6 +77,10 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     }
 
     private fun setEditablePrivate(editable: Boolean) {
+        if (!canBeEmpty)
+            if (editable) valueCache = text.toString()
+            else if (text.isNullOrBlank()) setText(valueCache)
+
         isFocusableInTouchMode = editable
         /* Setting the input type here will prevent misspelling underlines from
          * being displayed when the TextFieldEdit is not in an editable state. */
@@ -88,8 +100,8 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
 }
 
 /** A TextFieldEdit subclass that allows the toggling of a strike-through
- *  effect, optionally with an animation, using the public function setStrike-
- *  throughEnabled. */
+  * effect, optionally with an animation, using the public function setStrike-
+  * throughEnabled. */
 class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
         TextFieldEdit(context, attrs) {
 
@@ -97,15 +109,15 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
     private var strikeThroughAnimationIsReversed = false
     private val normalTextColor = currentTextColor
 
-    // So the property can be named in an object animator
-    fun setStrikeThroughLength(length: Float) { strikeThroughLength = length }
-
     init {
         doAfterTextChanged { text ->
             if (strikeThroughLength != null)
                 strikeThroughLength = paint.measureText(text, 0, text?.length ?: 0)
         }
     }
+
+    // So the property can be named in an object animator
+    private fun setStrikeThroughLength(length: Float) { strikeThroughLength = length }
 
     fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean, animate: Boolean = true) {
         strikeThroughAnimationIsReversed = !strikeThroughEnabled
