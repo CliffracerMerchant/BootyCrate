@@ -93,5 +93,6 @@
     <string name="select_all_description">Select all</string>
     <string name="check_all_description">Check all</string>
     <string name="uncheck_all_description">Uncheck all</string>
+    <string name="no_search_results_message">No items match the query</string>
 
 </resources>

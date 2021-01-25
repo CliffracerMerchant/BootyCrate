@@ -28,20 +28,9 @@ import kotlinx.android.synthetic.main.activity_main.view.*
  *  recyclerView property and initialize it before calling super.onViewCreated,
  *  or an exception will occur.
  *
- *  RecyclerViewFragment starts or finishes an action mode instance according
- *  to the size of the RecyclerView's selection. The ActionMode.Callback used
- *  with this action mode is the value of its property actionModeCallback. This
- *  property defaults to an instance of its own ActionModeCallback inner class,
- *  but is open in case subclasses need to override the callback with their own.
- *
- *  RecyclerViewFragment manages the visual state of the floating action button
- *  and its onClickListeners according to whether an action mode is ongoing.
- *  While it automatically switches between two visual states for the FAB, sub-
- *  classes should set the drawables for the fabIconController member so that
- *  these visual states are not empty. It also switches the onClickListener of
- *  the FAB between the values of the abstract properties fabRegularOnClickList-
- *  ener and fabActionModeOnClickListener. Override these properties in sub-
- *  classes with the desired functionality. */
+ *  The open property actionMode is the ActionMode instance used when the recy-
+ *  clerView has a selection. Subclasses can override this property with their
+ *  own instance of ActionMode if they wish to specialize this behavior. */
 abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: Boolean = false) :
         MainActivityFragment(isActive) {
 
@@ -49,6 +38,15 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
     abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>
     open val actionMode = RecyclerViewActionMode()
     protected lateinit var sortModePrefKey: String
+    private var searchIsActive = false
+        set(value) {
+            field = value
+            val stateView = view as? MultiStateView ?: return
+            val emptyMessage = stateView.getView(MultiStateView.ViewState.EMPTY) as? TextView ?: return
+            emptyMessage.text = if (value) activity.getString(R.string.no_search_results_message)
+                                else activity.getString(R.string.empty_recycler_view_message,
+                                                        recyclerView.collectionName)
+        }
 
     init { setHasOptionsMenu(true) }
 
@@ -62,16 +60,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         recyclerView.selection.itemsLiveData.observe(viewLifecycleOwner, actionMode)
         recyclerView.viewModel.items.observe(viewLifecycleOwner) { items ->
             val stateView = view as? MultiStateView ?: return@observe
-            if (items.isNotEmpty())
-                stateView.viewState = MultiStateView.ViewState.CONTENT
-            else  {
-                val message = stateView.getView(MultiStateView.ViewState.EMPTY)
-                                        as? TextView ?: return@observe
-                message.text = if (false) "No items match the query."// search is active
-                               else activity.getString(R.string.empty_recycler_view_message,
-                                                       recyclerView.collectionName)
-                stateView.viewState = MultiStateView.ViewState.EMPTY
-            }
+            stateView.viewState = if (items.isNotEmpty()) MultiStateView.ViewState.CONTENT
+                                  else                    MultiStateView.ViewState.EMPTY
         }
         super.onViewCreated(view, savedInstanceState)
     }
@@ -92,6 +82,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         }
 
         val searchView = menu.findItem(R.id.app_bar_search).actionView as SearchView
+        searchView.setOnQueryTextFocusChangeListener { v, hasFocus -> searchIsActive = hasFocus }
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = true
             override fun onQueryTextChange(newText: String?): Boolean {
