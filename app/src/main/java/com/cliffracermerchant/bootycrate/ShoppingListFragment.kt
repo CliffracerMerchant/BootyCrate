@@ -8,7 +8,8 @@ import android.os.Bundle
 import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.ActionBar
-import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
+import kotlinx.android.synthetic.main.shopping_list_fragment.*
+import kotlinx.android.synthetic.main.shopping_list_fragment.view.*
 
 /** A fragment to display and modify the user's shopping list.
  *
@@ -34,10 +35,10 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? =
-        inflater.inflate(R.layout.shopping_list_fragment_layout, container, false)
+        inflater.inflate(R.layout.shopping_list_fragment, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerView = shoppingListRecyclerView
+        recyclerView = shoppingListFragmentView.shoppingListRecyclerView
         val mainActivity = requireActivity() as MainActivity
         recyclerView.finishInit(viewLifecycleOwner,
                                 mainActivity.shoppingListViewModel,

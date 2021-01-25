@@ -5,12 +5,8 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.LayoutTransition
-import android.graphics.Bitmap
-import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
-
-enum class SelectionState { Selected, NotSelected }
 
 fun delaylessLayoutTransition() = LayoutTransition().apply {
     setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)

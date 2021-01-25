@@ -103,7 +103,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
 
     fun deleteAll() {
         if (adapter.currentList.isEmpty()) {
-            val message = context.getString(R.string.delete_all_no_items_error_message, collectionName)
+            val message = context.getString(R.string.empty_recycler_view_message, collectionName)
             Snackbar.make(this, message, Snackbar.LENGTH_SHORT).
                 setAnchorView(snackBarAnchor ?: this).show()
             return

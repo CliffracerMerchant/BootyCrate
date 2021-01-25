@@ -129,7 +129,7 @@ object Dialog {
         collectionName: String
     ) {
         if (viewModel.items.value?.isEmpty() == true) {
-            val message = context.getString(R.string.delete_all_no_items_error_message, collectionName)
+            val message = context.getString(R.string.empty_recycler_view_message, collectionName)
             Snackbar.make(snackBarParent, message, Snackbar.LENGTH_SHORT).
                      setAnchorView(snackBarParent).show()
             return

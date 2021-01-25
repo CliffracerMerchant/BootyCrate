@@ -8,7 +8,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.ActionBar
-import kotlinx.android.synthetic.main.inventory_view_fragment_layout.*
+import kotlinx.android.synthetic.main.inventory_fragment.*
 
 /** A fragment to display and modify the user's inventory.
  *
@@ -24,7 +24,7 @@ class InventoryFragment(isActive: Boolean = false) :
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.inventory_view_fragment_layout, container, false)
+        return inflater.inflate(R.layout.inventory_fragment, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

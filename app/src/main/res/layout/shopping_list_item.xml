@@ -75,6 +75,6 @@
         android:contentDescription="@string/edit_button_description"
         style="@style/ViewModelItemEditButton" />
 
-    <include layout="@layout/shopping_list_item_details_layout"/>
+    <include layout="@layout/shopping_list_item_details"/>
 
 </merge>

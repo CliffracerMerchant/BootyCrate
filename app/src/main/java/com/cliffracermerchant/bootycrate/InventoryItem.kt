@@ -6,8 +6,6 @@ package com.cliffracermerchant.bootycrate
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
-import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 
 /** A Room entity that represents an inventory item in the user's inventory. */
 @Entity(tableName = "inventory_item")

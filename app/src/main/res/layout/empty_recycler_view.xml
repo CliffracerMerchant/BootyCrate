@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2020 Nicholas Hochstetler
+  ~ You may not use this file except in compliance with the Apache License
+  ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~ or in the file LICENSE in the project's root directory.
+  -->
+
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/TitleTextAppearance"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    tools:text="@string/empty_recycler_view_message">
+
+</TextView>

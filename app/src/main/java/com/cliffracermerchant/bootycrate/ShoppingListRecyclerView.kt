@@ -11,9 +11,9 @@ import android.view.View.OnLongClickListener
 import android.view.ViewGroup
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.DiffUtil
-import kotlinx.android.synthetic.main.integer_edit_layout.view.*
-import kotlinx.android.synthetic.main.shopping_list_item_details_layout.view.*
-import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
+import kotlinx.android.synthetic.main.integer_edit.view.*
+import kotlinx.android.synthetic.main.shopping_list_item_details.view.*
+import kotlinx.android.synthetic.main.shopping_list_item.view.*
 import java.util.*
 
 /** A RecyclerView to display the data provided by a ShoppingListViewModel.

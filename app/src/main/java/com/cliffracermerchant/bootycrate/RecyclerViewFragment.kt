@@ -13,6 +13,7 @@ import androidx.appcompat.app.ActionBar
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
+import com.kennyc.view.MultiStateView
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main.view.*
 
@@ -59,6 +60,19 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         recyclerView.sort = ViewModelItem.Sort.fromString(sortStr)
         recyclerView.snackBarAnchor = activity.bottomAppBar
         recyclerView.selection.itemsLiveData.observe(viewLifecycleOwner, actionMode)
+        recyclerView.viewModel.items.observe(viewLifecycleOwner) { items ->
+            val stateView = view as? MultiStateView ?: return@observe
+            if (items.isNotEmpty())
+                stateView.viewState = MultiStateView.ViewState.CONTENT
+            else  {
+                val message = stateView.getView(MultiStateView.ViewState.EMPTY)
+                                        as? TextView ?: return@observe
+                message.text = if (false) "No items match the query."// search is active
+                               else activity.getString(R.string.empty_recycler_view_message,
+                                                       recyclerView.collectionName)
+                stateView.viewState = MultiStateView.ViewState.EMPTY
+            }
+        }
         super.onViewCreated(view, savedInstanceState)
     }
 

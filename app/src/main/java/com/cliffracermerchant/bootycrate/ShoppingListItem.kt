@@ -6,7 +6,6 @@ package com.cliffracermerchant.bootycrate
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 
 /** A Room entity that represents an shopping list item in the user's shopping list. */
 @Entity(tableName = "shopping_list_item")

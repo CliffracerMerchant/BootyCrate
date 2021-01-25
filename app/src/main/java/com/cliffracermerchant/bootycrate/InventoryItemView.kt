@@ -14,9 +14,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.RecyclerView
-import com.cliffracermerchant.bootycrate.databinding.InventoryItemDetailsLayoutBinding
-import com.cliffracermerchant.bootycrate.databinding.InventoryItemLayoutBinding
-import kotlinx.android.synthetic.main.integer_edit_layout.view.*
+import com.cliffracermerchant.bootycrate.databinding.InventoryItemDetailsBinding
+import com.cliffracermerchant.bootycrate.databinding.InventoryItemBinding
+import kotlinx.android.synthetic.main.integer_edit.view.*
 
 /** A layout to display the contents of an inventory item.
  *
@@ -29,8 +29,8 @@ class InventoryItemView(context: Context, attrs: AttributeSet? = null) :
     ExpandableSelectableItemView<InventoryItem>(context, attrs)
 {
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-    val ui = InventoryItemLayoutBinding.inflate(LayoutInflater.from(context), this)
-    val detailsUi = InventoryItemDetailsLayoutBinding.bind(ui.root)
+    val ui = InventoryItemBinding.inflate(LayoutInflater.from(context), this)
+    val detailsUi = InventoryItemDetailsBinding.bind(ui.root)
 
     var color get() = ui.colorEdit.imageTintList?.defaultColor ?: 0
               set(value) = setColor(value)

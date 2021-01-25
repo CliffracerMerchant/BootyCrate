@@ -5,7 +5,6 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas

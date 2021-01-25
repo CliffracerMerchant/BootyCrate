@@ -30,7 +30,7 @@
     <string name="delete_all_description">Delete all</string>
     <string name="delete_all_items_confirmation_message">
         This will delete all items in the %1$s. Are you sure?</string>
-    <string name="delete_all_no_items_error_message">The %1$s is empty</string>
+    <string name="empty_recycler_view_message">The %1$s is empty</string>
     <string name="edit_button_description">Edit item</string>
     <string name="delete_snackbar_text">%1$d item(s) deleted</string>
     <string name="delete_snackbar_undo_text">Undo</string>

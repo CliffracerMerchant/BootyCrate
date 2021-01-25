@@ -13,7 +13,6 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
-import androidx.core.graphics.ColorUtils
 
 /** A ConstraintLayout subclass that provides an interface for a selectable and expandable view.
  *

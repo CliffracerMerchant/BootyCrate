@@ -12,9 +12,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.integer_edit_layout.view.*
-import kotlinx.android.synthetic.main.shopping_list_item_details_layout.view.*
-import kotlinx.android.synthetic.main.shopping_list_item_layout.view.*
+import kotlinx.android.synthetic.main.integer_edit.view.*
+import kotlinx.android.synthetic.main.shopping_list_item_details.view.*
+import kotlinx.android.synthetic.main.shopping_list_item.view.*
 
 /** A layout to display the contents of a shopping list item.
  *
@@ -42,7 +42,7 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
     }
 
     init {
-        LayoutInflater.from(context).inflate(R.layout.shopping_list_item_layout, this, true)
+        LayoutInflater.from(context).inflate(R.layout.shopping_list_item, this, true)
         layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.WRAP_CONTENT)
         if (!SharedResources.isInitialized) initSharedResources(context)

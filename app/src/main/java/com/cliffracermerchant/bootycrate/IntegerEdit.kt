@@ -15,7 +15,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import kotlinx.android.synthetic.main.integer_edit_layout.view.*
+import kotlinx.android.synthetic.main.integer_edit.view.*
 
 /** A compound view to edit an integer quantity.
  *
@@ -68,7 +68,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
 
     init {
-        LayoutInflater.from(context).inflate(R.layout.integer_edit_layout, this, true)
+        LayoutInflater.from(context).inflate(R.layout.integer_edit, this, true)
         var a = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
         _value = a.getInt(R.styleable.IntegerEdit_initialValue, 0)
         _minValue = a.getInt(R.styleable.IntegerEdit_minValue, 0)
