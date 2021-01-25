@@ -59,12 +59,19 @@ class ShoppingListFragment(isActive: Boolean = false) :
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem) =
-        if (item.itemId == R.id.add_to_inventory_button) {
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.add_to_inventory_button -> {
             activity.inventoryViewModel.addFromSelectedShoppingListItems()
             actionMode.finishAndClearSelection()
             true
-        } else super.onOptionsItemSelected(item)
+        } R.id.check_all_menu_item -> {
+            recyclerView.checkedItems.checkAll()
+            true
+        } R.id.uncheck_all_menu_item -> {
+            recyclerView.checkedItems.clear()
+            true
+        } else -> super.onOptionsItemSelected(item)
+    }
 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
         super.setOptionsMenuItemsVisible(showing)

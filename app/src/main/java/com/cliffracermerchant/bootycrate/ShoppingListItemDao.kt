@@ -108,6 +108,9 @@ import androidx.room.*
               WHERE isSelected""")
     abstract override suspend fun deleteSelected()
 
+    @Query("UPDATE shopping_list_item set isSelected = 1")
+    abstract override suspend fun selectAll()
+
     @Query("UPDATE shopping_list_item SET isSelected = 0")
     abstract override suspend fun clearSelection()
 
@@ -115,6 +118,9 @@ import androidx.room.*
               SET isChecked = :isChecked
               WHERE id = :id""")
     abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
+
+    @Query("UPDATE shopping_list_item SET isChecked = 1")
+    abstract suspend fun checkAll()
 
     @Query("UPDATE shopping_list_item SET isChecked = 0")
     abstract suspend fun uncheckAll()

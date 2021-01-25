@@ -43,6 +43,7 @@ import androidx.room.Transaction
     abstract suspend fun toggleIsSelected(id: Long)
     abstract suspend fun deleteSelected()
 
+    abstract suspend fun selectAll()
     abstract suspend fun clearExpandedItem()
     abstract suspend fun clearSelection()
     @Transaction open suspend fun resetExpandedItemAndSelection() {

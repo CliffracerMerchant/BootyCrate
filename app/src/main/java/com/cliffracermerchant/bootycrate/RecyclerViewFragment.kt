@@ -102,10 +102,13 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
                 true
             } R.id.delete_all_menu_item -> {
                 recyclerView.deleteAll(); true
-            } R.id.export_menu_item -> {
+            } R.id.share_menu_item -> {
                 Dialog.shareList(items = if (recyclerView.selection.size != 0)
                                              recyclerView.selection.items!!
                                          else recyclerView.adapter.currentList)
+                true
+            } R.id.select_all_menu_item -> {
+                recyclerView.selection.addAll()
                 true
             } R.id.color_option -> {
                 recyclerView.sort = ViewModelItem.Sort.Color

@@ -189,6 +189,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         val sizeLiveData get() = shoppingListViewModel.checkedItemsSize
         val size get() = sizeLiveData.value
         val isEmpty get() = size == 0
+        fun checkAll() = shoppingListViewModel.checkAll()
         fun clear() = shoppingListViewModel.uncheckAll()
     }
 

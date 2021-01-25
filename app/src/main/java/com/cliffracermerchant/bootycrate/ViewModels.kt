@@ -62,24 +62,18 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
     val newlyAddedItemId get() = _newlyAddedItemId.get()
     fun resetNewlyAddedItemId() = _newlyAddedItemId.set(0)
 
-    fun add(item: Entity) = viewModelScope.launch {
-        _newlyAddedItemId.set(dao.add(item))
-    }
-    fun add(items: List<Entity>) = viewModelScope.launch {
-        dao.add(items)
-    }
-    fun deleteAll() = viewModelScope.launch {
-        dao.deleteAll()
-    }
-    fun emptyTrash() = viewModelScope.launch {
-        dao.emptyTrash()
-    }
-    fun delete(ids: LongArray) = viewModelScope.launch {
-        dao.delete(ids)
-    }
-    fun undoDelete() = viewModelScope.launch {
-        dao.undoDelete()
-    }
+    fun add(item: Entity) = viewModelScope.launch { _newlyAddedItemId.set(dao.add(item)) }
+
+    fun add(items: List<Entity>) = viewModelScope.launch { dao.add(items) }
+
+    fun deleteAll() = viewModelScope.launch { dao.deleteAll() }
+
+    fun emptyTrash() = viewModelScope.launch { dao.emptyTrash() }
+
+    fun delete(ids: LongArray) = viewModelScope.launch { dao.delete(ids) }
+
+    fun undoDelete() = viewModelScope.launch { dao.undoDelete() }
+
     fun updateName(id: Long, name: String) = viewModelScope.launch {
         dao.updateName(id, name)
     }
@@ -112,21 +106,18 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
     fun resetExpandedItemAndSelection() = viewModelScope.launch {
         dao.resetExpandedItemAndSelection()
     }
-    fun setExpandedId(id: Long?) = viewModelScope.launch {
-        dao.setExpandedItem(id)
-    }
+    fun setExpandedId(id: Long?) = viewModelScope.launch { dao.setExpandedItem(id) }
+
     fun updateIsSelected(id: Long, isSelected: Boolean) = viewModelScope.launch {
         dao.updateIsSelected(id, isSelected)
     }
-    fun toggleIsSelected(id: Long) = viewModelScope.launch {
-        dao.toggleIsSelected(id)
-    }
-    fun deleteSelected() = viewModelScope.launch {
-        dao.deleteSelected()
-    }
-    fun clearSelection() = viewModelScope.launch {
-        dao.clearSelection()
-    }
+    fun toggleIsSelected(id: Long) = viewModelScope.launch { dao.toggleIsSelected(id) }
+
+    fun deleteSelected() = viewModelScope.launch { dao.deleteSelected() }
+
+    fun selectAll() = viewModelScope.launch { dao.selectAll() }
+
+    fun clearSelection() = viewModelScope.launch { dao.clearSelection() }
 }
 
 /** A ViewModel<ShoppingListItem> subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
@@ -142,12 +133,11 @@ class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewMode
     fun updateIsChecked(id: Long, isChecked: Boolean) = viewModelScope.launch {
         dao.updateIsChecked(id, isChecked)
     }
-    fun uncheckAll() = viewModelScope.launch {
-        dao.uncheckAll()
-    }
-    fun checkout() = viewModelScope.launch {
-        dao.checkout()
-    }
+    fun checkAll() = viewModelScope.launch { dao.checkAll() }
+
+    fun uncheckAll() = viewModelScope.launch { dao.uncheckAll() }
+
+    fun checkout() = viewModelScope.launch { dao.checkout() }
 }
 
 /** A ViewModel<InventoryItem> subclass that provides functions to asynchronously execute InventoryItemDao's functions. */

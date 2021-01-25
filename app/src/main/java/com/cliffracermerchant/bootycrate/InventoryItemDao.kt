@@ -108,6 +108,9 @@ import androidx.room.*
               WHERE isSelected""")
     abstract override suspend fun deleteSelected()
 
+    @Query("UPDATE inventory_item set isSelected = 1")
+    abstract override suspend fun selectAll()
+
     @Query("UPDATE inventory_item SET isSelected = 0")
     abstract override suspend fun clearSelection()
 

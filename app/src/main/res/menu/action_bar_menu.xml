@@ -42,29 +42,35 @@
           app:showAsAction="always"
           android:visible="false" />
 
-    <group android:id="@+id/inventory_view_menu_group"
-           android:visible="false" >
-    </group>
-
-    <group android:id="@+id/inventory_view_action_mode_menu_group"
-           android:visible="false" >
-        <item android:id="@+id/add_to_shopping_list_button"
-              android:title="@string/add_to_shopping_list_description"
-              android:visible="false"
-              app:showAsAction="never" />
-    </group>
-
     <group android:id="@+id/shopping_list_view_menu_group"
            android:visible="false">
+        <item android:id="@+id/check_all_menu_item"
+            android:title="@string/check_all_description"
+            app:showAsAction="never" />
+        <item android:id="@+id/uncheck_all_menu_item"
+            android:title="@string/uncheck_all_description"
+            app:showAsAction="never" />
     </group>
 
     <group android:id="@+id/shopping_list_view_action_mode_menu_group"
            android:visible="false" >
         <item android:id="@+id/add_to_inventory_button"
               android:title="@string/add_to_inventory_description"
-              android:visible="false"
               app:showAsAction="never" />
     </group>
+
+    <group android:id="@+id/inventory_view_menu_group"
+        android:visible="false" >
+    </group>
+
+    <group android:id="@+id/inventory_view_action_mode_menu_group"
+        android:visible="false" >
+        <item android:id="@+id/add_to_shopping_list_button"
+            android:title="@string/add_to_shopping_list_description"
+            android:visible="false"
+            app:showAsAction="never" />
+    </group>
+
 </group>
 
 <!-- For some reason wrapping the entire action bar menu in one group, and
@@ -75,7 +81,11 @@
      menu_items is another group just for these menu items so that they can
      be set to be not visible as a group. -->
 <group android:id="@+id/other_action_bar_menu_items">
-    <item android:id="@+id/export_menu_item"
+    <item android:id="@+id/select_all_menu_item"
+        android:title="@string/select_all_description"
+        app:showAsAction="never" />
+
+    <item android:id="@+id/share_menu_item"
         android:title="@string/share_description"
         app:showAsAction="never" />
 

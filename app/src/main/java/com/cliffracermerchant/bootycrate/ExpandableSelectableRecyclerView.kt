@@ -92,6 +92,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         val isEmpty get() = size == 0
         val isNotEmpty get() = size != 0
 
+        fun addAll() = viewModel.selectAll()
         fun add(id: Long) = viewModel.updateIsSelected(id, true)
         fun remove(id: Long) = viewModel.updateIsSelected(id, false)
         fun toggle(id: Long) = viewModel.toggleIsSelected(id)
