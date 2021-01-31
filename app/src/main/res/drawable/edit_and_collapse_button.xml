@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/collapse"
+        android:state_activated="true"
+        android:drawable="@drawable/animated_collapse_to_edit" />
+    <item android:id="@+id/edit"
+        android:drawable="@drawable/animated_edit_to_collapse" />
+    <transition
+        android:fromId="@id/collapse"
+        android:toId="@id/edit"
+        android:drawable="@drawable/animated_collapse_to_edit" />
+    <transition
+        android:fromId="@id/edit"
+        android:toId="@id/collapse"
+        android:drawable="@drawable/animated_edit_to_collapse" />
+
+</animated-selector>

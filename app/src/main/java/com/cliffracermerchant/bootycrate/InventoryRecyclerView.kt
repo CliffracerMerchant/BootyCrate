@@ -86,10 +86,9 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.ExtraInfo) &&
                         holder.view.extraInfoEdit.text.toString() != item.extraInfo)
                             holder.view.extraInfoEdit.setText(item.extraInfo)
-                    if (changes.contains(InventoryItem.Field.Color)) {
-                        val colorEditBg = holder.view.colorEdit.drawable
-                        colorEditBg.setTint(ViewModelItem.Colors[item.color])
-                    }
+                    if (changes.contains(InventoryItem.Field.Color) &&
+                        holder.view.colorIndex != item.color)
+                            holder.view.colorIndex = item.color
                     if (changes.contains(InventoryItem.Field.Amount) &&
                         holder.view.inventoryAmountEdit.value != item.amount)
                             holder.view.inventoryAmountEdit.value = item.amount

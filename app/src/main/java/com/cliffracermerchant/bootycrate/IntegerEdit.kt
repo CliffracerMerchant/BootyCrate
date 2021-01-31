@@ -10,6 +10,7 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -28,16 +29,9 @@ import kotlinx.android.synthetic.main.integer_edit.view.*
  *  changed by setting the member isEditable. If set to true, the user can edit
  *  the value directly (rather than through the use of the decrease / increase
  *  buttons). When in the editable state, the EditText will underline the cur-
- *  rent value to indicate this to the user.
- *
- *  XML Attributes:
- *  - Int initialValue = 0: The starting value
- *  - Int minValue = 0: The minimum value that the IntegerEdit can hold.
- *  - Int maxValue = 99: The maximum value that the IntegerEdit can hold.
- *  - Int stepSize = 1: The amount to decrease or increase the value by when
- *    the corresponding button is pressed.
- *  - valueIsDirectlyEditable: Boolean = false: Whether the user can input the
- *    value directly instead of through the decrease / increase buttons. */
+ *  rent value to indicate this to the user, and will, if necessary, expand the
+ *  width of the value to R.dimen.integer_edit_editable_value_min_width to make
+ *  it a larger touch target. */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
     // this.value = this.value is not pointless due
@@ -48,7 +42,6 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     private var _maxValue = 0
     var maxValue get() = _maxValue
                  set(value) { _maxValue = value; this.value = this.value }
-
     var stepSize: Int
 
     private var _value get() = try { valueEdit.text.toString().toInt() }
@@ -60,12 +53,13 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
                               _liveData.value = value }
 
     var valueIsDirectlyEditable get() = valueEdit.isFocusableInTouchMode
-                                set(editable) { setEditable(editable) }
+        set(editable) = setValueIsDirectlyEditable(editable, animate = true)
 
     private val _liveData = MutableLiveData(value)
     val liveData: LiveData<Int> get() = _liveData
 
-    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+    private val interpolator = AccelerateDecelerateInterpolator()
 
     init {
         LayoutInflater.from(context).inflate(R.layout.integer_edit, this, true)
@@ -74,7 +68,9 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         _minValue = a.getInt(R.styleable.IntegerEdit_minValue, 0)
         _maxValue = a.getInt(R.styleable.IntegerEdit_maxValue, 99)
         stepSize = a.getInt(R.styleable.IntegerEdit_stepSize, 1)
-        valueIsDirectlyEditable = a.getBoolean(R.styleable.IntegerEdit_valueIsDirectlyEditable, false)
+        setValueIsDirectlyEditable(
+            a.getBoolean(R.styleable.IntegerEdit_valueIsDirectlyEditable, false),
+            animate = false)
 
         a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.textSize))
         valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimension(0, 0f))
@@ -100,12 +96,30 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     fun decrement() = modifyValue(-stepSize)
     private fun modifyValue(stepSize: Int) { value += stepSize }
 
-    private fun setEditable(editable: Boolean) {
+    fun setValueIsDirectlyEditable(editable: Boolean, animate: Boolean = true) {
         valueEdit.isFocusableInTouchMode = editable
         if (!editable && valueEdit.isFocused)
             valueEdit.clearFocus()
         if (editable) valueEdit.paintFlags = valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
         else          valueEdit.paintFlags = valueEdit.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
-        invalidate()
+
+        val oldWidth = valueEdit.width
+        valueEdit.minWidth = if (!editable) 0 else
+            resources.getDimensionPixelSize(R.dimen.integer_edit_editable_value_min_width)
+        if (!animate || oldWidth == 0) return
+
+        /* The following animations will make the IntegerEdit smoothly expand
+         * to its new total width after the change in the value edit's min-
+         * Width (layout transitions apparently do not handle this). */
+        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        valueEdit.measure(wrapContentSpec, wrapContentSpec)
+        val newWidth = valueEdit.measuredWidth
+        val widthChange = newWidth - oldWidth
+        valueEdit.translationX = -widthChange / 2f
+        increaseButton.translationX = -widthChange.toFloat()
+        valueEdit.animate().translationX(0f).setDuration(300)
+            .withLayer().setInterpolator(interpolator).start()
+        increaseButton.animate().translationX(0f).setDuration(300)
+            .withLayer().setInterpolator(interpolator).start()
     }
 }

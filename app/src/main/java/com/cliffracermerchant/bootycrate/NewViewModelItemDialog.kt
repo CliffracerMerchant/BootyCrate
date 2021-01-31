@@ -110,9 +110,8 @@ class NewShoppingListItemDialog(context: Context, viewModel: ShoppingListViewMod
 {
     init { ui.newItemView.apply {
         detailsUi.inventoryItemDetailsGroup.visibility = View.GONE
-        ui.nameEdit.isEditable = true
-        ui.extraInfoEdit.isEditable = true
-        ui.inventoryAmountEdit.valueIsDirectlyEditable = true
+        ui.nameEdit.setEditable(true, animate = false)
+        ui.extraInfoEdit.setEditable(true, animate = false)
         ui.inventoryAmountEdit.minValue = 1
     }}
 

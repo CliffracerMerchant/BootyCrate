@@ -63,7 +63,7 @@
         <attr name="maxValue"     format="integer" />
         <!-- The step size of the increment and decrement buttons. -->
         <attr name="stepSize"     format="integer" />
-        <!-- Whether the user is able to directly input the value -->
+        <!-- Whether the user is able to directly input the value. -->
         <attr name="valueIsDirectlyEditable" format="boolean" />
     </declare-styleable>
 

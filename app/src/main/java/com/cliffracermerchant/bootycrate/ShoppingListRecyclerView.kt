@@ -12,7 +12,6 @@ import android.view.ViewGroup
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.DiffUtil
 import kotlinx.android.synthetic.main.integer_edit.view.*
-import kotlinx.android.synthetic.main.shopping_list_item_details.view.*
 import kotlinx.android.synthetic.main.shopping_list_item.view.*
 import java.util.*
 
@@ -177,10 +176,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 view.setStrikeThroughEnabled(checked)
             }
             view.editButton.setOnClickListener {
-                if (!view.isExpanded) setExpandedItem(adapterPosition)
+                 setExpandedItem(if (!view.isExpanded) adapterPosition
+                                 else                  null)
             }
-            view.collapseButton.setOnClickListener { setExpandedItem(null) }
-
         }
     }
 

@@ -4,7 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
@@ -14,8 +14,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.RecyclerView
-import com.cliffracermerchant.bootycrate.databinding.InventoryItemDetailsBinding
 import com.cliffracermerchant.bootycrate.databinding.InventoryItemBinding
+import com.cliffracermerchant.bootycrate.databinding.InventoryItemDetailsBinding
 import kotlinx.android.synthetic.main.integer_edit.view.*
 
 /** A layout to display the contents of an inventory item.
@@ -38,13 +38,10 @@ class InventoryItemView(context: Context, attrs: AttributeSet? = null) :
                    set(value) = setColorIndex(value)
 
     init {
-        ui.editButton.setOnClickListener {
-            if (isExpanded) //TODO Implement more options menu
-            else            expand()
-        }
+        ui.editButton.setOnClickListener { expand() }
         detailsUi.collapseButton.setOnClickListener{ collapse() }
 
-        layoutTransition = delaylessLayoutTransition()
+        layoutTransition = defaultLayoutTransition()
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
     }
@@ -69,8 +66,7 @@ class InventoryItemView(context: Context, attrs: AttributeSet? = null) :
         ui.nameEdit.isEditable = expanded
         ui.inventoryAmountEdit.valueIsDirectlyEditable = expanded
         ui.extraInfoEdit.isEditable = expanded
-        detailsUi.addToShoppingListTriggerEdit.valueIsDirectlyEditable = expanded
-        ui.editButton.isActivated = expanded
+        ui.editButton.visibility = if (expanded) View.GONE else View.VISIBLE
 
         val newVisibility = if (expanded) View.VISIBLE
                             else          View.GONE
@@ -88,12 +84,10 @@ class InventoryItemView(context: Context, attrs: AttributeSet? = null) :
         ui.spacer.requestLayout()
     }
 
-    fun setColor(color: Int, animate: Boolean = true) {
-        if (!animate) {
-            ui.colorEdit.imageTintList = ColorStateList.valueOf(color)
-            return
-        }
-        ObjectAnimator.ofArgb(ui.colorEdit, "tint", color).apply {
+    fun setColor(newColor: Int, animate: Boolean = true) {
+        if (!animate)
+            ui.colorEdit.imageTintList = ColorStateList.valueOf(newColor)
+        else ValueAnimator.ofArgb(color, newColor).apply {
             duration = 200L
             addUpdateListener {
                 ui.colorEdit.imageTintList = ColorStateList.valueOf(it.animatedValue as Int)

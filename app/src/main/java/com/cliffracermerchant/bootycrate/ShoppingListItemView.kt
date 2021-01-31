@@ -13,8 +13,8 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.integer_edit.view.*
-import kotlinx.android.synthetic.main.shopping_list_item_details.view.*
 import kotlinx.android.synthetic.main.shopping_list_item.view.*
+import kotlinx.android.synthetic.main.shopping_list_item_details.view.*
 
 /** A layout to display the contents of a shopping list item.
  *
@@ -32,30 +32,16 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
     var colorIndex get() = ViewModelItem.Colors.indexOf(color)
                    set(value) { val index = value.coerceIn(ViewModelItem.Colors.indices)
                                 checkBox.color = ViewModelItem.Colors[index] }
-
-    // This companion object stores resources common to all ShoppingListItemViews.
-    private companion object SharedResources {
-        private var isInitialized = false
-        private lateinit var imm: InputMethodManager
-        private lateinit var linkedItemDescriptionString: String
-        private lateinit var unlinkedItemDescriptionString: String
-    }
+    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
 
     init {
         LayoutInflater.from(context).inflate(R.layout.shopping_list_item, this, true)
-        layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.WRAP_CONTENT)
-        if (!SharedResources.isInitialized) initSharedResources(context)
+        editButton.setOnClickListener { toggleExpanded() }
 
-        editButton.setOnClickListener {
-            if (isExpanded) //TODO: Implement more options menu
-            else             expand()
-        }
-        collapseButton.setOnClickListener { collapse() }
-
-        layoutTransition = delaylessLayoutTransition()
+        layoutTransition = defaultLayoutTransition()
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
+
     }
 
     override fun update(item: ShoppingListItem) {
@@ -65,8 +51,8 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
         checkBox.setColor(ViewModelItem.Colors[colorIndex], animate = false)
 
         shoppingListAmountEdit.initValue(item.amount)
-        linkedToIndicator.text = if (item.linkedItemId != null) linkedItemDescriptionString
-                                 else                           unlinkedItemDescriptionString
+//        linkedToIndicator.text = if (item.linkedItemId != null) linkedItemDescriptionString
+//                                 else                           unlinkedItemDescriptionString
         checkBox.onCheckedChangedListener = null
         checkBox.isChecked = item.isChecked
         checkBox.onCheckedChangedListener = { checked -> setStrikeThroughEnabled(checked) }
@@ -78,39 +64,21 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
         super.setExpanded(expanded)
         if (!expanded && nameEdit.isFocused || extraInfoEdit.isFocused ||
             shoppingListAmountEdit.valueEdit.isFocused)
-                imm.hideSoftInputFromWindow(windowToken, 0)
+                imm?.hideSoftInputFromWindow(windowToken, 0)
 
-        nameEdit.isEditable = expanded
-        shoppingListAmountEdit.valueIsDirectlyEditable = expanded
-        extraInfoEdit.isEditable = expanded
         checkBox.inColorEditMode = expanded
+        nameEdit.isEditable = expanded
+        extraInfoEdit.isEditable = expanded
         shoppingListAmountEdit.valueIsDirectlyEditable = expanded
         editButton.isActivated = expanded
-        val newVisibility = if (expanded) View.VISIBLE
-                            else          View.GONE
-        shoppingListItemDetailsGroup.visibility = newVisibility
+        amountEditSpacer.visibility = if (expanded) View.GONE else View.VISIBLE
+        shoppingListItemDetailsGroup.visibility = if (expanded) View.VISIBLE else View.GONE
         if (extraInfoEdit.text.isNullOrBlank())
-            extraInfoEdit.visibility = newVisibility
-
-        // For some reason, expanding an shopping list item whose extra info is not
-        // blank causes a flicker. It appears that changing the layout params of a view
-        // and requesting a layout for it stops this flicker from occurring. Given that
-        // the bug seems to originate from somewhere deep in Android code, having this
-        // useless layout parameter changing and requested layout is an easy and per-
-        // formance negligible way to prevent the bug.
-        spacer.layoutParams.width = if (expanded) 1 else 0
-        spacer.requestLayout()
+            extraInfoEdit.visibility = if (expanded) View.VISIBLE else View.GONE
     }
 
     fun setStrikeThroughEnabled(checked: Boolean, animate: Boolean = true) {
         nameEdit.setStrikeThroughEnabled(checked, animate)
         extraInfoEdit.setStrikeThroughEnabled(checked, animate)
-    }
-
-    private fun initSharedResources(context: Context) {
-        imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-        linkedItemDescriptionString = context.getString(R.string.linked_item_description)
-        unlinkedItemDescriptionString = context.getString(R.string.unlinked_item_description)
-        isInitialized = true
     }
 }

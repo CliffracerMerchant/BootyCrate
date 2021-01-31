@@ -25,6 +25,7 @@
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
         <item name="canBeBlank">false</item>
+        <item name="android:gravity">center_vertical</item>
     </style>
 
     <style name="ViewModelItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
@@ -32,20 +33,20 @@
         <item name="android:textColor">@color/colorTextLightSecondary</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
+        <item name="android:gravity">center_vertical</item>
     </style>
 
     <style name="ViewModelItemAmountEdit" parent="@style/TextAppearance">
-        <item name="minValue">1</item>
-        <item name="isEditable">false</item>
         <item name="android:textSize">22sp</item>
+        <item name="minValue">1</item>
     </style>
 
     <style name="ViewModelItemEditButton">
-        <item name="android:src">@drawable/edit_and_more_options_icon</item>
-        <item name="android:paddingStart">4dp</item>
-        <item name="android:paddingEnd">4dp</item>
-        <item name="android:paddingTop">8dp</item>
-        <item name="android:paddingBottom">8dp</item>
+        <item name="android:src">@drawable/edit_and_collapse_button</item>
+        <item name="android:paddingStart">6dp</item>
+        <item name="android:paddingEnd">6dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
     </style>
 
     <style name="ExpandableSelectableItemDivider">
@@ -75,7 +76,7 @@
     </style>
 
     <style name="InventoryItemAddToShoppingListTriggerEdit" parent="@style/ViewModelItemAmountEdit">
-        <item name="isEditable">true</item>
+        <item name="valueIsDirectlyEditable">true</item>
     </style>
 
 </resources>

@@ -63,6 +63,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     open fun setExpanded(expanded: Boolean = true) {
         _isExpanded = expanded
     }
+    fun toggleExpanded() = if (isExpanded) collapse() else expand()
 
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)

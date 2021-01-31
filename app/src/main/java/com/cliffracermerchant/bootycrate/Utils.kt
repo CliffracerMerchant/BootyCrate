@@ -7,13 +7,20 @@ package com.cliffracermerchant.bootycrate
 import android.animation.LayoutTransition
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 
-fun delaylessLayoutTransition() = LayoutTransition().apply {
+fun defaultLayoutTransition() = LayoutTransition().apply {
     setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
     setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
     setStartDelay(LayoutTransition.APPEARING, 0)
     setStartDelay(LayoutTransition.DISAPPEARING, 0)
     setStartDelay(LayoutTransition.CHANGING, 0)
+    val interp = AccelerateDecelerateInterpolator()
+    setInterpolator(LayoutTransition.CHANGE_APPEARING, interp)
+    setInterpolator(LayoutTransition.CHANGE_DISAPPEARING, interp)
+    setInterpolator(LayoutTransition.APPEARING, interp)
+    setInterpolator(LayoutTransition.DISAPPEARING, interp)
+    setInterpolator(LayoutTransition.CHANGING, interp)
 }
 
 fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,

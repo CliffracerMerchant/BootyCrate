@@ -87,7 +87,7 @@ open class MainActivity : AppCompatActivity() {
         checkoutButton = checkout_button
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
 
-        cradleLayout.layoutTransition = delaylessLayoutTransition()
+        cradleLayout.layoutTransition = defaultLayoutTransition()
         cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
             pendingCradleAnim?.start()
             pendingCradleAnim = null

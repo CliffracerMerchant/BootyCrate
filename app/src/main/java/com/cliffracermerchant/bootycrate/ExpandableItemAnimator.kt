@@ -29,9 +29,9 @@ import androidx.recyclerview.widget.RecyclerView
  *  an adapter data observer for the adapter using the ExpandableItemAnimator
  *  instance as its item animator, will automatically update the expanded item
  *  position so that this doesn't need to be done manually. ExpandableItemAnim-
- *  ator will attempt to do this automatically, but if the parent recycler view
- *  does not have an adapter when ExpandableItemAnimator is constructed this
- *  will have to be done manually. */
+ *  ator will attempt to register itself automatically, but if the parent recy-
+ *  cler view does not have an adapter when ExpandableItemAnimator is construc-
+ *  ted this will have to be done manually. */
 class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultItemAnimator() {
     private val pendingAnimations = mutableListOf<Animator>()
     val expandedItemPos get() = _expandedItemPos
