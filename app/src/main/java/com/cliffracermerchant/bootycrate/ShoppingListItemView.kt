@@ -13,7 +13,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.integer_edit.view.*
-import kotlinx.android.synthetic.main.shopping_list_item.view.*
+import kotlinx.android.synthetic.main.viewmodel_item.view.*
 
 /** A layout to display the contents of a shopping list item.
  *
@@ -35,7 +35,7 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
     private var itemIsLinked = false
 
     init {
-        LayoutInflater.from(context).inflate(R.layout.shopping_list_item, this, true)
+        LayoutInflater.from(context).inflate(R.layout.viewmodel_item, this, true)
         editButton.setOnClickListener { toggleExpanded() }
 
         layoutTransition = defaultLayoutTransition()

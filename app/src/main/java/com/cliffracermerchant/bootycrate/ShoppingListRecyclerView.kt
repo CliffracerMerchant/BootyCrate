@@ -12,7 +12,7 @@ import android.view.ViewGroup
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.DiffUtil
 import kotlinx.android.synthetic.main.integer_edit.view.*
-import kotlinx.android.synthetic.main.shopping_list_item.view.*
+import kotlinx.android.synthetic.main.viewmodel_item.view.*
 import java.util.*
 
 /** A RecyclerView to display the data provided by a ShoppingListViewModel.

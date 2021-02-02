@@ -17,13 +17,13 @@ import androidx.core.content.ContextCompat
 
 /** A button that acts as a checkbox with easily an customizable color.
  *
- *  CheckboxAndColorEdit acts as a tinted checkbox that can be toggled between
- *  a normal checkbox mode (where the checked state can be toggled) and a color
+ *  TintableCheckbox acts as a tinted checkbox that can be toggled between a
+ *  normal checkbox mode (where the checked state can be toggled) and a color
  *  editing mode (where the checkbox will morph into a tinted circle, and a
  *  click will open a color picker dialog). The mode is changed via the pro-
- *  perty isEditable, while the current color is changed through the property
- *  color.*/
-class CheckboxAndColorEdit(context: Context, attrs: AttributeSet) :
+ *  perty inColorEditMode, while the current color is changed through the
+ *  property color.*/
+class TintableCheckbox(context: Context, attrs: AttributeSet) :
     AppCompatImageButton(context, attrs)
 {
     var inColorEditMode = false
@@ -43,7 +43,7 @@ class CheckboxAndColorEdit(context: Context, attrs: AttributeSet) :
               set(value) { setColor(value) }
 
     init {
-        setImageDrawable(ContextCompat.getDrawable(context, R.drawable.color_changing_checkbox))
+        setImageDrawable(ContextCompat.getDrawable(context, R.drawable.tintable_checkbox))
         val checkMarkDrawable = (drawable as LayerDrawable).getDrawable(1)
         checkMarkDrawable.setTint(ContextCompat.getColor(context, android.R.color.black))
         setOnClickListener {

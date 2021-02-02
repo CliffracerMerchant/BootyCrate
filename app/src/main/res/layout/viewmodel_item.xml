@@ -20,7 +20,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         tools:visibility="gone" />
 
-    <com.cliffracermerchant.bootycrate.CheckboxAndColorEdit
+    <com.cliffracermerchant.bootycrate.TintableCheckbox
         android:id="@+id/checkBox"
         android:layout_width="44dp"
         android:layout_height="44dp"
