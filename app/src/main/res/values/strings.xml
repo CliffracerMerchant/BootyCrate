@@ -45,8 +45,7 @@
     <string name="item_amount_description">Amount</string>
     <string name="decrease_button_description">Decrease amount</string>
     <string name="increase_button_description">Increase amount</string>
-    <string name="linked_item_description">Linked</string>
-    <string name="unlinked_item_description">Not linked</string>
+    <string name="link_status_description">Linked status</string>
     <string name="collapse_button_description">Collapse extra item options</string>
 
     <string name="inventory_item_collection_name">inventory</string>

@@ -97,8 +97,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.colorIndex != item.color)
                             holder.view.colorIndex = item.color
                     if (changes.contains(ShoppingListItem.Field.Amount) &&
-                        holder.view.shoppingListAmountEdit.value != item.amount)
-                            holder.view.shoppingListAmountEdit.value = item.amount
+                        holder.view.amountEdit.value != item.amount)
+                            holder.view.amountEdit.value = item.amount
                     if (changes.contains(ShoppingListItem.Field.IsExpanded))
                         holder.view.setExpanded(item.isExpanded)
                     if (changes.contains(ShoppingListItem.Field.IsSelected))
@@ -149,7 +149,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 if (linkedId != null)
                     inventoryViewModel.updateExtraInfo(linkedId, value)
             }
-            view.shoppingListAmountEdit.liveData.observeForever { value ->
+            view.amountEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 shoppingListViewModel.updateAmount(item.id, value)
             }
@@ -160,13 +160,13 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
             view.setOnClickListener(onClick)
             view.nameEdit.setOnClickListener(onClick)
             view.extraInfoEdit.setOnClickListener(onClick)
-            view.shoppingListAmountEdit.valueEdit.setOnClickListener(onClick)
+            view.amountEdit.valueEdit.setOnClickListener(onClick)
 
             val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
             view.setOnLongClickListener(onLongClick)
             view.nameEdit.setOnLongClickListener(onLongClick)
             view.extraInfoEdit.setOnLongClickListener(onLongClick)
-            view.shoppingListAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
+            view.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
 
             view.checkBox.onColorChangedListener = { color ->
                 shoppingListViewModel.updateColor(item.id, ViewModelItem.Colors.indexOf(color))

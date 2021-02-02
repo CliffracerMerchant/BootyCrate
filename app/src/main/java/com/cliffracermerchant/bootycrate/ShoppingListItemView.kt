@@ -32,6 +32,7 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
                    set(value) { val index = value.coerceIn(ViewModelItem.Colors.indices)
                                 checkBox.color = ViewModelItem.Colors[index] }
     private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+    private var itemIsLinked = false
 
     init {
         LayoutInflater.from(context).inflate(R.layout.shopping_list_item, this, true)
@@ -47,10 +48,8 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
         extraInfoEdit.setText(item.extraInfo)
         val colorIndex = item.color.coerceIn(ViewModelItem.Colors.indices)
         checkBox.setColor(ViewModelItem.Colors[colorIndex], animate = false)
-
-        shoppingListAmountEdit.initValue(item.amount)
-//        linkedToIndicator.text = if (item.linkedItemId != null) linkedItemDescriptionString
-//                                 else                           unlinkedItemDescriptionString
+        amountEdit.initValue(item.amount)
+        itemIsLinked = item.linkedItemId != null
         checkBox.onCheckedChangedListener = null
         checkBox.isChecked = item.isChecked
         checkBox.onCheckedChangedListener = { checked -> setStrikeThroughEnabled(checked) }
@@ -61,23 +60,23 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
     override fun setExpanded(expanded: Boolean) {
         super.setExpanded(expanded)
         if (!expanded && nameEdit.isFocused || extraInfoEdit.isFocused ||
-            shoppingListAmountEdit.valueEdit.isFocused)
+            amountEdit.valueEdit.isFocused)
                 imm?.hideSoftInputFromWindow(windowToken, 0)
 
         checkBox.inColorEditMode = expanded
         nameEdit.isEditable = expanded
-        // If extraInfoEdit is blank and is being expanded then we can set its
-        // editable state before it becomes visible to prevent needing to animate
-        // its change in editable state.
         if (extraInfoEdit.text.isNullOrBlank()) {
+            // If extraInfoEdit is blank and is being expanded then we
+            // can set its editable state before it becomes visible to
+            // prevent needing to animate its change in editable state.
             if (expanded) extraInfoEdit.setEditable(editable = true, animate = false)
             extraInfoEdit.visibility = if (expanded) View.VISIBLE else View.GONE
         }
         else extraInfoEdit.isEditable = expanded
-        shoppingListAmountEdit.valueIsDirectlyEditable = expanded
+        amountEdit.valueIsDirectlyEditable = expanded
         editButton.isActivated = expanded
         amountEditSpacer.visibility = if (expanded) View.GONE else View.VISIBLE
-//        shoppingListItemDetailsGroup.visibility = if (expanded) View.VISIBLE else View.GONE
+        linkIndicator.visibility = if (expanded && itemIsLinked) View.VISIBLE else View.GONE
     }
 
     fun setStrikeThroughEnabled(checked: Boolean, animate: Boolean = true) {

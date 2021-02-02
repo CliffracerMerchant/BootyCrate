@@ -7,17 +7,12 @@
 <resources>
     <style name="RecyclerViewItemStyle">
         <item name="android:background">@drawable/recycler_view_item_background</item>
-        <item name="android:paddingStart">4dp</item>
-        <item name="android:paddingEnd">4dp</item>
         <item name="android:paddingTop">4dp</item>
         <item name="android:paddingBottom">4dp</item>
     </style>
 
     <style name="ViewModelItemColorEdit">
-        <item name="android:paddingStart">8dp</item>
-        <item name="android:paddingEnd">10dp</item>
-        <item name="android:paddingTop">10dp</item>
-        <item name="android:paddingBottom">10dp</item>
+        <item name="android:padding">10dp</item>
     </style>
 
     <style name="ViewModelItemNameEdit" parent="@style/NormalTextAppearance">
@@ -25,7 +20,6 @@
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
         <item name="canBeBlank">false</item>
-        <item name="android:textAlignment">viewStart</item>
     </style>
 
     <style name="ViewModelItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
@@ -33,7 +27,6 @@
         <item name="android:textColor">@color/colorTextLightSecondary</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
-        <item name="android:textAlignment">viewStart</item>
     </style>
 
     <style name="ViewModelItemAmountEdit" parent="@style/TextAppearance">
@@ -43,8 +36,8 @@
 
     <style name="ViewModelItemEditButton">
         <item name="android:src">@drawable/edit_and_collapse_button</item>
-        <item name="android:paddingStart">6dp</item>
-        <item name="android:paddingEnd">6dp</item>
+        <item name="android:paddingStart">8dp</item>
+        <item name="android:paddingEnd">8dp</item>
         <item name="android:paddingTop">10dp</item>
         <item name="android:paddingBottom">10dp</item>
     </style>
@@ -59,8 +52,9 @@
         <item name="android:padding">9dp</item>
     </style>
 
-    <style name="ShoppingListItemLinkedToIndicator" parent="@style/SecondaryTextAppearance">
-        <item name="android:gravity">center_vertical</item>
+    <style name="ShoppingListItemLinkIndicator" parent="@style/SecondaryTextAppearance">
+        <item name="android:padding">10dp</item>
+        <item name="android:src">@drawable/ic_baseline_link_24</item>
     </style>
 
     <style name="InventoryItemColorEdit" parent="@style/ViewModelItemColorEdit">
