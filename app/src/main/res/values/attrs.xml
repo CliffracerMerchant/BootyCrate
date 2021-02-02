@@ -47,11 +47,9 @@
 
     <declare-styleable name="TextFieldEdit">
         <!-- Whether the TextFieldEdit will start in an editable state. -->
-        <attr name="isEditable"   format="boolean" />
-        <!-- The hint that will appear when the TextFieldEdit is editable. -->
-        <attr name="editableHint" format="string" />
+        <attr name="isEditable" format="boolean" />
         <!-- Whether the text field can be blank. -->
-        <attr name="canBeBlank"   format="boolean" />
+        <attr name="canBeBlank" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="IntegerEdit">

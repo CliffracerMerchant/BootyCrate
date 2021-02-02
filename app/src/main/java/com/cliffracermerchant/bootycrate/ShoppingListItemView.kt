@@ -14,7 +14,6 @@ import android.view.inputmethod.InputMethodManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.integer_edit.view.*
 import kotlinx.android.synthetic.main.shopping_list_item.view.*
-import kotlinx.android.synthetic.main.shopping_list_item_details.view.*
 
 /** A layout to display the contents of a shopping list item.
  *
@@ -41,7 +40,6 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
         layoutTransition = defaultLayoutTransition()
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
-
     }
 
     override fun update(item: ShoppingListItem) {
@@ -68,13 +66,18 @@ class ShoppingListItemView(context: Context, attrs: AttributeSet? = null) :
 
         checkBox.inColorEditMode = expanded
         nameEdit.isEditable = expanded
-        extraInfoEdit.isEditable = expanded
+        // If extraInfoEdit is blank and is being expanded then we can set its
+        // editable state before it becomes visible to prevent needing to animate
+        // its change in editable state.
+        if (extraInfoEdit.text.isNullOrBlank()) {
+            if (expanded) extraInfoEdit.setEditable(editable = true, animate = false)
+            extraInfoEdit.visibility = if (expanded) View.VISIBLE else View.GONE
+        }
+        else extraInfoEdit.isEditable = expanded
         shoppingListAmountEdit.valueIsDirectlyEditable = expanded
         editButton.isActivated = expanded
         amountEditSpacer.visibility = if (expanded) View.GONE else View.VISIBLE
-        shoppingListItemDetailsGroup.visibility = if (expanded) View.VISIBLE else View.GONE
-        if (extraInfoEdit.text.isNullOrBlank())
-            extraInfoEdit.visibility = if (expanded) View.VISIBLE else View.GONE
+//        shoppingListItemDetailsGroup.visibility = if (expanded) View.VISIBLE else View.GONE
     }
 
     fun setStrikeThroughEnabled(checked: Boolean, animate: Boolean = true) {

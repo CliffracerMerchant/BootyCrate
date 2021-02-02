@@ -27,11 +27,19 @@ fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
                                          container: ViewGroup, view: View,
                                          transitionType: Int) -> Unit = {_, _, _, _ -> }) {
     addTransitionListener(object: LayoutTransition.TransitionListener {
-        override fun startTransition(transition: LayoutTransition, container: ViewGroup,
-                                     view: View, transitionType: Int) {
-            onStart(transition, container, view, transitionType)
-        }
+        override fun startTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) =
+            onStart(a, b, c, d)
         override fun endTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) { }
+    })
+}
+
+fun LayoutTransition.doOnEnd(onEnd: (transition: LayoutTransition,
+                                     container: ViewGroup, view: View,
+                                     transitionType: Int) -> Unit = {_, _, _, _ -> }) {
+    addTransitionListener(object: LayoutTransition.TransitionListener {
+        override fun startTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) { }
+        override fun endTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) =
+            onEnd(a, b, c, d)
     })
 }
 

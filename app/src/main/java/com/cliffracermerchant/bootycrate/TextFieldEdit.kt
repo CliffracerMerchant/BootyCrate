@@ -11,8 +11,10 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Rect
-import android.text.*
+import android.text.InputType
+import android.text.TextUtils
 import android.util.AttributeSet
+import android.view.Gravity
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -35,16 +37,14 @@ import androidx.lifecycle.MutableLiveData
   * it will not be enforced until the value is changed to a non-blank value.
   *
   * When in editable mode, TextFieldEdit will underline it's text to indicate
-  * this to the user. If the TextFieldEdit is empty, it will instead draw its
-  * underlined editableHint (like TextView.hint except that it is not displayed
-  * when not editable). If editable hint is null, the TextFieldEdit will use
-  * TextView's hint as normal (displayed all the time when empty). */
+  * this to the user, and will set its minHeight to the value of the dimension
+  * R.dimen.text_field_edit_editable_min_height (to ensure that its touch tar-
+  * get size is adequate. */
 open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         AppCompatEditText(context, attrs) {
     val liveData = MutableLiveData<String>()
     private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
 
-    var editableHint: String?
     var isEditable: Boolean get() = isFocusableInTouchMode
                             set(editable) = setEditable(editable, animate = true)
 
@@ -55,7 +55,6 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
         isEditable = a.getBoolean(R.styleable.TextFieldEdit_isEditable, false)
-        editableHint = a.getString(R.styleable.TextFieldEdit_editableHint)
         canBeEmpty = a.getBoolean(R.styleable.TextFieldEdit_canBeBlank, true)
         a.recycle()
 
@@ -88,27 +87,38 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
          * being displayed when the TextFieldEdit is not in an editable state. */
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-        if (editableHint != null) hint = if (editable) editableHint
-                                         else          null
+        paintFlags = if (editable) paintFlags or Paint.UNDERLINE_TEXT_FLAG
+                     else          paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
         if (!editable && isFocused) clearFocus()
 
         val oldHeight = height
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.text_field_edit_editable_min_height)
-        if (!animate || oldHeight == 0) return
-
+        val endGravity = if (editable) Gravity.CENTER_VERTICAL else Gravity.START
+        if (!animate || oldHeight == 0) {
+            gravity = endGravity
+            return
+        }
+        /* A text gravity of center_vertical is intended when the TextFieldEdit is expanded
+         * for editing (its vertical gravity does not matter when it is not editable due to
+         * its layout height being wrap_content and its minHeight being 0). But if the gra-
+         * vity is center_vertical when the expansion animation is played, a parent layout
+         * transition will not animate this, and the text will jump to its new position in
+         * the resized view. While this can be counteracted with a translationY animation,
+         * if the gravity is already center_vertical when the translationY animation is
+         * started it can cause the text to be partially clipped. To work around this the
+         * gravity is set to viewStart when the view is collapsed, and is only set to
+         * center_vertical after the expansion animation is finished. */
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
-        val newHeight = measuredHeight
-        val heightChange = newHeight - oldHeight
-        translationY = -heightChange / 2f
-        animate().translationY(0f).withLayer().setInterpolator(interp).start()
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        paintFlags = if (isEditable) paintFlags or Paint.UNDERLINE_TEXT_FLAG
-                     else            paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
-        super.onDraw(canvas)
+        val heightChange = measuredHeight - oldHeight
+        translationY = if (editable) 0f else -heightChange / 2f
+        animate().withLayer().setInterpolator(interp)
+            .translationY(if (editable) heightChange / 2f else 0f)
+            .withEndAction {
+                if (editable) translationY = 0f
+                gravity = endGravity
+            }.start()
     }
 }
 
@@ -150,7 +160,7 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         }
     }
 
-    override fun onDraw(canvas: Canvas) {
+    override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         val strikeThroughLength = this.strikeThroughLength ?: return
 
@@ -162,6 +172,6 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
                   else strikeThroughLength
         val baselineOffset = paint.fontMetrics.ascent * 0.35f
         val y = baseline + baselineOffset
-        canvas.drawLine(begin, y, end, y, paint)
+        canvas?.drawLine(begin, y, end, y, paint)
     }
 }

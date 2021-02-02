@@ -25,15 +25,15 @@
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
         <item name="canBeBlank">false</item>
-        <item name="android:gravity">center_vertical</item>
+        <item name="android:textAlignment">viewStart</item>
     </style>
 
     <style name="ViewModelItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
-        <item name="editableHint">@string/item_extra_info_description</item>
+        <item name="android:hint">@string/item_extra_info_description</item>
         <item name="android:textColor">@color/colorTextLightSecondary</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
-        <item name="android:gravity">center_vertical</item>
+        <item name="android:textAlignment">viewStart</item>
     </style>
 
     <style name="ViewModelItemAmountEdit" parent="@style/TextAppearance">
