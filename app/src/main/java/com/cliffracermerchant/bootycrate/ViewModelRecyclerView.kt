@@ -11,8 +11,9 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import java.util.*
 
-/** A RecyclerView for displaying the contents of a BootyCrate ViewModel<Entity>.
+/** A RecyclerView for displaying the contents of a ViewModel<Entity>.
  *
  *  ViewModelRecyclerView is an abstract RecyclerView subclass that tailors the
  *  RecyclerView interface toward displaying the contents of a ViewModel<
@@ -21,18 +22,14 @@ import com.google.android.material.snackbar.Snackbar
  *  back and adapter must be overridden in subclasses. diffUtilCallback must be
  *  overridden with an appropriate DiffUtil.ItemCallback<Entity> for the adap-
  *  ter. adapter must be overridden with a ViewModelAdapter subclass that imple-
- *  ments onCreateViewHolder. While it is not abstract, the viewModel property
- *  should probably be overridden with a concrete ViewModel<Entity> subclass
- *  that implements its abstract methods. collectionName, used in user facing
- *  strings regarding the item collection, should be overridden with a string
- *  that describes the collection of items (e.g. inventory for a collection of
- *  inventory items).
+ *  ments onCreateViewHolder. collectionName, used in user facing strings regar-
+ *  ding the item collection, should be overridden with a string that describes
+ *  the collection of items (e.g. inventory for a collection of inventory items).
  *
  *  Because AndroidViewModels are created after views inflated from xml are
- *  created, it is necessary to finish initialization with these required mem-
- *  bers. To do this, the function finishInit must be called with an Lifecycle-
- *  Owner and a ViewModel<Entity> instance during runtime, but before any sort
- *  of data access is attempted.
+ *  created, the function finishInit must be called with a LifecycleOwner and a
+ *  ViewModel<Entity> instance during runtime, but before any sort of data
+ *  access is attempted.
  *
  *  ViewModelRecyclerView has two public properties, sort and searchFilter,
  *  that mirror these properties from the view model from which it obtains its
@@ -62,9 +59,9 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     attrs: AttributeSet
 ) : RecyclerView(context, attrs) {
 
-    abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
+    open val collectionName = ""
+    protected abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
     abstract val adapter: ViewModelAdapter<out ViewModelItemViewHolder>
-    abstract val collectionName: String
     private lateinit var viewModel: ViewModel<Entity>
     var snackBarAnchor: View? = null
 
@@ -116,9 +113,10 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
 
     /** A ListAdapter derived RecyclerView.Adapter for ViewModelRecyclerView.
      *
-     *  ViewModelAdapter is an abstract (because it does not implement onCreate-
-     *  ViewHolder) ListAdapter subclass that enforces the use of stable ids
-     *  and calls onNewItemInsertion for newly inserted items. */
+     *  ViewModelAdapter enforces the use of stable ids and calls onNewItemInsertion
+     *  for newly inserted items. It is abstract because it does not implement
+     *  onCreateViewHolder. */
+    @Suppress("LeakingThis")
     abstract inner class ViewModelAdapter<VHType: ViewModelItemViewHolder> :
             ListAdapter<Entity, VHType>(diffUtilCallback) {
         init { setHasStableIds(true) }
@@ -126,19 +124,43 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
         final override fun setHasStableIds(hasStableIds: Boolean) =
             super.setHasStableIds(true)
 
+        override fun getItemId(position: Int) = currentList[position].id
+
         override fun onBindViewHolder(holder: VHType, position: Int) {
             if (getItemId(holder.adapterPosition) == viewModel.newlyAddedItemId) {
                 onNewItemInsertion(currentList[holder.adapterPosition], holder)
                 viewModel.resetNewlyAddedItemId()
             }
         }
-
-        override fun getItemId(position: Int) = currentList[position].id
     }
 
-   /** A ViewHolder subclass that provides a simplified way of obtaining the
-    *  instance of the item that it represents through the property item. */
-    open inner class ViewModelItemViewHolder(view: View) : ViewHolder(view) {
+    /** A ViewHolder subclass that wraps an instance of ViewModelItemView.
+     *
+     *  ViewModelItemViewHolder provides a simplified way of obtaining the instance
+     *  of the item that it represents through the property item, and connects
+     *  changes to the fields made by the user to view model update calls.*/
+    open inner class ViewModelItemViewHolder(view: ViewModelItemView<Entity>) :
+            ViewHolder(view) {
         val item: Entity get() = adapter.currentList[adapterPosition]
+
+        init {
+            view.apply {
+                ui.checkBox.onColorChangedListener = { color ->
+                    viewModel.updateColor(item.id, ViewModelItem.Colors.indexOf(color))
+                }
+                ui.nameEdit.liveData.observeForever { value ->
+                    if (adapterPosition == -1) return@observeForever
+                    viewModel.updateName(item.id, value)
+                }
+                ui.extraInfoEdit.liveData.observeForever { value ->
+                    if (adapterPosition == -1) return@observeForever
+                    viewModel.updateExtraInfo(item.id, value)
+                }
+                ui.amountEdit.liveData.observeForever { value ->
+                    if (adapterPosition == -1) return@observeForever
+                    viewModel.updateAmount(item.id, value)
+                }
+            }
+        }
     }
 }

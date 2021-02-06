@@ -53,10 +53,10 @@ class ShoppingListFragment(isActive: Boolean = false) :
         super.onActiveStateChanged(active)
         if (active) {
             activity.addButton.setOnClickListener {
-                NewShoppingListItemDialog(activity, activity.shoppingListViewModel)
-                    .show(activity.supportFragmentManager, null)
+//                NewShoppingListItemDialog(activity, activity.shoppingListViewModel)
+//                    .show(activity.supportFragmentManager, null)
             }
-            activity.checkoutButton.checkoutCallback = { recyclerView.checkout() }
+            activity.checkoutButton.checkoutCallback = { activity.shoppingListViewModel.checkout() }
         }
     }
 

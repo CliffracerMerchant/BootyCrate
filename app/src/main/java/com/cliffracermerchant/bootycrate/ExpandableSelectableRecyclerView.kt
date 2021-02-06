@@ -6,22 +6,25 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.View.OnClickListener
+import android.view.View.OnLongClickListener
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.integer_edit.view.*
 
 /** A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
  *
  *  ExpandableSelectableRecyclerView extends ViewModelRecyclerView via the use
  *  of an ExpandableSelectableItemViewModel along with the new functions delete-
- *  SelectedItems. Its member selection provides an interface for manipulating
- *  the recycler view selection (see the documentation for the inner class Sel-
- *  ection for more details) as well as the function setExpandedItem to change
- *  or set to null the currently expanded item. It also utilizes its own custom
- *  view holder to enforce the use of an ExpandableSelectableItemView, and a
- *  custom adapter that in turn enforces the use of ExpandableSelectableItem-
- *  ViewHolder.
+ *  SelectedItems. Its selection property provides an interface for manipula-
+ *  ting the recycler view selection (see the documentation for the inner class
+ *  Selection for more details) as well as the function setExpandedItem to
+ *  change or set to null the currently expanded item. It also utilizes its own
+ *  custom view holder to enforce the use of an ExpandableSelectableItemView,
+ *  and a custom adapter that in turn enforces the use of ExpandableSelectable-
+ *  ItemViewHolder.
  *
  *  Like its parent class, ExpandableSelectableRecyclerView requires the func-
  *  tion finishInit to be called in order to provide it with an instance of
@@ -30,12 +33,12 @@ import com.google.android.material.snackbar.Snackbar
  *  sion due to requiring a different function signature, is designed to call
  *  ViewModelRecyclerView's version to prevent the implementing activity or
  *  fragment from needing to remember to call both. */
+@Suppress("LeakingThis")
 abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem>(
     context: Context,
     attrs: AttributeSet
 ) : ViewModelRecyclerView<Entity>(context, attrs) {
 
-    abstract override val adapter: ExpandableSelectableItemAdapter<out ExpandableSelectableItemViewHolder>
     lateinit var viewModel: ExpandableSelectableItemViewModel<Entity>
     private val itemAnimator = ExpandableItemAnimator(this)
 
@@ -105,6 +108,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
      *  therefore abstract.*/
     abstract inner class ExpandableSelectableItemAdapter<VHType: ExpandableSelectableItemViewHolder> :
             ViewModelAdapter<VHType>() {
+
         override fun onBindViewHolder(holder: VHType, position: Int) {
             if (holder.item.isExpanded)
                 itemAnimator.notifyExpandedItemChanged(position)
@@ -112,8 +116,32 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         }
     }
 
-    /** A view holder that ensures that the view passed in the constructor is an instance of ExpandableSelectableItemView. */
+    /** A ViewHolder subclass that wraps an instance of ExpandableSelectableItemView.
+     *
+     *  ExpandableSelectableItemView updates the onClickListeners of the wrapped item
+     *  view to enable the selection and expansion of the items. */
     open inner class ExpandableSelectableItemViewHolder(
         view: ExpandableSelectableItemView<Entity>
-    ) : ViewModelItemViewHolder(view)
+    ) : ViewModelItemViewHolder(view) {
+        init {
+            val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }
+            val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
+
+            view.apply {
+                setOnClickListener(onClick)
+                ui.nameEdit.setOnClickListener(onClick)
+                ui.extraInfoEdit.setOnClickListener(onClick)
+                ui.amountEdit.valueEdit.setOnClickListener(onClick)
+
+                setOnLongClickListener(onLongClick)
+                ui.nameEdit.setOnLongClickListener(onLongClick)
+                ui.extraInfoEdit.setOnLongClickListener(onLongClick)
+                ui.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
+                ui.editButton.setOnClickListener {
+                    setExpandedItem(if (!view.isExpanded) adapterPosition
+                                    else                  null)
+                }
+            }
+        }
+    }
 }

@@ -6,14 +6,10 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View.OnClickListener
-import android.view.View.OnLongClickListener
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import kotlinx.android.synthetic.main.integer_edit.view.*
-import kotlinx.android.synthetic.main.inventory_item_details.view.*
-import kotlinx.android.synthetic.main.inventory_item.view.*
 import java.util.*
 
 /** A RecyclerView to display the data provided by an InventoryViewModel.
@@ -21,15 +17,11 @@ import java.util.*
  *  InventoryRecyclerView is a ExpandableSelectableRecyclerView subclass spec-
  *  ialized for displaying the contents of an inventory. Several of Inventory-
  *  RecyclerView's necessary fields can not be obtained when it is inflated
- *  from XML, such as its viewmodels. To finish initialization with these
- *  required members, the function finishInit MUST be called during runtime,
+ *  from XML, such as its view models. To finish initialization with these
+ *  required members, the function finishInit must be called during runtime,
  *  but before any sort of data access is attempted. InventoryRecyclerView's
  *  version of finishInit will call ExpandableSelectableRecyclerView's version
- *  to prevent the implementing activity or fragment from needing to call both.
- *
- *  Adding or removing inventory items is accomplished using the ViewModel-
- *  RecyclerView and ExpandableSelectableRecyclerView functions and the new
- *  function addNewItem. */
+ *  to prevent the implementing activity or fragment from needing to call both. */
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<InventoryItem>(context, attrs) {
     override val diffUtilCallback = InventoryItemDiffUtilCallback()
@@ -50,16 +42,18 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
     /** A RecyclerView.Adapter to display the contents of a list of inventory items.
      *
-     *  InventoryAdapter is a subclass of BootyCrateAdapter using InventoryItem-
-     *  InventoryItemViewHolder instances to represent inventory items. Its
-     *  overrides of onBindViewHolder make use of the InventoryItem.Field val-
-     *  ues passed by InventoryItemDiffUtilCallback to support partial binding. */
+     *  InventoryAdapter is a subclass of ExpandableSelectableItemAdapter using
+     *  InventoryItemViewHolder instances to represent inventory items. Its over-
+     *  rides of onBindViewHolder make use of the InventoryItem.Field values passed
+     *  by InventoryItemDiffUtilCallback to support partial binding. Note that
+     *  InventoryAdapter assumes that any payloads passed to it are of the type
+     *  EnumSet<InventoryItem.Field>. If a payload of another type is passed to it,
+     *  an exception will be thrown. */
+    @Suppress("UNCHECKED_CAST")
     inner class InventoryAdapter : ExpandableSelectableItemAdapter<InventoryItemViewHolder>() {
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) : InventoryItemViewHolder {
-            val view = InventoryItemView(context)
-            return InventoryItemViewHolder(view)
-        }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+            InventoryItemViewHolder(InventoryItemView(context))
 
         override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int) {
             holder.view.update(holder.item)
@@ -79,29 +73,31 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 if (payload is EnumSet<*>) {
                     val item = getItem(position)
                     val changes = payload as EnumSet<InventoryItem.Field>
+                    val ui = holder.view.ui
+                    val detailsUi = holder.view.detailsUi
 
                     if (changes.contains(InventoryItem.Field.Name) &&
-                        holder.view.nameEdit.text.toString() != item.name)
-                            holder.view.nameEdit.setText(item.name)
+                        ui.nameEdit.text.toString() != item.name)
+                            ui.nameEdit.setText(item.name)
                     if (changes.contains(InventoryItem.Field.ExtraInfo) &&
-                        holder.view.extraInfoEdit.text.toString() != item.extraInfo)
-                            holder.view.extraInfoEdit.setText(item.extraInfo)
+                        ui.extraInfoEdit.text.toString() != item.extraInfo)
+                            ui.extraInfoEdit.setText(item.extraInfo)
                     if (changes.contains(InventoryItem.Field.Color) &&
-                        holder.view.colorIndex != item.color)
-                            holder.view.colorIndex = item.color
+                        ui.checkBox.colorIndex != item.color)
+                            ui.checkBox.colorIndex = item.color
                     if (changes.contains(InventoryItem.Field.Amount) &&
-                        holder.view.inventoryAmountEdit.value != item.amount)
-                            holder.view.inventoryAmountEdit.value = item.amount
+                        ui.amountEdit.value != item.amount)
+                            ui.amountEdit.value = item.amount
                     if (changes.contains(InventoryItem.Field.IsExpanded))
                         holder.view.setExpanded(item.isExpanded)
                     if (changes.contains(InventoryItem.Field.IsSelected))
                         holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(InventoryItem.Field.AddToShoppingList) &&
-                        holder.view.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
-                            holder.view.addToShoppingListCheckBox.isChecked = item.addToShoppingList
+                        detailsUi.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
+                            detailsUi.addToShoppingListCheckBox.isChecked = item.addToShoppingList
                     if (changes.contains(InventoryItem.Field.AddToShoppingListTrigger) &&
-                        holder.view.addToShoppingListTriggerEdit.value != item.addToShoppingListTrigger)
-                            holder.view.addToShoppingListTriggerEdit.value = item.addToShoppingListTrigger
+                        detailsUi.addToShoppingListTriggerEdit.value != item.addToShoppingListTrigger)
+                            detailsUi.addToShoppingListTriggerEdit.value = item.addToShoppingListTrigger
                 }
                 else unhandledChanges.add(payload)
             }
@@ -110,75 +106,33 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         }
     }
 
-    /** A BootyCrateViewHolder that wraps an instance of InventoryItemView.
+    /** A ExpandableSelectableItemViewHolder that wraps an instance of InventoryItemView.
      *
-     *  InventoryItemViewHolder is a subclass of BootyCrateViewHolder that
-     *  holds an instance of InventoryItemView to display the data for an Inven-
-     *  toryItem. Besides its use of this custom item view, its differences
-     *  from BootyCrateViewHolder are:
-     * - It sets the on click listeners of each of the sub views in the Inven-
-     *   toryItemView to permit the user to select/deselect items, and to edit
-     *   the displayed data when allowed.
-     * - Its override of the expand details button's onClickListener calls the
-     *   RecyclerViewExpandableItem.set function on itself. Its override of
-     *   ExpandableViewHolder.onExpansionStateChanged calls the corresponding
-     *   expand or collapse functions on its InventoryItemView instance. */
+     *  InventoryItemViewHolder is a subclass of ExpandableSelectableItemViewHolder
+     *  that holds an instance of InventoryItemView to display the data for an
+     *  InventoryItem. It also connects changes in the InventoryItemView extra
+     *  details section to view model update calls. */
     inner class InventoryItemViewHolder(val view: InventoryItemView) :
         ExpandableSelectableItemViewHolder(view) {
 
         init {
-            // Click & long click listeners
-            val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }
-            view.setOnClickListener(onClick)
-            view.nameEdit.setOnClickListener(onClick)
-            view.extraInfoEdit.setOnClickListener(onClick)
-            view.inventoryAmountEdit.valueEdit.setOnClickListener(onClick)
-
-            val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
-            view.setOnLongClickListener(onLongClick)
-            view.nameEdit.setOnLongClickListener(onLongClick)
-            view.extraInfoEdit.setOnLongClickListener(onLongClick)
-            view.inventoryAmountEdit.valueEdit.setOnLongClickListener(onLongClick)
-
-            view.colorEdit.setOnClickListener {
-                Dialog.colorPicker(item.color) { chosenColor ->
-                    inventoryViewModel.updateColor(item.id, chosenColor)
-            }}
-            view.editButton.setOnClickListener {
-                if (!view.isExpanded) setExpandedItem(adapterPosition)
-            }
-            view.collapseButton.setOnClickListener { setExpandedItem(null) }
-
-            // Data change listeners
-            view.nameEdit.liveData.observeForever { value ->
-                if (adapterPosition == -1) return@observeForever
-                inventoryViewModel.updateName(item.id, value)
-            }
-            view.extraInfoEdit.liveData.observeForever { value ->
-                if (adapterPosition == -1) return@observeForever
-                inventoryViewModel.updateExtraInfo(item.id, value)
-            }
-            view.inventoryAmountEdit.liveData.observeForever { value ->
-                if (adapterPosition == -1) return@observeForever
-                inventoryViewModel.updateAmount(item.id, value)
-            }
-            view.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
+            view.detailsUi.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
                 inventoryViewModel.updateAddToShoppingList(item.id, checked)
             }
-            view.addToShoppingListTriggerEdit.liveData.observeForever { value ->
+            view.detailsUi.addToShoppingListTriggerEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
                 inventoryViewModel.updateAddToShoppingListTrigger(item.id, value)
             }
         }
     }
 
-    /** Computes a diff between two inventory items.
+    /** Computes a diff between two inventory item lists.
      *
      *  InventoryItemDiffUtilCallback uses the ids of inventory items to determine
      *  if they are the same or not. If they are the same, changes are logged by
      *  setting the appropriate bit of an instance of EnumSet<InventoryItem.Field>.
      *  The change payload for modified items will then be the enum set containing
-     *  all of the Fields that were changed. */
+     *  all of the fields that were changed. */
     class InventoryItemDiffUtilCallback : DiffUtil.ItemCallback<InventoryItem>() {
         private val listChanges = mutableMapOf<Long, EnumSet<InventoryItem.Field>>()
         private val itemChanges = EnumSet.noneOf(InventoryItem.Field::class.java)
@@ -186,24 +140,23 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         override fun areItemsTheSame(oldItem: InventoryItem, newItem: InventoryItem) =
             oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: InventoryItem,
-                                        newItem: InventoryItem): Boolean {
-            itemChanges.clear()
-            if (newItem.name != oldItem.name)             itemChanges.add(InventoryItem.Field.Name)
-            if (newItem.extraInfo != oldItem.extraInfo)   itemChanges.add(InventoryItem.Field.ExtraInfo)
-            if (newItem.color != oldItem.color)           itemChanges.add(InventoryItem.Field.Color)
-            if (newItem.amount != oldItem.amount)         itemChanges.add(InventoryItem.Field.Amount)
-            if (newItem.isExpanded != oldItem.isExpanded) itemChanges.add(InventoryItem.Field.IsExpanded)
-            if (newItem.isSelected != oldItem.isSelected) itemChanges.add(InventoryItem.Field.IsSelected)
-            if (newItem.addToShoppingList != oldItem.addToShoppingList)
-                itemChanges.add(InventoryItem.Field.AddToShoppingList)
-            if (newItem.addToShoppingListTrigger != oldItem.addToShoppingListTrigger)
-                itemChanges.add(InventoryItem.Field.AddToShoppingListTrigger)
+        override fun areContentsTheSame(oldItem: InventoryItem, newItem: InventoryItem) =
+            itemChanges.apply {
+                clear()
+                if (newItem.name != oldItem.name)             add(InventoryItem.Field.Name)
+                if (newItem.extraInfo != oldItem.extraInfo)   add(InventoryItem.Field.ExtraInfo)
+                if (newItem.color != oldItem.color)           add(InventoryItem.Field.Color)
+                if (newItem.amount != oldItem.amount)         add(InventoryItem.Field.Amount)
+                if (newItem.isExpanded != oldItem.isExpanded) add(InventoryItem.Field.IsExpanded)
+                if (newItem.isSelected != oldItem.isSelected) add(InventoryItem.Field.IsSelected)
+                if (newItem.addToShoppingList != oldItem.addToShoppingList)
+                    add(InventoryItem.Field.AddToShoppingList)
+                if (newItem.addToShoppingListTrigger != oldItem.addToShoppingListTrigger)
+                    add(InventoryItem.Field.AddToShoppingListTrigger)
 
-            if (!itemChanges.isEmpty())
-                listChanges[newItem.id] = EnumSet.copyOf(itemChanges)
-            return itemChanges.isEmpty()
-        }
+                if (!isEmpty())
+                    listChanges[newItem.id] = EnumSet.copyOf(this)
+            }.isEmpty()
 
         override fun getChangePayload(oldItem: InventoryItem, newItem: InventoryItem) =
             listChanges.remove(newItem.id)

@@ -40,8 +40,8 @@ class InventoryFragment(isActive: Boolean = false) :
         super.onActiveStateChanged(active)
         if (active) {
             activity.addButton.setOnClickListener {
-                NewInventoryItemDialog(activity, activity.inventoryViewModel)
-                    .show(activity.supportFragmentManager, null)
+//                NewInventoryItemDialog(activity, activity.inventoryViewModel)
+//                    .show(activity.supportFragmentManager, null)
             }
             activity.checkoutButton.checkoutCallback = null
         }

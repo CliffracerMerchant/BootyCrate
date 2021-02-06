@@ -7,4 +7,5 @@
 <resources>
     <dimen name="text_field_edit_editable_min_height">44dp</dimen>
     <dimen name="integer_edit_editable_value_min_width">40dp</dimen>
+    <dimen name="recycler_view_item_vertical_padding">4dp</dimen>
 </resources>
