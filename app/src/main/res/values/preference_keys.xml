@@ -5,10 +5,14 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <string name="pref_dark_theme_active">dark_theme_active</string>
+    <string name="pref_sort">%1$s_sort</string>
+    <string name="pref_viewmodels_need_cleared">viewModelsNeedCleared</string>
+
+    <string name="pref_app_theme">dark_theme_active</string>
+
     <string name="pref_import_database">import_database</string>
     <string name="pref_export_database">export_database</string>
-    <string name="pref_sort">%1$s_sort</string>
-    <string name="pref_inventory_sort">inventory_sort</string>
-    <string name="pref_shopping_list_sort">shopping_list_sort</string>
+
+    <string name="pref_about_app">about_app</string>
+    <string name="pref_open_source_libraries_used">open_source_libraries_used</string>
 </resources>

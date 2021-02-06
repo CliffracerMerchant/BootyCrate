@@ -8,13 +8,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory android:title="@string/visual_preference_category_name">
-<!--        <ListPreference-->
-<!--            android:key="app_theme"-->
-<!--            android:title="App Theme" />-->
-        <SwitchPreferenceCompat
-            android:key="@string/pref_dark_theme_active"
-            android:title="@string/dark_theme_switch_title"
-            android:defaultValue="true" />
+        <ListPreference
+            android:key="@string/pref_app_theme"
+            android:title="App Theme"
+            android:entries="@array/app_theme_preference_entries"
+            android:entryValues="@array/app_theme_preference_entries"/>
     </PreferenceCategory>
 
 <!--    <PreferenceCategory android:title="@string/backup_and_restore_preference_category_name">-->

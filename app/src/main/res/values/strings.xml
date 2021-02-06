@@ -60,9 +60,18 @@
     <string name="checkout_description">Checkout</string>
     <string name="checkout_confirm_description">Confirm?</string>
 
-    <string name="pref_viewmodels_need_cleared">viewModelsNeedCleared</string>
-    <string name="dark_theme_switch_description">Dark theme toggle</string>
-    <string name="dark_theme_switch_title">Dark theme</string>
+    <string name="share_description">Share</string>
+    <string name="share_dialog_title">Share via…</string>
+    <string name="share_text_message_option">Text message</string>
+    <string name="share_email_option">Email</string>
+    <string name="share_error_message">No app that can send the list was found</string>
+
+    <string name="visual_preference_category_name">Visual</string>
+    <string name="sys_default_theme_description">Use system default</string>
+    <string name="light_theme_description">Light</string>
+    <string name="dark_theme_description">Dark</string>
+
+    <string name="backup_and_restore_preference_category_name">Backup and Restore</string>
     <string name="export_database_description">Export database</string>
     <string name="import_database_description">Import database</string>
     <string name="import_database_question_message">
@@ -72,18 +81,10 @@
     <string name="import_database_overwrite_confirmation_message">
         Overwriting the existing database is irreversible. Are you sure?</string>
     <string name="exported_database_default_name">BootyCrateDatabase.sqlite</string>
-    <string name="share_description">Share</string>
-    <string name="share_dialog_title">Share via…</string>
-    <string name="share_text_message_option">Text message</string>
-    <string name="share_email_option">Email</string>
-    <string name="share_error_message">No app that can send the list was found</string>
-    <string name="visual_preference_category_name">Visual</string>
-    <string name="backup_and_restore_preference_category_name">Backup and Restore</string>
+
     <string name="about_preference_category_name">About</string>
     <string name="open_source_libraries_used_description">Open source libraries used</string>
-    <string name="pref_open_source_libraries_used">open_source_libraries_used</string>
     <string name="about_app_description">About BootyCrate</string>
-    <string name="pref_about_app">about_app</string>
     <string name="about_app_body">
         Copyright 2020 Nicholas Hochstetler. \nBootyCrate is an open-source shopping list and
         inventory management app, licensed under the terms of the Apache License, version 2.0.

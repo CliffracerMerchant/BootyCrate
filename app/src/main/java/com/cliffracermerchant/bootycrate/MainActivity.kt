@@ -8,6 +8,8 @@ import android.animation.Animator
 import android.animation.LayoutTransition
 import android.animation.ObjectAnimator
 import android.app.Activity
+import android.content.res.Configuration
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.Menu
@@ -76,9 +78,14 @@ open class MainActivity : AppCompatActivity() {
         shoppingListViewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
         inventoryViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
 
-        prefKey = getString(R.string.pref_dark_theme_active)
-        setTheme(if (prefs.getBoolean(prefKey, false)) R.style.DarkTheme
-                 else                                  R.style.LightTheme)
+        prefKey = getString(R.string.pref_app_theme)
+        val themeDefault = getString(R.string.sys_default_theme_description)
+        setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
+            getString(R.string.light_theme_description) -> R.style.LightTheme
+            getString(R.string.dark_theme_description) ->  R.style.DarkTheme
+            else -> if (sysDarkThemeIsActive) R.style.DarkTheme
+                    else                      R.style.LightTheme
+        })
 
         setContentView(R.layout.activity_main)
         setSupportActionBar(topActionBar)
@@ -322,4 +329,7 @@ open class MainActivity : AppCompatActivity() {
             true
         }
     }
+
+    val sysDarkThemeIsActive get() =
+        (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
 }
