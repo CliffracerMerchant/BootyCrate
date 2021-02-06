@@ -9,11 +9,11 @@ import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Rect
 import android.text.InputType
 import android.text.TextUtils
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.Gravity
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.EditorInfo
@@ -36,21 +36,22 @@ import androidx.lifecycle.MutableLiveData
   * canBeEmpty property is changed to false when the field is already empty,
   * it will not be enforced until the value is changed to a non-blank value.
   *
-  * When in editable mode, TextFieldEdit will underline it's text to indicate
-  * this to the user, and will set its minHeight to the value of the dimension
-  * R.dimen.text_field_edit_editable_min_height (to ensure that its touch tar-
+  * When in editable mode, TextFieldEdit will underline itself to indicate this
+  * to the user, and will set its minHeight to the value of the dimension
+  * R.dimen.text_field_edit_editable_min_height to ensure that its touch tar-
   * get size is adequate. */
 open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
-        AppCompatEditText(context, attrs) {
+    AppCompatEditText(context, attrs)
+{
     val liveData = MutableLiveData<String>()
-    private var imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
 
     var isEditable: Boolean get() = isFocusableInTouchMode
                             set(editable) = setEditable(editable, animate = true)
 
     var canBeEmpty: Boolean
     private var lastValue: String? = null
-    private var interp = AccelerateDecelerateInterpolator()
+    private val interp = AccelerateDecelerateInterpolator()
+    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
@@ -87,8 +88,6 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
          * being displayed when the TextFieldEdit is not in an editable state. */
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-        paintFlags = if (editable) paintFlags or Paint.UNDERLINE_TEXT_FLAG
-                     else          paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
         if (!editable && isFocused) clearFocus()
 
         val oldHeight = height
@@ -119,6 +118,14 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
                 if (editable) translationY = 0f
                 gravity = endGravity
             }.start()
+    }
+
+    override fun draw(canvas: Canvas?) {
+        super.draw(canvas)
+        if (!isEditable) return
+        val y = baseline + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                                                     2f, resources.displayMetrics)
+        canvas?.drawLine(0f, y, width.toFloat(), y, paint)
     }
 }
 
