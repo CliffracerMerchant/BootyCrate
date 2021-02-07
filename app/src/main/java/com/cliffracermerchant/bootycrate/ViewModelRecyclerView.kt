@@ -98,16 +98,6 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
 
     open fun undoDelete() { viewModel.undoDelete() }
 
-    fun deleteAll() {
-        if (adapter.currentList.isEmpty()) {
-            val message = context.getString(R.string.empty_recycler_view_message, collectionName)
-            Snackbar.make(this, message, Snackbar.LENGTH_SHORT).
-                setAnchorView(snackBarAnchor ?: this).show()
-            return
-        }
-        Dialog.deleteAllFromViewModel(viewModel, collectionName)
-    }
-
     open fun onNewItemInsertion(item: Entity, vh: ViewModelItemViewHolder) =
         smoothScrollToPosition(vh.adapterPosition)
 

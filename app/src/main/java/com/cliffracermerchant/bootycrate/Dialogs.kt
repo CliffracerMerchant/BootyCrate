@@ -124,23 +124,6 @@ object Dialog {
             }.show()
     }
 
-    fun <Entity: ViewModelItem>deleteAllFromViewModel(
-        viewModel: ViewModel<Entity>,
-        collectionName: String
-    ) {
-        if (viewModel.items.value?.isEmpty() == true) {
-            val message = context.getString(R.string.empty_recycler_view_message, collectionName)
-            Snackbar.make(snackBarParent, message, Snackbar.LENGTH_SHORT).
-                     setAnchorView(snackBarParent).show()
-            return
-        }
-        themedAlertBuilder().
-            setMessage(context.getString(R.string.delete_all_items_confirmation_message, collectionName)).
-            setPositiveButton(android.R.string.yes) { _, _ -> viewModel.deleteAll() }.
-            setNegativeButton(android.R.string.cancel) { _, _ -> }.
-            show()
-    }
-
     /** Return an AlertDialog.Builder that uses the current theme's alertDialogTheme. */
     fun themedAlertBuilder(): MaterialAlertDialogBuilder {
         // AlertDialog seems to ignore the theme's alertDialogTheme value, making it

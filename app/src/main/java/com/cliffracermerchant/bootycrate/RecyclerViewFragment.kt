@@ -31,6 +31,7 @@ import kotlinx.android.synthetic.main.activity_main.view.*
  *  The open property actionMode is the ActionMode instance used when the recy-
  *  clerView has a selection. Subclasses can override this property with their
  *  own instance of ActionMode if they wish to specialize this behavior. */
+@Suppress("LeakingThis")
 abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: Boolean = false) :
         MainActivityFragment(isActive) {
 
@@ -95,7 +96,6 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
             ViewModelItem.Sort.NameDesc ->   R.id.name_descending_option
             ViewModelItem.Sort.AmountAsc ->  R.id.amount_ascending_option
             ViewModelItem.Sort.AmountDesc -> R.id.amount_descending_option
-            else ->                          R.id.color_option
         }).isChecked = true
     }
 
@@ -105,8 +105,6 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
             R.id.delete_selected_menu_item -> {
                 recyclerView.deleteSelectedItems()
                 true
-            } R.id.delete_all_menu_item -> {
-                recyclerView.deleteAll(); true
             } R.id.share_menu_item -> {
                 Dialog.shareList(items = if (recyclerView.selection.size != 0)
                                              recyclerView.selection.items!!
