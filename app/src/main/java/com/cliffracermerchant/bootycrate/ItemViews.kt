@@ -210,6 +210,7 @@ class InventoryItemView(context: Context) :
         detailsUi = InventoryItemDetailsBinding.bind(tempUi.root)
         ui.editButton.setOnClickListener { toggleExpanded() }
         ui.checkBox.inColorEditMode = true
+        ui.amountEdit.minValue = 0
     }
 
     override fun update(item: InventoryItem) {

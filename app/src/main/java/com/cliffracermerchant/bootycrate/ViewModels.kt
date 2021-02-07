@@ -49,7 +49,7 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
     private val sortOptionsChanged = MutableLiveData<Boolean>()
     protected fun notifySortOptionsChanged() { sortOptionsChanged.value = true }
     protected open fun itemsSwitchMapFunc(): LiveData<List<Entity>> {
-        val filter = "%${searchFilter}%"
+        val filter = "%${searchFilter ?: ""}%"
         return when (sort) {
             ViewModelItem.Sort.Color -> dao.getAllSortedByColor(filter)
             ViewModelItem.Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)

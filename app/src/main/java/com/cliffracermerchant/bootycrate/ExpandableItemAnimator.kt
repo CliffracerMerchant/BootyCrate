@@ -82,9 +82,9 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
                                preInfo: ItemHolderInfo, postInfo: ItemHolderInfo): Boolean {
         // If a view is being expanded or collapsed, oldHolder must be
         // equal to newHolder, and the heightChange must not be zero.
-        if (oldHolder != newHolder) return false
+        if (oldHolder != newHolder) return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
         val heightChange = postInfo.bottom - postInfo.top - preInfo.bottom + preInfo.top
-        if (heightChange == 0) return false
+        if (heightChange == 0) return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
 
         // Animate the height change of the view
         val view = newHolder.itemView
