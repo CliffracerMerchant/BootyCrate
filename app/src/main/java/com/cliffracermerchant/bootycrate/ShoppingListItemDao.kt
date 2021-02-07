@@ -38,6 +38,31 @@ import androidx.room.*
               ORDER BY amount DESC""")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter)
+              ORDER BY isChecked, color""")
+    abstract fun getAllSortedByColorAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter)
+              ORDER BY isChecked, name COLLATE NOCASE ASC""")
+    abstract fun getAllSortedByNameAscAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter) 
+              ORDER BY isChecked, name COLLATE NOCASE DESC""")
+    abstract fun getAllSortedByNameDescAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter) 
+              ORDER BY isChecked, amount ASC""")
+    abstract fun getAllSortedByAmountAscAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter) 
+              ORDER BY isChecked, amount DESC""")
+    abstract fun getAllSortedByAmountDescAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+    
     @Query("""SELECT EXISTS(SELECT * FROM shopping_list_item
                             WHERE (name = :name AND extraInfo = :extraInfo)
                             AND NOT inTrash)""")

@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.ActionBar
+import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.shopping_list_fragment.*
 import kotlinx.android.synthetic.main.shopping_list_fragment.view.*
 
@@ -46,6 +47,12 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner)
             { newSize -> activity.checkoutButton.isEnabled = newSize != 0 }
+
+        val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val sortByChecked = prefs.getBoolean(sortByCheckedPrefKey, false)
+        recyclerView.sortByChecked = sortByChecked
+
         super.onViewCreated(view, savedInstanceState)
     }
 

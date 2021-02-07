@@ -18,6 +18,19 @@ import java.util.concurrent.atomic.AtomicLong
  *  ter allow the view model user to modify the sorting or filtering used in
  *  retrieving the items.
  *
+ *  ViewModel provides subclasses an API for adding new sort methods through
+ *  the functions notifySortOptionsChanged and itemsSwitchMapFunc. Subclasses
+ *  can add properties that affect sorting, and then utilize them in their over-
+ *  ride of itemsSwitchMapFunc. itemsSwitchMapFunc should return the appropri-
+ *  ate dao function for the chosen sorting method. Any time a subclass sorting
+ *  method property is changed, notifySortOptionsChanged must be called for the
+ *  change to take effect.
+ *
+ *  If the properties newItemName and newItemExtraInfo are updated with the
+ *  proposed name and extra info for a new item, the property newItemNameIs-
+ *  AlreadyUsed can be observed to tell if the name and extra info combination
+ *  is already in use by another item.
+ *
  *  ViewModel provides support for treating new items differently through the
  *  public property newlyAddedItemId. This value will change to match the id of
  *  the most recently added item. External entities can compare this value to
@@ -28,16 +41,16 @@ import java.util.concurrent.atomic.AtomicLong
 abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewModel(app) {
     protected abstract val dao: DataAccessObject<Entity>
 
-    var sort get() = sortAndFilterLiveData.value?.first
-        set(value) { sortAndFilterLiveData.value = Pair(value, searchFilter) }
-    var searchFilter get() = sortAndFilterLiveData.value?.second
-        set(value) { sortAndFilterLiveData.value = Pair(sort, value) }
-    private val sortAndFilterLiveData =
-        MutableLiveData(Pair<ViewModelItem.Sort?, String?>(ViewModelItem.Sort.Color, ""))
-    val items = Transformations.switchMap(sortAndFilterLiveData) { sortAndFilter ->
-        val filter = "%${sortAndFilter.second ?: ""}%"
-        when (sortAndFilter.first) {
-            null -> dao.getAllSortedByColor(filter)
+    var sort: ViewModelItem.Sort = ViewModelItem.Sort.Color
+        set(value) { field = value; notifySortOptionsChanged() }
+    var searchFilter: String? = null
+        set(value) { field = value; notifySortOptionsChanged() }
+
+    private val sortOptionsChanged = MutableLiveData<Boolean>()
+    protected fun notifySortOptionsChanged() { sortOptionsChanged.value = true }
+    protected open fun itemsSwitchMapFunc(): LiveData<List<Entity>> {
+        val filter = "%${searchFilter}%"
+        return when (sort) {
             ViewModelItem.Sort.Color -> dao.getAllSortedByColor(filter)
             ViewModelItem.Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)
             ViewModelItem.Sort.NameDesc -> dao.getAllSortedByNameDesc(filter)
@@ -45,17 +58,16 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
             ViewModelItem.Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
         }
     }
+    val items = Transformations.switchMap(sortOptionsChanged) { itemsSwitchMapFunc() }
 
-    var newItemName get() = newItemNameLiveData.value?.first
-        set(value) { newItemNameLiveData.value = Pair(value, newItemExtraInfo) }
-    var newItemExtraInfo get() = newItemNameLiveData.value?.second
-        set(value) { newItemNameLiveData.value = Pair(newItemName, value) }
-    private val newItemNameLiveData = MutableLiveData(Pair<String?, String?>("", ""))
-    val newItemNameIsAlreadyUsed =
-        Transformations.switchMap(newItemNameLiveData) { newItemNameAndExtraInfo ->
-            dao.itemWithNameAlreadyExists(newItemNameAndExtraInfo.first ?: "",
-                                          newItemNameAndExtraInfo.second ?: "")
-        }
+    var newItemName: String? = null
+        set(value) { field = value; newItemNameChanged.value = true }
+    var newItemExtraInfo: String? = null
+        set(value) { field = value; newItemNameChanged.value = true }
+    private val newItemNameChanged = MutableLiveData<Boolean>()
+    val newItemNameIsAlreadyUsed = Transformations.switchMap(newItemNameChanged) {
+            dao.itemWithNameAlreadyExists(newItemName ?: "", newItemExtraInfo ?: "")
+    }
     fun resetNewItemName() { newItemName = null; newItemExtraInfo = null }
 
     private var _newlyAddedItemId = AtomicLong()
@@ -87,6 +99,7 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
         dao.updateAmount(id, amountOnList)
     }
 }
+
 
 /** An extension of ViewModel that provides access to ExpandableSelectableItemDao methods.
  *
@@ -120,10 +133,26 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
     fun clearSelection() = viewModelScope.launch { dao.clearSelection() }
 }
 
+
 /** A ViewModel<ShoppingListItem> subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
 class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewModel<ShoppingListItem>(app) {
     override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
     val checkedItemsSize = dao.getCheckedItemsSize()
+
+    var sortByChecked = false
+        set(value) { field = value; notifySortOptionsChanged() }
+
+    override fun itemsSwitchMapFunc(): LiveData<List<ShoppingListItem>> {
+        val filter = "%${searchFilter}%"
+        return if (sortByChecked) when (sort) {
+            ViewModelItem.Sort.Color -> dao.getAllSortedByColorAndChecked(filter)
+            ViewModelItem.Sort.NameAsc -> dao.getAllSortedByNameAscAndChecked(filter)
+            ViewModelItem.Sort.NameDesc -> dao.getAllSortedByNameDescAndChecked(filter)
+            ViewModelItem.Sort.AmountAsc -> dao.getAllSortedByAmountAscAndChecked(filter)
+            ViewModelItem.Sort.AmountDesc -> dao.getAllSortedByAmountDescAndChecked(filter)
+        }
+        else super.itemsSwitchMapFunc()
+    }
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
@@ -139,6 +168,7 @@ class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewMode
 
     fun checkout() = viewModelScope.launch { dao.checkout() }
 }
+
 
 /** A ViewModel<InventoryItem> subclass that provides functions to asynchronously execute InventoryItemDao's functions. */
 class InventoryViewModel(app: Application) : ExpandableSelectableItemViewModel<InventoryItem>(app) {

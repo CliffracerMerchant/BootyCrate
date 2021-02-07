@@ -22,11 +22,15 @@ import kotlin.collections.set
  *  specialized for displaying the contents of a shopping list. Several of
  *  ShoppingListRecyclerView's necessary fields can not be obtained when it
  *  is inflated from XML, such as its view models. To finish initialization
- *  with these required members, the function finishInit MUST be called during
+ *  with these required members, the function finishInit must be called during
  *  runtime, but before any sort of data access is attempted. ShoppingListRecy-
  *  clerView's version of finishInit will call ExpandableSelectableRecycler-
  *  View's version to prevent the implementing activity or fragment from nee-
- *  ding to call both. */
+ *  ding to call both.
+ *
+ *  ShoppingListRecyclerView adds a sortByChecked property, which mirrors the
+ *  ShoppingListViewModel property, for convenience. sortByChecked should not
+ *  be changed before finishInit is called, or an exception will be thrown. */
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs) {
     override val diffUtilCallback = ShoppingListDiffUtilCallback()
@@ -35,6 +39,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     private lateinit var shoppingListViewModel: ShoppingListViewModel
     private lateinit var inventoryViewModel: InventoryViewModel
     val checkedItems = CheckedItems()
+
+    var sortByChecked get() = shoppingListViewModel.sortByChecked
+        set(value) { shoppingListViewModel.sortByChecked = value }
 
     fun finishInit(
         owner: LifecycleOwner,

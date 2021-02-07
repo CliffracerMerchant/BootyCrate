@@ -65,8 +65,8 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     private lateinit var viewModel: ViewModel<Entity>
     var snackBarAnchor: View? = null
 
-    var sort: ViewModelItem.Sort? get() = viewModel.sort
-                                  set(value) { viewModel.sort = value }
+    var sort get() = viewModel.sort
+             set(value) { viewModel.sort = value }
     var searchFilter: String? get() = viewModel.searchFilter
                               set(value) { viewModel.searchFilter = value }
 

@@ -94,5 +94,7 @@
     <string name="check_all_description">Check all</string>
     <string name="uncheck_all_description">Uncheck all</string>
     <string name="no_search_results_message">No items match the query</string>
+    <string name="sort_by_checked_description">Sort by checked</string>
+    <string name="sort_by_checked_summary">Move checked items to the bottom of the shopping list.</string>
 
 </resources>

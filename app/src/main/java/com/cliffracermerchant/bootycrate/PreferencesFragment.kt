@@ -10,6 +10,7 @@ import android.view.Menu
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreferenceCompat
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
 /** A fragment to display the BootyCrate app settings.
@@ -44,7 +45,11 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         when (preference?.key) {
-            getString(R.string.pref_about_app) ->       Dialog.aboutApp()
+            getString(R.string.pref_sort_by_checked) -> {
+                val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
+                (activity as? MainActivity)?.shoppingListViewModel?.sortByChecked = sortByChecked
+            }
+            getString(R.string.pref_about_app) -> Dialog.aboutApp()
             getString(R.string.pref_open_source_libraries_used) -> {
                 val context = activity ?: return false
                 startActivity(Intent(context, OssLicensesMenuActivity::class.java))
