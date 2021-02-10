@@ -11,13 +11,13 @@ import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracermerchant.bootycrate.databinding.InventoryItemBinding
 import com.cliffracermerchant.bootycrate.databinding.InventoryItemDetailsBinding
@@ -139,12 +139,12 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             // can set its editable state before it becomes visible to
             // prevent needing to animate its change in editable state.
             if (expanded) ui.extraInfoEdit.setEditable(editable = true, animate = false)
-            ui.extraInfoEdit.visibility = if (expanded) View.VISIBLE else View.GONE
+            ui.extraInfoEdit.isVisible = expanded
         }
         else ui.extraInfoEdit.isEditable = expanded
         ui.editButton.isActivated = expanded
-        ui.amountEditSpacer.visibility = if (expanded) View.GONE else View.VISIBLE
-        ui.linkIndicator.visibility = if (expanded && itemIsLinked) View.VISIBLE else View.GONE
+        ui.amountEditSpacer.isVisible = !expanded
+        ui.linkIndicator.isVisible = expanded && itemIsLinked
     }
 
     fun select() = setSelectedState(true)
@@ -223,9 +223,6 @@ class InventoryItemView(context: Context) :
         super.setExpanded(expanded)
         if (!expanded && detailsUi.addToShoppingListTriggerEdit.valueEdit.isFocused)
             imm?.hideSoftInputFromWindow(windowToken, 0)
-
-        val visibility = if (expanded) View.VISIBLE
-        else          View.GONE
-        detailsUi.inventoryItemDetailsGroup.visibility = visibility
+        detailsUi.inventoryItemDetailsGroup.isVisible = expanded
     }
 }

@@ -12,13 +12,13 @@ import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
 import android.os.Bundle
-import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
+import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -56,7 +56,6 @@ open class MainActivity : AppCompatActivity() {
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var addButton: OutlinedGradientButton
     lateinit var checkoutButton: CheckoutButton
-    lateinit var menu: Menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -86,10 +85,8 @@ open class MainActivity : AppCompatActivity() {
             else -> if (sysDarkThemeIsActive) R.style.DarkTheme
                     else                      R.style.LightTheme
         })
-
         setContentView(R.layout.activity_main)
-        setSupportActionBar(topActionBar)
-        supportActionBar?.setDisplayShowTitleEnabled(false)
+
         addButton = add_button
         checkoutButton = checkout_button
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
@@ -125,15 +122,18 @@ open class MainActivity : AppCompatActivity() {
         shoppingListViewModel.items.observe(this) { newList ->
             updateShoppingListBadge(newList)
         }
-    }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.action_bar_menu, menu)
-        super.onCreateOptionsMenu(menu)
-        this.menu = menu
-        shoppingListFragment.initOptionsMenu(menu)
-        inventoryFragment.initOptionsMenu(menu)
-        return true
+        topActionBar.ui.backButton.setOnClickListener { onSupportNavigateUp() }
+        onCreateOptionsMenu(topActionBar.optionsMenu)
+        topActionBar.onDeleteButtonClickedListener = {
+            onOptionsItemSelected(topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
+        }
+        topActionBar.setOnSortOptionClickedListener { item ->
+            onOptionsItemSelected(item)
+        }
+        topActionBar.setOnOptionsItemClickedListener { item ->
+            onOptionsItemSelected(item)
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -149,7 +149,7 @@ open class MainActivity : AppCompatActivity() {
             showPreferencesFragment()
             return true
         }
-        return false
+        return activeFragment.onOptionsItemSelected(item)
     }
 
     override fun onSupportNavigateUp() = when {
@@ -234,7 +234,7 @@ open class MainActivity : AppCompatActivity() {
         if (checkoutButtonIsVisible == showing) return
 
         checkoutButtonIsVisible = showing
-        checkoutButton.visibility = if (showing) View.VISIBLE else View.GONE
+        checkoutButton.isVisible = showing
 
         val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         cradleLayout.measure(wrapContentSpec, wrapContentSpec)

@@ -65,7 +65,12 @@
         <attr name="valueIsDirectlyEditable" format="boolean" />
     </declare-styleable>
 
-    <declare-styleable name="TopActionBar">
+    <declare-styleable name="RecyclerViewActionBar">
+        <attr name="changeSortMenuResId" format="reference" />
+        <attr name="optionsMenuResId" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="GradientActionBar">
         <attr name="bottomBorderWidth" format="dimension" />
     </declare-styleable>
 

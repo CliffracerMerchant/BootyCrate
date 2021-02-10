@@ -6,9 +6,8 @@ package com.cliffracermerchant.bootycrate
 
 import android.os.Bundle
 import android.view.*
-import android.widget.TextView
-import androidx.appcompat.app.ActionBar
 import kotlinx.android.synthetic.main.inventory_fragment.*
+import kotlinx.android.synthetic.main.activity_main.*
 
 /** A fragment to display and modify the user's inventory.
  *
@@ -39,6 +38,7 @@ class InventoryFragment(isActive: Boolean = false) :
     override fun onActiveStateChanged(active: Boolean) {
         super.onActiveStateChanged(active)
         if (active) {
+            val activity = activity as? MainActivity ?: return
             activity.addButton.setOnClickListener {
 //                NewInventoryItemDialog(activity, activity.inventoryViewModel)
 //                    .show(activity.supportFragmentManager, null)
@@ -49,6 +49,7 @@ class InventoryFragment(isActive: Boolean = false) :
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return if (item.itemId == R.id.add_to_shopping_list_button) {
+            val activity = activity as? MainActivity ?: return false
             activity.shoppingListViewModel.addFromSelectedInventoryItems()
             actionMode.finishAndClearSelection()
             true
@@ -57,19 +58,19 @@ class InventoryFragment(isActive: Boolean = false) :
 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
         super.setOptionsMenuItemsVisible(showing)
-        menu?.setGroupVisible(R.id.inventory_view_menu_group, showing)
+        mainActivity?.topActionBar?.optionsMenu?.setGroupVisible(R.id.inventory_view_menu_group, showing)
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */
-    inner class InventoryActionMode() : RecyclerViewFragment<InventoryItem>.RecyclerViewActionMode() {
-        override fun onStart(actionBar: ActionBar, menu: Menu, titleView: TextView?) {
-            super.onStart(actionBar, menu, titleView)
-            menu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
+    inner class InventoryActionMode() : RecyclerViewFragment<InventoryItem>.ActionMode() {
+        override fun onStart(actionBar: RecyclerViewActionBar) {
+            super.onStart(actionBar)
+            actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
         }
 
-        override fun onFinish(actionBar: ActionBar, menu: Menu, titleView: TextView?) {
-            super.onFinish(actionBar, menu, titleView)
-            menu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, false)
+        override fun onFinish(actionBar: RecyclerViewActionBar) {
+            super.onFinish(actionBar)
+            actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, false)
         }
     }
 }

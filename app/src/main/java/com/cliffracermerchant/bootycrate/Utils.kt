@@ -5,6 +5,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.LayoutTransition
+import android.graphics.Bitmap
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -61,3 +62,7 @@ fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, move
         pos - moveCount
     else pos
 }
+
+fun Bitmap.getPixelAtCenter(view: View) = getPixel(view.centerX(), view.centerY())
+fun View.centerX() = left + width / 2
+fun View.centerY() = top + height / 2

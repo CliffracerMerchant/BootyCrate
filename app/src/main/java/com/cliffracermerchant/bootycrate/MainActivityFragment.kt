@@ -26,27 +26,16 @@ import androidx.fragment.app.Fragment
  *  being switched to, in that order. The current active / inactive state of
  *  the fragment can be queried and set via the property isActive.
  *
- *  Because onCreateOptionsMenu is typically called after the activities and /
- *  or fragments containing the menu are visible, the function initOptionsMenu
- *  should be called with an instance of the menu when it is ready. It is up
- *  to the activities and / or fragment manager subclasses that use MainActivi-
- *  tyFragments to call initOptionsMenu and onActiveStateChanged at the appro-
- *  priate times.
- *
  *  onPrepareOptionsMenu is only called when the user clicks on the options
  *  menu overflow button, and is therefore not an appropriate place to hide
  *  menu items that are displayed in the action bar instead of in the overflow
  *  menu. The open function setOptionsMenuItemsVisible(showing = false) is
  *  called when the fragment is set to inactive, and is likewise called with
  *  showing = true when the fragment is set to active. Subclasses can override
- *  this function with their own implementation (still calling the original
- *  implementation via super.setOptionsMenuItemsVisible()) to customize how the
- *  options menu appears when they are visible. setOptionsMenuItemsVisible does
- *  not need to be called manually, as the default implementation of onActive-
- *  StateChanged will call it, and initOptionsMenu will call it when the
- *  options menu is initialized. */
+ *  this function with their own implementation to customize how the options
+ *  menu appears when they are visible. */
 open class MainActivityFragment(isActive: Boolean = false): Fragment() {
-    protected var menu: Menu? = null
+    val mainActivity get() = activity as? MainActivity
     var isActive: Boolean = isActive
         set(value) { field = value
                      onActiveStateChanged(value) }
@@ -64,12 +53,6 @@ open class MainActivityFragment(isActive: Boolean = false): Fragment() {
 
     protected open fun onActiveStateChanged(active: Boolean) =
         setOptionsMenuItemsVisible(active)
-
-    fun initOptionsMenu(menu: Menu) {
-        if (this.menu != null) return
-        this.menu = menu
-        setOptionsMenuItemsVisible(isVisible)
-    }
 
     protected open fun setOptionsMenuItemsVisible(showing: Boolean) { }
 }

@@ -4,43 +4,23 @@
   ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
   ~  or in the file LICENSE in the project's root directory. -->
 
+<!--suppress AndroidElementNotAllowed -->
 <menu xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:android="http://schemas.android.com/apk/res/android">
 
 <group android:id="@+id/all_action_bar_items_group">
 
-    <item android:id="@+id/app_bar_search"
-          android:title="@string/search_description"
-          android:icon="@drawable/ic_search_black_24dp"
-          app:actionViewClass="androidx.appcompat.widget.SearchView"
-          app:showAsAction="ifRoom|collapseActionView" />
-
-    <item android:id="@+id/change_sorting_menu_item"
-          android:title="@string/change_sorting_description"
-          android:icon="@drawable/ic_bx_sort_down"
-          app:showAsAction="always" >
-        <menu android:id="@+id/change_sorting_menu">
-            <group android:id="@+id/sorting_options_group"
-                   android:checkableBehavior="single" >
-                <item android:id="@+id/color_option"
-                      android:title="@string/color_description" />
-                <item android:id="@+id/name_ascending_option"
-                      android:title="@string/name_ascending_description" />
-                <item android:id="@+id/name_descending_option"
-                      android:title="@string/name_descending_description" />
-                <item android:id="@+id/amount_ascending_option"
-                      android:title="@string/amount_ascending_description" />
-                <item android:id="@+id/amount_descending_option"
-                      android:title="@string/amount_descending_description" />
-            </group>
-        </menu>
-    </item>
-
     <item android:id="@+id/delete_selected_menu_item"
           android:title="@string/delete_selected_items_description"
           android:icon="@drawable/ic_delete_black_24dp"
-          app:showAsAction="always"
           android:visible="false" />
+
+    <group android:id="@+id/shopping_list_view_action_mode_menu_group"
+        android:visible="false" >
+        <item android:id="@+id/add_to_inventory_button"
+            android:title="@string/add_to_inventory_description"
+            app:showAsAction="never" />
+    </group>
 
     <group android:id="@+id/shopping_list_view_menu_group"
            android:visible="false">
@@ -52,23 +32,16 @@
             app:showAsAction="never" />
     </group>
 
-    <group android:id="@+id/shopping_list_view_action_mode_menu_group"
-           android:visible="false" >
-        <item android:id="@+id/add_to_inventory_button"
-              android:title="@string/add_to_inventory_description"
-              app:showAsAction="never" />
-    </group>
-
-    <group android:id="@+id/inventory_view_menu_group"
-        android:visible="false" >
-    </group>
-
     <group android:id="@+id/inventory_view_action_mode_menu_group"
         android:visible="false" >
         <item android:id="@+id/add_to_shopping_list_button"
             android:title="@string/add_to_shopping_list_description"
             android:visible="false"
             app:showAsAction="never" />
+    </group>
+
+    <group android:id="@+id/inventory_view_menu_group"
+        android:visible="false" >
     </group>
 
 </group>

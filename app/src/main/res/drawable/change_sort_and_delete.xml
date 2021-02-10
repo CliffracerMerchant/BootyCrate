@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/delete_state"
+        android:state_activated="true"
+        android:drawable="@drawable/animated_delete_to_sort" />
+
+    <item android:id="@+id/change_sort_state"
+        android:drawable="@drawable/animated_sort_to_delete" />
+
+    <transition
+        android:fromId="@id/change_sort_state"
+        android:toId="@id/delete_state"
+        android:drawable="@drawable/animated_sort_to_delete" />
+
+    <transition
+        android:fromId="@id/delete_state"
+        android:toId="@id/change_sort_state"
+        android:drawable="@drawable/animated_delete_to_sort" />
+
+</animated-selector>
