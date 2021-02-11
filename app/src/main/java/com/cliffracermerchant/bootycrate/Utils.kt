@@ -6,6 +6,9 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.LayoutTransition
 import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.graphics.Rect
+import android.graphics.Shader
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -66,3 +69,19 @@ fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, move
 fun Bitmap.getPixelAtCenter(view: View) = getPixel(view.centerX(), view.centerY())
 fun View.centerX() = left + width / 2
 fun View.centerY() = top + height / 2
+
+internal object UtilsPrivate {
+    val matrix = Matrix()
+    val matrixValues = FloatArray(9)
+    val rect = Rect()
+}
+
+/** Translate the shader by dx, dy; will not affect the Shader's scale transform.*/
+fun Shader.offsetAfterMoveTo(dx: Float, dy: Float) {
+    getLocalMatrix(UtilsPrivate.matrix)
+    UtilsPrivate.matrix.getValues(UtilsPrivate.matrixValues)
+    UtilsPrivate.matrixValues[2] = -dx
+    UtilsPrivate.matrixValues[5] = -dy
+    UtilsPrivate.matrix.setValues(UtilsPrivate.matrixValues)
+    setLocalMatrix(UtilsPrivate.matrix)
+}

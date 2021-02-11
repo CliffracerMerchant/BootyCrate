@@ -5,8 +5,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
-import android.graphics.Paint
-import android.graphics.Shader
+import android.graphics.*
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
@@ -119,10 +118,22 @@ class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewAct
     }
 }
 
-/** A TextSwitcher that comes with two text views, passes xml attributes on to these text views,
- * and preconfigures short fade in and out animations.*/
-class PrefilledTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitcher(context, attrs) {
+/** A preconfigured TextSwitcher that comes with two text views and a property that allows setting a paint shader for both TextViews at once.
+ *
+ *  ShaderTextSwitcher is a TextSwitcher that adds two TextViews, passes xml
+ *  attributes on to these text views, preconfigures short fade in and out anim-
+ *  ations, and allows setting a Shader object to the shader property. Setting
+ *  this property will apply the shader to both member TextViews. If the Shader-
+ *  TextSwitcher is moved during a layout, the shader will be offset to create
+ *  the appearance that the shader is set in global coordinates, and the Text-
+ *  Views are moving relative to it, instead of the shader moving with the Text-
+ *  Views. */
+class ShaderTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitcher(context, attrs) {
     val text get() = (currentView as TextView).text.toString()
+    var shader get() = (currentView as TextView).paint.shader
+        set(value) { (currentView as TextView).paint.shader = value
+                     (nextView as TextView).paint.shader = value }
+
     init {
         addView(TextView(context, attrs))
         addView(TextView(context, attrs))
@@ -135,5 +146,12 @@ class PrefilledTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitche
         val font = ResourcesCompat.getFont(context, fontId)
         (currentView as TextView).typeface = font
         (nextView as TextView).typeface = font
+
+        addOnLayoutChangeListener { _, left, top, _, _, _, _, _, _ ->
+            val textView = currentView as TextView
+            if (textView.paint.shader == null) return@addOnLayoutChangeListener
+            val textTop = top.toFloat() + textView.baseline + textView.paint.fontMetrics.top
+            textView.paint.shader.offsetAfterMoveTo(left * -1f, -textTop)
+        }
     }
 }

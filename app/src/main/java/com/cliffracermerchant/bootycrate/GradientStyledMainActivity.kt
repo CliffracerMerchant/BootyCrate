@@ -73,8 +73,7 @@ class GradientStyledMainActivity : MainActivity() {
 
         topActionBar.backgroundGradient = topBgGradient
         topActionBar.borderGradient = topFgGradient
-        (topActionBar.ui.customTitle.currentView as TextView).paint.shader = topFgGradient
-        (topActionBar.ui.customTitle.nextView as TextView).paint.shader = topFgGradient
+        topActionBar.ui.customTitle.shader = BitmapShader(topFgGradientBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
 
         bottomAppBar.backgroundGradient = bottomBgGradient
         bottomAppBar.borderGradient = bottomFgGradient
@@ -90,9 +89,12 @@ class GradientStyledMainActivity : MainActivity() {
             checkoutButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
             checkoutButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
 
-            // Home as up icon
+            // Back icon
+            val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            topActionBar.ui.backButton.measure(wrapContent, wrapContent)
             topActionBar.ui.backButton.drawable.setTint(
-                topFgGradientBitmap.getPixelAtCenter(topActionBar.ui.backButton))
+                topFgGradientBitmap.getPixel(topActionBar.ui.backButton.measuredHeight / 2,
+                                             topActionBar.height / 2))
 
             // Search view
             val searchView = topActionBar.ui.searchView

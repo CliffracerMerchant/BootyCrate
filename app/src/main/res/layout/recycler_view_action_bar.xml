@@ -22,7 +22,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.cliffracermerchant.bootycrate.PrefilledTextSwitcher
+    <com.cliffracermerchant.bootycrate.ShaderTextSwitcher
         android:id="@+id/customTitle"
         style="@style/CustomTitle"
         android:layout_width="0dp"
