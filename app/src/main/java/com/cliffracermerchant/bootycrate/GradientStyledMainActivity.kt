@@ -7,15 +7,13 @@ package com.cliffracermerchant.bootycrate
 import android.content.res.ColorStateList
 import android.graphics.*
 import android.os.Bundle
-import android.os.Handler
 import android.util.TypedValue
-import android.view.Menu
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
-import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.doOnNextLayout
 import kotlinx.android.synthetic.main.activity_main.*
 
 /** A styled subclass of MainActivity.
@@ -25,37 +23,16 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  and bottom action bar) are impossible to accomplish in XML. GradientStyled-
  *  MainActivity performs additional operations to initialize its style. */
 class GradientStyledMainActivity : MainActivity() {
-    private val handler = Handler()
-    private var menuIconInitializationErrors = 0
-
-    lateinit var topFgGradientBitmap: Bitmap
-    lateinit var bottomFgGradientBitmap: Bitmap
-    lateinit var topBgGradient: Shader
-    lateinit var topFgGradient: Shader
-    lateinit var bottomBgGradient: Shader
-    lateinit var bottomFgGradient: Shader
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        initGradients()
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        return if (super.onCreateOptionsMenu(menu)) {
-            initOptionsMenuIcons()
-            true
-        }
-        else false
-    }
-
-    private fun initGradients() {
         val screenWidth = resources.displayMetrics.widthPixels
         val typedValue = TypedValue()
         theme.resolveAttribute(R.attr.actionBarSize, typedValue, true)
         val actionBarHeight = typedValue.getDimension(resources.displayMetrics)
 
         // Foreground colors
-        val colors = IntArray(4)
+        var colors = IntArray(4)
         colors[0] = ContextCompat.getColor(this, R.color.colorPrimary)
         colors[1] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1)
         colors[2] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2)
@@ -74,15 +51,15 @@ class GradientStyledMainActivity : MainActivity() {
         val dimmedColors = IntArray(4) { ColorUtils.compositeColors(ColorUtils.setAlphaComponent(colors[it], alpha), blendColor) }
 
         val gradientBuilder = GradientBuilder()
-        topFgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight).
+        val topFgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight).
         setX2(screenWidth * 0.8f).setY2(actionBarHeight * 1.25f).
         setColors(colors).buildRadialGradient()
-        topBgGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
-        bottomBgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight * 0.25f).buildRadialGradient()
-        bottomFgGradient = gradientBuilder.setColors(colors).buildRadialGradient()
+        val topBgGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
+        val bottomBgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight * 0.25f).buildRadialGradient()
+        val bottomFgGradient = gradientBuilder.setColors(colors).buildRadialGradient()
 
-        topFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
-        bottomFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+        val topFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+        val bottomFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(topFgGradientBitmap)
         val paint = Paint()
         paint.style = Paint.Style.FILL
@@ -95,7 +72,7 @@ class GradientStyledMainActivity : MainActivity() {
 
         topActionBar.backgroundGradient = topBgGradient
         topActionBar.borderGradient = topFgGradient
-        customTitle.paint.shader = topFgGradient
+        topActionBar.ui.customTitle.shader = BitmapShader(topFgGradientBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
 
         bottomAppBar.backgroundGradient = bottomBgGradient
         bottomAppBar.borderGradient = bottomFgGradient
@@ -104,96 +81,51 @@ class GradientStyledMainActivity : MainActivity() {
         addButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
         addButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
 
-        val rect = Rect()
-        checkoutButton.getGlobalVisibleRect(rect)
-        gradientBuilder.setX1(screenWidth / 2f - bottomAppBar.cradleWidth / 2f)
-        checkoutButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
-        checkoutButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
-    }
-
-    private fun initOptionsMenuIcons() {
-        /* Because the action bar's items are set to have instances of GradientVectorDrawable
-           as icons, and because GradientVectorDrawable needs to know the on screen position
-           of the view that uses it in order to offset the gradient used as a background by
-           the opposite amount, the views that contain the menu items must be initialized
-           when this work is done. Unfortunately this is sometimes not the case when onCreate-
-           OptionsMenu, which calls this function, is called. According to this SO answer
-           https://stackoverflow.com/a/33337827/9653167 this happens because the view init-
-           ialization is added to the message queue, and consequently is not performed imm-
-           ediately. Posting the following work to the message queue should result in it
-           being performed after the menu view initialization is finished.
-
-           EDIT: This method sometimes still does not work (only sometimes during activity
-           recreations?). Using menuIconInitializationErrors as a counter, the initialization
-           work is attempted up to three times, and is aborted thereafter to prevent the
-           execution from getting stuck in a loop.*/
-        var finished = false
-        handler.post {
+        coordinatorLayout.doOnNextLayout {
             val rect = Rect()
+            checkoutButton.getGlobalVisibleRect(rect)
+            gradientBuilder.setX1(screenWidth / 2f - bottomAppBar.cradleWidth / 2f)
+            checkoutButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
+            checkoutButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
 
-            // Home as up icon
-            ContextCompat.getDrawable(this, R.drawable.ic_arrow_back_black_24dp)?.apply {
-                setTint(topFgGradientBitmap.getPixel(topActionBar.height / 2, topActionBar.height / 2))
-                supportActionBar?.setHomeAsUpIndicator(this)
-                topActionBar.collapseIcon = this
-            }
-
-            // Change sort icon
-            val changeSortButton = topActionBar.findViewById<View>(
-                R.id.change_sorting_menu_item) ?: return@post
-            changeSortButton.getDrawingRect(rect)
-            var menuItem = menu.findItem(R.id.change_sorting_menu_item) ?: return@post
-            var color = topFgGradientBitmap.getPixel(rect.centerX(), rect.centerY())
-            menuItem.icon.setTint(color)
+            // Back icon
+            val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            topActionBar.ui.backButton.measure(wrapContent, wrapContent)
+            topActionBar.ui.backButton.drawable.setTint(
+                topFgGradientBitmap.getPixel(topActionBar.ui.backButton.measuredHeight / 2,
+                                             topActionBar.height / 2))
 
             // Search view
-            menuItem = menu.findItem(R.id.app_bar_search) ?: return@post
-            val searchView = menuItem.actionView as SearchView
-            // For some reason (maybe because the search action view is collapsed?),
-            // using the search button's position to get the color does not work.
-            // Instead we'll use the changeSortButton's position and offset by its
-            // width to approximate the searchButton's on screen position.
-            color = topFgGradientBitmap.getPixel(rect.centerX() + changeSortButton.width, rect.centerY())
-            menuItem.icon.setTint(color)
-            val searchClose = searchView.findViewById<ImageView>(
-                androidx.appcompat.R.id.search_close_btn) ?: return@post
-            searchClose.drawable.setTint(color)
-            val searchEditText = searchView.findViewById<EditText>(
-                androidx.appcompat.R.id.search_src_text) ?: return@post
-            val colors = intArrayOf(
-                ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1),
-                ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2))
+            val searchView = topActionBar.ui.searchView
+            val color = topFgGradientBitmap.getPixelAtCenter(searchView)
+            var view = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_button)
+            view?.drawable?.setTint(color)
+            view = searchView.findViewById(androidx.appcompat.R.id.search_close_btn)
+            view?.drawable?.setTint(color)
+            val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
+            colors = intArrayOf(ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1),
+                                ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2))
             searchEditText.paint.shader = LinearGradient(0f, searchEditText.height.toFloat(),
-                0f, 0f, colors, null, Shader.TileMode.CLAMP)
+                                                         0f, 0f, colors, null, Shader.TileMode.CLAMP)
 
-            // Delete icon
-            // When the action mode is active, the delete button should appear
-            // where the change sort button is normally, so we'll just use the
-            // change sort button's center instead of the delete button's.
-            menuItem = menu.findItem(R.id.delete_selected_menu_item) ?: return@post
-            menuItem.icon.setTint(color)
+            // Change sort icon
+            topActionBar.ui.changeSortButton.drawable.setTint(
+                topFgGradientBitmap.getPixelAtCenter(topActionBar.ui.changeSortButton))
 
             // Overflow icon
-            // It's hard to get the view that holds the overflow icon, so we just approximate its center.
-            color = topFgGradientBitmap.getPixel(
-                topActionBar.width - topActionBar.height / 2, topActionBar.height / 2)
-            topActionBar.overflowIcon?.setTint(color)
+            topActionBar.ui.menuButton.drawable.setTint(
+                topFgGradientBitmap.getPixelAtCenter(topActionBar.ui.menuButton))
 
             // BottomNavigationView active colors
             val shoppingListButton = bottomNavigationBar.findViewById<View>(R.id.shopping_list_button)
             shoppingListButton.getDrawingRect(rect)
             val inactiveColor = bottomNavigationBar.itemIconTintList?.defaultColor ?: 0
-            val activeColor = bottomFgGradientBitmap.getPixel(rect.centerX(), rect.centerY())
+            val activeColor = bottomFgGradientBitmap.getPixelAtCenter(shoppingListButton)
             val itemTintList = ColorStateList(
                 arrayOf(intArrayOf(android.R.attr.state_checked), IntArray(0)),
                 intArrayOf(activeColor, inactiveColor))
             bottomNavigationBar.itemIconTintList = itemTintList
             bottomNavigationBar.itemTextColor = itemTintList
-
-            finished = true
         }
-        if (!finished && ++menuIconInitializationErrors < 3)
-            handler.post { initOptionsMenuIcons() }
-        else menuIconInitializationErrors = 0
     }
 }

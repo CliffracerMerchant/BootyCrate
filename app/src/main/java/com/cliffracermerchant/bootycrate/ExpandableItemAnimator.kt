@@ -29,9 +29,9 @@ import androidx.recyclerview.widget.RecyclerView
  *  an adapter data observer for the adapter using the ExpandableItemAnimator
  *  instance as its item animator, will automatically update the expanded item
  *  position so that this doesn't need to be done manually. ExpandableItemAnim-
- *  ator will attempt to do this automatically, but if the parent recycler view
- *  does not have an adapter when ExpandableItemAnimator is constructed this
- *  will have to be done manually. */
+ *  ator will attempt to register itself automatically, but if the parent recy-
+ *  cler view does not have an adapter when ExpandableItemAnimator is construc-
+ *  ted this will have to be done manually. */
 class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultItemAnimator() {
     private val pendingAnimations = mutableListOf<Animator>()
     val expandedItemPos get() = _expandedItemPos
@@ -82,9 +82,9 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
                                preInfo: ItemHolderInfo, postInfo: ItemHolderInfo): Boolean {
         // If a view is being expanded or collapsed, oldHolder must be
         // equal to newHolder, and the heightChange must not be zero.
-        if (oldHolder != newHolder) return false
+        if (oldHolder != newHolder) return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
         val heightChange = postInfo.bottom - postInfo.top - preInfo.bottom + preInfo.top
-        if (heightChange == 0) return false
+        if (heightChange == 0) return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
 
         // Animate the height change of the view
         val view = newHolder.itemView

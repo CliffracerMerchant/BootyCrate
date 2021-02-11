@@ -38,6 +38,11 @@ import androidx.room.*
               ORDER BY amount DESC""")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
 
+    @Query("""SELECT EXISTS(SELECT * FROM inventory_item
+                            WHERE (name = :name AND extraInfo = :extraInfo)
+                            AND NOT inTrash)""")
+    abstract override fun itemWithNameAlreadyExists(name: String, extraInfo: String): LiveData<Boolean>
+
     @Query("SELECT * FROM inventory_item WHERE isSelected AND NOT inTrash")
     abstract override fun getSelectedItems(): LiveData<List<InventoryItem>>
 
@@ -102,6 +107,9 @@ import androidx.room.*
                   isSelected = 0
               WHERE isSelected""")
     abstract override suspend fun deleteSelected()
+
+    @Query("UPDATE inventory_item set isSelected = 1")
+    abstract override suspend fun selectAll()
 
     @Query("UPDATE inventory_item SET isSelected = 0")
     abstract override suspend fun clearSelection()

@@ -9,7 +9,6 @@
     xmlns:aapt="http://schemas.android.com/aapt">
     <aapt:attr name="android:drawable">
         <vector
-            android:name="vector"
             android:width="28dp"
             android:height="28dp"
             android:viewportWidth="28"

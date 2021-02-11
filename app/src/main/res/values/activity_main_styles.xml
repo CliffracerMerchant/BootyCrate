@@ -6,16 +6,17 @@
 
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="TopActionBar">
-        <item name="menu">@menu/action_bar_menu</item>
+        <item name="optionsMenuResId">@menu/action_bar_menu</item>
+        <item name="changeSortMenuResId">@menu/change_sort</item>
+        <item name="android:text">@string/app_name</item>
         <item name="bottomBorderWidth">?attr/borderWidth</item>
     </style>
 
     <style name="CustomTitle">
-        <item name="android:text">@string/app_name</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
         <item name="android:textSize">19sp</item>
-        <item name="android:fontFamily">@font/comfortaa</item>
+        <item name="fontFamily">@font/comfortaa</item>
     </style>
 
     <style name="BottomAppBar">

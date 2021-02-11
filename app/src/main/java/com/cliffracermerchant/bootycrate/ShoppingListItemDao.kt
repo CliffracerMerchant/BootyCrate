@@ -38,6 +38,36 @@ import androidx.room.*
               ORDER BY amount DESC""")
     abstract override fun getAllSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter)
+              ORDER BY isChecked, color""")
+    abstract fun getAllSortedByColorAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter)
+              ORDER BY isChecked, name COLLATE NOCASE ASC""")
+    abstract fun getAllSortedByNameAscAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter) 
+              ORDER BY isChecked, name COLLATE NOCASE DESC""")
+    abstract fun getAllSortedByNameDescAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter) 
+              ORDER BY isChecked, amount ASC""")
+    abstract fun getAllSortedByAmountAscAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+
+    @Query("""SELECT * FROM shopping_list_item WHERE NOT inTrash
+              AND (name LIKE :filter OR extraInfo LIKE :filter) 
+              ORDER BY isChecked, amount DESC""")
+    abstract fun getAllSortedByAmountDescAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+    
+    @Query("""SELECT EXISTS(SELECT * FROM shopping_list_item
+                            WHERE (name = :name AND extraInfo = :extraInfo)
+                            AND NOT inTrash)""")
+    abstract override fun itemWithNameAlreadyExists(name: String, extraInfo: String): LiveData<Boolean>
+
     @Query("SELECT * FROM shopping_list_item WHERE isSelected AND NOT inTrash")
     abstract override fun getSelectedItems(): LiveData<List<ShoppingListItem>>
 
@@ -103,6 +133,9 @@ import androidx.room.*
               WHERE isSelected""")
     abstract override suspend fun deleteSelected()
 
+    @Query("UPDATE shopping_list_item set isSelected = 1")
+    abstract override suspend fun selectAll()
+
     @Query("UPDATE shopping_list_item SET isSelected = 0")
     abstract override suspend fun clearSelection()
 
@@ -110,6 +143,9 @@ import androidx.room.*
               SET isChecked = :isChecked
               WHERE id = :id""")
     abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
+
+    @Query("UPDATE shopping_list_item SET isChecked = 1")
+    abstract suspend fun checkAll()
 
     @Query("UPDATE shopping_list_item SET isChecked = 0")
     abstract suspend fun uncheckAll()

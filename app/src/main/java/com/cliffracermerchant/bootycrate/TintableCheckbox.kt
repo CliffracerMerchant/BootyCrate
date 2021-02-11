@@ -17,20 +17,22 @@ import androidx.core.content.ContextCompat
 
 /** A button that acts as a checkbox with easily an customizable color.
  *
- *  CheckboxAndColorEdit acts as a tinted checkbox that can be toggled between
- *  a normal checkbox mode (where the checked state can be toggled) and a color
+ *  TintableCheckbox acts as a tinted checkbox that can be toggled between a
+ *  normal checkbox mode (where the checked state can be toggled) and a color
  *  editing mode (where the checkbox will morph into a tinted circle, and a
  *  click will open a color picker dialog). The mode is changed via the pro-
- *  perty isEditable, while the current color is changed through the property
- *  color.*/
-class CheckboxAndColorEdit(context: Context, attrs: AttributeSet) :
+ *  perty inColorEditMode, while the current color is changed through the
+ *  property color (or colorIndex if setting the color to an value of View-
+ *  ModelItem.Colors is preferred. */
+class TintableCheckbox(context: Context, attrs: AttributeSet) :
     AppCompatImageButton(context, attrs)
 {
     var inColorEditMode = false
         set(value) { field = value
                      refreshDrawableState() }
-    var isChecked = false
-        set(checked) { field = checked
+    private var _isChecked = false
+    var isChecked get() = _isChecked
+        set(checked) { _isChecked = checked
                        val newState = android.R.attr.state_checked * if (checked) 1 else -1
                        setImageState(intArrayOf(newState), true)
                        onCheckedChangedListener?.invoke(checked) }
@@ -41,9 +43,11 @@ class CheckboxAndColorEdit(context: Context, attrs: AttributeSet) :
     private var _color = 0
     var color get() = _color
               set(value) { setColor(value) }
+    var colorIndex get() = ViewModelItem.Colors.indexOf(color)
+                   set(value) = setColorIndex(value)
 
     init {
-        setImageDrawable(ContextCompat.getDrawable(context, R.drawable.color_changing_checkbox))
+        setImageDrawable(ContextCompat.getDrawable(context, R.drawable.tintable_checkbox))
         val checkMarkDrawable = (drawable as LayerDrawable).getDrawable(1)
         checkMarkDrawable.setTint(ContextCompat.getColor(context, android.R.color.black))
         setOnClickListener {
@@ -55,17 +59,24 @@ class CheckboxAndColorEdit(context: Context, attrs: AttributeSet) :
         }
     }
 
-    fun setColorIndex(colorIndex: Int, animate: Boolean = false) {
-        val index = colorIndex.coerceIn(ViewModelItem.Colors.indices)
-        setColor(ViewModelItem.Colors[index], animate)
-    }
-
     fun setColor(color: Int, animate: Boolean = false) {
         val checkboxBackground = (drawable as LayerDrawable).getDrawable(0)
         if (!animate) checkboxBackground.setTint(color)
         else ObjectAnimator.ofArgb(checkboxBackground, "tint", color).start()
         _color = color
         onColorChangedListener?.invoke(color)
+    }
+
+    fun setColorIndex(colorIndex: Int, animate: Boolean = false) {
+        val index = colorIndex.coerceIn(ViewModelItem.Colors.indices)
+        setColor(ViewModelItem.Colors[index], animate)
+    }
+
+    /** Set the check state without calling the onCheckedChangeListener. */
+    fun initIsChecked(isChecked: Boolean) {
+        _isChecked = isChecked
+        val newState = android.R.attr.state_checked * if (isChecked) 1 else -1
+        setImageState(intArrayOf(newState), true)
     }
 
     // For some reason when the CheckboxAndColorEdit's visibility is set to gone

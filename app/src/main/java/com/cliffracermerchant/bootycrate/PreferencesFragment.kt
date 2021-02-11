@@ -7,7 +7,7 @@ package com.cliffracermerchant.bootycrate
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
@@ -28,8 +28,13 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
 
-        val darkThemeActivePref = findPreference<SwitchPreferenceCompat>(getString(R.string.pref_dark_theme_active))
-        darkThemeActivePref?.isPersistent = true
+        findPreference<ListPreference>(getString(R.string.pref_app_theme))?.apply {
+            isPersistent = true
+            setOnPreferenceChangeListener { _, _ ->
+                activity?.recreate()
+                true
+            }
+        }
     }
 
     override fun onPrepareOptionsMenu(menu: Menu) {
@@ -40,14 +45,11 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         when (preference?.key) {
-            getString(R.string.pref_dark_theme_active) -> {
-                // An activity restart is necessary when the user changes
-                // the theme to ensure that all fragments use the new theme.
-                activity?.recreate()
+            getString(R.string.pref_sort_by_checked) -> {
+                val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
+                (activity as? MainActivity)?.shoppingListViewModel?.sortByChecked = sortByChecked
             }
-//            getString(R.string.pref_export_database) -> getExportPath.launch(getString(R.string.exported_database_default_name))
-//            getString(R.string.pref_import_database) -> getImportPath.launch(arrayOf("*/*"))
-            getString(R.string.pref_about_app) ->       Dialog.aboutApp()
+            getString(R.string.pref_about_app) -> Dialog.aboutApp()
             getString(R.string.pref_open_source_libraries_used) -> {
                 val context = activity ?: return false
                 startActivity(Intent(context, OssLicensesMenuActivity::class.java))

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+  ~  You may not use this file except in compliance with the Apache License
+  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~  or in the file LICENSE in the project's root directory. -->
+
+<com.kennyc.view.MultiStateView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/shoppingListFragmentView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:msv_emptyView="@layout/empty_recycler_view"
+    app:msv_loadingView="@layout/loading_recycler_view"
+    app:msv_viewState="loading"
+    app:msv_animateViewChanges="true" >
+
+    <com.cliffracermerchant.bootycrate.ShoppingListRecyclerView
+        android:id="@+id/shoppingListRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        style="@style/RecyclerViewFragment" />
+
+</com.kennyc.view.MultiStateView>

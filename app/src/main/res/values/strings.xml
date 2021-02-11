@@ -30,7 +30,7 @@
     <string name="delete_all_description">Delete all</string>
     <string name="delete_all_items_confirmation_message">
         This will delete all items in the %1$s. Are you sure?</string>
-    <string name="delete_all_no_items_error_message">The %1$s is empty</string>
+    <string name="empty_recycler_view_message">The %1$s is empty</string>
     <string name="edit_button_description">Edit item</string>
     <string name="delete_snackbar_text">%1$d item(s) deleted</string>
     <string name="delete_snackbar_undo_text">Undo</string>
@@ -45,8 +45,7 @@
     <string name="item_amount_description">Amount</string>
     <string name="decrease_button_description">Decrease amount</string>
     <string name="increase_button_description">Increase amount</string>
-    <string name="linked_item_description">Linked</string>
-    <string name="unlinked_item_description">Not linked</string>
+    <string name="link_status_description">Linked status</string>
     <string name="collapse_button_description">Collapse extra item options</string>
 
     <string name="inventory_item_collection_name">inventory</string>
@@ -61,9 +60,18 @@
     <string name="checkout_description">Checkout</string>
     <string name="checkout_confirm_description">Confirm?</string>
 
-    <string name="pref_viewmodels_need_cleared">viewModelsNeedCleared</string>
-    <string name="dark_theme_switch_description">Dark theme toggle</string>
-    <string name="dark_theme_switch_title">Dark theme</string>
+    <string name="share_description">Share</string>
+    <string name="share_dialog_title">Share via…</string>
+    <string name="share_text_message_option">Text message</string>
+    <string name="share_email_option">Email</string>
+    <string name="share_error_message">No app that can send the list was found</string>
+
+    <string name="visual_preference_category_name">Visual</string>
+    <string name="sys_default_theme_description">Use system default</string>
+    <string name="light_theme_description">Light</string>
+    <string name="dark_theme_description">Dark</string>
+
+    <string name="backup_and_restore_preference_category_name">Backup and Restore</string>
     <string name="export_database_description">Export database</string>
     <string name="import_database_description">Import database</string>
     <string name="import_database_question_message">
@@ -73,21 +81,20 @@
     <string name="import_database_overwrite_confirmation_message">
         Overwriting the existing database is irreversible. Are you sure?</string>
     <string name="exported_database_default_name">BootyCrateDatabase.sqlite</string>
-    <string name="share_description">Share</string>
-    <string name="share_dialog_title">Share via…</string>
-    <string name="share_text_message_option">Text message</string>
-    <string name="share_email_option">Email</string>
-    <string name="share_error_message">No app that can send the list was found</string>
-    <string name="visual_preference_category_name">Visual</string>
-    <string name="backup_and_restore_preference_category_name">Backup and Restore</string>
+
     <string name="about_preference_category_name">About</string>
     <string name="open_source_libraries_used_description">Open source libraries used</string>
-    <string name="pref_open_source_libraries_used">open_source_libraries_used</string>
     <string name="about_app_description">About BootyCrate</string>
-    <string name="pref_about_app">about_app</string>
     <string name="about_app_body">
         Copyright 2020 Nicholas Hochstetler. \nBootyCrate is an open-source shopping list and
         inventory management app, licensed under the terms of the Apache License, version 2.0.
         View the source code at: https://github.com/NicholasHochstetler/BootyCrate</string>
+    <string name="new_item_duplicate_name_warning">Name is already in use</string>
+    <string name="select_all_description">Select all</string>
+    <string name="check_all_description">Check all</string>
+    <string name="uncheck_all_description">Uncheck all</string>
+    <string name="no_search_results_message">No items match the query</string>
+    <string name="sort_by_checked_description">Sort by checked</string>
+    <string name="sort_by_checked_summary">Move checked items to the bottom of the shopping list.</string>
 
 </resources>

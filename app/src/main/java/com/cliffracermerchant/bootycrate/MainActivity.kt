@@ -8,15 +8,18 @@ import android.animation.Animator
 import android.animation.LayoutTransition
 import android.animation.ObjectAnimator
 import android.app.Activity
+import android.content.res.Configuration
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
 import android.os.Bundle
-import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
+import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -54,7 +57,6 @@ open class MainActivity : AppCompatActivity() {
     lateinit var inventoryViewModel: InventoryViewModel
     lateinit var addButton: OutlinedGradientButton
     lateinit var checkoutButton: CheckoutButton
-    lateinit var menu: Menu
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,18 +78,21 @@ open class MainActivity : AppCompatActivity() {
         shoppingListViewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
         inventoryViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
 
-        prefKey = getString(R.string.pref_dark_theme_active)
-        setTheme(if (prefs.getBoolean(prefKey, false)) R.style.DarkTheme
-                 else                                  R.style.LightTheme)
-
+        prefKey = getString(R.string.pref_app_theme)
+        val themeDefault = getString(R.string.sys_default_theme_description)
+        setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
+            getString(R.string.light_theme_description) -> R.style.LightTheme
+            getString(R.string.dark_theme_description) ->  R.style.DarkTheme
+            else -> if (sysDarkThemeIsActive) R.style.DarkTheme
+                    else                      R.style.LightTheme
+        })
         setContentView(R.layout.activity_main)
-        setSupportActionBar(topActionBar)
-        supportActionBar?.setDisplayShowTitleEnabled(false)
+
         addButton = add_button
         checkoutButton = checkout_button
         imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
 
-        cradleLayout.layoutTransition = delaylessLayoutTransition()
+        cradleLayout.layoutTransition = defaultLayoutTransition()
         cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
             pendingCradleAnim?.start()
             pendingCradleAnim = null
@@ -101,7 +106,7 @@ open class MainActivity : AppCompatActivity() {
             if (supportFragmentManager.backStackEntryCount == 0) {
                 showBottomAppBar()
                 showingPreferences = false
-                supportActionBar?.setDisplayHomeAsUpEnabled(false)
+                topActionBar.ui.backButton.isVisible = false
                 activeFragment.isActive = true
             }
         }
@@ -118,15 +123,18 @@ open class MainActivity : AppCompatActivity() {
         shoppingListViewModel.items.observe(this) { newList ->
             updateShoppingListBadge(newList)
         }
-    }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.action_bar_menu, menu)
-        super.onCreateOptionsMenu(menu)
-        this.menu = menu
-        shoppingListFragment.initOptionsMenu(menu)
-        inventoryFragment.initOptionsMenu(menu)
-        return true
+        topActionBar.ui.backButton.setOnClickListener { onSupportNavigateUp() }
+        onCreateOptionsMenu(topActionBar.optionsMenu)
+        topActionBar.onDeleteButtonClickedListener = {
+            onOptionsItemSelected(topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
+        }
+        topActionBar.setOnSortOptionClickedListener { item ->
+            onOptionsItemSelected(item)
+        }
+        topActionBar.setOnOptionsItemClickedListener { item ->
+            onOptionsItemSelected(item)
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -142,12 +150,17 @@ open class MainActivity : AppCompatActivity() {
             showPreferencesFragment()
             return true
         }
-        return false
+        return activeFragment.onOptionsItemSelected(item)
     }
 
     override fun onSupportNavigateUp() = when {
         showingPreferences -> {
             supportFragmentManager.popBackStack()
+            true
+        } activeFragment.searchIsActive -> {
+            topActionBar.ui.searchView.findViewById<ImageView>(
+                androidx.appcompat.R.id.search_close_btn)
+                .apply { performClick(); performClick() }
             true
         } activeFragment.actionMode.isStarted -> {
             activeFragment.actionMode.finishAndClearSelection()
@@ -165,7 +178,7 @@ open class MainActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
         showBottomAppBar(false)
         activeFragment.isActive = false
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        topActionBar.ui.backButton.isVisible = true
 
         val enterAnimResId = if (animate) R.animator.fragment_close_enter else 0
         supportFragmentManager.beginTransaction().
@@ -227,7 +240,7 @@ open class MainActivity : AppCompatActivity() {
         if (checkoutButtonIsVisible == showing) return
 
         checkoutButtonIsVisible = showing
-        checkoutButton.visibility = if (showing) View.VISIBLE else View.GONE
+        checkoutButton.isVisible = showing
 
         val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         cradleLayout.measure(wrapContentSpec, wrapContentSpec)
@@ -322,4 +335,7 @@ open class MainActivity : AppCompatActivity() {
             true
         }
     }
+
+    val sysDarkThemeIsActive get() =
+        (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
 }

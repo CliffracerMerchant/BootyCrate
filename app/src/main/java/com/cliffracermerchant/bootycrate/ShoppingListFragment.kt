@@ -6,9 +6,10 @@ package com.cliffracermerchant.bootycrate
 
 import android.os.Bundle
 import android.view.*
-import android.widget.TextView
-import androidx.appcompat.app.ActionBar
-import kotlinx.android.synthetic.main.shopping_list_fragment_layout.*
+import androidx.preference.PreferenceManager
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.shopping_list_fragment.*
+import kotlinx.android.synthetic.main.shopping_list_fragment.view.*
 
 /** A fragment to display and modify the user's shopping list.
  *
@@ -34,51 +35,68 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? =
-        inflater.inflate(R.layout.shopping_list_fragment_layout, container, false)
+        inflater.inflate(R.layout.shopping_list_fragment, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerView = shoppingListRecyclerView
-        val mainActivity = requireActivity() as MainActivity
+        recyclerView = shoppingListFragmentView.shoppingListRecyclerView
+        val activity = requireActivity() as? MainActivity ?: return
         recyclerView.finishInit(viewLifecycleOwner,
-                                mainActivity.shoppingListViewModel,
-                                mainActivity.inventoryViewModel)
+                                activity.shoppingListViewModel,
+                                activity.inventoryViewModel)
 
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner)
             { newSize -> activity.checkoutButton.isEnabled = newSize != 0 }
+
+        val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val sortByChecked = prefs.getBoolean(sortByCheckedPrefKey, false)
+        recyclerView.sortByChecked = sortByChecked
+
         super.onViewCreated(view, savedInstanceState)
     }
 
     override fun onActiveStateChanged(active: Boolean) {
         super.onActiveStateChanged(active)
+        val activity = activity as? MainActivity ?: return
         if (active) {
-            activity.addButton.setOnClickListener { recyclerView.addNewItem() }
-            activity.checkoutButton.checkoutCallback = { recyclerView.checkout() }
+            activity.addButton.setOnClickListener {
+//                NewShoppingListItemDialog(activity, activity.shoppingListViewModel)
+//                    .show(activity.supportFragmentManager, null)
+            }
+            activity.checkoutButton.checkoutCallback = { activity.shoppingListViewModel.checkout() }
         }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return if (item.itemId == R.id.add_to_inventory_button) {
-            activity.inventoryViewModel.addFromSelectedShoppingListItems()
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.add_to_inventory_button -> {
+            val activity = this.activity as? MainActivity
+            activity?.inventoryViewModel?.addFromSelectedShoppingListItems()
             actionMode.finishAndClearSelection()
             true
-        } else super.onOptionsItemSelected(item)
+        } R.id.check_all_menu_item -> {
+            recyclerView.checkedItems.checkAll()
+            true
+        } R.id.uncheck_all_menu_item -> {
+            recyclerView.checkedItems.clear()
+            true
+        } else -> super.onOptionsItemSelected(item)
     }
 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
         super.setOptionsMenuItemsVisible(showing)
-        menu?.setGroupVisible(R.id.shopping_list_view_menu_group, showing)
+        mainActivity?.topActionBar?.optionsMenu?.setGroupVisible(R.id.shopping_list_view_menu_group, showing)
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */
-    inner class ShoppingListActionMode() : RecyclerViewFragment<ShoppingListItem>.RecyclerViewActionMode() {
-        override fun onStart(actionBar: ActionBar, menu: Menu, titleView: TextView?) {
-            super.onStart(actionBar, menu, titleView)
-            menu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
+    inner class ShoppingListActionMode() : RecyclerViewFragment<ShoppingListItem>.ActionMode() {
+        override fun onStart(actionBar: RecyclerViewActionBar) {
+            super.onStart(actionBar)
+            actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
         }
 
-        override fun onFinish(actionBar: ActionBar, menu: Menu, titleView: TextView?) {
-            super.onFinish(actionBar, menu, titleView)
-            menu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
+        override fun onFinish(actionBar: RecyclerViewActionBar) {
+            super.onFinish(actionBar)
+            actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
         }
     }
 }

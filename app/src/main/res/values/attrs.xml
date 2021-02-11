@@ -47,9 +47,9 @@
 
     <declare-styleable name="TextFieldEdit">
         <!-- Whether the TextFieldEdit will start in an editable state. -->
-        <attr name="isEditable"   format="boolean" />
-        <!-- The hint that will appear when the TextFieldEdit is editable. -->
-        <attr name="editableHint" format="string" />
+        <attr name="isEditable" format="boolean" />
+        <!-- Whether the text field can be blank. -->
+        <attr name="canBeBlank" format="boolean" />
     </declare-styleable>
 
     <declare-styleable name="IntegerEdit">
@@ -61,11 +61,16 @@
         <attr name="maxValue"     format="integer" />
         <!-- The step size of the increment and decrement buttons. -->
         <attr name="stepSize"     format="integer" />
-        <!-- Whether the user is able to directly input the value -->
+        <!-- Whether the user is able to directly input the value. -->
         <attr name="valueIsDirectlyEditable" format="boolean" />
     </declare-styleable>
 
-    <declare-styleable name="TopActionBar">
+    <declare-styleable name="RecyclerViewActionBar">
+        <attr name="changeSortMenuResId" format="reference" />
+        <attr name="optionsMenuResId" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="GradientActionBar">
         <attr name="bottomBorderWidth" format="dimension" />
     </declare-styleable>
 

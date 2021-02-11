@@ -6,8 +6,6 @@ package com.cliffracermerchant.bootycrate
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import kotlinx.android.synthetic.main.inventory_item_details_layout.view.*
-import kotlinx.android.synthetic.main.inventory_item_layout.view.*
 
 /** A Room entity that represents an inventory item in the user's inventory. */
 @Entity(tableName = "inventory_item")
@@ -48,12 +46,3 @@ class InventoryItem(
                        IsExpanded, IsSelected, AddToShoppingList,
                        AddToShoppingListTrigger }
 }
-
-fun inventoryItemFromItemView(view: InventoryItemView) = InventoryItem(
-        name = view.nameEdit.text.toString(),
-        extraInfo = view.extraInfoEdit.text.toString(),
-        color = ViewModelItem.Colors.indexOf(view.colorEdit.imageTintList?.defaultColor ?: 0),
-        amount = view.inventoryAmountEdit.value,
-        addToShoppingList = view.addToShoppingListCheckBox.isChecked,
-        addToShoppingListTrigger = view.addToShoppingListTriggerEdit.value)
-
