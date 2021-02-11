@@ -43,6 +43,7 @@
         app:layout_constraintEnd_toStartOf="@id/changeSortButton"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        android:imeOptions="flagNoExtractUi|actionSearch"
         app:searchHintIcon="@null"/>
 
     <androidx.appcompat.widget.AppCompatImageButton

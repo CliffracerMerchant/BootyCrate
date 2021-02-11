@@ -36,7 +36,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
 
     abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>
     open val actionMode = ActionMode()
-    protected lateinit var sortModePrefKey: String
+
     val searchIsActive get() = _searchIsActive
     private var _searchIsActive = false
         set(value) {
@@ -47,6 +47,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
                                 else activity?.getString(R.string.empty_recycler_view_message,
                                                          recyclerView.collectionName)
         }
+    private lateinit var sortModePrefKey: String
+    private val searchWasActivePrefKey = "searchWasActive"
 
     init { setHasOptionsMenu(true) }
 
@@ -61,6 +63,14 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
             val stateView = view as? MultiStateView ?: return@observe
             stateView.viewState = if (items.isNotEmpty()) MultiStateView.ViewState.CONTENT
                                   else                    MultiStateView.ViewState.EMPTY
+        }
+        if (savedInstanceState != null) {
+            _searchIsActive = savedInstanceState.getBoolean(searchWasActivePrefKey, false)
+            val mainActivity = this.mainActivity
+            if (searchIsActive && mainActivity != null) {
+                mainActivity.topActionBar.ui.backButton.isVisible = true
+                mainActivity.topActionBar.ui.customTitle.isVisible = false
+            }
         }
         super.onViewCreated(view, savedInstanceState)
     }
@@ -131,6 +141,11 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
                 saveSortingOption(); true
             } else -> false
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(searchWasActivePrefKey, searchIsActive)
     }
 
     private fun saveSortingOption() {
