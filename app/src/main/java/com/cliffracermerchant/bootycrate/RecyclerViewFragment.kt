@@ -37,7 +37,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
     abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>
     open val actionMode = ActionMode()
     protected lateinit var sortModePrefKey: String
-    private var searchIsActive = false
+    val searchIsActive get() = _searchIsActive
+    private var _searchIsActive = false
         set(value) {
             field = value
             val stateView = view as? MultiStateView ?: return
@@ -77,11 +78,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
             actionMode.onChanged(recyclerView.selection.items!!)
 
         val searchView = activity.topActionBar.ui.searchView
-        searchView.setOnQueryTextFocusChangeListener { _, hasFocus ->
-            searchIsActive = hasFocus
-            activity.topActionBar.ui.customTitle.isVisible = hasFocus
-            activity.topActionBar.ui.backButton.isVisible = hasFocus
-        }
+        searchView.setOnCloseListener { _searchIsActive = false; false }
+        searchView.setOnSearchClickListener { _searchIsActive = true }
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?) = true
             override fun onQueryTextChange(newText: String?): Boolean {

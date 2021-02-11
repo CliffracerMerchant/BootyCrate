@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
@@ -105,7 +106,7 @@ open class MainActivity : AppCompatActivity() {
             if (supportFragmentManager.backStackEntryCount == 0) {
                 showBottomAppBar()
                 showingPreferences = false
-                supportActionBar?.setDisplayHomeAsUpEnabled(false)
+                topActionBar.ui.backButton.isVisible = false
                 activeFragment.isActive = true
             }
         }
@@ -156,6 +157,11 @@ open class MainActivity : AppCompatActivity() {
         showingPreferences -> {
             supportFragmentManager.popBackStack()
             true
+        } activeFragment.searchIsActive -> {
+            topActionBar.ui.searchView.findViewById<ImageView>(
+                androidx.appcompat.R.id.search_close_btn)
+                .apply { performClick(); performClick() }
+            true
         } activeFragment.actionMode.isStarted -> {
             activeFragment.actionMode.finishAndClearSelection()
             true
@@ -172,7 +178,7 @@ open class MainActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
         showBottomAppBar(false)
         activeFragment.isActive = false
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        topActionBar.ui.backButton.isVisible = true
 
         val enterAnimResId = if (animate) R.animator.fragment_close_enter else 0
         supportFragmentManager.beginTransaction().

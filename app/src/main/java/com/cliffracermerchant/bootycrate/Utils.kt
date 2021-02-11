@@ -5,13 +5,16 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.LayoutTransition
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.Rect
 import android.graphics.Shader
+import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.appcompat.widget.SearchView
 
 fun defaultLayoutTransition() = LayoutTransition().apply {
     setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
@@ -76,12 +79,28 @@ internal object UtilsPrivate {
     val rect = Rect()
 }
 
-/** Translate the shader by dx, dy; will not affect the Shader's scale transform.*/
-fun Shader.offsetAfterMoveTo(dx: Float, dy: Float) {
+/** Translate the shader by dx, dy; will not affect the Shader's scale.*/
+fun Shader.translateBy(dx: Float, dy: Float) {
     getLocalMatrix(UtilsPrivate.matrix)
     UtilsPrivate.matrix.getValues(UtilsPrivate.matrixValues)
-    UtilsPrivate.matrixValues[2] = -dx
-    UtilsPrivate.matrixValues[5] = -dy
+    UtilsPrivate.matrixValues[2] = dx
+    UtilsPrivate.matrixValues[5] = dy
     UtilsPrivate.matrix.setValues(UtilsPrivate.matrixValues)
     setLocalMatrix(UtilsPrivate.matrix)
+}
+
+/** A SearchView that allows multiple onSearchClickListeners and onCloseListeners. */
+class MultiListenerSearchView(context: Context, attrs: AttributeSet) : SearchView(context, attrs) {
+    private val onOpenListeners = mutableListOf<OnClickListener>()
+    private val onCloseListeners = mutableListOf<OnCloseListener>()
+
+    init {
+        super.setOnSearchClickListener { for (l in onOpenListeners) l.onClick(this) }
+        super.setOnCloseListener { for (l in onCloseListeners) l.onClose(); false }
+    }
+
+    override fun setOnSearchClickListener(l: OnClickListener?) {
+        if (l != null) onOpenListeners.add(l)
+    }
+    override fun setOnCloseListener(l: OnCloseListener) { onCloseListeners.add(l) }
 }

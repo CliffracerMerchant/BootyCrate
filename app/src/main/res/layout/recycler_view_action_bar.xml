@@ -33,14 +33,17 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_goneMarginStart="20dp" />
 
-    <androidx.appcompat.widget.SearchView
+    <!-- Without a maxWidth, the searchView will expand until it covers up the
+         back button, even when it is constrained to the end of customTitle -->
+    <com.cliffracermerchant.bootycrate.MultiListenerSearchView
         android:id="@+id/searchView"
         android:layout_width="wrap_content"
+        android:maxWidth="280dp"
         android:layout_height="44dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/changeSortButton"
         app:layout_constraintTop_toTopOf="parent"
-        android:src="@drawable/ic_arrow_back_black_24dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:searchHintIcon="@null"/>
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/changeSortButton"

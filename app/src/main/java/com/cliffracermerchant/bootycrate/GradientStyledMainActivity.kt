@@ -11,7 +11,6 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
-import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnNextLayout
@@ -104,12 +103,10 @@ class GradientStyledMainActivity : MainActivity() {
             view = searchView.findViewById(androidx.appcompat.R.id.search_close_btn)
             view?.drawable?.setTint(color)
             val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
-            colors = intArrayOf(
-                ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1),
-                ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2))
-            searchEditText.paint.shader = LinearGradient(
-                0f, searchEditText.height.toFloat(),
-                0f, 0f, colors, null, Shader.TileMode.CLAMP)
+            colors = intArrayOf(ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1),
+                                ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2))
+            searchEditText.paint.shader = LinearGradient(0f, searchEditText.height.toFloat(),
+                                                         0f, 0f, colors, null, Shader.TileMode.CLAMP)
 
             // Change sort icon
             topActionBar.ui.changeSortButton.drawable.setTint(

@@ -15,6 +15,7 @@ import android.widget.TextView
 import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.isVisible
 import com.cliffracermerchant.bootycrate.databinding.RecyclerViewActionBarBinding
 
 /** A toolbar tailored towards interacting with a recycler view.
@@ -115,6 +116,15 @@ class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewAct
         backgroundDrawable.gradient = backgroundGradient
         borderDrawable.gradient = borderGradient
         background = LayerDrawable(arrayOf(backgroundDrawable, borderDrawable))
+        ui.searchView.setOnSearchClickListener {
+            ui.backButton.isVisible = true
+            ui.customTitle.isVisible = false
+        }
+        ui.searchView.setOnCloseListener {
+            ui.backButton.isVisible = false
+            ui.customTitle.isVisible = true
+            false
+        }
     }
 }
 
@@ -131,7 +141,11 @@ class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewAct
 class ShaderTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitcher(context, attrs) {
     val text get() = (currentView as TextView).text.toString()
     var shader get() = (currentView as TextView).paint.shader
-        set(value) { (currentView as TextView).paint.shader = value
+        set(value) { val textView = currentView as TextView
+                     val textTop = top.toFloat() + textView.baseline +
+                                   textView.paint.fontMetrics.top
+                     value?.translateBy(left * -1f, -textTop)
+                     (currentView as TextView).paint.shader = value
                      (nextView as TextView).paint.shader = value }
 
     init {
@@ -151,7 +165,7 @@ class ShaderTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitcher(c
             val textView = currentView as TextView
             if (textView.paint.shader == null) return@addOnLayoutChangeListener
             val textTop = top.toFloat() + textView.baseline + textView.paint.fontMetrics.top
-            textView.paint.shader.offsetAfterMoveTo(left * -1f, -textTop)
+            textView.paint.shader.translateBy(left * -1f, -textTop)
         }
     }
 }
