@@ -10,134 +10,163 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import androidx.appcompat.app.AlertDialog
+import androidx.core.view.isVisible
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Transformations
 import com.cliffracermerchant.bootycrate.databinding.NewItemDialogBinding
-import com.cliffracermerchant.bootycrate.databinding.ViewModelItemBinding
 
-//abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
-//    context: Context,
-//    private val viewModel: ViewModel<Entity>
-//) : DialogFragment() {
-//    protected val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
-//    protected val cancelButton get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEUTRAL)
-//    protected val addAnotherButton get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
-//    protected val okButton get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
-//    protected val ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
-//    protected open val newItemViewLayoutResId = R.layout.view_model_item
-//    protected open val newItemView: ExpandableSelectableItemView<Entity>
-//    protected open val newItemUi = ViewmodelItemBinding.bind(ui.root)
-//
-//    init {
-//        ui.newItemViewStub.layoutResource = newItemViewLayoutResId
-//        newItemView = ui.newItemViewStub.inflate() as ExpandableSelectableItemView<Entity>
-//    }
-//
-//    override fun onCreateDialog(savedInstanceState: Bundle?): android.app.Dialog {
-////        ui.newItemView.apply {
-////            background = null
-////            newItemUi.editButton.visibility = View.GONE
-////            setColorIndex(0, animate = false)
-////            ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
-////                viewModel.newItemExtraInfo = text.toString()
-////            }
-////            requestLayout()
-////        }
-////        ui.newItemView.ui.nameEdit.doOnTextChanged { text, _, _, _ ->
-////            viewModel.newItemName = text.toString()
-////            if (text?.isNotBlank() == true &&
-////                ui.noNameError.visibility == View.VISIBLE)
-////            {
-////                ui.noNameError.visibility = View.INVISIBLE
-////                addAnotherButton.isEnabled = true
-////                okButton.isEnabled = true
-////            }
-////        }
-//        Transformations.distinctUntilChanged(viewModel.newItemNameIsAlreadyUsed).observe(this) { nameIsAlreadyUsed ->
-//            ui.duplicateNameWarning.visibility = if (nameIsAlreadyUsed) View.VISIBLE
-//            else                   View.INVISIBLE
-//        }
-//        return Dialog.themedAlertBuilder()
-//            .setBackgroundInsetStart(0)
-//            .setBackgroundInsetEnd(0)
-//            .setTitle(R.string.add_item_button_name)
-//            .setNeutralButton(android.R.string.cancel) { _, _ -> }
-//            .setNegativeButton(R.string.add_another_item_button_description) { _, _ -> }
-//            .setPositiveButton(android.R.string.ok) { _, _ -> }
-//            .setView(ui.root)
-//            .create().apply {
-//                setOnDismissListener { viewModel.resetNewItemName() }
-////                setOnShowListener {
-////                    okButton.setOnClickListener { if (addItem()) dismiss() }
-////                    // Override the add another button's default on click listener
-////                    // to prevent it from closing the dialog when clicked
-////                    addAnotherButton.setOnClickListener {
-////                        if (addItem()) ui.newItemView.apply {
-////                            ui.nameEdit.text?.clear()
-////                            ui.extraInfoEdit.text?.clear()
-////                            ui.amountEdit.apply { value = minValue }
-////                            detailsUi.addToShoppingListCheckBox.isChecked = false
-////                            detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
-////                            // We'll leave the color edit set to whichever color it was on previously,
-////                            // in case the user wants to add items with like colors consecutively.
-////                            ui.nameEdit.requestFocus()
-////                            imm?.showSoftInput(ui.nameEdit, InputMethodManager.SHOW_IMPLICIT)
-////                        }
-////                    }
-////                    ui.newItemView.ui.nameEdit.requestFocus()
-////                    imm?.showSoftInput(ui.newItemView.ui.nameEdit, InputMethodManager.SHOW_IMPLICIT)
-////                }
-//            }
-//    }
-//
-//    private fun addItem() =
-//
-//        if (newItemView.ui.nameEdit.text?.isBlank() == true) {
-//            ui.noNameError.visibility = View.VISIBLE
-//            (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-//            (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = false
-//            false
-//        } else {
-//            viewModel.add(createItemFromView())
-//            true
-//        }
-//
-//    abstract fun createItemFromView(): Entity
-//}
-//
-///** Open a dialog to create a new shopping list item. */
-//class NewShoppingListItemDialog(context: Context, viewModel: ShoppingListViewModel) :
-//    NewViewModelItemDialog<ShoppingListItem>(context, viewModel)
-//{
-//    init { newItemView.apply {
-//        //detailsUi.inventoryItemDetailsGroup.visibility = View.GONE
-//        ui.nameEdit.setEditable(true, animate = false)
-//        ui.extraInfoEdit.setEditable(true, animate = false)
-//        ui.amountEdit.minValue = 1
-//    }}
-//
-//    override fun createItemFromView() = ShoppingListItem(
-//        name = newItemView.ui.nameEdit.text.toString(),
-//        extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
-//        color = newItemView.colorIndex,
-//        amount = newItemView.ui.amountEdit.value)
-//}
-//
-///** Open a dialog to create a new inventory item. */
-//class NewInventoryItemDialog(context: Context, viewModel: InventoryViewModel) :
-//    NewViewModelItemDialog<InventoryItem>(context, viewModel)
-//{
-//    init { newItemView.apply {
-//        expand()
-//       //detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
-//    }}
-//
-//    override fun createItemFromView() = InventoryItem(
-//        name = newItemView.ui.nameEdit.text.toString(),
-//        extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
-//        color = newItemView.colorIndex,
-//        amount = newItemView.ui.amountEdit.value,
-//        addToShoppingList = false,//newItemView.detailsUi.addToShoppingListCheckBox.isChecked,
-//        addToShoppingListTrigger = 0)//newItemView.detailsUi.addToShoppingListTriggerEdit.value)
-//}
+/** An abstract DialogFragment to create a new ViewModelItem.
+ *
+ *  NewViewModelItemDialog is an abstract DialogFragment for creating new View-
+ *  ModelItems. By default it fills the newItemViewContainer ui element with
+ *  a ViewModelItemView instance. If this needs to be overridden in a subclass,
+ *  call the constructor with the useDefaultLayoutParameter set to false. If
+ *  this is done, the subclass must initialize the newItemView member before on-
+ *  CreateDialog, or an exception will be thrown.
+ *
+ *  The abstract function createItemFromView must be overridden in subclasses
+ *  with an implementation that returns an Entity instance that reflects the
+ *  information entered in the newItemView member. The open function resetNew-
+ *  ItemView should be overridden in subclasses if additional work is needed
+ *  to prepare the newItemView member if the user clicks the addAnotherButton.
+ *
+ *  The dialog will display a warning when the current name and extra info
+ *  combination is already used by another item. It will not prevent the user
+ *  from adding the item anyway if desired. It will also display an error mes-
+ *  sage and will prevent the user from proceeding if they try to add an item
+ *  with no name.
+ */
+abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
+    context: Context,
+    private val viewModel: ViewModel<Entity>,
+    useDefaultLayout: Boolean = true
+) : DialogFragment() {
+    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+    private val cancelButton get(): Button = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEUTRAL)
+    private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
+    private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
+
+    protected val ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
+    protected lateinit var newItemView: ViewModelItemView<Entity>
+
+    init { if (useDefaultLayout) {
+        newItemView = ViewModelItemView(context)
+        ui.root.layoutTransition = defaultLayoutTransition()
+    }}
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): android.app.Dialog {
+        ui.newItemViewContainer.addView(newItemView)
+        newItemView.apply {
+            ui.checkBox.setColorIndex(0, animate = false)
+            ui.nameEdit.setEditable(true, animate = false)
+            ui.extraInfoEdit.setEditable(true, animate = false)
+            background = null
+            ui.editButton.visibility = View.GONE
+            ui.amountEdit.setValueIsDirectlyEditable(true, animate = false)
+            ui.amountEdit.initValue(1)
+            ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
+                viewModel.newItemExtraInfo = text.toString()
+            }
+        }
+        newItemView.ui.nameEdit.doOnTextChanged { text, _, _, _ ->
+            viewModel.newItemName = text.toString()
+            if (text?.isNotBlank() == true && ui.noNameError.isVisible) {
+                ui.noNameError.isVisible = false
+                addAnotherButton.isEnabled = true
+                okButton.isEnabled = true
+            }
+        }
+        Transformations.distinctUntilChanged(viewModel.newItemNameIsAlreadyUsed).observe(this) {
+            nameIsAlreadyUsed -> ui.duplicateNameWarning.isVisible = nameIsAlreadyUsed
+        }
+        return Dialog.themedAlertBuilder()
+            .setBackgroundInsetStart(0)
+            .setBackgroundInsetEnd(0)
+            .setTitle(R.string.add_item_button_name)
+            .setNeutralButton(android.R.string.cancel) { _, _ -> }
+            .setNegativeButton(R.string.add_another_item_button_description) { _, _ -> }
+            .setPositiveButton(android.R.string.ok) { _, _ -> }
+            .setView(ui.root)
+            .create().apply {
+                setOnDismissListener { viewModel.resetNewItemName() }
+                setOnShowListener {
+                    okButton.setOnClickListener { if (addItem()) dismiss() }
+                    // Override the add another button's default on click listener
+                    // to prevent it from closing the dialog when clicked
+                    addAnotherButton.setOnClickListener {
+                        if (addItem()) resetNewItemView()
+                    }
+                    newItemView.ui.nameEdit.requestFocus()
+                    imm?.showSoftInput(newItemView.ui.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+                }
+            }
+    }
+
+    open fun resetNewItemView() = with(newItemView) {
+        ui.nameEdit.text?.clear()
+        ui.extraInfoEdit.text?.clear()
+        ui.amountEdit.value = 1
+        // We'll leave the color edit set to whichever color it was on previously,
+        // in case the user wants to add items with like colors consecutively.
+        ui.nameEdit.requestFocus()
+        imm?.showSoftInput(ui.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+        return@with
+    }
+
+    private fun addItem() =
+        if (newItemView.ui.nameEdit.text?.isBlank() == true) {
+            ui.noNameError.isVisible = true
+            (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+            (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = false
+            false
+        } else {
+            viewModel.add(createItemFromView())
+            true
+        }
+
+    abstract fun createItemFromView(): Entity
+}
+
+/** Open a dialog to create a new shopping list item. */
+class NewShoppingListItemDialog(context: Context, viewModel: ShoppingListViewModel) :
+    NewViewModelItemDialog<ShoppingListItem>(context, viewModel)
+{
+    init { newItemView.ui.checkBox.inColorEditMode = true
+    }
+
+    override fun createItemFromView() = ShoppingListItem(
+        name = newItemView.ui.nameEdit.text.toString(),
+        extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
+        color = newItemView.ui.checkBox.colorIndex,
+        amount = newItemView.ui.amountEdit.value)
+}
+
+/** Open a dialog to create a new inventory item. */
+class NewInventoryItemDialog(context: Context, viewModel: InventoryViewModel) :
+    NewViewModelItemDialog<InventoryItem>(context, viewModel, useDefaultLayout = false)
+{
+    private val newInventoryItemView = InventoryItemView(context)
+
+    init {
+        newItemView = newInventoryItemView
+        newInventoryItemView.expand()
+        newInventoryItemView.detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
+    }
+
+    override fun resetNewItemView() {
+        super.resetNewItemView()
+        newInventoryItemView.detailsUi.addToShoppingListCheckBox.isChecked = false
+        newInventoryItemView.detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
+    }
+
+    override fun createItemFromView() = InventoryItem(
+        name = newItemView.ui.nameEdit.text.toString(),
+        extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
+        color = newItemView.ui.checkBox.colorIndex,
+        amount = newItemView.ui.amountEdit.value,
+        addToShoppingList = newInventoryItemView.detailsUi.addToShoppingListCheckBox.isChecked,
+        addToShoppingListTrigger = newInventoryItemView.detailsUi.addToShoppingListTriggerEdit.value)
+}

@@ -10,19 +10,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="10dp"
-    android:animateLayoutChanges="true" >
+    android:layout_margin="10dp"  >
 
-<!--    <com.cliffracermerchant.bootycrate.InventoryItemView-->
-    <ViewStub
-        android:id="@+id/newItemViewStub"
-        android:inflatedId="@+id/newItemView"
+    <FrameLayout
+        android:id="@+id/newItemViewContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/duplicateNameWarning" />
+        app:layout_constraintTop_toTopOf="parent"  />
 
     <TextView
         android:id="@+id/duplicateNameWarning"
@@ -31,8 +27,7 @@
         android:layout_margin="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/newItemViewStub"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/newItemViewContainer"
         tools:visibility="visible"
         style="@style/AddNewItemDialogDuplicateNameMessage" />
 
@@ -43,8 +38,7 @@
         android:layout_margin="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/newItemViewStub"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/newItemViewContainer"
         style="@style/AddNewItemDialogNameRequiredMessage" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -40,8 +40,8 @@ class InventoryFragment(isActive: Boolean = false) :
         if (active) {
             val activity = activity as? MainActivity ?: return
             activity.addButton.setOnClickListener {
-//                NewInventoryItemDialog(activity, activity.inventoryViewModel)
-//                    .show(activity.supportFragmentManager, null)
+                NewInventoryItemDialog(activity, activity.inventoryViewModel)
+                    .show(activity.supportFragmentManager, null)
             }
             activity.checkoutButton.checkoutCallback = null
         }
@@ -62,7 +62,7 @@ class InventoryFragment(isActive: Boolean = false) :
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */
-    inner class InventoryActionMode() : RecyclerViewFragment<InventoryItem>.ActionMode() {
+    inner class InventoryActionMode : RecyclerViewFragment<InventoryItem>.ActionMode() {
         override fun onStart(actionBar: RecyclerViewActionBar) {
             super.onStart(actionBar)
             actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)

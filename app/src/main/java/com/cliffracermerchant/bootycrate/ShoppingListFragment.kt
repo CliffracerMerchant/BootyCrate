@@ -60,8 +60,8 @@ class ShoppingListFragment(isActive: Boolean = false) :
         val activity = activity as? MainActivity ?: return
         if (active) {
             activity.addButton.setOnClickListener {
-//                NewShoppingListItemDialog(activity, activity.shoppingListViewModel)
-//                    .show(activity.supportFragmentManager, null)
+                NewShoppingListItemDialog(activity, activity.shoppingListViewModel)
+                    .show(activity.supportFragmentManager, null)
             }
             activity.checkoutButton.checkoutCallback = { activity.shoppingListViewModel.checkout() }
         }
@@ -88,7 +88,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */
-    inner class ShoppingListActionMode() : RecyclerViewFragment<ShoppingListItem>.ActionMode() {
+    inner class ShoppingListActionMode : RecyclerViewFragment<ShoppingListItem>.ActionMode() {
         override fun onStart(actionBar: RecyclerViewActionBar) {
             super.onStart(actionBar)
             actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
