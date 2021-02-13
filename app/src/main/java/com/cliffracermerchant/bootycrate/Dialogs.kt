@@ -14,33 +14,30 @@ import androidx.fragment.app.FragmentManager
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.thebluealliance.spectrum.SpectrumDialog
 import dev.sasikanth.colorsheet.ColorSheet
 import kotlinx.android.synthetic.main.share_dialog.*
 
-/** An object that contains functions to open dialogs.
- *
- *  Dialog contains functions to open various dialogs. An instance of an activity must
- *  be supplied to Dialog via the init function. If any of the dialogs are called
- *  before init, an exception will occur. */
+fun colorPickerDialog(
+    context: Context,
+    fragmentManager: FragmentManager,
+    initialColorIndex: Int,
+    callback: (Int) -> Unit,
+) {
+    SpectrumDialog.Builder(context)
+        .setColors(ViewModelItem.Colors)
+        .setSelectedColor(initialColorIndex)
+        .setOnColorSelectedListener { _, color -> callback(color) }
+        .build().show(fragmentManager, null)
+}
+
 object Dialog {
-    private lateinit var context: Context
-    private lateinit var fragmentManager: FragmentManager
-    private lateinit var snackBarParent: CoordinatorLayout
-    private lateinit var shoppingListViewModel: ShoppingListViewModel
-    private lateinit var inventoryViewModel: InventoryViewModel
-    fun init(activity: MainActivity, snackBarParent: CoordinatorLayout) {
-        context = activity
-        fragmentManager = activity.supportFragmentManager
-        this.shoppingListViewModel = activity.shoppingListViewModel
-        this.inventoryViewModel = activity.inventoryViewModel
-        this.snackBarParent = snackBarParent
-    }
 
     /** Display a color picker dialog to choose from one of ViewModelItem's twelve colors.
      *
      *  Note that the initial color parameter and the return value are the
      *  indices of the chosen color, not the Android color value for the color. */
-    fun colorPicker(initialColorIndex: Int = 0, callback: (Int) -> Unit) {
+    fun colorPicker(fragmentManager: FragmentManager, callback: (Int) -> Unit, initialColorIndex: Int = 0) {
         val index = initialColorIndex.coerceIn(ViewModelItem.Colors.indices)
         val initialColor = ViewModelItem.Colors[index]
         val colorPicker = ColorSheet().colorPicker(ViewModelItem.Colors, initialColor,

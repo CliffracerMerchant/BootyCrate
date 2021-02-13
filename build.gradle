@@ -4,15 +4,15 @@
  * or in the file LICENSE in the project's root directory. */
 
 buildscript {
-    ext.kotlin_version = '1.4.10'
     repositories {
         google()
         jcenter()
-        
     }
+    ext.hilt_version = '2.31.2-alpha'
     dependencies {
         classpath 'com.android.tools.build:gradle:4.1.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.30"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
         classpath 'com.google.android.gms:oss-licenses-plugin:0.10.2'
     }
 }
