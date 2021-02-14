@@ -14,6 +14,9 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentManager
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /** A button that acts as a checkbox with easily an customizable color.
  *
@@ -24,9 +27,11 @@ import androidx.core.content.ContextCompat
  *  perty inColorEditMode, while the current color is changed through the
  *  property color (or colorIndex if setting the color to an value of View-
  *  ModelItem.Colors is preferred. */
-class TintableCheckbox(context: Context, attrs: AttributeSet) :
-    AppCompatImageButton(context, attrs)
-{
+@AndroidEntryPoint
+class TintableCheckbox(
+    context: Context,
+    attrs: AttributeSet
+) : AppCompatImageButton(context, attrs) {
     var inColorEditMode = false
         set(value) { field = value
                      refreshDrawableState() }
@@ -39,6 +44,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
 
     var onCheckedChangedListener: ((Boolean) -> Unit)? = null
     var onColorChangedListener: ((Int) -> Unit)? = null
+    @Inject lateinit var fragmentManager: FragmentManager
 
     private var _color = 0
     var color get() = _color
@@ -52,9 +58,8 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
         checkMarkDrawable.setTint(ContextCompat.getColor(context, android.R.color.black))
         setOnClickListener {
             if (inColorEditMode)
-                Dialog.colorPicker(ViewModelItem.Colors.indexOf(color)) { pickedColorIndex ->
-                    setColorIndex(pickedColorIndex)
-                }
+                showColorPickerDialog(context, fragmentManager, ViewModelItem.Colors.indexOf(color))
+                    { pickedColorIndex -> setColorIndex(pickedColorIndex) }
             else isChecked = !isChecked
         }
     }
@@ -65,6 +70,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
         else ObjectAnimator.ofArgb(checkboxBackground, "tint", color).start()
         _color = color
         onColorChangedListener?.invoke(color)
+        context
     }
 
     fun setColorIndex(colorIndex: Int, animate: Boolean = false) {

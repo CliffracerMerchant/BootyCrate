@@ -16,13 +16,14 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
-import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 
 /** The primary activity for BootyCrate
@@ -39,6 +40,7 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  If showingPreferences is true, the value of showingInventory determines the
  *  fragment "under" the preferences (i.e. the one that will be returned to on a
  *  back button press or a navigate up). */
+@AndroidEntryPoint
 open class MainActivity : AppCompatActivity() {
     private lateinit var shoppingListFragment: ShoppingListFragment
     private lateinit var inventoryFragment: InventoryFragment
@@ -53,8 +55,8 @@ open class MainActivity : AppCompatActivity() {
     private var shoppingListNumNewItems = 0
     private var pendingCradleAnim: Animator? = null
 
-    lateinit var shoppingListViewModel: ShoppingListViewModel
-    lateinit var inventoryViewModel: InventoryViewModel
+    val shoppingListViewModel: ShoppingListViewModel by viewModels()
+    val inventoryViewModel: InventoryViewModel by viewModels()
     lateinit var addButton: OutlinedGradientButton
     lateinit var checkoutButton: CheckoutButton
 
@@ -75,8 +77,6 @@ open class MainActivity : AppCompatActivity() {
             editor.putBoolean(prefKey, false)
             editor.apply()
         }
-        shoppingListViewModel = ViewModelProvider(this).get(ShoppingListViewModel::class.java)
-        inventoryViewModel = ViewModelProvider(this).get(InventoryViewModel::class.java)
 
         prefKey = getString(R.string.pref_app_theme)
         val themeDefault = getString(R.string.sys_default_theme_description)

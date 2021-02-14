@@ -7,13 +7,10 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
-import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
-import kotlin.collections.MutableList
-import kotlin.collections.isNotEmpty
-import kotlin.collections.mutableListOf
-import kotlin.collections.mutableMapOf
+import javax.inject.Inject
 import kotlin.collections.set
 
 /** A RecyclerView to display the data provided by a ShoppingListViewModel.
@@ -31,27 +28,18 @@ import kotlin.collections.set
  *  ShoppingListRecyclerView adds a sortByChecked property, which mirrors the
  *  ShoppingListViewModel property, for convenience. sortByChecked should not
  *  be changed before finishInit is called, or an exception will be thrown. */
+@AndroidEntryPoint
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs) {
     override val diffUtilCallback = ShoppingListDiffUtilCallback()
     override val adapter = ShoppingListAdapter()
     override val collectionName = context.getString(R.string.shopping_list_item_collection_name)
-    private lateinit var shoppingListViewModel: ShoppingListViewModel
-    private lateinit var inventoryViewModel: InventoryViewModel
+    @Inject lateinit var shoppingListViewModel: ShoppingListViewModel
+    @Inject lateinit var inventoryViewModel: InventoryViewModel
     val checkedItems = CheckedItems()
 
     var sortByChecked get() = shoppingListViewModel.sortByChecked
         set(value) { shoppingListViewModel.sortByChecked = value }
-
-    fun finishInit(
-        owner: LifecycleOwner,
-        shoppingListViewModel: ShoppingListViewModel,
-        inventoryViewModel: InventoryViewModel
-    ) {
-        this.shoppingListViewModel = shoppingListViewModel
-        this.inventoryViewModel = inventoryViewModel
-        finishInit(owner, shoppingListViewModel)
-    }
 
     /** A RecyclerView.Adapter to display the contents of a list of shopping list items.
      *

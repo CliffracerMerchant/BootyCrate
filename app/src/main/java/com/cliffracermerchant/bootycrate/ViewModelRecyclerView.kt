@@ -7,11 +7,14 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
+import androidx.annotation.CallSuper
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
+import javax.inject.Inject
 
 /** A RecyclerView for displaying the contents of a ViewModel<Entity>.
  *
@@ -54,6 +57,7 @@ import java.util.*
  *  snackbar will be anchored to the view set as the public property snackBar-
  *  Anchor, in case this needs to be customized, or to the RecyclerView itself
  *  otherwise. */
+@AndroidEntryPoint
 abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     context: Context,
     attrs: AttributeSet
@@ -62,7 +66,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     open val collectionName = ""
     protected abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
     abstract val adapter: ViewModelAdapter<out ViewModelItemViewHolder>
-    private lateinit var viewModel: ViewModel<Entity>
+    @Inject lateinit var viewModel: ViewModel<Entity>
     var snackBarAnchor: View? = null
 
     var sort get() = viewModel.sort
@@ -74,9 +78,9 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
         ItemTouchHelper(SwipeToDeleteCallback(::deleteItem, context)).attachToRecyclerView(this)
     }
 
-    fun finishInit(owner: LifecycleOwner, viewModel: ViewModel<Entity> ) {
+    @CallSuper
+    open fun finishInit(owner: LifecycleOwner) {
         setAdapter(adapter)
-        this.viewModel = viewModel
         viewModel.items.observe(owner) { items -> adapter.submitList(items) }
     }
 

@@ -12,6 +12,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
+import dagger.hilt.android.AndroidEntryPoint
 
 /** A fragment to display the BootyCrate app settings.
  *
@@ -20,7 +21,10 @@ import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
  *  the function initOptionsMenu(menu: Menu) must be called with an instance of
  *  the app's action bar menu. See the comment before the implementation of
  *  initOptionsMenu for more information. */
-class PreferencesFragment : PreferenceFragmentCompat() {
+@AndroidEntryPoint
+class PreferencesFragment(
+    @
+) : PreferenceFragmentCompat() {
     private var menu: Menu? = null
 
     init { setHasOptionsMenu(true) }
@@ -49,7 +53,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
                 (activity as? MainActivity)?.shoppingListViewModel?.sortByChecked = sortByChecked
             }
-            getString(R.string.pref_about_app) -> Dialog.aboutApp()
+            getString(R.string.pref_about_app) -> AboutAppDialog(context).show()
             getString(R.string.pref_open_source_libraries_used) -> {
                 val context = activity ?: return false
                 startActivity(Intent(context, OssLicensesMenuActivity::class.java))

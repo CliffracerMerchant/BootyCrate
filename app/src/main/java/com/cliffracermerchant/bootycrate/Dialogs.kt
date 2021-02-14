@@ -4,21 +4,34 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Bundle
 import android.util.TypedValue
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.preference.PreferenceManager
+import com.cliffracermerchant.bootycrate.Dialog.themedAlertBuilder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.thebluealliance.spectrum.SpectrumDialog
+import dagger.hilt.android.AndroidEntryPoint
 import dev.sasikanth.colorsheet.ColorSheet
 import kotlinx.android.synthetic.main.share_dialog.*
+import javax.inject.Inject
 
-fun colorPickerDialog(
+/** Display a color picker dialog to choose from one of ViewModelItem's twelve colors,
+ *  then invoke @param callback with the chosen color index.
+ *
+ *  Note that the initial color parameter and the return value are the
+ *  indices of the chosen color, not the Android color value for the color. */
+fun showColorPickerDialog(
     context: Context,
     fragmentManager: FragmentManager,
     initialColorIndex: Int,
@@ -31,42 +44,32 @@ fun colorPickerDialog(
         .build().show(fragmentManager, null)
 }
 
-object Dialog {
+private enum class ShareOption { TextMessage, Email }
 
-    /** Display a color picker dialog to choose from one of ViewModelItem's twelve colors.
-     *
-     *  Note that the initial color parameter and the return value are the
-     *  indices of the chosen color, not the Android color value for the color. */
-    fun colorPicker(fragmentManager: FragmentManager, callback: (Int) -> Unit, initialColorIndex: Int = 0) {
-        val index = initialColorIndex.coerceIn(ViewModelItem.Colors.indices)
-        val initialColor = ViewModelItem.Colors[index]
-        val colorPicker = ColorSheet().colorPicker(ViewModelItem.Colors, initialColor,
-                                                   noColorOption = false) { color ->
-            val colorIndex = ViewModelItem.Colors.indexOf(color)
-            callback(if (colorIndex != -1) colorIndex else 0)
-        }
-        colorPicker.show(fragmentManager)
-    }
-
-    private enum class ShareOption { TextMessage, Email }
-    /** Display a dialog to provide options to share the list of items */
-    fun <Entity: ViewModelItem>shareList(items: List<Entity>) {
-        themedAlertBuilder().setView(R.layout.share_dialog).create().apply {
+@AndroidEntryPoint
+class ShareDialog<Entity: ViewModelItem>(
+    context: Context,
+    items: List<Any>,
+    snackBarParent: View
+) : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?) =
+        themedAlertBuilder(context)
+        .setView(R.layout.share_dialog)
+        .create().apply {
             setOnShowListener {
                 shareTextMessageOption.setOnClickListener {
-                    shareList(items, ShareOption.TextMessage)
+                    shareList(ShareOption.TextMessage)
                     dismiss()
                 }
                 shareEmailOption.setOnClickListener {
-                    shareList(items, ShareOption.Email)
+                    shareList(ShareOption.Email)
                     dismiss()
                 }
             }
-        }.show()
-    }
+        }
 
     /** Export the list of items via the selected share option. */
-    private fun <Entity: ViewModelItem>shareList(items: List<Entity>, shareOption: ShareOption) {
+    private fun shareList(shareOption: ShareOption) {
         val intent = Intent(Intent.ACTION_SENDTO)
         intent.type = "HTTP.PLAIN_TEXT_TYPE"
 
@@ -82,16 +85,33 @@ object Dialog {
                 intent.data = Uri.parse("smsto:")
             } ShareOption.Email -> {
                 intent.data = Uri.parse("mailto:")
-                val subject = context.getString(R.string.shopping_list_navigation_item_name)
+                val subject =  context?.getString(R.string.shopping_list_navigation_item_name)
                 intent.putExtra(Intent.EXTRA_SUBJECT, subject)
                 intent.putExtra(Intent.EXTRA_TEXT, message)
             }
         }
         if (intent.resolveActivity(context.packageManager) != null)
-            context.startActivity(intent)
+            context?.startActivity(intent)
         else Snackbar.make(snackBarParent, R.string.share_error_message, Snackbar.LENGTH_SHORT).
-                      setAnchorView(snackBarParent).show()
+        setAnchorView(snackBarParent).show()
     }
+}
+
+class AboutAppDialog(context: Context) : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+        themedAlertBuilder(context).setView(R.layout.about_app_dialog).create()
+}
+
+fun themedAlertBuilder(context: Context): MaterialAlertDialogBuilder {
+    // AlertDialog seems to ignore the theme's alertDialogTheme value, making it
+    // necessary to pass it's value in manually to the AlertDialog.builder constructor.
+    val typedValue = TypedValue()
+    context.theme.resolveAttribute(R.attr.materialAlertDialogTheme, typedValue, true)
+    return MaterialAlertDialogBuilder(context, typedValue.data)
+}
+
+
+object Dialog {
 
     fun aboutApp() { themedAlertBuilder().setView(R.layout.about_app_dialog).show() }
 

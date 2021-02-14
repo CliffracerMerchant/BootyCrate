@@ -7,10 +7,11 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
-import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.integer_edit.view.*
 import java.util.*
+import javax.inject.Inject
 
 /** A RecyclerView to display the data provided by an InventoryViewModel.
  *
@@ -22,23 +23,14 @@ import java.util.*
  *  but before any sort of data access is attempted. InventoryRecyclerView's
  *  version of finishInit will call ExpandableSelectableRecyclerView's version
  *  to prevent the implementing activity or fragment from needing to call both. */
+@AndroidEntryPoint
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<InventoryItem>(context, attrs) {
     override val diffUtilCallback = InventoryItemDiffUtilCallback()
     override val adapter = InventoryAdapter()
     override val collectionName = context.getString(R.string.inventory_item_collection_name)
-    private lateinit var inventoryViewModel: InventoryViewModel
-    private lateinit var shoppingListViewModel: ShoppingListViewModel
-
-    fun finishInit(
-        owner: LifecycleOwner,
-        inventoryViewModel: InventoryViewModel,
-        shoppingListViewModel: ShoppingListViewModel
-    ) {
-        this.inventoryViewModel = inventoryViewModel
-        this.shoppingListViewModel = shoppingListViewModel
-        finishInit(owner, inventoryViewModel)
-    }
+    @Inject lateinit var inventoryViewModel: InventoryViewModel
+    @Inject lateinit var shoppingListViewModel: ShoppingListViewModel
 
     /** A RecyclerView.Adapter to display the contents of a list of inventory items.
      *

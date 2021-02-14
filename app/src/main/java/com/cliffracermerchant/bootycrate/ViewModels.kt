@@ -6,8 +6,10 @@ package com.cliffracermerchant.bootycrate
 
 import android.app.Application
 import androidx.lifecycle.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
+import javax.inject.Inject
 
 /** An abstract AndroidViewModel that provides an asynchronous interface for DataAccessObject<Entity> functions.
  *
@@ -135,7 +137,10 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 
 
 /** A ViewModel<ShoppingListItem> subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
-class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewModel<ShoppingListItem>(app) {
+@HiltViewModel
+class ShoppingListViewModel @Inject constructor(app: Application) :
+    ExpandableSelectableItemViewModel<ShoppingListItem>(app)
+{
     override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
     val checkedItemsSize = dao.getCheckedItemsSize()
 
@@ -171,7 +176,10 @@ class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewMode
 
 
 /** A ViewModel<InventoryItem> subclass that provides functions to asynchronously execute InventoryItemDao's functions. */
-class InventoryViewModel(app: Application) : ExpandableSelectableItemViewModel<InventoryItem>(app) {
+@HiltViewModel
+class InventoryViewModel @Inject constructor(app: Application) :
+    ExpandableSelectableItemViewModel<InventoryItem>(app)
+{
     override val dao = BootyCrateDatabase.get(app).inventoryItemDao()
 
     init { viewModelScope.launch{ dao.emptyTrash() } }

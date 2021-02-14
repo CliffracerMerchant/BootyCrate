@@ -13,6 +13,7 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import com.kennyc.view.MultiStateView
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_main.view.*
 
@@ -31,9 +32,10 @@ import kotlinx.android.synthetic.main.activity_main.view.*
  *  clerView has a selection. Subclasses can override this property with their
  *  own instance of ActionMode if they wish to specialize this behavior. */
 @Suppress("LeakingThis")
+@AndroidEntryPoint
 abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: Boolean = false) :
-        MainActivityFragment(isActive) {
-
+    MainActivityFragment(isActive)
+{
     abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>
     open val actionMode = ActionMode()
 
@@ -107,14 +109,18 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.isChecked || !isActive) return false
+        val context = this.context ?: return false
         return when (item.itemId) {
             R.id.delete_selected_menu_item -> {
                 recyclerView.deleteSelectedItems()
                 true
             } R.id.share_menu_item -> {
-                Dialog.shareList(items = if (recyclerView.selection.size != 0)
-                                             recyclerView.selection.items!!
-                                         else recyclerView.adapter.currentList)
+                ShareDialog<Entity>(
+                    context = context,
+                    items = if (recyclerView.selection.size != 0)
+                                recyclerView.selection.items!!
+                            else recyclerView.adapter.currentList,
+                    snackBarParent = activity?.bottomAppBar ?: recyclerView)
                 true
             } R.id.select_all_menu_item -> {
                 recyclerView.selection.addAll()
