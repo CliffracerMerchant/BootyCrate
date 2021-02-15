@@ -55,6 +55,7 @@ import java.util.*
  *  snackbar will be anchored to the view set as the public property snackBar-
  *  Anchor, in case this needs to be customized, or to the RecyclerView itself
  *  otherwise. */
+@Suppress("LeakingThis")
 abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     context: Context,
     attrs: AttributeSet

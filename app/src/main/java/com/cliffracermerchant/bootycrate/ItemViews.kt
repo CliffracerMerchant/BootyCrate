@@ -32,6 +32,7 @@ import com.cliffracermerchant.bootycrate.databinding.ViewModelItemBinding
  *  desired layout and initialize the member ui with an instance of a ViewModel-
  *  ItemBinding. If the ui member is not initialized then a kotlin.Uninitial-
  *  izedPropertyAccessException will be thrown. */
+@Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
 open class ViewModelItemView<Entity: ViewModelItem>(
     context: Context,

@@ -69,12 +69,12 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     var indicatorColor: Int get() = indicatorPaint.color
                             set(value) { indicatorPaint.color = value }
 
-    var backgroundGradient get() = backgroundPaint.shader
+    var backgroundGradient: Shader? get() = backgroundPaint.shader
                            set(gradient) { backgroundPaint.shader = gradient }
-    var borderGradient get() = borderPaint.shader
-                       set(gradient) { borderPaint.shader = gradient }
-    var indicatorGradient get() = indicatorPaint.shader
-                          set(gradient) { indicatorPaint.shader = gradient }
+    var borderGradient: Shader? get() = borderPaint.shader
+                                set(gradient) { borderPaint.shader = gradient }
+    var indicatorGradient: Shader?get() = indicatorPaint.shader
+                                  set(gradient) { indicatorPaint.shader = gradient }
 
     private val materialShapeDrawable = MaterialShapeDrawable()
     private val outlinePath = Path()
@@ -167,7 +167,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
             interpolation: Float,
             shapePath: ShapePath
         ) {
-            // The path needs to be offset by half of the border paint's strokewidth
+            // The path needs to be offset by half of the border paint's strokeWidth
             // value to ensure that the border is drawn entirely within the canvas.
             val pathOffset = borderPaint.strokeWidth / 2f
 
@@ -235,6 +235,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
                 // elsewhere, that causes the y value after the above arc to be slightly
                 // off. This will cause a tilt in the final horizontal line. The follo-
                 // wing lineTo puts the current y at pathOffset, where it should be.
+                @Suppress("DEPRECATION")
                 lineTo(endX, pathOffset)
                 lineTo(width.toFloat(), pathOffset)
             }

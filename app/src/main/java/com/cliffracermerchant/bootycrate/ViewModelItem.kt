@@ -46,8 +46,6 @@ import androidx.room.PrimaryKey
 
     override fun hashCode() = id.hashCode()
 
-    enum class Field { Name, ExtraInfo, Color, Amount, LinkedTo }
-
     enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
         companion object {
             fun fromString(string: String?): Sort =
@@ -90,7 +88,4 @@ import androidx.room.PrimaryKey
 
     override fun toDebugString() = super.toString() +
             "\nisExpanded = $isExpanded\nisSelected = $isSelected"
-
-    enum class Field { Name, ExtraInfo, Color, Amount,
-                       LinkedTo, isExpanded, isSelected }
 }

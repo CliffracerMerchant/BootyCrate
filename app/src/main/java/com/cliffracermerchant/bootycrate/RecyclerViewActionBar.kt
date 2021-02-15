@@ -43,6 +43,7 @@ import com.cliffracermerchant.bootycrate.databinding.RecyclerViewActionBarBindin
  *  click being routed through onOptionsItemSelected) is desired, the functions
  *  can be passed a lambda that manually calls onOptionsItemSelected for the
  *  activity or fragment being used. */
+@Suppress("LeakingThis")
 open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         ConstraintLayout(context, attrs) {
     val ui = RecyclerViewActionBarBinding.inflate(LayoutInflater.from(context), this)
@@ -140,7 +141,7 @@ class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewAct
  *  Views. */
 class ShaderTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitcher(context, attrs) {
     val text get() = (currentView as TextView).text.toString()
-    var shader get() = (currentView as TextView).paint.shader
+    var shader: Shader? get() = (currentView as TextView).paint.shader
         set(value) { val textView = currentView as TextView
                      val textTop = top.toFloat() + textView.baseline +
                                    textView.paint.fontMetrics.top

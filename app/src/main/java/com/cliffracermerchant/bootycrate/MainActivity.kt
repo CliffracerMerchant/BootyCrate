@@ -208,7 +208,7 @@ open class MainActivity : AppCompatActivity() {
 
     private fun showBottomAppBar(show: Boolean = true) {
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
-        val views = arrayOf<View>(ui.bottomAppBar, ui.addButton, ui.checkoutButton)
+        val views = arrayOf(ui.bottomAppBar, ui.addButton, ui.checkoutButton)
 
         if (!show && ui.bottomAppBar.height == 0) {
             ui.bottomAppBar.doOnNextLayout {

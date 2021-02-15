@@ -21,12 +21,12 @@ import androidx.core.graphics.PathParser
  *  ground gradient that "shows through" certain UI components) due to its use
  *  of the paint.shader property. */
 open class GradientVectorDrawable(
-    protected val pathWidth: Float,
-    protected val pathHeight: Float,
+    private val pathWidth: Float,
+    private val pathHeight: Float,
     pathData: String
 ) : Drawable() {
-    protected val paint = Paint().apply { style = Paint.Style.FILL }
-    protected val originalPath = PathParser.createPathFromPathData(pathData)
+    private val paint = Paint().apply { style = Paint.Style.FILL }
+    private val originalPath: Path = PathParser.createPathFromPathData(pathData)
     protected var path = Path()
     protected val matrix = Matrix()
 
@@ -78,6 +78,7 @@ class ClippedGradientVectorDrawable(
 
     override fun draw(canvas: Canvas) {
         canvas.save()
+        @Suppress("DEPRECATION")
         canvas.clipPath(clipPath, Region.Op.DIFFERENCE)
         super.draw(canvas)
         canvas.restore()

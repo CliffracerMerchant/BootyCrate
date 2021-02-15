@@ -110,19 +110,19 @@ fun inputMethodManager(context: Context) =
     context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
 
 /** Return a valueAnimator for an Int property with the update listener already set. */
-fun valueAnimatorOfInt(setter: (Int) -> Unit, initialValue: Int, endValue: Int) =
+fun valueAnimatorOfInt(setter: (Int) -> Unit, initialValue: Int, endValue: Int): ValueAnimator =
     ValueAnimator.ofInt(initialValue, endValue).apply {
         addUpdateListener { setter(it.animatedValue as Int) }
     }
 
 /** Return a valueAnimator for a Float property with the update listener already set. */
-fun valueAnimatorOfFloat(setter: (Float) -> Unit, initialValue: Float, endValue: Float) =
+fun valueAnimatorOfFloat(setter: (Float) -> Unit, initialValue: Float, endValue: Float): ValueAnimator =
     ValueAnimator.ofFloat(initialValue, endValue).apply {
         addUpdateListener { setter(it.animatedValue as Float) }
     }
 
 /** Return a valueAnimator for an ARGB property with the update listener already set. */
-fun valueAnimatorOfArgb(setter: (Int) -> Unit, initialValue: Int, endValue: Int) =
+fun valueAnimatorOfArgb(setter: (Int) -> Unit, initialValue: Int, endValue: Int): ValueAnimator =
     ValueAnimator.ofArgb(initialValue, endValue).apply {
         addUpdateListener { setter(it.animatedValue as Int) }
     }
