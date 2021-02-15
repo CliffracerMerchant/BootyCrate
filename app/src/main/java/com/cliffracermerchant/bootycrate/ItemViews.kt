@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
@@ -13,7 +12,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
@@ -148,16 +146,11 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        if (animate) {
-            setLayerType(LAYER_TYPE_HARDWARE, null)
-            ObjectAnimator.ofInt(gradientOutline, "alpha",
-                if (selected) 0 else 255,
-                if (selected) 255 else 0).apply {
-                duration = 200L
-                doOnEnd { setLayerType(LAYER_TYPE_NONE, null) }
-                start()
-            }
-        }
+        if (animate) valueAnimatorOfInt(gradientOutline::setAlpha,
+                                        if (selected) 0 else 255,
+                                        if (selected) 255 else 0)
+                                        .apply { duration = 200L }
+                                        .start()
         else gradientOutline.alpha = if (selected) 255 else 0
     }
 }

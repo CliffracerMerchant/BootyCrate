@@ -4,8 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
@@ -133,9 +131,14 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
 class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
         TextFieldEdit(context, attrs) {
 
-    private var strikeThroughLength: Float? = null
-    private var strikeThroughAnimIsReversed = false
     private val normalTextColor = currentTextColor
+    private var strikeThroughAnimIsReversed = false
+    private var strikeThroughLength: Float? = null
+    // So that the setter can be passed to valueAnimatorOfFloat
+    private fun setStrikeThroughLength(value: Float) {
+        strikeThroughLength = value
+        invalidate()
+    }
 
     init {
         doAfterTextChanged { text ->
@@ -148,15 +151,12 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         strikeThroughAnimIsReversed = !strikeThroughEnabled
         val fullLength = paint.measureText(text, 0, text?.length ?: 0)
         if (animate) {
-            ObjectAnimator.ofArgb(this, "textColor", currentTextColor,
-                                  if (strikeThroughEnabled) currentHintTextColor
-                                  else                      normalTextColor).start()
-            ValueAnimator.ofFloat(0f, fullLength).apply {
-                addUpdateListener {
-                    strikeThroughLength = it.animatedValue as Float
-                    invalidate()
-                }
-                if (!strikeThroughEnabled) doOnEnd { strikeThroughLength = null }
+            val endColor = if (strikeThroughEnabled) currentHintTextColor
+                           else                      normalTextColor
+            valueAnimatorOfArgb(::setTextColor, currentTextColor, endColor).start()
+            valueAnimatorOfFloat(::setStrikeThroughLength, 0f, fullLength).apply {
+                if (!strikeThroughEnabled)
+                    doOnEnd { strikeThroughLength = null }
             }.start()
         } else {
             strikeThroughLength = if (strikeThroughEnabled) fullLength else null

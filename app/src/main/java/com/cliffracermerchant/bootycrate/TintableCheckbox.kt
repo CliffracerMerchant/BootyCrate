@@ -1,13 +1,9 @@
-/*
- * Copyright 2020 Nicholas Hochstetler
+/* Copyright 2020 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
- * or in the file LICENSE in the project's root directory.
- */
-
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
@@ -60,13 +56,12 @@ class TintableCheckbox(
         }
     }
 
-    fun setColor(color: Int, animate: Boolean = false) {
-        val checkboxBackground = (drawable as LayerDrawable).getDrawable(0)
-        if (!animate) checkboxBackground.setTint(color)
-        else ObjectAnimator.ofArgb(checkboxBackground, "tint", color).start()
-        _color = color
-        onColorChangedListener?.invoke(color)
-        context
+    fun setColor(newColor: Int, animate: Boolean = false) {
+        val checkboxBg = (drawable as LayerDrawable).getDrawable(0)
+        if (!animate) checkboxBg.setTint(newColor)
+        else valueAnimatorOfArgb(checkboxBg::setTint, color, newColor).start()
+        _color = newColor
+        onColorChangedListener?.invoke(newColor)
     }
 
     fun setColorIndex(colorIndex: Int, animate: Boolean = false) {

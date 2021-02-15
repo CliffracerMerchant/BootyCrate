@@ -6,7 +6,6 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
-import android.animation.ObjectAnimator
 import android.view.View
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
@@ -93,7 +92,7 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
         // preInfo.top won't necessarily be the correct start value
         // if the view is on bottom and also needs to be translated.
         val start = view.top + preInfo.bottom - preInfo.top
-        ObjectAnimator.ofInt(view, "bottom", start, postInfo.bottom).apply {
+        valueAnimatorOfInt(view::setBottom, start, postInfo.bottom).apply {
             duration = moveDuration
             doOnStart {
                 dispatchChangeStarting(newHolder, true)
@@ -116,7 +115,7 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
             val viewIsOnBottom = if (collapsingPos == pos) collapsingPos > expandingPos
                                  else                      expandingPos > collapsingPos
             if (viewIsOnBottom)
-                ObjectAnimator.ofFloat(view, "translationY", heightChange * 1f, 0f).apply {
+                valueAnimatorOfFloat(view::setTranslationY, heightChange * 1f, 0f).apply {
                     duration = moveDuration
                     doOnStart { pause() }
                     pendingAnimations.add(this)

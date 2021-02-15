@@ -6,7 +6,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
 import android.animation.LayoutTransition
-import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
@@ -257,10 +257,11 @@ open class MainActivity : AppCompatActivity() {
         // right corners of the checkout button from sticking out
         // underneath the FAB during the show / hide animation.
         val checkoutBtnClipBounds = Rect(0, 0, 0, checkoutButton.height)
-        ObjectAnimator.ofInt(bottomAppBar, "cradleWidth", cradleEndWidth).apply {
+        ValueAnimator.ofInt(bottomAppBar.cradleWidth, cradleEndWidth).apply {
             interpolator = cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
             duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
             addUpdateListener {
+                bottomAppBar.cradleWidth = it.animatedValue as Int
                 checkoutBtnClipBounds.right = bottomAppBar.cradleWidth - addButton.measuredWidth / 2
                 checkoutButton.clipBounds = checkoutBtnClipBounds
             }
@@ -326,7 +327,8 @@ open class MainActivity : AppCompatActivity() {
                 if (item.itemId == R.id.inventory_button) R.id.inventory_button
                 else                                      R.id.shopping_list_button)
             val indicatorNewXPos = (newIcon.width - bottomAppBar.indicatorWidth) / 2 + newIcon.left
-            ObjectAnimator.ofInt(bottomAppBar, "indicatorXPos", indicatorNewXPos).apply {
+            ValueAnimator.ofInt(bottomAppBar.indicatorXPos, indicatorNewXPos).apply {
+                addUpdateListener { bottomAppBar.indicatorXPos = it.animatedValue as Int }
                 duration = cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
             }.start()
             true

@@ -5,6 +5,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.LayoutTransition
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
@@ -107,3 +108,22 @@ class MultiListenerSearchView(context: Context, attrs: AttributeSet) : SearchVie
 
 fun inputMethodManager(context: Context) =
     context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+
+/** Return a valueAnimator for an Int property with the update listener already set. */
+fun valueAnimatorOfInt(setter: (Int) -> Unit, initialValue: Int, endValue: Int) =
+    ValueAnimator.ofInt(initialValue, endValue).apply {
+        addUpdateListener { setter(it.animatedValue as Int) }
+    }
+
+/** Return a valueAnimator for a Float property with the update listener already set. */
+fun valueAnimatorOfFloat(setter: (Float) -> Unit, initialValue: Float, endValue: Float) =
+    ValueAnimator.ofFloat(initialValue, endValue).apply {
+        addUpdateListener { setter(it.animatedValue as Float) }
+    }
+
+/** Return a valueAnimator for an ARGB property with the update listener already set. */
+fun valueAnimatorOfArgb(setter: (Int) -> Unit, initialValue: Int, endValue: Int) =
+    ValueAnimator.ofArgb(initialValue, endValue).apply {
+        addUpdateListener { setter(it.animatedValue as Int) }
+    }
+

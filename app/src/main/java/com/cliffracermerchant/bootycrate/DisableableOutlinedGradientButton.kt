@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -20,31 +19,19 @@ import androidx.core.view.doOnNextLayout
  *  DisableableOutlinedGradientButton automatically creates a disabled drawable
  *  for itself based on the OutlinedGradientButton background and the XML attri-
  *  butes disabledBackgroundTint and disabledOutlineAndTextTint. The disabled
- *  drawable will look like the OutlinedGradientButton background but with
+ *  drawable will look like the OutlinedGradientButton background, but with
  *  these alternative tint values and no gradient shaders. When the button is
  *  enabled or disabled via the View property isEnabled the button will animate
- *  to or from its disabled state. Note that due to its implementation the
- *  disabled background will not reflect any changes to the button's text that
- *  occur after initialization.
+ *  to or from its disabled state. Note that the disabled background will not
+ *  reflect any changes to the button's text that occur after initialization.
  *
- *  If any additional changes when the isEnabledState is changed are desired,
+ *  If any additional changes are desired when the isEnabledState is changed,
  *  they can be defined in a subclass override of View.setEnabled, which should
  *  always call the super implementation. */
 open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeSet) :
     OutlinedGradientButton(context, attrs)
 {
     private var disabledOverlay: Drawable? = null
-
-    @CallSuper
-    override fun setEnabled(enabled: Boolean) {
-        if (isEnabled == enabled) return
-        super.setEnabled(enabled)
-        val disabledOverlay = this.disabledOverlay ?: return
-        val alpha = if (enabled) 0 else 255
-        ObjectAnimator.ofInt(disabledOverlay, "alpha", alpha).apply {
-            addUpdateListener{ invalidate() }
-        }.start()
-    }
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.DisableableOutlinedGradientButton)
@@ -67,10 +54,22 @@ open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeS
             draw(canvas)
             disabledOverlay = BitmapDrawable(context.resources, bitmap).apply {
                 alpha = if (isEnabled) 0 else 255
-                bounds = background.bounds }
+                bounds = background.bounds
+            }
             backgroundGradient = backupBackgroundGradient
             outlineGradient = backupOutlineGradient
         }
+    }
+
+    @CallSuper
+    override fun setEnabled(enabled: Boolean) {
+        if (isEnabled == enabled) return
+        super.setEnabled(enabled)
+        val disabledOverlay = this.disabledOverlay ?: return
+        valueAnimatorOfInt(disabledOverlay::setAlpha,
+                           disabledOverlay.alpha,
+                           if (enabled) 0 else 255).apply {
+            addUpdateListener{ invalidate() }}.start()
     }
 
     override fun onDraw(canvas: Canvas?) {
