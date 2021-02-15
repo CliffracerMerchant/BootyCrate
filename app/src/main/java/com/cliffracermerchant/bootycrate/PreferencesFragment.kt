@@ -12,7 +12,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
-import dagger.hilt.android.AndroidEntryPoint
 
 /** A fragment to display the BootyCrate app settings.
  *
@@ -21,13 +20,7 @@ import dagger.hilt.android.AndroidEntryPoint
  *  the function initOptionsMenu(menu: Menu) must be called with an instance of
  *  the app's action bar menu. See the comment before the implementation of
  *  initOptionsMenu for more information. */
-@AndroidEntryPoint
-class PreferencesFragment(
-    @
-) : PreferenceFragmentCompat() {
-    private var menu: Menu? = null
-
-    init { setHasOptionsMenu(true) }
+class PreferencesFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -53,19 +46,14 @@ class PreferencesFragment(
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
                 (activity as? MainActivity)?.shoppingListViewModel?.sortByChecked = sortByChecked
             }
-            getString(R.string.pref_about_app) -> AboutAppDialog(context).show()
+            getString(R.string.pref_about_app) ->
+                AboutAppDialog().show(parentFragmentManager, null)
             getString(R.string.pref_open_source_libraries_used) -> {
-                val context = activity ?: return false
+                val context = this.context ?: return false
                 startActivity(Intent(context, OssLicensesMenuActivity::class.java))
             } else -> return super.onPreferenceTreeClick(preference)
         }
         return true
-    }
-
-    override fun onHiddenChanged(hidden: Boolean) {
-        menu?.setGroupVisible(R.id.all_action_bar_items_group, hidden)
-        // See R.menu.action_bar_menu source for an explanation of "other_action_bar_menu_items"
-        menu?.setGroupVisible(R.id.other_action_bar_menu_items, hidden)
     }
 
 //    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->

@@ -12,9 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.integer_edit.view.*
-import javax.inject.Inject
 
 /** A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
  *
@@ -36,13 +34,12 @@ import javax.inject.Inject
  *  ViewModelRecyclerView's version to prevent the implementing activity or
  *  fragment from needing to remember to call both. */
 @Suppress("LeakingThis")
-@AndroidEntryPoint
 abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem>(
     context: Context,
     attrs: AttributeSet
 ) : ViewModelRecyclerView<Entity>(context, attrs) {
 
-    @Inject lateinit var expandableSelectableViewModel: ExpandableSelectableItemViewModel<Entity>
+    abstract override val viewModel: ExpandableSelectableItemViewModel<Entity>
     private val itemAnimator = ExpandableItemAnimator(this)
 
     val selection = Selection()
@@ -61,7 +58,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
 
     open fun deleteSelectedItems() {
         val size = selection.size
-        expandableSelectableViewModel.deleteSelected()
+        viewModel.deleteSelected()
         val text = context.getString(R.string.delete_snackbar_text, size)
         Snackbar.make(this, text, Snackbar.LENGTH_LONG).
              setAnchorView(snackBarAnchor ?: this).
@@ -73,8 +70,8 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
     }
 
     fun setExpandedItem(pos: Int?) {
-        expandableSelectableViewModel.setExpandedId(if (pos == null) null
-                                                    else adapter.currentList[pos].id)
+        viewModel.setExpandedId(if (pos == null) null
+                                else adapter.currentList[pos].id)
         itemAnimator.notifyExpandedItemChanged(pos)
     }
 
@@ -91,17 +88,17 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
      *  stable id of the item being operated on. The function clear will erase
      *  the selection entirely. */
     inner class Selection {
-        val itemsLiveData get() = expandableSelectableViewModel.selectedItems
+        val itemsLiveData get() = viewModel.selectedItems
         val items get() = itemsLiveData.value
         val size get() = items?.size ?: 0
         val isEmpty get() = size == 0
         val isNotEmpty get() = size != 0
 
-        fun addAll() = expandableSelectableViewModel.selectAll()
-        fun add(id: Long) = expandableSelectableViewModel.updateIsSelected(id, true)
-        fun remove(id: Long) = expandableSelectableViewModel.updateIsSelected(id, false)
-        fun toggle(id: Long) = expandableSelectableViewModel.toggleIsSelected(id)
-        fun clear() = expandableSelectableViewModel.clearSelection()
+        fun addAll() = viewModel.selectAll()
+        fun add(id: Long) = viewModel.updateIsSelected(id, true)
+        fun remove(id: Long) = viewModel.updateIsSelected(id, false)
+        fun toggle(id: Long) = viewModel.toggleIsSelected(id)
+        fun clear() = viewModel.clearSelection()
     }
 
     /** A subclass of ViewModelAdapter that enforces the use of ExpandableSelectableItemViewHolder.

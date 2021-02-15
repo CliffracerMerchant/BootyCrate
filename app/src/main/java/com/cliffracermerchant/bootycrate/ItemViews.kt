@@ -6,13 +6,11 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
@@ -43,7 +41,7 @@ open class ViewModelItemView<Entity: ViewModelItem>(
     useDefaultLayout: Boolean = true,
 ) : ConstraintLayout(context) {
 
-    protected val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+    protected val inputMethodManager = inputMethodManager(context)
     protected var itemIsLinked = false
 
     lateinit var ui: ViewModelItemBinding
@@ -130,7 +128,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             ui.nameEdit.isFocused ||
             ui.extraInfoEdit.isFocused ||
             ui.amountEdit.valueEdit.isFocused)
-            imm?.hideSoftInputFromWindow(windowToken, 0)
+            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
 
         ui.nameEdit.isEditable = expanded
         ui.amountEdit.valueIsDirectlyEditable = expanded
@@ -222,7 +220,7 @@ class InventoryItemView(context: Context) :
     override fun setExpanded(expanded: Boolean) {
         super.setExpanded(expanded)
         if (!expanded && detailsUi.addToShoppingListTriggerEdit.valueEdit.isFocused)
-            imm?.hideSoftInputFromWindow(windowToken, 0)
+            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
         detailsUi.inventoryItemDetailsGroup.isVisible = expanded
     }
 }

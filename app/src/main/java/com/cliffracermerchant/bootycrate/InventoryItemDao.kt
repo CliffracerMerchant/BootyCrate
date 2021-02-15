@@ -5,7 +5,9 @@
 package com.cliffracermerchant.bootycrate
 
 import androidx.lifecycle.LiveData
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.Transaction
 
 /** A Room DAO for BootyCrateDatabase's inventory_item table. */
 @Dao abstract class InventoryItemDao : ExpandableSelectableItemDao<InventoryItem>() {

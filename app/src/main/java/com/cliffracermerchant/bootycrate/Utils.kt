@@ -5,15 +5,16 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.LayoutTransition
+import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.graphics.Rect
 import android.graphics.Shader
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.SearchView
 
 fun defaultLayoutTransition() = LayoutTransition().apply {
@@ -76,7 +77,6 @@ fun View.centerY() = top + height / 2
 internal object UtilsPrivate {
     val matrix = Matrix()
     val matrixValues = FloatArray(9)
-    val rect = Rect()
 }
 
 /** Translate the shader by dx, dy; will not affect the Shader's scale.*/
@@ -104,3 +104,6 @@ class MultiListenerSearchView(context: Context, attrs: AttributeSet) : SearchVie
     }
     override fun setOnCloseListener(l: OnCloseListener) { onCloseListeners.add(l) }
 }
+
+fun inputMethodManager(context: Context) =
+    context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager

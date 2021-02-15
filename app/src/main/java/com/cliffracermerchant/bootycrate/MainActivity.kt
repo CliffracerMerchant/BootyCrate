@@ -7,14 +7,12 @@ package com.cliffracermerchant.bootycrate
 import android.animation.Animator
 import android.animation.LayoutTransition
 import android.animation.ObjectAnimator
-import android.app.Activity
 import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -23,8 +21,10 @@ import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.activity_main.*
+
+//@HiltAndroidApp
+//class BootyCrateApplication: Application()
 
 /** The primary activity for BootyCrate
  *
@@ -40,11 +40,10 @@ import kotlinx.android.synthetic.main.activity_main.*
  *  If showingPreferences is true, the value of showingInventory determines the
  *  fragment "under" the preferences (i.e. the one that will be returned to on a
  *  back button press or a navigate up). */
-@AndroidEntryPoint
+//@AndroidEntryPoint
 open class MainActivity : AppCompatActivity() {
     private lateinit var shoppingListFragment: ShoppingListFragment
     private lateinit var inventoryFragment: InventoryFragment
-    private lateinit var imm: InputMethodManager
     private var showingInventory = false
     private var showingPreferences = false
     val activeFragment get() = if (showingInventory) inventoryFragment
@@ -90,7 +89,6 @@ open class MainActivity : AppCompatActivity() {
 
         addButton = add_button
         checkoutButton = checkout_button
-        imm = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
 
         cradleLayout.layoutTransition = defaultLayoutTransition()
         cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
@@ -174,7 +172,7 @@ open class MainActivity : AppCompatActivity() {
 
     private fun showPreferencesFragment(animate: Boolean = true) {
         showingPreferences = true
-        imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
+        inputMethodManager(this)?.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
         showBottomAppBar(false)
         activeFragment.isActive = false
         topActionBar.ui.backButton.isVisible = true
@@ -196,7 +194,7 @@ open class MainActivity : AppCompatActivity() {
         val oldFragment = activeFragment
         showingInventory = switchingToInventory
         showCheckoutButton(showing = !showingInventory)
-        imm.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
+        inputMethodManager(this)?.hideSoftInputFromWindow(bottomAppBar.windowToken, 0)
 
         val newFragmentTranslationStart = fragmentContainer.width * if (showingInventory) 1f else -1f
         val fragmentTranslationAmount = fragmentContainer.width * if (showingInventory) -1f else 1f

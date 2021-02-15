@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.app.Activity
 import android.content.Context
 import android.graphics.Paint
 import android.util.AttributeSet
@@ -12,7 +11,6 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -58,7 +56,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     private val _liveData = MutableLiveData(value)
     val liveData: LiveData<Int> get() = _liveData
 
-    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+    private val inputMethodManager = inputMethodManager(context)
     private val interpolator = AccelerateDecelerateInterpolator()
 
     init {
@@ -81,7 +79,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         valueEdit.setOnEditorActionListener{ _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 clearFocus()
-                imm?.hideSoftInputFromWindow(windowToken, 0)
+                inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
                 value = value // To enforce min/max value
             }
             actionId == EditorInfo.IME_ACTION_DONE

@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.app.Activity
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -37,14 +36,13 @@ import com.cliffracermerchant.bootycrate.databinding.NewItemDialogBinding
  *  combination is already used by another item. It will not prevent the user
  *  from adding the item anyway if desired. It will also display an error mes-
  *  sage and will prevent the user from proceeding if they try to add an item
- *  with no name.
- */
+ *  with no name. */
 abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     context: Context,
     private val viewModel: ViewModel<Entity>,
     useDefaultLayout: Boolean = true
 ) : DialogFragment() {
-    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager?
+    private val inputMethodManager = inputMethodManager(context)
     private val cancelButton get(): Button = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEUTRAL)
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
@@ -84,7 +82,7 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
         Transformations.distinctUntilChanged(viewModel.newItemNameIsAlreadyUsed).observe(this) {
             nameIsAlreadyUsed -> ui.duplicateNameWarning.isVisible = nameIsAlreadyUsed
         }
-        return Dialog.themedAlertBuilder()
+        return themedAlertDialogBuilder(requireContext())
             .setBackgroundInsetStart(0)
             .setBackgroundInsetEnd(0)
             .setTitle(R.string.add_item_button_name)
@@ -102,27 +100,27 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
                         if (addItem()) resetNewItemView()
                     }
                     newItemView.ui.nameEdit.requestFocus()
-                    imm?.showSoftInput(newItemView.ui.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+                    inputMethodManager?.showSoftInput(newItemView.ui.nameEdit,
+                                                      InputMethodManager.SHOW_IMPLICIT)
                 }
             }
     }
 
-    open fun resetNewItemView() = with(newItemView) {
+    open fun resetNewItemView(): Unit = with(newItemView) {
         ui.nameEdit.text?.clear()
         ui.extraInfoEdit.text?.clear()
         ui.amountEdit.value = 1
         // We'll leave the color edit set to whichever color it was on previously,
         // in case the user wants to add items with like colors consecutively.
         ui.nameEdit.requestFocus()
-        imm?.showSoftInput(ui.nameEdit, InputMethodManager.SHOW_IMPLICIT)
-        return@with
+        inputMethodManager?.showSoftInput(ui.nameEdit, InputMethodManager.SHOW_IMPLICIT)
     }
 
     private fun addItem() =
         if (newItemView.ui.nameEdit.text?.isBlank() == true) {
             ui.noNameError.isVisible = true
-            (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
-            (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE).isEnabled = false
+            addAnotherButton.isEnabled = false
+            okButton.isEnabled = false
             false
         } else {
             viewModel.add(createItemFromView())
@@ -136,8 +134,7 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
 class NewShoppingListItemDialog(context: Context, viewModel: ShoppingListViewModel) :
     NewViewModelItemDialog<ShoppingListItem>(context, viewModel)
 {
-    init { newItemView.ui.checkBox.inColorEditMode = true
-    }
+    init { newItemView.ui.checkBox.inColorEditMode = true }
 
     override fun createItemFromView() = ShoppingListItem(
         name = newItemView.ui.nameEdit.text.toString(),

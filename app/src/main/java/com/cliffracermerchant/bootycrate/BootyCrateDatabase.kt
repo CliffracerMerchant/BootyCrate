@@ -10,13 +10,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
-import javax.inject.Singleton
 
 /** A Room database to access the tables shopping_list_item and inventory_item.
  *
@@ -236,12 +232,4 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                       (SELECT isSelected FROM shopping_list_item WHERE id == new.linkedItemId),
                       (SELECT isChecked FROM shopping_list_item WHERE id == new.linkedItemId)"""
     }
-}
-
-@Module
-object DatabaseModule {
-    @Provides @Singleton
-    fun provideDatabase(@ApplicationContext app: Context) = BootyCrateDatabase.get(app)
-    @Provides fun provideShoppingListItemDao(db: BootyCrateDatabase) = db.shoppingListItemDao()
-    @Provides fun provideInventoryItemDao(db: BootyCrateDatabase) = db.inventoryItemDao()
 }

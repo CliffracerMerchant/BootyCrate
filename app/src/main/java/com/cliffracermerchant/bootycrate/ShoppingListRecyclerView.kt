@@ -7,10 +7,9 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
-import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
-import javax.inject.Inject
 import kotlin.collections.set
 
 /** A RecyclerView to display the data provided by a ShoppingListViewModel.
@@ -28,18 +27,27 @@ import kotlin.collections.set
  *  ShoppingListRecyclerView adds a sortByChecked property, which mirrors the
  *  ShoppingListViewModel property, for convenience. sortByChecked should not
  *  be changed before finishInit is called, or an exception will be thrown. */
-@AndroidEntryPoint
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs) {
     override val diffUtilCallback = ShoppingListDiffUtilCallback()
     override val adapter = ShoppingListAdapter()
     override val collectionName = context.getString(R.string.shopping_list_item_collection_name)
-    @Inject lateinit var shoppingListViewModel: ShoppingListViewModel
-    @Inject lateinit var inventoryViewModel: InventoryViewModel
+    override lateinit var viewModel: ShoppingListViewModel
+    lateinit var inventoryViewModel: InventoryViewModel
     val checkedItems = CheckedItems()
 
-    var sortByChecked get() = shoppingListViewModel.sortByChecked
-        set(value) { shoppingListViewModel.sortByChecked = value }
+    var sortByChecked get() = viewModel.sortByChecked
+        set(value) { viewModel.sortByChecked = value }
+
+    fun finishInit(
+        owner: LifecycleOwner,
+        viewModel: ShoppingListViewModel,
+        inventoryViewModel: InventoryViewModel
+    ) {
+        this.viewModel = viewModel
+        this.inventoryViewModel = inventoryViewModel
+        finishInit(owner)
+    }
 
     /** A RecyclerView.Adapter to display the contents of a list of shopping list items.
      *
@@ -114,7 +122,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
         init {
             view.ui.checkBox.onCheckedChangedListener = { checked ->
-                shoppingListViewModel.updateIsChecked(item.id, checked)
+                viewModel.updateIsChecked(item.id, checked)
                 view.setStrikeThroughEnabled(checked)
             }
         }
@@ -122,11 +130,11 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
     /** A memberless class to make accessing the checked items of the shopping list more idiomatic. */
     inner class CheckedItems {
-        val sizeLiveData get() = shoppingListViewModel.checkedItemsSize
+        val sizeLiveData get() = viewModel.checkedItemsSize
         val size get() = sizeLiveData.value
         val isEmpty get() = size == 0
-        fun checkAll() = shoppingListViewModel.checkAll()
-        fun clear() = shoppingListViewModel.uncheckAll()
+        fun checkAll() = viewModel.checkAll()
+        fun clear() = viewModel.uncheckAll()
     }
 
     /** Computes a diff between two shopping list item lists.

@@ -5,7 +5,10 @@
 package com.cliffracermerchant.bootycrate
 
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import androidx.preference.PreferenceManager
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.shopping_list_fragment.*
@@ -39,7 +42,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerView = shoppingListFragmentView.shoppingListRecyclerView
-        val activity = requireActivity() as? MainActivity ?: return
+        val activity = requireActivity() as MainActivity
         recyclerView.finishInit(viewLifecycleOwner,
                                 activity.shoppingListViewModel,
                                 activity.inventoryViewModel)

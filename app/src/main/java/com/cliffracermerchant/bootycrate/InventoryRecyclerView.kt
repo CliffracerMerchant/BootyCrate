@@ -7,11 +7,10 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.android.synthetic.main.integer_edit.view.*
 import java.util.*
-import javax.inject.Inject
 
 /** A RecyclerView to display the data provided by an InventoryViewModel.
  *
@@ -23,14 +22,23 @@ import javax.inject.Inject
  *  but before any sort of data access is attempted. InventoryRecyclerView's
  *  version of finishInit will call ExpandableSelectableRecyclerView's version
  *  to prevent the implementing activity or fragment from needing to call both. */
-@AndroidEntryPoint
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<InventoryItem>(context, attrs) {
     override val diffUtilCallback = InventoryItemDiffUtilCallback()
     override val adapter = InventoryAdapter()
     override val collectionName = context.getString(R.string.inventory_item_collection_name)
-    @Inject lateinit var inventoryViewModel: InventoryViewModel
-    @Inject lateinit var shoppingListViewModel: ShoppingListViewModel
+    override lateinit var viewModel: InventoryViewModel
+    lateinit var shoppingListViewModel: ShoppingListViewModel
+
+    fun finishInit(
+        owner: LifecycleOwner,
+        viewModel: InventoryViewModel,
+        shoppingListViewModel: ShoppingListViewModel
+    ) {
+        this.viewModel = viewModel
+        this.shoppingListViewModel = shoppingListViewModel
+        finishInit(owner)
+    }
 
     /** A RecyclerView.Adapter to display the contents of a list of inventory items.
      *
@@ -109,11 +117,11 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
         init {
             view.detailsUi.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
-                inventoryViewModel.updateAddToShoppingList(item.id, checked)
+                viewModel.updateAddToShoppingList(item.id, checked)
             }
             view.detailsUi.addToShoppingListTriggerEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
-                inventoryViewModel.updateAddToShoppingListTrigger(item.id, value)
+                viewModel.updateAddToShoppingListTrigger(item.id, value)
             }
         }
     }

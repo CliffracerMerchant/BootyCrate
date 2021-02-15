@@ -12,9 +12,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
-import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
-import javax.inject.Inject
 
 /** A RecyclerView for displaying the contents of a ViewModel<Entity>.
  *
@@ -57,7 +55,6 @@ import javax.inject.Inject
  *  snackbar will be anchored to the view set as the public property snackBar-
  *  Anchor, in case this needs to be customized, or to the RecyclerView itself
  *  otherwise. */
-@AndroidEntryPoint
 abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     context: Context,
     attrs: AttributeSet
@@ -66,7 +63,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     open val collectionName = ""
     protected abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
     abstract val adapter: ViewModelAdapter<out ViewModelItemViewHolder>
-    @Inject lateinit var viewModel: ViewModel<Entity>
+    abstract val viewModel: ViewModel<Entity>
     var snackBarAnchor: View? = null
 
     var sort get() = viewModel.sort

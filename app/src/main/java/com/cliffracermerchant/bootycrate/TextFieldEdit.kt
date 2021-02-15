@@ -6,7 +6,6 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
-import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
@@ -17,7 +16,6 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
 import androidx.core.widget.doAfterTextChanged
@@ -51,7 +49,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     var canBeEmpty: Boolean
     private var lastValue: String? = null
     private val interp = AccelerateDecelerateInterpolator()
-    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+    private val inputMethodManager = inputMethodManager(context)
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
@@ -67,7 +65,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     override fun onEditorAction(actionCode: Int) {
         if (actionCode == EditorInfo.IME_ACTION_DONE) {
             clearFocus()
-            imm?.hideSoftInputFromWindow(windowToken, 0)
+            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
             liveData.value = text.toString()
         }
         super.onEditorAction(actionCode)
