@@ -12,7 +12,6 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.integer_edit.view.*
 
 /** A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
  *
@@ -130,15 +129,14 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
                 setOnClickListener(onClick)
                 ui.nameEdit.setOnClickListener(onClick)
                 ui.extraInfoEdit.setOnClickListener(onClick)
-                ui.amountEdit.valueEdit.setOnClickListener(onClick)
+                ui.amountEdit.ui.valueEdit.setOnClickListener(onClick)
 
                 setOnLongClickListener(onLongClick)
                 ui.nameEdit.setOnLongClickListener(onLongClick)
                 ui.extraInfoEdit.setOnLongClickListener(onLongClick)
-                ui.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
+                ui.amountEdit.ui.valueEdit.setOnLongClickListener(onLongClick)
                 ui.editButton.setOnClickListener {
-                    setExpandedItem(if (!view.isExpanded) adapterPosition
-                                    else                  null)
+                    setExpandedItem(if (!view.isExpanded) adapterPosition else null)
                 }
             }
         }

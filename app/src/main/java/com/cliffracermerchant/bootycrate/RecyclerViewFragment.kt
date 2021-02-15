@@ -13,8 +13,6 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import com.kennyc.view.MultiStateView
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.activity_main.view.*
 
 /** An fragment to display a SelectableExpandableRecyclerView to the user.
  *
@@ -57,7 +55,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(sortModePrefKey, ViewModelItem.Sort.Color.toString())
         recyclerView.sort = ViewModelItem.Sort.fromString(sortStr)
-        recyclerView.snackBarAnchor = mainActivity?.bottomAppBar
+        recyclerView.snackBarAnchor = mainActivity?.ui?.bottomAppBar
         recyclerView.selection.itemsLiveData.observe(viewLifecycleOwner, actionMode)
         recyclerView.viewModel.items.observe(viewLifecycleOwner) { items ->
             val stateView = view as? MultiStateView ?: return@observe
@@ -68,8 +66,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
             _searchIsActive = savedInstanceState.getBoolean(searchWasActivePrefKey, false)
             val mainActivity = this.mainActivity
             if (searchIsActive && mainActivity != null) {
-                mainActivity.topActionBar.ui.backButton.isVisible = true
-                mainActivity.topActionBar.ui.customTitle.isVisible = false
+                mainActivity.ui.topActionBar.ui.backButton.isVisible = true
+                mainActivity.ui.topActionBar.ui.customTitle.isVisible = false
             }
         }
         super.onViewCreated(view, savedInstanceState)
@@ -83,11 +81,11 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
         if (!showing) return
         val activity = mainActivity?: return
-        actionMode.actionBar = activity.topActionBar
+        actionMode.actionBar = activity.ui.topActionBar
         if (recyclerView.selection.isNotEmpty)
             actionMode.onChanged(recyclerView.selection.items!!)
 
-        val searchView = activity.topActionBar.ui.searchView
+        val searchView = activity.ui.topActionBar.ui.searchView
         searchView.setOnCloseListener { _searchIsActive = false; false }
         searchView.setOnSearchClickListener { _searchIsActive = true }
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
@@ -96,7 +94,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
                 recyclerView.searchFilter = newText
                 return true
             }})
-        activity.topActionBar.changeSortMenu.findItem(when (recyclerView.sort) {
+        activity.ui.topActionBar.changeSortMenu.findItem(when (recyclerView.sort) {
             ViewModelItem.Sort.Color ->      R.id.color_option
             ViewModelItem.Sort.NameAsc ->    R.id.name_ascending_option
             ViewModelItem.Sort.NameDesc ->   R.id.name_descending_option
@@ -116,7 +114,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
                     items = if (recyclerView.selection.size != 0)
                                 recyclerView.selection.items!!
                             else recyclerView.adapter.currentList,
-                    snackBarParent = activity?.bottomAppBar ?: recyclerView
+                    snackBarParent = mainActivity?.ui?.bottomAppBar ?: recyclerView
                 ).show(childFragmentManager, null)
                 true
             } R.id.select_all_menu_item -> {

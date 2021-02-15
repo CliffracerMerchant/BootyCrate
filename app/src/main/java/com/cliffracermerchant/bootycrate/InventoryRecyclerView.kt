@@ -9,7 +9,6 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
-import kotlinx.android.synthetic.main.integer_edit.view.*
 import java.util.*
 
 /** A RecyclerView to display the data provided by an InventoryViewModel.

@@ -11,13 +11,14 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
+import com.cliffracermerchant.bootycrate.databinding.ShareDialogBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.thebluealliance.spectrum.SpectrumDialog
-import kotlinx.android.synthetic.main.share_dialog.*
 
 /** Display a color picker dialog to choose from one of ViewModelItem's twelve colors,
  *  then invoke @param callback with the chosen color index.
@@ -30,12 +31,12 @@ fun showColorPickerDialog(
     initialColorIndex: Int,
     callback: (Int) -> Unit,
 ) = SpectrumDialog.Builder(context)
-        .setColors(ViewModelItem.Colors)
-        .setSelectedColor(initialColorIndex)
-        .setOnColorSelectedListener { _, color ->
-            val colorIndex = ViewModelItem.Colors.indexOf(color)
-            callback(if (colorIndex != -1) colorIndex else 0)
-        }.build().show(fragmentManager, null)
+    .setColors(ViewModelItem.Colors)
+    .setSelectedColor(initialColorIndex)
+    .setOnColorSelectedListener { _, color ->
+        val colorIndex = ViewModelItem.Colors.indexOf(color)
+        callback(if (colorIndex != -1) colorIndex else 0)
+    }.build().show(fragmentManager, null)
 
 private enum class ShareOption { TextMessage, Email }
 
@@ -43,16 +44,18 @@ class ShareDialog<Entity: ViewModelItem>(
     private val items: List<Entity>,
     private val snackBarParent: View
 ) : DialogFragment() {
+    val ui = ShareDialogBinding.inflate(LayoutInflater.from(context))
+
     override fun onCreateDialog(savedInstanceState: Bundle?) =
         themedAlertDialogBuilder(requireContext())
-        .setView(R.layout.share_dialog)
+        .setView(ui.root)
         .create().apply {
             setOnShowListener {
-                shareTextMessageOption.setOnClickListener {
+                ui.shareTextMessageOption.setOnClickListener {
                     shareList(ShareOption.TextMessage)
                     dismiss()
                 }
-                shareEmailOption.setOnClickListener {
+                ui.shareEmailOption.setOnClickListener {
                     shareList(ShareOption.Email)
                     dismiss()
                 }

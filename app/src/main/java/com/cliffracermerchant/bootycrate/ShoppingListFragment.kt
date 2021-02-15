@@ -10,9 +10,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.preference.PreferenceManager
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.shopping_list_fragment.*
-import kotlinx.android.synthetic.main.shopping_list_fragment.view.*
+import com.cliffracermerchant.bootycrate.databinding.ShoppingListFragmentBinding
 
 /** A fragment to display and modify the user's shopping list.
  *
@@ -35,20 +33,23 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
     override lateinit var recyclerView: ShoppingListRecyclerView
     override val actionMode = ShoppingListActionMode()
+    lateinit var ui: ShoppingListFragmentBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? =
-        inflater.inflate(R.layout.shopping_list_fragment, container, false)
+                              savedInstanceState: Bundle?): View {
+        ui = ShoppingListFragmentBinding.inflate(inflater, container, false)
+        return ui.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerView = shoppingListFragmentView.shoppingListRecyclerView
+        recyclerView = ui.shoppingListRecyclerView
         val activity = requireActivity() as MainActivity
         recyclerView.finishInit(viewLifecycleOwner,
                                 activity.shoppingListViewModel,
                                 activity.inventoryViewModel)
 
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner)
-            { newSize -> activity.checkoutButton.isEnabled = newSize != 0 }
+            { newSize -> activity.ui.checkoutButton.isEnabled = newSize != 0 }
 
         val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked)
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
@@ -62,11 +63,11 @@ class ShoppingListFragment(isActive: Boolean = false) :
         super.onActiveStateChanged(active)
         val activity = activity as? MainActivity ?: return
         if (active) {
-            activity.addButton.setOnClickListener {
+            activity.ui.addButton.setOnClickListener {
                 NewShoppingListItemDialog(activity, activity.shoppingListViewModel)
                     .show(activity.supportFragmentManager, null)
             }
-            activity.checkoutButton.checkoutCallback = { activity.shoppingListViewModel.checkout() }
+            activity.ui.checkoutButton.checkoutCallback = { activity.shoppingListViewModel.checkout() }
         }
     }
 
@@ -87,7 +88,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
         super.setOptionsMenuItemsVisible(showing)
-        mainActivity?.topActionBar?.optionsMenu?.setGroupVisible(R.id.shopping_list_view_menu_group, showing)
+        mainActivity?.ui?.topActionBar?.optionsMenu?.setGroupVisible(R.id.shopping_list_view_menu_group, showing)
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */

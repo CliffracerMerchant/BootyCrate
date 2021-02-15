@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.cliffracermerchant.bootycrate.databinding.InventoryItemBinding
 import com.cliffracermerchant.bootycrate.databinding.InventoryItemDetailsBinding
 import com.cliffracermerchant.bootycrate.databinding.ViewModelItemBinding
-import kotlinx.android.synthetic.main.integer_edit.view.*
 
 /** A layout to display the data for a ViewModelItem.
  *
@@ -125,7 +124,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         if (!expanded &&
             ui.nameEdit.isFocused ||
             ui.extraInfoEdit.isFocused ||
-            ui.amountEdit.valueEdit.isFocused)
+            ui.amountEdit.ui.valueEdit.isFocused)
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
 
         ui.nameEdit.isEditable = expanded
@@ -212,7 +211,7 @@ class InventoryItemView(context: Context) :
 
     override fun setExpanded(expanded: Boolean) {
         super.setExpanded(expanded)
-        if (!expanded && detailsUi.addToShoppingListTriggerEdit.valueEdit.isFocused)
+        if (!expanded && detailsUi.addToShoppingListTriggerEdit.ui.valueEdit.isFocused)
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
         detailsUi.inventoryItemDetailsGroup.isVisible = expanded
     }
