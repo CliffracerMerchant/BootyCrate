@@ -18,34 +18,37 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import com.cliffracermerchant.bootycrate.databinding.RecyclerViewActionBarBinding
 
-/** A toolbar tailored towards interacting with a recycler view.
+/**
+ * A toolbar tailored towards interacting with a recycler view.
  *
- *  RecyclerViewActionBar acts as an entirely custom (i.e. it eschews the
- *  Android setSupportActionBar API in favor of its own) action bar with an
- *  interface tailored towards activities or fragments that primarily show a
- *  recycler view. Through its binding property ui, the ui elements available
- *  are:
- *      - backButton, similar to the home as up indicator, hidden by default
- *      - customTitle, a TextSwitcher that can be used as an activity or frag-
- *        ment title, or an action mode title. The attribute android.R.attr.-
- *        text is used as the default text for the title.
- *      - searchView, a SearchView
- *      - changeSortButton, a button whose default on click action opens the
- *        changeSortMenu, but can also have isActivated set to true to change
- *        to a delete icon and call the property onDeleteButtonClickedListener
- *        instead.
- *      - menuButton, which opens the optionsMenu member.
- *  The contents of the changeSortMenu and the optionsMenu can be set in XML
- *  with the attributes R.attr.changeSortMenuResId and R.attr.optionsMenuResId.
- *  The callbacks for the menu items being clicked can be set through the func-
- *  tions setOnSortOptionClickedListener and setOnOptionsItemClickedListener.
- *  If the default Android action bar menu item callback functionality (every
- *  click being routed through onOptionsItemSelected) is desired, the functions
- *  can be passed a lambda that manually calls onOptionsItemSelected for the
- *  activity or fragment being used. */
+ * RecyclerViewActionBar acts as an entirely custom (i.e. it eschews the
+ * Android setSupportActionBar API in favor of its own) action bar with an
+ * interface tailored towards activities or fragments that primarily show a
+ * recycler view. Through its binding property ui, the ui elements available
+ * are:
+ *     - backButton, similar to the home as up indicator, hidden by default
+ *     - customTitle, a TextSwitcher that can be used as an activity or frag-
+ *       ment title, or an action mode title. The attribute android.R.attr.-
+ *       text is used as the default text for the title.
+ *     - searchView, a SearchView
+ *     - changeSortButton, a button whose default on click action opens the
+ *       changeSortMenu, but can also have isActivated set to true to change
+ *       to a delete icon and call the property onDeleteButtonClickedListener
+ *       instead.
+ *     - menuButton, which opens the optionsMenu member.
+ * The contents of the changeSortMenu and the optionsMenu can be set in XML
+ * with the attributes R.attr.changeSortMenuResId and R.attr.optionsMenuResId.
+ * The callbacks for the menu items being clicked can be set through the func-
+ * tions setOnSortOptionClickedListener and setOnOptionsItemClickedListener.
+ * If the default Android action bar menu item callback functionality (every
+ * click being routed through onOptionsItemSelected) is desired, the functions
+ * can be passed a lambda that manually calls onOptionsItemSelected for the
+ * activity or fragment being used.
+ */
 @Suppress("LeakingThis")
 open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
-        ConstraintLayout(context, attrs) {
+    ConstraintLayout(context, attrs)
+{
     val ui = RecyclerViewActionBarBinding.inflate(LayoutInflater.from(context), this)
 
     var onDeleteButtonClickedListener: (() -> Unit)? = null
@@ -78,20 +81,22 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     }
 }
 
-/** A RecyclerViewActionBar that has a bottom border and allows setting a gradient as a background and / or border.
+/**
+ * A RecyclerViewActionBar that has a bottom border and allows setting a gradient as a background and / or border.
  *
- *  GradientActionBar acts as an RecyclerViewActionBar, except that a gradient
- *  (in the form of a Shader) can be set as the background or as the paint to
- *  use for its border. Setting a gradient background this way (as opposed to,
- *  e.g. a ShapeDrawable with a gradient fill) allows for more customization
- *  (e.g. a radial gradient with different x and y radii).
+ * GradientActionBar acts as an RecyclerViewActionBar, except that a gradient
+ * (in the form of a Shader) can be set as the background or as the paint to
+ * use for its border. Setting a gradient background this way (as opposed to,
+ * e.g. a ShapeDrawable with a gradient fill) allows for more customization
+ * (e.g. a radial gradient with different x and y radii).
  *
- *  The border width is derived from the attr borderWidth. The background and
- *  border gradients can be set independently of each other through the prop-
- *  erties backgroundGradient and borderGradient. */
+ * The border width is derived from the attr borderWidth. The background and
+ * border gradients can be set independently of each other through the prop-
+ * erties backgroundGradient and borderGradient.
+ */
 class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewActionBar(context, attrs) {
-    val backgroundDrawable: GradientVectorDrawable
-    val borderDrawable: GradientVectorDrawable
+    private val backgroundDrawable: GradientVectorDrawable
+    private val borderDrawable: GradientVectorDrawable
 
     var backgroundGradient: Shader? = null
         set(value) { field = value; backgroundDrawable.gradient = value }
@@ -129,16 +134,18 @@ class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewAct
     }
 }
 
-/** A preconfigured TextSwitcher that comes with two text views and a property that allows setting a paint shader for both TextViews at once.
+/**
+ * A preconfigured TextSwitcher that comes with two text views and a property that allows setting a paint shader for both TextViews at once.
  *
- *  ShaderTextSwitcher is a TextSwitcher that adds two TextViews, passes xml
- *  attributes on to these text views, preconfigures short fade in and out anim-
- *  ations, and allows setting a Shader object to the shader property. Setting
- *  this property will apply the shader to both member TextViews. If the Shader-
- *  TextSwitcher is moved during a layout, the shader will be offset to create
- *  the appearance that the shader is set in global coordinates, and the Text-
- *  Views are moving relative to it, instead of the shader moving with the Text-
- *  Views. */
+ * ShaderTextSwitcher is a TextSwitcher that adds two TextViews, passes xml
+ * attributes on to these text views, preconfigures short fade in and out anim-
+ * ations, and allows setting a Shader object to the shader property. Setting
+ * this property will apply the shader to both member TextViews. If the Shader-
+ * TextSwitcher is moved during a layout, the shader will be offset to create
+ * the appearance that the shader is set in global coordinates, and the Text-
+ * Views are moving relative to it, instead of the shader moving with the Text-
+ * Views.
+ */
 class ShaderTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitcher(context, attrs) {
     val text get() = (currentView as TextView).text.toString()
     var shader: Shader? get() = (currentView as TextView).paint.shader

@@ -19,23 +19,25 @@ import androidx.core.animation.doOnEnd
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.MutableLiveData
 
-/** A view to edit a single line text field.
-  *
-  * TextFieldEdit is an AppCompatEditText optimized for toggleable editing
-  * of a single line. When isEditable is false, the TextFieldEdit will present
-  * itself as a normal single line TextView. When isEditable is true, TextField-
-  * Edit will request focus when it is tapped and display a soft input. If the
-  * user presses the done action on the soft input or if the focus is changed,
-  * the changes can be listened to through the member liveData. If the proposed
-  * change would leave the field empty and the property canBeEmpty is false,
-  * the value will instead be reverted to its previous value. Note that if the
-  * canBeEmpty property is changed to false when the field is already empty,
-  * it will not be enforced until the value is changed to a non-blank value.
-  *
-  * When in editable mode, TextFieldEdit will underline itself to indicate this
-  * to the user, and will set its minHeight to the value of the dimension
-  * R.dimen.text_field_edit_editable_min_height to ensure that its touch tar-
-  * get size is adequate. */
+/**
+ * A view to edit a single line text field.
+ *
+ * TextFieldEdit is an AppCompatEditText optimized for toggleable editing
+ * of a single line. When isEditable is false, the TextFieldEdit will present
+ * itself as a normal single line TextView. When isEditable is true, TextField-
+ * Edit will request focus when it is tapped and display a soft input. If the
+ * user presses the done action on the soft input or if the focus is changed,
+ * the changes can be listened to through the member liveData. If the proposed
+ * change would leave the field empty and the property canBeEmpty is false,
+ * the value will instead be reverted to its previous value. Note that if the
+ * canBeEmpty property is changed to false when the field is already empty,
+ * it will not be enforced until the value is changed to a non-blank value.
+ *
+ * When in editable mode, TextFieldEdit will underline itself to indicate this
+ * to the user, and will set its minHeight to the value of the dimension
+ * R.dimen.text_field_edit_editable_min_height to ensure that its touch tar-
+ * get size is adequate.
+ */
 open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     AppCompatEditText(context, attrs)
 {
@@ -125,12 +127,14 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     }
 }
 
-/** A TextFieldEdit subclass that allows the toggling of a strike-through
-  * effect, optionally with an animation, using the public function setStrike-
-  * throughEnabled. */
+/**
+ * A TextFieldEdit subclass that allows the toggling of a strike-through
+ * effect, optionally with an animation, using the public function setStrike-
+ * throughEnabled.
+ */
 class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
-        TextFieldEdit(context, attrs) {
-
+    TextFieldEdit(context, attrs)
+{
     private val normalTextColor = currentTextColor
     private var strikeThroughAnimIsReversed = false
     private var strikeThroughLength: Float? = null

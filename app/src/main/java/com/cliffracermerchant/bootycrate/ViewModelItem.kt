@@ -21,6 +21,17 @@ import androidx.room.PrimaryKey
 
     init { color.coerceIn(Colors.indices) }
 
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + name.hashCode()
+        result = 31 * result + extraInfo.hashCode()
+        result = 31 * result + color
+        result = 31 * result + amount
+        result = 31 * result + (linkedItemId?.hashCode() ?: 0)
+        result = 31 * result + inTrash.hashCode()
+        return result
+    }
+
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
         if (other == null || other !is ViewModelItem) return false
@@ -43,8 +54,6 @@ import androidx.room.PrimaryKey
 
     // For a user-facing string representation of the object
     override fun toString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
-
-    override fun hashCode() = id.hashCode()
 
     enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
         companion object {

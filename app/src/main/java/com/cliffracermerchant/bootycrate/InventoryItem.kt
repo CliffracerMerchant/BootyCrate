@@ -8,6 +8,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 
 /** A Room entity that represents an inventory item in the user's inventory. */
+@Suppress("")
 @Entity(tableName = "inventory_item")
 class InventoryItem(
     id: Long = 0,
@@ -26,6 +27,9 @@ class InventoryItem(
 ) : ExpandableSelectableItem(id, name, extraInfo, color, amount, linkedItemId,
                              inTrash, isExpanded, isSelected) {
 
+    override fun hashCode() =
+        (super.hashCode() * 31 + addToShoppingList.hashCode()) * 31 + addToShoppingListTrigger
+
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
         if (other == null || other !is InventoryItem) return false
@@ -41,7 +45,7 @@ class InventoryItem(
     /** The enum class Field identifies user facing fields that are potentially
      *  editable by the user. Field values (in the form of an EnumSet<Field>)
      *  are used as a payload in the adapter notifyItemChanged calls in order
-     *  to identify which fields were changed.*/
+     *  to identify which fields were changed. */
     enum class Field { Name, ExtraInfo, Color, Amount, LinkedTo,
                        IsExpanded, IsSelected, AddToShoppingList,
                        AddToShoppingListTrigger }

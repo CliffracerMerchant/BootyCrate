@@ -14,20 +14,22 @@ import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import com.kennyc.view.MultiStateView
 
-/** An fragment to display a SelectableExpandableRecyclerView to the user.
+/**
+ * An fragment to display a SelectableExpandableRecyclerView to the user.
  *
- *  RecyclerViewFragment is an abstract fragment whose main purpose is to dis-
- *  play an instance of a ExpandableSelectableRecyclerView to the user. It has
- *  an abstract property recyclerView that must be overridden in subclasses
- *  with a concrete implementation of ExpandableSelectableRecyclerView. Because
- *  RecyclerViewFragment's implementation of onViewCreated references its abs-
- *  tract recyclerView property, it is important that subclasses override the
- *  recyclerView property and initialize it before calling super.onViewCreated,
- *  or an exception will occur.
+ * RecyclerViewFragment is an abstract fragment whose main purpose is to dis-
+ * play an instance of a ExpandableSelectableRecyclerView to the user. It has
+ * an abstract property recyclerView that must be overridden in subclasses
+ * with a concrete implementation of ExpandableSelectableRecyclerView. Because
+ * RecyclerViewFragment's implementation of onViewCreated references its abs-
+ * tract recyclerView property, it is important that subclasses override the
+ * recyclerView property and initialize it before calling super.onViewCreated,
+ * or an exception will occur.
  *
- *  The open property actionMode is the ActionMode instance used when the recy-
- *  clerView has a selection. Subclasses can override this property with their
- *  own instance of ActionMode if they wish to specialize this behavior. */
+ * The open property actionMode is the ActionMode instance used when the recy-
+ * clerView has a selection. Subclasses can override this property with their
+ * own instance of ActionMode if they wish to specialize this behavior.
+ */
 @Suppress("LeakingThis")
 abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: Boolean = false) :
     MainActivityFragment(isActive)
@@ -156,18 +158,20 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         editor.apply()
     }
 
-    /** The default ActionMode used by RecyclerViewFragment.
+    /**
+     * The default ActionMode used by RecyclerViewFragment.
      *
-     *  RecyclerViewActionMode implements Observer<Int>, and is intended to be used
-     *  as an observer of the recyclerView.selection.sizeLiveData. When the number of
-     *  selected items increases above zero and the RecyclerViewFragment is the
-     *  active one, the action mode will be started. If the number of selected items
-     *  ever decreases to zero, the action mode will be ended.
+     * RecyclerViewActionMode implements Observer<Int>, and is intended to be used
+     * as an observer of the recyclerView.selection.sizeLiveData. When the number of
+     * selected items increases above zero and the RecyclerViewFragment is the
+     * active one, the action mode will be started. If the number of selected items
+     * ever decreases to zero, the action mode will be ended.
      *
-     *  Note that finish will not clear the selection in case ending the action mode
-     *  but not the selection is desired. To clear the selection and end the action
-     *  mode, either clear the selection manually, which will end the action mode, or
-     *  call finishAndClearSelection. */
+     * Note that finish will not clear the selection in case ending the action mode
+     * but not the selection is desired. To clear the selection and end the action
+     * mode, either clear the selection manually, which will end the action mode, or
+     * call finishAndClearSelection.
+     */
     open inner class ActionMode : RecyclerViewActionMode(), Observer<List<Entity>> {
 
         override fun onChanged(newList: List<Entity>) {

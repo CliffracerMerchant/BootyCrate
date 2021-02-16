@@ -17,26 +17,28 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Transformations
 import com.cliffracermerchant.bootycrate.databinding.NewItemDialogBinding
 
-/** An abstract DialogFragment to create a new ViewModelItem.
+/**
+ * An abstract DialogFragment to create a new ViewModelItem.
  *
- *  NewViewModelItemDialog is an abstract DialogFragment for creating new View-
- *  ModelItems. By default it fills the newItemViewContainer ui element with
- *  a ViewModelItemView instance. If this needs to be overridden in a subclass,
- *  call the constructor with the useDefaultLayoutParameter set to false. If
- *  this is done, the subclass must initialize the newItemView member before on-
- *  CreateDialog, or an exception will be thrown.
+ * NewViewModelItemDialog is an abstract DialogFragment for creating new View-
+ * ModelItems. By default it fills the newItemViewContainer ui element with
+ * a ViewModelItemView instance. If this needs to be overridden in a subclass,
+ * call the constructor with the useDefaultLayoutParameter set to false. If
+ * this is done, the subclass must initialize the newItemView member before on-
+ * CreateDialog, or an exception will be thrown.
  *
- *  The abstract function createItemFromView must be overridden in subclasses
- *  with an implementation that returns an Entity instance that reflects the
- *  information entered in the newItemView member. The open function resetNew-
- *  ItemView should be overridden in subclasses if additional work is needed
- *  to prepare the newItemView member if the user clicks the addAnotherButton.
+ * The abstract function createItemFromView must be overridden in subclasses
+ * with an implementation that returns an Entity instance that reflects the
+ * information entered in the newItemView member. The open function resetNew-
+ * ItemView should be overridden in subclasses if additional work is needed
+ * to prepare the newItemView member if the user clicks the addAnotherButton.
  *
- *  The dialog will display a warning when the current name and extra info
- *  combination is already used by another item. It will not prevent the user
- *  from adding the item anyway if desired. It will also display an error mes-
- *  sage and will prevent the user from proceeding if they try to add an item
- *  with no name. */
+ * The dialog will display a warning when the current name and extra info
+ * combination is already used by another item. It will not prevent the user
+ * from adding the item anyway if desired. It will also display an error mes-
+ * sage and will prevent the user from proceeding if they try to add an item
+ * with no name.
+ */
 abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     context: Context,
     private val viewModel: ViewModel<Entity>,

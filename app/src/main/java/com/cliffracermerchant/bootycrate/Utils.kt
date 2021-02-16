@@ -52,13 +52,15 @@ fun LayoutTransition.doOnEnd(onEnd: (transition: LayoutTransition,
     })
 }
 
-/** For a given position in a range, return the position after
- *  a move operation on one or more items is performed.
- *  @param pos The before move position whose position after the move is desired.
- *  @param moveStartPos The start position of the to-be-moved range before the move.
- *  @param moveEndPos The start position of the to-be-moved range after the move.
- *  @param moveCount The number of items being moved.
- *  @return The new position of the pos parameter after the move. */
+/**
+ * For a given position in a range, return the position after
+ * a move operation on one or more items is performed.
+ * @param pos The before move position whose position after the move is desired.
+ * @param moveStartPos The start position of the to-be-moved range before the move.
+ * @param moveEndPos The start position of the to-be-moved range after the move.
+ * @param moveCount The number of items being moved.
+ * @return The new position of the pos parameter after the move.
+ */
 fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, moveCount: Int): Int {
     val oldRange = moveStartPos until moveStartPos + moveCount
     val newRange = moveEndPos until moveEndPos + moveCount
@@ -109,6 +111,8 @@ class MultiListenerSearchView(context: Context, attrs: AttributeSet) : SearchVie
 fun inputMethodManager(context: Context) =
     context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
 
+// The following value animator returning functions can be used similarly to object animators,
+// but hopefully are more performant due to not using reflection to get the property setter.
 /** Return a valueAnimator for an Int property with the update listener already set. */
 fun valueAnimatorOfInt(setter: (Int) -> Unit, initialValue: Int, endValue: Int): ValueAnimator =
     ValueAnimator.ofInt(initialValue, endValue).apply {

@@ -15,12 +15,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnNextLayout
 
-/** A styled subclass of MainActivity.
+/**
+ * A styled subclass of MainActivity.
  *
- *  Unfortunately many of the desired aspects of MainActivity's style (e.g. the
- *  menu item icons being tinted to match the gradient background of the top
- *  and bottom action bar) are impossible to accomplish in XML. GradientStyled-
- *  MainActivity performs additional operations to initialize its style. */
+ * Unfortunately many of the desired aspects of MainActivity's style (e.g. the
+ * menu item icons being tinted to match the gradient background of the top
+ * and bottom action bar) are impossible to accomplish in XML. GradientStyled-
+ * MainActivity performs additional operations to initialize its style.
+ */
 class GradientStyledMainActivity : MainActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

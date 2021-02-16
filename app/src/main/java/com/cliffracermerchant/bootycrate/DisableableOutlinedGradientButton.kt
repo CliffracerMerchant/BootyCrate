@@ -14,20 +14,21 @@ import android.util.AttributeSet
 import androidx.annotation.CallSuper
 import androidx.core.view.doOnNextLayout
 
-/** An OutlinedGradientButton with disable/enable functionality.
+/**
+ * An OutlinedGradientButton with disable/enable functionality.
  *
- *  DisableableOutlinedGradientButton automatically creates a disabled drawable
- *  for itself based on the OutlinedGradientButton background and the XML attri-
- *  butes disabledBackgroundTint and disabledOutlineAndTextTint. The disabled
- *  drawable will look like the OutlinedGradientButton background, but with
- *  these alternative tint values and no gradient shaders. When the button is
- *  enabled or disabled via the View property isEnabled the button will animate
- *  to or from its disabled state. Note that the disabled background will not
- *  reflect any changes to the button's text that occur after initialization.
+ * DisableableOutlinedGradientButton automatically creates a disabled drawable
+ * for itself based on the OutlinedGradientButton background and the XML attri-
+ * butes disabledBackgroundTint and disabledOutlineAndTextTint. The disabled
+ * drawable will look like the OutlinedGradientButton background, but with
+ * these alternative tint values and no gradient shaders. When the button is
+ * enabled or disabled via the View property isEnabled the button will animate
+ * to or from its disabled state. Note that the disabled background will not
+ * reflect any changes to the button's text that occur after initialization.
  *
- *  If any additional changes are desired when the isEnabledState is changed,
- *  they can be defined in a subclass override of View.setEnabled, which should
- *  always call the super implementation. */
+ * If any additional changes are desired when the isEnabledState is changed,
+ * they can be defined in a subclass override of View.setEnabled.
+ */
 open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeSet) :
     OutlinedGradientButton(context, attrs)
 {

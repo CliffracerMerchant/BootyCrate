@@ -11,13 +11,15 @@ import android.view.View
 import android.view.ViewGroup
 import com.cliffracermerchant.bootycrate.databinding.InventoryFragmentBinding
 
-/** A fragment to display and modify the user's inventory.
+/**
+ * A fragment to display and modify the user's inventory.
  *
- *  InventoryFragment is a RecyclerViewFragment subclass to view and modify the
- *  user's inventory using an InventoryRecyclerView. It does almost nothing
- *  different from RecyclerViewFragment apart from implementing its abstract
- *  properties with values suitable for display of an InventoryRecyclerView,
- *  and using its own action mode callback. */
+ * InventoryFragment is a RecyclerViewFragment subclass to view and modify the
+ * user's inventory using an InventoryRecyclerView. It does almost nothing
+ * different from RecyclerViewFragment apart from implementing its abstract
+ * properties with values suitable for display of an InventoryRecyclerView,
+ * and using its own action mode callback.
+ */
 class InventoryFragment(isActive: Boolean = false) :
         RecyclerViewFragment<InventoryItem>(isActive) {
     override lateinit var recyclerView: InventoryRecyclerView

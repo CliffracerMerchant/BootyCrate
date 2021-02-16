@@ -12,21 +12,23 @@ import androidx.recyclerview.widget.DiffUtil
 import java.util.*
 import kotlin.collections.set
 
-/** A RecyclerView to display the data provided by a ShoppingListViewModel.
+/**
+ * A RecyclerView to display the data provided by a ShoppingListViewModel.
  *
- *  ShoppingListRecyclerView is a ExpandableSelectableRecyclerView subclass
- *  specialized for displaying the contents of a shopping list. Several of
- *  ShoppingListRecyclerView's necessary fields can not be obtained when it
- *  is inflated from XML, such as its view models. To finish initialization
- *  with these required members, the function finishInit must be called during
- *  runtime, but before any sort of data access is attempted. ShoppingListRecy-
- *  clerView's version of finishInit will call ExpandableSelectableRecycler-
- *  View's version to prevent the implementing activity or fragment from nee-
- *  ding to call both.
+ * ShoppingListRecyclerView is a ExpandableSelectableRecyclerView subclass
+ * specialized for displaying the contents of a shopping list. Several of
+ * ShoppingListRecyclerView's necessary fields can not be obtained when it
+ * is inflated from XML, such as its view models. To finish initialization
+ * with these required members, the function finishInit must be called during
+ * runtime, but before any sort of data access is attempted. ShoppingListRecy-
+ * clerView's version of finishInit will call ExpandableSelectableRecycler-
+ * View's version to prevent the implementing activity or fragment from nee-
+ * ding to call both.
  *
- *  ShoppingListRecyclerView adds a sortByChecked property, which mirrors the
- *  ShoppingListViewModel property, for convenience. sortByChecked should not
- *  be changed before finishInit is called, or an exception will be thrown. */
+ * ShoppingListRecyclerView adds a sortByChecked property, which mirrors the
+ * ShoppingListViewModel property, for convenience. sortByChecked should not
+ * be changed before finishInit is called, or an exception will be thrown.
+ */
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs) {
     override val diffUtilCallback = ShoppingListDiffUtilCallback()
@@ -49,15 +51,17 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         finishInit(owner)
     }
 
-    /** A RecyclerView.Adapter to display the contents of a list of shopping list items.
+    /**
+     * A RecyclerView.Adapter to display the contents of a list of shopping list items.
      *
-     *  ShoppingListAdapter is a subclass of ExpandableSelectableItemAdapter using
-     *  ShoppingListItemViewHolder instances to represent shopping list items. Its
-     *  overrides of onBindViewHolder make use of the ShoppingListItem.Field values
-     *  passed by ShoppingListItemDiffUtilCallback to support partial binding. Note
-     *  that ShoppingListAdapter assumes that any payloads passed to it are of the
-     *  type EnumSet<ShoppingListItem.Field>. If a payload of another type is
-     *  passed to it, an exception will be thrown. */
+     * ShoppingListAdapter is a subclass of ExpandableSelectableItemAdapter using
+     * ShoppingListItemViewHolder instances to represent shopping list items. Its
+     * overrides of onBindViewHolder make use of the ShoppingListItem.Field values
+     * passed by ShoppingListItemDiffUtilCallback to support partial binding. Note
+     * that ShoppingListAdapter assumes that any payloads passed to it are of the
+     * type EnumSet<ShoppingListItem.Field>. If a payload of another type is
+     * passed to it, an exception will be thrown.
+     */
     @Suppress("UNCHECKED_CAST")
     inner class ShoppingListAdapter : ExpandableSelectableItemAdapter<ShoppingListItemViewHolder>() {
 
@@ -111,12 +115,14 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         }
     }
 
-    /** A ExpandableSelectableItemViewHolder that wraps an instance of ShoppingListItemView.
+    /**
+     * A ExpandableSelectableItemViewHolder that wraps an instance of ShoppingListItemView.
      *
-     *  ShoppingListItemViewHolder is a subclass of ExpandableSelectableItemView-
-     *  Holder that holds an instance of ShoppingListItemView to display the data
-     *  for a ShoppingListItem. It also connects changes in the checkbox state to
-     *  view model updateIsChecked calls. */
+     * ShoppingListItemViewHolder is a subclass of ExpandableSelectableItemView-
+     * Holder that holds an instance of ShoppingListItemView to display the data
+     * for a ShoppingListItem. It also connects changes in the checkbox state to
+     * view model updateIsChecked calls.
+     */
     inner class ShoppingListItemViewHolder(val view: ShoppingListItemView) :
             ExpandableSelectableItemViewHolder(view) {
 
@@ -137,14 +143,16 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         fun clear() = viewModel.uncheckAll()
     }
 
-    /** Computes a diff between two shopping list item lists.
+    /**
+     * Computes a diff between two shopping list item lists.
      *
-     *  ShoppingListRecyclerView.DiffUtilCallback uses the ids of shopping list
-     *  items to determine if they are the same or not. If they are the same,
-     *  changes are logged by setting the appropriate bit of an instance of
-     *  EnumSet<ShoppingListItem.Field>. The change payload for modified items
-     *  will then be the enum set containing all of the Fields that were
-     *  changed. */
+     * ShoppingListRecyclerView.DiffUtilCallback uses the ids of shopping list
+     * items to determine if they are the same or not. If they are the same,
+     * changes are logged by setting the appropriate bit of an instance of
+     * EnumSet<ShoppingListItem.Field>. The change payload for modified items
+     * will then be the enum set containing all of the Fields that were
+     * changed.
+     */
     class ShoppingListDiffUtilCallback : DiffUtil.ItemCallback<ShoppingListItem>() {
         private val listChanges = mutableMapOf<Long, EnumSet<ShoppingListItem.Field>>()
         private val itemChanges = EnumSet.noneOf(ShoppingListItem.Field::class.java)

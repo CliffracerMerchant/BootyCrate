@@ -13,13 +13,15 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
-/** A fragment to display the BootyCrate app settings.
+/**
+ * A fragment to display the BootyCrate app settings.
  *
- *  Note: PreferencesFragment is intended to hide the action bar menu when it
- *  is shown, and show it again when it is hidden. For this to work properly,
- *  the function initOptionsMenu(menu: Menu) must be called with an instance of
- *  the app's action bar menu. See the comment before the implementation of
- *  initOptionsMenu for more information. */
+ * Note: PreferencesFragment is intended to hide the action bar menu when it
+ * is shown, and show it again when it is hidden. For this to work properly,
+ * the function initOptionsMenu(menu: Menu) must be called with an instance of
+ * the app's action bar menu. See the comment before the implementation of
+ * initOptionsMenu for more information.
+ */
 class PreferencesFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

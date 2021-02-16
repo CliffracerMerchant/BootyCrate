@@ -5,37 +5,43 @@
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
+import android.net.Uri
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.io.File
 
-/** A Room database to access the tables shopping_list_item and inventory_item.
+/**
+ * A Room database to access the tables shopping_list_item and inventory_item.
  *
- *  BootyCrateDatabase is an implementation of RoomDatabase that provides
- *  instances of a ShoppingListItemDao and an InventoryItemDao in order to
- *  query the contents of the shopping_list_item and inventory_item tables.
+ * BootyCrateDatabase is an implementation of RoomDatabase that provides
+ * instances of a ShoppingListItemDao and an InventoryItemDao in order to
+ * query the contents of the shopping_list_item and inventory_item tables.
  *
- *  BootyCrateDatabase functions as a singleton, with the current instance
- *  obtained using the static function get. get also takes an optional boolean
- *  parameter overwriteExistingDb that, when true, will overwrite the current
- *  instance with a new one. This might be necessary when, for example, the
- *  database file is overwritten with another one, and the database needs to be
- *  reopened.
+ * BootyCrateDatabase functions as a singleton, with the current instance
+ * obtained using the static function get. get also takes an optional boolean
+ * parameter overwriteExistingDb that, when true, will overwrite the current
+ * instance with a new one. This might be necessary when, for example, the
+ * database file is overwritten with another one, and the database needs to be
+ * reopened.
  *
- *  The function backup will export a copy of the current database file to the
- *  location pointed to by the parameter backupUri.
+ * The function backup will export a copy of the current database file to the
+ * location pointed to by the parameter backupUri.
  *
- *  The function replaceWithBackup will overwrite the existing database with
- *  the one pointed to by the parameter backupUri. Note that when the existing
- *  database is replaced, activities that have obtained instances of the con-
- *  tained DAOs will need to retrieve new DAOs, or crashes are likely to occur
- *  when the old DAOs are used.
+ * The function replaceWithBackup will overwrite the existing database with
+ * the one pointed to by the parameter backupUri. Note that when the existing
+ * database is replaced, activities that have obtained instances of the con-
+ * tained DAOs will need to retrieve new DAOs, or crashes are likely to occur
+ * when the old DAOs are used.
  *
- *  The function mergeWithBackup will attempt to open the database pointed to
- *  by the parameter backupUri as a temporary second database, read the shop-
- *  ping list and inventory items in the database, and then add them to the
- *  current database. */
+ * The function mergeWithBackup will attempt to open the database pointed to
+ * by the parameter backupUri as a temporary second database, read the shop-
+ * ping list and inventory items in the database, and then add them to the
+ * current database.
+ */
 @Database(entities = [ShoppingListItem::class, InventoryItem::class],
           version = 1, exportSchema = false)
 abstract class BootyCrateDatabase : RoomDatabase() {
@@ -62,50 +68,50 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             }
         }
 
-//        fun backup(context: Context, backupUri: Uri) {
-//            val db = get(context)
-//            val databasePath = db.openHelper.readableDatabase.path
-//            db.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)")
-//            db.close()
-//            val writer = context.contentResolver.openOutputStream(backupUri)
-//            writer?.write(File(databasePath).readBytes())
-//            writer?.close()
-//        }
-//
-//        fun replaceWithBackup(context: Context, backupUri: Uri) {
-//            val importReader = context.contentResolver.openInputStream(backupUri) ?: return
-//            val currentDb = get(context)
-//            val dbFile = File(currentDb.openHelper.readableDatabase.path)
-//            currentDb.close()
-//            dbFile.delete()
-//            dbFile.writeBytes(importReader.readBytes())
-//            get(context, overwriteExistingDb = true) // To make a new instance instead of retaining the old one
-//            return
-//        }
-//
-//        fun mergeWithBackup(context: Context, backupUri: Uri) {
-//            val importReader = context.contentResolver.openInputStream(backupUri) ?: return
-//            val currentDb = get(context)
-//
-//            // Room can only open databases in the app's database directory,
-//            // making it necessary to copy the imported database here first.
-//            val tempDbName = "tempDb"
-//            val tempDbFile = context.getDatabasePath(tempDbName)
-//            tempDbFile.writeBytes(importReader.readBytes())
-//
-//            val importedDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName).
-//                    allowMainThreadQueries().createFromFile(tempDbFile).build()
-//            val shoppingListItems = importedDb.shoppingListItemDao().getAllNow()
-//            val inventoryItems = importedDb.inventoryItemDao().getAllNow()
-//            for (item in shoppingListItems) { item.id = 0; item.linkedItemId = null }
-//            for (item in inventoryItems) { item.id = 0; item.linkedItemId = null }
-//            importedDb.close()
-//            tempDbFile.delete()
-//
-//            // Add the imported items to the current database
-//            GlobalScope.launch { currentDb.shoppingListItemDao().add(shoppingListItems) }
-//            GlobalScope.launch { currentDb.inventoryItemDao().add(inventoryItems) }
-//        }
+        fun backup(context: Context, backupUri: Uri) {
+            val db = get(context)
+            val databasePath = db.openHelper.readableDatabase.path
+            db.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)")
+            db.close()
+            val writer = context.contentResolver.openOutputStream(backupUri)
+            writer?.write(File(databasePath).readBytes())
+            writer?.close()
+        }
+
+        fun replaceWithBackup(context: Context, backupUri: Uri) {
+            val importReader = context.contentResolver.openInputStream(backupUri) ?: return
+            val currentDb = get(context)
+            val dbFile = File(currentDb.openHelper.readableDatabase.path)
+            currentDb.close()
+            dbFile.delete()
+            dbFile.writeBytes(importReader.readBytes())
+            get(context, overwriteExistingDb = true) // To make a new instance instead of retaining the old one
+            return
+        }
+
+        fun mergeWithBackup(context: Context, backupUri: Uri) {
+            val importReader = context.contentResolver.openInputStream(backupUri) ?: return
+            val currentDb = get(context)
+
+            // Room can only open databases in the app's database directory,
+            // making it necessary to copy the imported database here first.
+            val tempDbName = "tempDb"
+            val tempDbFile = context.getDatabasePath(tempDbName)
+            tempDbFile.writeBytes(importReader.readBytes())
+
+            val importedDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName).
+                    allowMainThreadQueries().createFromFile(tempDbFile).build()
+            val shoppingListItems = importedDb.shoppingListItemDao().getAllNow()
+            val inventoryItems = importedDb.inventoryItemDao().getAllNow()
+            for (item in shoppingListItems) { item.id = 0; item.linkedItemId = null }
+            for (item in inventoryItems) { item.id = 0; item.linkedItemId = null }
+            importedDb.close()
+            tempDbFile.delete()
+
+            // Add the imported items to the current database
+            GlobalScope.launch { currentDb.shoppingListItemDao().add(shoppingListItems) }
+            GlobalScope.launch { currentDb.inventoryItemDao().add(inventoryItems) }
+        }
 
         private val callback = object: Callback() {
             override fun onOpen(db: SupportSQLiteDatabase) {

@@ -5,7 +5,9 @@
 package com.cliffracermerchant.bootycrate
 
 import androidx.lifecycle.LiveData
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.Transaction
 
 /** A Room DAO for BootyCrateDatabase's shopping_list_item table. */
 @Dao abstract class ShoppingListItemDao : ExpandableSelectableItemDao<ShoppingListItem>() {
@@ -185,10 +187,10 @@ import androidx.room.*
     protected abstract suspend fun deleteCheckedItems()
 
     /** The checkout function allows the user to clear all checked shopping
-     *  list items at once and modify the amounts of linked inventory items
-     *  appropriately. For non-linked shopping list items, which are simply
-     *  removed from the list, the checkout function acts no differently than
-     *  removing them via swiping or the delete button. */
+     * list items at once and modify the amounts of linked inventory items
+     * appropriately. For non-linked shopping list items, which are simply
+     * removed from the list, the checkout function acts no differently than
+     * deleting them. */
     @Transaction open suspend fun checkout() {
         updateInventoryItemAmountsFromShoppingList()
         deleteCheckedItems()

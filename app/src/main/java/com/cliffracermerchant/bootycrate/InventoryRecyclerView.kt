@@ -11,16 +11,18 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import java.util.*
 
-/** A RecyclerView to display the data provided by an InventoryViewModel.
+/**
+ * A RecyclerView to display the data provided by an InventoryViewModel.
  *
- *  InventoryRecyclerView is a ExpandableSelectableRecyclerView subclass spec-
- *  ialized for displaying the contents of an inventory. Several of Inventory-
- *  RecyclerView's necessary fields can not be obtained when it is inflated
- *  from XML, such as its view models. To finish initialization with these
- *  required members, the function finishInit must be called during runtime,
- *  but before any sort of data access is attempted. InventoryRecyclerView's
- *  version of finishInit will call ExpandableSelectableRecyclerView's version
- *  to prevent the implementing activity or fragment from needing to call both. */
+ * InventoryRecyclerView is a ExpandableSelectableRecyclerView subclass spec-
+ * ialized for displaying the contents of an inventory. Several of Inventory-
+ * RecyclerView's necessary fields can not be obtained when it is inflated
+ * from XML, such as its view models. To finish initialization with these
+ * required members, the function finishInit must be called during runtime,
+ * but before any sort of data access is attempted. InventoryRecyclerView's
+ * version of finishInit will call ExpandableSelectableRecyclerView's version
+ * to prevent the implementing activity or fragment from needing to call both.
+ */
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<InventoryItem>(context, attrs) {
     override val diffUtilCallback = InventoryItemDiffUtilCallback()

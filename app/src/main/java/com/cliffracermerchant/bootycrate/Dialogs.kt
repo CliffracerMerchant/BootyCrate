@@ -21,10 +21,11 @@ import com.google.android.material.snackbar.Snackbar
 import com.thebluealliance.spectrum.SpectrumDialog
 
 /** Display a color picker dialog to choose from one of ViewModelItem's twelve colors,
- *  then invoke @param callback with the chosen color index.
+ * then invoke @param callback with the chosen color index.
  *
- *  Note that the initial color parameter and the return value are the
- *  indices of the chosen color, not the Android color value for the color. */
+ * Note that the initial color parameter and the return value are the
+ * indices of the chosen color, not the Android color value for the color.
+ */
 fun showColorPickerDialog(
     context: Context,
     fragmentManager: FragmentManager,
@@ -106,7 +107,7 @@ fun themedAlertDialogBuilder(context: Context): MaterialAlertDialogBuilder {
 }
 
 /** Open a dialog to ask the user to the type of database import they want (merge
- *  existing or overwrite, and recreate the given activity if the import requires it. */
+ * existing or overwrite, and recreate the given activity if the import requires it. */
 //fun importDatabaseFromUri(uri: Uri, activity: FragmentActivity?)  {
 //    themedAlertBuilder().
 //    setMessage(R.string.import_database_question_message).

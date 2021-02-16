@@ -12,22 +12,24 @@ import android.view.ViewGroup
 import androidx.preference.PreferenceManager
 import com.cliffracermerchant.bootycrate.databinding.ShoppingListFragmentBinding
 
-/** A fragment to display and modify the user's shopping list.
+/**
+ * A fragment to display and modify the user's shopping list.
  *
- *  ShoppingListFragment is a RecyclerViewFragment subclass to view and modify
- *  the user's shopping list using an ShoppingListRecyclerView. ShoppingList-
- *  Fragment overrides RecyclerViewFragment's abstract recyclerView property
- *  with an instance of ShoppingListRecyclerView, and overrides its ActionMode-
- *  Callback with its own version.
+ * ShoppingListFragment is a RecyclerViewFragment subclass to view and modify
+ * the user's shopping list using an ShoppingListRecyclerView. ShoppingList-
+ * Fragment overrides RecyclerViewFragment's abstract recyclerView property
+ * with an instance of ShoppingListRecyclerView, and overrides its ActionMode-
+ * Callback with its own version.
  *
- *  ShoppingListFragment also manages the state and function of the checkout
- *  button. The checkout button is enabled when the user has checked at least
- *  one shopping list item, and disabled when no items are checked through its
- *  observation of ShoppingListRecyclerView's checkedItems member. If the check-
- *  out button is clicked while it is enabled, it switches to its confirmatory
- *  state to safeguard the user from checking out accidentally. If the user
- *  does not press the button again within two seconds, it will revert to its
- *  normal state. */
+ * ShoppingListFragment also manages the state and function of the checkout
+ * button. The checkout button is enabled when the user has checked at least
+ * one shopping list item, and disabled when no items are checked through its
+ * observation of ShoppingListRecyclerView's checkedItems member. If the check-
+ * out button is clicked while it is enabled, it switches to its confirmatory
+ * state to safeguard the user from checking out accidentally. If the user
+ * does not press the button again within two seconds, it will revert to its
+ * normal state.
+ */
 class ShoppingListFragment(isActive: Boolean = false) :
         RecyclerViewFragment<ShoppingListItem>(isActive) {
 

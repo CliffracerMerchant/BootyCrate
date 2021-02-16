@@ -13,25 +13,27 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 
-/** A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
+/**
+ * A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
  *
- *  ExpandableSelectableRecyclerView extends ViewModelRecyclerView via the use
- *  of an ExpandableSelectableItemViewModel along with the new functions delete-
- *  SelectedItems. Its selection property provides an interface for manipula-
- *  ting the recycler view selection (see the documentation for the inner class
- *  Selection for more details) as well as the function setExpandedItem to
- *  change or set to null the currently expanded item. It also utilizes its own
- *  custom view holder to enforce the use of an ExpandableSelectableItemView,
- *  and a custom adapter that in turn enforces the use of ExpandableSelectable-
- *  ItemViewHolder.
+ * ExpandableSelectableRecyclerView extends ViewModelRecyclerView via the use
+ * of an ExpandableSelectableItemViewModel along with the new functions delete-
+ * SelectedItems. Its selection property provides an interface for manipula-
+ * ting the recycler view selection (see the documentation for the inner class
+ * Selection for more details) as well as the function setExpandedItem to
+ * change or set to null the currently expanded item. It also utilizes its own
+ * custom view holder to enforce the use of an ExpandableSelectableItemView,
+ * and a custom adapter that in turn enforces the use of ExpandableSelectable-
+ * ItemViewHolder.
  *
- *  Like its parent class, ExpandableSelectableRecyclerView requires the func-
- *  tion finishInit to be called in order to provide it with an instance of
- *  ExpandableSelectableItemViewModel. ExpandableSelectableRecyclerView's
- *  finishInit function, while not an override of ViewModelRecyclerView's ver-
- *  sion due to requiring a different function signature, is designed to call
- *  ViewModelRecyclerView's version to prevent the implementing activity or
- *  fragment from needing to remember to call both. */
+ * Like its parent class, ExpandableSelectableRecyclerView requires the func-
+ * tion finishInit to be called in order to provide it with an instance of
+ * ExpandableSelectableItemViewModel. ExpandableSelectableRecyclerView's
+ * finishInit function, while not an override of ViewModelRecyclerView's ver-
+ * sion due to requiring a different function signature, is designed to call
+ * ViewModelRecyclerView's version to prevent the implementing activity or
+ * fragment from needing to remember to call both.
+ */
 @Suppress("LeakingThis")
 abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem>(
     context: Context,

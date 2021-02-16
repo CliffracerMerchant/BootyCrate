@@ -11,19 +11,20 @@ import android.view.View
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 
-/** A button that acts as a checkbox with easily an customizable color.
+/**
+ * A button that acts as a checkbox with easily an customizable color.
  *
- *  TintableCheckbox acts as a tinted checkbox that can be toggled between a
- *  normal checkbox mode (where the checked state can be toggled) and a color
- *  editing mode (where the checkbox will morph into a tinted circle, and a
- *  click will open a color picker dialog). The mode is changed via the pro-
- *  perty inColorEditMode, while the current color is changed through the
- *  property color (or colorIndex if setting the color to an value of View-
- *  ModelItem.Colors is preferred. */
-class TintableCheckbox(
-    context: Context,
-    attrs: AttributeSet
-) : AppCompatImageButton(context, attrs) {
+ * TintableCheckbox acts as a tinted checkbox that can be toggled between a
+ * normal checkbox mode (where the checked state can be toggled) and a color
+ * editing mode (where the checkbox will morph into a tinted circle, and a
+ * click will open a color picker dialog). The mode is changed via the pro-
+ * perty inColorEditMode, while the current color is changed through the
+ * property color (or colorIndex if setting the color to an value of View-
+ * ModelItem.Colors is preferred.
+ */
+class TintableCheckbox(context: Context, attrs: AttributeSet) :
+    AppCompatImageButton(context, attrs)
+{
     var inColorEditMode = false
         set(value) { field = value
                      refreshDrawableState() }

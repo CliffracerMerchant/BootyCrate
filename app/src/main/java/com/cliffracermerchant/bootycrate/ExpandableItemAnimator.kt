@@ -12,25 +12,27 @@ import androidx.core.animation.doOnStart
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 
-/** A RecyclerView.ItemAnimator that animates the expanding and collapsing of items.
+/**
+ * A RecyclerView.ItemAnimator that animates the expanding and collapsing of items.
  *
- *  ExpandableItemAnimator is a RecyclerView.ItemAnimator that provides an over-
- *  ride of animateChange to animate the height changes of expanding or collaps-
- *  ing items. It assumes that only one item can be expanded at a time, and
- *  that a previously expanded item will be collapsed when a new one is expan-
- *  ded. In order to play these animations correctly, it is necessary to call
- *  the function notifyExpandedItemChanged with the adapter position of the
- *  newly expanded item whenever it is changed, or null if the expanded item is
- *  being collapsed. The currently expanded item can be queried via the prop-
- *  erty expandedItemPos.
+ * ExpandableItemAnimator is a RecyclerView.ItemAnimator that provides an over-
+ * ride of animateChange to animate the height changes of expanding or collaps-
+ * ing items. It assumes that only one item can be expanded at a time, and
+ * that a previously expanded item will be collapsed when a new one is expan-
+ * ded. In order to play these animations correctly, it is necessary to call
+ * the function notifyExpandedItemChanged with the adapter position of the
+ * newly expanded item whenever it is changed, or null if the expanded item is
+ * being collapsed. The currently expanded item can be queried via the prop-
+ * erty expandedItemPos.
  *
- *  ExpandableItemAnimator also has an observer member that, when registered as
- *  an adapter data observer for the adapter using the ExpandableItemAnimator
- *  instance as its item animator, will automatically update the expanded item
- *  position so that this doesn't need to be done manually. ExpandableItemAnim-
- *  ator will attempt to register itself automatically, but if the parent recy-
- *  cler view does not have an adapter when ExpandableItemAnimator is construc-
- *  ted this will have to be done manually. */
+ * ExpandableItemAnimator also has an observer member that, when registered as
+ * an adapter data observer for the adapter using the ExpandableItemAnimator
+ * instance as its item animator, will automatically update the expanded item
+ * position so that this doesn't need to be done manually. ExpandableItemAnim-
+ * ator will attempt to register itself automatically, but if the parent recy-
+ * cler view does not have an adapter when ExpandableItemAnimator is construc-
+ * ted this will have to be done manually.
+ */
 class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultItemAnimator() {
     private val pendingAnimations = mutableListOf<Animator>()
     val expandedItemPos get() = _expandedItemPos

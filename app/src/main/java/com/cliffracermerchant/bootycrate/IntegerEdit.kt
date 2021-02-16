@@ -16,20 +16,22 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.cliffracermerchant.bootycrate.databinding.IntegerEditBinding
 
-/** A compound view to edit an integer quantity.
+/**
+ * A compound view to edit an integer quantity.
  *
- *  IntegerEdit is a compound view that combines an EditText displaying an
- *  integer with two image buttons on its left and right to act as decrease and
- *  increase buttons. IntegerEdit provides a publicly accessible LiveData mem-
- *  ber to allow external entities to react to a change in its data.
+ * IntegerEdit is a compound view that combines an EditText displaying an
+ * integer with two image buttons on its left and right to act as decrease and
+ * increase buttons. IntegerEdit provides a publicly accessible LiveData mem-
+ * ber to allow external entities to react to a change in its data.
  *
- *  The EditText is by default not focusable in touch mode, but this can be
- *  changed by setting the member isEditable. If set to true, the user can edit
- *  the value directly (rather than through the use of the decrease / increase
- *  buttons). When in the editable state, the EditText will underline the cur-
- *  rent value to indicate this to the user, and will, if necessary, expand the
- *  width of the value to R.dimen.integer_edit_editable_value_min_width to make
- *  it a larger touch target. */
+ * The EditText is by default not focusable in touch mode, but this can be
+ * changed by setting the member isEditable. If set to true, the user can edit
+ * the value directly (rather than through the use of the decrease / increase
+ * buttons). When in the editable state, the EditText will underline the cur-
+ * rent value to indicate this to the user, and will, if necessary, expand the
+ * width of the value to R.dimen.integer_edit_editable_value_min_width to make
+ * it a larger touch target.
+ */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
     // this.value = this.value is not pointless due

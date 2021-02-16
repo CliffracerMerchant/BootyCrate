@@ -19,19 +19,21 @@ import com.cliffracermerchant.bootycrate.databinding.InventoryItemBinding
 import com.cliffracermerchant.bootycrate.databinding.InventoryItemDetailsBinding
 import com.cliffracermerchant.bootycrate.databinding.ViewModelItemBinding
 
-/** A layout to display the data for a ViewModelItem.
+/**
+ * A layout to display the data for a ViewModelItem.
  *
- *  ViewModelItemView displays the data for an instance of ViewModelItem. The
- *  displayed data can be updated for a new item with the function update.
+ * ViewModelItemView displays the data for an instance of ViewModelItem. The
+ * displayed data can be updated for a new item with the function update.
  *
- *  By default ViewModelItemView inflates itself with the contents of R.layout.-
- *  view_model_item_view.xml and initializes its ViewModelItemBinding member ui.
- *  In case this layout needs to be overridden in a subclass, the ViewModelItem-
- *  View can be constructed with the parameter useDefaultLayout equal to false.
- *  If useDefaultLayout is false, it will be up to the subclass to inflate the
- *  desired layout and initialize the member ui with an instance of a ViewModel-
- *  ItemBinding. If the ui member is not initialized then a kotlin.Uninitial-
- *  izedPropertyAccessException will be thrown. */
+ * By default ViewModelItemView inflates itself with the contents of R.layout.-
+ * view_model_item_view.xml and initializes its ViewModelItemBinding member ui.
+ * In case this layout needs to be overridden in a subclass, the ViewModelItem-
+ * View can be constructed with the parameter useDefaultLayout equal to false.
+ * If useDefaultLayout is false, it will be up to the subclass to inflate the
+ * desired layout and initialize the member ui with an instance of a ViewModel-
+ * ItemBinding. If the ui member is not initialized then a kotlin.Uninitialized-
+ * PropertyAccessException will be thrown.
+ */
 @Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
 open class ViewModelItemView<Entity: ViewModelItem>(
@@ -61,22 +63,24 @@ open class ViewModelItemView<Entity: ViewModelItem>(
     }
 }
 
-/** A ViewModelItemView subclass that provides an interface for a selection and expansion of the view.
+/**
+ * A ViewModelItemView subclass that provides an interface for a selection and expansion of the view.
  *
- *  ExpandableSelectableItemView will display the information of an instance of
- *  ExpandableSelectableItem, while also providing an interface for expansion
- *  and selection. The update override will update the view to reflect the
- *  selection and expansion state of the ExpandableSelectableItem passed to it.
+ * ExpandableSelectableItemView will display the information of an instance of
+ * ExpandableSelectableItem, while also providing an interface for expansion
+ * and selection. The update override will update the view to reflect the
+ * selection and expansion state of the ExpandableSelectableItem passed to it.
  *
- *  The interface for selection and deselection consists of the functions
- *  select, deselect, and setSelectedState. With the default background these
- *  functions will give the view a surrounding gradient outline or hide the
- *  outline depending on the item's selection state.
+ * The interface for selection and deselection consists of the functions
+ * select, deselect, and setSelectedState. With the default background these
+ * functions will give the view a surrounding gradient outline or hide the
+ * outline depending on the item's selection state.
  *
- *  Likewise, the interface for item expansion consists of expand, collapse,
- *  setExpanded, and toggleExpanded. Because subclasses may need to alter
- *  the visibility of additional views during expansion or collapse, setExpan-
- *  ded is open. */
+ * Likewise, the interface for item expansion consists of expand, collapse,
+ * setExpanded, and toggleExpanded. Because subclasses may need to alter
+ * the visibility of additional views during expansion or collapse, setExpan-
+ * ded is open.
+ */
 @Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
@@ -155,18 +159,20 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     }
 }
 
-/** An ExpandableSelectableItemView to display the contents of a shopping list item.
+/**
+ * An ExpandableSelectableItemView to display the contents of a shopping list item.
  *
- *  ShoppingListItemView is a ExpandableSelectableItemView subclass that dis-
- *  plays the data of a ShoppingListItem instance. It has an update override
- *  that updates the check state of the checkbox, it overrides the setExpanded
- *  function with an implementation that toggles the checkbox between its nor-
- *  mal checkbox mode and its color edit mode, and it has a convenience method
- *  setStrikeThroughEnabled that will set the strike through state for both the
- *  name and extra info edit at the same time. */
+ * ShoppingListItemView is a ExpandableSelectableItemView subclass that dis-
+ * plays the data of a ShoppingListItem instance. It has an update override
+ * that updates the check state of the checkbox, it overrides the setExpanded
+ * function with an implementation that toggles the checkbox between its nor-
+ * mal checkbox mode and its color edit mode, and it has a convenience method
+ * setStrikeThroughEnabled that will set the strike through state for both the
+ * name and extra info edit at the same time.
+ */
 class ShoppingListItemView(context: Context) :
-    ExpandableSelectableItemView<ShoppingListItem>(context) {
-
+    ExpandableSelectableItemView<ShoppingListItem>(context)
+{
     override fun update(item: ShoppingListItem) {
         ui.checkBox.initIsChecked(item.isChecked)
         setStrikeThroughEnabled(enabled = item.isChecked, animate = false)
@@ -184,12 +190,14 @@ class ShoppingListItemView(context: Context) :
     }
 }
 
-/** An ExpandableSelectableItemView to display the contents of an inventory item.
+/**
+ * An ExpandableSelectableItemView to display the contents of an inventory item.
  *
- *  InventoryItemView is a ExpandableSelectableItemView subclass that displays
- *  the data of an InventoryItem instance. It has an update override for the
- *  extra fields that InventoryItem adds to its parent class, and has a set-
- *  Expanded override that also shows or hides these extra fields. */
+ * InventoryItemView is a ExpandableSelectableItemView subclass that displays
+ * the data of an InventoryItem instance. It has an update override for the
+ * extra fields that InventoryItem adds to its parent class, and has a set-
+ * Expanded override that also shows or hides these extra fields.
+ */
 class InventoryItemView(context: Context) :
     ExpandableSelectableItemView<InventoryItem>(context, useDefaultLayout = false)
 {

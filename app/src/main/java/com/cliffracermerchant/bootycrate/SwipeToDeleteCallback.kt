@@ -11,13 +11,15 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 
-/** A RecyclerView.ItemTouchHelper.SimpleCallback to delete swiped items.
+/**
+ * A RecyclerView.ItemTouchHelper.SimpleCallback to delete swiped items.
  *
- *  SwipeToDeleteCallback is a RecyclerView.ItemTouchHelper.SimpleCallback
- *  subclass that implements swipe (left or right) to delete functionality.
- *  @property deleteFunc The function callback invoked when an item is swiped
- *                       left or right. The Int parameter will be the Recycler-
- *                       View.Adapter position of the swiped item */
+ * SwipeToDeleteCallback is a RecyclerView.ItemTouchHelper.SimpleCallback sub-
+ * class that implements swipe (left or right) to delete functionality. The
+ * function callback @param deleteFunc is invoked when an item is swiped left
+ * or right. The Int parameter will be the RecyclerView.Adapter position of the
+ * swiped item
+ */
 class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Context) :
         ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
@@ -56,7 +58,6 @@ class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Cont
         deleteIcon.draw(c)
     }
 
-    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+    override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) =
         deleteFunc(viewHolder.adapterPosition)
-    }
 }
