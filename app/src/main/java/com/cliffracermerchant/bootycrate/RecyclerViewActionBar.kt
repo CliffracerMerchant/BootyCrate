@@ -72,7 +72,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
         optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
 
-        layoutTransition = defaultLayoutTransition()
+        layoutTransition = layoutTransition(AnimatorUtils.viewTranslationConfig)
         ui.changeSortButton.setOnClickListener {
             if (!ui.changeSortButton.isActivated) changeSortPopupMenu.show()
             else onDeleteButtonClickedListener?.invoke()
@@ -159,8 +159,8 @@ class ShaderTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitcher(c
     init {
         addView(TextView(context, attrs))
         addView(TextView(context, attrs))
-        setInAnimation(context, R.anim.short_fade_in)
-        setOutAnimation(context, R.anim.short_fade_out)
+        setInAnimation(context, R.anim.fade_in)
+        setOutAnimation(context, R.anim.fade_out)
 
         val a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.fontFamily))
         val fontId = a.getResourceId(0, 0)

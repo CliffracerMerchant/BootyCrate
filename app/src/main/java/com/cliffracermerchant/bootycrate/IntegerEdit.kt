@@ -9,7 +9,6 @@ import android.graphics.Paint
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.EditorInfo
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.LiveData
@@ -31,6 +30,9 @@ import com.cliffracermerchant.bootycrate.databinding.IntegerEditBinding
  * rent value to indicate this to the user, and will, if necessary, expand the
  * width of the value to R.dimen.integer_edit_editable_value_min_width to make
  * it a larger touch target.
+ *
+ * Unless the function setValueIsDirectlyEditable is called with a value of
+ * false for the parameter animate, the IntegerEdit will animate to its n
  */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
@@ -59,6 +61,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     val liveData: LiveData<Int> get() = _liveData
 
     val ui = IntegerEditBinding.inflate(LayoutInflater.from(context), this)
+    var animatorConfig = AnimatorUtils.viewTranslationConfig
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
@@ -113,14 +116,11 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         ui.valueEdit.measure(wrapContentSpec, wrapContentSpec)
         val newWidth = ui.valueEdit.measuredWidth
         val widthChange = newWidth - oldWidth
-        val interp = AccelerateDecelerateInterpolator()
 
         ui.valueEdit.translationX = -widthChange / 2f
         ui.increaseButton.translationX = -widthChange.toFloat()
 
-        ui.valueEdit.animate().translationX(0f).setDuration(300)
-            .withLayer().setInterpolator(interp).start()
-        ui.increaseButton.animate().translationX(0f).setDuration(300)
-            .withLayer().setInterpolator(interp).start()
+        ui.valueEdit.animate().translationX(0f).withLayer().applyConfig(animatorConfig).start()
+        ui.increaseButton.animate().translationX(0f).withLayer().applyConfig(animatorConfig).start()
     }
 }

@@ -63,7 +63,7 @@ open class RecyclerViewActionMode(actionBar: RecyclerViewActionBar? = null) {
             actionBar.ui.customTitle.setText(title)
             actionBar.ui.backButton.alpha = 0f
             actionBar.ui.backButton.isVisible = true
-            actionBar.ui.backButton.animate().alpha(1f).withLayer().start()
+            //actionBar.ui.backButton.animate().alpha(1f).withLayer().start()
             onStart(actionBar)
         } else {
             actionBar.ui.customTitle.setText(titleBackup)

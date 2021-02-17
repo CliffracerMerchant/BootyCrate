@@ -4,8 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.LayoutTransition
-import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
@@ -13,44 +11,8 @@ import android.graphics.Matrix
 import android.graphics.Shader
 import android.util.AttributeSet
 import android.view.View
-import android.view.ViewGroup
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.SearchView
-
-fun defaultLayoutTransition() = LayoutTransition().apply {
-    setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
-    setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
-    setStartDelay(LayoutTransition.APPEARING, 0)
-    setStartDelay(LayoutTransition.DISAPPEARING, 0)
-    setStartDelay(LayoutTransition.CHANGING, 0)
-    val interp = AccelerateDecelerateInterpolator()
-    setInterpolator(LayoutTransition.CHANGE_APPEARING, interp)
-    setInterpolator(LayoutTransition.CHANGE_DISAPPEARING, interp)
-    setInterpolator(LayoutTransition.APPEARING, interp)
-    setInterpolator(LayoutTransition.DISAPPEARING, interp)
-    setInterpolator(LayoutTransition.CHANGING, interp)
-}
-
-fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
-                                         container: ViewGroup, view: View,
-                                         transitionType: Int) -> Unit = {_, _, _, _ -> }) {
-    addTransitionListener(object: LayoutTransition.TransitionListener {
-        override fun startTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) =
-            onStart(a, b, c, d)
-        override fun endTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) { }
-    })
-}
-
-fun LayoutTransition.doOnEnd(onEnd: (transition: LayoutTransition,
-                                     container: ViewGroup, view: View,
-                                     transitionType: Int) -> Unit = {_, _, _, _ -> }) {
-    addTransitionListener(object: LayoutTransition.TransitionListener {
-        override fun startTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) { }
-        override fun endTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) =
-            onEnd(a, b, c, d)
-    })
-}
 
 /**
  * For a given position in a range, return the position after
@@ -110,24 +72,4 @@ class MultiListenerSearchView(context: Context, attrs: AttributeSet) : SearchVie
 
 fun inputMethodManager(context: Context) =
     context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
-
-// The following value animator returning functions can be used similarly to object animators,
-// but hopefully are more performant due to not using reflection to get the property setter.
-/** Return a valueAnimator for an Int property with the update listener already set. */
-fun valueAnimatorOfInt(setter: (Int) -> Unit, initialValue: Int, endValue: Int): ValueAnimator =
-    ValueAnimator.ofInt(initialValue, endValue).apply {
-        addUpdateListener { setter(it.animatedValue as Int) }
-    }
-
-/** Return a valueAnimator for a Float property with the update listener already set. */
-fun valueAnimatorOfFloat(setter: (Float) -> Unit, initialValue: Float, endValue: Float): ValueAnimator =
-    ValueAnimator.ofFloat(initialValue, endValue).apply {
-        addUpdateListener { setter(it.animatedValue as Float) }
-    }
-
-/** Return a valueAnimator for an ARGB property with the update listener already set. */
-fun valueAnimatorOfArgb(setter: (Int) -> Unit, initialValue: Int, endValue: Int): ValueAnimator =
-    ValueAnimator.ofArgb(initialValue, endValue).apply {
-        addUpdateListener { setter(it.animatedValue as Int) }
-    }
 

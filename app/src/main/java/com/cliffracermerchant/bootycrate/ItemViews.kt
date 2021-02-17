@@ -85,6 +85,7 @@ open class ViewModelItemView<Entity: ViewModelItem>(
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
+    animatorConfig: AnimatorUtils.Config = AnimatorUtils.viewTranslationConfig,
     useDefaultLayout: Boolean = true,
 ) : ViewModelItemView<Entity>(context, useDefaultLayout) {
 
@@ -93,7 +94,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     private val gradientOutline: GradientDrawable
 
     init {
-        layoutTransition = defaultLayoutTransition()
+        layoutTransition = layoutTransition(animatorConfig)
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
         gradientOutline = (background.getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
         gradientOutline.setTintList(null)
@@ -171,7 +172,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
  * name and extra info edit at the same time.
  */
 class ShoppingListItemView(context: Context) :
-    ExpandableSelectableItemView<ShoppingListItem>(context)
+    ExpandableSelectableItemView<ShoppingListItem>(context, AnimatorUtils.shoppingListItemViewConfig)
 {
     override fun update(item: ShoppingListItem) {
         ui.checkBox.initIsChecked(item.isChecked)

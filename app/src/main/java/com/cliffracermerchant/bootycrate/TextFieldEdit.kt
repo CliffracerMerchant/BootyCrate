@@ -12,7 +12,6 @@ import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
@@ -42,13 +41,12 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     AppCompatEditText(context, attrs)
 {
     val liveData = MutableLiveData<String>()
-
+    var animatorConfig = AnimatorUtils.viewTranslationConfig
     var isEditable: Boolean get() = isFocusableInTouchMode
                             set(editable) = setEditable(editable, animate = true)
 
     var canBeEmpty: Boolean
     private var lastValue: String? = null
-    private val interp = AccelerateDecelerateInterpolator()
     private val inputMethodManager = inputMethodManager(context)
 
     init {
@@ -110,7 +108,8 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         measure(wrapContentSpec, wrapContentSpec)
         val heightChange = measuredHeight - oldHeight
         translationY = if (editable) 0f else -heightChange / 2f
-        animate().withLayer().setInterpolator(interp)
+        animate().withLayer()
+            .applyConfig(animatorConfig)
             .translationY(if (editable) heightChange / 2f else 0f)
             .withEndAction {
                 if (editable) translationY = 0f

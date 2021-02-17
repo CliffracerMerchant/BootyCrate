@@ -23,11 +23,11 @@
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:propertyName="pathData"
-                android:duration="200"
                 android:valueFrom="M 12 8 L 6 14 L 6.705 14.705 L 7.41 15.41 L 12 10.83 L 12 8 M 12 10.83 L 16.59 15.42 L 18 14 L 12 8 Z"
                 android:valueTo="M 13 8 L 5 16 L 5 19 L 8 19 L 16 11 L 13 8 M 14 7 L 17 10 L 19 8 L 16 5 Z"
                 android:valueType="pathType"
-                android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                android:duration="@integer/viewAnimationDuration"
+                android:interpolator="@android:anim/decelerate_interpolator" />
         </aapt:attr>
     </target>
 </animated-vector>

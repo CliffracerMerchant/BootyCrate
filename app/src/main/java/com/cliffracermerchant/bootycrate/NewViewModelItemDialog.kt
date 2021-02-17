@@ -55,13 +55,14 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     init {
         if (useDefaultLayout) {
             newItemView = ViewModelItemView(context)
-            ui.root.layoutTransition = defaultLayoutTransition()
+            ui.root.layoutTransition = layoutTransition(AnimatorUtils.viewTranslationConfig)
         }
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): android.app.Dialog {
         ui.newItemViewContainer.addView(newItemView)
         newItemView.apply {
+            ui.amountEditSpacer.isVisible = false
             ui.checkBox.setColorIndex(0, animate = false)
             ui.nameEdit.setEditable(true, animate = false)
             ui.extraInfoEdit.setEditable(true, animate = false)

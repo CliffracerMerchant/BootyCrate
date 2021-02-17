@@ -41,7 +41,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
 ) : ViewModelRecyclerView<Entity>(context, attrs) {
 
     abstract override val viewModel: ExpandableSelectableItemViewModel<Entity>
-    private val itemAnimator = ExpandableItemAnimator(this)
+    private lateinit var itemAnimator: ExpandableItemAnimator
 
     val selection = Selection()
 
@@ -49,12 +49,12 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         addItemDecoration(ItemSpacingDecoration(context))
         setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
-        setItemAnimator(itemAnimator)
     }
 
-    override fun finishInit(owner: LifecycleOwner) {
-        super.finishInit(owner)
-        adapter.registerAdapterDataObserver(itemAnimator.observer)
+    fun finishInit(owner: LifecycleOwner, animatorConfig: AnimatorUtils.Config) {
+        finishInit(owner)
+        itemAnimator = ExpandableItemAnimator(this, animatorConfig)
+        setItemAnimator(itemAnimator)
     }
 
     open fun deleteSelectedItems() {
@@ -65,9 +65,10 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
              setAnchorView(snackBarAnchor ?: this).
              setAction(R.string.delete_snackbar_undo_text) { undoDelete() }.
              addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                 viewModel.emptyTrash()
-             }}).show()
+                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                     viewModel.emptyTrash()
+                 }
+             }).show()
     }
 
     fun setExpandedItem(pos: Int?) {

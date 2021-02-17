@@ -48,7 +48,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     ) {
         this.viewModel = viewModel
         this.inventoryViewModel = inventoryViewModel
-        finishInit(owner)
+        finishInit(owner, AnimatorUtils.shoppingListItemViewConfig)
     }
 
     /**

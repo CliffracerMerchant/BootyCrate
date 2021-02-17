@@ -5,8 +5,8 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
-import android.animation.LayoutTransition
 import android.animation.ValueAnimator
+import android.app.Application
 import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
@@ -23,6 +23,13 @@ import androidx.core.view.isVisible
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
+
+class App : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        AnimatorUtils.initConfigs(this)
+    }
+}
 
 /**
  * The primary activity for BootyCrate
@@ -85,7 +92,7 @@ open class MainActivity : AppCompatActivity() {
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
 
-        ui.cradleLayout.layoutTransition = defaultLayoutTransition()
+        ui.cradleLayout.layoutTransition = layoutTransition(AnimatorUtils.fragmentTransitionConfig)
         ui.cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
             pendingCradleAnim?.start()
             pendingCradleAnim = null
@@ -196,16 +203,19 @@ open class MainActivity : AppCompatActivity() {
 
         oldFragment.isActive = false
         val oldFragmentView = oldFragment.view
-        oldFragmentView?.animate()?.translationXBy(fragmentTranslationAmount)?.
-                                    setDuration(300)?.//withLayer()?.
-                                    withEndAction { oldFragmentView.visibility = View.INVISIBLE }?.
-                                    start()
+        oldFragmentView?.animate()
+            ?.translationXBy(fragmentTranslationAmount)
+            ?.applyConfig(AnimatorUtils.fragmentTransitionConfig)
+            ?.withEndAction { oldFragmentView.visibility = View.INVISIBLE }
+            ?.start()
 
         activeFragment.isActive = true
         val newFragmentView = activeFragment.view
         newFragmentView?.translationX = newFragmentTranslationStart
         newFragmentView?.visibility = View.VISIBLE
-        newFragmentView?.animate()?.translationX(0f)?.setDuration(300)?.start()//withLayer()
+        newFragmentView?.animate()
+            ?.applyConfig(AnimatorUtils.fragmentTransitionConfig)
+            ?.translationX(0f)?.start()
     }
 
     private fun showBottomAppBar(show: Boolean = true) {
@@ -224,7 +234,9 @@ open class MainActivity : AppCompatActivity() {
         val translationEnd =   if (show) 0f else translationAmount
         for (view in views) {
             view.translationY = translationStart
-            view.animate().withLayer().translationY(translationEnd).start()
+            view.animate().withLayer()
+                .applyConfig(AnimatorUtils.fragmentTransitionConfig)
+                .translationY(translationEnd).start()
         }
     }
 
@@ -246,13 +258,13 @@ open class MainActivity : AppCompatActivity() {
             ui.bottomAppBar.cradleWidth = cradleEndWidth
             return
         }
+        android.R.anim.accelerate_decelerate_interpolator
         // Settings the checkout button's clip bounds prevents the
         // right corners of the checkout button from sticking out
         // underneath the FAB during the show / hide animation.
         val clipBounds = Rect(0, 0, 0, ui.checkoutButton.height)
         ValueAnimator.ofInt(ui.bottomAppBar.cradleWidth, cradleEndWidth).apply {
-            interpolator = ui.cradleLayout.layoutTransition.getInterpolator(LayoutTransition.CHANGE_APPEARING)
-            duration = ui.cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
+            AnimatorUtils.fragmentTransitionConfig.apply(this)
             addUpdateListener {
                 ui.bottomAppBar.cradleWidth = it.animatedValue as Int
                 clipBounds.right = ui.bottomAppBar.cradleWidth - ui.addButton.measuredWidth / 2
@@ -297,7 +309,7 @@ open class MainActivity : AppCompatActivity() {
 
             if (showingPreferences) {
                 showBottomAppBar(false)
-                supportActionBar?.setDisplayHomeAsUpEnabled(true)
+                ui.topActionBar.ui.backButton.isVisible = true
             }
 
         } else {
@@ -322,7 +334,7 @@ open class MainActivity : AppCompatActivity() {
             val indicatorNewXPos = (newIcon.width - ui.bottomAppBar.indicatorWidth) / 2 + newIcon.left
             ValueAnimator.ofInt(ui.bottomAppBar.indicatorXPos, indicatorNewXPos).apply {
                 addUpdateListener { ui.bottomAppBar.indicatorXPos = it.animatedValue as Int }
-                duration = ui.cradleLayout.layoutTransition.getDuration(LayoutTransition.CHANGE_APPEARING)
+                AnimatorUtils.fragmentTransitionConfig.apply(this)
             }.start()
             true
         }
