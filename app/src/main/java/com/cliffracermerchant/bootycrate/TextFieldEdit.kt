@@ -41,7 +41,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     AppCompatEditText(context, attrs)
 {
     val liveData = MutableLiveData<String>()
-    var animatorConfig = AnimatorUtils.viewTranslationConfig
+    var animatorConfig = AnimatorConfigs.translation
     var isEditable: Boolean get() = isFocusableInTouchMode
                             set(editable) = setEditable(editable, animate = true)
 

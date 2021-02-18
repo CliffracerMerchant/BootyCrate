@@ -55,7 +55,7 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     init {
         if (useDefaultLayout) {
             newItemView = ViewModelItemView(context)
-            ui.root.layoutTransition = layoutTransition(AnimatorUtils.viewTranslationConfig)
+            ui.root.layoutTransition = layoutTransition(AnimatorConfigs.translation)
         }
     }
 

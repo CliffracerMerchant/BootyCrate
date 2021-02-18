@@ -85,7 +85,7 @@ open class ViewModelItemView<Entity: ViewModelItem>(
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
-    animatorConfig: AnimatorUtils.Config = AnimatorUtils.viewTranslationConfig,
+    animatorConfig: AnimatorConfigs.Config = AnimatorConfigs.translation,
     useDefaultLayout: Boolean = true,
 ) : ViewModelItemView<Entity>(context, useDefaultLayout) {
 
@@ -172,7 +172,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
  * name and extra info edit at the same time.
  */
 class ShoppingListItemView(context: Context) :
-    ExpandableSelectableItemView<ShoppingListItem>(context, AnimatorUtils.shoppingListItemViewConfig)
+    ExpandableSelectableItemView<ShoppingListItem>(context, AnimatorConfigs.shoppingListItem)
 {
     override fun update(item: ShoppingListItem) {
         ui.checkBox.initIsChecked(item.isChecked)

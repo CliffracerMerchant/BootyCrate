@@ -72,7 +72,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
         optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
 
-        layoutTransition = layoutTransition(AnimatorUtils.viewTranslationConfig)
+        layoutTransition = layoutTransition(AnimatorConfigs.translation)
         ui.changeSortButton.setOnClickListener {
             if (!ui.changeSortButton.isActivated) changeSortPopupMenu.show()
             else onDeleteButtonClickedListener?.invoke()

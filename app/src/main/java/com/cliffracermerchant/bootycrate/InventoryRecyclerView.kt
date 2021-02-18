@@ -38,7 +38,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     ) {
         this.viewModel = viewModel
         this.shoppingListViewModel = shoppingListViewModel
-        finishInit(owner, AnimatorUtils.viewTranslationConfig)
+        finishInit(owner, AnimatorConfigs.translation)
     }
 
     /** A RecyclerView.Adapter to display the contents of a list of inventory items.

@@ -27,7 +27,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        AnimatorUtils.initConfigs(this)
+        AnimatorConfigs.initConfigs(this)
     }
 }
 
@@ -92,7 +92,7 @@ open class MainActivity : AppCompatActivity() {
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
 
-        ui.cradleLayout.layoutTransition = layoutTransition(AnimatorUtils.fragmentTransitionConfig)
+        ui.cradleLayout.layoutTransition = layoutTransition(AnimatorConfigs.transition)
         ui.cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
             pendingCradleAnim?.start()
             pendingCradleAnim = null
@@ -205,7 +205,7 @@ open class MainActivity : AppCompatActivity() {
         val oldFragmentView = oldFragment.view
         oldFragmentView?.animate()
             ?.translationXBy(fragmentTranslationAmount)
-            ?.applyConfig(AnimatorUtils.fragmentTransitionConfig)
+            ?.applyConfig(AnimatorConfigs.transition)
             ?.withEndAction { oldFragmentView.visibility = View.INVISIBLE }
             ?.start()
 
@@ -214,7 +214,7 @@ open class MainActivity : AppCompatActivity() {
         newFragmentView?.translationX = newFragmentTranslationStart
         newFragmentView?.visibility = View.VISIBLE
         newFragmentView?.animate()
-            ?.applyConfig(AnimatorUtils.fragmentTransitionConfig)
+            ?.applyConfig(AnimatorConfigs.transition)
             ?.translationX(0f)?.start()
     }
 
@@ -235,7 +235,7 @@ open class MainActivity : AppCompatActivity() {
         for (view in views) {
             view.translationY = translationStart
             view.animate().withLayer()
-                .applyConfig(AnimatorUtils.fragmentTransitionConfig)
+                .applyConfig(AnimatorConfigs.transition)
                 .translationY(translationEnd).start()
         }
     }
@@ -264,7 +264,7 @@ open class MainActivity : AppCompatActivity() {
         // underneath the FAB during the show / hide animation.
         val clipBounds = Rect(0, 0, 0, ui.checkoutButton.height)
         ValueAnimator.ofInt(ui.bottomAppBar.cradleWidth, cradleEndWidth).apply {
-            AnimatorUtils.fragmentTransitionConfig.apply(this)
+            applyConfig(AnimatorConfigs.transition)
             addUpdateListener {
                 ui.bottomAppBar.cradleWidth = it.animatedValue as Int
                 clipBounds.right = ui.bottomAppBar.cradleWidth - ui.addButton.measuredWidth / 2
@@ -334,7 +334,7 @@ open class MainActivity : AppCompatActivity() {
             val indicatorNewXPos = (newIcon.width - ui.bottomAppBar.indicatorWidth) / 2 + newIcon.left
             ValueAnimator.ofInt(ui.bottomAppBar.indicatorXPos, indicatorNewXPos).apply {
                 addUpdateListener { ui.bottomAppBar.indicatorXPos = it.animatedValue as Int }
-                AnimatorUtils.fragmentTransitionConfig.apply(this)
+                applyConfig(AnimatorConfigs.transition)
             }.start()
             true
         }

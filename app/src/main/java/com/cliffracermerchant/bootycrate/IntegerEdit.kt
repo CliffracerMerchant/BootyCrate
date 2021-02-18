@@ -61,7 +61,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     val liveData: LiveData<Int> get() = _liveData
 
     val ui = IntegerEditBinding.inflate(LayoutInflater.from(context), this)
-    var animatorConfig = AnimatorUtils.viewTranslationConfig
+    var animatorConfig = AnimatorConfigs.translation
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)

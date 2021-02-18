@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
+import android.view.animation.AnimationUtils
 import androidx.annotation.CallSuper
 import androidx.core.view.doOnNextLayout
 
@@ -62,18 +63,20 @@ open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeS
         }
     }
 
-    @CallSuper
-    override fun setEnabled(enabled: Boolean) {
+    @CallSuper override fun setEnabled(enabled: Boolean) {
         if (isEnabled == enabled) return
         super.setEnabled(enabled)
         val disabledOverlay = this.disabledOverlay ?: return
-        val animConfig = if (enabled) AnimatorUtils.viewFadeInConfig
-                         else         AnimatorUtils.viewFadeOutConfig
-        valueAnimatorOfInt(disabledOverlay::setAlpha,
-                           disabledOverlay.alpha,
-                           if (enabled) 0 else 255,
-                           animConfig).apply {
-            addUpdateListener{ invalidate() }}.start()
+        val animConfig = if (enabled) AnimatorConfigs.fadeIn
+                         else         AnimatorConfigs.fadeOut
+        valueAnimatorOfInt(setter = disabledOverlay::setAlpha,
+                           fromValue = disabledOverlay.alpha,
+                           toValue = if (enabled) 0 else 255,
+                           config = animConfig).apply {
+                addUpdateListener{ invalidate() }
+                duration = resources.getInteger(R.integer.viewTranslationDuration).toLong()
+                interpolator = AnimationUtils.loadInterpolator(context, R.anim.translation_interpolator)
+            }.start()
     }
 
     override fun onDraw(canvas: Canvas?) {

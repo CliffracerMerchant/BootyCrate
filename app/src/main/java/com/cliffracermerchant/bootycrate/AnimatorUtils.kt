@@ -12,46 +12,66 @@ import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewPropertyAnimator
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AnimationUtils
 
-object AnimatorUtils {
-    data class Config(val duration: Long, val interpolator: TimeInterpolator) {
-        fun apply(anim: Animator) {
-            anim.duration = duration
-            anim.interpolator = interpolator
-        }
-    }
+/**
+ * An object that contains static AnimatorConfigs.Config instances to help synchronize animations.
+ *
+ * The duration and interpolator of animations are the most important factors
+ * in ensuring that separate but related animations are synchronized. Applying
+ * the provided AnimatorConfigs.Config instances wherever animations are used
+ * within the app make it easier to achieve this. The provided configs are:
+ * - AnimatorConfigs.translation: For translation or size changing of views
+ * - AnimatorConfigs.fadeIn: For views that fade in.
+ * - AnimatorConfigs.fadeOut: For views that fade out.
+ * - AnimatorConfigs.transition: For views involved in large scale transitions,
+ *       e.g. between fragments.
+ * - AnimatorConfigs.shoppingListItem: Like the translation config, but for
+ *       shopping list item views. It uses a slightly shorter duration due to
+ *       the small size of shopping list item views making the default transla-
+ *       tion duration look a little slow.
+ * The function init must be called with a context instance sometime before any
+ * of the configs are accessed, or else an exception will be thrown.
+ */
+object AnimatorConfigs {
+    /** Config instances contain a duration and an animation interpolator. */
+    data class Config(val duration: Long, val interpolator: TimeInterpolator)
 
     fun initConfigs(context: Context) {
-        val viewAnimationDuration = context.resources.getInteger(R.integer.viewAnimationDuration).toLong()
-        val fragmentTransitionDuration = context.resources.getInteger(R.integer.fragmentTransitionDuration).toLong()
-        val accelerateDecelerateInterpolator = AnimationUtils.loadInterpolator(
-            context, android.R.anim.accelerate_decelerate_interpolator)
-        val decelerateInterpolator = AnimationUtils.loadInterpolator(
-            context, android.R.anim.decelerate_interpolator)
-        val accelerateInterpolator = AnimationUtils.loadInterpolator(
-            context, android.R.anim.accelerate_interpolator)
-        viewTranslationConfigPrivate = Config(viewAnimationDuration, accelerateDecelerateInterpolator)
-        viewFadeInConfigPrivate = Config(viewAnimationDuration, accelerateInterpolator)
-        viewFadeOutConfigPrivate = Config(viewAnimationDuration, decelerateInterpolator)
-        fragmentTransitionConfigPrivate = Config(fragmentTransitionDuration, AccelerateDecelerateInterpolator())
-        shoppingListItemViewConfigPrivate = Config((viewAnimationDuration * 3 / 4), accelerateDecelerateInterpolator)
+        val translationDuration = context.resources.getInteger(R.integer.viewTranslationDuration).toLong()
+        val transitionDuration = context.resources.getInteger(R.integer.fragmentTransitionDuration).toLong()
+        val shoppingListItemDuration = context.resources.getInteger(R.integer.shoppingListItemViewTranslationDuration).toLong()
+        val translationInterpolator = AnimationUtils.loadInterpolator(context, R.anim.translation_interpolator)
+        val fadeInInterpolator = AnimationUtils.loadInterpolator(context, R.anim.fade_in_interpolator)
+        val fadeOutInterpolator = AnimationUtils.loadInterpolator(context, R.anim.fade_out_interpolator)
+        translationPrivate = Config(translationDuration, translationInterpolator)
+        fadeInPrivate = Config(translationDuration, fadeInInterpolator)
+        fadeOutPrivate = Config(translationDuration, fadeOutInterpolator)
+        transitionPrivate = Config(transitionDuration, translationInterpolator)
+        shoppingListItemPrivate = Config(shoppingListItemDuration, translationInterpolator)
     }
 
-    private lateinit var viewTranslationConfigPrivate: Config
-    private lateinit var viewFadeInConfigPrivate: Config
-    private lateinit var viewFadeOutConfigPrivate: Config
-    private lateinit var fragmentTransitionConfigPrivate: Config
-    private lateinit var shoppingListItemViewConfigPrivate: Config
-    val viewTranslationConfig get() = viewTranslationConfigPrivate
-    val viewFadeInConfig get() = viewFadeInConfigPrivate
-    val viewFadeOutConfig get() = viewFadeOutConfigPrivate
-    val fragmentTransitionConfig get() = fragmentTransitionConfigPrivate
-    val shoppingListItemViewConfig get() = shoppingListItemViewConfigPrivate
+    private lateinit var translationPrivate: Config
+    private lateinit var fadeInPrivate: Config
+    private lateinit var fadeOutPrivate: Config
+    private lateinit var transitionPrivate: Config
+    private lateinit var shoppingListItemPrivate: Config
+
+    val translation get() = translationPrivate
+    val fadeIn get() = fadeInPrivate
+    val fadeOut get() = fadeOutPrivate
+    val transition get() = transitionPrivate
+    val shoppingListItem get() = shoppingListItemPrivate
 }
 
-fun ViewPropertyAnimator.applyConfig(config: AnimatorUtils.Config) = apply {
+/** Apply an AnimatorConfigs.Config to an Animator object and return the object. */
+fun Animator.applyConfig(config: AnimatorConfigs.Config) = apply {
+    duration = config.duration
+    interpolator = config.interpolator
+}
+
+/** Apply an AnimatorConfigs.Config to a ViewPropertyAnimator object and return the object. */
+fun ViewPropertyAnimator.applyConfig(config: AnimatorConfigs.Config) = apply {
     duration = config.duration
     interpolator = config.interpolator
 }
@@ -60,39 +80,38 @@ fun ViewPropertyAnimator.applyConfig(config: AnimatorUtils.Config) = apply {
 // but hopefully are more performant due to not using reflection to get the property setter.
 /** Return a valueAnimator for an Int property with the update listener already set. */
 fun valueAnimatorOfInt(
-    setter: (Int) -> Unit,
-    initialValue: Int,
-    endValue: Int,
-    config: AnimatorUtils.Config = AnimatorUtils.viewTranslationConfig,
-): ValueAnimator = ValueAnimator.ofInt(initialValue, endValue).apply {
+    setter: (Int) -> Unit, fromValue: Int, toValue: Int,
+    config: AnimatorConfigs.Config = AnimatorConfigs.translation,
+): ValueAnimator = ValueAnimator.ofInt(fromValue, toValue).apply {
     addUpdateListener { setter(it.animatedValue as Int) }
-    config.apply(this)
+    applyConfig(config)
 }
 
 /** Return a valueAnimator for a Float property with the update listener already set. */
 fun valueAnimatorOfFloat(
-    setter: (Float) -> Unit,
-    initialValue: Float,
-    endValue: Float,
-    config: AnimatorUtils.Config = AnimatorUtils.viewTranslationConfig,
-): ValueAnimator = ValueAnimator.ofFloat(initialValue, endValue).apply {
+    setter: (Float) -> Unit, fromValue: Float, toValue: Float,
+    config: AnimatorConfigs.Config = AnimatorConfigs.translation,
+): ValueAnimator = ValueAnimator.ofFloat(fromValue, toValue).apply {
     addUpdateListener { setter(it.animatedValue as Float) }
-    config.apply(this)
+    applyConfig(config)
 }
 
 /** Return a valueAnimator for an ARGB property with the update listener already set. */
 fun valueAnimatorOfArgb(
-    setter: (Int) -> Unit,
-    initialValue: Int,
-    endValue: Int,
-    config: AnimatorUtils.Config = AnimatorUtils.viewTranslationConfig,
-): ValueAnimator = ValueAnimator.ofArgb(initialValue, endValue).apply {
+    setter: (Int) -> Unit, fromValue: Int, toValue: Int,
+    config: AnimatorConfigs.Config = AnimatorConfigs.translation,
+): ValueAnimator = ValueAnimator.ofArgb(fromValue, toValue).apply {
     addUpdateListener { setter(it.animatedValue as Int) }
-    config.apply(this)
+    applyConfig(config)
 }
 
-fun layoutTransition(config: AnimatorUtils.Config) = LayoutTransition().apply {
-    enableTransitionType(LayoutTransition.CHANGING)
+/**
+ * Return a LayoutTransition whose durations and interpolators match the given AnimatorConfigs.Config.
+ *
+ * Note that the APPEARING and DISAPPEARING transitions will use the AnimatorConfigs.fadeIn
+ * and AnimatorConfigs.fadeOut interpolators instead of the interpolator of the config parameter.
+ */
+fun layoutTransition(config: AnimatorConfigs.Config) = LayoutTransition().apply {
     setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
     setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
     setStartDelay(LayoutTransition.APPEARING, 0)
@@ -100,12 +119,13 @@ fun layoutTransition(config: AnimatorUtils.Config) = LayoutTransition().apply {
     setStartDelay(LayoutTransition.CHANGING, 0)
     setInterpolator(LayoutTransition.CHANGE_APPEARING, config.interpolator)
     setInterpolator(LayoutTransition.CHANGE_DISAPPEARING, config.interpolator)
-    setInterpolator(LayoutTransition.APPEARING, AnimatorUtils.viewFadeInConfig.interpolator)
-    setInterpolator(LayoutTransition.DISAPPEARING, AnimatorUtils.viewFadeOutConfig.interpolator)
+    setInterpolator(LayoutTransition.APPEARING, AnimatorConfigs.fadeIn.interpolator)
+    setInterpolator(LayoutTransition.DISAPPEARING, AnimatorConfigs.fadeOut.interpolator)
     setInterpolator(LayoutTransition.CHANGING, config.interpolator)
     setDuration(config.duration)
 }
 
+/** Apply a onStart action to a LayoutTransition. */
 fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
                                          container: ViewGroup, view: View,
                                          transitionType: Int) -> Unit = {_, _, _, _ -> }) {
@@ -116,6 +136,7 @@ fun LayoutTransition.doOnStart(onStart: (transition: LayoutTransition,
     })
 }
 
+/** Apply a onEnd action to a LayoutTransition. */
 fun LayoutTransition.doOnEnd(onEnd: (transition: LayoutTransition,
                                      container: ViewGroup, view: View,
                                      transitionType: Int) -> Unit = {_, _, _, _ -> }) {

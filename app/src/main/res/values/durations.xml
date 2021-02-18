@@ -6,5 +6,6 @@
 
 <resources>
     <integer name="fragmentTransitionDuration">300</integer>
-    <integer name="viewAnimationDuration">300</integer>
+    <integer name="viewTranslationDuration">300</integer>
+    <integer name="shoppingListItemViewTranslationDuration">250</integer>
 </resources>

@@ -51,7 +51,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         layoutManager = LinearLayoutManager(context)
     }
 
-    fun finishInit(owner: LifecycleOwner, animatorConfig: AnimatorUtils.Config) {
+    fun finishInit(owner: LifecycleOwner, animatorConfig: AnimatorConfigs.Config) {
         finishInit(owner)
         itemAnimator = ExpandableItemAnimator(this, animatorConfig)
         setItemAnimator(itemAnimator)

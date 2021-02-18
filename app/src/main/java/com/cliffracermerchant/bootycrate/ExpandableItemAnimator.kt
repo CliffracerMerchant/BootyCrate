@@ -35,7 +35,7 @@ import androidx.recyclerview.widget.RecyclerView
  */
 class ExpandableItemAnimator(
     private val recyclerView: RecyclerView,
-    private val animatorConfig: AnimatorUtils.Config = AnimatorUtils.viewTranslationConfig
+    private val animatorConfig: AnimatorConfigs.Config = AnimatorConfigs.translation
 ) : DefaultItemAnimator() {
     private val pendingAnimations = mutableListOf<Animator>()
     val expandedItemPos get() = _expandedItemPos
