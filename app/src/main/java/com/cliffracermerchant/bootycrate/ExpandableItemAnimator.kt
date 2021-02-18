@@ -6,7 +6,6 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
-import android.util.Log
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -75,7 +74,6 @@ class ExpandableItemAnimator(
     fun notifyExpandedItemChanged(newlyExpandedItemPos: Int?) {
         collapsingItemPos = expandedItemPos
         _expandedItemPos = newlyExpandedItemPos
-        Log.d("expansion", "collapsingItemPos = $collapsingItemPos, expandingItemPos = $newlyExpandedItemPos")
     }
 
     /* The DefaultItemAnimator animations start playing in runPendingAnimations, rather
@@ -142,7 +140,7 @@ class ExpandableItemAnimator(
     override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
         val view = holder?.itemView ?: return false
         view.animate().alpha(0f).withLayer()
-            .applyConfig(animatorConfig)
+            .applyConfig(AnimatorConfigs.fadeOut)
             .withStartAction { dispatchRemoveStarting(holder) }
             .withEndAction {
                 dispatchRemoveFinished(holder)

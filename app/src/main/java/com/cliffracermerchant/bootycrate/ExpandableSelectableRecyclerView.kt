@@ -28,11 +28,12 @@ import com.google.android.material.snackbar.Snackbar
  *
  * Like its parent class, ExpandableSelectableRecyclerView requires the func-
  * tion finishInit to be called in order to provide it with an instance of
- * ExpandableSelectableItemViewModel. ExpandableSelectableRecyclerView's
+ * ExpandableSelectableItemViewModel and the animator config used for its
+ * instance of ExpandableItemAnimator. ExpandableSelectableRecyclerView's
  * finishInit function, while not an override of ViewModelRecyclerView's ver-
  * sion due to requiring a different function signature, is designed to call
  * ViewModelRecyclerView's version to prevent the implementing activity or
- * fragment from needing to remember to call both.
+ * fragment from needing to call both.
  */
 @Suppress("LeakingThis")
 abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem>(
@@ -77,18 +78,20 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         itemAnimator.notifyExpandedItemChanged(pos)
     }
 
-    /** A class that provides an interface for manipulating the selection of the parent recycler view.
+    /**
+     * A class that provides an interface for manipulating the selection of the parent recycler view.
      *
-     *  Selection is a memberless class whose purpose is to make the manipula-
-     *  tion of the recycler view selection more idiomatic (e.g. recyclerView.-
-     *  selection.add() instead of recyclerView.addToSelection()). The size of
-     *  the selection can be queried through the properties size and isEmpty,
-     *  as well as sizeLiveData in case an observable selection size is desired.
+     * Selection is a memberless class whose purpose is to make the manipula-
+     * tion of the recycler view selection more idiomatic (e.g. recyclerView.-
+     * selection.add() instead of recyclerView.addToSelection()). The size of
+     * the selection can be queried through the properties size and isEmpty,
+     * as well as sizeLiveData in case an observable selection size is desired.
      *
-     *  The contents of the selection are modified for single items through the
-     *  self-explanatory functions add, remove, and toggle, which accept the
-     *  stable id of the item being operated on. The function clear will erase
-     *  the selection entirely. */
+     * The contents of the selection are modified for single items through the
+     * self-explanatory functions add, remove, and toggle, which accept the
+     * stable id of the item being operated on. The function clear will erase
+     * the selection entirely.
+     */
     inner class Selection {
         val itemsLiveData get() = viewModel.selectedItems
         val items get() = itemsLiveData.value
@@ -103,10 +106,10 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         fun clear() = viewModel.clearSelection()
     }
 
-    /** A subclass of ViewModelAdapter that enforces the use of ExpandableSelectableItemViewHolder.
-     *
-     *  ExpandableSelectableItemAdapter does not implement onCreateViewHolder, and is
-     *  therefore abstract.*/
+    /**
+     * An abstract (due to not implementing onCreateViewHolder) subclass of
+     * ViewModelAdapter that enforces the use of ExpandableSelectableItemViewHolder.
+     */
     abstract inner class ExpandableSelectableItemAdapter<VHType: ExpandableSelectableItemViewHolder> :
             ViewModelAdapter<VHType>() {
 
@@ -117,10 +120,12 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         }
     }
 
-    /** A ViewHolder subclass that wraps an instance of ExpandableSelectableItemView.
+    /**
+     * A ViewHolder subclass that wraps an instance of ExpandableSelectableItemView.
      *
-     *  ExpandableSelectableItemView updates the onClickListeners of the wrapped item
-     *  view to enable the selection and expansion of the items. */
+     * ExpandableSelectableItemView updates the onClickListeners of the wrapped item
+     * view to enable the selection and expansion of the items.
+     */
     open inner class ExpandableSelectableItemViewHolder(
         view: ExpandableSelectableItemView<Entity>
     ) : ViewModelItemViewHolder(view) {

@@ -93,7 +93,7 @@ open class MainActivity : AppCompatActivity() {
         setContentView(ui.root)
 
         ui.cradleLayout.layoutTransition = layoutTransition(AnimatorConfigs.transition)
-        ui.cradleLayout.layoutTransition.doOnStart { _, _, _, _ ->
+        ui.cradleLayout.layoutTransition.doOnStart {
             pendingCradleAnim?.start()
             pendingCradleAnim = null
         }

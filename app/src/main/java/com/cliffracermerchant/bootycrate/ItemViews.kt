@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.animation.LayoutTransition
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
@@ -51,6 +52,9 @@ open class ViewModelItemView<Entity: ViewModelItem>(
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
         if (useDefaultLayout)
             ui = ViewModelItemBinding.inflate(LayoutInflater.from(context), this)
+
+        val verticalPadding = resources.getDimensionPixelSize(R.dimen.recycler_view_item_vertical_padding)
+        setPadding(0, verticalPadding, 0, verticalPadding)
     }
 
     @CallSuper open fun update(item: Entity) {
@@ -80,6 +84,12 @@ open class ViewModelItemView<Entity: ViewModelItem>(
  * setExpanded, and toggleExpanded. Because subclasses may need to alter
  * the visibility of additional views during expansion or collapse, setExpan-
  * ded is open.
+ *
+ * The @param animatorConfig will determine the animator config used for the
+ * view's layout transition and some of the views' internal animations. If
+ * desired the default value of AnimatorConfigs.translation can be overridden
+ * in order to make sure the view's animations are in sync with others outside
+ * the view.
  */
 @Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
@@ -94,7 +104,30 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     private val gradientOutline: GradientDrawable
 
     init {
-        layoutTransition = layoutTransition(animatorConfig)
+        /* Because ExpandableSelectableItemView is intended to be used in a
+           RecyclerView with an item animator, the automatic animations played
+           by the view's layout transition should ideally be synchronized with
+           those of the item animator. Unfortunately in tests the layout tran-
+           sition's animations started before those of the item animator, lead-
+           ing to noticeable visual artifacts (particularly when a view is
+           expanded at the same time as another is collapsed, leading to the
+           bottom view being resized and translated at the same time). As the
+           layout transition API does not permit access to the ValueAnimators
+           it uses internally, there is no easy way to pause these animators
+           and resume them once the item animator animations begin, the ideal
+           solution. As a workaround a delay is set here to all of the layout
+           transition's animations to compensate. Obviously this is not ideal
+           because the delay is likely to be different on different systems,
+           but in tests on several systems it seems to almost eliminate the
+           delay between the layout transition and item animator animations. */
+        val transitionDelay = 20L
+        layoutTransition = layoutTransition(animatorConfig).apply {
+            setStartDelay(LayoutTransition.CHANGE_APPEARING, transitionDelay)
+            setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, transitionDelay)
+            setStartDelay(LayoutTransition.APPEARING, transitionDelay)
+            setStartDelay(LayoutTransition.DISAPPEARING, transitionDelay)
+            setStartDelay(LayoutTransition.CHANGING, transitionDelay)
+        }
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
         gradientOutline = (background.getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
         gradientOutline.setTintList(null)
@@ -108,11 +141,12 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         gradientOutline.colors = colors
         this.background = background
 
-        val verticalPadding = resources.getDimensionPixelSize(R.dimen.recycler_view_item_vertical_padding)
-        setPadding(0, verticalPadding, 0, verticalPadding)
-
-        if (useDefaultLayout)
+        if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }
+            ui.nameEdit.animatorConfig = animatorConfig
+            ui.extraInfoEdit.animatorConfig = animatorConfig
+            ui.amountEdit.animatorConfig = animatorConfig
+        }
     }
 
     override fun update(item: Entity) {
@@ -211,6 +245,9 @@ class InventoryItemView(context: Context) :
         ui.editButton.setOnClickListener { toggleExpanded() }
         ui.checkBox.inColorEditMode = true
         ui.amountEdit.minValue = 0
+        ui.nameEdit.animatorConfig = AnimatorConfigs.translation
+        ui.extraInfoEdit.animatorConfig = AnimatorConfigs.translation
+        ui.amountEdit.animatorConfig = AnimatorConfigs.translation
     }
 
     override fun update(item: InventoryItem) {

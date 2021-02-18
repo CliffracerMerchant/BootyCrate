@@ -41,15 +41,17 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         finishInit(owner, AnimatorConfigs.translation)
     }
 
-    /** A RecyclerView.Adapter to display the contents of a list of inventory items.
+    /**
+     * A RecyclerView.Adapter to display the contents of a list of inventory items.
      *
-     *  InventoryAdapter is a subclass of ExpandableSelectableItemAdapter using
-     *  InventoryItemViewHolder instances to represent inventory items. Its over-
-     *  rides of onBindViewHolder make use of the InventoryItem.Field values passed
-     *  by InventoryItemDiffUtilCallback to support partial binding. Note that
-     *  InventoryAdapter assumes that any payloads passed to it are of the type
-     *  EnumSet<InventoryItem.Field>. If a payload of another type is passed to it,
-     *  an exception will be thrown. */
+     * InventoryAdapter is a subclass of ExpandableSelectableItemAdapter using
+     * InventoryItemViewHolder instances to represent inventory items. Its over-
+     * rides of onBindViewHolder make use of the InventoryItem.Field values passed
+     * by InventoryItemDiffUtilCallback to support partial binding. Note that
+     * InventoryAdapter assumes that any payloads passed to it are of the type
+     * EnumSet<InventoryItem.Field>. If a payload of another type is passed to it,
+     * an exception will be thrown.
+     */
     @Suppress("UNCHECKED_CAST")
     inner class InventoryAdapter : ExpandableSelectableItemAdapter<InventoryItemViewHolder>() {
 
@@ -107,12 +109,14 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         }
     }
 
-    /** A ExpandableSelectableItemViewHolder that wraps an instance of InventoryItemView.
+    /**
+     * A ExpandableSelectableItemViewHolder that wraps an instance of InventoryItemView.
      *
-     *  InventoryItemViewHolder is a subclass of ExpandableSelectableItemViewHolder
-     *  that holds an instance of InventoryItemView to display the data for an
-     *  InventoryItem. It also connects changes in the InventoryItemView extra
-     *  details section to view model update calls. */
+     * InventoryItemViewHolder is a subclass of ExpandableSelectableItemViewHolder
+     * that holds an instance of InventoryItemView to display the data for an
+     * InventoryItem. It also connects changes in the InventoryItemView extra
+     * details section to view model update calls.
+     */
     inner class InventoryItemViewHolder(val view: InventoryItemView) :
         ExpandableSelectableItemViewHolder(view) {
 
@@ -127,13 +131,15 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         }
     }
 
-    /** Computes a diff between two inventory item lists.
+    /**
+     * Computes a diff between two inventory item lists.
      *
-     *  InventoryItemDiffUtilCallback uses the ids of inventory items to determine
-     *  if they are the same or not. If they are the same, changes are logged by
-     *  setting the appropriate bit of an instance of EnumSet<InventoryItem.Field>.
-     *  The change payload for modified items will then be the enum set containing
-     *  all of the fields that were changed. */
+     * InventoryItemDiffUtilCallback uses the ids of inventory items to determine
+     * if they are the same or not. If they are the same, changes are logged by
+     * setting the appropriate bit of an instance of EnumSet<InventoryItem.Field>.
+     * The change payload for modified items will then be the enum set containing
+     * all of the fields that were changed.
+     */
     class InventoryItemDiffUtilCallback : DiffUtil.ItemCallback<InventoryItem>() {
         private val listChanges = mutableMapOf<Long, EnumSet<InventoryItem.Field>>()
         private val itemChanges = EnumSet.noneOf(InventoryItem.Field::class.java)

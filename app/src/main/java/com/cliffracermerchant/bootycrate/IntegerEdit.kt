@@ -32,7 +32,9 @@ import com.cliffracermerchant.bootycrate.databinding.IntegerEditBinding
  * it a larger touch target.
  *
  * Unless the function setValueIsDirectlyEditable is called with a value of
- * false for the parameter animate, the IntegerEdit will animate to its n
+ * false for the parameter animate, the IntegerEdit will animate when valueIs-
+ * directlyEditable is changed. The animation will use the property animator-
+ * Config for its duration and interpolator.
  */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 

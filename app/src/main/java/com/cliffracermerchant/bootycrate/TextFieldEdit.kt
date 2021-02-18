@@ -35,7 +35,10 @@ import androidx.lifecycle.MutableLiveData
  * When in editable mode, TextFieldEdit will underline itself to indicate this
  * to the user, and will set its minHeight to the value of the dimension
  * R.dimen.text_field_edit_editable_min_height to ensure that its touch tar-
- * get size is adequate.
+ * get size is adequate. It will also animate changes in its editable state
+ * (unless the function setEditable is called with the parameter animate =
+ * equal to false). The animations will use the property animatorConfig for
+ * their durations and interpolators.
  */
 open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     AppCompatEditText(context, attrs)
@@ -101,7 +104,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
          * transition will not animate this, and the text will jump to its new position in
          * the resized view. While this can be counteracted with a translationY animation,
          * if the gravity is already center_vertical when the translationY animation is
-         * started it can cause the text to be partially clipped. To work around this the
+         * started, it can cause the text to be partially clipped. To work around this the
          * gravity is set to viewStart when the view is collapsed, and is only set to
          * center_vertical after the expansion animation is finished. */
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
@@ -156,8 +159,8 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         if (animate) {
             val endColor = if (strikeThroughEnabled) currentHintTextColor
                            else                      normalTextColor
-            valueAnimatorOfArgb(::setTextColor, currentTextColor, endColor).start()
-            valueAnimatorOfFloat(::setStrikeThroughLength, 0f, fullLength).apply {
+            valueAnimatorOfArgb(::setTextColor, currentTextColor, endColor, animatorConfig).start()
+            valueAnimatorOfFloat(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
                 if (!strikeThroughEnabled)
                     doOnEnd { strikeThroughLength = null }
             }.start()
