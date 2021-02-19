@@ -16,41 +16,31 @@ import androidx.core.graphics.withClip
 import com.google.android.material.shape.*
 import kotlin.math.atan
 
-/** A custom toolbar that has a cutout in its top edge to hold the contents of a layout.
+/**
+ * A custom toolbar that has a cutout in its top edge to hold the contents of a layout.
  *
- *  BottomAppBar functions mostly as a regular Toolbar, except that its custom
- *  CradleTopEdgeTreatment used on its top edge gives it a cutout in its shape
- *  that can be used to hold the contents of a layout. The layout in question
- *  should be passed to the function prepareCradleLayout during app startup so
- *  that BottomAppBar can set up its layout params.
+ * BottomAppBar functions mostly as a regular Toolbar, except that its custom
+ * CradleTopEdgeTreatment used on its top edge gives it a cutout in its shape
+ * that can be used to hold the contents of a layout. The layout in question
+ * should be passed to the function prepareCradleLayout during app startup so
+ * that BottomAppBar can set up its layout params.
  *
- *  BottomAppBar can also draw an indicator along its top edge, in case it is
- *  used in conjunction with a BottomNavigationView. The primary reason to use
- *  BottomAppBar's indicator over, for example, one inside a BottomNavigation-
- *  View subclass, is that BottomAppBar's indicator will always appear along
- *  its top edge, taking into account the cradle layout cutaway. Unfortunately,
- *  BottomAppBar has no way of knowing the exact on-screen positions of the
- *  menu items displayed in the BottomNavigationView, so the position must be
- *  manually set in pixels using the property indicatorXPos. The width (also in
- *  pixels) can be set via the XML attribute indicatorWidth, or at runtime using
- *  the property of the same name. The indicator color can be set using the XML
- *  property indicatorColor.
+ * BottomAppBar can also draw an indicator along its top edge, in case it is
+ * used in conjunction with a BottomNavigationView. The primary reason to use
+ * BottomAppBar's indicator over, for example, one inside a BottomNavigation-
+ * View subclass, is that BottomAppBar's indicator will always appear along
+ * its top edge, taking into account the cradle layout cutaway. Unfortunately,
+ * BottomAppBar has no way of knowing the exact on-screen positions of the
+ * menu items displayed in the BottomNavigationView, so the position must be
+ * manually set in pixels using the property indicatorXPos. The width (also in
+ * pixels) can be set via the XML attribute indicatorWidth, or at runtime using
+ * the property of the same name. The indicator color can be set using the XML
+ * property indicatorColor.
  *
- *  The gradients used for the background, border, and indicator can be set
- *  through the public properties backgroundGradient, borderGradient, and indi-
- *  catorGradient, respectively.
- *
- *  XML attributes:
- *  - cradleAlignmentMode: CradleAlignmentMode = CradleAlignmentMode.Center:
- *        Where the cradle is drawn on the BottomAppBar.
- *  - cradleDepth: dimension = 0: The depth of the cradle
- *  - cradleTopCornerRadius: dimension = 0: The radius of the top corners of the cradle
- *  - cradleBottomCornerRadius: dimension = 0: The radius of the bottom corners of the cradle
- *  - cradleStartEndMargin: dimension = 90: The start or end margin of the cradle when the Cradle-
- *        AlignmentMode is Start or End. Does nothing when the CradleAlignmentMode is Center.
- *  - cradleContentsMargin: dimension = 0: The margin between the cradle and its nested layout
- *  - indicatorWidth: dimension = 0: The width of the indicator.
- *  - indicatorColor: color = 0: The color of the indicator. */
+ * The gradients used for the background, border, and indicator can be set
+ * through the public properties backgroundGradient, borderGradient, and indi-
+ * catorGradient, respectively.
+ */
 class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
 
     enum class CradleAlignmentMode { Start, Center, End }
@@ -69,12 +59,12 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     var indicatorColor: Int get() = indicatorPaint.color
                             set(value) { indicatorPaint.color = value }
 
-    var backgroundGradient get() = backgroundPaint.shader
+    var backgroundGradient: Shader? get() = backgroundPaint.shader
                            set(gradient) { backgroundPaint.shader = gradient }
-    var borderGradient get() = borderPaint.shader
-                       set(gradient) { borderPaint.shader = gradient }
-    var indicatorGradient get() = indicatorPaint.shader
-                          set(gradient) { indicatorPaint.shader = gradient }
+    var borderGradient: Shader? get() = borderPaint.shader
+                                set(gradient) { borderPaint.shader = gradient }
+    var indicatorGradient: Shader?get() = indicatorPaint.shader
+                                  set(gradient) { indicatorPaint.shader = gradient }
 
     private val materialShapeDrawable = MaterialShapeDrawable()
     private val outlinePath = Path()
@@ -167,7 +157,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
             interpolation: Float,
             shapePath: ShapePath
         ) {
-            // The path needs to be offset by half of the border paint's strokewidth
+            // The path needs to be offset by half of the border paint's strokeWidth
             // value to ensure that the border is drawn entirely within the canvas.
             val pathOffset = borderPaint.strokeWidth / 2f
 
@@ -235,6 +225,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
                 // elsewhere, that causes the y value after the above arc to be slightly
                 // off. This will cause a tilt in the final horizontal line. The follo-
                 // wing lineTo puts the current y at pathOffset, where it should be.
+                @Suppress("DEPRECATION")
                 lineTo(endX, pathOffset)
                 lineTo(width.toFloat(), pathOffset)
             }

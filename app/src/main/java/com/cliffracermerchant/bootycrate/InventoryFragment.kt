@@ -5,33 +5,39 @@
 package com.cliffracermerchant.bootycrate
 
 import android.os.Bundle
-import android.view.*
-import kotlinx.android.synthetic.main.inventory_fragment.*
-import kotlinx.android.synthetic.main.activity_main.*
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import com.cliffracermerchant.bootycrate.databinding.InventoryFragmentBinding
 
-/** A fragment to display and modify the user's inventory.
+/**
+ * A fragment to display and modify the user's inventory.
  *
- *  InventoryFragment is a RecyclerViewFragment subclass to view and modify the
- *  user's inventory using an InventoryRecyclerView. It does almost nothing
- *  different from RecyclerViewFragment apart from implementing its abstract
- *  properties with values suitable for display of an InventoryRecyclerView,
- *  and using its own action mode callback. */
+ * InventoryFragment is a RecyclerViewFragment subclass to view and modify the
+ * user's inventory using an InventoryRecyclerView. It does almost nothing
+ * different from RecyclerViewFragment apart from implementing its abstract
+ * properties with values suitable for display of an InventoryRecyclerView,
+ * and using its own action mode callback.
+ */
 class InventoryFragment(isActive: Boolean = false) :
         RecyclerViewFragment<InventoryItem>(isActive) {
     override lateinit var recyclerView: InventoryRecyclerView
     override val actionMode = InventoryActionMode()
+    lateinit var ui: InventoryFragmentBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.inventory_fragment, container, false)
+                              savedInstanceState: Bundle?): View {
+        ui = InventoryFragmentBinding.inflate(inflater, container, false)
+        return ui.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerView = inventoryRecyclerView
-        val mainActivity = requireActivity() as MainActivity
+        recyclerView = ui.inventoryRecyclerView
+        val activity = requireActivity() as MainActivity
         recyclerView.finishInit(viewLifecycleOwner,
-                                mainActivity.inventoryViewModel,
-                                mainActivity.shoppingListViewModel)
+                                activity.inventoryViewModel,
+                                activity.shoppingListViewModel)
         super.onViewCreated(view, savedInstanceState)
     }
 
@@ -39,11 +45,11 @@ class InventoryFragment(isActive: Boolean = false) :
         super.onActiveStateChanged(active)
         if (active) {
             val activity = activity as? MainActivity ?: return
-            activity.addButton.setOnClickListener {
+            activity.ui.addButton.setOnClickListener {
                 NewInventoryItemDialog(activity, activity.inventoryViewModel)
                     .show(activity.supportFragmentManager, null)
             }
-            activity.checkoutButton.checkoutCallback = null
+            activity.ui.checkoutButton.checkoutCallback = null
         }
     }
 
@@ -58,7 +64,7 @@ class InventoryFragment(isActive: Boolean = false) :
 
     override fun setOptionsMenuItemsVisible(showing: Boolean) {
         super.setOptionsMenuItemsVisible(showing)
-        mainActivity?.topActionBar?.optionsMenu?.setGroupVisible(R.id.inventory_view_menu_group, showing)
+        mainActivity?.ui?.topActionBar?.optionsMenu?.setGroupVisible(R.id.inventory_view_menu_group, showing)
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */

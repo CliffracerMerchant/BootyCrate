@@ -26,11 +26,11 @@
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:propertyName="trimPathEnd"
-                android:duration="300"
                 android:valueFrom="0"
                 android:valueTo="1"
                 android:valueType="floatType"
-                android:interpolator="@android:anim/decelerate_interpolator"/>
+                android:duration="@integer/viewTranslationDuration"
+                android:interpolator="@anim/translation_interpolator" />
         </aapt:attr>
     </target>
 </animated-vector>

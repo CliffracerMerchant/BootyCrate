@@ -2,7 +2,6 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-
 package com.cliffracermerchant.bootycrate
 
 import android.graphics.LinearGradient
@@ -11,21 +10,23 @@ import android.graphics.RadialGradient
 import android.graphics.Shader
 import kotlin.math.min
 
-/** A factory to create instances of Android.Graphics.LinearGradient or RadialGradient.
+/**
+ * A factory to create instances of Android.Graphics.LinearGradient or RadialGradient.
  *
- *  GradientBuilder creates instances of LinearGradient or RadialGradient using
- *  its public functions buildLinearGradient or buildRadialGradient. All of the
- *  properties of the gradients can be set in the constructor, or using the
- *  standard factory pattern methods that return the GradientBuilder instance
- *  being acted upon.
+ * GradientBuilder creates instances of LinearGradient or RadialGradient using
+ * its public functions buildLinearGradient or buildRadialGradient. All of the
+ * properties of the gradients can be set in the constructor, or using the
+ * standard factory pattern methods that return the GradientBuilder instance
+ * being acted upon.
  *
- *  Property    LinearGradient                  RadialGradient
- *  -------------------------------------------------------------------
- *  x1, y1      coordinates of start point      coordinates of center
- *  x2, y2      coordinates of end point        x radius and y radius
- *  colors      colors to be used               same
- *  stops       stop points for the colors      same
- *  tileMode    Shader.TileMode to use          same */
+ * Property    LinearGradient                RadialGradient
+ * -----------------------------------------------------------------
+ * x1, y1      coordinates of start point    coordinates of center
+ * x2, y2      coordinates of end point      x radius and y radius
+ * colors      colors to be used             same
+ * stops       stop points for the colors    same
+ * tileMode    Shader.TileMode to use        same
+ */
 data class GradientBuilder(
     var x1: Float = 0f,
     var y1: Float = 0f,

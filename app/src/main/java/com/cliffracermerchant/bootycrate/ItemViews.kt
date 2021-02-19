@@ -4,46 +4,45 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
+import android.animation.LayoutTransition
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracermerchant.bootycrate.databinding.InventoryItemBinding
 import com.cliffracermerchant.bootycrate.databinding.InventoryItemDetailsBinding
 import com.cliffracermerchant.bootycrate.databinding.ViewModelItemBinding
-import kotlinx.android.synthetic.main.integer_edit.view.*
 
-/** A layout to display the data for a ViewModelItem.
+/**
+ * A layout to display the data for a ViewModelItem.
  *
- *  ViewModelItemView displays the data for an instance of ViewModelItem. The
- *  displayed data can be updated for a new item with the function update.
+ * ViewModelItemView displays the data for an instance of ViewModelItem. The
+ * displayed data can be updated for a new item with the function update.
  *
- *  By default ViewModelItemView inflates itself with the contents of R.layout.-
- *  view_model_item_view.xml and initializes its ViewModelItemBinding member ui.
- *  In case this layout needs to be overridden in a subclass, the ViewModelItem-
- *  View can be constructed with the parameter useDefaultLayout equal to false.
- *  If useDefaultLayout is false, it will be up to the subclass to inflate the
- *  desired layout and initialize the member ui with an instance of a ViewModel-
- *  ItemBinding. If the ui member is not initialized then a kotlin.Uninitial-
- *  izedPropertyAccessException will be thrown. */
+ * By default ViewModelItemView inflates itself with the contents of R.layout.-
+ * view_model_item_view.xml and initializes its ViewModelItemBinding member ui.
+ * In case this layout needs to be overridden in a subclass, the ViewModelItem-
+ * View can be constructed with the parameter useDefaultLayout equal to false.
+ * If useDefaultLayout is false, it will be up to the subclass to inflate the
+ * desired layout and initialize the member ui with an instance of a ViewModel-
+ * ItemBinding. If the ui member is not initialized then a kotlin.Uninitialized-
+ * PropertyAccessException will be thrown.
+ */
+@Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
 open class ViewModelItemView<Entity: ViewModelItem>(
     context: Context,
     useDefaultLayout: Boolean = true,
 ) : ConstraintLayout(context) {
 
-    protected val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+    protected val inputMethodManager = inputMethodManager(context)
     protected var itemIsLinked = false
 
     lateinit var ui: ViewModelItemBinding
@@ -53,6 +52,9 @@ open class ViewModelItemView<Entity: ViewModelItem>(
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
         if (useDefaultLayout)
             ui = ViewModelItemBinding.inflate(LayoutInflater.from(context), this)
+
+        val verticalPadding = resources.getDimensionPixelSize(R.dimen.recycler_view_item_vertical_padding)
+        setPadding(0, verticalPadding, 0, verticalPadding)
     }
 
     @CallSuper open fun update(item: Entity) {
@@ -65,26 +67,35 @@ open class ViewModelItemView<Entity: ViewModelItem>(
     }
 }
 
-/** A ViewModelItemView subclass that provides an interface for a selection and expansion of the view.
+/**
+ * A ViewModelItemView subclass that provides an interface for a selection and expansion of the view.
  *
- *  ExpandableSelectableItemView will display the information of an instance of
- *  ExpandableSelectableItem, while also providing an interface for expansion
- *  and selection. The update override will update the view to reflect the
- *  selection and expansion state of the ExpandableSelectableItem passed to it.
+ * ExpandableSelectableItemView will display the information of an instance of
+ * ExpandableSelectableItem, while also providing an interface for expansion
+ * and selection. The update override will update the view to reflect the
+ * selection and expansion state of the ExpandableSelectableItem passed to it.
  *
- *  The interface for selection and deselection consists of the functions
- *  select, deselect, and setSelectedState. With the default background these
- *  functions will give the view a surrounding gradient outline or hide the
- *  outline depending on the item's selection state.
+ * The interface for selection and deselection consists of the functions
+ * select, deselect, and setSelectedState. With the default background these
+ * functions will give the view a surrounding gradient outline or hide the
+ * outline depending on the item's selection state.
  *
- *  Likewise, the interface for item expansion consists of expand, collapse,
- *  setExpanded, and toggleExpanded. Because subclasses may need to alter
- *  the visibility of additional views during expansion or collapse, setExpan-
- *  ded is open. */
+ * Likewise, the interface for item expansion consists of expand, collapse,
+ * setExpanded, and toggleExpanded. Because subclasses may need to alter
+ * the visibility of additional views during expansion or collapse, setExpan-
+ * ded is open.
+ *
+ * The @param animatorConfig will determine the animator config used for the
+ * view's layout transition and some of the views' internal animations. If
+ * desired the default value of AnimatorConfigs.translation can be overridden
+ * in order to make sure the view's animations are in sync with others outside
+ * the view.
+ */
 @Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
+    animatorConfig: AnimatorConfigs.Config = AnimatorConfigs.translation,
     useDefaultLayout: Boolean = true,
 ) : ViewModelItemView<Entity>(context, useDefaultLayout) {
 
@@ -93,7 +104,30 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     private val gradientOutline: GradientDrawable
 
     init {
-        layoutTransition = defaultLayoutTransition()
+        /* Because ExpandableSelectableItemView is intended to be used in a
+           RecyclerView with an item animator, the automatic animations played
+           by the view's layout transition should ideally be synchronized with
+           those of the item animator. Unfortunately in tests the layout tran-
+           sition's animations started before those of the item animator, lead-
+           ing to noticeable visual artifacts (particularly when a view is
+           expanded at the same time as another is collapsed, leading to the
+           bottom view being resized and translated at the same time). As the
+           layout transition API does not permit access to the ValueAnimators
+           it uses internally, there is no easy way to pause these animators
+           and resume them once the item animator animations begin, the ideal
+           solution. As a workaround a delay is set here to all of the layout
+           transition's animations to compensate. Obviously this is not ideal
+           because the delay is likely to be different on different systems,
+           but in tests on several systems it seems to almost eliminate the
+           delay between the layout transition and item animator animations. */
+        val transitionDelay = 20L
+        layoutTransition = layoutTransition(animatorConfig).apply {
+            setStartDelay(LayoutTransition.CHANGE_APPEARING, transitionDelay)
+            setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, transitionDelay)
+            setStartDelay(LayoutTransition.APPEARING, transitionDelay)
+            setStartDelay(LayoutTransition.DISAPPEARING, transitionDelay)
+            setStartDelay(LayoutTransition.CHANGING, transitionDelay)
+        }
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
         gradientOutline = (background.getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
         gradientOutline.setTintList(null)
@@ -107,11 +141,12 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         gradientOutline.colors = colors
         this.background = background
 
-        val verticalPadding = resources.getDimensionPixelSize(R.dimen.recycler_view_item_vertical_padding)
-        setPadding(0, verticalPadding, 0, verticalPadding)
-
-        if (useDefaultLayout)
+        if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }
+            ui.nameEdit.animatorConfig = animatorConfig
+            ui.extraInfoEdit.animatorConfig = animatorConfig
+            ui.amountEdit.animatorConfig = animatorConfig
+        }
     }
 
     override fun update(item: Entity) {
@@ -129,8 +164,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         if (!expanded &&
             ui.nameEdit.isFocused ||
             ui.extraInfoEdit.isFocused ||
-            ui.amountEdit.valueEdit.isFocused)
-            imm?.hideSoftInputFromWindow(windowToken, 0)
+            ui.amountEdit.ui.valueEdit.isFocused)
+            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
 
         ui.nameEdit.isEditable = expanded
         ui.amountEdit.valueIsDirectlyEditable = expanded
@@ -150,32 +185,29 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        if (animate) {
-            setLayerType(LAYER_TYPE_HARDWARE, null)
-            ObjectAnimator.ofInt(gradientOutline, "alpha",
-                if (selected) 0 else 255,
-                if (selected) 255 else 0).apply {
-                duration = 200L
-                doOnEnd { setLayerType(LAYER_TYPE_NONE, null) }
-                start()
-            }
-        }
+        if (animate) valueAnimatorOfInt(gradientOutline::setAlpha,
+                                        if (selected) 0 else 255,
+                                        if (selected) 255 else 0)
+                                        .apply { duration = 200L }
+                                        .start()
         else gradientOutline.alpha = if (selected) 255 else 0
     }
 }
 
-/** An ExpandableSelectableItemView to display the contents of a shopping list item.
+/**
+ * An ExpandableSelectableItemView to display the contents of a shopping list item.
  *
- *  ShoppingListItemView is a ExpandableSelectableItemView subclass that dis-
- *  plays the data of a ShoppingListItem instance. It has an update override
- *  that updates the check state of the checkbox, it overrides the setExpanded
- *  function with an implementation that toggles the checkbox between its nor-
- *  mal checkbox mode and its color edit mode, and it has a convenience method
- *  setStrikeThroughEnabled that will set the strike through state for both the
- *  name and extra info edit at the same time. */
+ * ShoppingListItemView is a ExpandableSelectableItemView subclass that dis-
+ * plays the data of a ShoppingListItem instance. It has an update override
+ * that updates the check state of the checkbox, it overrides the setExpanded
+ * function with an implementation that toggles the checkbox between its nor-
+ * mal checkbox mode and its color edit mode, and it has a convenience method
+ * setStrikeThroughEnabled that will set the strike through state for both the
+ * name and extra info edit at the same time.
+ */
 class ShoppingListItemView(context: Context) :
-    ExpandableSelectableItemView<ShoppingListItem>(context) {
-
+    ExpandableSelectableItemView<ShoppingListItem>(context, AnimatorConfigs.shoppingListItem)
+{
     override fun update(item: ShoppingListItem) {
         ui.checkBox.initIsChecked(item.isChecked)
         setStrikeThroughEnabled(enabled = item.isChecked, animate = false)
@@ -193,12 +225,14 @@ class ShoppingListItemView(context: Context) :
     }
 }
 
-/** An ExpandableSelectableItemView to display the contents of an inventory item.
+/**
+ * An ExpandableSelectableItemView to display the contents of an inventory item.
  *
- *  InventoryItemView is a ExpandableSelectableItemView subclass that displays
- *  the data of an InventoryItem instance. It has an update override for the
- *  extra fields that InventoryItem adds to its parent class, and has a set-
- *  Expanded override that also shows or hides these extra fields. */
+ * InventoryItemView is a ExpandableSelectableItemView subclass that displays
+ * the data of an InventoryItem instance. It has an update override for the
+ * extra fields that InventoryItem adds to its parent class, and has a set-
+ * Expanded override that also shows or hides these extra fields.
+ */
 class InventoryItemView(context: Context) :
     ExpandableSelectableItemView<InventoryItem>(context, useDefaultLayout = false)
 {
@@ -211,6 +245,9 @@ class InventoryItemView(context: Context) :
         ui.editButton.setOnClickListener { toggleExpanded() }
         ui.checkBox.inColorEditMode = true
         ui.amountEdit.minValue = 0
+        ui.nameEdit.animatorConfig = AnimatorConfigs.translation
+        ui.extraInfoEdit.animatorConfig = AnimatorConfigs.translation
+        ui.amountEdit.animatorConfig = AnimatorConfigs.translation
     }
 
     override fun update(item: InventoryItem) {
@@ -221,8 +258,8 @@ class InventoryItemView(context: Context) :
 
     override fun setExpanded(expanded: Boolean) {
         super.setExpanded(expanded)
-        if (!expanded && detailsUi.addToShoppingListTriggerEdit.valueEdit.isFocused)
-            imm?.hideSoftInputFromWindow(windowToken, 0)
+        if (!expanded && detailsUi.addToShoppingListTriggerEdit.ui.valueEdit.isFocused)
+            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
         detailsUi.inventoryItemDetailsGroup.isVisible = expanded
     }
 }

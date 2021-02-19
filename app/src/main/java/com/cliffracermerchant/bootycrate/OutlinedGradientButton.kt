@@ -12,16 +12,18 @@ import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatButton
 
-/** A button with a vector background and an outline that are both tintable with gradients.
+/**
+ * A button with a vector background and an outline that are both tintable with gradients.
  *
- *  OutlinedGradientButton is a button that accepts two paths that define its
- *  vector background and outline, backgroundPathData and outlinePathData. Both
- *  of these paths' gradients can be set independently of each other via the
- *  properties backgroundGradient and outlineGradient. In addition to the out-
- *  line, the outlineGradient property will also be used as the shader for any
- *  text. In order for the path data to be interpreted correctly, the XML prop-
- *  erties pathWidth and pathHeight must also be set in XML. The stroke width
- *  of the outline can be set through the XML property outlineStrokeWidth. */
+ * OutlinedGradientButton is a button that accepts two paths that define its
+ * vector background and outline, backgroundPathData and outlinePathData. Both
+ * of these paths' gradients can be set independently of each other via the
+ * properties backgroundGradient and outlineGradient. In addition to the out-
+ * line, the outlineGradient property will also be used as the shader for any
+ * text. In order for the path data to be interpreted correctly, the XML prop-
+ * erties pathWidth and pathHeight must also be set in XML. The stroke width
+ * of the outline can be set through the XML property outlineStrokeWidth.
+ */
 @SuppressLint("ResourceType")
 open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
     AppCompatButton(context, attrs)

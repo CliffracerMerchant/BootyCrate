@@ -4,9 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
-import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
@@ -15,43 +12,45 @@ import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
 import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.MutableLiveData
 
-/** A view to edit a single line text field.
-  *
-  * TextFieldEdit is an AppCompatEditText optimized for toggleable editing
-  * of a single line. When isEditable is false, the TextFieldEdit will present
-  * itself as a normal single line TextView. When isEditable is true, TextField-
-  * Edit will request focus when it is tapped and display a soft input. If the
-  * user presses the done action on the soft input or if the focus is changed,
-  * the changes can be listened to through the member liveData. If the proposed
-  * change would leave the field empty and the property canBeEmpty is false,
-  * the value will instead be reverted to its previous value. Note that if the
-  * canBeEmpty property is changed to false when the field is already empty,
-  * it will not be enforced until the value is changed to a non-blank value.
-  *
-  * When in editable mode, TextFieldEdit will underline itself to indicate this
-  * to the user, and will set its minHeight to the value of the dimension
-  * R.dimen.text_field_edit_editable_min_height to ensure that its touch tar-
-  * get size is adequate. */
+/**
+ * A view to edit a single line text field.
+ *
+ * TextFieldEdit is an AppCompatEditText optimized for toggleable editing
+ * of a single line. When isEditable is false, the TextFieldEdit will present
+ * itself as a normal single line TextView. When isEditable is true, TextField-
+ * Edit will request focus when it is tapped and display a soft input. If the
+ * user presses the done action on the soft input or if the focus is changed,
+ * the changes can be listened to through the member liveData. If the proposed
+ * change would leave the field empty and the property canBeEmpty is false,
+ * the value will instead be reverted to its previous value. Note that if the
+ * canBeEmpty property is changed to false when the field is already empty,
+ * it will not be enforced until the value is changed to a non-blank value.
+ *
+ * When in editable mode, TextFieldEdit will underline itself to indicate this
+ * to the user, and will set its minHeight to the value of the dimension
+ * R.dimen.text_field_edit_editable_min_height to ensure that its touch tar-
+ * get size is adequate. It will also animate changes in its editable state
+ * (unless the function setEditable is called with the parameter animate =
+ * equal to false). The animations will use the property animatorConfig for
+ * their durations and interpolators.
+ */
 open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     AppCompatEditText(context, attrs)
 {
     val liveData = MutableLiveData<String>()
-
+    var animatorConfig = AnimatorConfigs.translation
     var isEditable: Boolean get() = isFocusableInTouchMode
                             set(editable) = setEditable(editable, animate = true)
 
     var canBeEmpty: Boolean
     private var lastValue: String? = null
-    private val interp = AccelerateDecelerateInterpolator()
-    private val imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+    private val inputMethodManager = inputMethodManager(context)
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
@@ -67,7 +66,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     override fun onEditorAction(actionCode: Int) {
         if (actionCode == EditorInfo.IME_ACTION_DONE) {
             clearFocus()
-            imm?.hideSoftInputFromWindow(windowToken, 0)
+            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
             liveData.value = text.toString()
         }
         super.onEditorAction(actionCode)
@@ -105,14 +104,15 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
          * transition will not animate this, and the text will jump to its new position in
          * the resized view. While this can be counteracted with a translationY animation,
          * if the gravity is already center_vertical when the translationY animation is
-         * started it can cause the text to be partially clipped. To work around this the
+         * started, it can cause the text to be partially clipped. To work around this the
          * gravity is set to viewStart when the view is collapsed, and is only set to
          * center_vertical after the expansion animation is finished. */
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
         val heightChange = measuredHeight - oldHeight
         translationY = if (editable) 0f else -heightChange / 2f
-        animate().withLayer().setInterpolator(interp)
+        animate().withLayer()
+            .applyConfig(animatorConfig)
             .translationY(if (editable) heightChange / 2f else 0f)
             .withEndAction {
                 if (editable) translationY = 0f
@@ -129,15 +129,22 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     }
 }
 
-/** A TextFieldEdit subclass that allows the toggling of a strike-through
-  * effect, optionally with an animation, using the public function setStrike-
-  * throughEnabled. */
+/**
+ * A TextFieldEdit subclass that allows the toggling of a strike-through
+ * effect, optionally with an animation, using the public function setStrike-
+ * throughEnabled.
+ */
 class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
-        TextFieldEdit(context, attrs) {
-
-    private var strikeThroughLength: Float? = null
-    private var strikeThroughAnimIsReversed = false
+    TextFieldEdit(context, attrs)
+{
     private val normalTextColor = currentTextColor
+    private var strikeThroughAnimIsReversed = false
+    private var strikeThroughLength: Float? = null
+    // So that the setter can be passed to valueAnimatorOfFloat
+    private fun setStrikeThroughLength(value: Float) {
+        strikeThroughLength = value
+        invalidate()
+    }
 
     init {
         doAfterTextChanged { text ->
@@ -150,15 +157,12 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         strikeThroughAnimIsReversed = !strikeThroughEnabled
         val fullLength = paint.measureText(text, 0, text?.length ?: 0)
         if (animate) {
-            ObjectAnimator.ofArgb(this, "textColor", currentTextColor,
-                                  if (strikeThroughEnabled) currentHintTextColor
-                                  else                      normalTextColor).start()
-            ValueAnimator.ofFloat(0f, fullLength).apply {
-                addUpdateListener {
-                    strikeThroughLength = it.animatedValue as Float
-                    invalidate()
-                }
-                if (!strikeThroughEnabled) doOnEnd { strikeThroughLength = null }
+            val endColor = if (strikeThroughEnabled) currentHintTextColor
+                           else                      normalTextColor
+            valueAnimatorOfArgb(::setTextColor, currentTextColor, endColor, animatorConfig).start()
+            valueAnimatorOfFloat(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
+                if (!strikeThroughEnabled)
+                    doOnEnd { strikeThroughLength = null }
             }.start()
         } else {
             strikeThroughLength = if (strikeThroughEnabled) fullLength else null

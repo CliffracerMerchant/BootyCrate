@@ -9,35 +9,37 @@ import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
 
-/** An abstract AndroidViewModel that provides an asynchronous interface for DataAccessObject<Entity> functions.
+/**
+ * An abstract AndroidViewModel that provides an asynchronous interface for DataAccessObject<Entity> functions.
  *
- *  ViewModel<Entity> is an abstract AndroidViewModel that provides asynchro-
- *  nous functions for executing DataAccessObject<Entity> methods. The public
- *  property items returns a LiveData<List<Entity>> object that represents all
- *  of the items in the SQLite table. The public properties sort and searchFil-
- *  ter allow the view model user to modify the sorting or filtering used in
- *  retrieving the items.
+ * ViewModel<Entity> is an abstract AndroidViewModel that provides asynchro-
+ * nous functions for executing DataAccessObject<Entity> methods. The public
+ * property items returns a LiveData<List<Entity>> object that represents all
+ * of the items in the SQLite table. The public properties sort and searchFil-
+ * ter allow the view model user to modify the sorting or filtering used in
+ * retrieving the items.
  *
- *  ViewModel provides subclasses an API for adding new sort methods through
- *  the functions notifySortOptionsChanged and itemsSwitchMapFunc. Subclasses
- *  can add properties that affect sorting, and then utilize them in their over-
- *  ride of itemsSwitchMapFunc. itemsSwitchMapFunc should return the appropri-
- *  ate dao function for the chosen sorting method. Any time a subclass sorting
- *  method property is changed, notifySortOptionsChanged must be called for the
- *  change to take effect.
+ * ViewModel provides subclasses an API for adding new sort methods through
+ * the functions notifySortOptionsChanged and itemsSwitchMapFunc. Subclasses
+ * can add properties that affect sorting, and then utilize them in their over-
+ * ride of itemsSwitchMapFunc. itemsSwitchMapFunc should return the appropri-
+ * ate dao function for the chosen sorting method. Any time a subclass sorting
+ * method property is changed, notifySortOptionsChanged must be called for the
+ * change to take effect.
  *
- *  If the properties newItemName and newItemExtraInfo are updated with the
- *  proposed name and extra info for a new item, the property newItemNameIs-
- *  AlreadyUsed can be observed to tell if the name and extra info combination
- *  is already in use by another item.
+ * If the properties newItemName and newItemExtraInfo are updated with the
+ * proposed name and extra info for a new item, the property newItemNameIs-
+ * AlreadyUsed can be observed to tell if the name and extra info combination
+ * is already in use by another item.
  *
- *  ViewModel provides support for treating new items differently through the
- *  public property newlyAddedItemId. This value will change to match the id of
- *  the most recently added item. External entities can compare this value to
- *  the id of items in order to determine the new item. resetNewlyAddedItemId()
- *  should usually be called after this value is utilized so that the most
- *  recently added item will not be treated as new forever until a new item is
- *  added. */
+ * ViewModel provides support for treating new items differently through the
+ * public property newlyAddedItemId. This value will change to match the id of
+ * the most recently added item. External entities can compare this value to
+ * the id of items in order to determine the new item. resetNewlyAddedItemId()
+ * should usually be called after this value is utilized so that the most
+ * recently added item will not be treated as new forever until a new item is
+ * added.
+ */
 abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewModel(app) {
     protected abstract val dao: DataAccessObject<Entity>
 
@@ -135,7 +137,9 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 
 
 /** A ViewModel<ShoppingListItem> subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
-class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewModel<ShoppingListItem>(app) {
+class ShoppingListViewModel(app: Application) :
+    ExpandableSelectableItemViewModel<ShoppingListItem>(app)
+{
     override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
     val checkedItemsSize = dao.getCheckedItemsSize()
 
@@ -171,7 +175,9 @@ class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewMode
 
 
 /** A ViewModel<InventoryItem> subclass that provides functions to asynchronously execute InventoryItemDao's functions. */
-class InventoryViewModel(app: Application) : ExpandableSelectableItemViewModel<InventoryItem>(app) {
+class InventoryViewModel(app: Application) :
+    ExpandableSelectableItemViewModel<InventoryItem>(app)
+{
     override val dao = BootyCrateDatabase.get(app).inventoryItemDao()
 
     init { viewModelScope.launch{ dao.emptyTrash() } }

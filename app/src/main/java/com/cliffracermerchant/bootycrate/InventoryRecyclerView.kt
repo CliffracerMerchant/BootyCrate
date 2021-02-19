@@ -9,46 +9,49 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
-import kotlinx.android.synthetic.main.integer_edit.view.*
 import java.util.*
 
-/** A RecyclerView to display the data provided by an InventoryViewModel.
+/**
+ * A RecyclerView to display the data provided by an InventoryViewModel.
  *
- *  InventoryRecyclerView is a ExpandableSelectableRecyclerView subclass spec-
- *  ialized for displaying the contents of an inventory. Several of Inventory-
- *  RecyclerView's necessary fields can not be obtained when it is inflated
- *  from XML, such as its view models. To finish initialization with these
- *  required members, the function finishInit must be called during runtime,
- *  but before any sort of data access is attempted. InventoryRecyclerView's
- *  version of finishInit will call ExpandableSelectableRecyclerView's version
- *  to prevent the implementing activity or fragment from needing to call both. */
+ * InventoryRecyclerView is a ExpandableSelectableRecyclerView subclass spec-
+ * ialized for displaying the contents of an inventory. Several of Inventory-
+ * RecyclerView's necessary fields can not be obtained when it is inflated
+ * from XML, such as its view models. To finish initialization with these
+ * required members, the function finishInit must be called during runtime,
+ * but before any sort of data access is attempted. InventoryRecyclerView's
+ * version of finishInit will call ExpandableSelectableRecyclerView's version
+ * to prevent the implementing activity or fragment from needing to call both.
+ */
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<InventoryItem>(context, attrs) {
     override val diffUtilCallback = InventoryItemDiffUtilCallback()
     override val adapter = InventoryAdapter()
     override val collectionName = context.getString(R.string.inventory_item_collection_name)
-    private lateinit var inventoryViewModel: InventoryViewModel
-    private lateinit var shoppingListViewModel: ShoppingListViewModel
+    override lateinit var viewModel: InventoryViewModel
+    lateinit var shoppingListViewModel: ShoppingListViewModel
 
     fun finishInit(
         owner: LifecycleOwner,
-        inventoryViewModel: InventoryViewModel,
+        viewModel: InventoryViewModel,
         shoppingListViewModel: ShoppingListViewModel
     ) {
-        this.inventoryViewModel = inventoryViewModel
+        this.viewModel = viewModel
         this.shoppingListViewModel = shoppingListViewModel
-        finishInit(owner, inventoryViewModel)
+        finishInit(owner, AnimatorConfigs.translation)
     }
 
-    /** A RecyclerView.Adapter to display the contents of a list of inventory items.
+    /**
+     * A RecyclerView.Adapter to display the contents of a list of inventory items.
      *
-     *  InventoryAdapter is a subclass of ExpandableSelectableItemAdapter using
-     *  InventoryItemViewHolder instances to represent inventory items. Its over-
-     *  rides of onBindViewHolder make use of the InventoryItem.Field values passed
-     *  by InventoryItemDiffUtilCallback to support partial binding. Note that
-     *  InventoryAdapter assumes that any payloads passed to it are of the type
-     *  EnumSet<InventoryItem.Field>. If a payload of another type is passed to it,
-     *  an exception will be thrown. */
+     * InventoryAdapter is a subclass of ExpandableSelectableItemAdapter using
+     * InventoryItemViewHolder instances to represent inventory items. Its over-
+     * rides of onBindViewHolder make use of the InventoryItem.Field values passed
+     * by InventoryItemDiffUtilCallback to support partial binding. Note that
+     * InventoryAdapter assumes that any payloads passed to it are of the type
+     * EnumSet<InventoryItem.Field>. If a payload of another type is passed to it,
+     * an exception will be thrown.
+     */
     @Suppress("UNCHECKED_CAST")
     inner class InventoryAdapter : ExpandableSelectableItemAdapter<InventoryItemViewHolder>() {
 
@@ -106,33 +109,37 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         }
     }
 
-    /** A ExpandableSelectableItemViewHolder that wraps an instance of InventoryItemView.
+    /**
+     * A ExpandableSelectableItemViewHolder that wraps an instance of InventoryItemView.
      *
-     *  InventoryItemViewHolder is a subclass of ExpandableSelectableItemViewHolder
-     *  that holds an instance of InventoryItemView to display the data for an
-     *  InventoryItem. It also connects changes in the InventoryItemView extra
-     *  details section to view model update calls. */
+     * InventoryItemViewHolder is a subclass of ExpandableSelectableItemViewHolder
+     * that holds an instance of InventoryItemView to display the data for an
+     * InventoryItem. It also connects changes in the InventoryItemView extra
+     * details section to view model update calls.
+     */
     inner class InventoryItemViewHolder(val view: InventoryItemView) :
         ExpandableSelectableItemViewHolder(view) {
 
         init {
             view.detailsUi.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
-                inventoryViewModel.updateAddToShoppingList(item.id, checked)
+                viewModel.updateAddToShoppingList(item.id, checked)
             }
             view.detailsUi.addToShoppingListTriggerEdit.liveData.observeForever { value ->
                 if (adapterPosition == -1) return@observeForever
-                inventoryViewModel.updateAddToShoppingListTrigger(item.id, value)
+                viewModel.updateAddToShoppingListTrigger(item.id, value)
             }
         }
     }
 
-    /** Computes a diff between two inventory item lists.
+    /**
+     * Computes a diff between two inventory item lists.
      *
-     *  InventoryItemDiffUtilCallback uses the ids of inventory items to determine
-     *  if they are the same or not. If they are the same, changes are logged by
-     *  setting the appropriate bit of an instance of EnumSet<InventoryItem.Field>.
-     *  The change payload for modified items will then be the enum set containing
-     *  all of the fields that were changed. */
+     * InventoryItemDiffUtilCallback uses the ids of inventory items to determine
+     * if they are the same or not. If they are the same, changes are logged by
+     * setting the appropriate bit of an instance of EnumSet<InventoryItem.Field>.
+     * The change payload for modified items will then be the enum set containing
+     * all of the fields that were changed.
+     */
     class InventoryItemDiffUtilCallback : DiffUtil.ItemCallback<InventoryItem>() {
         private val listChanges = mutableMapOf<Long, EnumSet<InventoryItem.Field>>()
         private val itemChanges = EnumSet.noneOf(InventoryItem.Field::class.java)

@@ -1,13 +1,9 @@
-/*
- * Copyright 2020 Nicholas Hochstetler
+/* Copyright 2020 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
- * or in the file LICENSE in the project's root directory.
- */
-
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
@@ -15,15 +11,17 @@ import android.view.View
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 
-/** A button that acts as a checkbox with easily an customizable color.
+/**
+ * A button that acts as a checkbox with easily an customizable color.
  *
- *  TintableCheckbox acts as a tinted checkbox that can be toggled between a
- *  normal checkbox mode (where the checked state can be toggled) and a color
- *  editing mode (where the checkbox will morph into a tinted circle, and a
- *  click will open a color picker dialog). The mode is changed via the pro-
- *  perty inColorEditMode, while the current color is changed through the
- *  property color (or colorIndex if setting the color to an value of View-
- *  ModelItem.Colors is preferred. */
+ * TintableCheckbox acts as a tinted checkbox that can be toggled between a
+ * normal checkbox mode (where the checked state can be toggled) and a color
+ * editing mode (where the checkbox will morph into a tinted circle, and a
+ * click will open a color picker dialog). The mode is changed via the pro-
+ * perty inColorEditMode, while the current color is changed through the
+ * property color (or colorIndex if setting the color to an value of View-
+ * ModelItem.Colors is preferred.
+ */
 class TintableCheckbox(context: Context, attrs: AttributeSet) :
     AppCompatImageButton(context, attrs)
 {
@@ -51,20 +49,20 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
         val checkMarkDrawable = (drawable as LayerDrawable).getDrawable(1)
         checkMarkDrawable.setTint(ContextCompat.getColor(context, android.R.color.black))
         setOnClickListener {
+            val activity = context as? MainActivity ?: return@setOnClickListener
             if (inColorEditMode)
-                Dialog.colorPicker(ViewModelItem.Colors.indexOf(color)) { pickedColorIndex ->
-                    setColorIndex(pickedColorIndex)
-                }
+                showColorPickerDialog(context, activity.supportFragmentManager,
+                                      colorIndex, ::setColorIndex)
             else isChecked = !isChecked
         }
     }
 
-    fun setColor(color: Int, animate: Boolean = false) {
-        val checkboxBackground = (drawable as LayerDrawable).getDrawable(0)
-        if (!animate) checkboxBackground.setTint(color)
-        else ObjectAnimator.ofArgb(checkboxBackground, "tint", color).start()
-        _color = color
-        onColorChangedListener?.invoke(color)
+    fun setColor(newColor: Int, animate: Boolean = false) {
+        val checkboxBg = (drawable as LayerDrawable).getDrawable(0)
+        if (!animate) checkboxBg.setTint(newColor)
+        else valueAnimatorOfArgb(checkboxBg::setTint, color, newColor).start()
+        _color = newColor
+        onColorChangedListener?.invoke(newColor)
     }
 
     fun setColorIndex(colorIndex: Int, animate: Boolean = false) {

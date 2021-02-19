@@ -6,33 +6,36 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
-import android.animation.ObjectAnimator
-import android.view.View
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 
-/** A RecyclerView.ItemAnimator that animates the expanding and collapsing of items.
+/**
+ * A RecyclerView.ItemAnimator that animates the expanding and collapsing of items.
  *
- *  ExpandableItemAnimator is a RecyclerView.ItemAnimator that provides an over-
- *  ride of animateChange to animate the height changes of expanding or collaps-
- *  ing items. It assumes that only one item can be expanded at a time, and
- *  that a previously expanded item will be collapsed when a new one is expan-
- *  ded. In order to play these animations correctly, it is necessary to call
- *  the function notifyExpandedItemChanged with the adapter position of the
- *  newly expanded item whenever it is changed, or null if the expanded item is
- *  being collapsed. The currently expanded item can be queried via the prop-
- *  erty expandedItemPos.
+ * ExpandableItemAnimator is a RecyclerView.ItemAnimator that provides an over-
+ * ride of animateChange to animate the height changes of expanding or collaps-
+ * ing items. It assumes that only one item can be expanded at a time, and
+ * that a previously expanded item will be collapsed when a new one is expan-
+ * ded. In order to play these animations correctly, it is necessary to call
+ * the function notifyExpandedItemChanged with the adapter position of the
+ * newly expanded item whenever it is changed, or null if the expanded item is
+ * being collapsed. The currently expanded item can be queried via the prop-
+ * erty expandedItemPos.
  *
- *  ExpandableItemAnimator also has an observer member that, when registered as
- *  an adapter data observer for the adapter using the ExpandableItemAnimator
- *  instance as its item animator, will automatically update the expanded item
- *  position so that this doesn't need to be done manually. ExpandableItemAnim-
- *  ator will attempt to register itself automatically, but if the parent recy-
- *  cler view does not have an adapter when ExpandableItemAnimator is construc-
- *  ted this will have to be done manually. */
-class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultItemAnimator() {
+ * ExpandableItemAnimator also has an observer member that, when registered as
+ * an adapter data observer for the adapter using the ExpandableItemAnimator
+ * instance as its item animator, will automatically update the expanded item
+ * position so that this doesn't need to be done manually. ExpandableItemAnim-
+ * ator will attempt to register itself automatically, but if the parent recy-
+ * cler view does not have an adapter when ExpandableItemAnimator is construc-
+ * ted this will have to be done manually.
+ */
+class ExpandableItemAnimator(
+    private val recyclerView: RecyclerView,
+    private val animatorConfig: AnimatorConfigs.Config = AnimatorConfigs.translation
+) : DefaultItemAnimator() {
     private val pendingAnimations = mutableListOf<Animator>()
     val expandedItemPos get() = _expandedItemPos
     private var _expandedItemPos: Int? = null
@@ -60,7 +63,13 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
         }
     }
 
-    init { recyclerView.adapter?.registerAdapterDataObserver(observer) }
+    init {
+        recyclerView.adapter?.registerAdapterDataObserver(observer)
+        addDuration = animatorConfig.duration
+        changeDuration = animatorConfig.duration
+        removeDuration = animatorConfig.duration
+        moveDuration = animatorConfig.duration
+    }
 
     fun notifyExpandedItemChanged(newlyExpandedItemPos: Int?) {
         collapsingItemPos = expandedItemPos
@@ -78,8 +87,13 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
      * animation are started here in animateChange, but paused immediately. They are
      * then resumed in runPendingAnimations when the DefaultItemAnimator animations
      * start. */
-    override fun animateChange(oldHolder: RecyclerView.ViewHolder, newHolder: RecyclerView.ViewHolder,
-                               preInfo: ItemHolderInfo, postInfo: ItemHolderInfo): Boolean {
+
+    override fun animateChange(
+        oldHolder: RecyclerView.ViewHolder,
+        newHolder: RecyclerView.ViewHolder,
+        preInfo: ItemHolderInfo,
+        postInfo: ItemHolderInfo
+    ): Boolean {
         // If a view is being expanded or collapsed, oldHolder must be
         // equal to newHolder, and the heightChange must not be zero.
         if (oldHolder != newHolder) return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
@@ -93,8 +107,7 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
         // preInfo.top won't necessarily be the correct start value
         // if the view is on bottom and also needs to be translated.
         val start = view.top + preInfo.bottom - preInfo.top
-        ObjectAnimator.ofInt(view, "bottom", start, postInfo.bottom).apply {
-            duration = moveDuration
+        valueAnimatorOfInt(view::setBottom, start, postInfo.bottom, animatorConfig).apply {
             doOnStart {
                 dispatchChangeStarting(newHolder, true)
                 pause()
@@ -116,8 +129,7 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
             val viewIsOnBottom = if (collapsingPos == pos) collapsingPos > expandingPos
                                  else                      expandingPos > collapsingPos
             if (viewIsOnBottom)
-                ObjectAnimator.ofFloat(view, "translationY", heightChange * 1f, 0f).apply {
-                    duration = moveDuration
+                valueAnimatorOfFloat(view::setTranslationY, heightChange * 1f, 0f, animatorConfig).apply {
                     doOnStart { pause() }
                     pendingAnimations.add(this)
                 }.start()
@@ -125,16 +137,12 @@ class ExpandableItemAnimator(private val recyclerView: RecyclerView) : DefaultIt
         return true
     }
 
-    /* For some reason no removal animations are played with this item animator when
-       no override for animateRemove is provided. To prevent this the default removal
-       animation, a fade out, is duplicated here. */
     override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
         val view = holder?.itemView ?: return false
-        view.animate().alpha(0f).setDuration(removeDuration).withLayer().
-            withStartAction {
-                dispatchRemoveStarting(holder)
-                view.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-            }.withEndAction {
+        view.animate().alpha(0f).withLayer()
+            .applyConfig(AnimatorConfigs.fadeOut)
+            .withStartAction { dispatchRemoveStarting(holder) }
+            .withEndAction {
                 dispatchRemoveFinished(holder)
                 recyclerView.layoutManager?.removeView(view)
             }.start()

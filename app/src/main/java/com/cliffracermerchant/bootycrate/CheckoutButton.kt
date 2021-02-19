@@ -5,23 +5,25 @@
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Paint
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 
-/** An button with a custom shape and a double tap to use functionality.
+/**
+ * An button with a custom shape and a double tap to use functionality.
  *
- *  CheckoutButton is a DisableableOutlinedGradientButton with extra function-
- *  ality that is intended to be used as the button to execute the shopping
- *  list checkout function (see ShoppingListItemDao.checkout() for more infor-
- *  mation). Its normal text reads checkout, but when tapped its text will
- *  change to indicate to the user that it is in a confirmatory state. An add-
- *  itional tap will then actually execute the callback set via the property
- *  checkoutCallback. Confirmation is requested due to the checkout function
- *  being irreversible, and because a double tap for users who know what they
- *  are doing is faster than having to answer yes to a confirmatory alert
- *  dialog. If the user does not tap the button again before the value of the
- *  constant property confirmTimeout, the button will reset to its normal state. */
+ * CheckoutButton is a DisableableOutlinedGradientButton with extra function-
+ * ality that is intended to be used as the button to execute the shopping
+ * list checkout function (see ShoppingListItemDao.checkout() for more infor-
+ * mation). Its normal text reads checkout, but when tapped its text will
+ * change to indicate to the user that it is in a confirmatory state. An add-
+ * itional tap will then actually execute the callback set via the property
+ * checkoutCallback. Confirmation is requested due to the checkout function
+ * being irreversible, and because a double tap for users who know what they
+ * are doing is faster than having to answer yes to a confirmatory alert
+ * dialog. If the user does not tap the button again before the value of the
+ * constant property confirmTimeout, the button will reset to its normal state.
+ */
 class CheckoutButton(context: Context, attrs: AttributeSet) :
     DisableableOutlinedGradientButton(context, attrs)
 {

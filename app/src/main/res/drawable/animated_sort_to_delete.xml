@@ -18,11 +18,11 @@
         <aapt:attr name="android:animation">
             <objectAnimator
                 android:propertyName="pathData"
-                android:duration="200"
                 android:valueFrom="M 11 16 C 12.667 16 14.333 16 16 16 L 16 18 C 16 18 16 18 16 18 L 11 18 L 11 16 M 11 12 L 18 12 L 18 14 L 11 14 L 11 12 M 11 8 L 20 8 L 20 10 L 11 10 L 11 8 M 11 4 L 14 4 L 15.5 4 L 17.5 4 L 19 4 L 22 4 L 22 6 L 11 6 L 11 4 M 6 20 C 7.333 18.667 8.667 17.333 10 16 L 7 16 L 7 4 L 5 4 L 5 16 L 2 16 C 3.333 17.333 4.667 18.667 6 20"
                 android:valueTo="M 12 16 C 14 16 16 16 18 16 L 18 19 C 18 20.1 17.1 21 16 21 L 12 21 L 12 16 M 12 11 L 18 11 L 18 16 L 12 16 L 12 11 M 12 7 L 18 7 L 18 11 L 12 11 L 12 7 M 5 4 L 8.5 4 L 9.5 3 L 14.5 3 L 15.5 4 L 19 4 L 19 6 L 5 6 L 5 4 M 8 21 C 9.333 21 10.667 21 12 21 L 12 16 L 12 7 L 6 7 L 6 17 L 6 19 C 6 20.1 6.9 21 8 21"
                 android:valueType="pathType"
-                android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                android:duration="@integer/viewTranslationDuration"
+                android:interpolator="@anim/translation_interpolator" />
         </aapt:attr>
     </target>
 </animated-vector>

@@ -14,14 +14,15 @@ import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnNextLayout
-import kotlinx.android.synthetic.main.activity_main.*
 
-/** A styled subclass of MainActivity.
+/**
+ * A styled subclass of MainActivity.
  *
- *  Unfortunately many of the desired aspects of MainActivity's style (e.g. the
- *  menu item icons being tinted to match the gradient background of the top
- *  and bottom action bar) are impossible to accomplish in XML. GradientStyled-
- *  MainActivity performs additional operations to initialize its style. */
+ * Unfortunately many of the desired aspects of MainActivity's style (e.g. the
+ * menu item icons being tinted to match the gradient background of the top
+ * and bottom action bar) are impossible to accomplish in XML. GradientStyled-
+ * MainActivity performs additional operations to initialize its style.
+ */
 class GradientStyledMainActivity : MainActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -70,33 +71,33 @@ class GradientStyledMainActivity : MainActivity() {
         paint.shader = bottomFgGradient
         canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
-        topActionBar.backgroundGradient = topBgGradient
-        topActionBar.borderGradient = topFgGradient
-        topActionBar.ui.customTitle.shader = BitmapShader(topFgGradientBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        ui.topActionBar.backgroundGradient = topBgGradient
+        ui.topActionBar.borderGradient = topFgGradient
+        ui.topActionBar.ui.customTitle.shader = BitmapShader(topFgGradientBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
 
-        bottomAppBar.backgroundGradient = bottomBgGradient
-        bottomAppBar.borderGradient = bottomFgGradient
-        bottomAppBar.indicatorGradient = bottomFgGradient
-        gradientBuilder.setX1(addButton.width / 2f)
-        addButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
-        addButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
+        ui.bottomAppBar.backgroundGradient = bottomBgGradient
+        ui.bottomAppBar.borderGradient = bottomFgGradient
+        ui.bottomAppBar.indicatorGradient = bottomFgGradient
+        gradientBuilder.setX1(ui.addButton.width / 2f)
+        ui.addButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
+        ui.addButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
 
-        coordinatorLayout.doOnNextLayout {
+        ui.coordinatorLayout.doOnNextLayout {
             val rect = Rect()
-            checkoutButton.getGlobalVisibleRect(rect)
-            gradientBuilder.setX1(screenWidth / 2f - bottomAppBar.cradleWidth / 2f)
-            checkoutButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
-            checkoutButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
+            ui.checkoutButton.getGlobalVisibleRect(rect)
+            gradientBuilder.setX1(screenWidth / 2f - ui.bottomAppBar.cradleWidth / 2f)
+            ui.checkoutButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
+            ui.checkoutButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
 
             // Back icon
             val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            topActionBar.ui.backButton.measure(wrapContent, wrapContent)
-            topActionBar.ui.backButton.drawable.setTint(
-                topFgGradientBitmap.getPixel(topActionBar.ui.backButton.measuredHeight / 2,
-                                             topActionBar.height / 2))
+            ui.topActionBar.ui.backButton.measure(wrapContent, wrapContent)
+            ui.topActionBar.ui.backButton.drawable.setTint(
+                topFgGradientBitmap.getPixel(ui.topActionBar.ui.backButton.measuredHeight / 2,
+                                             ui.topActionBar.height / 2))
 
             // Search view
-            val searchView = topActionBar.ui.searchView
+            val searchView = ui.topActionBar.ui.searchView
             val color = topFgGradientBitmap.getPixelAtCenter(searchView)
             var view = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_button)
             view?.drawable?.setTint(color)
@@ -109,23 +110,23 @@ class GradientStyledMainActivity : MainActivity() {
                                                          0f, 0f, colors, null, Shader.TileMode.CLAMP)
 
             // Change sort icon
-            topActionBar.ui.changeSortButton.drawable.setTint(
-                topFgGradientBitmap.getPixelAtCenter(topActionBar.ui.changeSortButton))
+            ui.topActionBar.ui.changeSortButton.drawable.setTint(
+                topFgGradientBitmap.getPixelAtCenter(ui.topActionBar.ui.changeSortButton))
 
             // Overflow icon
-            topActionBar.ui.menuButton.drawable.setTint(
-                topFgGradientBitmap.getPixelAtCenter(topActionBar.ui.menuButton))
+            ui.topActionBar.ui.menuButton.drawable.setTint(
+                topFgGradientBitmap.getPixelAtCenter(ui.topActionBar.ui.menuButton))
 
             // BottomNavigationView active colors
-            val shoppingListButton = bottomNavigationBar.findViewById<View>(R.id.shopping_list_button)
+            val shoppingListButton = ui.bottomNavigationBar.findViewById<View>(R.id.shopping_list_button)
             shoppingListButton.getDrawingRect(rect)
-            val inactiveColor = bottomNavigationBar.itemIconTintList?.defaultColor ?: 0
+            val inactiveColor = ui.bottomNavigationBar.itemIconTintList?.defaultColor ?: 0
             val activeColor = bottomFgGradientBitmap.getPixelAtCenter(shoppingListButton)
             val itemTintList = ColorStateList(
                 arrayOf(intArrayOf(android.R.attr.state_checked), IntArray(0)),
                 intArrayOf(activeColor, inactiveColor))
-            bottomNavigationBar.itemIconTintList = itemTintList
-            bottomNavigationBar.itemTextColor = itemTintList
+            ui.bottomNavigationBar.itemIconTintList = itemTintList
+            ui.bottomNavigationBar.itemTextColor = itemTintList
         }
     }
 }

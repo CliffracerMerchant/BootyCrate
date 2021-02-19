@@ -14,32 +14,34 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
 
-/** A Room database to access the tables shopping_list_item and inventory_item.
+/**
+ * A Room database to access the tables shopping_list_item and inventory_item.
  *
- *  BootyCrateDatabase is an implementation of RoomDatabase that provides
- *  instances of a ShoppingListItemDao and an InventoryItemDao in order to
- *  query the contents of the shopping_list_item and inventory_item tables.
+ * BootyCrateDatabase is an implementation of RoomDatabase that provides
+ * instances of a ShoppingListItemDao and an InventoryItemDao in order to
+ * query the contents of the shopping_list_item and inventory_item tables.
  *
- *  BootyCrateDatabase functions as a singleton, with the current instance
- *  obtained using the static function get. get also takes an optional boolean
- *  parameter overwriteExistingDb that, when true, will overwrite the current
- *  instance with a new one. This might be necessary when, for example, the
- *  database file is overwritten with another one, and the database needs to be
- *  reopened.
+ * BootyCrateDatabase functions as a singleton, with the current instance
+ * obtained using the static function get. get also takes an optional boolean
+ * parameter overwriteExistingDb that, when true, will overwrite the current
+ * instance with a new one. This might be necessary when, for example, the
+ * database file is overwritten with another one, and the database needs to be
+ * reopened.
  *
- *  The function backup will export a copy of the current database file to the
- *  location pointed to by the parameter backupUri.
+ * The function backup will export a copy of the current database file to the
+ * location pointed to by the parameter backupUri.
  *
- *  The function replaceWithBackup will overwrite the existing database with
- *  the one pointed to by the parameter backupUri. Note that when the existing
- *  database is replaced, activities that have obtained instances of the con-
- *  tained DAOs will need to retrieve new DAOs, or crashes are likely to occur
- *  when the old DAOs are used.
+ * The function replaceWithBackup will overwrite the existing database with
+ * the one pointed to by the parameter backupUri. Note that when the existing
+ * database is replaced, activities that have obtained instances of the con-
+ * tained DAOs will need to retrieve new DAOs, or crashes are likely to occur
+ * when the old DAOs are used.
  *
- *  The function mergeWithBackup will attempt to open the database pointed to
- *  by the parameter backupUri as a temporary second database, read the shop-
- *  ping list and inventory items in the database, and then add them to the
- *  current database. */
+ * The function mergeWithBackup will attempt to open the database pointed to
+ * by the parameter backupUri as a temporary second database, read the shop-
+ * ping list and inventory items in the database, and then add them to the
+ * current database.
+ */
 @Database(entities = [ShoppingListItem::class, InventoryItem::class],
           version = 1, exportSchema = false)
 abstract class BootyCrateDatabase : RoomDatabase() {

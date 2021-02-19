@@ -24,6 +24,8 @@ class ShoppingListItem(
 ) : ExpandableSelectableItem(id, name, extraInfo, color, amount, linkedItemId,
                              inTrash, isExpanded, isSelected) {
 
+    override fun hashCode() = super.hashCode() * 31 + isChecked.hashCode()
+
     override fun equals(other: Any?): Boolean {
         if (other === this) return true
         if (other == null || other !is ShoppingListItem) return false

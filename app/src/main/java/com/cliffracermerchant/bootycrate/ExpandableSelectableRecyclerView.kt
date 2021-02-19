@@ -12,35 +12,37 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.integer_edit.view.*
 
-/** A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
+/**
+ * A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
  *
- *  ExpandableSelectableRecyclerView extends ViewModelRecyclerView via the use
- *  of an ExpandableSelectableItemViewModel along with the new functions delete-
- *  SelectedItems. Its selection property provides an interface for manipula-
- *  ting the recycler view selection (see the documentation for the inner class
- *  Selection for more details) as well as the function setExpandedItem to
- *  change or set to null the currently expanded item. It also utilizes its own
- *  custom view holder to enforce the use of an ExpandableSelectableItemView,
- *  and a custom adapter that in turn enforces the use of ExpandableSelectable-
- *  ItemViewHolder.
+ * ExpandableSelectableRecyclerView extends ViewModelRecyclerView via the use
+ * of an ExpandableSelectableItemViewModel along with the new functions delete-
+ * SelectedItems. Its selection property provides an interface for manipula-
+ * ting the recycler view selection (see the documentation for the inner class
+ * Selection for more details) as well as the function setExpandedItem to
+ * change or set to null the currently expanded item. It also utilizes its own
+ * custom view holder to enforce the use of an ExpandableSelectableItemView,
+ * and a custom adapter that in turn enforces the use of ExpandableSelectable-
+ * ItemViewHolder.
  *
- *  Like its parent class, ExpandableSelectableRecyclerView requires the func-
- *  tion finishInit to be called in order to provide it with an instance of
- *  ExpandableSelectableItemViewModel. ExpandableSelectableRecyclerView's
- *  finishInit function, while not an override of ViewModelRecyclerView's ver-
- *  sion due to requiring a different function signature, is designed to call
- *  ViewModelRecyclerView's version to prevent the implementing activity or
- *  fragment from needing to remember to call both. */
+ * Like its parent class, ExpandableSelectableRecyclerView requires the func-
+ * tion finishInit to be called in order to provide it with an instance of
+ * ExpandableSelectableItemViewModel and the animator config used for its
+ * instance of ExpandableItemAnimator. ExpandableSelectableRecyclerView's
+ * finishInit function, while not an override of ViewModelRecyclerView's ver-
+ * sion due to requiring a different function signature, is designed to call
+ * ViewModelRecyclerView's version to prevent the implementing activity or
+ * fragment from needing to call both.
+ */
 @Suppress("LeakingThis")
 abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem>(
     context: Context,
     attrs: AttributeSet
 ) : ViewModelRecyclerView<Entity>(context, attrs) {
 
-    lateinit var viewModel: ExpandableSelectableItemViewModel<Entity>
-    private val itemAnimator = ExpandableItemAnimator(this)
+    abstract override val viewModel: ExpandableSelectableItemViewModel<Entity>
+    private lateinit var itemAnimator: ExpandableItemAnimator
 
     val selection = Selection()
 
@@ -48,13 +50,12 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         addItemDecoration(ItemSpacingDecoration(context))
         setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
-        setItemAnimator(itemAnimator)
     }
 
-    fun finishInit(owner: LifecycleOwner, viewModel: ExpandableSelectableItemViewModel<Entity>) {
-        this.viewModel = viewModel
-        adapter.registerAdapterDataObserver(itemAnimator.observer)
-        super.finishInit(owner, viewModel)
+    fun finishInit(owner: LifecycleOwner, animatorConfig: AnimatorConfigs.Config) {
+        finishInit(owner)
+        itemAnimator = ExpandableItemAnimator(this, animatorConfig)
+        setItemAnimator(itemAnimator)
     }
 
     open fun deleteSelectedItems() {
@@ -65,9 +66,10 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
              setAnchorView(snackBarAnchor ?: this).
              setAction(R.string.delete_snackbar_undo_text) { undoDelete() }.
              addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-             override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                 viewModel.emptyTrash()
-             }}).show()
+                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                     viewModel.emptyTrash()
+                 }
+             }).show()
     }
 
     fun setExpandedItem(pos: Int?) {
@@ -76,18 +78,20 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         itemAnimator.notifyExpandedItemChanged(pos)
     }
 
-    /** A class that provides an interface for manipulating the selection of the parent recycler view.
+    /**
+     * A class that provides an interface for manipulating the selection of the parent recycler view.
      *
-     *  Selection is a memberless class whose purpose is to make the manipula-
-     *  tion of the recycler view selection more idiomatic (e.g. recyclerView.-
-     *  selection.add() instead of recyclerView.addToSelection()). The size of
-     *  the selection can be queried through the properties size and isEmpty,
-     *  as well as sizeLiveData in case an observable selection size is desired.
+     * Selection is a memberless class whose purpose is to make the manipula-
+     * tion of the recycler view selection more idiomatic (e.g. recyclerView.-
+     * selection.add() instead of recyclerView.addToSelection()). The size of
+     * the selection can be queried through the properties size and isEmpty,
+     * as well as sizeLiveData in case an observable selection size is desired.
      *
-     *  The contents of the selection are modified for single items through the
-     *  self-explanatory functions add, remove, and toggle, which accept the
-     *  stable id of the item being operated on. The function clear will erase
-     *  the selection entirely. */
+     * The contents of the selection are modified for single items through the
+     * self-explanatory functions add, remove, and toggle, which accept the
+     * stable id of the item being operated on. The function clear will erase
+     * the selection entirely.
+     */
     inner class Selection {
         val itemsLiveData get() = viewModel.selectedItems
         val items get() = itemsLiveData.value
@@ -102,10 +106,10 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         fun clear() = viewModel.clearSelection()
     }
 
-    /** A subclass of ViewModelAdapter that enforces the use of ExpandableSelectableItemViewHolder.
-     *
-     *  ExpandableSelectableItemAdapter does not implement onCreateViewHolder, and is
-     *  therefore abstract.*/
+    /**
+     * An abstract (due to not implementing onCreateViewHolder) subclass of
+     * ViewModelAdapter that enforces the use of ExpandableSelectableItemViewHolder.
+     */
     abstract inner class ExpandableSelectableItemAdapter<VHType: ExpandableSelectableItemViewHolder> :
             ViewModelAdapter<VHType>() {
 
@@ -116,10 +120,12 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         }
     }
 
-    /** A ViewHolder subclass that wraps an instance of ExpandableSelectableItemView.
+    /**
+     * A ViewHolder subclass that wraps an instance of ExpandableSelectableItemView.
      *
-     *  ExpandableSelectableItemView updates the onClickListeners of the wrapped item
-     *  view to enable the selection and expansion of the items. */
+     * ExpandableSelectableItemView updates the onClickListeners of the wrapped item
+     * view to enable the selection and expansion of the items.
+     */
     open inner class ExpandableSelectableItemViewHolder(
         view: ExpandableSelectableItemView<Entity>
     ) : ViewModelItemViewHolder(view) {
@@ -131,15 +137,14 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
                 setOnClickListener(onClick)
                 ui.nameEdit.setOnClickListener(onClick)
                 ui.extraInfoEdit.setOnClickListener(onClick)
-                ui.amountEdit.valueEdit.setOnClickListener(onClick)
+                ui.amountEdit.ui.valueEdit.setOnClickListener(onClick)
 
                 setOnLongClickListener(onLongClick)
                 ui.nameEdit.setOnLongClickListener(onLongClick)
                 ui.extraInfoEdit.setOnLongClickListener(onLongClick)
-                ui.amountEdit.valueEdit.setOnLongClickListener(onLongClick)
+                ui.amountEdit.ui.valueEdit.setOnLongClickListener(onLongClick)
                 ui.editButton.setOnClickListener {
-                    setExpandedItem(if (!view.isExpanded) adapterPosition
-                                    else                  null)
+                    setExpandedItem(if (!view.isExpanded) adapterPosition else null)
                 }
             }
         }

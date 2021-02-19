@@ -2,31 +2,32 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-
 package com.cliffracermerchant.bootycrate
 
 import android.graphics.*
 import android.graphics.drawable.Drawable
 import androidx.core.graphics.PathParser
 
-/** A vector drawable that strokes a path supplied in the constructor with a gradient background.
+/**
+ * A vector drawable that strokes a path supplied in the constructor with a gradient background.
  *
- *  GradientVectorDrawable is a custom drawable that draws a vector based on
- *  the path data supplied to its constructor with a gradient background. The
- *  gradient used is set through the public property gradient.
+ * GradientVectorDrawable is a custom drawable that draws a vector based on
+ * the path data supplied to its constructor with a gradient background. The
+ * gradient used is set through the public property gradient.
  *
- *  While the same effect of having a VectorDrawable with a gradient background
- *  is achievable using the Android API's native VectorDrawable, GradientVector-
- *  Drawable makes it easier to achieve certain effects (such a global back-
- *  ground gradient that "shows through" certain UI components) due to its use
- *  of the paint.shader property. */
+ * While the same effect of having a VectorDrawable with a gradient background
+ * is achievable using the Android API's native VectorDrawable, GradientVector-
+ * Drawable makes it easier to achieve certain effects (such a global back-
+ * ground gradient that "shows through" certain UI components) due to its use
+ * of the paint.shader property.
+ */
 open class GradientVectorDrawable(
-    protected val pathWidth: Float,
-    protected val pathHeight: Float,
+    private val pathWidth: Float,
+    private val pathHeight: Float,
     pathData: String
 ) : Drawable() {
-    protected val paint = Paint().apply { style = Paint.Style.FILL }
-    protected val originalPath = PathParser.createPathFromPathData(pathData)
+    private val paint = Paint().apply { style = Paint.Style.FILL }
+    private val originalPath: Path = PathParser.createPathFromPathData(pathData)
     protected var path = Path()
     protected val matrix = Matrix()
 
@@ -78,6 +79,7 @@ class ClippedGradientVectorDrawable(
 
     override fun draw(canvas: Canvas) {
         canvas.save()
+        @Suppress("DEPRECATION")
         canvas.clipPath(clipPath, Region.Op.DIFFERENCE)
         super.draw(canvas)
         canvas.restore()
