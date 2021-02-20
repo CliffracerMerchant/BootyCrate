@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+  ~  You may not use this file except in compliance with the Apache License
+  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+  ~  or in the file LICENSE in the project's root directory. -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   width="108"
+   height="108"
+   viewBox="0 0 108 108"
+   version="1.1"
+   id="svg3995">
+  <defs
+     id="defs3989">
+    <linearGradient
+       id="linearGradient861">
+      <stop
+         id="stop853"
+         offset="0"
+         style="stop-color:#cb8c50;stop-opacity:1" />
+      <stop
+         style="stop-color:#cb5050;stop-opacity:1"
+         offset="0.49921039"
+         id="stop855" />
+      <stop
+         style="stop-color:#cb508c;stop-opacity:1"
+         offset="1"
+         id="stop857" />
+    </linearGradient>
+    <linearGradient
+       xlink:href="#linearGradient861"
+       id="linearGradient923"
+       x1="54"
+       y1="20"
+       x2="54"
+       y2="88"
+       gradientUnits="userSpaceOnUse"  />
+    <linearGradient
+       xlink:href="#linearGradient861"
+       id="linearGradient977"
+       x1="54"
+       y1="20"
+       x2="54"
+       y2="88"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       xlink:href="#linearGradient861"
+       id="linearGradient869"
+       x1="54"
+       y1="20"
+       x2="54"
+       y2="88"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <metadata
+     id="metadata3992">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     id="layer1"
+     style="display:inline">
+    <rect
+       style="display:inline;fill:#353535;fill-opacity:1;stroke:url(#linearGradient869);stroke-width:3.5;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       id="rect4560"
+       width="50.5"
+       height="50.5"
+       x="28.75"
+       y="28.75"
+       rx="2.5"
+       ry="2.5" />
+    <path
+       style="display:inline;fill:none;fill-opacity:1;stroke:url(#linearGradient977);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       d="m 48.75,70.85 -11.6,-11.6 v -16 l 11.1,11.1 -1.85,7.4 7.4,-1.85 11.1,11.1 z"
+       id="path903" />
+    <path
+       style="display:inline;fill:none;stroke:url(#linearGradient923);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 70.95,48.75 v 16.1 l -27.7,-27.7 h 16.1"
+       id="path915" />
+  </g>
+</svg>
