@@ -28,7 +28,6 @@
         app:layout_constraintEnd_toStartOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="@id/extraInfoEdit"
         tools:tint="@color/colorInBetweenPrimaryAccent1"
         style="@style/ViewModelItemColorEdit" />
 

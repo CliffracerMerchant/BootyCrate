@@ -66,7 +66,7 @@ object AnimatorConfigs {
 }
 
 /** Apply an AnimatorConfigs.Config to an Animator object and return the object. */
-fun Animator.applyConfig(config: AnimatorConfigs.Config) = apply {
+fun <T: Animator>T.applyConfig(config: AnimatorConfigs.Config) = apply {
     duration = config.duration
     interpolator = config.interpolator
 }

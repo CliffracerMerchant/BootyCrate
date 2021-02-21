@@ -134,6 +134,10 @@ class ExpandableItemAnimator(
                     pendingAnimations.add(this)
                 }.start()
         }
+        (view as? ExpandableSelectableItemView<*>)?.let {
+            pendingAnimations.addAll(it.pendingAnimations)
+            it.pendingAnimations.clear()
+        }
         return true
     }
 

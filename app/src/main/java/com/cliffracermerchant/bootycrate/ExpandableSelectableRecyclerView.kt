@@ -134,6 +134,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
             val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
 
             view.apply {
+                startAnimationsImmediately = false
                 setOnClickListener(onClick)
                 ui.nameEdit.setOnClickListener(onClick)
                 ui.extraInfoEdit.setOnClickListener(onClick)

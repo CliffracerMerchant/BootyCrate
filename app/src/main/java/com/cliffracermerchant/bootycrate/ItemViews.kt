@@ -4,7 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.LayoutTransition
+import android.animation.Animator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
@@ -78,24 +78,35 @@ open class ViewModelItemView<Entity: ViewModelItem>(
  * The interface for selection and deselection consists of the functions
  * select, deselect, and setSelectedState. With the default background these
  * functions will give the view a surrounding gradient outline or hide the
- * outline depending on the item's selection state.
+ * outline depending on the item's selection state. Unless setSelectedState is
+ * called with the parameter animate set to false, the change in selection
+ * state will be animated with a fade in or out animation.
  *
- * Likewise, the interface for item expansion consists of expand, collapse,
- * setExpanded, and toggleExpanded. Because subclasses may need to alter
- * the visibility of additional views during expansion or collapse, setExpan-
- * ded is open.
+ * The interface for item expansion consists of expand, collapse, setExpanded,
+ * and toggleExpanded. If subclasses need to alter the visibility of additional
+ * views during expansion or collapse, they can override the function
+ * onExpandedChanged with their additional changes. Like setSelectedState, set-
+ * Expanded will animated the changes inside the view unless it is called with
+ * the parameter animate equal to false.
  *
- * The @param animatorConfig will determine the animator config used for the
- * view's layout transition and some of the views' internal animations. If
- * desired the default value of AnimatorConfigs.translation can be overridden
- * in order to make sure the view's animations are in sync with others outside
- * the view.
+ * In order to allow for easier synchronization with concurrent animations out-
+ * side the view, ExpandableSelectableItemView has the properties animatorCon-
+ * fig, startAnimationsImmediately, and pendingAnimations. The constructor
+ * parameter and property animatorConfig will determine the animator config
+ * used for the view's internal animations. The default value of AnimatorCon-
+ * figs.translation can be overridden in order to make sure the view's anima-
+ * tions use the same config as others outside the view. The property start-
+ * AnimationsImmediately determines whether the animations prepared during set-
+ * Expanded will be started immediately. If it is set to false, the animations
+ * will instead be stored in the member pendingAnimations. In this case it is
+ * up to the containing view to play these animations at the same time as its
+ * own.
  */
 @Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
-    animatorConfig: AnimatorConfigs.Config = AnimatorConfigs.translation,
+    val animatorConfig: AnimatorConfigs.Config = AnimatorConfigs.translation,
     useDefaultLayout: Boolean = true,
 ) : ViewModelItemView<Entity>(context, useDefaultLayout) {
 
@@ -103,31 +114,10 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     private var _isExpanded = false
     private val gradientOutline: GradientDrawable
 
+    var startAnimationsImmediately = true
+    val pendingAnimations = mutableListOf<Animator>()
+
     init {
-        /* Because ExpandableSelectableItemView is intended to be used in a
-           RecyclerView with an item animator, the automatic animations played
-           by the view's layout transition should ideally be synchronized with
-           those of the item animator. Unfortunately in tests the layout tran-
-           sition's animations started before those of the item animator, lead-
-           ing to noticeable visual artifacts (particularly when a view is
-           expanded at the same time as another is collapsed, leading to the
-           bottom view being resized and translated at the same time). As the
-           layout transition API does not permit access to the ValueAnimators
-           it uses internally, there is no easy way to pause these animators
-           and resume them once the item animator animations begin, the ideal
-           solution. As a workaround a delay is set here to all of the layout
-           transition's animations to compensate. Obviously this is not ideal
-           because the delay is likely to be different on different systems,
-           but in tests on several systems it seems to almost eliminate the
-           delay between the layout transition and item animator animations. */
-        val transitionDelay = 20L
-        layoutTransition = layoutTransition(animatorConfig).apply {
-            setStartDelay(LayoutTransition.CHANGE_APPEARING, transitionDelay)
-            setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, transitionDelay)
-            setStartDelay(LayoutTransition.APPEARING, transitionDelay)
-            setStartDelay(LayoutTransition.DISAPPEARING, transitionDelay)
-            setStartDelay(LayoutTransition.CHANGING, transitionDelay)
-        }
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
         gradientOutline = (background.getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
         gradientOutline.setTintList(null)
@@ -151,7 +141,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
 
     override fun update(item: Entity) {
         super.update(item)
-        setExpanded(item.isExpanded)
+        setExpanded(item.isExpanded, animate = false)
         setSelectedState(item.isSelected, animate = false)
     }
 
@@ -159,7 +149,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     fun collapse() = setExpanded(false)
     fun toggleExpanded() = if (isExpanded) collapse() else expand()
 
-    @CallSuper open fun setExpanded(expanded: Boolean = true) {
+    fun setExpanded(expanded: Boolean = true, animate: Boolean = true) {
         _isExpanded = expanded
         if (!expanded &&
             ui.nameEdit.isFocused ||
@@ -167,20 +157,30 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             ui.amountEdit.ui.valueEdit.isFocused)
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
 
-        ui.nameEdit.isEditable = expanded
-        ui.amountEdit.valueIsDirectlyEditable = expanded
+        ui.nameEdit.setEditable(expanded, animate)
+        ui.amountEdit.setValueIsDirectlyEditable(expanded, animate)
+
         if (ui.extraInfoEdit.text.isNullOrBlank()) {
             // If extraInfoEdit is blank and is being expanded then we
             // can set its editable state before it becomes visible to
             // prevent needing to animate its change in editable state.
-            if (expanded) ui.extraInfoEdit.setEditable(editable = true, animate = false)
+            if (expanded) ui.extraInfoEdit.setEditable(true, animate = false)
             ui.extraInfoEdit.isVisible = expanded
         }
-        else ui.extraInfoEdit.isEditable = expanded
+        else ui.extraInfoEdit.setEditable(expanded, animate)
+
         ui.editButton.isActivated = expanded
         ui.amountEditSpacer.isVisible = !expanded
         ui.linkIndicator.isVisible = expanded && itemIsLinked
+
+        onExpandedChanged(expanded, animate)
+        if (startAnimationsImmediately) {
+            for (anim in pendingAnimations) anim.start()
+            pendingAnimations.clear()
+        }
     }
+
+    open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
 
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
@@ -214,8 +214,7 @@ class ShoppingListItemView(context: Context) :
         super.update(item)
     }
 
-    override fun setExpanded(expanded: Boolean) {
-        super.setExpanded(expanded)
+    override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
         ui.checkBox.inColorEditMode = expanded
     }
 
@@ -256,8 +255,7 @@ class InventoryItemView(context: Context) :
         super.update(item)
     }
 
-    override fun setExpanded(expanded: Boolean) {
-        super.setExpanded(expanded)
+    override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
         if (!expanded && detailsUi.addToShoppingListTriggerEdit.ui.valueEdit.isFocused)
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
         detailsUi.inventoryItemDetailsGroup.isVisible = expanded
