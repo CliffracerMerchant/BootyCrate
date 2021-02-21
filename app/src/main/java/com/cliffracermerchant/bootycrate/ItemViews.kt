@@ -157,6 +157,10 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             ui.amountEdit.ui.valueEdit.isFocused)
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
 
+        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+        measure(wrapContentSpec, wrapContentSpec)
+        val oldHeight = measuredHeight
+
         ui.nameEdit.setEditable(expanded, animate)
 
         val amountEditInternalAnimInfo = ui.amountEdit.setValueIsDirectlyEditable(expanded, animate)
@@ -183,9 +187,17 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         ui.linkIndicator.isVisible = expanded && itemIsLinked
 
         onExpandedChanged(expanded, animate)
-        if (startAnimationsImmediately) {
-            for (anim in pendingAnimations) anim.start()
-            pendingAnimations.clear()
+
+        if (animate) {
+            measure(wrapContentSpec, wrapContentSpec)
+            val heightChange = measuredHeight - oldHeight
+            pendingAnimations.add(valueAnimatorOfFloat(ui.editButton::setTranslationY,
+                -heightChange * 1f, 0f, animatorConfig)
+                .apply { start(); pause() })
+            if (startAnimationsImmediately) {
+                for (anim in pendingAnimations) anim.start()
+                pendingAnimations.clear()
+            }
         }
     }
 
