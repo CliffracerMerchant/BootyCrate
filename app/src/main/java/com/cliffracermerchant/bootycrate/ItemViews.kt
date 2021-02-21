@@ -130,7 +130,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         colors[4] = colors[0]
         gradientOutline.colors = colors
         this.background = background
-
+        clipChildren = false
         if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }
             ui.nameEdit.animatorConfig = animatorConfig
@@ -158,7 +158,16 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
 
         ui.nameEdit.setEditable(expanded, animate)
-        ui.amountEdit.setValueIsDirectlyEditable(expanded, animate)
+
+        val amountEditInternalAnimInfo = ui.amountEdit.setValueIsDirectlyEditable(expanded, animate)
+        if (amountEditInternalAnimInfo != null) {
+            val start = amountEditInternalAnimInfo.widthChange +
+                    ui.amountEditSpacer.layoutParams.width * if (expanded) -1f else 1f
+            val amountEditTranslateAnim = valueAnimatorOfFloat(ui.amountEdit::setTranslationX,
+                start * 1f, 0f, animatorConfig)
+            pendingAnimations.add(amountEditTranslateAnim.apply { start(); pause() })
+            pendingAnimations.add(amountEditInternalAnimInfo.animator.apply { pause() })
+        }
 
         if (ui.extraInfoEdit.text.isNullOrBlank()) {
             // If extraInfoEdit is blank and is being expanded then we

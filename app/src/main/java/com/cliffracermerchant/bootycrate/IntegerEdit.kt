@@ -4,6 +4,8 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.animation.Animator
+import android.animation.AnimatorSet
 import android.content.Context
 import android.graphics.Paint
 import android.util.AttributeSet
@@ -24,17 +26,20 @@ import com.cliffracermerchant.bootycrate.databinding.IntegerEditBinding
  * ber to allow external entities to react to a change in its data.
  *
  * The EditText is by default not focusable in touch mode, but this can be
- * changed by setting the member isEditable. If set to true, the user can edit
- * the value directly (rather than through the use of the decrease / increase
- * buttons). When in the editable state, the EditText will underline the cur-
- * rent value to indicate this to the user, and will, if necessary, expand the
- * width of the value to R.dimen.integer_edit_editable_value_min_width to make
- * it a larger touch target.
+ * changed by calling the function setValueIsDirectlyEditable. If set to true,
+ * the user can edit the value directly (rather than through the use of the
+ * decrease / increase buttons). When in the editable state, the EditText will
+ * underline the current value to indicate this to the user, and will, if neces-
+ * sary, expand the width of the value to R.dimen.integer_edit_editable_value_-
+ * min_width to make it a larger touch target.
  *
  * Unless the function setValueIsDirectlyEditable is called with a value of
- * false for the parameter animate, the IntegerEdit will animate when valueIs-
- * directlyEditable is changed. The animation will use the property animator-
- * Config for its duration and interpolator.
+ * false for the parameter animate, the IntegerEdit will start an animation
+ * that uses the property animatorConfig for its duration and interpolator. In
+ * case an external layout needs to know information about this animation to
+ * combine it with others, setValueIsDirectlyEditable will return an AnimInfo
+ * object that contains the animator and the width change that was animated, or
+ * null if no animation occurred.
  */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
@@ -56,8 +61,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
               set(newValue) { _value = newValue
                               _liveData.value = value }
 
-    var valueIsDirectlyEditable get() = ui.valueEdit.isFocusableInTouchMode
-        set(editable) = setValueIsDirectlyEditable(editable, animate = true)
+    val valueIsDirectlyEditable get() = ui.valueEdit.isFocusableInTouchMode
 
     private val _liveData = MutableLiveData(value)
     val liveData: LiveData<Int> get() = _liveData
@@ -99,7 +103,13 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     fun decrement() = modifyValue(-stepSize)
     private fun modifyValue(stepSize: Int) { value += stepSize }
 
-    fun setValueIsDirectlyEditable(editable: Boolean, animate: Boolean = true) {
+    /** Information about the internal animation played when setValueIsDirectlyEditable is called. */
+    data class AnimInfo(val animator: Animator, val widthChange: Int)
+
+    /** Set whether the value is directly editable (i.e. able to be changed with a
+     * user number entry rather than with the decrease / increase buttons), and return
+     * an AnimInfo object if an animation was played. */
+    fun setValueIsDirectlyEditable(editable: Boolean, animate: Boolean = true): AnimInfo? {
         ui.valueEdit.isFocusableInTouchMode = editable
         if (!editable && ui.valueEdit.isFocused)
             ui.valueEdit.clearFocus()
@@ -109,7 +119,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         val oldWidth = ui.valueEdit.width
         ui.valueEdit.minWidth = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.integer_edit_editable_value_min_width)
-        if (!animate || oldWidth == 0) return
+        if (!animate || oldWidth == 0) return null
 
         /* The following animations will make the IntegerEdit smoothly expand
          * to its new total width after the change in the value edit's min-
@@ -119,10 +129,9 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         val newWidth = ui.valueEdit.measuredWidth
         val widthChange = newWidth - oldWidth
 
-        ui.valueEdit.translationX = -widthChange / 2f
-        ui.increaseButton.translationX = -widthChange.toFloat()
-
-        ui.valueEdit.animate().translationX(0f).withLayer().applyConfig(animatorConfig).start()
-        ui.increaseButton.animate().translationX(0f).withLayer().applyConfig(animatorConfig).start()
+        val animSet = AnimatorSet()
+        animSet.play(valueAnimatorOfFloat(ui.valueEdit::setTranslationX, -widthChange / 2f, 0f, animatorConfig))
+            .with(valueAnimatorOfFloat(ui.increaseButton::setTranslationX, -widthChange * 1f, 0f, animatorConfig))
+        return AnimInfo(animSet.apply { start() }, widthChange)
     }
 }
