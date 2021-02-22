@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
@@ -45,8 +46,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
 {
     val liveData = MutableLiveData<String>()
     var animatorConfig = AnimatorConfigs.translation
-    var isEditable: Boolean get() = isFocusableInTouchMode
-                            set(editable) = setEditable(editable, animate = true)
+    val isEditable get() = isFocusableInTouchMode
 
     var canBeEmpty: Boolean
     private var lastValue: String? = null
@@ -54,7 +54,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
-        isEditable = a.getBoolean(R.styleable.TextFieldEdit_isEditable, false)
+        setEditable(a.getBoolean(R.styleable.TextFieldEdit_isEditable, false), animate = false)
         canBeEmpty = a.getBoolean(R.styleable.TextFieldEdit_canBeBlank, true)
         a.recycle()
 
@@ -77,7 +77,18 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         if (!focused) liveData.value = text.toString()
     }
 
-    fun setEditable(editable: Boolean, animate: Boolean = true) {
+    /**
+     * Information about the internal animation played when setEditable is called.
+     *
+     * The internal animation will only take into account the view's change in height
+     * to smoothly translate the text to its new location. If the view is also moved
+     * on screen then the animation will need to be adjusted by this amount. For this
+     * reason the view's height change and start and end translation values are provided.
+     */
+    data class AnimInfo(val animator: ValueAnimator, val heightChange: Int,
+                        val startTranslationY: Float, val endTranslationY: Float)
+
+    fun setEditable(editable: Boolean, animate: Boolean = true): AnimInfo? {
         if (!canBeEmpty)
             if (editable) lastValue = text.toString()
             else if (text.isNullOrBlank()) setText(lastValue)
@@ -90,34 +101,21 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         if (!editable && isFocused) clearFocus()
 
         val oldHeight = height
+        val oldBaseline = baseline
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.text_field_edit_editable_min_height)
-        val endGravity = if (editable) Gravity.CENTER_VERTICAL else Gravity.START
-        if (!animate || oldHeight == 0) {
-            gravity = endGravity
-            return
-        }
-        /* A text gravity of center_vertical is intended when the TextFieldEdit is expanded
-         * for editing (its vertical gravity does not matter when it is not editable due to
-         * its layout height being wrap_content and its minHeight being 0). But if the gra-
-         * vity is center_vertical when the expansion animation is played, a parent layout
-         * transition will not animate this, and the text will jump to its new position in
-         * the resized view. While this can be counteracted with a translationY animation,
-         * if the gravity is already center_vertical when the translationY animation is
-         * started, it can cause the text to be partially clipped. To work around this the
-         * gravity is set to viewStart when the view is collapsed, and is only set to
-         * center_vertical after the expansion animation is finished. */
+        gravity = if (editable) Gravity.CENTER_VERTICAL else Gravity.START
+        if (!animate) return null
+
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
+        val baselineChange = baseline - oldBaseline
         val heightChange = measuredHeight - oldHeight
-        translationY = if (editable) 0f else -heightChange / 2f
-        animate().withLayer()
-            .applyConfig(animatorConfig)
-            .translationY(if (editable) heightChange / 2f else 0f)
-            .withEndAction {
-                if (editable) translationY = 0f
-                gravity = endGravity
-            }.start()
+        val start = -baselineChange.toFloat()
+        val animator = valueAnimatorOfFloat(::setTranslationY, start, 0f, animatorConfig).apply {
+            start()
+        }
+        return AnimInfo(animator, heightChange, start, 0f)
     }
 
     override fun draw(canvas: Canvas?) {

@@ -39,7 +39,7 @@
         app:layout_constraintEnd_toStartOf="@id/amountEdit"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
-        app:layout_goneMarginBottom="3dp"
+        app:layout_goneMarginBottom="2dp"
         tools:text="Item Name"
         tools:layout_height="@dimen/text_field_edit_editable_min_height"
         style="@style/ViewModelItemNameEdit" />
