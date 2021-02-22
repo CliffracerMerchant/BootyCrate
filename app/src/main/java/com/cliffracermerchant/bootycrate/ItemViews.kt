@@ -186,10 +186,10 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         // amountEdit
         val amountEditInternalAnimInfo = ui.amountEdit.setValueIsDirectlyEditable(expanding, animate)
         if (amountEditInternalAnimInfo != null) {
-            val start = amountEditInternalAnimInfo.widthChange +
-                    ui.amountEditSpacer.layoutParams.width * if (expanding) -1f else 1f
+            val leftChange = amountEditInternalAnimInfo.widthChange +
+                ui.amountEditSpacer.layoutParams.width * if (expanding) -1f else 1f
             val amountEditTranslateAnim = valueAnimatorOfFloat(ui.amountEdit::setTranslationX,
-                start * 1f, 0f, animatorConfig)
+                                                               leftChange * 1f, 0f, animatorConfig)
             pendingAnimations.add(amountEditTranslateAnim.apply { start(); pause() })
             pendingAnimations.add(amountEditInternalAnimInfo.animator.apply { pause() })
         }
@@ -213,6 +213,30 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
                 extraInfoAnimInfo.startTranslationY - nameEditAnimInfo.heightChange,
                 extraInfoAnimInfo.endTranslationY)
             pendingAnimations.add(extraInfoAnimInfo.animator)
+        }
+
+
+        // nameEdit and extraInfoEdit end animations
+        // If the amount edit changed its left coordinate, then nameEdit and, if
+        // it wasn't hidden, extraInfoEdit will need to have their ends animated
+        // to prevent their underlines from briefly overlapping the amount edit.
+        if (amountEditInternalAnimInfo != null) {
+            val amountEditLeftChange = amountEditInternalAnimInfo.widthChange +
+                ui.amountEditSpacer.layoutParams.width * if (expanding) -1 else 1
+            val nameEditEndAnim = valueAnimatorOfInt(ui.nameEdit::setRight,
+                                                     ui.nameEdit.right ,
+                                                     ui.nameEdit.right - amountEditLeftChange,
+                                                     animatorConfig)
+                                                     .apply { start(); pause() }
+            pendingAnimations.add(nameEditEndAnim)
+            if (extraInfoAnimInfo != null) {
+                val extraInfoEditEndAnim = valueAnimatorOfInt(ui.extraInfoEdit::setRight,
+                                                              ui.extraInfoEdit.right,
+                                                              ui.extraInfoEdit.right - amountEditLeftChange,
+                                                              animatorConfig)
+                                                              .apply { start(); pause() }
+                pendingAnimations.add(extraInfoEditEndAnim)
+            }
         }
 
 
