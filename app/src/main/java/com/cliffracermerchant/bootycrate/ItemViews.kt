@@ -145,9 +145,21 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         setSelectedState(item.isSelected, animate = false)
     }
 
+    fun select() = setSelectedState(true)
+    fun deselect() = setSelectedState(false)
+    fun setSelectedState(selected: Boolean, animate: Boolean = true) {
+        if (animate) valueAnimatorOfInt(gradientOutline::setAlpha,
+            if (selected) 0 else 255,
+            if (selected) 255 else 0)
+            .apply { duration = 200L }
+            .start()
+        else gradientOutline.alpha = if (selected) 255 else 0
+    }
+
     fun expand() = setExpanded(true)
     fun collapse() = setExpanded(false)
     fun toggleExpanded() = if (isExpanded) collapse() else expand()
+    open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
 
     fun setExpanded(expanding: Boolean = true, animate: Boolean = true) {
         _isExpanded = expanding
@@ -162,97 +174,48 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         val oldHeight = measuredHeight
 
         val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animate)
-        if (nameEditAnimInfo != null) {
-            nameEditAnimInfo.animator.pause()
-            // If the extra info edit is going to appear or disappear, then nameEdit's
-            // translation animation's values will have to be adjusted by its top change.
-            if (ui.extraInfoEdit.text.isNullOrBlank()) {
-                val newTop = if (expanding) paddingTop else
-                    ui.nameEdit.top - nameEditAnimInfo.heightChange / 2 - 2
-                    // For some reason the above calculation is always off by two pixels without the
-                    // manual adjustment. Obviously the manual adjustment is not ideal because it
-                    // might have to be changed in the future if the layout is changed, but it seems
-                    // to be the only way to get the correct value.
-                val topChange = newTop - ui.nameEdit.top
-                ui.nameEdit.translationY -= topChange
-                nameEditAnimInfo.animator.setFloatValues(
-                    nameEditAnimInfo.startTranslationY - topChange,
-                    nameEditAnimInfo.endTranslationY)
-            }
-            pendingAnimations.add(nameEditAnimInfo.animator)
-        }
+        if (nameEditAnimInfo != null)
+            setupNameEditAnimations(expanding, nameEditAnimInfo)
 
+        val amountEditInternalAnimInfo =
+            ui.amountEdit.setValueIsDirectlyEditable(expanding, animate)
+        if (amountEditInternalAnimInfo != null)
+            setupAmountEditAnimations(expanding, amountEditInternalAnimInfo)
 
-        // amountEdit
-        val amountEditInternalAnimInfo = ui.amountEdit.setValueIsDirectlyEditable(expanding, animate)
-        if (amountEditInternalAnimInfo != null) {
-            val leftChange = amountEditInternalAnimInfo.widthChange +
-                ui.amountEditSpacer.layoutParams.width * if (expanding) -1f else 1f
-            val amountEditTranslateAnim = valueAnimatorOfFloat(ui.amountEdit::setTranslationX,
-                                                               leftChange * 1f, 0f, animatorConfig)
-            pendingAnimations.add(amountEditTranslateAnim.apply { start(); pause() })
-            pendingAnimations.add(amountEditInternalAnimInfo.animator.apply { pause() })
-        }
+        /* If extraInfoEdit is blank and is being expanded, then we
+           can set its editable state before it becomes visible to
+           prevent needing to animate its change in editable state. */
+        val extraInfoAnimInfo = ui.extraInfoEdit.setEditable(
+            editable = expanding,
+            animate = !ui.extraInfoEdit.text.isNullOrBlank())
+        if (extraInfoAnimInfo == null) ui.extraInfoEdit.isVisible = expanding
+        else setupExtraInfoEditAnimations(extraInfoAnimInfo,
+                                          nameEditAnimInfo!!.heightChange)
 
-
-        // extraInfoEdit
-        val extraInfoAnimInfo = if (ui.extraInfoEdit.text.isNullOrBlank()) {
-            // If extraInfoEdit is blank and is being expanded, then we
-            // can set its editable state before it becomes visible to
-            // prevent needing to animate its change in editable state.
-            if (expanding) ui.extraInfoEdit.setEditable(true, animate = false)
-            ui.extraInfoEdit.isVisible = expanding
-            null
-        } else ui.extraInfoEdit.setEditable(expanding, animate)
-        if (extraInfoAnimInfo != null) {
-            extraInfoAnimInfo.animator.pause()
-            // We have to adjust the extraInfoEdit starting translation by the
-            // height change of the nameEdit to get the correct translation amount.
-            ui.extraInfoEdit.translationY -= nameEditAnimInfo!!.heightChange
-            extraInfoAnimInfo.animator.setFloatValues(
-                extraInfoAnimInfo.startTranslationY - nameEditAnimInfo.heightChange,
-                extraInfoAnimInfo.endTranslationY)
-            pendingAnimations.add(extraInfoAnimInfo.animator)
-        }
-
-
-        // nameEdit and extraInfoEdit end animations
-        // If the amount edit changed its left coordinate, then nameEdit and, if
-        // it wasn't hidden, extraInfoEdit will need to have their ends animated
-        // to prevent their underlines from briefly overlapping the amount edit.
-        if (amountEditInternalAnimInfo != null) {
-            val amountEditLeftChange = amountEditInternalAnimInfo.widthChange +
-                ui.amountEditSpacer.layoutParams.width * if (expanding) -1 else 1
-            val nameEditEndAnim = valueAnimatorOfInt(ui.nameEdit::setRight,
-                                                     ui.nameEdit.right ,
-                                                     ui.nameEdit.right - amountEditLeftChange,
-                                                     animatorConfig)
-                                                     .apply { start(); pause() }
-            pendingAnimations.add(nameEditEndAnim)
-            if (extraInfoAnimInfo != null) {
-                val extraInfoEditEndAnim = valueAnimatorOfInt(ui.extraInfoEdit::setRight,
-                                                              ui.extraInfoEdit.right,
-                                                              ui.extraInfoEdit.right - amountEditLeftChange,
-                                                              animatorConfig)
-                                                              .apply { start(); pause() }
-                pendingAnimations.add(extraInfoEditEndAnim)
-            }
-        }
-
+        /* If the amount edit changed its left coordinate, then nameEdit and, if
+           it wasn't hidden, extraInfoEdit will need to have their ends animated
+           to prevent their underlines from briefly overlapping the amount edit. */
+        if (amountEditInternalAnimInfo != null)
+            setupTextFieldEndAnimations(expanding,
+                endChange = amountEditInternalAnimInfo.widthChange,
+                animateExtraInfo = extraInfoAnimInfo != null)
 
         ui.editButton.isActivated = expanding
         ui.amountEditSpacer.isVisible = !expanding
         ui.linkIndicator.isVisible = expanding && itemIsLinked
 
+        // Allow subclasses to make their changes.
         onExpandedChanged(expanding, animate)
 
         if (animate) {
-            // editButton
+            // edit button slide down animation
             measure(wrapContentSpec, wrapContentSpec)
             val heightChange = measuredHeight - oldHeight
-            pendingAnimations.add(valueAnimatorOfFloat(ui.editButton::setTranslationY,
-                                                       -heightChange * 1f, 0f, animatorConfig)
-                                                       .apply { start(); pause() })
+            pendingAnimations.add(valueAnimatorOfFloat(
+                setter = ui.editButton::setTranslationY,
+                fromValue = -heightChange * 1f,
+                toValue = 0f, config = animatorConfig
+            ).apply { start(); pause() })
 
             if (startAnimationsImmediately) {
                 for (anim in pendingAnimations) anim.start()
@@ -261,17 +224,83 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         }
     }
 
-    open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
+    private fun setupExtraInfoEditAnimations(
+        extraInfoAnimInfo: TextFieldEdit.AnimInfo,
+        nameEditHeightChange: Int
+    ) {
+        extraInfoAnimInfo.animator.pause()
+        // We have to adjust the extraInfoEdit starting translation by the
+        // height change of the nameEdit to get the correct translation amount.
+        ui.extraInfoEdit.translationY -= nameEditHeightChange
+        extraInfoAnimInfo.animator.setFloatValues(
+            extraInfoAnimInfo.startTranslationY - nameEditHeightChange,
+            extraInfoAnimInfo.endTranslationY
+        )
+        pendingAnimations.add(extraInfoAnimInfo.animator)
+    }
 
-    fun select() = setSelectedState(true)
-    fun deselect() = setSelectedState(false)
-    fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        if (animate) valueAnimatorOfInt(gradientOutline::setAlpha,
-                                        if (selected) 0 else 255,
-                                        if (selected) 255 else 0)
-                                        .apply { duration = 200L }
-                                        .start()
-        else gradientOutline.alpha = if (selected) 255 else 0
+    private fun setupTextFieldEndAnimations(
+        expanding: Boolean,
+        endChange: Int,
+        animateExtraInfo: Boolean
+    ) {
+        val amountEditLeftChange = endChange +
+            ui.amountEditSpacer.layoutParams.width * if (expanding) -1 else 1
+        val nameEditEndAnim = valueAnimatorOfInt(
+            setter = ui.nameEdit::setRight,
+            fromValue = ui.nameEdit.right,
+            toValue = ui.nameEdit.right - amountEditLeftChange,
+            config = animatorConfig
+        ).apply { start(); pause() }
+
+        pendingAnimations.add(nameEditEndAnim)
+        if (!animateExtraInfo) return
+
+        val extraInfoEditEndAnim = valueAnimatorOfInt(
+            setter = ui.extraInfoEdit::setRight,
+            fromValue = ui.extraInfoEdit.right,
+            toValue = ui.extraInfoEdit.right - amountEditLeftChange,
+            config = animatorConfig
+        ).apply { start(); pause() }
+
+        pendingAnimations.add(extraInfoEditEndAnim)
+    }
+
+    private fun setupAmountEditAnimations(
+        expanding: Boolean,
+        amountEditInternalAnimInfo: IntegerEdit.AnimInfo
+    ) {
+        pendingAnimations.add(amountEditInternalAnimInfo.animator.apply { pause() })
+        val leftChange = amountEditInternalAnimInfo.widthChange +
+                ui.amountEditSpacer.layoutParams.width * if (expanding) -1f else 1f
+        val amountEditTranslateAnim = valueAnimatorOfFloat(
+            setter = ui.amountEdit::setTranslationX,
+            fromValue = leftChange * 1f, toValue = 0f,
+            config = animatorConfig)
+        pendingAnimations.add(amountEditTranslateAnim.apply { start(); pause() })
+    }
+
+    private fun setupNameEditAnimations(
+        expanding: Boolean,
+        nameEditAnimInfo: TextFieldEdit.AnimInfo
+    ) {
+        nameEditAnimInfo.animator.pause()
+        // If the extra info edit is going to appear or disappear, then nameEdit's
+        // translation animation's values will have to be adjusted by its top change.
+        if (ui.extraInfoEdit.text.isNullOrBlank()) {
+            val newTop = if (expanding) paddingTop else
+                ui.nameEdit.top - nameEditAnimInfo.heightChange / 2 - 2
+                // For some reason the above calculation is always off by two pixels with-
+                // out the manual adjustment. Obviously the manual adjustment is not ideal
+                // because it might have to be changed in the future if the layout is
+                // changed, but it seems to be the only way to get the correct value.
+            val topChange = newTop - ui.nameEdit.top
+            ui.nameEdit.translationY -= topChange
+            nameEditAnimInfo.animator.setFloatValues(
+                nameEditAnimInfo.startTranslationY - topChange,
+                nameEditAnimInfo.endTranslationY)
+        }
+        pendingAnimations.add(nameEditAnimInfo.animator)
     }
 }
 
