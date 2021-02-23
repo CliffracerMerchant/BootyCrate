@@ -116,9 +116,9 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
 
     var startAnimationsImmediately = true
     private val pendingAnimations = mutableListOf<Animator>()
-    fun runPendingAnimations() { for (anim in this.pendingAnimations)
-                                      anim.start()
-                                  this.pendingAnimations.clear() }
+    fun runPendingAnimations() { for (anim in pendingAnimations)
+                                     anim.start()
+                                 pendingAnimations.clear() }
 
     init {
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
@@ -174,15 +174,19 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
 
      /* While a LayoutTransition would achieve the same thing as all of the following
         custom animations and would be much more readable, it is unfortunately imposs-
-        ible to synchronize LayoutTransition animators with other animators because the
-        LayoutTransition API does not permit pausing and resuming, or manual starting
-        after they are prepared, for the animators it uses internally. Unless this is
-        changed, the internal expand / collapse animations must be done manually in
-        case they need to be synchronized with other animators. */
+        ible to synchronize LayoutTransition animations with other animations because
+        the LayoutTransition API does not permit pausing and resuming, or manual star-
+        ting after they are prepared, for the animators it uses internally. Unless this
+        is changed, the internal expand / collapse animations must be done manually in
+        case they need to be synchronized with other animations. */
 
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
         val oldHeight = measuredHeight
+
+        ui.editButton.isActivated = expanding
+        ui.amountEditSpacer.isVisible = !expanding
+        ui.linkIndicator.isVisible = expanding && itemIsLinked
 
         val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animate)
         if (nameEditAnimInfo != null)
@@ -190,18 +194,22 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
 
         val amountEditInternalAnimInfo =
             ui.amountEdit.setValueIsDirectlyEditable(expanding, animate)
-        if (amountEditInternalAnimInfo != null)
-            setupAmountEditAnimations(expanding, amountEditInternalAnimInfo)
+        if (amountEditInternalAnimInfo != null) {
+            pendingAnimations.add(amountEditInternalAnimInfo.animator.apply { pause() })
+            setupAmountEditAnimations(expanding, amountEditInternalAnimInfo.widthChange)
+        }
 
-        /* If extraInfoEdit is blank and is being expanded, then we
-           can set its editable state before it becomes visible to
-           prevent needing to animate its change in editable state. */
-        val extraInfoAnimInfo = ui.extraInfoEdit.setEditable(
-            editable = expanding,
-            animate = animate && !ui.extraInfoEdit.text.isNullOrBlank())
-        if (extraInfoAnimInfo == null) ui.extraInfoEdit.isVisible = expanding
-        else setupExtraInfoEditAnimations(extraInfoAnimInfo,
-                                          nameEditAnimInfo!!.heightChange)
+        val extraInfoAnimInfo = if (ui.extraInfoEdit.text.isNullOrBlank()) {
+            // If extraInfoEdit is blank and is being expanded, then we
+            // can set its editable state before it becomes visible to
+            // prevent needing to animate its change in editable state.
+            if (expanding) ui.extraInfoEdit.setEditable(true, animate = false)
+            ui.extraInfoEdit.isVisible = expanding
+            null
+        } else ui.extraInfoEdit.setEditable(expanding, animate)
+        if (extraInfoAnimInfo != null)
+            setupExtraInfoEditAnimations(extraInfoAnimInfo,
+                                         nameEditAnimInfo!!.heightChange)
 
         /* If the amount edit changed its left coordinate, then nameEdit and, if
            it wasn't hidden, extraInfoEdit will need to have their ends animated
@@ -211,10 +219,6 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
                 endChange = amountEditInternalAnimInfo.widthChange,
                 animateExtraInfo = extraInfoAnimInfo != null)
 
-        ui.editButton.isActivated = expanding
-        ui.amountEditSpacer.isVisible = !expanding
-        ui.linkIndicator.isVisible = expanding && itemIsLinked
-
         // Allow subclasses to make their changes.
         onExpandedChanged(expanding, animate)
 
@@ -222,7 +226,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             // edit button slide down animation
             measure(wrapContentSpec, wrapContentSpec)
             val heightChange = measuredHeight - oldHeight
-            this.pendingAnimations.add(valueAnimatorOfFloat(
+            pendingAnimations.add(valueAnimatorOfFloat(
                 setter = ui.editButton::setTranslationY,
                 fromValue = -heightChange * 1f,
                 toValue = 0f, config = animatorConfig
@@ -245,7 +249,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             extraInfoAnimInfo.startTranslationY - nameEditHeightChange,
             extraInfoAnimInfo.endTranslationY
         )
-        this.pendingAnimations.add(extraInfoAnimInfo.animator)
+        pendingAnimations.add(extraInfoAnimInfo.animator)
     }
 
     private fun setupTextFieldEndAnimations(
@@ -262,7 +266,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             config = animatorConfig
         ).apply { start(); pause() }
 
-        this.pendingAnimations.add(nameEditEndAnim)
+        pendingAnimations.add(nameEditEndAnim)
         if (!animateExtraInfo) return
 
         val extraInfoEditEndAnim = valueAnimatorOfInt(
@@ -272,21 +276,17 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             config = animatorConfig
         ).apply { start(); pause() }
 
-        this.pendingAnimations.add(extraInfoEditEndAnim)
+        pendingAnimations.add(extraInfoEditEndAnim)
     }
 
-    private fun setupAmountEditAnimations(
-        expanding: Boolean,
-        amountEditInternalAnimInfo: IntegerEdit.AnimInfo
-    ) {
-        this.pendingAnimations.add(amountEditInternalAnimInfo.animator.apply { pause() })
-        val leftChange = amountEditInternalAnimInfo.widthChange +
-                ui.amountEditSpacer.layoutParams.width * if (expanding) -1f else 1f
+    private fun setupAmountEditAnimations(expanding: Boolean, amountEditWidthChange: Int) {
+        val leftChange = amountEditWidthChange +
+            ui.amountEditSpacer.layoutParams.width * if (expanding) -1f else 1f
         val amountEditTranslateAnim = valueAnimatorOfFloat(
             setter = ui.amountEdit::setTranslationX,
             fromValue = leftChange * 1f, toValue = 0f,
             config = animatorConfig)
-        this.pendingAnimations.add(amountEditTranslateAnim.apply { start(); pause() })
+        pendingAnimations.add(amountEditTranslateAnim.apply { start(); pause() })
     }
 
     private fun setupNameEditAnimations(
@@ -309,7 +309,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
                 nameEditAnimInfo.startTranslationY - topChange,
                 nameEditAnimInfo.endTranslationY)
         }
-        this.pendingAnimations.add(nameEditAnimInfo.animator)
+        pendingAnimations.add(nameEditAnimInfo.animator)
     }
 }
 

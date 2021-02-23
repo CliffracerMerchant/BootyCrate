@@ -55,10 +55,6 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
     fun finishInit(owner: LifecycleOwner, animatorConfig: AnimatorConfigs.Config) {
         finishInit(owner)
         itemAnimator = ExpandableItemAnimator(this, animatorConfig)
-        itemAnimator.onExpandCollapseAnimationStartedListener = { viewHolder ->
-            @Suppress("UNCHECKED_CAST")
-            (viewHolder.itemView as ExpandableSelectableItemView<Entity>).runPendingAnimations()
-        }
         setItemAnimator(itemAnimator)
     }
 
