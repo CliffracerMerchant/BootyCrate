@@ -55,6 +55,10 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
     fun finishInit(owner: LifecycleOwner, animatorConfig: AnimatorConfigs.Config) {
         finishInit(owner)
         itemAnimator = ExpandableItemAnimator(this, animatorConfig)
+        itemAnimator.onExpandCollapseAnimationStartedListener = { viewHolder ->
+            @Suppress("UNCHECKED_CAST")
+            (viewHolder.itemView as ExpandableSelectableItemView<Entity>).runPendingAnimations()
+        }
         setItemAnimator(itemAnimator)
     }
 
@@ -63,13 +67,12 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         viewModel.deleteSelected()
         val text = context.getString(R.string.delete_snackbar_text, size)
         Snackbar.make(this, text, Snackbar.LENGTH_LONG).
-             setAnchorView(snackBarAnchor ?: this).
-             setAction(R.string.delete_snackbar_undo_text) { undoDelete() }.
-             addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                     viewModel.emptyTrash()
-                 }
-             }).show()
+            setAnchorView(snackBarAnchor ?: this).
+            setAction(R.string.delete_snackbar_undo_text) { undoDelete() }.
+            addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int)
+                    { viewModel.emptyTrash() }
+            }).show()
     }
 
     fun setExpandedItem(pos: Int?) {

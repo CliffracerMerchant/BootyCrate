@@ -98,9 +98,9 @@ open class ViewModelItemView<Entity: ViewModelItem>(
  * tions use the same config as others outside the view. The property start-
  * AnimationsImmediately determines whether the animations prepared during set-
  * Expanded will be started immediately. If it is set to false, the animations
- * will instead be stored in the member pendingAnimations. In this case it is
- * up to the containing view to play these animations at the same time as its
- * own.
+ * will instead be stored. In this case it is up to the containing view to play
+ * these animations at the same time as its own using the function runPending-
+ * Animations.
  */
 @Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
@@ -115,8 +115,10 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     private val gradientOutline: GradientDrawable
 
     var startAnimationsImmediately = true
-    private val _pendingAnimations = mutableListOf<Animator>()
-    val pendingAnimations: List<Animator> get() = _pendingAnimations
+    private val pendingAnimations = mutableListOf<Animator>()
+    fun runPendingAnimations() { for (anim in this.pendingAnimations)
+                                      anim.start()
+                                  this.pendingAnimations.clear() }
 
     init {
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
@@ -196,7 +198,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
            prevent needing to animate its change in editable state. */
         val extraInfoAnimInfo = ui.extraInfoEdit.setEditable(
             editable = expanding,
-            animate = !ui.extraInfoEdit.text.isNullOrBlank())
+            animate = animate && !ui.extraInfoEdit.text.isNullOrBlank())
         if (extraInfoAnimInfo == null) ui.extraInfoEdit.isVisible = expanding
         else setupExtraInfoEditAnimations(extraInfoAnimInfo,
                                           nameEditAnimInfo!!.heightChange)
@@ -220,16 +222,14 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             // edit button slide down animation
             measure(wrapContentSpec, wrapContentSpec)
             val heightChange = measuredHeight - oldHeight
-            _pendingAnimations.add(valueAnimatorOfFloat(
+            this.pendingAnimations.add(valueAnimatorOfFloat(
                 setter = ui.editButton::setTranslationY,
                 fromValue = -heightChange * 1f,
                 toValue = 0f, config = animatorConfig
             ).apply { start(); pause() })
 
-            if (startAnimationsImmediately) {
-                for (anim in _pendingAnimations) anim.start()
-                _pendingAnimations.clear()
-            }
+            if (startAnimationsImmediately)
+                runPendingAnimations()
         }
     }
 
@@ -245,7 +245,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             extraInfoAnimInfo.startTranslationY - nameEditHeightChange,
             extraInfoAnimInfo.endTranslationY
         )
-        _pendingAnimations.add(extraInfoAnimInfo.animator)
+        this.pendingAnimations.add(extraInfoAnimInfo.animator)
     }
 
     private fun setupTextFieldEndAnimations(
@@ -262,7 +262,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             config = animatorConfig
         ).apply { start(); pause() }
 
-        _pendingAnimations.add(nameEditEndAnim)
+        this.pendingAnimations.add(nameEditEndAnim)
         if (!animateExtraInfo) return
 
         val extraInfoEditEndAnim = valueAnimatorOfInt(
@@ -272,21 +272,21 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             config = animatorConfig
         ).apply { start(); pause() }
 
-        _pendingAnimations.add(extraInfoEditEndAnim)
+        this.pendingAnimations.add(extraInfoEditEndAnim)
     }
 
     private fun setupAmountEditAnimations(
         expanding: Boolean,
         amountEditInternalAnimInfo: IntegerEdit.AnimInfo
     ) {
-        _pendingAnimations.add(amountEditInternalAnimInfo.animator.apply { pause() })
+        this.pendingAnimations.add(amountEditInternalAnimInfo.animator.apply { pause() })
         val leftChange = amountEditInternalAnimInfo.widthChange +
                 ui.amountEditSpacer.layoutParams.width * if (expanding) -1f else 1f
         val amountEditTranslateAnim = valueAnimatorOfFloat(
             setter = ui.amountEdit::setTranslationX,
             fromValue = leftChange * 1f, toValue = 0f,
             config = animatorConfig)
-        _pendingAnimations.add(amountEditTranslateAnim.apply { start(); pause() })
+        this.pendingAnimations.add(amountEditTranslateAnim.apply { start(); pause() })
     }
 
     private fun setupNameEditAnimations(
@@ -309,7 +309,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
                 nameEditAnimInfo.startTranslationY - topChange,
                 nameEditAnimInfo.endTranslationY)
         }
-        _pendingAnimations.add(nameEditAnimInfo.animator)
+        this.pendingAnimations.add(nameEditAnimInfo.animator)
     }
 }
 

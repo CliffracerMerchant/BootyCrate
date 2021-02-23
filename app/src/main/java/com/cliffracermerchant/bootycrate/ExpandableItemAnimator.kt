@@ -6,6 +6,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
+import android.view.ViewPropertyAnimator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -22,7 +23,9 @@ import androidx.recyclerview.widget.RecyclerView
  * the function notifyExpandedItemChanged with the adapter position of the
  * newly expanded item whenever it is changed, or null if the expanded item is
  * being collapsed. The currently expanded item can be queried via the prop-
- * erty expandedItemPos.
+ * erty expandedItemPos. The member onExpandCollapseAnimationStartedListener
+ * can be set if an external entity needs to do additional work when an expand
+ * or collapse animation is started.
  *
  * ExpandableItemAnimator also has an observer member that, when registered as
  * an adapter data observer for the adapter using the ExpandableItemAnimator
@@ -36,10 +39,14 @@ class ExpandableItemAnimator(
     private val recyclerView: RecyclerView,
     private val animatorConfig: AnimatorConfigs.Config = AnimatorConfigs.translation
 ) : DefaultItemAnimator() {
-    private val pendingAnimations = mutableListOf<Animator>()
+
     val expandedItemPos get() = _expandedItemPos
     private var _expandedItemPos: Int? = null
     private var collapsingItemPos: Int? = null
+
+    private val pendingChangeAnimators = mutableListOf<Animator>()
+    private val pendingRemoveAnimators = mutableListOf<ViewPropertyAnimator>()
+    var onExpandCollapseAnimationStartedListener: ((RecyclerView.ViewHolder) -> Unit)? = null
 
     val observer = object: RecyclerView.AdapterDataObserver() {
         private var initialized = false
@@ -76,24 +83,24 @@ class ExpandableItemAnimator(
         _expandedItemPos = newlyExpandedItemPos
     }
 
-    /* The DefaultItemAnimator animations start playing in runPendingAnimations, rather
-     * than in their respective functions (e.g. animateChange). If this custom change
-     * animation is started here in animateChange, there will be a small lag time in
-     * between the custom change animation and the default animations due to the slight
-     * delay before runPendingAnimations is called. But if the change animations are
-     * started in runPendingAnimations, the view's final state will be briefly visible
-     * before the expanding/collapsing animation is started, causing a flicker effect.
-     * To prevent this, the expanding/collapsing animation and the possible translation
-     * animation are started here in animateChange, but paused immediately. They are
-     * then resumed in runPendingAnimations when the DefaultItemAnimator animations
-     * start. */
-
     override fun animateChange(
         oldHolder: RecyclerView.ViewHolder,
         newHolder: RecyclerView.ViewHolder,
         preInfo: ItemHolderInfo,
         postInfo: ItemHolderInfo
     ): Boolean {
+      /* The DefaultItemAnimator animations start playing in runPendingAnimations, rather
+       * than in their respective functions (e.g. animateChange). If this custom change
+       * animation is started here in animateChange, there will be a small lag time in
+       * between the custom change animation and the default animations due to the slight
+       * delay before runPendingAnimations is called. But if the change animations are
+       * started in runPendingAnimations, the view's final state will be briefly visible
+       * before the expanding/collapsing animation is started, causing a flicker effect.
+       * To prevent this, the expanding/collapsing animation and the possible translation
+       * animation are started here in animateChange, but paused immediately. They are
+       * then resumed in runPendingAnimations when the DefaultItemAnimator animations
+       * start. */
+
         // If a view is being expanded or collapsed, oldHolder must be
         // equal to newHolder, and the heightChange must not be zero.
         if (oldHolder != newHolder) return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
@@ -110,6 +117,7 @@ class ExpandableItemAnimator(
         valueAnimatorOfInt(view::setBottom, start, postInfo.bottom, animatorConfig).apply {
             doOnStart {
                 dispatchChangeStarting(newHolder, true)
+                onExpandCollapseAnimationStartedListener?.invoke(newHolder)
                 pause()
             }
             doOnEnd {
@@ -117,7 +125,7 @@ class ExpandableItemAnimator(
                 if (pos == collapsingItemPos)
                     collapsingItemPos = null
             }
-            pendingAnimations.add(this)
+            pendingChangeAnimators.add(this)
         }.start()
 
         // If another view is expanding as this one is collapsing,
@@ -131,31 +139,30 @@ class ExpandableItemAnimator(
             if (viewIsOnBottom)
                 valueAnimatorOfFloat(view::setTranslationY, heightChange * 1f, 0f, animatorConfig).apply {
                     doOnStart { pause() }
-                    pendingAnimations.add(this)
+                    pendingChangeAnimators.add(this)
                 }.start()
-        }
-        (view as? ExpandableSelectableItemView<*>)?.let {
-            pendingAnimations.addAll(it.pendingAnimations)
-            it.pendingAnimations.clear()
         }
         return true
     }
 
     override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
         val view = holder?.itemView ?: return false
-        view.animate().alpha(0f).withLayer()
+        pendingRemoveAnimators.add(view.animate()
+            .alpha(0f).withLayer()
             .applyConfig(AnimatorConfigs.fadeOut)
             .withStartAction { dispatchRemoveStarting(holder) }
             .withEndAction {
                 dispatchRemoveFinished(holder)
                 recyclerView.layoutManager?.removeView(view)
-            }.start()
+            })
         return true
     }
 
     override fun runPendingAnimations() {
         super.runPendingAnimations()
-        for (anim in pendingAnimations) anim.resume()
-        pendingAnimations.clear()
+        for (anim in pendingChangeAnimators) anim.resume()
+        for (anim in pendingRemoveAnimators) anim.start()
+        pendingChangeAnimators.clear()
+        pendingRemoveAnimators.clear()
     }
 }
