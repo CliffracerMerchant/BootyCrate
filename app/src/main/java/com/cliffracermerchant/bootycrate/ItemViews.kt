@@ -194,10 +194,14 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
 
         val amountEditInternalAnimInfo =
             ui.amountEdit.setValueIsDirectlyEditable(expanding, animate)
-        if (amountEditInternalAnimInfo != null) {
-            pendingAnimations.add(amountEditInternalAnimInfo.animator.apply { pause() })
+        if (amountEditInternalAnimInfo != null)
+            // For some reason pausing the amount edit internal animation here so
+            // that it can be resumed when the rest of the animations are played
+            // causes it to not work. As the delay between these animations should
+            // be small and unnoticeable (with this particular animation at least),
+            // we'll just allow it to start now and not bother to add it to
+            // pendingAnimations.
             setupAmountEditAnimations(expanding, amountEditInternalAnimInfo.widthChange)
-        }
 
         val extraInfoAnimInfo = if (ui.extraInfoEdit.text.isNullOrBlank()) {
             // If extraInfoEdit is blank and is being expanded, then we

@@ -131,7 +131,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
 
         val animSet = AnimatorSet()
         animSet.play(valueAnimatorOfFloat(ui.valueEdit::setTranslationX, -widthChange / 2f, 0f, animatorConfig))
-            .with(valueAnimatorOfFloat(ui.increaseButton::setTranslationX, -widthChange * 1f, 0f, animatorConfig))
+               .with(valueAnimatorOfFloat(ui.increaseButton::setTranslationX, -widthChange.toFloat(), 0f, animatorConfig))
         return AnimInfo(animSet.apply { start() }, widthChange)
     }
 }
