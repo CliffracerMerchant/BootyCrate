@@ -101,9 +101,11 @@ class ExpandableItemAnimator(
 
         // If a view is being expanded or collapsed, oldHolder must be
         // equal to newHolder, and the heightChange must not be zero.
-        if (oldHolder != newHolder) return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
+        if (oldHolder != newHolder)
+            return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
         val heightChange = postInfo.bottom - postInfo.top - preInfo.bottom + preInfo.top
-        if (heightChange == 0) return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
+        if (heightChange == 0)
+            return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
 
         // Animate the height change of the view
         val view = newHolder.itemView
@@ -112,7 +114,11 @@ class ExpandableItemAnimator(
         // preInfo.top won't necessarily be the correct start value
         // if the view is on bottom and also needs to be translated.
         val start = view.top + preInfo.bottom - preInfo.top
-        valueAnimatorOfInt(view::setBottom, start, postInfo.bottom, animatorConfig).apply {
+        valueAnimatorOfInt(
+            setter = view::setBottom,
+            fromValue = start, toValue = postInfo.bottom,
+            config = animatorConfig
+        ).apply {
             doOnStart { dispatchChangeStarting(newHolder, true) }
             doOnEnd {
                 dispatchChangeFinished(newHolder, true)
@@ -133,7 +139,7 @@ class ExpandableItemAnimator(
                                  else                      expandingPos > collapsingPos
             if (viewIsOnBottom) valueAnimatorOfFloat(
                 setter = view::setTranslationY,
-                fromValue = heightChange * 1f,
+                fromValue = heightChange.toFloat(),
                 toValue = 0f, config = animatorConfig
             ).apply {
                 pendingChangeAnimators.add(this)
