@@ -12,7 +12,10 @@
     </style>
 
     <style name="ViewModelItemColorEdit">
-        <item name="android:padding">11dp</item>
+        <item name="android:paddingStart">11dp</item>
+        <item name="android:paddingEnd">11dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingBottom">12dp</item>
     </style>
 
     <style name="ViewModelItemNameEdit" parent="@style/NormalTextAppearance">
@@ -20,6 +23,7 @@
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
         <item name="canBeBlank">false</item>
+        <item name="android:gravity">center_vertical</item>
     </style>
 
     <style name="ViewModelItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
@@ -27,6 +31,7 @@
         <item name="android:textColor">@color/colorTextLightSecondary</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
+        <item name="android:gravity">center_vertical</item>
     </style>
 
     <style name="ViewModelItemAmountEdit" parent="@style/TextAppearance">

@@ -35,7 +35,7 @@ import androidx.recyclerview.widget.RecyclerView
  */
 class ExpandableItemAnimator(
     private val recyclerView: RecyclerView,
-    private val animatorConfig: AnimatorConfigs.Config = AnimatorConfigs.translation
+    private val animatorConfig: AnimatorConfig = AnimatorConfig.translation
 ) : DefaultItemAnimator() {
 
     val expandedItemPos get() = _expandedItemPos
@@ -167,7 +167,7 @@ class ExpandableItemAnimator(
         val view = holder?.itemView ?: return false
         pendingRemoveAnimators.add(view.animate()
             .alpha(0f).withLayer()
-            .applyConfig(AnimatorConfigs.fadeOut)
+            .applyConfig(AnimatorConfig.fadeOut)
             .withStartAction { dispatchRemoveStarting(holder) }
             .withEndAction {
                 dispatchRemoveFinished(holder)

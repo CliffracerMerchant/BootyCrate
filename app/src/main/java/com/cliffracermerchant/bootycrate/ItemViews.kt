@@ -9,12 +9,16 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
+import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
+import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracermerchant.bootycrate.databinding.InventoryItemBinding
@@ -107,7 +111,7 @@ open class ViewModelItemView<Entity: ViewModelItem>(
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
-    val animatorConfig: AnimatorConfigs.Config = AnimatorConfigs.translation,
+    val animatorConfig: AnimatorConfig = AnimatorConfig.translation,
     useDefaultLayout: Boolean = true,
 ) : ViewModelItemView<Entity>(context, useDefaultLayout) {
 
@@ -152,17 +156,19 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        if (animate) valueAnimatorOfInt(gradientOutline::setAlpha,
-            if (selected) 0 else 255,
-            if (selected) 255 else 0)
-            .apply { duration = 200L }
-            .start()
+        if (animate) valueAnimatorOfInt(
+            setter = gradientOutline::setAlpha,
+            fromValue = if (selected) 0 else 255,
+            toValue = if (selected) 255 else 0,
+            config = if (selected) AnimatorConfig.fadeIn
+                     else          AnimatorConfig.fadeOut
+        ).start()
         else gradientOutline.alpha = if (selected) 255 else 0
     }
 
     fun expand() = setExpanded(true)
     fun collapse() = setExpanded(false)
-    fun toggleExpanded() = if (isExpanded) collapse() else expand()
+    fun toggleExpanded() = setExpanded(!isExpanded)
     open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
 
     fun setExpanded(expanding: Boolean = true, animate: Boolean = true) {
@@ -185,22 +191,42 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         measure(wrapContentSpec, wrapContentSpec)
         val oldHeight = measuredHeight
 
-        ui.editButton.isActivated = expanding
         ui.amountEditSpacer.isVisible = !expanding
-        ui.linkIndicator.isVisible = expanding && itemIsLinked
+        ui.editButton.isActivated = expanding
+        val heightDp = if (expanding) 88f else 46f
+        ui.spacer.layoutParams.height = TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, heightDp, resources.displayMetrics).toInt()
+        ui.linkIndicator.showOrHideWithAnimation(showing = expanding)
 
-        val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animate)
+        // If the extra info edit is gone but about to be visible, the apparent top
+        // of the nameEdit will not change and therefore does not need to be animated.
+        val animateNameEdit = animate && !ui.extraInfoEdit.text.isNullOrBlank()
+        val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animateNameEdit)
         if (nameEditAnimInfo != null)
             setupNameHeightAnimation(expanding, nameEditAnimInfo)
 
-        val extraInfoAnimInfo = if (ui.extraInfoEdit.text.isNullOrBlank()) {
-            // If extraInfoEdit is blank and is being expanded, then we
-            // can set its editable state before it becomes visible to
-            // prevent needing to animate its change in editable state.
-            if (expanding) ui.extraInfoEdit.setEditable(true, animate = false)
-            ui.extraInfoEdit.isVisible = expanding
-            null
-        } else ui.extraInfoEdit.setEditable(expanding, animate)
+        val extraInfoAnimInfo =
+            if (ui.extraInfoEdit.text.isNullOrBlank()) {
+                // If extraInfoEdit is blank and is being expanded, then we
+                // can set its editable state before it becomes visible to
+                // prevent needing to animate its change in editable state.
+                if (expanding) ui.extraInfoEdit.setEditable(true, animate = false)
+                if (animate) {
+                    // Because nameEdit is constrained to extraInfoEdit, adding extraInfoEdit
+                    // to the overlay during showOrHideWithAnimation will mess up nameEdit.
+                    // To avoid this we'll add nameEdit to the overlay as well for the
+                    // duration of the animation.
+                    if (!expanding) overlay.add(ui.nameEdit)
+                    val fadeAnim = ui.extraInfoEdit.showOrHideWithAnimation(showing = expanding)
+                    if (!expanding) fadeAnim.doOnEnd {
+                        overlay.remove(ui.nameEdit)
+                        addView(ui.nameEdit)
+                    }
+                }
+                else ui.extraInfoEdit.isVisible = animate
+                null
+            }
+            else ui.extraInfoEdit.setEditable(expanding, animate)
         if (extraInfoAnimInfo != null)
             setupExtraInfoHeightAnimation(extraInfoAnimInfo, nameEditAnimInfo!!.heightChange)
 
@@ -252,16 +278,18 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         // translation animation's values will have to be adjusted by its top change.
         if (ui.extraInfoEdit.text.isNullOrBlank()) {
             val newTop = if (expanding) paddingTop else
-                ui.nameEdit.top - nameEditAnimInfo.heightChange / 2 - 2
-            // For some reason the above calculation is always off by two pixels with-
-            // out the manual adjustment. Obviously the manual adjustment is not ideal
-            // because it might have to be changed in the future if the layout is
-            // changed, but it seems to be the only way to get the correct value.
+                paddingTop - nameEditAnimInfo.heightChange / 2
             val topChange = newTop - ui.nameEdit.top
-            ui.nameEdit.translationY -= topChange
-            nameEditAnimInfo.animator.setFloatValues(
-                nameEditAnimInfo.startTranslationY - topChange,
-                nameEditAnimInfo.endTranslationY)
+
+            val newStart = nameEditAnimInfo.startTranslationY - if (expanding) topChange else 0
+            val newEnd = nameEditAnimInfo.endTranslationY - if (expanding) 0 else -topChange
+            ui.nameEdit.translationY = newStart
+            nameEditAnimInfo.animator.setFloatValues(newStart, newEnd)
+            // If the ending translationY value is not zero, it needs to be set to zero
+            // on the new layout after the animation has ended to avoid flickering.
+            if (!expanding) nameEditAnimInfo.animator.doOnEnd {
+                doOnNextLayout { ui.nameEdit.translationY = 0f }
+            }
         }
         pendingAnimations.add(nameEditAnimInfo.animator)
     }
@@ -333,6 +361,26 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
                 ui.extraInfoEdit.right = ui.extraInfoEdit.left + it
         }
     }
+
+    protected fun View.showOrHideWithAnimation(showing: Boolean): Animator {
+        alpha = if (showing) 0f else 1f
+        if (!isVisible) isVisible = true
+        val endAlpha = if (showing) 1f else 0f
+        val config = if (showing) AnimatorConfig.fadeIn
+                     else         AnimatorConfig.fadeOut
+        val animator = valueAnimatorOfFloat(::setAlpha, alpha, endAlpha, config)
+        if (!showing) {
+            val parent = parent as ViewGroup
+            parent.overlay.add(this)
+            animator.doOnEnd {
+                parent.overlay.remove(this)
+                isVisible = false
+                parent.addView(this)
+            }
+        }
+        pendingAnimations.add(animator)
+        return animator
+    }
 }
 
 /**
@@ -347,7 +395,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
  * name and extra info edit at the same time.
  */
 class ShoppingListItemView(context: Context) :
-    ExpandableSelectableItemView<ShoppingListItem>(context, AnimatorConfigs.shoppingListItem)
+    ExpandableSelectableItemView<ShoppingListItem>(context, AnimatorConfig.shoppingListItem)
 {
     override fun update(item: ShoppingListItem) {
         ui.checkBox.initIsChecked(item.isChecked)
@@ -385,9 +433,9 @@ class InventoryItemView(context: Context) :
         ui.editButton.setOnClickListener { toggleExpanded() }
         ui.checkBox.inColorEditMode = true
         ui.amountEdit.minValue = 0
-        ui.nameEdit.animatorConfig = AnimatorConfigs.translation
-        ui.extraInfoEdit.animatorConfig = AnimatorConfigs.translation
-        ui.amountEdit.animatorConfig = AnimatorConfigs.translation
+        ui.nameEdit.animatorConfig = AnimatorConfig.translation
+        ui.extraInfoEdit.animatorConfig = AnimatorConfig.translation
+        ui.amountEdit.animatorConfig = AnimatorConfig.translation
     }
 
     override fun update(item: InventoryItem) {

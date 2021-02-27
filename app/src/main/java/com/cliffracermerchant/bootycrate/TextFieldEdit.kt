@@ -12,7 +12,6 @@ import android.text.InputType
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.TypedValue
-import android.view.Gravity
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
@@ -45,7 +44,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     AppCompatEditText(context, attrs)
 {
     val liveData = MutableLiveData<String>()
-    var animatorConfig = AnimatorConfigs.translation
+    var animatorConfig = AnimatorConfig.translation
     val isEditable get() = isFocusableInTouchMode
 
     var canBeEmpty: Boolean
@@ -104,7 +103,6 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         val oldBaseline = baseline
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.text_field_edit_editable_min_height)
-        gravity = if (editable) Gravity.CENTER_VERTICAL else Gravity.START
         if (!animate) return null
 
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
@@ -112,9 +110,11 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         val baselineChange = baseline - oldBaseline
         val heightChange = measuredHeight - oldHeight
         val start = -baselineChange.toFloat()
-        val animator = valueAnimatorOfFloat(::setTranslationY, start, 0f, animatorConfig).apply {
-            start()
-        }
+        val animator = valueAnimatorOfFloat(
+            setter = ::setTranslationY,
+            fromValue = start, toValue = 0f,
+            config = animatorConfig)
+            .apply { start() }
         return AnimInfo(animator, heightChange, start, 0f)
     }
 
