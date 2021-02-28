@@ -172,13 +172,15 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         val strikeThroughLength = this.strikeThroughLength ?: return
+        val truncatedStrikeThroughLength = kotlin.math.min(strikeThroughLength, width.toFloat())
+        val truncatedTextLength = kotlin.math.min(paint.measureText(text, 0, text?.length ?: 0),
+                                                  width.toFloat())
 
-        val fullLength = paint.measureText(text, 0, text?.length ?: 0)
         paint.strokeWidth = textSize / 12
         val begin = if (!strikeThroughAnimIsReversed) 0f
-                    else strikeThroughLength
-        val end = if (strikeThroughAnimIsReversed) fullLength
-                  else strikeThroughLength
+                    else truncatedStrikeThroughLength
+        val end = if (strikeThroughAnimIsReversed) truncatedTextLength
+                  else truncatedStrikeThroughLength
         val baselineOffset = paint.fontMetrics.ascent * 0.35f
         val y = baseline + baselineOffset
         canvas?.drawLine(begin, y, end, y, paint)

@@ -190,6 +190,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
         val oldHeight = measuredHeight
+        val checkBoxOldTop = ui.checkBox.top
 
         ui.amountEditSpacer.isVisible = !expanding
         ui.editButton.isActivated = expanding
@@ -197,6 +198,16 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         ui.spacer.layoutParams.height = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP, heightDp, resources.displayMetrics).toInt()
         ui.linkIndicator.showOrHideWithAnimation(showing = expanding)
+
+        if (animate) {
+            val checkBoxNewTop = paddingTop + (ui.spacer.layoutParams.height - ui.checkBox.height) / 2
+            val checkBoxTopChange = checkBoxNewTop - checkBoxOldTop.toFloat()
+            ui.checkBox.translationY = -checkBoxTopChange
+            val checkBoxAnim = valueAnimatorOfFloat(setter = ui.checkBox::setTranslationY,
+                                                    fromValue = -checkBoxTopChange,
+                                                    toValue = 0f, config = animatorConfig)
+            pendingAnimations.add(checkBoxAnim)
+        }
 
         // If the extra info edit is gone but about to be visible, the apparent top
         // of the nameEdit will not change and therefore does not need to be animated.
@@ -301,9 +312,14 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         extraInfoAnimInfo.animator.pause()
         // We have to adjust the extraInfoEdit starting translation by the
         // height change of the nameEdit to get the correct translation amount.
-        ui.extraInfoEdit.translationY -= nameEditHeightChange
+        // Without the multiplier of 0.95f the value seems to be very slightly
+        // off, causing a very small flicker when the animation starts.
+        // Obviously it would be better to figure out where this calculation
+        // is off instead of arbitrarily changing the value to what seems to
+        // be correct, but it will do for now.
+        ui.extraInfoEdit.translationY -= nameEditHeightChange * 0.95f
         extraInfoAnimInfo.animator.setFloatValues(
-            extraInfoAnimInfo.startTranslationY - nameEditHeightChange,
+            extraInfoAnimInfo.startTranslationY * 0.95f,
             extraInfoAnimInfo.endTranslationY)
         pendingAnimations.add(extraInfoAnimInfo.animator)
     }
