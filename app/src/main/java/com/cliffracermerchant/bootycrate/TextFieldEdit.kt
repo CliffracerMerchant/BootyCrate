@@ -61,6 +61,8 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         maxLines = 1
         imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
         ellipsize = TextUtils.TruncateAt.END
+        paint.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1f,
+                                                      resources.displayMetrics)
     }
 
     override fun onEditorAction(actionCode: Int) {
@@ -125,18 +127,16 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         val translateAnimator = valueAnimatorOfFloat(
             setter = ::setTranslationY,
             fromValue = start, toValue = 0f,
-            config = animatorConfig)
-            .apply { start() }
+            config = animatorConfig
+        ).apply { start() }
 
-        val underlineAnimator = ValueAnimator.ofInt(if (editable) 0 else 255, newUnderlineAlpha).apply {
-            applyConfig(if (editable) AnimatorConfig.fadeIn
-                        else          AnimatorConfig.fadeOut)
-            addUpdateListener {
-                underlineAlpha = it.animatedValue as Int
-                invalidate()
-            }
-            start()
-        }
+        val underlineAnimator = valueAnimatorOfInt(
+            setter = ::setUnderlineAlpha,
+            fromValue = if (editable) 0 else 255,
+            toValue = newUnderlineAlpha,
+            config = if (editable) AnimatorConfig.fadeIn
+                     else          AnimatorConfig.fadeOut
+        ).apply { start() }
 
         return AnimInfo(translateAnimator, underlineAnimator, heightChange, start, 0f)
     }
@@ -151,6 +151,9 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         canvas?.drawLine(0f, y, width.toFloat(), y, paint)
         paint.alpha = paintOldAlpha
     }
+
+    // So that the property can be used in a ObjectAnimator or one of the AnimatorUtils valueAnimator functions.
+    private fun setUnderlineAlpha(value: Int) { underlineAlpha = value; invalidate() }
 }
 
 /**

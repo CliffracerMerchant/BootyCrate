@@ -232,7 +232,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             setupExtraInfoHeightAnimation(extraInfoAnimInfo, nameEditAnimInfo!!.heightChange)
 
         val amountEditInternalAnimInfo =
-            ui.amountEdit.setValueIsDirectlyEditable(expanding, animate)
+            ui.amountEdit.setValueIsFocusable(expanding, animate)
         /* For some reason pausing the amount edit internal animation here so
            that it can be resumed when the rest of the animations are played
            causes it to not work. As the delay between these animations should

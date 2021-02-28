@@ -71,7 +71,7 @@
     </style>
 
     <style name="InventoryItemAddToShoppingListTriggerEdit" parent="@style/ViewModelItemAmountEdit">
-        <item name="valueIsDirectlyEditable">true</item>
+        <item name="valueIsFocusable">true</item>
     </style>
 
 </resources>

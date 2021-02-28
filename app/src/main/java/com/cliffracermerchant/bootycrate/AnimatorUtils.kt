@@ -80,29 +80,32 @@ fun ViewPropertyAnimator.applyConfig(config: AnimatorConfig) = apply {
 // but hopefully are more performant due to not using reflection to get the property setter.
 /** Return a valueAnimator for an Int property with the update listener already set. */
 fun valueAnimatorOfInt(
-    setter: (Int) -> Unit, fromValue: Int, toValue: Int,
-    config: AnimatorConfig = AnimatorConfig.translation,
+    setter: (Int) -> Unit,
+    fromValue: Int, toValue: Int,
+    config: AnimatorConfig? = null,
 ): ValueAnimator = ValueAnimator.ofInt(fromValue, toValue).apply {
     addUpdateListener { setter(it.animatedValue as Int) }
-    applyConfig(config)
+    if (config != null) applyConfig(config)
 }
 
 /** Return a valueAnimator for a Float property with the update listener already set. */
 fun valueAnimatorOfFloat(
-    setter: (Float) -> Unit, fromValue: Float, toValue: Float,
-    config: AnimatorConfig = AnimatorConfig.translation,
+    setter: (Float) -> Unit,
+    fromValue: Float, toValue: Float,
+    config: AnimatorConfig? = null,
 ): ValueAnimator = ValueAnimator.ofFloat(fromValue, toValue).apply {
     addUpdateListener { setter(it.animatedValue as Float) }
-    applyConfig(config)
+    if (config != null) applyConfig(config)
 }
 
 /** Return a valueAnimator for an ARGB property with the update listener already set. */
 fun valueAnimatorOfArgb(
-    setter: (Int) -> Unit, fromValue: Int, toValue: Int,
-    config: AnimatorConfig = AnimatorConfig.translation,
+    setter: (Int) -> Unit,
+    fromValue: Int, toValue: Int,
+    config: AnimatorConfig? = null,
 ): ValueAnimator = ValueAnimator.ofArgb(fromValue, toValue).apply {
     addUpdateListener { setter(it.animatedValue as Int) }
-    applyConfig(config)
+    if (config != null) applyConfig(config)
 }
 
 /**
