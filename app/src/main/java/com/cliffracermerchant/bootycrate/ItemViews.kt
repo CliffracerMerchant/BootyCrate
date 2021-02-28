@@ -190,7 +190,6 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
         val oldHeight = measuredHeight
-        val checkBoxOldTop = ui.checkBox.top
 
         ui.amountEditSpacer.isVisible = !expanding
         ui.editButton.isActivated = expanding
@@ -199,20 +198,11 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             TypedValue.COMPLEX_UNIT_DIP, heightDp, resources.displayMetrics).toInt()
         ui.linkIndicator.showOrHideWithAnimation(showing = expanding)
 
-        if (animate) {
-            val checkBoxNewTop = paddingTop + (ui.spacer.layoutParams.height - ui.checkBox.height) / 2
-            val checkBoxTopChange = checkBoxNewTop - checkBoxOldTop.toFloat()
-            ui.checkBox.translationY = -checkBoxTopChange
-            val checkBoxAnim = valueAnimatorOfFloat(setter = ui.checkBox::setTranslationY,
-                                                    fromValue = -checkBoxTopChange,
-                                                    toValue = 0f, config = animatorConfig)
-            pendingAnimations.add(checkBoxAnim)
-        }
+        if (animate) setupCheckBoxAnimation()
 
         // If the extra info edit is gone but about to be visible, the apparent top
         // of the nameEdit will not change and therefore does not need to be animated.
-        val animateNameEdit = animate && !ui.extraInfoEdit.text.isNullOrBlank()
-        val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animateNameEdit)
+        val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animate)
         if (nameEditAnimInfo != null)
             setupNameHeightAnimation(expanding, nameEditAnimInfo)
 
@@ -280,11 +270,22 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         }
     }
 
+    private fun setupCheckBoxAnimation() {
+        val checkBoxNewTop = paddingTop + (ui.spacer.layoutParams.height - ui.checkBox.height) / 2
+        val checkBoxTopChange = checkBoxNewTop - ui.checkBox.top.toFloat()
+        ui.checkBox.translationY = -checkBoxTopChange
+        val checkBoxAnim = valueAnimatorOfFloat(setter = ui.checkBox::setTranslationY,
+            fromValue = -checkBoxTopChange,
+            toValue = 0f, config = animatorConfig)
+        pendingAnimations.add(checkBoxAnim)
+    }
+
     private fun setupNameHeightAnimation(
         expanding: Boolean,
         nameEditAnimInfo: TextFieldEdit.AnimInfo
     ) {
-        nameEditAnimInfo.animator.pause()
+        nameEditAnimInfo.translateAnimator.pause()
+        nameEditAnimInfo.underlineAnimator.pause()
         // If the extra info edit is going to appear or disappear, then nameEdit's
         // translation animation's values will have to be adjusted by its top change.
         if (ui.extraInfoEdit.text.isNullOrBlank()) {
@@ -295,21 +296,23 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             val newStart = nameEditAnimInfo.startTranslationY - if (expanding) topChange else 0
             val newEnd = nameEditAnimInfo.endTranslationY - if (expanding) 0 else -topChange
             ui.nameEdit.translationY = newStart
-            nameEditAnimInfo.animator.setFloatValues(newStart, newEnd)
+            nameEditAnimInfo.translateAnimator.setFloatValues(newStart, newEnd)
             // If the ending translationY value is not zero, it needs to be set to zero
             // on the new layout after the animation has ended to avoid flickering.
-            if (!expanding) nameEditAnimInfo.animator.doOnEnd {
+            if (!expanding) nameEditAnimInfo.translateAnimator.doOnEnd {
                 doOnNextLayout { ui.nameEdit.translationY = 0f }
             }
         }
-        pendingAnimations.add(nameEditAnimInfo.animator)
+        pendingAnimations.add(nameEditAnimInfo.translateAnimator)
+        pendingAnimations.add(nameEditAnimInfo.underlineAnimator)
     }
 
     private fun setupExtraInfoHeightAnimation(
         extraInfoAnimInfo: TextFieldEdit.AnimInfo,
         nameEditHeightChange: Int
     ) {
-        extraInfoAnimInfo.animator.pause()
+        extraInfoAnimInfo.translateAnimator.pause()
+        extraInfoAnimInfo.underlineAnimator.pause()
         // We have to adjust the extraInfoEdit starting translation by the
         // height change of the nameEdit to get the correct translation amount.
         // Without the multiplier of 0.95f the value seems to be very slightly
@@ -318,10 +321,11 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         // is off instead of arbitrarily changing the value to what seems to
         // be correct, but it will do for now.
         ui.extraInfoEdit.translationY -= nameEditHeightChange * 0.95f
-        extraInfoAnimInfo.animator.setFloatValues(
-            extraInfoAnimInfo.startTranslationY * 0.95f,
+        extraInfoAnimInfo.translateAnimator.setFloatValues(
+            extraInfoAnimInfo.startTranslationY - nameEditHeightChange * 0.95f,
             extraInfoAnimInfo.endTranslationY)
-        pendingAnimations.add(extraInfoAnimInfo.animator)
+        pendingAnimations.add(extraInfoAnimInfo.translateAnimator)
+        pendingAnimations.add(extraInfoAnimInfo.underlineAnimator)
     }
 
     private fun setupAmountTranslateAnimation(expanding: Boolean, amountEditWidthChange: Int) {

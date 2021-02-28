@@ -46,8 +46,9 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     val liveData = MutableLiveData<String>()
     var animatorConfig = AnimatorConfig.translation
     val isEditable get() = isFocusableInTouchMode
-
     var canBeEmpty: Boolean
+
+    private var underlineAlpha = 0
     private var lastValue: String? = null
     private val inputMethodManager = inputMethodManager(context)
 
@@ -77,15 +78,21 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     }
 
     /**
-     * Information about the internal animation played when setEditable is called.
+     * Information about the internal animations played when setEditable is called.
      *
-     * The internal animation will only take into account the view's change in height
-     * to smoothly translate the text to its new location. If the view is also moved
-     * on screen then the animation will need to be adjusted by this amount. For this
-     * reason the view's height change and start and end translation values are provided.
+     * The internal translate animation will only take into account the view's change
+     * in height to smoothly translate the text to its new location. If the view is
+     * also moved on screen then the animation will need to be adjusted by this amount.
+     * For this reason the view's height change and start and end translation values
+     * are provided.
      */
-    data class AnimInfo(val animator: ValueAnimator, val heightChange: Int,
-                        val startTranslationY: Float, val endTranslationY: Float)
+    data class AnimInfo(
+        val translateAnimator: ValueAnimator,
+        val underlineAnimator: ValueAnimator,
+        val heightChange: Int,
+        val startTranslationY: Float,
+        val endTranslationY: Float
+    )
 
     fun setEditable(editable: Boolean, animate: Boolean = true): AnimInfo? {
         if (!canBeEmpty)
@@ -103,27 +110,46 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         val oldBaseline = baseline
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.text_field_edit_editable_min_height)
-        if (!animate) return null
+        val newUnderlineAlpha = if (editable) 255 else 0
+        if (!animate) {
+            underlineAlpha = newUnderlineAlpha
+            return null
+        }
 
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
         val baselineChange = baseline - oldBaseline
         val heightChange = measuredHeight - oldHeight
         val start = -baselineChange.toFloat()
-        val animator = valueAnimatorOfFloat(
+
+        val translateAnimator = valueAnimatorOfFloat(
             setter = ::setTranslationY,
             fromValue = start, toValue = 0f,
             config = animatorConfig)
             .apply { start() }
-        return AnimInfo(animator, heightChange, start, 0f)
+
+        val underlineAnimator = ValueAnimator.ofInt(if (editable) 0 else 255, newUnderlineAlpha).apply {
+            applyConfig(if (editable) AnimatorConfig.fadeIn
+                        else          AnimatorConfig.fadeOut)
+            addUpdateListener {
+                underlineAlpha = it.animatedValue as Int
+                invalidate()
+            }
+            start()
+        }
+
+        return AnimInfo(translateAnimator, underlineAnimator, heightChange, start, 0f)
     }
 
     override fun draw(canvas: Canvas?) {
         super.draw(canvas)
-        if (!isEditable) return
+        if (underlineAlpha == 0) return
         val y = baseline + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                                                      2f, resources.displayMetrics)
+        val paintOldAlpha = paint.alpha
+        paint.alpha = underlineAlpha
         canvas?.drawLine(0f, y, width.toFloat(), y, paint)
+        paint.alpha = paintOldAlpha
     }
 }
 
