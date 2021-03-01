@@ -5,7 +5,6 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
-import android.animation.AnimatorSet
 import android.content.Context
 import android.graphics.Canvas
 import android.util.AttributeSet
@@ -105,12 +104,11 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     fun decrement() = modifyValue(-stepSize)
     private fun modifyValue(stepSize: Int) { value += stepSize }
 
-    /** Information about the internal animation played when setValueIsDirectlyEditable is called. */
-    data class AnimInfo(val animator: Animator, val widthChange: Int)
+    /** Information about the internal animations played and
+     * any width change when setValueIsFocusable is called. */
+    data class AnimInfo(val animators: List<Animator>, val widthChange: Int)
 
-    /** Set whether the value is directly editable (i.e. able to be changed with a
-     * user number entry rather than with the decrease / increase buttons), and return
-     * an AnimInfo object if an animation was played. */
+    /** Set whether the value is focusable, and return an AnimInfo object if an animation was played. */
     fun setValueIsFocusable(focusable: Boolean, animate: Boolean = true): AnimInfo? {
         ui.valueEdit.isFocusableInTouchMode = focusable
         if (!focusable && ui.valueEdit.isFocused)
@@ -134,13 +132,12 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         val widthChange = newWidth - oldWidth
         val underlineStartAlpha = if (focusable) 0 else 255
 
-        val animSet = AnimatorSet().apply {
-            playTogether(valueAnimatorOfFloat(ui.valueEdit::setTranslationX, -widthChange / 2f, 0f, animatorConfig),
-                         valueAnimatorOfFloat(ui.increaseButton::setTranslationX, -widthChange.toFloat(), 0f, animatorConfig),
-                         valueAnimatorOfInt(::setUnderlineAlpha, underlineStartAlpha, underlineEndAlpha, animatorConfig))
-            start()
-        }
-        return AnimInfo(animSet, widthChange)
+        val anims = listOf(
+            valueAnimatorOfFloat(ui.valueEdit::setTranslationX, -widthChange / 2f, 0f, animatorConfig),
+            valueAnimatorOfFloat(ui.increaseButton::setTranslationX, -widthChange.toFloat(), 0f, animatorConfig),
+            valueAnimatorOfInt(::setUnderlineAlpha, underlineStartAlpha, underlineEndAlpha, animatorConfig))
+        for (anim in anims) anim.start()
+        return AnimInfo(anims, widthChange)
     }
 
     private var underlineAlpha = 0

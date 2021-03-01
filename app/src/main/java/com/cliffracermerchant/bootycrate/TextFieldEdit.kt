@@ -84,18 +84,24 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
      *
      * The internal translate animation will only take into account the view's change
      * in height to smoothly translate the text to its new location. If the view is
-     * also moved on screen then the animation will need to be adjusted by this amount.
-     * For this reason the view's height change and start and end translation values
-     * are provided.
+     * also moved on screen, then the animation's start and end values will need to
+     * be adjusted by this amount using the function adjustTranslationStartEnd.
      */
     data class AnimInfo(
         val translateAnimator: ValueAnimator,
         val underlineAnimator: ValueAnimator,
         val heightChange: Int,
-        val startTranslationY: Float,
-        val endTranslationY: Float
-    )
+        private val startTranslationY: Float,
+        private val endTranslationY: Float
+    ) {
+        fun adjustTranslationStartEnd(startAdjustment: Float, endAdjustment: Float) =
+            translateAnimator.setFloatValues(startTranslationY + startAdjustment,
+                                             endTranslationY + endAdjustment)
+    }
 
+    /** Set the editable state of the TextFieldEdit and return the AnimInfo
+     * containing information about the internal animations set up during
+     * the state change if @param animate == true, or null otherwise. */
     fun setEditable(editable: Boolean, animate: Boolean = true): AnimInfo? {
         if (!canBeEmpty)
             if (editable) lastValue = text.toString()
