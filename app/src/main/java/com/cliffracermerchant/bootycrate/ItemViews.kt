@@ -190,8 +190,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             (editableTextFieldHeight * if (expanding) 2 else 1).toInt()
 
         if (itemIsLinked)
-            if (animate) ui.linkIndicator.showOrHideWithAnimation(showing = expanding)
-            else ui.linkIndicator.isVisible = expanding
+            if (!animate) ui.linkIndicator.isVisible = expanding
+            else ui.linkIndicator.showOrHideAfterFading(showing = expanding)
         if (animate) setupCheckBoxAnimation()
         val nameEditHeightChange = updateNameEditState(expanding, animate)
         updateExtraInfoState(expanding, animate, nameEditHeightChange)
@@ -275,7 +275,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         }
 
         if (extraInfoIsBlank) {
-            val anim = ui.extraInfoEdit.showOrHideWithAnimation(showing = expanding)
+            val anim = ui.extraInfoEdit.showOrHideAfterFading(showing = expanding)
             // Because nameEdit is constrained to extraInfoEdit, adding extra-
             // InfoEdit to the overlay during showOrHideWithAnimation will alter
             // nameEdit's position. To avoid this we'll add nameEdit to the over-
@@ -362,7 +362,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
      * animation with countermeasures the parent might employ to hide the
      * effects of temporarily removing the child.
      */
-    protected fun View.showOrHideWithAnimation(showing: Boolean): Animator {
+    protected fun View.showOrHideAfterFading(showing: Boolean): Animator {
         alpha = if (showing) 0f else 1f
         isVisible = true
         val animator = valueAnimatorOfFloat(
@@ -470,6 +470,11 @@ class InventoryItemView(context: Context) :
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
         if (!expanded && detailsUi.addToShoppingListTriggerEdit.ui.valueEdit.isFocused)
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
-        detailsUi.inventoryItemDetailsGroup.isVisible = expanded
+        if (!animate) detailsUi.inventoryItemDetailsGroup.isVisible = expanded
+        else {
+            detailsUi.divider.showOrHideAfterFading(expanded)
+            detailsUi.addToShoppingListCheckBox.showOrHideAfterFading(expanded)
+            detailsUi.addToShoppingListTriggerEdit.showOrHideAfterFading(expanded)
+        }
     }
 }
