@@ -13,6 +13,10 @@
     tools:background="@drawable/recycler_view_item_background"
     tools:paddingVertical="4dp" >
 
+<!-- spacer makes it easier to define the desired constraints for
+     the name edit, extra info edit, and the checkbox. Because it
+     should always be at the bottom of this layout, it also provides
+     an easy attachment point for views that extend this view. -->
     <Space
         android:id="@+id/spacer"
         android:layout_width="0dp"
@@ -39,9 +43,9 @@
         app:layout_constraintEnd_toStartOf="@id/amountEdit"
         app:layout_constraintTop_toTopOf="@id/spacer"
         app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
-        app:layout_goneMarginBottom="2dp"
         tools:text="Item Name"
-        tools:layout_height="@dimen/text_field_edit_editable_min_height"
+        tools:layout_height="@dimen/editable_text_field_min_height"
+        tools:layout_width="256dp"
         style="@style/ViewModelItemNameEdit" />
 
     <com.cliffracermerchant.bootycrate.AnimatedStrikeThroughTextFieldEdit
@@ -53,7 +57,7 @@
         app:layout_constraintTop_toBottomOf="@id/nameEdit"
         app:layout_constraintBottom_toBottomOf="@id/spacer"
         tools:text="Extra info"
-        tools:layout_height="@dimen/text_field_edit_editable_min_height"
+        tools:layout_height="@dimen/editable_text_field_min_height"
         style="@style/ViewModelItemExtraInfoEdit" />
 
     <com.cliffracermerchant.bootycrate.IntegerEdit
@@ -63,8 +67,8 @@
         app:layout_constraintStart_toEndOf="@id/nameEdit"
         app:layout_constraintEnd_toStartOf="@id/amountEditSpacer"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout_height="44dp"
-        tools:layout_width="100dp"
+        tools:layout_height="@dimen/editable_text_field_min_height"
+        tools:layout_width="109dp"
         style="@style/ViewModelItemAmountEdit" />
 
 <!-- The amountEditSpacer, because it is the same width as the editButton, allows
@@ -76,6 +80,7 @@
         android:layout_width="40dp"
         android:layout_height="0dp"
         android:orientation="horizontal"
+        tools:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <ImageButton
@@ -95,7 +100,6 @@
         app:layout_constraintEnd_toEndOf="@id/amountEdit"
         app:layout_constraintTop_toBottomOf="@id/amountEdit"
         android:visibility="gone"
-        tools:visibility="visible"
         android:contentDescription="@string/link_status_description"
         style="@style/ShoppingListItemLinkIndicator" />
 

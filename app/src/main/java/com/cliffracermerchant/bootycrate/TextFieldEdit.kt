@@ -117,7 +117,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         val oldHeight = height
         val oldBaseline = baseline
         minHeight = if (!editable) 0 else
-            resources.getDimensionPixelSize(R.dimen.text_field_edit_editable_min_height)
+            resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
         val newUnderlineAlpha = if (editable) 255 else 0
         if (!animate) {
             underlineAlpha = newUnderlineAlpha
