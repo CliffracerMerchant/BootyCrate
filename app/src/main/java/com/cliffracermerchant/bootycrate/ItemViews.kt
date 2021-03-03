@@ -33,8 +33,8 @@ import com.cliffracermerchant.bootycrate.databinding.ViewModelItemBinding
  * By default ViewModelItemView inflates itself with the contents of R.layout.-
  * view_model_item_view.xml and initializes its ViewModelItemBinding member ui.
  * In case this layout needs to be overridden in a subclass, the ViewModelItem-
- * View can be constructed with the parameter useDefaultLayout equal to false.
- * If useDefaultLayout is false, it will be up to the subclass to inflate the
+ * View can be constructed with the @param useDefaultLayout equal to false. If
+ * useDefaultLayout is false, it will be up to the subclass to inflate the
  * desired layout and initialize the member ui with an instance of a ViewModel-
  * ItemBinding. If the ui member is not initialized then a kotlin.Uninitialized-
  * PropertyAccessException will be thrown.
@@ -71,6 +71,8 @@ open class ViewModelItemView<Entity: ViewModelItem>(
     }
 }
 
+
+
 /**
  * A ViewModelItemView subclass that provides an interface for a selection and expansion of the view.
  *
@@ -90,38 +92,32 @@ open class ViewModelItemView<Entity: ViewModelItem>(
  * and toggleExpanded. If subclasses need to alter the visibility of additional
  * views during expansion or collapse, they can override the function
  * onExpandedChanged with their additional changes. Like setSelectedState, set-
- * Expanded will animated the changes inside the view unless it is called with
+ * Expanded will animate the changes inside the view unless it is called with
  * the parameter animate equal to false.
  *
  * In order to allow for easier synchronization with concurrent animations out-
- * side the view, ExpandableSelectableItemView has the properties animatorCon-
- * fig, startAnimationsImmediately, and pendingAnimations. The constructor
- * parameter and property animatorConfig will determine the animator config
- * used for the view's internal animations. The default value of AnimatorCon-
- * figs.translation can be overridden in order to make sure the view's anima-
- * tions use the same config as others outside the view. The property start-
- * AnimationsImmediately determines whether the animations prepared during set-
- * Expanded will be started immediately. If it is set to false, the animations
- * will instead be stored. In this case it is up to the containing view to play
- * these animations at the same time as its own using the function runPending-
- * Animations.
- */
+ * side the view, ExpandableSelectableItemView has the property animatorConfig,
+ * which will determine the animator config used for the view's internal anim-
+ * ations. The default value of AnimatorConfig.translation can be overridden in
+ * order to make sure the view's animations use the same config as others out-
+ * side the view. */
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
     val animatorConfig: AnimatorConfig = AnimatorConfig.translation,
     useDefaultLayout: Boolean = true,
-) : ViewModelItemView<Entity>(context, useDefaultLayout) {
-
+) : ViewModelItemView<Entity>(context, useDefaultLayout),
+    ExpandableItemAnimator.ExpandableRecyclerViewItem
+{
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
     private val gradientOutline: GradientDrawable
 
     var startAnimationsImmediately = true
     private val pendingAnimations = mutableListOf<Animator>()
-    fun runPendingAnimations() { for (anim in pendingAnimations)
-                                     anim.start()
-                                 pendingAnimations.clear() }
+    override fun runPendingAnimations() { for (anim in pendingAnimations)
+                                              anim.start()
+                                          pendingAnimations.clear() }
 
     init {
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
@@ -164,18 +160,15 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         else gradientOutline.alpha = if (selected) 255 else 0
     }
 
-    fun expand() = setExpanded(true)
-    fun collapse() = setExpanded(false)
     fun toggleExpanded() = setExpanded(!isExpanded)
     open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
 
-    fun setExpanded(expanding: Boolean = true, animate: Boolean = true) {
+    override fun setExpanded(expanding: Boolean, animate: Boolean) {
         _isExpanded = expanding
-        if (!expanding &&
-            ui.nameEdit.isFocused ||
-            ui.extraInfoEdit.isFocused ||
-            ui.amountEdit.ui.valueEdit.isFocused)
-                inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
+        if (!expanding && ui.nameEdit.isFocused ||
+                          ui.extraInfoEdit.isFocused ||
+                          ui.amountEdit.ui.valueEdit.isFocused)
+            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
 
      /* While a LayoutTransition would achieve the same thing as all of the following
         custom animations and would be much more readable, it is unfortunately imposs-
@@ -406,6 +399,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     }
 }
 
+
+
 /**
  * An ExpandableSelectableItemView to display the contents of a shopping list item.
  *
@@ -435,6 +430,8 @@ class ShoppingListItemView(context: Context) :
         ui.extraInfoEdit.setStrikeThroughEnabled(enabled, animate)
     }
 }
+
+
 
 /**
  * An ExpandableSelectableItemView to display the contents of an inventory item.

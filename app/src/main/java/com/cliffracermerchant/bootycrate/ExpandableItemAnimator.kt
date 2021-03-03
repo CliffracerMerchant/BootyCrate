@@ -23,7 +23,8 @@ import androidx.recyclerview.widget.RecyclerView
  * the function notifyExpandedItemChanged with the adapter position of the
  * newly expanded item whenever it is changed, or null if the expanded item is
  * being collapsed. The currently expanded item can be queried via the prop-
- * erty expandedItemPos.
+ * erty expandedItemPos. The recycler view that uses ExpandableItemAnimator
+ * must use item views that implement the ExpandableRecyclerViewItem interface.
  *
  * ExpandableItemAnimator also has an observer member that, when registered as
  * an adapter data observer for the adapter using the ExpandableItemAnimator
@@ -44,32 +45,10 @@ class ExpandableItemAnimator(
 
     private val pendingChangeAnimators = mutableListOf<Animator>()
     private val pendingRemoveAnimators = mutableListOf<ViewPropertyAnimator>()
-    private val changingViews = mutableListOf<ExpandableSelectableItemView<*>>()
-
-    val observer = object: RecyclerView.AdapterDataObserver() {
-        private var initialized = false
-
-        override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-            if (!initialized) initialized = true
-            else {
-                val expandingPos = expandedItemPos ?: return
-                if (expandingPos >= positionStart)
-                    _expandedItemPos = expandingPos + itemCount
-            }
-        }
-        override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
-            val expandingPos = expandedItemPos ?: return
-            _expandedItemPos = adjustPosInRangeAfterMove(expandingPos, fromPosition,
-                                                         toPosition, itemCount)
-        }
-        override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-            if (expandedItemPos in positionStart until positionStart + itemCount)
-                _expandedItemPos = null
-        }
-    }
+    private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
 
     init {
-        recyclerView.adapter?.registerAdapterDataObserver(observer)
+        recyclerView.adapter?.registerAdapterDataObserver(observer())
         addDuration = animatorConfig.duration
         changeDuration = animatorConfig.duration
         removeDuration = animatorConfig.duration
@@ -87,18 +66,6 @@ class ExpandableItemAnimator(
         preInfo: ItemHolderInfo,
         postInfo: ItemHolderInfo
     ): Boolean {
-      /* The DefaultItemAnimator animations start playing in runPendingAnimations, rather
-       * than in their respective functions (e.g. animateChange). If this custom change
-       * animation is started here in animateChange, there will be a small lag time in
-       * between the custom change animation and the default animations due to the slight
-       * delay before runPendingAnimations is called. But if the change animations are
-       * started in runPendingAnimations, the view's final state will be briefly visible
-       * before the expanding/collapsing animation is started, causing a flicker effect.
-       * To prevent this, the expanding/collapsing animation and the possible translation
-       * animation are started here in animateChange, but paused immediately. They are
-       * then resumed in runPendingAnimations when the DefaultItemAnimator animations
-       * start. */
-
         // If a view is being expanded or collapsed, oldHolder must be
         // equal to newHolder, and the heightChange must not be zero.
         if (oldHolder != newHolder)
@@ -109,15 +76,17 @@ class ExpandableItemAnimator(
 
         // Animate the height change of the view
         val view = newHolder.itemView
+        if (view !is ExpandableRecyclerViewItem)
+            throw IllegalStateException("The item views used with ExpandableItemAnimator must implement ExpandableItemAnimator.ExpandableRecyclerViewItem.")
         val pos = newHolder.adapterPosition
 
         // preInfo.top won't necessarily be the correct start value
         // if the view is on bottom and also needs to be translated.
         val start = view.top + preInfo.bottom - preInfo.top
-        valueAnimatorOfInt(
-            setter = view::setBottom,
-            fromValue = start, toValue = postInfo.bottom,
-            config = animatorConfig
+        view.bottom = start
+        pendingChangeAnimators.add(valueAnimatorOfInt(
+            setter = view::setBottom, fromValue = start,
+            toValue = postInfo.bottom, config = animatorConfig
         ).apply {
             doOnStart { dispatchChangeStarting(newHolder, true) }
             doOnEnd {
@@ -125,41 +94,26 @@ class ExpandableItemAnimator(
                 if (pos == collapsingItemPos)
                     collapsingItemPos = null
             }
-            pendingChangeAnimators.add(this)
-            start(); pause()
-        }
+        })
 
-     /* If another view is expanding as this one is collapsing,
-        the view on bottom must be translated by the same amount
-        as its height change to prevent visual artifacts. */
+        // If another view is expanding as this one is collapsing,
+        // the view on bottom must be translated by the same amount
+        // as its height change to prevent visual artifacts.
         val collapsingPos = collapsingItemPos
         val expandingPos = expandedItemPos
         if (collapsingPos != null && expandingPos != null) {
             val viewIsOnBottom = if (collapsingPos == pos) collapsingPos > expandingPos
                                  else                      expandingPos > collapsingPos
-            if (viewIsOnBottom) valueAnimatorOfFloat(
-                setter = view::setTranslationY,
-                fromValue = heightChange.toFloat(),
-                toValue = 0f, config = animatorConfig
-            ).apply {
-                pendingChangeAnimators.add(this)
-                start(); pause()
+            if (viewIsOnBottom) {
+                view.translationY = heightChange.toFloat()
+                pendingChangeAnimators.add(valueAnimatorOfFloat(
+                    setter = view::setTranslationY,
+                    fromValue = view.translationY,
+                    toValue = 0f, config = animatorConfig))
             }
         }
 
-     /* The below cast to ExpandableSelectableItemView is not documented in the
-        class documentation and undesirably couples ExpandableItemAnimator to the
-        use of ExpandableSelectableItemView. An attempt was made to introduce a
-        member called onExpandCollapseAnimationStartedListener that would be
-        called with the view holder being expanded or collapsed whenever a change
-        animation was prepared. Through this the containing recycler view could
-        then call ExpandableSelectableItemView.runPendingAnimations so that the
-        view's internal animations would sync with those of the item animator.
-        Unfortunately the animations were not synced properly when this was done.
-        For the time being, we'll just assume the use of ExpandableSelectableItem-
-        View here since ExpandableItemAnimator is always used with ExpandableSel-
-        ectableItemView in this project. */
-        changingViews.add(view as ExpandableSelectableItemView<*>)
+        changingViews.add(view)
         return true
     }
 
@@ -183,5 +137,45 @@ class ExpandableItemAnimator(
         for (view in changingViews) view.runPendingAnimations()
         pendingChangeAnimators.clear()
         pendingRemoveAnimators.clear()
+        changingViews.clear()
+    }
+
+    /**
+     * An interface for views that are used to represent expandable recycler view
+     * items to describe what should change internally when expanded or collapsed.
+     *
+     * Implementing views should perform any necessary changes to child views
+     * with a setExpanded implementation. Additionally, animations for these
+     * changes should be prepared and stored if @param animate == true, and
+     * then later played in an implementation of runPendingAnimations.
+     */
+    interface ExpandableRecyclerViewItem {
+        fun expand() = setExpanded(true)
+        fun collapse() = setExpanded(false)
+        fun setExpanded(expanding: Boolean, animate: Boolean = true)
+
+        fun runPendingAnimations()
+    }
+
+    private fun observer() = object: RecyclerView.AdapterDataObserver() {
+        private var initialized = false
+
+        override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+            if (!initialized) initialized = true
+            else {
+                val expandingPos = expandedItemPos ?: return
+                if (expandingPos >= positionStart)
+                    _expandedItemPos = expandingPos + itemCount
+            }
+        }
+        override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
+            val expandingPos = expandedItemPos ?: return
+            _expandedItemPos = adjustPosInRangeAfterMove(expandingPos, fromPosition,
+                toPosition, itemCount)
+        }
+        override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+            if (expandedItemPos in positionStart until positionStart + itemCount)
+                _expandedItemPos = null
+        }
     }
 }
