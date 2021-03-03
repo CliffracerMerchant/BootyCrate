@@ -4,11 +4,13 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.animation.Animator
 import android.content.Context
-import android.graphics.Paint
+import android.graphics.Canvas
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.LiveData
@@ -24,17 +26,20 @@ import com.cliffracermerchant.bootycrate.databinding.IntegerEditBinding
  * ber to allow external entities to react to a change in its data.
  *
  * The EditText is by default not focusable in touch mode, but this can be
- * changed by setting the member isEditable. If set to true, the user can edit
- * the value directly (rather than through the use of the decrease / increase
- * buttons). When in the editable state, the EditText will underline the cur-
- * rent value to indicate this to the user, and will, if necessary, expand the
- * width of the value to R.dimen.integer_edit_editable_value_min_width to make
- * it a larger touch target.
+ * changed by calling the function setValueIsDirectlyEditable. If set to true,
+ * the user can edit the value directly (rather than through the use of the
+ * decrease / increase buttons). When in the editable state, the EditText will
+ * underline the current value to indicate this to the user, and will, if neces-
+ * sary, expand the width of the value to R.dimen.integer_edit_editable_value_-
+ * min_width to make it a larger touch target.
  *
  * Unless the function setValueIsDirectlyEditable is called with a value of
- * false for the parameter animate, the IntegerEdit will animate when valueIs-
- * directlyEditable is changed. The animation will use the property animator-
- * Config for its duration and interpolator.
+ * false for the parameter animate, the IntegerEdit will start an animation
+ * that uses the property animatorConfig for its duration and interpolator. In
+ * case an external layout needs to know information about this animation to
+ * combine it with others, setValueIsDirectlyEditable will return an AnimInfo
+ * object that contains the animator and the width change that was animated, or
+ * null if no animation occurred.
  */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
@@ -56,14 +61,13 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
               set(newValue) { _value = newValue
                               _liveData.value = value }
 
-    var valueIsDirectlyEditable get() = ui.valueEdit.isFocusableInTouchMode
-        set(editable) = setValueIsDirectlyEditable(editable, animate = true)
+    val valueIsFocusable get() = ui.valueEdit.isFocusableInTouchMode
 
     private val _liveData = MutableLiveData(value)
     val liveData: LiveData<Int> get() = _liveData
 
     val ui = IntegerEditBinding.inflate(LayoutInflater.from(context), this)
-    var animatorConfig = AnimatorConfigs.translation
+    var animatorConfig = AnimatorConfig.translation
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
@@ -71,12 +75,13 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         _minValue = a.getInt(R.styleable.IntegerEdit_minValue, 0)
         _maxValue = a.getInt(R.styleable.IntegerEdit_maxValue, 99)
         stepSize = a.getInt(R.styleable.IntegerEdit_stepSize, 1)
-        setValueIsDirectlyEditable(
-            a.getBoolean(R.styleable.IntegerEdit_valueIsDirectlyEditable, false),
+        setValueIsFocusable(
+            a.getBoolean(R.styleable.IntegerEdit_valueIsFocusable, false),
             animate = false)
 
         a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.textSize))
         ui.valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimension(0, 0f))
+        ui.valueEdit.paint.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1f, resources.displayMetrics)//ui.valueEdit.textSize / 20
         a.recycle()
 
         ui.decreaseButton.setOnClickListener { decrement() }
@@ -99,17 +104,24 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     fun decrement() = modifyValue(-stepSize)
     private fun modifyValue(stepSize: Int) { value += stepSize }
 
-    fun setValueIsDirectlyEditable(editable: Boolean, animate: Boolean = true) {
-        ui.valueEdit.isFocusableInTouchMode = editable
-        if (!editable && ui.valueEdit.isFocused)
+    /** Information about the internal animations played and
+     * any width change when setValueIsFocusable is called. */
+    data class AnimInfo(val animators: List<Animator>, val widthChange: Int)
+
+    /** Set whether the value is focusable, and return an AnimInfo object if an animation was played. */
+    fun setValueIsFocusable(focusable: Boolean, animate: Boolean = true): AnimInfo? {
+        ui.valueEdit.isFocusableInTouchMode = focusable
+        if (!focusable && ui.valueEdit.isFocused)
             ui.valueEdit.clearFocus()
-        if (editable) ui.valueEdit.paintFlags = ui.valueEdit.paintFlags or Paint.UNDERLINE_TEXT_FLAG
-        else          ui.valueEdit.paintFlags = ui.valueEdit.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
+        val underlineEndAlpha = if (focusable) 255 else 0
 
         val oldWidth = ui.valueEdit.width
-        ui.valueEdit.minWidth = if (!editable) 0 else
+        ui.valueEdit.minWidth = if (!focusable) 0 else
             resources.getDimensionPixelSize(R.dimen.integer_edit_editable_value_min_width)
-        if (!animate || oldWidth == 0) return
+        if (!animate || oldWidth == 0) {
+            underlineAlpha = underlineEndAlpha
+            return null
+        }
 
         /* The following animations will make the IntegerEdit smoothly expand
          * to its new total width after the change in the value edit's min-
@@ -118,11 +130,32 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         ui.valueEdit.measure(wrapContentSpec, wrapContentSpec)
         val newWidth = ui.valueEdit.measuredWidth
         val widthChange = newWidth - oldWidth
+        val underlineStartAlpha = if (focusable) 0 else 255
 
-        ui.valueEdit.translationX = -widthChange / 2f
-        ui.increaseButton.translationX = -widthChange.toFloat()
+        val anims = listOf(
+            valueAnimatorOfFloat(ui.valueEdit::setTranslationX, -widthChange / 2f, 0f, animatorConfig),
+            valueAnimatorOfFloat(ui.increaseButton::setTranslationX, -widthChange.toFloat(), 0f, animatorConfig),
+            valueAnimatorOfInt(::setUnderlineAlpha, underlineStartAlpha, underlineEndAlpha, animatorConfig))
+        for (anim in anims) anim.start()
+        return AnimInfo(anims, widthChange)
+    }
 
-        ui.valueEdit.animate().translationX(0f).withLayer().applyConfig(animatorConfig).start()
-        ui.increaseButton.animate().translationX(0f).withLayer().applyConfig(animatorConfig).start()
+    private var underlineAlpha = 0
+    // So that the property can be used in a ObjectAnimator or one of the AnimatorUtils valueAnimator functions.
+    private fun setUnderlineAlpha(value: Int) { underlineAlpha = value; invalidate() }
+
+    override fun drawChild(canvas: Canvas?, child: View?, drawingTime: Long): Boolean {
+        val result = super.drawChild(canvas, child, drawingTime)
+        if (child !== ui.valueEdit || underlineAlpha == 0) return result
+
+        val y = ui.valueEdit.baseline + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                                                                  2f, resources.displayMetrics)
+        val paintOldAlpha = ui.valueEdit.paint.alpha
+        ui.valueEdit.paint.alpha = underlineAlpha
+        val startX = ui.decreaseButton.x + ui.decreaseButton.width
+        val endX = ui.increaseButton.x
+        canvas?.drawLine(startX, y, endX, y, ui.valueEdit.paint)
+        ui.valueEdit.paint.alpha = paintOldAlpha
+        return true
     }
 }

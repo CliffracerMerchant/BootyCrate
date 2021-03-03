@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Rect
@@ -11,7 +12,6 @@ import android.text.InputType
 import android.text.TextUtils
 import android.util.AttributeSet
 import android.util.TypedValue
-import android.view.Gravity
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
@@ -44,23 +44,25 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     AppCompatEditText(context, attrs)
 {
     val liveData = MutableLiveData<String>()
-    var animatorConfig = AnimatorConfigs.translation
-    var isEditable: Boolean get() = isFocusableInTouchMode
-                            set(editable) = setEditable(editable, animate = true)
-
+    var animatorConfig = AnimatorConfig.translation
+    val isEditable get() = isFocusableInTouchMode
     var canBeEmpty: Boolean
+
+    private var underlineAlpha = 0
     private var lastValue: String? = null
     private val inputMethodManager = inputMethodManager(context)
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
-        isEditable = a.getBoolean(R.styleable.TextFieldEdit_isEditable, false)
+        setEditable(a.getBoolean(R.styleable.TextFieldEdit_isEditable, false), animate = false)
         canBeEmpty = a.getBoolean(R.styleable.TextFieldEdit_canBeBlank, true)
         a.recycle()
 
         maxLines = 1
         imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
         ellipsize = TextUtils.TruncateAt.END
+        paint.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1f,
+                                                      resources.displayMetrics)
     }
 
     override fun onEditorAction(actionCode: Int) {
@@ -77,7 +79,30 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         if (!focused) liveData.value = text.toString()
     }
 
-    fun setEditable(editable: Boolean, animate: Boolean = true) {
+    /**
+     * Information about the internal animations played when setEditable is called.
+     *
+     * The internal translate animation will only take into account the view's change
+     * in height to smoothly translate the text to its new location. If the view is
+     * also moved on screen, then the animation's start and end values will need to
+     * be adjusted by this amount using the function adjustTranslationStartEnd.
+     */
+    data class AnimInfo(
+        val translateAnimator: ValueAnimator,
+        val underlineAnimator: ValueAnimator,
+        val heightChange: Int,
+        private val startTranslationY: Float,
+        private val endTranslationY: Float
+    ) {
+        fun adjustTranslationStartEnd(startAdjustment: Float, endAdjustment: Float) =
+            translateAnimator.setFloatValues(startTranslationY + startAdjustment,
+                                             endTranslationY + endAdjustment)
+    }
+
+    /** Set the editable state of the TextFieldEdit and return the AnimInfo
+     * containing information about the internal animations set up during
+     * the state change if @param animate == true, or null otherwise. */
+    fun setEditable(editable: Boolean, animate: Boolean = true): AnimInfo? {
         if (!canBeEmpty)
             if (editable) lastValue = text.toString()
             else if (text.isNullOrBlank()) setText(lastValue)
@@ -90,43 +115,51 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         if (!editable && isFocused) clearFocus()
 
         val oldHeight = height
+        val oldBaseline = baseline
         minHeight = if (!editable) 0 else
-            resources.getDimensionPixelSize(R.dimen.text_field_edit_editable_min_height)
-        val endGravity = if (editable) Gravity.CENTER_VERTICAL else Gravity.START
-        if (!animate || oldHeight == 0) {
-            gravity = endGravity
-            return
+            resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
+        val newUnderlineAlpha = if (editable) 255 else 0
+        if (!animate) {
+            underlineAlpha = newUnderlineAlpha
+            return null
         }
-        /* A text gravity of center_vertical is intended when the TextFieldEdit is expanded
-         * for editing (its vertical gravity does not matter when it is not editable due to
-         * its layout height being wrap_content and its minHeight being 0). But if the gra-
-         * vity is center_vertical when the expansion animation is played, a parent layout
-         * transition will not animate this, and the text will jump to its new position in
-         * the resized view. While this can be counteracted with a translationY animation,
-         * if the gravity is already center_vertical when the translationY animation is
-         * started, it can cause the text to be partially clipped. To work around this the
-         * gravity is set to viewStart when the view is collapsed, and is only set to
-         * center_vertical after the expansion animation is finished. */
+
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
+        val baselineChange = baseline - oldBaseline
         val heightChange = measuredHeight - oldHeight
-        translationY = if (editable) 0f else -heightChange / 2f
-        animate().withLayer()
-            .applyConfig(animatorConfig)
-            .translationY(if (editable) heightChange / 2f else 0f)
-            .withEndAction {
-                if (editable) translationY = 0f
-                gravity = endGravity
-            }.start()
+        val start = -baselineChange.toFloat()
+
+        val translateAnimator = valueAnimatorOfFloat(
+            setter = ::setTranslationY,
+            fromValue = start, toValue = 0f,
+            config = animatorConfig
+        ).apply { start() }
+
+        val underlineAnimator = valueAnimatorOfInt(
+            setter = ::setUnderlineAlpha,
+            fromValue = if (editable) 0 else 255,
+            toValue = newUnderlineAlpha,
+            config = if (editable) AnimatorConfig.fadeIn
+                     else          AnimatorConfig.fadeOut
+        ).apply { start() }
+
+        return AnimInfo(translateAnimator, underlineAnimator, heightChange, start, 0f)
     }
 
     override fun draw(canvas: Canvas?) {
         super.draw(canvas)
-        if (!isEditable) return
+        if (underlineAlpha == 0) return
         val y = baseline + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                                                      2f, resources.displayMetrics)
+        val paintOldAlpha = paint.alpha
+        paint.alpha = underlineAlpha
         canvas?.drawLine(0f, y, width.toFloat(), y, paint)
+        paint.alpha = paintOldAlpha
     }
+
+    // So that the property can be used in a ObjectAnimator or one of the AnimatorUtils valueAnimator functions.
+    private fun setUnderlineAlpha(value: Int) { underlineAlpha = value; invalidate() }
 }
 
 /**
@@ -174,13 +207,15 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         val strikeThroughLength = this.strikeThroughLength ?: return
+        val truncatedStrikeThroughLength = kotlin.math.min(strikeThroughLength, width.toFloat())
+        val truncatedTextLength = kotlin.math.min(paint.measureText(text, 0, text?.length ?: 0),
+                                                  width.toFloat())
 
-        val fullLength = paint.measureText(text, 0, text?.length ?: 0)
         paint.strokeWidth = textSize / 12
         val begin = if (!strikeThroughAnimIsReversed) 0f
-                    else strikeThroughLength
-        val end = if (strikeThroughAnimIsReversed) fullLength
-                  else strikeThroughLength
+                    else truncatedStrikeThroughLength
+        val end = if (strikeThroughAnimIsReversed) truncatedTextLength
+                  else truncatedStrikeThroughLength
         val baselineOffset = paint.fontMetrics.ascent * 0.35f
         val y = baseline + baselineOffset
         canvas?.drawLine(begin, y, end, y, paint)

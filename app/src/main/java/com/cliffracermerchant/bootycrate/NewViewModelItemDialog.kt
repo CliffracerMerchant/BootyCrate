@@ -55,7 +55,7 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     init {
         if (useDefaultLayout) {
             newItemView = ViewModelItemView(context)
-            ui.root.layoutTransition = layoutTransition(AnimatorConfigs.translation)
+            ui.root.layoutTransition = layoutTransition(AnimatorConfig.translation)
         }
     }
 
@@ -68,7 +68,7 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
             ui.extraInfoEdit.setEditable(true, animate = false)
             background = null
             ui.editButton.visibility = View.GONE
-            ui.amountEdit.setValueIsDirectlyEditable(true, animate = false)
+            ui.amountEdit.setValueIsFocusable(true, animate = false)
             ui.amountEdit.initValue(1)
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
                 viewModel.newItemExtraInfo = text.toString()

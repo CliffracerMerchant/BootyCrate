@@ -48,7 +48,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     ) {
         this.viewModel = viewModel
         this.inventoryViewModel = inventoryViewModel
-        finishInit(owner, AnimatorConfigs.shoppingListItem)
+        finishInit(owner, AnimatorConfig.shoppingListItem)
     }
 
     /**
@@ -100,10 +100,12 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(ShoppingListItem.Field.Amount) &&
                         ui.amountEdit.value != item.amount)
                             ui.amountEdit.value = item.amount
-                    if (changes.contains(ShoppingListItem.Field.IsExpanded))
-                        holder.view.setExpanded(item.isExpanded)
-                    if (changes.contains(ShoppingListItem.Field.IsSelected))
-                        holder.view.setSelectedState(item.isSelected)
+                    if (changes.contains(ShoppingListItem.Field.IsExpanded) &&
+                        holder.view.isExpanded != item.isExpanded)
+                            holder.view.setExpanded(item.isExpanded)
+                    if (changes.contains(ShoppingListItem.Field.IsSelected) &&
+                        holder.view.isSelected != item.isSelected)
+                            holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(ShoppingListItem.Field.IsChecked) &&
                         ui.checkBox.isChecked != item.isChecked)
                             ui.checkBox.isChecked = item.isChecked

@@ -67,8 +67,8 @@ open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeS
         if (isEnabled == enabled) return
         super.setEnabled(enabled)
         val disabledOverlay = this.disabledOverlay ?: return
-        val animConfig = if (enabled) AnimatorConfigs.fadeIn
-                         else         AnimatorConfigs.fadeOut
+        val animConfig = if (enabled) AnimatorConfig.fadeIn
+                         else         AnimatorConfig.fadeOut
         valueAnimatorOfInt(setter = disabledOverlay::setAlpha,
                            fromValue = disabledOverlay.alpha,
                            toValue = if (enabled) 0 else 255,
