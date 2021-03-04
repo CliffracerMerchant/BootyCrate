@@ -6,7 +6,6 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -27,8 +26,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
 
-        findPreference<ListPreference>(getString(R.string.pref_app_theme))?.apply {
-            isPersistent = true
+        findPreference<ListPreference>(getString(R.string.pref_light_dark_mode))?.apply {
             setOnPreferenceChangeListener { _, _ ->
                 activity?.recreate()
                 true
@@ -36,21 +34,15 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         }
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu) {
-        super.onPrepareOptionsMenu(menu)
-        menu.setGroupVisible(R.id.all_action_bar_items_group, false)
-        menu.setGroupVisible(R.id.other_action_bar_menu_items, false)
-    }
-
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         when (preference?.key) {
-            getString(R.string.pref_customize_top_bottom_bar_gradient) -> {
+            getString(R.string.pref_theme_gradient_screen) -> {
                 val activity = this.activity as? MainActivity ?: return false
                 val container = activity.ui.fragmentContainer
                 activity.supportFragmentManager.beginTransaction()
                     .setCustomAnimations(R.animator.fragment_close_enter, R.animator.fragment_close_exit,
                                          R.animator.fragment_close_enter, R.animator.fragment_close_exit,)
-                    .add(container.id, CustomizeTopBottomBarGradientFragment())
+                    .add(container.id, CustomizeThemeGradientFragment())
                     .hide(this).addToBackStack("").commit()
             }
             getString(R.string.pref_sort_by_checked) -> {

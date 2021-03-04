@@ -73,7 +73,7 @@ open class MainActivity : AppCompatActivity() {
         models therefore need to be reset), setting the shared preference whose
         key is equal to the value of R.string.pref_viewmodels_need_cleared to
         true will cause MainActivity to call viewModelStore.clear() */
-        var prefKey = getString(R.string.pref_viewmodels_need_cleared)
+        var prefKey = getString(R.string.pref_view_models_need_cleared)
         if (prefs.getBoolean(prefKey, false)) {
             viewModelStore.clear()
             val editor = prefs.edit()
@@ -81,7 +81,7 @@ open class MainActivity : AppCompatActivity() {
             editor.apply()
         }
 
-        prefKey = getString(R.string.pref_app_theme)
+        prefKey = getString(R.string.pref_light_dark_mode)
         val themeDefault = getString(R.string.sys_default_theme_description)
         setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
             getString(R.string.light_theme_description) -> R.style.LightTheme

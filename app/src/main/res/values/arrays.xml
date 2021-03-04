@@ -5,7 +5,7 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <string-array name="app_theme_preference_entries">
+    <string-array name="light_dark_theme_preference_entries">
         <item>@string/sys_default_theme_description</item>
         <item>@string/light_theme_description</item>
         <item>@string/dark_theme_description</item>

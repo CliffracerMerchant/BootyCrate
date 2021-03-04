@@ -7,15 +7,16 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="@string/visual_preference_category_name">
+    <PreferenceCategory android:title="@string/theme_preference_category_name">
         <ListPreference
-            android:key="@string/pref_app_theme"
-            android:title="App Theme"
-            android:entries="@array/app_theme_preference_entries"
-            android:entryValues="@array/app_theme_preference_entries" />
+            android:key="@string/pref_light_dark_mode"
+            android:title="Light / Dark mode"
+            android:entries="@array/light_dark_theme_preference_entries"
+            android:entryValues="@array/light_dark_theme_preference_entries"
+            android:persistent="true"/>
         <Preference
-            android:key="@string/pref_customize_top_bottom_bar_gradient"
-            android:title="@string/customize_top_bottom_bar_gradient_description" />
+            android:key="@string/pref_theme_gradient_screen"
+            android:title="@string/theme_gradient_description" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/shopping_list_navigation_item_name">

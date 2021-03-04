@@ -11,12 +11,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 
-class CustomizeTopBottomBarGradientFragment : Fragment() {
+class CustomizeThemeGradientFragment : Fragment() {
+    private lateinit var ui: CustomizeThemeGradientFragmentBinding
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ) = inflater.inflate(R.layout.customize_theme_tint_fragment, container, false)
+    ): View {
+        ui = CustomizeThemeGradientFragmentBinding.inflate(inflater, container, false)
+        return ui.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

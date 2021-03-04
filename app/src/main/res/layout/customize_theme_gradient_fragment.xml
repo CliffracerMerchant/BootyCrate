@@ -11,23 +11,23 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/customizeThemeTintTitle"
+        android:id="@+id/customizeThemeGradientTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
-        android:text="@string/customize_top_bottom_bar_gradient_description"
+        android:text="@string/theme_gradient_description"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         style="@style/TitleTextAppearance" />
 
     <SeekBar
-        android:id="@+id/tintSlider"
+        android:id="@+id/gradientSlider"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/customizeThemeTintTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/customizeThemeGradientTitle" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
