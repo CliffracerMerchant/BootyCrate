@@ -44,6 +44,15 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         when (preference?.key) {
+            getString(R.string.pref_customize_top_bottom_bar_gradient) -> {
+                val activity = this.activity as? MainActivity ?: return false
+                val container = activity.ui.fragmentContainer
+                activity.supportFragmentManager.beginTransaction()
+                    .setCustomAnimations(R.animator.fragment_close_enter, R.animator.fragment_close_exit,
+                                         R.animator.fragment_close_enter, R.animator.fragment_close_exit,)
+                    .add(container.id, CustomizeTopBottomBarGradientFragment())
+                    .hide(this).addToBackStack("").commit()
+            }
             getString(R.string.pref_sort_by_checked) -> {
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
                 (activity as? MainActivity)?.shoppingListViewModel?.sortByChecked = sortByChecked

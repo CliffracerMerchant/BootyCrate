@@ -9,6 +9,7 @@
     <string name="pref_viewmodels_need_cleared">viewModelsNeedCleared</string>
 
     <string name="pref_app_theme">dark_theme_active</string>
+    <string name="pref_customize_top_bottom_bar_gradient">customize_top_bottom_bar_gradient</string>
 
     <string name="pref_sort_by_checked">sort_by_checked</string>
 

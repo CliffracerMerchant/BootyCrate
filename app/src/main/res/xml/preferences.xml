@@ -12,7 +12,10 @@
             android:key="@string/pref_app_theme"
             android:title="App Theme"
             android:entries="@array/app_theme_preference_entries"
-            android:entryValues="@array/app_theme_preference_entries"/>
+            android:entryValues="@array/app_theme_preference_entries" />
+        <Preference
+            android:key="@string/pref_customize_top_bottom_bar_gradient"
+            android:title="@string/customize_top_bottom_bar_gradient_description" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/shopping_list_navigation_item_name">
