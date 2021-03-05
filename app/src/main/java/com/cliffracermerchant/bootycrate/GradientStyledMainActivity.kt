@@ -25,6 +25,15 @@ import androidx.core.view.doOnNextLayout
  */
 class GradientStyledMainActivity : MainActivity() {
 
+    private val _topFgGradientBuilder = GradientBuilder()
+    private lateinit var _topBgGradientBuilder: GradientBuilder
+    private lateinit var _bottomFgGradientBuilder: GradientBuilder
+    private lateinit var _bottomBgGradientBuilder: GradientBuilder
+    val topFgGradientBuilderCopy get() = _topFgGradientBuilder.copy()
+    val topBgGradientBuilderCopy get() = _topBgGradientBuilder.copy()
+    val bottomFgGradientBuilderCopy get() = _bottomFgGradientBuilder.copy()
+    val bottomBgGradientBuilderCopy get() = _bottomBgGradientBuilder.copy()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val screenWidth = resources.displayMetrics.widthPixels
@@ -51,13 +60,16 @@ class GradientStyledMainActivity : MainActivity() {
         val blendColor = typedValue.data
         val dimmedColors = IntArray(4) { ColorUtils.compositeColors(ColorUtils.setAlphaComponent(colors[it], alpha), blendColor) }
 
-        val gradientBuilder = GradientBuilder()
-        val topFgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight).
-        setX2(screenWidth * 0.8f).setY2(actionBarHeight * 1.25f).
-        setColors(colors).buildRadialGradient()
-        val topBgGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
-        val bottomBgGradient = gradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight * 0.25f).buildRadialGradient()
-        val bottomFgGradient = gradientBuilder.setColors(colors).buildRadialGradient()
+        val topFgGradient = _topFgGradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight)
+                                                 .setX2(screenWidth * 0.8f).setY2(actionBarHeight * 1.25f)
+                                                 .setColors(colors).buildRadialGradient()
+        _topBgGradientBuilder = _topFgGradientBuilder.copy(colors = dimmedColors)
+        _bottomFgGradientBuilder = _topFgGradientBuilder.copy(x1 = screenWidth / 2f,
+                                                              y1 = actionBarHeight * 0.25f)
+        _bottomBgGradientBuilder = _bottomFgGradientBuilder.copy(colors = dimmedColors)
+        val topBgGradient = _topBgGradientBuilder.buildRadialGradient()
+        val bottomFgGradient = _bottomFgGradientBuilder.buildRadialGradient()
+        val bottomBgGradient = _bottomBgGradientBuilder.buildRadialGradient()
 
         val topFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
         val bottomFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
@@ -78,16 +90,16 @@ class GradientStyledMainActivity : MainActivity() {
         ui.bottomAppBar.backgroundGradient = bottomBgGradient
         ui.bottomAppBar.borderGradient = bottomFgGradient
         ui.bottomAppBar.indicatorGradient = bottomFgGradient
-        gradientBuilder.setX1(ui.addButton.width / 2f)
-        ui.addButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
-        ui.addButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
+        val tempGradientBuilder = _bottomFgGradientBuilder.copy(x1 = ui.addButton.width / 2f)
+        ui.addButton.outlineGradient = tempGradientBuilder.buildRadialGradient()
+        ui.addButton.backgroundGradient = tempGradientBuilder.setColors(dimmedColors).buildRadialGradient()
 
         ui.coordinatorLayout.doOnNextLayout {
             val rect = Rect()
             ui.checkoutButton.getGlobalVisibleRect(rect)
-            gradientBuilder.setX1(screenWidth / 2f - ui.bottomAppBar.cradleWidth / 2f)
-            ui.checkoutButton.backgroundGradient = gradientBuilder.setColors(dimmedColors).buildRadialGradient()
-            ui.checkoutButton.outlineGradient = gradientBuilder.setColors(colors).buildRadialGradient()
+            tempGradientBuilder.setX1(screenWidth / 2f - ui.bottomAppBar.cradleWidth / 2f)
+            ui.checkoutButton.backgroundGradient = tempGradientBuilder.buildRadialGradient()
+            ui.checkoutButton.outlineGradient = tempGradientBuilder.setColors(colors).buildRadialGradient()
 
             // Back icon
             val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)

@@ -218,7 +218,7 @@ open class MainActivity : AppCompatActivity() {
             ?.translationX(0f)?.start()
     }
 
-    private fun showBottomAppBar(show: Boolean = true) {
+    fun showBottomAppBar(show: Boolean = true) {
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
         val views = arrayOf(ui.bottomAppBar, ui.addButton, ui.checkoutButton)
 
