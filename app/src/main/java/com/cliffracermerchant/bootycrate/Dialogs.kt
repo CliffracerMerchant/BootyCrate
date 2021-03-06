@@ -18,7 +18,7 @@ import androidx.fragment.app.FragmentManager
 import com.cliffracermerchant.bootycrate.databinding.ShareDialogBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import com.thebluealliance.spectrum.SpectrumDialog
+import dev.sasikanth.colorsheet.ColorSheet
 
 /** Display a color picker dialog to choose from one of ViewModelItem's twelve colors,
  * then invoke @param callback with the chosen color index.
@@ -27,17 +27,16 @@ import com.thebluealliance.spectrum.SpectrumDialog
  * indices of the chosen color, not the Android color value for the color.
  */
 fun showColorPickerDialog(
-    context: Context,
     fragmentManager: FragmentManager,
     initialColorIndex: Int,
     callback: (Int) -> Unit,
-) = SpectrumDialog.Builder(context)
-    .setColors(ViewModelItem.Colors)
-    .setSelectedColor(initialColorIndex)
-    .setOnColorSelectedListener { _, color ->
+) = ColorSheet().colorPicker(
+    colors = ViewModelItem.Colors,
+    selectedColor = ViewModelItem.Colors[initialColorIndex],
+    listener = { color: Int ->
         val colorIndex = ViewModelItem.Colors.indexOf(color)
         callback(if (colorIndex != -1) colorIndex else 0)
-    }.build().show(fragmentManager, null)
+    }).show(fragmentManager)
 
 private enum class ShareOption { TextMessage, Email }
 
