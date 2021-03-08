@@ -9,7 +9,7 @@
     package="com.cliffracermerchant.bootycrate">
 
     <application
-        android:name=".App"
+        android:name=".BootyCrateApplication"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"

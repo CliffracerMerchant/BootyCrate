@@ -45,11 +45,8 @@ class ShoppingListFragment(isActive: Boolean = false) :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerView = ui.shoppingListRecyclerView
-        val activity = requireActivity() as MainActivity
-        recyclerView.finishInit(viewLifecycleOwner,
-                                activity.shoppingListViewModel,
-                                activity.inventoryViewModel)
 
+        val activity = requireActivity() as MainActivity
         recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner)
             { newSize -> activity.ui.checkoutButton.isEnabled = newSize != 0 }
 
@@ -69,7 +66,7 @@ class ShoppingListFragment(isActive: Boolean = false) :
                 NewShoppingListItemDialog(activity, activity.shoppingListViewModel)
                     .show(activity.supportFragmentManager, null)
             }
-            activity.ui.checkoutButton.checkoutCallback = { activity.shoppingListViewModel.checkout() }
+            activity.ui.checkoutButton.checkoutCallback = activity.shoppingListViewModel::checkout
         }
     }
 

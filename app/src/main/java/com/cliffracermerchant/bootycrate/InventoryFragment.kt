@@ -34,10 +34,6 @@ class InventoryFragment(isActive: Boolean = false) :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerView = ui.inventoryRecyclerView
-        val activity = requireActivity() as MainActivity
-        recyclerView.finishInit(viewLifecycleOwner,
-                                activity.inventoryViewModel,
-                                activity.shoppingListViewModel)
         super.onViewCreated(view, savedInstanceState)
     }
 

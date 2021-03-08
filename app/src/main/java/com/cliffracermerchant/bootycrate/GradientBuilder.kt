@@ -28,10 +28,8 @@ import kotlin.math.min
  * tileMode    Shader.TileMode to use        same
  */
 data class GradientBuilder(
-    var x1: Float = 0f,
-    var y1: Float = 0f,
-    var x2: Float = 1f,
-    var y2: Float = 1f,
+    var x1: Float = 0f, var y1: Float = 0f,
+    var x2: Float = 1f, var y2: Float = 1f,
     var colors: IntArray = IntArray(0),
     var stops: FloatArray? = null,
     var tileMode: Shader.TileMode = Shader.TileMode.CLAMP
@@ -54,17 +52,15 @@ data class GradientBuilder(
         val xScale = if (x2 > y2) x2 / y2 else 1f
         val yScale = if (y2 > x2) y2 / x2 else 1f
         matrix.setScale(xScale, yScale)
-        val gradient = RadialGradient(x1 / xScale, y1 / yScale, min(x2, y2),
-                                      colors, stops, tileMode)
-        gradient.setLocalMatrix(matrix)
-        return gradient
+        return RadialGradient(x1 / xScale, y1 / yScale, min(x2, y2), colors, stops, tileMode)
+            .apply { setLocalMatrix(matrix) }
     }
 
     override fun equals(other: Any?): Boolean {
         if (other !is GradientBuilder) return false
         return super.equals(other) &&
-               colors.contentEquals(other.colors) &&
-               stops.contentEquals(other.stops)
+            colors.contentEquals(other.colors) &&
+            stops.contentEquals(other.stops)
     }
 
     override fun hashCode() =

@@ -5,9 +5,13 @@
 package com.cliffracermerchant.bootycrate
 
 import android.app.Application
+import android.content.Context
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
+import javax.inject.Inject
 
 /**
  * An abstract AndroidViewModel that provides an asynchronous interface for DataAccessObject<Entity> functions.
@@ -76,17 +80,17 @@ abstract class ViewModel<Entity: ViewModelItem>(app: Application): AndroidViewMo
     val newlyAddedItemId get() = _newlyAddedItemId.get()
     fun resetNewlyAddedItemId() = _newlyAddedItemId.set(0)
 
-    fun add(item: Entity) = viewModelScope.launch { _newlyAddedItemId.set(dao.add(item)) }
+    fun add(item: Entity) { viewModelScope.launch { _newlyAddedItemId.set(dao.add(item)) }}
 
-    fun add(items: List<Entity>) = viewModelScope.launch { dao.add(items) }
+    fun add(items: List<Entity>) { viewModelScope.launch { dao.add(items) }}
 
-    fun deleteAll() = viewModelScope.launch { dao.deleteAll() }
+    fun deleteAll() { viewModelScope.launch { dao.deleteAll() }}
 
-    fun emptyTrash() = viewModelScope.launch { dao.emptyTrash() }
+    fun emptyTrash() { viewModelScope.launch { dao.emptyTrash() }}
 
-    fun delete(ids: LongArray) = viewModelScope.launch { dao.delete(ids) }
+    fun delete(ids: LongArray) { viewModelScope.launch { dao.delete(ids) }}
 
-    fun undoDelete() = viewModelScope.launch { dao.undoDelete() }
+    fun undoDelete() { viewModelScope.launch { dao.undoDelete() }}
 
     fun updateName(id: Long, name: String) = viewModelScope.launch {
         dao.updateName(id, name)
@@ -118,26 +122,27 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
      * ItemViewModel, before it is overridden in the descendant class. */
     val selectedItems: LiveData<List<Entity>> by lazy { dao.getSelectedItems() }
 
-    fun resetExpandedItemAndSelection() = viewModelScope.launch {
-        dao.resetExpandedItemAndSelection()
+    fun resetExpandedItemAndSelection() {
+        viewModelScope.launch { dao.resetExpandedItemAndSelection() }
     }
-    fun setExpandedId(id: Long?) = viewModelScope.launch { dao.setExpandedItem(id) }
+    fun setExpandedId(id: Long?) { viewModelScope.launch { dao.setExpandedItem(id) } }
 
-    fun updateIsSelected(id: Long, isSelected: Boolean) = viewModelScope.launch {
-        dao.updateIsSelected(id, isSelected)
+    fun updateIsSelected(id: Long, isSelected: Boolean) {
+        viewModelScope.launch { dao.updateIsSelected(id, isSelected) }
     }
-    fun toggleIsSelected(id: Long) = viewModelScope.launch { dao.toggleIsSelected(id) }
+    fun toggleIsSelected(id: Long) { viewModelScope.launch { dao.toggleIsSelected(id) } }
 
-    fun deleteSelected() = viewModelScope.launch { dao.deleteSelected() }
+    fun deleteSelected() { viewModelScope.launch { dao.deleteSelected() }}
 
-    fun selectAll() = viewModelScope.launch { dao.selectAll() }
+    fun selectAll() { viewModelScope.launch { dao.selectAll() }}
 
-    fun clearSelection() = viewModelScope.launch { dao.clearSelection() }
+    fun clearSelection() { viewModelScope.launch { dao.clearSelection() }}
 }
 
 
 /** A ViewModel<ShoppingListItem> subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
-class ShoppingListViewModel(app: Application) :
+@HiltViewModel
+class ShoppingListViewModel @Inject constructor(app: Application) :
     ExpandableSelectableItemViewModel<ShoppingListItem>(app)
 {
     override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
@@ -160,35 +165,48 @@ class ShoppingListViewModel(app: Application) :
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun addFromSelectedInventoryItems() = viewModelScope.launch {
-        dao.addFromSelectedInventoryItems()
+    fun addFromSelectedInventoryItems() {
+        viewModelScope.launch { dao.addFromSelectedInventoryItems() }
     }
-    fun updateIsChecked(id: Long, isChecked: Boolean) = viewModelScope.launch {
-        dao.updateIsChecked(id, isChecked)
+    fun updateIsChecked(id: Long, isChecked: Boolean) {
+        viewModelScope.launch { dao.updateIsChecked(id, isChecked) }
     }
-    fun checkAll() = viewModelScope.launch { dao.checkAll() }
+    fun checkAll() { viewModelScope.launch { dao.checkAll() } }
 
-    fun uncheckAll() = viewModelScope.launch { dao.uncheckAll() }
+    fun uncheckAll() { viewModelScope.launch { dao.uncheckAll() } }
 
-    fun checkout() = viewModelScope.launch { dao.checkout() }
+    fun checkout() { viewModelScope.launch { dao.checkout() } }
 }
 
 
 /** A ViewModel<InventoryItem> subclass that provides functions to asynchronously execute InventoryItemDao's functions. */
-class InventoryViewModel(app: Application) :
+@HiltViewModel
+class InventoryViewModel @Inject constructor(app: Application) :
     ExpandableSelectableItemViewModel<InventoryItem>(app)
 {
     override val dao = BootyCrateDatabase.get(app).inventoryItemDao()
 
     init { viewModelScope.launch{ dao.emptyTrash() } }
 
-    fun addFromSelectedShoppingListItems() = viewModelScope.launch {
-        dao.addFromSelectedShoppingListItems()
+    fun addFromSelectedShoppingListItems() {
+        viewModelScope.launch { dao.addFromSelectedShoppingListItems() }
     }
-    fun updateAddToShoppingList(id: Long, addToShoppingList: Boolean) = viewModelScope.launch {
-        dao.updateAddToShoppingList(id, addToShoppingList)
+    fun updateAddToShoppingList(id: Long, addToShoppingList: Boolean) {
+        viewModelScope.launch { dao.updateAddToShoppingList(id, addToShoppingList) }
     }
-    fun updateAddToShoppingListTrigger(id: Long, addToShoppingListTrigger: Int) = viewModelScope.launch {
-        dao.updateAddToShoppingListTrigger(id, addToShoppingListTrigger)
+    fun updateAddToShoppingListTrigger(id: Long, addToShoppingListTrigger: Int) {
+        viewModelScope.launch { dao.updateAddToShoppingListTrigger(id, addToShoppingListTrigger) }
     }
 }
+
+fun inventoryViewModel(context: Context) =
+    try { ViewModelProvider(context as FragmentActivity).get(InventoryViewModel::class.java) }
+    catch(e: ClassCastException) {
+        throw ClassCastException("The provided context must be an instance of FragmentActivity")
+    }
+
+fun shoppingListViewModel(context: Context) =
+    try { ViewModelProvider(context as FragmentActivity).get(ShoppingListViewModel::class.java) }
+    catch(e: ClassCastException) {
+        throw ClassCastException("The provided context must be an instance of FragmentActivity")
+    }

@@ -59,6 +59,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         recyclerView.sort = ViewModelItem.Sort.fromString(sortStr)
         recyclerView.snackBarAnchor = mainActivity?.ui?.bottomAppBar
         recyclerView.selection.itemsLiveData.observe(viewLifecycleOwner, actionMode)
+        recyclerView.observeViewModel(viewLifecycleOwner)
         recyclerView.viewModel.items.observe(viewLifecycleOwner) { items ->
             val stateView = view as? MultiStateView ?: return@observe
             stateView.viewState = if (items.isNotEmpty()) MultiStateView.ViewState.CONTENT

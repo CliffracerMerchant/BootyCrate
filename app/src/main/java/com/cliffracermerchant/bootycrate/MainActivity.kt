@@ -6,7 +6,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
 import android.animation.ValueAnimator
-import android.app.Application
+import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
@@ -23,13 +23,12 @@ import androidx.core.view.isVisible
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
-
-class App : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        AnimatorConfig.initConfigs(this)
-    }
-}
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.components.ActivityComponent
+import dagger.hilt.android.qualifiers.ActivityContext
 
 /**
  * The primary activity for BootyCrate
@@ -48,6 +47,7 @@ class App : Application() {
  * back button press or a navigate up).
  */
 @Suppress("LeakingThis")
+@AndroidEntryPoint
 open class MainActivity : AppCompatActivity() {
     private lateinit var shoppingListFragment: ShoppingListFragment
     private lateinit var inventoryFragment: InventoryFragment
@@ -231,7 +231,7 @@ open class MainActivity : AppCompatActivity() {
         }
         val translationAmount = screenHeight - ui.cradleLayout.top
         val translationStart = if (show) translationAmount else 0f
-        val translationEnd =   if (show) 0f else translationAmount
+        val translationEnd = if (show) 0f else translationAmount
         for (view in views) {
             view.translationY = translationStart
             view.animate().withLayer()
@@ -342,4 +342,10 @@ open class MainActivity : AppCompatActivity() {
 
     val sysDarkThemeIsActive get() =
         (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
+}
+
+@Module @InstallIn(ActivityComponent::class)
+object MainActivityBindingModule {
+    @Provides fun provideMainActivityBinding(@ActivityContext context: Context) =
+        (context as MainActivity).ui
 }

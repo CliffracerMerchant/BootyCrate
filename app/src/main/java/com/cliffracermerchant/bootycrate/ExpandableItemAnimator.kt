@@ -36,7 +36,8 @@ import androidx.recyclerview.widget.RecyclerView
  */
 class ExpandableItemAnimator(
     private val recyclerView: RecyclerView,
-    private val animatorConfig: AnimatorConfig = AnimatorConfig.translation
+    animatorConfig: AnimatorConfig = AnimatorConfig.translation,
+    adapter: RecyclerView.Adapter<*>? = null
 ) : DefaultItemAnimator() {
 
     val expandedItemPos get() = _expandedItemPos
@@ -47,12 +48,15 @@ class ExpandableItemAnimator(
     private val pendingRemoveAnimators = mutableListOf<ViewPropertyAnimator>()
     private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
 
+    var animatorConfig = animatorConfig
+        set(value) { field = value
+                     addDuration = value.duration
+                     changeDuration = value.duration
+                     removeDuration = value.duration
+                     moveDuration = value.duration }
+
     init {
-        recyclerView.adapter?.registerAdapterDataObserver(observer())
-        addDuration = animatorConfig.duration
-        changeDuration = animatorConfig.duration
-        removeDuration = animatorConfig.duration
-        moveDuration = animatorConfig.duration
+        adapter?.let { registerAdapterDataObserver(it) }
     }
 
     fun notifyExpandedItemChanged(newlyExpandedItemPos: Int?) {
@@ -157,25 +161,27 @@ class ExpandableItemAnimator(
         fun runPendingAnimations()
     }
 
-    private fun observer() = object: RecyclerView.AdapterDataObserver() {
-        private var initialized = false
+    fun registerAdapterDataObserver(adapter: RecyclerView.Adapter<*>) {
+        adapter.registerAdapterDataObserver(object: RecyclerView.AdapterDataObserver() {
+            private var initialized = false
 
-        override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
-            if (!initialized) initialized = true
-            else {
-                val expandingPos = expandedItemPos ?: return
-                if (expandingPos >= positionStart)
-                    _expandedItemPos = expandingPos + itemCount
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                if (!initialized) initialized = true
+                else {
+                    val expandingPos = expandedItemPos ?: return
+                    if (expandingPos >= positionStart)
+                        _expandedItemPos = expandingPos + itemCount
+                }
             }
-        }
-        override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
-            val expandingPos = expandedItemPos ?: return
-            _expandedItemPos = adjustPosInRangeAfterMove(expandingPos, fromPosition,
-                toPosition, itemCount)
-        }
-        override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
-            if (expandedItemPos in positionStart until positionStart + itemCount)
-                _expandedItemPos = null
-        }
+            override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
+                val expandingPos = expandedItemPos ?: return
+                _expandedItemPos = adjustPosInRangeAfterMove(expandingPos, fromPosition,
+                    toPosition, itemCount)
+            }
+            override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+                if (expandedItemPos in positionStart until positionStart + itemCount)
+                    _expandedItemPos = null
+            }
+        })
     }
 }

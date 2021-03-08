@@ -14,9 +14,9 @@
             android:entries="@array/light_dark_theme_preference_entries"
             android:entryValues="@array/light_dark_theme_preference_entries"
             android:persistent="true"/>
-        <Preference
-            android:key="@string/pref_theme_gradient_screen"
-            android:title="@string/theme_gradient_description" />
+<!--        <Preference-->
+<!--            android:key="@string/pref_theme_gradient_screen"-->
+<!--            android:title="@string/theme_gradient_description" />-->
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/shopping_list_navigation_item_name">

@@ -7,7 +7,6 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import androidx.annotation.CallSuper
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
@@ -21,41 +20,34 @@ import java.util.*
  * RecyclerView interface toward displaying the contents of a ViewModel<
  * Entity> and updating itself asynchronously using its custom ListAdapter-
  * derived adapter type. To achieve this, its abstract properties diffUtilCall-
- * back and adapter must be overridden in subclasses. diffUtilCallback must be
- * overridden with an appropriate DiffUtil.ItemCallback<Entity> for the adap-
- * ter. adapter must be overridden with a ViewModelAdapter subclass that imple-
- * ments onCreateViewHolder. collectionName, used in user facing strings regar-
- * ding the item collection, should be overridden with a string that describes
- * the collection of items (e.g. inventory for a collection of inventory items).
+ * back, adapter, and viewModel must be overridden in subclasses. diffUtilCall-
+ * back must be overridden with an appropriate DiffUtil.ItemCallback<Entity>
+ * for the adapter. adapter must be overridden with a ViewModelAdapter subclass
+ * that implements onCreateViewHolder. viewModel must be overridden with a
+ * concrete ViewModel<Entity> subclass. collectionName, used in user facing
+ * strings regarding the item collection, should be overridden with a string
+ * that describes the collection of items (e.g. inventory for a collection of
+ * inventory items).
  *
- * Because AndroidViewModels are created after views inflated from xml are
- * created, the function finishInit must be called with a LifecycleOwner and a
- * ViewModel<Entity> instance during runtime, but before any sort of data
- * access is attempted.
- *
- * ViewModelRecyclerView has two public properties, sort and searchFilter,
- * that mirror these properties from the view model from which it obtains its
- * data. Changing these properties will therefore change the sorting or text
- * filter of the RecyclerView items.
+ * After the viewModel property is overridden and initialized in subclasses,
+ * the function observeViewModel must be called with a LifecycleOwner that
+ * matches the ViewModelRecyclerView's lifespan. If observeViewModel is not
+ * called then the recycler view will always be empty. Once the viewModel prop-
+ * erty is initialized properly, the properties sort and searchFilter, which
+ * mirror these properties from the view model, can be changed to change the
+ * sorting or text filter of the displayed items.
  *
  * To utilize ViewModel<Entity>'s support for treating new items differently,
  * ViewModelRecyclerView has an open function onNewItemInsertion. onNewItem-
- * Insertion smooth scrolls to the new item by default.
+ * Insertion smooth scrolls to the new item by default, but can be overridden
+ * in subclasses for additional functionality.
  *
- * ViewModelRecyclerView provides public functions to execute most of View-
- * Model<Entity>'s public functions such as add, delete, deleteAll, and undo-
- * Delete. It also utilizes a ItemTouchHelper with a SwipeToDeleteCallback to
- * allow the user to call deleteItem on the swiped item. It is worth noting
- * that due to being Entity agnostic, the addItem function requires an already
- * created instance of Entity to add to the ViewModel data. Subclasses may
- * wish to provide an alternative that inserts a default constructed Entity
- * instance.
- *
- * When items are deleted, a snackbar will appear informing the user of the
- * amount of items that were deleted, as well as providing an undo option. The
- * snackbar will be anchored to the view set as the public property snackBar-
- * Anchor, in case this needs to be customized, or to the RecyclerView itself
- * otherwise.
+ * ViewModelRecyclerView utilizes a ItemTouchHelper with a SwipeToDeleteCall-
+ * back to allow the user to call deleteItem on the swiped item. When items are
+ * deleted, a snack bar will appear informing the user of the amount of items
+ * that were deleted, as well as providing an undo option. The snack bar will
+ * be anchored to the view set as the public property snackBarAnchor, in case
+ * this needs to be customized, or to the RecyclerView itself otherwise.
  */
 @Suppress("LeakingThis")
 abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
@@ -75,32 +67,23 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
                               set(value) { viewModel.searchFilter = value }
 
     init {
-        ItemTouchHelper(SwipeToDeleteCallback(::deleteItem, context)).attachToRecyclerView(this)
+        val swipeCallback = SwipeToDeleteCallback(context) { pos ->
+            viewModel.delete(LongArray(1) { adapter.getItemId(pos) })
+            val text = context.getString(R.string.delete_snackbar_text, 1)
+            Snackbar.make(this, text, Snackbar.LENGTH_LONG)
+                .setAnchorView(snackBarAnchor ?: this)
+                .setAction(R.string.delete_snackbar_undo_text) { viewModel.undoDelete() }
+                .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                    override fun onDismissed(a: Snackbar?, b: Int) = viewModel.emptyTrash()
+                }).show()
+        }
+        ItemTouchHelper(swipeCallback).attachToRecyclerView(this)
     }
 
-    @CallSuper
-    open fun finishInit(owner: LifecycleOwner) {
+    fun observeViewModel(owner: LifecycleOwner) {
         setAdapter(adapter)
         viewModel.items.observe(owner) { items -> adapter.submitList(items) }
     }
-
-    open fun addItem(item: Entity) = viewModel.add(item)
-
-    open fun deleteItem(pos: Int) = deleteItems(LongArray(1) { adapter.getItemId(pos) })
-
-    open fun deleteItems(ids: LongArray) {
-        viewModel.delete(ids)
-        val text = context.getString(R.string.delete_snackbar_text, ids.size)
-        Snackbar.make(this, text, Snackbar.LENGTH_LONG).
-            setAnchorView(snackBarAnchor ?: this).
-            setAction(R.string.delete_snackbar_undo_text) { undoDelete() }.
-            addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                    viewModel.emptyTrash()
-            }}).show()
-    }
-
-    open fun undoDelete() { viewModel.undoDelete() }
 
     open fun onNewItemInsertion(item: Entity, vh: ViewModelItemViewHolder) =
         smoothScrollToPosition(vh.adapterPosition)
@@ -138,7 +121,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
      * changes to the fields made by the user to view model update calls.
      */
     open inner class ViewModelItemViewHolder(view: ViewModelItemView<Entity>) :
-            ViewHolder(view) {
+            RecyclerView.ViewHolder(view) {
         val item: Entity get() = adapter.currentList[adapterPosition]
 
         init {

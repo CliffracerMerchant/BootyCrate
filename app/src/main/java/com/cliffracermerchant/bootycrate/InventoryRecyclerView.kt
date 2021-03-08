@@ -7,39 +7,23 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
-import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 
 /**
- * A RecyclerView to display the data provided by an InventoryViewModel.
- *
- * InventoryRecyclerView is a ExpandableSelectableRecyclerView subclass spec-
- * ialized for displaying the contents of an inventory. Several of Inventory-
- * RecyclerView's necessary fields can not be obtained when it is inflated
- * from XML, such as its view models. To finish initialization with these
- * required members, the function finishInit must be called during runtime,
- * but before any sort of data access is attempted. InventoryRecyclerView's
- * version of finishInit will call ExpandableSelectableRecyclerView's version
- * to prevent the implementing activity or fragment from needing to call both.
+ * A RecyclerView to display the data provided by an InventoryViewModel
  */
+@AndroidEntryPoint
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
-        ExpandableSelectableRecyclerView<InventoryItem>(context, attrs) {
+    ExpandableSelectableRecyclerView<InventoryItem>(context, attrs)
+{
     override val diffUtilCallback = InventoryItemDiffUtilCallback()
     override val adapter = InventoryAdapter()
     override val collectionName = context.getString(R.string.inventory_item_collection_name)
-    override lateinit var viewModel: InventoryViewModel
-    lateinit var shoppingListViewModel: ShoppingListViewModel
+    override val viewModel = inventoryViewModel(context)
 
-    fun finishInit(
-        owner: LifecycleOwner,
-        viewModel: InventoryViewModel,
-        shoppingListViewModel: ShoppingListViewModel
-    ) {
-        this.viewModel = viewModel
-        this.shoppingListViewModel = shoppingListViewModel
-        finishInit(owner, AnimatorConfig.translation)
-    }
+    init { itemAnimator.registerAdapterDataObserver(adapter) }
 
     /**
      * A RecyclerView.Adapter to display the contents of a list of inventory items.
@@ -135,10 +119,9 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      * Computes a diff between two inventory item lists.
      *
      * InventoryItemDiffUtilCallback uses the ids of inventory items to determine
-     * if they are the same or not. If they are the same, changes are logged by
-     * setting the appropriate bit of an instance of EnumSet<InventoryItem.Field>.
-     * The change payload for modified items will then be the enum set containing
-     * all of the fields that were changed.
+     * if they are the same or not. If they are the same, the change payload will
+     * be an instance of EnumSet<InventoryItem.Field> that contains the Inventory-
+     * Item.Field values for all of the fields that were changed.
      */
     class InventoryItemDiffUtilCallback : DiffUtil.ItemCallback<InventoryItem>() {
         private val listChanges = mutableMapOf<Long, EnumSet<InventoryItem.Field>>()

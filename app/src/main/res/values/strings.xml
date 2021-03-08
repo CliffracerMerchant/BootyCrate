@@ -70,7 +70,7 @@
     <string name="sys_default_theme_description">Use system default</string>
     <string name="light_theme_description">Light</string>
     <string name="dark_theme_description">Dark</string>
-    <string name="theme_gradient_description">Top and bottom bar gradient</string>
+<!--    <string name="theme_gradient_description">Top and bottom bar gradient</string>-->
 
     <string name="backup_and_restore_preference_category_name">Backup and Restore</string>
     <string name="export_database_description">Export database</string>

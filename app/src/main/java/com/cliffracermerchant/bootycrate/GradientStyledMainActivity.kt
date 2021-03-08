@@ -14,6 +14,7 @@ import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnNextLayout
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * A styled subclass of MainActivity.
@@ -23,53 +24,63 @@ import androidx.core.view.doOnNextLayout
  * and bottom action bar) are impossible to accomplish in XML. GradientStyled-
  * MainActivity performs additional operations to initialize its style.
  */
+@AndroidEntryPoint
 class GradientStyledMainActivity : MainActivity() {
+    private val topFgGradientBuilder = GradientBuilder()
+    private lateinit var topBgGradientBuilder: GradientBuilder
+    private lateinit var bottomFgGradientBuilder: GradientBuilder
+    private lateinit var bottomBgGradientBuilder: GradientBuilder
 
-    private val _topFgGradientBuilder = GradientBuilder()
-    private lateinit var _topBgGradientBuilder: GradientBuilder
-    private lateinit var _bottomFgGradientBuilder: GradientBuilder
-    private lateinit var _bottomBgGradientBuilder: GradientBuilder
-    val topFgGradientBuilderCopy get() = _topFgGradientBuilder.copy()
-    val topBgGradientBuilderCopy get() = _topBgGradientBuilder.copy()
-    val bottomFgGradientBuilderCopy get() = _bottomFgGradientBuilder.copy()
-    val bottomBgGradientBuilderCopy get() = _bottomBgGradientBuilder.copy()
+    private var topFgGradient: Shader? = null
+    private var topBgGradient: Shader? = null
+    private var bottomFgGradient: Shader? = null
+    private var bottomBgGradient: Shader? = null
+
+    private val fgColors = IntArray(4)
+    private val bgColors = IntArray(4)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setGradientColors()
+        initGradients()
+    }
+
+    private fun setGradientColors() {
+        fgColors[0] = ContextCompat.getColor(this, R.color.colorPrimary)
+        fgColors[1] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1)
+        fgColors[2] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2)
+        fgColors[3] = ContextCompat.getColor(this, R.color.colorAccent)
+
+        // Colors are more easily visible on dark backgrounds compared to light ones,
+        // so the alpha value is lower when a dark theme is used and higher when a
+        // light theme is used. This will make the background gradient visible on
+        // both types of themes without being overpowering.
+        val typedValue = TypedValue()
+        theme.resolveAttribute(R.attr.isDarkTheme, typedValue, true)
+        val usingDarkTheme = typedValue.data == -1
+        val blendAlpha = if (usingDarkTheme) 100 else 150
+        theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
+        val blendColor = typedValue.data
+        for (i in bgColors.indices)
+            bgColors[i] = ColorUtils.compositeColors(ColorUtils.setAlphaComponent(fgColors[i], blendAlpha), blendColor)
+    }
+
+    private fun initGradients() {
         val screenWidth = resources.displayMetrics.widthPixels
         val typedValue = TypedValue()
         theme.resolveAttribute(R.attr.actionBarSize, typedValue, true)
         val actionBarHeight = typedValue.getDimension(resources.displayMetrics)
 
-        // Foreground colors
-        var colors = IntArray(4)
-        colors[0] = ContextCompat.getColor(this, R.color.colorPrimary)
-        colors[1] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1)
-        colors[2] = ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2)
-        colors[3] = ContextCompat.getColor(this, R.color.colorAccent)
+        topFgGradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight)
+                            .setX2(screenWidth * 0.8f).setY2(actionBarHeight * 1.25f)
+        topBgGradientBuilder = topFgGradientBuilder.copy()
+        bottomFgGradientBuilder = topFgGradientBuilder.copy(x1 = screenWidth / 2f, y1 = actionBarHeight * 0.25f)
+        bottomBgGradientBuilder = bottomFgGradientBuilder.copy()
 
-        // Background colors
-        // Colors are more easily visible on dark backgrounds compared to light ones,
-        // so the alpha value is lower when a dark theme is used and higher when a
-        // light theme is used. This will make the background gradient visible on
-        // both types of themes without being overpowering.
-        theme.resolveAttribute(R.attr.isDarkTheme, typedValue, true)
-        val usingDarkTheme = typedValue.data == -1
-        val alpha = if (usingDarkTheme) 125 else 150
-        theme.resolveAttribute(R.attr.recyclerViewItemColor, typedValue, true)
-        val blendColor = typedValue.data
-        val dimmedColors = IntArray(4) { ColorUtils.compositeColors(ColorUtils.setAlphaComponent(colors[it], alpha), blendColor) }
-
-        val topFgGradient = _topFgGradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight)
-                                                 .setX2(screenWidth * 0.8f).setY2(actionBarHeight * 1.25f)
-                                                 .setColors(colors).buildRadialGradient()
-        _topBgGradientBuilder = _topFgGradientBuilder.copy(colors = dimmedColors)
-        _bottomFgGradientBuilder = _topFgGradientBuilder.copy(x1 = screenWidth / 2f,
-                                                              y1 = actionBarHeight * 0.25f)
-        _bottomBgGradientBuilder = _bottomFgGradientBuilder.copy(colors = dimmedColors)
-        val topBgGradient = _topBgGradientBuilder.buildRadialGradient()
-        val bottomFgGradient = _bottomFgGradientBuilder.buildRadialGradient()
-        val bottomBgGradient = _bottomBgGradientBuilder.buildRadialGradient()
+        topFgGradient = topFgGradientBuilder.setColors(fgColors).buildRadialGradient()
+        topBgGradient = topBgGradientBuilder.setColors(bgColors).buildRadialGradient()
+        bottomFgGradient = bottomFgGradientBuilder.setColors(fgColors).buildRadialGradient()
+        bottomBgGradient = bottomBgGradientBuilder.setColors(bgColors).buildRadialGradient()
 
         val topFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
         val bottomFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
@@ -85,60 +96,77 @@ class GradientStyledMainActivity : MainActivity() {
 
         ui.topActionBar.backgroundGradient = topBgGradient
         ui.topActionBar.borderGradient = topFgGradient
-        ui.topActionBar.ui.customTitle.shader = BitmapShader(topFgGradientBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
 
         ui.bottomAppBar.backgroundGradient = bottomBgGradient
         ui.bottomAppBar.borderGradient = bottomFgGradient
         ui.bottomAppBar.indicatorGradient = bottomFgGradient
-        val tempGradientBuilder = _bottomFgGradientBuilder.copy(x1 = ui.addButton.width / 2f)
-        ui.addButton.outlineGradient = tempGradientBuilder.buildRadialGradient()
-        ui.addButton.backgroundGradient = tempGradientBuilder.setColors(dimmedColors).buildRadialGradient()
 
-        ui.coordinatorLayout.doOnNextLayout {
-            val rect = Rect()
-            ui.checkoutButton.getGlobalVisibleRect(rect)
-            tempGradientBuilder.setX1(screenWidth / 2f - ui.bottomAppBar.cradleWidth / 2f)
-            ui.checkoutButton.backgroundGradient = tempGradientBuilder.buildRadialGradient()
-            ui.checkoutButton.outlineGradient = tempGradientBuilder.setColors(colors).buildRadialGradient()
-
-            // Back icon
-            val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            ui.topActionBar.ui.backButton.measure(wrapContent, wrapContent)
-            ui.topActionBar.ui.backButton.drawable.setTint(
-                topFgGradientBitmap.getPixel(ui.topActionBar.ui.backButton.measuredHeight / 2,
-                                             ui.topActionBar.height / 2))
-
-            // Search view
-            val searchView = ui.topActionBar.ui.searchView
-            val color = topFgGradientBitmap.getPixelAtCenter(searchView)
-            var view = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_button)
-            view?.drawable?.setTint(color)
-            view = searchView.findViewById(androidx.appcompat.R.id.search_close_btn)
-            view?.drawable?.setTint(color)
-            val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
-            colors = intArrayOf(ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent1),
-                                ContextCompat.getColor(this, R.color.colorInBetweenPrimaryAccent2))
-            searchEditText.paint.shader = LinearGradient(0f, searchEditText.height.toFloat(),
-                                                         0f, 0f, colors, null, Shader.TileMode.CLAMP)
-
-            // Change sort icon
-            ui.topActionBar.ui.changeSortButton.drawable.setTint(
-                topFgGradientBitmap.getPixelAtCenter(ui.topActionBar.ui.changeSortButton))
-
-            // Overflow icon
-            ui.topActionBar.ui.menuButton.drawable.setTint(
-                topFgGradientBitmap.getPixelAtCenter(ui.topActionBar.ui.menuButton))
-
-            // BottomNavigationView active colors
-            val shoppingListButton = ui.bottomNavigationBar.findViewById<View>(R.id.shopping_list_button)
-            shoppingListButton.getDrawingRect(rect)
-            val inactiveColor = ui.bottomNavigationBar.itemIconTintList?.defaultColor ?: 0
-            val activeColor = bottomFgGradientBitmap.getPixelAtCenter(shoppingListButton)
-            val itemTintList = ColorStateList(
-                arrayOf(intArrayOf(android.R.attr.state_checked), IntArray(0)),
-                intArrayOf(activeColor, inactiveColor))
-            ui.bottomNavigationBar.itemIconTintList = itemTintList
-            ui.bottomNavigationBar.itemTextColor = itemTintList
+        if (ui.coordinatorLayout.isLaidOut)
+            initGradientsForTopAndBottomBarChildren(screenWidth, topFgGradientBitmap, bottomFgGradientBitmap)
+        else ui.coordinatorLayout.doOnNextLayout {
+            initGradientsForTopAndBottomBarChildren(screenWidth, topFgGradientBitmap, bottomFgGradientBitmap)
         }
+    }
+
+    private fun initGradientsForTopAndBottomBarChildren(
+        screenWidth: Int,
+        topFgGradientBitmap: Bitmap,
+        bottomFgGradientBitmap: Bitmap
+    ) {
+        ui.addButton.outlineGradient = bottomFgGradientBuilder.copy()
+            .setX1(ui.addButton.width / 2f).buildRadialGradient()
+        ui.addButton.backgroundGradient = bottomBgGradientBuilder.copy()
+            .setX1(ui.addButton.width / 2f).buildRadialGradient()
+
+        val rect = Rect()
+        ui.checkoutButton.getGlobalVisibleRect(rect)
+        ui.checkoutButton.outlineGradient = bottomFgGradientBuilder.copy()
+            .setX1(screenWidth / 2f - ui.bottomAppBar.cradleWidth / 2f).buildRadialGradient()
+        ui.checkoutButton.backgroundGradient = bottomBgGradientBuilder.copy()
+            .setX1(screenWidth / 2f - ui.bottomAppBar.cradleWidth / 2f).buildRadialGradient()
+
+        // Back icon
+        // For some reason, using getPixelAtCenter with the backButton does
+        // not work here, even though it should be laid out by this point.
+        val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        ui.topActionBar.ui.backButton.measure(wrapContent, wrapContent)
+        ui.topActionBar.ui.backButton.drawable.setTint(
+            topFgGradientBitmap.getPixel(ui.topActionBar.ui.backButton.measuredWidth / 2,
+                                         ui.topActionBar.height / 2))
+
+        // Custom title
+        // Because the custom title moves its shader around when it is moved,
+        // and we don't want the top action bar's shader to be moved around
+        // with it, the custom title's shader needs to be a separate instance.
+        ui.topActionBar.ui.customTitle.shader = topFgGradientBuilder.buildRadialGradient()
+        //ui.topActionBar.ui.customTitle.invalidate()
+
+        // Search view
+        val searchView = ui.topActionBar.ui.searchView
+        val color = topFgGradientBitmap.getPixelAtCenter(searchView)
+        var view = searchView.findViewById<ImageView>(androidx.appcompat.R.id.search_button)
+        view?.drawable?.setTint(color)
+        view = searchView.findViewById(androidx.appcompat.R.id.search_close_btn)
+        view?.drawable?.setTint(color)
+        val searchEditText = searchView.findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
+        searchEditText.paint.shader = ui.topActionBar.ui.customTitle.shader
+
+        // Change sort icon
+        ui.topActionBar.ui.changeSortButton.drawable.setTint(
+            topFgGradientBitmap.getPixelAtCenter(ui.topActionBar.ui.changeSortButton))
+
+        // Overflow icon
+        ui.topActionBar.ui.menuButton.drawable.setTint(
+            topFgGradientBitmap.getPixelAtCenter(ui.topActionBar.ui.menuButton))
+
+        // BottomNavigationView active colors
+        val shoppingListButton = ui.bottomNavigationBar.findViewById<View>(R.id.shopping_list_button)
+        val inactiveColor = ui.bottomNavigationBar.itemIconTintList?.defaultColor ?: 0
+        val activeColor = bottomFgGradientBitmap.getPixelAtCenter(shoppingListButton)
+        val itemTintList = ColorStateList(
+            arrayOf(intArrayOf(android.R.attr.state_checked), IntArray(0)),
+                    intArrayOf(activeColor, inactiveColor))
+        ui.bottomNavigationBar.itemIconTintList = itemTintList
+        ui.bottomNavigationBar.itemTextColor = itemTintList
     }
 }
