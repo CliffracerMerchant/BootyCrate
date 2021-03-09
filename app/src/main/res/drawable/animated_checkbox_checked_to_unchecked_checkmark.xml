@@ -28,8 +28,8 @@
                 android:valueFrom="1"
                 android:valueTo="0"
                 android:valueType="floatType"
-                android:duration="@integer/viewTranslationDuration"
-                android:interpolator="@anim/translation_interpolator" />
+                android:duration="@integer/animationDefaultDuration"
+                android:interpolator="@anim/default_interpolator" />
         </aapt:attr>
     </target>
 </animated-vector>
