@@ -44,7 +44,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     AppCompatEditText(context, attrs)
 {
     val liveData = MutableLiveData<String>()
-    var animatorConfig = AnimatorConfig.translation
+    var animatorConfig: AnimatorConfig? = null
     val isEditable get() = isFocusableInTouchMode
     var canBeEmpty: Boolean
 
@@ -141,9 +141,8 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
             fromValue = if (editable) 0 else 255,
             toValue = newUnderlineAlpha,
             config = if (editable) AnimatorConfig.fadeIn
-                     else          AnimatorConfig.fadeOut
-        ).apply { start() }
-
+                     else          AnimatorConfig.fadeOut)
+        underlineAnimator.start()
         return AnimInfo(translateAnimator, underlineAnimator, heightChange, start, 0f)
     }
 

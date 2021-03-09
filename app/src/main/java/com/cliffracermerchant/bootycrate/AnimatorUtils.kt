@@ -37,17 +37,17 @@ import android.view.animation.AnimationUtils
 data class AnimatorConfig(val duration: Long, val interpolator: TimeInterpolator) {
     companion object {
         fun initConfigs(context: Context) {
-            val translationDuration = context.resources.getInteger(R.integer.viewTranslationDuration).toLong()
+            val defaultDuration = context.resources.getInteger(R.integer.animationDefaultDuration).toLong()
             val transitionDuration = context.resources.getInteger(R.integer.fragmentTransitionDuration).toLong()
-            val shoppingListItemDuration = context.resources.getInteger(R.integer.shoppingListItemViewTranslationDuration).toLong()
-            val translationInterpolator = AnimationUtils.loadInterpolator(context, R.anim.translation_interpolator)
+            val shoppingListItemDuration = context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong()
+            val defaultInterpolator = AnimationUtils.loadInterpolator(context, R.anim.default_interpolator)
             val fadeInInterpolator = AnimationUtils.loadInterpolator(context, R.anim.fade_in_interpolator)
             val fadeOutInterpolator = AnimationUtils.loadInterpolator(context, R.anim.fade_out_interpolator)
-            translationPrivate = AnimatorConfig(translationDuration, translationInterpolator)
-            fadeInPrivate = AnimatorConfig(translationDuration, fadeInInterpolator)
-            fadeOutPrivate = AnimatorConfig(translationDuration, fadeOutInterpolator)
-            transitionPrivate = AnimatorConfig(transitionDuration, translationInterpolator)
-            shoppingListItemPrivate = AnimatorConfig(shoppingListItemDuration, translationInterpolator)
+            translationPrivate = AnimatorConfig(defaultDuration, defaultInterpolator)
+            fadeInPrivate = AnimatorConfig(defaultDuration, fadeInInterpolator)
+            fadeOutPrivate = AnimatorConfig(defaultDuration, fadeOutInterpolator)
+            transitionPrivate = AnimatorConfig(transitionDuration, defaultInterpolator)
+            shoppingListItemPrivate = AnimatorConfig(shoppingListItemDuration, defaultInterpolator)
         }
 
         private lateinit var translationPrivate: AnimatorConfig
@@ -65,13 +65,15 @@ data class AnimatorConfig(val duration: Long, val interpolator: TimeInterpolator
 }
 
 /** Apply an AnimatorConfig to an Animator object and return the object. */
-fun <T: Animator>T.applyConfig(config: AnimatorConfig) = apply {
+fun <T: Animator>T.applyConfig(config: AnimatorConfig?) = apply {
+    if (config == null) return@apply
     duration = config.duration
     interpolator = config.interpolator
 }
 
 /** Apply an AnimatorConfig to a ViewPropertyAnimator object and return the object. */
-fun ViewPropertyAnimator.applyConfig(config: AnimatorConfig) = apply {
+fun ViewPropertyAnimator.applyConfig(config: AnimatorConfig?) = apply {
+    if (config == null) return@apply
     duration = config.duration
     interpolator = config.interpolator
 }

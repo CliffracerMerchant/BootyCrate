@@ -150,7 +150,7 @@ class NewShoppingListItemDialog(context: Context, viewModel: ShoppingListViewMod
 class NewInventoryItemDialog(context: Context, viewModel: InventoryViewModel) :
     NewViewModelItemDialog<InventoryItem>(context, viewModel, useDefaultLayout = false)
 {
-    private val newInventoryItemView = InventoryItemView(context)
+    private val newInventoryItemView = InventoryItemView(context, null)
 
     init {
         newItemView = newInventoryItemView

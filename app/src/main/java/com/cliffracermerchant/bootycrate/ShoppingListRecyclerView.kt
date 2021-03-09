@@ -54,7 +54,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     inner class ShoppingListAdapter : ExpandableSelectableItemAdapter<ShoppingListItemViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            ShoppingListItemViewHolder(ShoppingListItemView(context))
+            ShoppingListItemViewHolder(ShoppingListItemView(context, itemAnimator.animatorConfig))
 
         override fun onBindViewHolder(holder: ShoppingListItemViewHolder, position: Int) {
             holder.view.update(holder.item)

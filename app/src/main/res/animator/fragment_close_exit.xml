@@ -18,12 +18,12 @@
             android:duration="50"/>
     </set>
     <objectAnimator
-        android:interpolator="@anim/translation_interpolator"
+        android:interpolator="@anim/default_interpolator"
         android:propertyName="scaleX"
         android:valueFrom="1.0" android:valueTo="0.9"
         android:duration="@integer/fragmentTransitionDuration"/>
     <objectAnimator
-        android:interpolator="@anim/translation_interpolator"
+        android:interpolator="@anim/default_interpolator"
         android:propertyName="scaleY"
         android:valueFrom="1.0" android:valueTo="0.9"
         android:duration="@integer/fragmentTransitionDuration"/>

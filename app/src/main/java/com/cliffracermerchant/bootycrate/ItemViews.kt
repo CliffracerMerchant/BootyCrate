@@ -104,7 +104,7 @@ open class ViewModelItemView<Entity: ViewModelItem>(
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
-    val animatorConfig: AnimatorConfig = AnimatorConfig.translation,
+    animatorConfig: AnimatorConfig? = null,
     useDefaultLayout: Boolean = true,
 ) : ViewModelItemView<Entity>(context, useDefaultLayout),
     ExpandableItemAnimator.ExpandableRecyclerViewItem
@@ -113,6 +113,11 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     private var _isExpanded = false
     private val gradientOutline: GradientDrawable
 
+    var animatorConfig: AnimatorConfig? = null
+        set(value) { field = value
+                     ui.nameEdit.animatorConfig = value
+                     ui.extraInfoEdit.animatorConfig = value
+                     ui.amountEdit.animatorConfig = value }
     var startAnimationsImmediately = true
     private val pendingAnimations = mutableListOf<Animator>()
     override fun runPendingAnimations() { for (anim in pendingAnimations)
@@ -135,9 +140,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         clipChildren = false
         if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }
-            ui.nameEdit.animatorConfig = animatorConfig
-            ui.extraInfoEdit.animatorConfig = animatorConfig
-            ui.amountEdit.animatorConfig = animatorConfig
+            this.animatorConfig = animatorConfig
         }
     }
 
@@ -412,8 +415,9 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
  * setStrikeThroughEnabled that will set the strike through state for both the
  * name and extra info edit at the same time.
  */
-class ShoppingListItemView(context: Context) :
-    ExpandableSelectableItemView<ShoppingListItem>(context, AnimatorConfig.shoppingListItem)
+@SuppressLint("ViewConstructor")
+class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig?) :
+    ExpandableSelectableItemView<ShoppingListItem>(context, animatorConfig)
 {
     override fun update(item: ShoppingListItem) {
         ui.checkBox.initIsChecked(item.isChecked)
@@ -441,8 +445,9 @@ class ShoppingListItemView(context: Context) :
  * extra fields that InventoryItem adds to its parent class, and has a set-
  * Expanded override that also shows or hides these extra fields.
  */
-class InventoryItemView(context: Context) :
-    ExpandableSelectableItemView<InventoryItem>(context, useDefaultLayout = false)
+@SuppressLint("ViewConstructor")
+class InventoryItemView(context: Context, animatorConfig: AnimatorConfig?) :
+    ExpandableSelectableItemView<InventoryItem>(context, animatorConfig, useDefaultLayout = false)
 {
     val detailsUi: InventoryItemDetailsBinding
 
@@ -453,9 +458,7 @@ class InventoryItemView(context: Context) :
         ui.editButton.setOnClickListener { toggleExpanded() }
         ui.checkBox.inColorEditMode = true
         ui.amountEdit.minValue = 0
-        ui.nameEdit.animatorConfig = AnimatorConfig.translation
-        ui.extraInfoEdit.animatorConfig = AnimatorConfig.translation
-        ui.amountEdit.animatorConfig = AnimatorConfig.translation
+        this.animatorConfig = animatorConfig
     }
 
     override fun update(item: InventoryItem) {

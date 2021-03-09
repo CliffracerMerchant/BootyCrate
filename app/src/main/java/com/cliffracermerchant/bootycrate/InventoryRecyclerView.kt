@@ -40,7 +40,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     inner class InventoryAdapter : ExpandableSelectableItemAdapter<InventoryItemViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            InventoryItemViewHolder(InventoryItemView(context))
+            InventoryItemViewHolder(InventoryItemView(context, itemAnimator.animatorConfig))
 
         override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int) {
             holder.view.update(holder.item)

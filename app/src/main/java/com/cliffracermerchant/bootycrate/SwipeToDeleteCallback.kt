@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
  * or right. The Int parameter will be the RecyclerView.Adapter position of the
  * swiped item
  */
-class SwipeToDeleteCallback(private val deleteFunc: (Int) -> Unit, context: Context) :
+class SwipeToDeleteCallback(context: Context, private val deleteFunc: (Int) -> Unit) :
         ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
 
     private val deleteBg = ColorDrawable(ContextCompat.getColor(context, android.R.color.holo_red_light))
