@@ -10,6 +10,9 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import com.cliffracermerchant.bootycrate.databinding.InventoryFragmentBinding
+import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * A fragment to display and modify the user's inventory.
@@ -20,8 +23,9 @@ import com.cliffracermerchant.bootycrate.databinding.InventoryFragmentBinding
  * properties with values suitable for display of an InventoryRecyclerView,
  * and using its own action mode callback.
  */
-class InventoryFragment(isActive: Boolean = false) :
-        RecyclerViewFragment<InventoryItem>(isActive) {
+@AndroidEntryPoint
+class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
+    @Inject override lateinit var mainActivityUi: MainActivityBinding
     override lateinit var recyclerView: InventoryRecyclerView
     override val actionMode = InventoryActionMode()
     lateinit var ui: InventoryFragmentBinding
@@ -37,18 +41,6 @@ class InventoryFragment(isActive: Boolean = false) :
         super.onViewCreated(view, savedInstanceState)
     }
 
-    override fun onActiveStateChanged(active: Boolean) {
-        super.onActiveStateChanged(active)
-        if (active) {
-            val activity = activity as? MainActivity ?: return
-            activity.ui.addButton.setOnClickListener {
-                NewInventoryItemDialog(activity, activity.inventoryViewModel)
-                    .show(activity.supportFragmentManager, null)
-            }
-            activity.ui.checkoutButton.checkoutCallback = null
-        }
-    }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return if (item.itemId == R.id.add_to_shopping_list_button) {
             val activity = activity as? MainActivity ?: return false
@@ -58,9 +50,19 @@ class InventoryFragment(isActive: Boolean = false) :
         } else super.onOptionsItemSelected(item)
     }
 
-    override fun setOptionsMenuItemsVisible(showing: Boolean) {
-        super.setOptionsMenuItemsVisible(showing)
-        mainActivity?.ui?.topActionBar?.optionsMenu?.setGroupVisible(R.id.inventory_view_menu_group, showing)
+    override val name = "InventoryFragment"
+    override fun inactiveToActiveAnimatorResId() = R.animator.slide_in_right
+    override fun oldFragmentActiveToInactiveAnimatorResId() = R.animator.slide_out_left
+    override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
+        super.onActiveStateChanged(isActive, ui,)
+        ui.topActionBar.optionsMenu.setGroupVisible(R.id.inventory_view_menu_group, isActive)
+        if (!isActive) return
+        ui.addButton.setOnClickListener {
+            val activity = this.activity ?: return@setOnClickListener
+            NewInventoryItemDialog(activity, recyclerView.viewModel)
+                .show(activity.supportFragmentManager, null)
+        }
+        mainActivityUi.checkoutButton.checkoutCallback = null
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */

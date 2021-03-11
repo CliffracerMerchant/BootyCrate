@@ -6,6 +6,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.core.view.isVisible
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -21,7 +22,7 @@ import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
  * the app's action bar menu. See the comment before the implementation of
  * initOptionsMenu for more information.
  */
-class PreferencesFragment : PreferenceFragmentCompat() {
+class PreferencesFragment : PreferenceFragmentCompat(), MainActivityFragment {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -39,7 +40,7 @@ class PreferencesFragment : PreferenceFragmentCompat() {
 //            getString(R.string.pref_theme_gradient_screen) -> {
 //                val activity = this.activity as? MainActivity ?: return false
 //                val container = activity.ui.fragmentContainer
-//                activity.supportFragmentManager.beginTransaction()
+//                childFragmentManager.beginTransaction()
 //                    .setCustomAnimations(R.animator.fragment_close_enter, R.animator.fragment_close_exit,
 //                                         R.animator.fragment_close_enter, R.animator.fragment_close_exit,)
 //                    .add(container.id, CustomizeThemeGradientFragment())
@@ -58,6 +59,21 @@ class PreferencesFragment : PreferenceFragmentCompat() {
         }
         return true
     }
+
+    override val name = "PreferencesFragment"
+    override fun showsOptionsMenu() = false
+    override fun showsBottomAppBar() = false
+    // Since the bottom app bar will be hidden we might as well
+    // prevent the checkout button from needing to be animated
+    override fun showsCheckoutButton() = true
+    override fun onBackPressed() { parentFragmentManager.popBackStack() }
+
+    override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
+        ui.topActionBar.ui.backButton.isVisible = true
+    }
+
+    override fun inactiveToActiveAnimatorResId() = R.animator.fragment_close_enter
+    override fun oldFragmentActiveToInactiveAnimatorResId() = R.animator.fragment_close_exit
 
 //    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
 //        val context = this.context ?: return@registerForActivityResult

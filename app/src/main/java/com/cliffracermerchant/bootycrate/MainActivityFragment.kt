@@ -5,19 +5,29 @@
 
 package com.cliffracermerchant.bootycrate
 
-import android.os.Bundle
-import android.view.View
-import androidx.fragment.app.Fragment
+import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
+
+interface MainActivityFragment {
+    val name: String
+    fun showsOptionsMenu(): Boolean
+    fun showsBottomAppBar(): Boolean
+    fun showsCheckoutButton(): Boolean
+    fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding)
+    fun inactiveToActiveAnimatorResId(): Int
+    fun oldFragmentActiveToInactiveAnimatorResId(): Int
+    fun onBackPressed()
+}
 
 /**
  * A Fragment subclass with API modifications.
  *
  * The main fragments in BootyCrate are designed to be added to the fragment
  * manager at the same time, and have their views' visibilities set to View.-
- * VISIBLE or View.GONE when they switched between. androidx.fragment.app.Frag-
- * ment's API obviously lacks callbacks for when such a switch occurs. MainAct-
- * ivityFragment adds the functions onActiveStateChanged and setOptionsMenu-
- * ItemsVisible to the API to make them easier to use in this way.
+ * VISIBLE or View.INVISIBLE when the user switches between them. androidx.-
+ * fragment.app.Fragment's API obviously lacks callbacks for when such a
+ * switch occurs. MainActivityFragment adds the functions onActiveStateChanged
+ * and setOptionsMenuItemsVisible to the API to make them easier to use in this
+ * way.
  *
  * onActiveStateChanged is called on both main fragments (the inventory frag-
  * ment and the shopping list fragment) when the active fragment is toggled.
@@ -35,25 +45,39 @@ import androidx.fragment.app.Fragment
  * this function with their own implementation to customize how the options
  * menu appears when they are visible.
  */
-open class MainActivityFragment(isActive: Boolean = false): Fragment() {
-    val mainActivity get() = activity as? MainActivity
-    var isActive: Boolean = isActive
-        set(value) { field = value
-                     onActiveStateChanged(value) }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        isActive = savedInstanceState?.getBoolean("wasActiveFragment") ?: isActive
-        if (!isActive) view.visibility = View.INVISIBLE
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putBoolean("wasActiveFragment", isActive)
-    }
-
-    protected open fun onActiveStateChanged(active: Boolean) =
-        setOptionsMenuItemsVisible(active)
-
-    protected open fun setOptionsMenuItemsVisible(showing: Boolean) { }
-}
+//@AndroidEntryPoint
+//open class MainActivityFragment(isActive: Boolean = false): Fragment(), MainActivityFragmentInterface {
+//    protected var mainActivityUi: MainActivityBinding? = null
+//
+//    var isActive: Boolean = isActive
+//        set(value) { field = value
+//                     onActiveStateChanged(value) }
+//
+//    override fun onAttach(context: Context) {
+//        super.onAttach(context)
+//        val activity = context as? MainActivity
+//            ?: throw IllegalStateException("The parent activity for a MainActivityFragment must be an instance of MainActivity.")
+//        mainActivityUi = activity.ui
+//    }
+//
+//    override fun onDetach() {
+//        super.onDetach()
+//        mainActivityUi = null
+//    }
+//
+//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+//        super.onViewCreated(view, savedInstanceState)
+//        isActive = savedInstanceState?.getBoolean("wasActiveFragment") ?: isActive
+//        if (!isActive) view.visibility = View.INVISIBLE
+//    }
+//
+//    override fun onSaveInstanceState(outState: Bundle) {
+//        super.onSaveInstanceState(outState)
+//        outState.putBoolean("wasActiveFragment", isActive)
+//    }
+//
+//    protected open fun onActiveStateChanged(active: Boolean) =
+//        setOptionsMenuItemsVisible(active)
+//
+//    protected open fun setOptionsMenuItemsVisible(showing: Boolean) { }
+//}

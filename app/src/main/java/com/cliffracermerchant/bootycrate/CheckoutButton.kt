@@ -30,7 +30,8 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
     private val normalText = context.getString(R.string.checkout_description)
     private val confirmText = context.getString(R.string.checkout_confirm_description)
     private var checkoutButtonLastPressTimeStamp = 0L
-    private val confirmTimeout = 2000L
+    private val confirmTimeout =
+        resources.getInteger(R.integer.checkoutButtonConfirmationTimeout).toLong()
     var checkoutCallback: (() -> Unit)? = null
 
     init {

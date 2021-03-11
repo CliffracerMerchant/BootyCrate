@@ -8,10 +8,13 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
+import androidx.annotation.CallSuper
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
+import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import com.kennyc.view.MultiStateView
 
 /**
@@ -31,9 +34,10 @@ import com.kennyc.view.MultiStateView
  * own instance of ActionMode if they wish to specialize this behavior.
  */
 @Suppress("LeakingThis")
-abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: Boolean = false) :
-    MainActivityFragment(isActive)
+abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
+    Fragment(), MainActivityFragment
 {
+    abstract val mainActivityUi: MainActivityBinding
     abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>
     open val actionMode = ActionMode()
 
@@ -57,7 +61,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortStr = prefs.getString(sortModePrefKey, ViewModelItem.Sort.Color.toString())
         recyclerView.sort = ViewModelItem.Sort.fromString(sortStr)
-        recyclerView.snackBarAnchor = mainActivity?.ui?.bottomAppBar
+        //recyclerView.snackBarAnchor = mainActivity?.ui?.bottomAppBar
         recyclerView.selection.itemsLiveData.observe(viewLifecycleOwner, actionMode)
         recyclerView.observeViewModel(viewLifecycleOwner)
         recyclerView.viewModel.items.observe(viewLifecycleOwner) { items ->
@@ -65,49 +69,13 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
             stateView.viewState = if (items.isNotEmpty()) MultiStateView.ViewState.CONTENT
                                   else                    MultiStateView.ViewState.EMPTY
         }
-        if (savedInstanceState != null) {
+        if (savedInstanceState != null)
             _searchIsActive = savedInstanceState.getBoolean(searchWasActivePrefKey, false)
-            val mainActivity = this.mainActivity
-            if (searchIsActive && mainActivity != null) {
-                mainActivity.ui.topActionBar.ui.backButton.isVisible = true
-                mainActivity.ui.topActionBar.ui.customTitle.isVisible = false
-            }
-        }
         super.onViewCreated(view, savedInstanceState)
     }
 
-    override fun onActiveStateChanged(active: Boolean) {
-        super.onActiveStateChanged(active)
-        if (!active) actionMode.finish()
-    }
-
-    override fun setOptionsMenuItemsVisible(showing: Boolean) {
-        if (!showing) return
-        val activity = mainActivity?: return
-        actionMode.actionBar = activity.ui.topActionBar
-        if (recyclerView.selection.isNotEmpty)
-            actionMode.onChanged(recyclerView.selection.items!!)
-
-        val searchView = activity.ui.topActionBar.ui.searchView
-        searchView.setOnCloseListener { _searchIsActive = false; false }
-        searchView.setOnSearchClickListener { _searchIsActive = true }
-        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?) = true
-            override fun onQueryTextChange(newText: String?): Boolean {
-                recyclerView.searchFilter = newText
-                return true
-            }})
-        activity.ui.topActionBar.changeSortMenu.findItem(when (recyclerView.sort) {
-            ViewModelItem.Sort.Color ->      R.id.color_option
-            ViewModelItem.Sort.NameAsc ->    R.id.name_ascending_option
-            ViewModelItem.Sort.NameDesc ->   R.id.name_descending_option
-            ViewModelItem.Sort.AmountAsc ->  R.id.amount_ascending_option
-            ViewModelItem.Sort.AmountDesc -> R.id.amount_descending_option
-        }).isChecked = true
-    }
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.isChecked || !isActive) return false
+        if (item.isChecked) return false
         return when (item.itemId) {
             R.id.delete_selected_menu_item -> {
                 recyclerView.deleteSelectedItems()
@@ -117,7 +85,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
                     items = if (recyclerView.selection.size != 0)
                                 recyclerView.selection.items!!
                             else recyclerView.adapter.currentList,
-                    snackBarParent = mainActivity?.ui?.bottomAppBar ?: recyclerView
+                    snackBarParent = recyclerView//mainActivity?.ui?.bottomAppBar ?: recyclerView
                 ).show(childFragmentManager, null)
                 true
             } R.id.select_all_menu_item -> {
@@ -159,6 +127,44 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
         editor.apply()
     }
 
+    override fun showsOptionsMenu() = true
+    override fun showsBottomAppBar() = true
+    override fun showsCheckoutButton() = false
+    override fun inactiveToActiveAnimatorResId() = R.animator.slide_in_left
+    override fun oldFragmentActiveToInactiveAnimatorResId() = R.animator.slide_out_right
+    override fun onBackPressed() {
+        if (actionMode.isStarted) actionMode.finishAndClearSelection()
+        if (_searchIsActive) mainActivityUi
+    }
+    @CallSuper
+    override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
+        if (isActive) {
+            actionMode.actionBar = ui.topActionBar
+            if (recyclerView.selection.isNotEmpty)
+                actionMode.onChanged(recyclerView.selection.items!!)
+
+            val searchView = ui.topActionBar.ui.searchView
+            searchView.setOnCloseListener { _searchIsActive = false; false }
+            searchView.setOnSearchClickListener { _searchIsActive = true }
+            searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?) = true
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    recyclerView.searchFilter = newText
+                    return true
+                }})
+            ui.topActionBar.changeSortMenu.findItem(when (recyclerView.sort) {
+                ViewModelItem.Sort.Color ->      R.id.color_option
+                ViewModelItem.Sort.NameAsc ->    R.id.name_ascending_option
+                ViewModelItem.Sort.NameDesc ->   R.id.name_descending_option
+                ViewModelItem.Sort.AmountAsc ->  R.id.amount_ascending_option
+                ViewModelItem.Sort.AmountDesc -> R.id.amount_descending_option
+            }).isChecked = true
+        } else {
+            actionMode.finish()
+            actionMode.actionBar = null
+        }
+    }
+
     /**
      * The default ActionMode used by RecyclerViewFragment.
      *
@@ -173,11 +179,11 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
      * mode, either clear the selection manually, which will end the action mode, or
      * call finishAndClearSelection.
      */
-    open inner class ActionMode : RecyclerViewActionMode(), Observer<List<Entity>> {
+    open inner class ActionMode : RecyclerViewActionBar.ActionMode(), Observer<List<Entity>> {
 
         override fun onChanged(newList: List<Entity>) {
             if (newList.isEmpty()) actionMode.finish()
-            else if (newList.isNotEmpty() && isActive) {
+            else if (newList.isNotEmpty()) {
                 actionMode.title = activity?.getString(R.string.action_mode_title, newList.size)
                 actionMode.start()
             }
@@ -195,4 +201,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>(isActive: 
 
         fun finishAndClearSelection() = recyclerView.selection.clear()
     }
+
+    var translationXFraction
+        get() = recyclerView.run { if (width == 0) 0f else translationX / width }
+        set(value) = recyclerView.run { translationX = value * width }
 }

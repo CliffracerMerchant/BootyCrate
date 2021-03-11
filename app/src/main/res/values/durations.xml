@@ -8,4 +8,5 @@
     <integer name="fragmentTransitionDuration">300</integer>
     <integer name="animationDefaultDuration">300</integer>
     <integer name="shoppingListItemAnimationDuration">250</integer>
+    <integer name="checkoutButtonConfirmationTimeout">2000</integer>
 </resources>

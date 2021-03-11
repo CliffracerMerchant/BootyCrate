@@ -6,6 +6,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.app.Application
 import android.content.Context
+import android.content.ContextWrapper
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -201,12 +202,19 @@ class InventoryViewModel @Inject constructor(app: Application) :
 
 fun inventoryViewModel(context: Context) =
     try { ViewModelProvider(context as FragmentActivity).get(InventoryViewModel::class.java) }
-    catch(e: ClassCastException) {
+    catch(e: ClassCastException) { try {
+        val activityContext = (context as ContextWrapper).baseContext as FragmentActivity
+        ViewModelProvider(activityContext).get(InventoryViewModel::class.java)
+    } catch(e: ClassCastException) {
         throw ClassCastException("The provided context must be an instance of FragmentActivity")
-    }
+    }}
+
 
 fun shoppingListViewModel(context: Context) =
     try { ViewModelProvider(context as FragmentActivity).get(ShoppingListViewModel::class.java) }
-    catch(e: ClassCastException) {
+    catch(e: ClassCastException) { try {
+        val activityContext = (context as ContextWrapper).baseContext as FragmentActivity
+        ViewModelProvider(activityContext).get(ShoppingListViewModel::class.java)
+    } catch(e: ClassCastException) {
         throw ClassCastException("The provided context must be an instance of FragmentActivity")
-    }
+    }}
