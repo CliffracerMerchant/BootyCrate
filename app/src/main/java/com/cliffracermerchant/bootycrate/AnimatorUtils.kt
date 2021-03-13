@@ -38,7 +38,7 @@ data class AnimatorConfig(val duration: Long, val interpolator: TimeInterpolator
     companion object {
         fun initConfigs(context: Context) {
             val defaultDuration = context.resources.getInteger(R.integer.animationDefaultDuration).toLong()
-            val transitionDuration = context.resources.getInteger(R.integer.fragmentTransitionDuration).toLong()
+            val transitionDuration = context.resources.getInteger(R.integer.fragmentTransitionLongDuration).toLong()
             val shoppingListItemDuration = context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong()
             val defaultInterpolator = AnimationUtils.loadInterpolator(context, R.anim.default_interpolator)
             val fadeInInterpolator = AnimationUtils.loadInterpolator(context, R.anim.fade_in_interpolator)

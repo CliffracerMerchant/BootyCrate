@@ -5,7 +5,6 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
-import android.animation.AnimatorInflater
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.Configuration
@@ -23,7 +22,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -50,11 +48,6 @@ import dagger.hilt.android.qualifiers.ActivityContext
 @Suppress("LeakingThis")
 @AndroidEntryPoint
 open class MainActivity : AppCompatActivity() {
-//    private lateinit var shoppingListFragment: ShoppingListFragment
-//    private lateinit var inventoryFragment: InventoryFragment
-    private var activeFragment: Fragment? = null
-    private var activeFragmentInterface: MainActivityFragment? = null
-
     private var shoppingListSize = -1
     private var shoppingListNumNewItems = 0
     private var pendingCradleAnim: Animator? = null
@@ -91,90 +84,73 @@ open class MainActivity : AppCompatActivity() {
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
 
+        ui.topActionBar.ui.backButton.setOnClickListener {
+            val visibleFragment = ui.fragmentContainer.visibleFragment as? FragmentInterface
+            if (visibleFragment?.onBackPressed() == false)
+                ui.fragmentContainer.popBackStack()
+        }
+        ui.topActionBar.onDeleteButtonClickedListener = {
+            onOptionsItemSelected(ui.topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
+        }
+        ui.topActionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
+        ui.topActionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
+        ui.fragmentContainer.onNewFragmentSelectedListener = ::updateUiForNewFragment
+
         ui.cradleLayout.layoutTransition = layoutTransition(AnimatorConfig.transition)
         ui.cradleLayout.layoutTransition.doOnStart {
             pendingCradleAnim?.start()
             pendingCradleAnim = null
         }
 
+        ui.bottomAppBar.prepareCradleLayout(ui.cradleLayout)
         ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
-        ui.bottomNavigationBar.setOnNavigationItemSelectedListener(onNavigationItemSelected)
-
-        initFragments(savedInstanceState)
-        val showingInventory = activeFragment is InventoryFragment
-        val navButton = findViewById<View>(if (showingInventory) R.id.inventory_button
-                                           else                  R.id.shopping_list_button)
+        val navButton = ui.bottomNavigationBar.findViewById<View>(ui.bottomNavigationBar.selectedItemId)
         navButton.doOnNextLayout {
             ui.bottomAppBar.indicatorXPos = (it.width - ui.bottomAppBar.indicatorWidth) / 2 + it.left
         }
-        ui.bottomAppBar.prepareCradleLayout(ui.cradleLayout)
 
-        shoppingListViewModel.items.observe(this) { newList ->
-            updateShoppingListBadge(newList)
-        }
-
-        ui.topActionBar.ui.backButton.setOnClickListener {
-            activeFragmentInterface?.onBackPressed()
-        }
-        onCreateOptionsMenu(ui.topActionBar.optionsMenu)
-        ui.topActionBar.onDeleteButtonClickedListener = {
-            onOptionsItemSelected(ui.topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
-        }
-        ui.topActionBar.setOnSortOptionClickedListener { item ->
-            onOptionsItemSelected(item)
-        }
-        ui.topActionBar.setOnOptionsItemClickedListener { item ->
-            onOptionsItemSelected(item)
-        }
+        shoppingListViewModel.items.observe(this) { newList -> updateShoppingListBadge(newList) }
     }
 
-    override fun onBackPressed() {
-        if (activeFragment is PreferencesFragment)
-            supportFragmentManager.popBackStack()
-        else super.onBackPressed()
-    }
+    override fun onBackPressed() { ui.topActionBar.ui.backButton.performClick() }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem) =
         if (item.itemId == R.id.settings_menu_item) {
-            switchToNewActiveFragment(PreferencesFragment())
-            return true
+            ui.fragmentContainer.addSecondaryFragment(PreferencesFragment(),
+                                                      R.animator.fragment_close_enter,
+                                                      R.animator.fragment_close_exit)
+            true
         }
-        return activeFragment?.onOptionsItemSelected(item) ?: false
-    }
+        else ui.fragmentContainer.visibleFragment?.onOptionsItemSelected(item) ?: false
 
-    private fun switchToNewActiveFragment(newActiveFragment: Fragment) {
-        if (newActiveFragment !is MainActivityFragment)
-            throw IllegalStateException("The new active fragment must implement MainActivityFragment.")
-        val oldActiveFragment = activeFragment
-        val oldActiveFragmentInterface = activeFragmentInterface
-        oldActiveFragmentInterface?.onActiveStateChanged(isActive = false, ui = ui)
+    private var currentFragment: Fragment? = null
+    private fun updateUiForNewFragment(newFragment: Fragment) {
+        currentFragment?.let {
+            if (it is FragmentInterface)
+                it.onActiveStateChanged(isActive = false, ui)
+        }
+        currentFragment = newFragment
 
-        activeFragmentInterface = newActiveFragment
-        activeFragment = newActiveFragment
-        newActiveFragment.onActiveStateChanged(isActive = true, ui = ui)
-        showBottomAppBar(show = newActiveFragment.showsBottomAppBar())
-        showCheckoutButton(showing = newActiveFragment.showsCheckoutButton())
+        if (newFragment !is FragmentInterface) return
+        newFragment.onActiveStateChanged(isActive = true, ui = ui)
+        ui.topActionBar.optionsMenuVisible = newFragment.showsOptionsMenu()
+        showBottomAppBar(show = newFragment.showsBottomAppBar())
+        if (newFragment.showsBottomAppBar())
+            showCheckoutButton(showing = newFragment.showsCheckoutButton())
         inputMethodManager(this)?.hideSoftInputFromWindow(ui.bottomAppBar.windowToken, 0)
 
-        val enterAnimatorResId = newActiveFragment.oldFragmentActiveToInactiveAnimatorResId()
-        val exitAnimatorResId = newActiveFragment.inactiveToActiveAnimatorResId()
-
-        if (newActiveFragment in supportFragmentManager.fragments) {
-            AnimatorInflater.loadAnimator(this, enterAnimatorResId).apply {
-                setTarget(newActiveFragment.view)
-            }.start()
-            oldActiveFragment?.view?.let {
-                AnimatorInflater.loadAnimator(this, exitAnimatorResId).apply {
-                    setTarget(it)
-                }.start()
+        val newMenuItemId = ui.fragmentContainer.visibleFragmentMenuItemId
+        if (newFragment.showsBottomAppBar() && newMenuItemId != null) {
+            val newMenuItem = ui.bottomNavigationBar.findViewById<View>(newMenuItemId)
+            newMenuItem?.let {
+                val indicatorNewXPos = (it.width - ui.bottomAppBar.indicatorWidth) / 2 + it.left
+                ui.bottomAppBar.apply {
+                    valueAnimatorOfInt(
+                        setter = ::setIndicatorXPosition, config = AnimatorConfig.transition,
+                        fromValue = indicatorXPos, toValue = indicatorNewXPos
+                    ).start()
+                }
             }
-        } else {
-            val transaction = supportFragmentManager.beginTransaction()
-                .add(newActiveFragment, newActiveFragment.name)
-                .setCustomAnimations(enterAnimatorResId, exitAnimatorResId,
-                                     enterAnimatorResId, exitAnimatorResId)
-            oldActiveFragment?.let { transaction.hide(it) }
-            transaction.addToBackStack(null).commit()
         }
     }
 
@@ -241,12 +217,12 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun updateShoppingListBadge(newShoppingList: List<ShoppingListItem>) {
-        if (shoppingListSize == -1) {
+        if (shoppingListSize == -1)
             if (newShoppingList.isNotEmpty())
                 shoppingListSize = newShoppingList.size
-        } else {
+        else {
             val sizeChange = newShoppingList.size - shoppingListSize
-            if (activeFragment is InventoryFragment && sizeChange > 0) {
+            if (ui.fragmentContainer.visibleFragment is InventoryFragment && sizeChange > 0) {
                 shoppingListNumNewItems += sizeChange
                 ui.shoppingListBadge.text = getString(R.string.shopping_list_badge_text,
                                                    shoppingListNumNewItems)
@@ -259,63 +235,19 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        activeFragment?.let { outState.putInt("activeFragmentId", it.id) }
-        val allFragmentKeys = mutableListOf<String>()
-        for (fragment in supportFragmentManager.fragments)
-            if (fragment is MainActivityFragment) {
-                allFragmentKeys.add(fragment.name)
-                supportFragmentManager.putFragment(outState, fragment.name, fragment)
-            }
-        outState.putStringArray("allFragments", allFragmentKeys.toTypedArray())
-    }
-
-    private fun initFragments(savedInstanceState: Bundle?) {
-        if (savedInstanceState != null) {
-            val allFragmentKeys = savedInstanceState.getStringArray("allFragments") ?: return
-            for (key in allFragmentKeys)
-                supportFragmentManager.getFragment(savedInstanceState, key)
-            val activeFragmentId = savedInstanceState.getInt("activeFragmentId")
-            val activeFragment = supportFragmentManager.findFragmentById(activeFragmentId)
-            activeFragmentInterface = activeFragment as MainActivityFragment
-
-        } else {
-            val shoppingListFragment = ShoppingListFragment()
-            val inventoryFragment = InventoryFragment()
-            supportFragmentManager.beginTransaction()
-                .add(R.id.fragmentContainer, shoppingListFragment, shoppingListFragment.name)
-                .add(R.id.fragmentContainer, inventoryFragment, inventoryFragment.name)
-                .runOnCommit { inventoryFragment.view?.visibility = View.INVISIBLE }.commit()
-            activeFragment = shoppingListFragment
-            activeFragmentInterface = shoppingListFragment
-        }
-    }
-
-    private val onNavigationItemSelected = BottomNavigationView.OnNavigationItemSelectedListener { item ->
-        if (item.isChecked) false // Selected item was already selected
-        else {
-            val newFragmentTag = if (item.itemId == R.id.inventory_button) "InventoryFragment"
-                                 else                                      "ShoppingListFragment"
-            val newFragment = supportFragmentManager.findFragmentByTag(newFragmentTag)
-            item.isChecked = newFragment != null
-            if (newFragment == null) return@OnNavigationItemSelectedListener false
-
-            switchToNewActiveFragment(newFragment)
-            val newIcon = findViewById<View>(
-                if (item.itemId == R.id.inventory_button) R.id.inventory_button
-                else                                      R.id.shopping_list_button)
-            val indicatorNewXPos = (newIcon.width - ui.bottomAppBar.indicatorWidth) / 2 + newIcon.left
-            ValueAnimator.ofInt(ui.bottomAppBar.indicatorXPos, indicatorNewXPos).apply {
-                addUpdateListener { ui.bottomAppBar.indicatorXPos = it.animatedValue as Int }
-                applyConfig(AnimatorConfig.transition)
-            }.start()
-            true
-        }
-    }
-
-    val sysDarkThemeIsActive get() =
+    private val sysDarkThemeIsActive get() =
         (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
+
+    interface FragmentInterface {
+        val name: String
+        fun showsOptionsMenu(): Boolean
+        fun showsBottomAppBar(): Boolean
+        fun showsCheckoutButton(): Boolean
+        fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding)
+        fun inactiveToActiveAnimatorResId(): Int
+        fun oldFragmentActiveToInactiveAnimatorResId(): Int
+        fun onBackPressed(): Boolean
+    }
 
     @Module @InstallIn(ActivityComponent::class)
     object MainActivityBindingModule {

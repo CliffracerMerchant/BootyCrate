@@ -6,6 +6,7 @@ package com.cliffracermerchant.bootycrate
 
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.Shader
@@ -13,6 +14,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.SearchView
+import androidx.fragment.app.FragmentActivity
 
 /**
  * For a given position in a range, return the position after
@@ -35,9 +37,9 @@ fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, move
     else pos
 }
 
-fun Bitmap.getPixelAtCenter(view: View) = getPixel(view.centerX(), view.centerY())
 fun View.centerX() = left + width / 2
 fun View.centerY() = top + height / 2
+fun Bitmap.getPixelAtCenter(view: View) = getPixel(view.centerX(), view.centerY())
 
 internal object UtilsPrivate {
     val matrix = Matrix()
@@ -70,6 +72,17 @@ class MultiListenerSearchView(context: Context, attrs: AttributeSet) : SearchVie
     override fun setOnCloseListener(l: OnCloseListener) { onCloseListeners.add(l) }
 }
 
+/** Return a InputMethodManager system service from the @param context. */
 fun inputMethodManager(context: Context) =
     context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+
+/** Return @param context as a FragmentActivity. */
+fun fragmentActivityFrom(context: Context) =
+    try { context as FragmentActivity }
+    catch(e: ClassCastException) {
+        try { (context as ContextWrapper).baseContext as FragmentActivity }
+        catch(e: ClassCastException) {
+            throw ClassCastException("The provided context must be an instance of FragmentActivity")
+        }
+    }
 

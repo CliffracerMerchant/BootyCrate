@@ -49,10 +49,11 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
         val checkMarkDrawable = (drawable as LayerDrawable).getDrawable(1)
         checkMarkDrawable.setTint(ContextCompat.getColor(context, android.R.color.black))
         setOnClickListener {
-            val activity = context as? MainActivity ?: return@setOnClickListener
-            if (inColorEditMode)
-                showColorPickerDialog(context, activity.supportFragmentManager,
+            if (inColorEditMode) {
+                val activity = fragmentActivityFrom(context)
+                showColorPickerDialog(activity, activity.supportFragmentManager,
                                       colorIndex, ::setColorIndex)
+            }
             else isChecked = !isChecked
         }
     }

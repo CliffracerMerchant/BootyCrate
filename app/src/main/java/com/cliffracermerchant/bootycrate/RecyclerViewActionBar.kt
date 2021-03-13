@@ -57,10 +57,16 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     fun setOnOptionsItemClickedListener(listener: (MenuItem) -> Boolean) =
         optionsPopupMenu.setOnMenuItemClickListener(listener)
 
-    private val optionsPopupMenu = PopupMenu(context, ui.menuButton)
     private val changeSortPopupMenu = PopupMenu(context, ui.changeSortButton)
-    val optionsMenu get() = optionsPopupMenu.menu
+    private val optionsPopupMenu = PopupMenu(context, ui.menuButton)
     val changeSortMenu get() = changeSortPopupMenu.menu
+    val optionsMenu get() = optionsPopupMenu.menu
+    var optionsMenuVisible: Boolean = true
+        set(value) { field = value
+                     ui.searchView.isVisible = value
+                     ui.changeSortButton.isVisible = value
+                     ui.menuButton.isVisible = value }
+
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.RecyclerViewActionBar)

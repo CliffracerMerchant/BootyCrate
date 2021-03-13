@@ -27,11 +27,12 @@ import dev.sasikanth.colorsheet.ColorSheet
  * indices of the chosen color, not the Android color value for the color.
  */
 fun showColorPickerDialog(
+    context: Context,
     fragmentManager: FragmentManager,
     initialColorIndex: Int,
     callback: (Int) -> Unit,
 ) = ColorSheet().colorPicker(
-    colors = ViewModelItem.Colors,
+    colors = context.resources.getIntArray(R.array.view_model_item_colors),
     selectedColor = ViewModelItem.Colors[initialColorIndex],
     listener = { color: Int ->
         val colorIndex = ViewModelItem.Colors.indexOf(color)

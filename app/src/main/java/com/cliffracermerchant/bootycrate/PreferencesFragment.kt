@@ -11,6 +11,7 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
+import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
 /**
@@ -22,7 +23,7 @@ import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
  * the app's action bar menu. See the comment before the implementation of
  * initOptionsMenu for more information.
  */
-class PreferencesFragment : PreferenceFragmentCompat(), MainActivityFragment {
+class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.FragmentInterface {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -66,10 +67,9 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivityFragment {
     // Since the bottom app bar will be hidden we might as well
     // prevent the checkout button from needing to be animated
     override fun showsCheckoutButton() = true
-    override fun onBackPressed() { parentFragmentManager.popBackStack() }
-
+    override fun onBackPressed() = false
     override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
-        ui.topActionBar.ui.backButton.isVisible = true
+        ui.topActionBar.ui.backButton.isVisible = isActive
     }
 
     override fun inactiveToActiveAnimatorResId() = R.animator.fragment_close_enter

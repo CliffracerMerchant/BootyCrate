@@ -101,4 +101,10 @@
     <declare-styleable name="ToggleableTintedCheckbox">
         <attr name="state_edit_color" format="boolean" />
     </declare-styleable>
+
+    <declare-styleable name="FragmentContainer">
+        <attr name="navBarResId" format="reference" />
+        <attr name="navBarMenuFragmentMap" format="reference" />
+    </declare-styleable>
+
 </resources>

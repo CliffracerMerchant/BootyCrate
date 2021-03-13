@@ -35,7 +35,7 @@ import com.kennyc.view.MultiStateView
  */
 @Suppress("LeakingThis")
 abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
-    Fragment(), MainActivityFragment
+    Fragment(), MainActivity.FragmentInterface
 {
     abstract val mainActivityUi: MainActivityBinding
     abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>
@@ -132,9 +132,10 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
     override fun showsCheckoutButton() = false
     override fun inactiveToActiveAnimatorResId() = R.animator.slide_in_left
     override fun oldFragmentActiveToInactiveAnimatorResId() = R.animator.slide_out_right
-    override fun onBackPressed() {
-        if (actionMode.isStarted) actionMode.finishAndClearSelection()
-        if (_searchIsActive) mainActivityUi
+    override fun onBackPressed() = when {
+        actionMode.isStarted -> { actionMode.finishAndClearSelection(); true }
+        _searchIsActive ->      { mainActivityUi.topActionBar.ui.searchView.isIconified = true; true }
+        else ->                   false
     }
     @CallSuper
     override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
@@ -182,7 +183,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
     open inner class ActionMode : RecyclerViewActionBar.ActionMode(), Observer<List<Entity>> {
 
         override fun onChanged(newList: List<Entity>) {
-            if (newList.isEmpty()) actionMode.finish()
+            if (newList.isEmpty() && actionMode.isStarted) actionMode.finish()
             else if (newList.isNotEmpty()) {
                 actionMode.title = activity?.getString(R.string.action_mode_title, newList.size)
                 actionMode.start()
@@ -201,8 +202,4 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
 
         fun finishAndClearSelection() = recyclerView.selection.clear()
     }
-
-    var translationXFraction
-        get() = recyclerView.run { if (width == 0) 0f else translationX / width }
-        set(value) = recyclerView.run { translationX = value * width }
 }

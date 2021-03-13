@@ -25,4 +25,17 @@
     <color name="colorTextDarkSecondary">#353535</color>
     <color name="colorTextLink">#58ECFF</color>
     <color name="checkoutButtonEnabledColor">#CB6C50</color>
+
+    <color name="viewModelItemColor0">#D65C5C</color>
+    <color name="viewModelItemColor1">#D6995C</color>
+    <color name="viewModelItemColor2">#D6D65C</color>
+    <color name="viewModelItemColor3">#A7D65C</color>
+    <color name="viewModelItemColor4">#61D161</color>
+    <color name="viewModelItemColor5">#5CD6A7</color>
+    <color name="viewModelItemColor6">#5CC7D6</color>
+    <color name="viewModelItemColor7">#5C99D6</color>
+    <color name="viewModelItemColor8">#7070DB</color>
+    <color name="viewModelItemColor9">#A670DB</color>
+    <color name="viewModelItemColor10">#D270DB</color>
+    <color name="viewModelItemColor11">#DB70A6</color>
 </resources>

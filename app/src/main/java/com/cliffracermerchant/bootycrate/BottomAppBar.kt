@@ -141,6 +141,8 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
         materialShapeDrawable.invalidateSelf()
     }
 
+    fun setIndicatorXPosition(pos: Int) { indicatorXPos = pos }
+
     /** An EdgeTreatment used to draw a cradle cutout for the BottomAppBar.
      *
      *  CradleTopEdgeTreatment's getEdgePath draws a cutout shape for the Bottom-
