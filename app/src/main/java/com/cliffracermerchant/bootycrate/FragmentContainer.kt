@@ -35,10 +35,17 @@ class FragmentContainer(context: Context, attrs: AttributeSet) : FrameLayout(con
                                 else backStackFragments.peek()
     var onNewFragmentSelectedListener: ((Fragment) -> Unit)? = null
 
+    var secondaryFragmentDefaultEnterAnimResId = 0
+    var secondaryFragmentDefaultExitAnimResId = 0
+
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.FragmentContainer)
         navBarResId = a.getResourceIdOrThrow(R.styleable.FragmentContainer_navBarResId)
-        navBarMenuFragmentMapResId = a.getResourceIdOrThrow(R.styleable.FragmentContainer_navBarMenuFragmentMap)
+        navBarMenuFragmentMapResId = a.getResourceIdOrThrow(R.styleable.FragmentContainer_navBarMenuFragmentMapResId)
+        secondaryFragmentDefaultEnterAnimResId = a.getResourceId(
+            R.styleable.FragmentContainer_secondaryFragmentDefaultEnterAnimResId, 0)
+        secondaryFragmentDefaultExitAnimResId = a.getResourceId(
+            R.styleable.FragmentContainer_secondaryFragmentDefaultExitAnimResId, 0)
         a.recycle()
     }
 
@@ -101,8 +108,15 @@ class FragmentContainer(context: Context, attrs: AttributeSet) : FrameLayout(con
         return true
     }
 
-    fun addSecondaryFragment(fragment: Fragment, enterAnimResId: Int = 0, exitAnimResId: Int = 0) {
+    @Suppress("NAME_SHADOWING")
+    fun addSecondaryFragment(
+        fragment: Fragment,
+        enterAnimResId: Int? = null,
+        exitAnimResId: Int? = null
+    ) {
         fragment.view?.alpha = 0f
+        val enterAnimResId = enterAnimResId ?: secondaryFragmentDefaultEnterAnimResId
+        val exitAnimResId = exitAnimResId ?: secondaryFragmentDefaultExitAnimResId
         fragmentActivityFrom(context).supportFragmentManager.beginTransaction()
             .setCustomAnimations(enterAnimResId, exitAnimResId, enterAnimResId, exitAnimResId)
             .apply {

@@ -15,8 +15,6 @@
          due to dev.sasikanth.colorsheet.ColorSheet picking its background
          color based on the android attribute. -->
     <attr name="textColor"     format="color" />
-    <!-- The width of borders that are used in several places within the UI. -->
-    <attr name="borderWidth"   format="dimension" />
     <!-- The width of the canvas a path is drawn on. -->
     <attr name="pathWidth"     format="float" />
     <!-- The height of the canvas a path is drawn  on. -->
@@ -39,10 +37,17 @@
         <attr name="cradleStartEndMargin"     format="dimension" />
         <!-- The margin in between the cradle and the cradle layout contents. -->
         <attr name="cradleContentsMargin"     format="dimension" />
+        <!-- The width of the top border. -->
+        <attr name="topBorderWidth"           format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="BottomAppBarWithIndicator">
         <!-- The initial width of the indicator. -->
-        <attr name="indicatorWidth"           format="dimension" />
+        <attr name="indicatorWidth"     format="dimension" />
         <!-- The initial color of the indicator. -->
-        <attr name="indicatorColor"           format="color" />
+        <attr name="indicatorColor"     format="color" />
+        <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
+        <attr name="navigationBarResId" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="TextFieldEdit">
@@ -66,11 +71,14 @@
     </declare-styleable>
 
     <declare-styleable name="RecyclerViewActionBar">
+        <!-- The resource id of the menu to be used as the contents of the change sort menu. -->
         <attr name="changeSortMenuResId" format="reference" />
+        <!-- The resource id of the menu to be used as the contents of the options menu. -->
         <attr name="optionsMenuResId" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="GradientActionBar">
+        <!-- The width of the bottom border. -->
         <attr name="bottomBorderWidth" format="dimension" />
     </declare-styleable>
 
@@ -88,7 +96,7 @@
         <!-- The path data to use for the vector outline. -->
         <attr name="outlinePathData"    format="string" />
         <!-- The stroke width of the outline. -->
-        <attr name="outlineStrokeWidth" format="float" />
+        <attr name="outlineStrokeWidth" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="DisableableOutlinedGradientButton">
@@ -103,8 +111,15 @@
     </declare-styleable>
 
     <declare-styleable name="FragmentContainer">
+        <!-- The resource id of the linked BottomNavigationView -->
         <attr name="navBarResId" format="reference" />
-        <attr name="navBarMenuFragmentMap" format="reference" />
+        <!-- The resource id of the string array that gives the name of the fragment (including the
+             package name) that should be associated with each corresponding navigation bar menu item. -->
+        <attr name="navBarMenuFragmentMapResId" format="reference" />
+        <!-- The resource id of the animator that will be used for the entering fragment during a transaction involving a secondary fragment. -->
+        <attr name="secondaryFragmentDefaultEnterAnimResId" format="reference" />
+        <!-- The resource id of the animator that will be used for the exiting fragment during a transaction involving a secondary fragment. -->
+        <attr name="secondaryFragmentDefaultExitAnimResId" format="reference" />
     </declare-styleable>
 
 </resources>

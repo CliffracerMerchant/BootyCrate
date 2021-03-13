@@ -61,7 +61,6 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.FragmentInt
         return true
     }
 
-    override val name = "PreferencesFragment"
     override fun showsOptionsMenu() = false
     override fun showsBottomAppBar() = false
     // Since the bottom app bar will be hidden we might as well
@@ -71,9 +70,6 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.FragmentInt
     override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
         ui.topActionBar.ui.backButton.isVisible = isActive
     }
-
-    override fun inactiveToActiveAnimatorResId() = R.animator.fragment_close_enter
-    override fun oldFragmentActiveToInactiveAnimatorResId() = R.animator.fragment_close_exit
 
 //    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
 //        val context = this.context ?: return@registerForActivityResult

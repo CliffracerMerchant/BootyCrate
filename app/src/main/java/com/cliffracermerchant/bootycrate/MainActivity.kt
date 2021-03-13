@@ -96,17 +96,18 @@ open class MainActivity : AppCompatActivity() {
         ui.topActionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
         ui.fragmentContainer.onNewFragmentSelectedListener = ::updateUiForNewFragment
 
+        ui.bottomAppBar.prepareCradleLayout(ui.cradleLayout)
+        ui.bottomAppBar.indicatorAnimatorConfig = AnimatorConfig.transition
+        ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
+        ui.bottomAppBar.doOnNextLayout {
+            ui.bottomAppBar.moveIndicatorToNavBarItem(
+                ui.bottomNavigationBar.selectedItemId, animate = false)
+        }
+
         ui.cradleLayout.layoutTransition = layoutTransition(AnimatorConfig.transition)
         ui.cradleLayout.layoutTransition.doOnStart {
             pendingCradleAnim?.start()
             pendingCradleAnim = null
-        }
-
-        ui.bottomAppBar.prepareCradleLayout(ui.cradleLayout)
-        ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
-        val navButton = ui.bottomNavigationBar.findViewById<View>(ui.bottomNavigationBar.selectedItemId)
-        navButton.doOnNextLayout {
-            ui.bottomAppBar.indicatorXPos = (it.width - ui.bottomAppBar.indicatorWidth) / 2 + it.left
         }
 
         shoppingListViewModel.items.observe(this) { newList -> updateShoppingListBadge(newList) }
@@ -116,9 +117,7 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) =
         if (item.itemId == R.id.settings_menu_item) {
-            ui.fragmentContainer.addSecondaryFragment(PreferencesFragment(),
-                                                      R.animator.fragment_close_enter,
-                                                      R.animator.fragment_close_exit)
+            ui.fragmentContainer.addSecondaryFragment(PreferencesFragment())
             true
         }
         else ui.fragmentContainer.visibleFragment?.onOptionsItemSelected(item) ?: false
@@ -140,18 +139,8 @@ open class MainActivity : AppCompatActivity() {
         inputMethodManager(this)?.hideSoftInputFromWindow(ui.bottomAppBar.windowToken, 0)
 
         val newMenuItemId = ui.fragmentContainer.visibleFragmentMenuItemId
-        if (newFragment.showsBottomAppBar() && newMenuItemId != null) {
-            val newMenuItem = ui.bottomNavigationBar.findViewById<View>(newMenuItemId)
-            newMenuItem?.let {
-                val indicatorNewXPos = (it.width - ui.bottomAppBar.indicatorWidth) / 2 + it.left
-                ui.bottomAppBar.apply {
-                    valueAnimatorOfInt(
-                        setter = ::setIndicatorXPosition, config = AnimatorConfig.transition,
-                        fromValue = indicatorXPos, toValue = indicatorNewXPos
-                    ).start()
-                }
-            }
-        }
+        if (newFragment.showsBottomAppBar() && newMenuItemId != null)
+            ui.bottomAppBar.moveIndicatorToNavBarItem(newMenuItemId)
     }
 
     private var showingBottomAppBar = true
@@ -238,15 +227,25 @@ open class MainActivity : AppCompatActivity() {
     private val sysDarkThemeIsActive get() =
         (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
 
+    /**
+     * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
+     *
+     * Fragment interface can be implemented by a Fragment subclass to inform the
+     * MainActivity as to how to alter its ui to suit the fragment, and to provide
+     * callbacks for certain user actions that might be forwarded to the fragment
+     * (e.g. a back button or options menu item press).
+     * */
     interface FragmentInterface {
-        val name: String
+        /** Return whether the top action bar's options menu (including its search view and change sort button) should be visible when the implementing fragment is. */
         fun showsOptionsMenu(): Boolean
+        /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
         fun showsBottomAppBar(): Boolean
+        /** Return whether the checkout button should be visible when the implementing fragment is.*/
         fun showsCheckoutButton(): Boolean
-        fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding)
-        fun inactiveToActiveAnimatorResId(): Int
-        fun oldFragmentActiveToInactiveAnimatorResId(): Int
+        /** Return whether the implementing fragment consumed the back button press. Note that this function is also called when the top action bar's back button is pressed. */
         fun onBackPressed(): Boolean
+        /** Perform any additional actions on @param ui that the fragment desires, given its @param isActive state. */
+        fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding)
     }
 
     @Module @InstallIn(ActivityComponent::class)

@@ -130,8 +130,6 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
     override fun showsOptionsMenu() = true
     override fun showsBottomAppBar() = true
     override fun showsCheckoutButton() = false
-    override fun inactiveToActiveAnimatorResId() = R.animator.slide_in_left
-    override fun oldFragmentActiveToInactiveAnimatorResId() = R.animator.slide_out_right
     override fun onBackPressed() = when {
         actionMode.isStarted -> { actionMode.finishAndClearSelection(); true }
         _searchIsActive ->      { mainActivityUi.topActionBar.ui.searchView.isIconified = true; true }

@@ -76,7 +76,6 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         } else -> super.onOptionsItemSelected(item)
     }
 
-    override val name = "ShoppingListFragment"
     override fun showsCheckoutButton() = true
     override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
         super.onActiveStateChanged(isActive, ui)

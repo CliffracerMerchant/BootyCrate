@@ -50,9 +50,6 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
         } else super.onOptionsItemSelected(item)
     }
 
-    override val name = "InventoryFragment"
-    override fun inactiveToActiveAnimatorResId() = R.animator.slide_in_right
-    override fun oldFragmentActiveToInactiveAnimatorResId() = R.animator.slide_out_left
     override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
         super.onActiveStateChanged(isActive, ui,)
         ui.topActionBar.optionsMenu.setGroupVisible(R.id.inventory_view_menu_group, isActive)

@@ -24,10 +24,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
-        app:navBarResId="@id/bottomNavigationBar"
-        app:navBarMenuFragmentMap="@array/nav_bar_menu_item_fragment_map"/>
+        style="@style/FragmentContainer"/>
 
-    <com.cliffracermerchant.bootycrate.BottomAppBar
+    <com.cliffracermerchant.bootycrate.BottomAppBarWithIndicator
         android:id="@+id/bottomAppBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
@@ -51,7 +50,7 @@
 
         </com.google.android.material.bottomnavigation.BottomNavigationView>
 
-    </com.cliffracermerchant.bootycrate.BottomAppBar>
+    </com.cliffracermerchant.bootycrate.BottomAppBarWithIndicator>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cradleLayout"

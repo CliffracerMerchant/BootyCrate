@@ -21,8 +21,9 @@ import android.util.AttributeSet
  * checkoutCallback. Confirmation is requested due to the checkout function
  * being irreversible, and because a double tap for users who know what they
  * are doing is faster than having to answer yes to a confirmatory alert
- * dialog. If the user does not tap the button again before the value of the
- * constant property confirmTimeout, the button will reset to its normal state.
+ * dialog. If the user does not tap the button again before the value of
+ * R.integer.checkoutButtonConfirmationTimeout, the button will reset to its
+ * normal state.
  */
 class CheckoutButton(context: Context, attrs: AttributeSet) :
     DisableableOutlinedGradientButton(context, attrs)
