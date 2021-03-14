@@ -32,7 +32,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
 ) : ViewModelRecyclerView<Entity>(context, attrs) {
 
     abstract override val viewModel: ExpandableSelectableItemViewModel<Entity>
-    protected val itemAnimator = ExpandableItemAnimator(this)
+    protected val itemAnimator = ExpandableItemAnimator(this, AnimatorConfig.translation)
 
     val selection = Selection()
 

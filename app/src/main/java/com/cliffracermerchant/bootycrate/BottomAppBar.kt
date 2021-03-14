@@ -26,8 +26,8 @@ import kotlin.math.atan
  * BottomAppBar functions mostly as a regular Toolbar, except that its custom
  * CradleTopEdgeTreatment used on its top edge gives it a cutout in its shape
  * that can be used to hold the contents of a layout. The layout in question
- * should be passed to the function prepareCradleLayout during app startup so
- * that BottomAppBar can set up its layout params.
+ * must be referenced by the XML attribute cradleLayoutResId, must be a sib-
+ * ling of the BottomAppBar, and both must have a CoordinatorLayout parent.
  *
  * The gradients used for the background, border, and indicator can be set
  * through the public properties backgroundGradient, borderGradient, and indi-
@@ -74,12 +74,18 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
         cradleStartEndMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleStartEndMargin, 90)
         cradleContentsMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleContentsMargin, 0)
         borderPaint.strokeWidth = a.getDimensionPixelSize(R.styleable.BottomAppBar_topBorderWidth, 0).toFloat()
+        val cradleLayoutResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_cradleLayoutResId)
         a.recycle()
 
         materialShapeDrawable.shapeAppearanceModel = ShapeAppearanceModel.builder().
                                                      setTopEdge(CradleTopEdgeTreatment()).build()
         background = materialShapeDrawable
         @Suppress("LeakingThis") setWillNotDraw(false)
+
+        doOnNextLayout {
+            val cradleLayout = (parent as ViewGroup).findViewById<ViewGroup>(cradleLayoutResId)
+            prepareCradleLayout(cradleLayout)
+        }
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -88,7 +94,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
         canvas.drawPath(topEdgePath, borderPaint)
     }
 
-    fun prepareCradleLayout(cradleLayout: ViewGroup) {
+    private fun prepareCradleLayout(cradleLayout: ViewGroup) {
         if (cradleLayout.parent !is CoordinatorLayout)
             throw IllegalStateException("The cradle layout should have a CoordinatorLayout as a parent.")
 

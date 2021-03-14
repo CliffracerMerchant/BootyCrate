@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.content.res.getResourceIdOrThrow
+import androidx.core.view.doOnNextLayout
 import androidx.core.view.forEach
 import androidx.core.view.forEachIndexed
 import androidx.core.view.isVisible
@@ -20,9 +21,49 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import java.util.*
 
+/**
+ * A container for fragments that, when linked up with a navigation menu
+ * instance, will automatically create and manage fragment instances for
+ * each navigation bar menu item.
+ *
+ * FragmentContainer acts as a container for fragments that will automatic-
+ * ally add a fragment instance for each menu item of a navigation bar
+ * menu that it is connected to. The resource id of the navigation bar
+ * must be set in XML using the attribute R.attr.navBarResId. Likewise,
+ * the attribute R.attr.navBarMenuFragmentMapResId must reference a string
+ * array that contains the names of the fragments (including package name)
+ * to be associated with each corresponding menu item, or an empty string
+ * if a menu item should not be associated with a fragment. After set up,
+ * FragmentContainer will set itself as the OnNavigationItemSelectedListe-
+ * ner for the navigation bar, and will automatically switch to the corre-
+ * sponding fragment with an animation.
+ *
+ * FragmentContainer is intended to be used primarily with fragments that
+ * need to be switched between often. To speed up this operation, the frag-
+ * ments will have their views' visibilities set to View.INVISIBLE when
+ * not in use. Because this increases memory consumption, it is not reco-
+ * mmended to add more than a few commonly used fragments. If other, less
+ * frequently used fragments need to be used temporarily, this can be
+ * accomplished using the function addSecondaryFragment. The function pop-
+ * BackStack will function similarly to FragmentManager popBackStack, but
+ * will only pop secondary fragments and not primary fragments (the ones
+ * added automatically that correspond to the navigation bar menu items).
+ *
+ * The menu item id of the currently selected primary fragment, or null
+ * if a secondary fragment is displayed, can be queried using the property
+ * visibleFragmentMenuItemId. The property visibleFragment will always
+ * be equal to the topmost fragment, including secondary fragments. When a
+ * new primary or secondary fragment becomes visible to the user the call-
+ * back onNewFragmentSelectedListener will be invoked.
+ *
+ * FragmentContainer uses its own slide left or right animations for its
+ * primary fragments. The animations used for the addition or popping of
+ * secondary fragments can either be passed in directly to a call of add-
+ * SecondaryFragment, or will default to the value of the properties
+ * secondaryFragmentDefaultEnterAnimResId and secondaryFragmentDefaultExit-
+ * AnimResId.
+ * */
 class FragmentContainer(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
-    private val navBarResId: Int
-    private val navBarMenuFragmentMapResId: Int
     private val backStackFragments = Stack<Fragment>()
     private val navBarMenuItemFragmentMap = mutableMapOf<Int, Fragment>()
     private lateinit var navBar: BottomNavigationView
@@ -40,19 +81,19 @@ class FragmentContainer(context: Context, attrs: AttributeSet) : FrameLayout(con
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.FragmentContainer)
-        navBarResId = a.getResourceIdOrThrow(R.styleable.FragmentContainer_navBarResId)
-        navBarMenuFragmentMapResId = a.getResourceIdOrThrow(R.styleable.FragmentContainer_navBarMenuFragmentMapResId)
+        val navBarResId = a.getResourceIdOrThrow(R.styleable.FragmentContainer_navBarResId)
+        val navBarMenuFragmentMapResId = a.getResourceIdOrThrow(R.styleable.FragmentContainer_navBarMenuFragmentMapResId)
         secondaryFragmentDefaultEnterAnimResId = a.getResourceId(
             R.styleable.FragmentContainer_secondaryFragmentDefaultEnterAnimResId, 0)
         secondaryFragmentDefaultExitAnimResId = a.getResourceId(
             R.styleable.FragmentContainer_secondaryFragmentDefaultExitAnimResId, 0)
         a.recycle()
+        doOnNextLayout { initFragments(navBarResId, navBarMenuFragmentMapResId) }
     }
 
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
+    private fun initFragments(navBarResId: Int, fragmentMapResId: Int) {
         navBar = (parent as ViewGroup).findViewById(navBarResId)
-        val fragmentNames = resources.getStringArray(navBarMenuFragmentMapResId)
+        val fragmentNames = resources.getStringArray(fragmentMapResId)
         val fragmentManager = fragmentActivityFrom(context).supportFragmentManager
         try { navBar.menu.forEachIndexed { i, menuItem ->
             if (fragmentNames[i].isNotEmpty()) {

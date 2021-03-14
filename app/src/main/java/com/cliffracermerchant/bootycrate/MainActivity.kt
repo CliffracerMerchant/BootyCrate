@@ -96,7 +96,6 @@ open class MainActivity : AppCompatActivity() {
         ui.topActionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
         ui.fragmentContainer.onNewFragmentSelectedListener = ::updateUiForNewFragment
 
-        ui.bottomAppBar.prepareCradleLayout(ui.cradleLayout)
         ui.bottomAppBar.indicatorAnimatorConfig = AnimatorConfig.transition
         ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
         ui.bottomAppBar.doOnNextLayout {

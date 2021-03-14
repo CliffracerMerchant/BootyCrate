@@ -36,7 +36,7 @@ import androidx.recyclerview.widget.RecyclerView
  */
 class ExpandableItemAnimator(
     private val recyclerView: RecyclerView,
-    animatorConfig: AnimatorConfig = AnimatorConfig.translation,
+    animatorConfig: AnimatorConfig,
     adapter: RecyclerView.Adapter<*>? = null
 ) : DefaultItemAnimator() {
 

@@ -39,6 +39,8 @@
         <attr name="cradleContentsMargin"     format="dimension" />
         <!-- The width of the top border. -->
         <attr name="topBorderWidth"           format="dimension" />
+        <!-- The id of the contained cradle layout. -->
+        <attr name="cradleLayoutResId"        format="reference" />
     </declare-styleable>
 
     <declare-styleable name="BottomAppBarWithIndicator">
