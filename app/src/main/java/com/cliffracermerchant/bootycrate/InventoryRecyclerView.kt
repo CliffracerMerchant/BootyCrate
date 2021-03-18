@@ -36,7 +36,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      * EnumSet<InventoryItem.Field>. If a payload of another type is passed to it,
      * an exception will be thrown.
      */
-    @Suppress("UNCHECKED_CAST")
     inner class InventoryAdapter : ExpandableSelectableItemAdapter<InventoryItemViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
@@ -59,6 +58,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             for (payload in payloads) {
                 if (payload is EnumSet<*>) {
                     val item = getItem(position)
+                    @Suppress("UNCHECKED_CAST")
                     val changes = payload as EnumSet<InventoryItem.Field>
                     val ui = holder.view.ui
                     val detailsUi = holder.view.detailsUi

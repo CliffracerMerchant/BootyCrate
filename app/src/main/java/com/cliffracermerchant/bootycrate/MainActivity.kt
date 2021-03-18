@@ -6,7 +6,6 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
 import android.animation.ValueAnimator
-import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
@@ -22,28 +21,20 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.qualifiers.ActivityContext
 
 /**
- * The primary activity for BootyCrate
+ * A FragmentContainer hosting activity with a custom UI.
  *
- * Instead of switching between activities, nearly everything in BootyCrate is
- * accomplished in the ShoppingListFragment, InventoryFragment, or the Preferences-
- * Fragment. Instances of ShoppingListFragment and InventoryFragment are created
- * on app startup, and hidden/shown by the fragment manager as appropriate. The
- * currently shown fragment can be determined via the boolean members showing-
- * Inventory and showingPreferences as follows:
- * Shown fragment = if (showingPreferences)    PreferencesFragment
- *                  else if (showingInventory) InventoryFragment
- *                  else                       ShoppingListFragment
- * If showingPreferences is true, the value of showingInventory determines the
- * fragment "under" the preferences (i.e. the one that will be returned to on a
- * back button press or a navigate up).
+ * MainActivity contains a FragmentContainer along with a custom UI inclu-
+ * ding a RecyclerViewActionBar, a BottomAppBar, and a checkout button and
+ * an add button in the cradle of the BottomAppBar. In order for fragments
+ * displayed in the FragmentContainer to inform MainActivity which of
+ * these UI elements should be displayed when they are active, the frag-
+ * ment should implement MainActivity.FragmentInterface. While it is not
+ * necessary for fragments to implement FragmentInterface, fragments that
+ * do not will not be able to affect the visibility of the MainActivity UI
+ * when they are displayed.
  */
 @Suppress("LeakingThis")
 @AndroidEntryPoint
@@ -53,7 +44,6 @@ open class MainActivity : AppCompatActivity() {
     private var pendingCradleAnim: Animator? = null
 
     val shoppingListViewModel: ShoppingListViewModel by viewModels()
-    val inventoryViewModel: InventoryViewModel by viewModels()
     lateinit var ui: MainActivityBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,13 +85,10 @@ open class MainActivity : AppCompatActivity() {
         ui.topActionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
         ui.topActionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
         ui.fragmentContainer.onNewFragmentSelectedListener = ::updateUiForNewFragment
+        ui.fragmentContainer.primaryFragmentTransitionAnimatorConfig = AnimatorConfig.transition
 
         ui.bottomAppBar.indicatorAnimatorConfig = AnimatorConfig.transition
         ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
-        ui.bottomAppBar.doOnNextLayout {
-            ui.bottomAppBar.moveIndicatorToNavBarItem(
-                ui.bottomNavigationBar.selectedItemId, animate = false)
-        }
 
         ui.cradleLayout.layoutTransition = layoutTransition(AnimatorConfig.transition)
         ui.cradleLayout.layoutTransition.doOnStart {
@@ -235,21 +222,17 @@ open class MainActivity : AppCompatActivity() {
      * (e.g. a back button or options menu item press).
      * */
     interface FragmentInterface {
-        /** Return whether the top action bar's options menu (including its search view and change sort button) should be visible when the implementing fragment is. */
+        /** Return whether the top action bar's options menu (including its search view and change
+         * sort button) should be visible when the implementing fragment is. */
         fun showsOptionsMenu(): Boolean
         /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
         fun showsBottomAppBar(): Boolean
         /** Return whether the checkout button should be visible when the implementing fragment is.*/
         fun showsCheckoutButton(): Boolean
-        /** Return whether the implementing fragment consumed the back button press. Note that this function is also called when the top action bar's back button is pressed. */
+        /** Return whether the implementing fragment consumed the back button press. Note that
+         * this function is also called when the top action bar's back button is pressed. */
         fun onBackPressed(): Boolean
         /** Perform any additional actions on @param ui that the fragment desires, given its @param isActive state. */
         fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding)
-    }
-
-    @Module @InstallIn(ActivityComponent::class)
-    object MainActivityBindingModule {
-        @Provides fun provideMainActivityBinding(@ActivityContext context: Context) =
-            (context as MainActivity).ui
     }
 }

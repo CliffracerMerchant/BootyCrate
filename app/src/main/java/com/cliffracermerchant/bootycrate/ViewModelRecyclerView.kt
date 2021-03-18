@@ -58,7 +58,7 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     open val collectionName = ""
     protected abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
     abstract val adapter: ViewModelAdapter<out ViewModelItemViewHolder>
-    abstract val viewModel: ViewModel<Entity>
+    protected abstract val viewModel: ViewModel<Entity>
     var snackBarAnchor: View? = null
 
     var sort get() = viewModel.sort

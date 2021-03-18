@@ -253,12 +253,16 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
 
         setWillNotDraw(false)
         indicatorPaint.strokeWidth = 2.5f * borderPaint.strokeWidth
-        doOnNextLayout { navBar = findViewById(navViewResId) }
+        doOnNextLayout {
+            navBar = findViewById(navViewResId)
+            moveIndicatorToNavBarItem(navBar.selectedItemId, false)
+        }
     }
 
     /** Move the indicator to be above the item with id equal to @param menuItemId,
      * animating the change if @param animate is equal to true. */
     fun moveIndicatorToNavBarItem(menuItemId: Int, animate: Boolean = true) {
+        if (!::navBar.isInitialized) return
         navBar.findViewById<View>(menuItemId)?.let {
             val newIndicatorXPos = (it.width - indicatorWidth) / 2 + it.left
             if (!animate) indicatorXPos = newIndicatorXPos

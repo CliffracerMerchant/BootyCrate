@@ -5,6 +5,9 @@
 
 package com.cliffracermerchant.bootycrate
 
+import android.animation.AnimatorInflater
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.os.Parcelable
 import android.util.AttributeSet
@@ -12,6 +15,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.core.animation.doOnEnd
 import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.forEach
@@ -53,11 +57,13 @@ import java.util.*
  * if a secondary fragment is displayed, can be queried using the property
  * visibleFragmentMenuItemId. The property visibleFragment will always
  * be equal to the topmost fragment, including secondary fragments. When a
- * new primary or secondary fragment becomes visible to the user the call-
+ * new primary or secondary fragment becomes visible to the user, the call-
  * back onNewFragmentSelectedListener will be invoked.
  *
  * FragmentContainer uses its own slide left or right animations for its
- * primary fragments. The animations used for the addition or popping of
+ * primary fragments, although the duration and the interpolators used for
+ * these animations can be set through the property primaryFragmentTransi-
+ * tionAnimatorConfig. The animations used for the addition or popping of
  * secondary fragments can either be passed in directly to a call of add-
  * SecondaryFragment, or will default to the value of the properties
  * secondaryFragmentDefaultEnterAnimResId and secondaryFragmentDefaultExit-
@@ -67,22 +73,24 @@ class FragmentContainer(context: Context, attrs: AttributeSet) : FrameLayout(con
     private val backStackFragments = Stack<Fragment>()
     private val navBarMenuItemFragmentMap = mutableMapOf<Int, Fragment>()
     private lateinit var navBar: BottomNavigationView
-    private var _visibleFragmentMenuItemId = -1
+    private var _visibleFragmentMenuItem: MenuItem? = null
 
     val visibleFragmentMenuItemId get() = if (!backStackFragments.isEmpty()) null
-                                          else _visibleFragmentMenuItemId
+                                          else navBar.selectedItemId
     val visibleFragment get() = if (backStackFragments.isEmpty())
-                                    navBarMenuItemFragmentMap[_visibleFragmentMenuItemId]
+                                    navBarMenuItemFragmentMap[_visibleFragmentMenuItem?.itemId]
                                 else backStackFragments.peek()
     var onNewFragmentSelectedListener: ((Fragment) -> Unit)? = null
 
+    var primaryFragmentTransitionAnimatorConfig: AnimatorConfig? = null
     var secondaryFragmentDefaultEnterAnimResId = 0
     var secondaryFragmentDefaultExitAnimResId = 0
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.FragmentContainer)
         val navBarResId = a.getResourceIdOrThrow(R.styleable.FragmentContainer_navBarResId)
-        val navBarMenuFragmentMapResId = a.getResourceIdOrThrow(R.styleable.FragmentContainer_navBarMenuFragmentMapResId)
+        val navBarMenuFragmentMapResId = a.getResourceIdOrThrow(
+            R.styleable.FragmentContainer_navBarMenuFragmentMapResId)
         secondaryFragmentDefaultEnterAnimResId = a.getResourceId(
             R.styleable.FragmentContainer_secondaryFragmentDefaultEnterAnimResId, 0)
         secondaryFragmentDefaultExitAnimResId = a.getResourceId(
@@ -104,60 +112,71 @@ class FragmentContainer(context: Context, attrs: AttributeSet) : FrameLayout(con
         }}
         catch (e: IndexOutOfBoundsException) { throw IndexOutOfBoundsException(
             "The string array pointed to by R.attr.navBarMenuFragmentMap must be the same length " +
-                    "as the navigation menu of the navigation bar pointed to by R.attr.navBarResId.")
+            "as the navigation menu of the navigation bar pointed to by R.attr.navBarResId.")
         }
         fragmentManager.beginTransaction()
             .runOnCommit {
                 navBar.menu.forEach { menuItem ->
                     if (navBar.selectedItemId != menuItem.itemId)
-                        navBarMenuItemFragmentMap.get(menuItem.itemId)?.view?.visibility = View.INVISIBLE
+                        navBarMenuItemFragmentMap[menuItem.itemId]?.view?.visibility = View.INVISIBLE
                 }
             }.apply {
                 for (idAndFragment in navBarMenuItemFragmentMap)
                     add(id, idAndFragment.value)
             }.commit()
 
-        _visibleFragmentMenuItemId = navBar.selectedItemId
+        val selectedMenuItem = navBar.menu.findItem(navBar.selectedItemId)
+        switchToNewFragment(selectedMenuItem)
         navBar.setOnNavigationItemSelectedListener(::switchToNewFragment)
     }
 
+    /** Attempt to switch to a new active fragment corresponding to the @param menuItem,
+     * and @return whether or not the switch was successful. */
     private fun switchToNewFragment(menuItem: MenuItem): Boolean {
-        if (_visibleFragmentMenuItemId == menuItem.itemId) return false
+        if (_visibleFragmentMenuItem == menuItem) return false
         if (!navBarMenuItemFragmentMap.containsKey(menuItem.itemId)) return false
 
-        val oldFragmentMenuItem = navBar.menu.findItem(_visibleFragmentMenuItemId)
-        val leftToRight = oldFragmentMenuItem.order < menuItem.order
-        val translationAmount = resources.displayMetrics.widthPixels / 2f
-
-        navBarMenuItemFragmentMap.getValue(_visibleFragmentMenuItemId).view?.apply {
-            animate().alpha(0f)
-                .translationX(translationAmount * if (leftToRight) -1f else 1f)
-                .applyConfig(AnimatorConfig.transition)
-                .withEndAction { visibility = View.INVISIBLE }
-                .start()
-        }
+        val oldFragmentMenuItem = _visibleFragmentMenuItem
+        _visibleFragmentMenuItem = menuItem
+        menuItem.isChecked = true
         val newFragment = navBarMenuItemFragmentMap.getValue(menuItem.itemId)
+        onNewFragmentSelectedListener?.invoke(newFragment)
+        // If there was no old fragment, then the container is being initialized and no animation is necessary.
+        if (oldFragmentMenuItem == null) return true
+
+        val leftToRight = oldFragmentMenuItem.order < menuItem.order
+        navBarMenuItemFragmentMap.getValue(oldFragmentMenuItem.itemId).view?.apply {
+            val animResId = if (leftToRight) R.animator.slide_out_left
+                            else             R.animator.slide_out_right
+            val anim = AnimatorInflater.loadAnimator(context, animResId)
+            anim.setTarget(this)
+            ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
+                .setFloatValues(0f, width / 2f * if (leftToRight) -1f else 1f)
+            anim.doOnEnd { visibility = View.INVISIBLE}
+            anim.start()
+        }
         newFragment.view?.apply {
             alpha = 0f
             isVisible = true
-            translationX = translationAmount * if (leftToRight) 1f else -1f
-            animate().alpha(1f).translationX(0f).applyConfig(AnimatorConfig.transition).start()
+            val animResId = if (leftToRight) R.animator.slide_in_right
+                            else             R.animator.slide_in_left
+            val anim = AnimatorInflater.loadAnimator(context, animResId)
+            anim.setTarget(this)
+            ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
+                .setFloatValues(width / 2f * if (leftToRight) 1f else -1f, 0f)
+            anim.start()
         }
-
-        _visibleFragmentMenuItemId = menuItem.itemId
-        onNewFragmentSelectedListener?.invoke(newFragment)
         return true
     }
 
-    @Suppress("NAME_SHADOWING")
     fun addSecondaryFragment(
         fragment: Fragment,
-        enterAnimResId: Int? = null,
-        exitAnimResId: Int? = null
+        customEnterAnimResId: Int? = null,
+        customExitAnimResId: Int? = null
     ) {
         fragment.view?.alpha = 0f
-        val enterAnimResId = enterAnimResId ?: secondaryFragmentDefaultEnterAnimResId
-        val exitAnimResId = exitAnimResId ?: secondaryFragmentDefaultExitAnimResId
+        val enterAnimResId = customEnterAnimResId ?: secondaryFragmentDefaultEnterAnimResId
+        val exitAnimResId = customExitAnimResId ?: secondaryFragmentDefaultExitAnimResId
         fragmentActivityFrom(context).supportFragmentManager.beginTransaction()
             .setCustomAnimations(enterAnimResId, exitAnimResId, enterAnimResId, exitAnimResId)
             .apply {

@@ -9,10 +9,11 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import com.cliffracermerchant.bootycrate.databinding.InventoryFragmentBinding
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 /**
  * A fragment to display and modify the user's inventory.
@@ -25,8 +26,9 @@ import javax.inject.Inject
  */
 @AndroidEntryPoint
 class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
-    @Inject override lateinit var mainActivityUi: MainActivityBinding
-    override lateinit var recyclerView: InventoryRecyclerView
+    override val viewModel: InventoryViewModel by activityViewModels()
+    private val shoppingListViewModel: ShoppingListViewModel by activityViewModels()
+    override var recyclerView: ExpandableSelectableRecyclerView<InventoryItem>? = null
     override val actionMode = InventoryActionMode()
     lateinit var ui: InventoryFragmentBinding
 
@@ -43,8 +45,7 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return if (item.itemId == R.id.add_to_shopping_list_button) {
-            val activity = activity as? MainActivity ?: return false
-            activity.shoppingListViewModel.addFromSelectedInventoryItems()
+            shoppingListViewModel.addFromSelectedInventoryItems()
             actionMode.finishAndClearSelection()
             true
         } else super.onOptionsItemSelected(item)
@@ -56,10 +57,10 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
         if (!isActive) return
         ui.addButton.setOnClickListener {
             val activity = this.activity ?: return@setOnClickListener
-            NewInventoryItemDialog(activity, recyclerView.viewModel)
-                .show(activity.supportFragmentManager, null)
+            val viewModel: InventoryViewModel by viewModels()
+            NewInventoryItemDialog(activity, viewModel).show(activity.supportFragmentManager, null)
         }
-        mainActivityUi.checkoutButton.checkoutCallback = null
+        ui.checkoutButton.checkoutCallback = null
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */

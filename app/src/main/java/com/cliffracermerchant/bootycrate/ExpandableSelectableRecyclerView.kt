@@ -9,8 +9,6 @@ import android.util.AttributeSet
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
 
 /**
  * A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
@@ -41,18 +39,6 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
         setItemAnimator(itemAnimator)
-    }
-
-    open fun deleteSelectedItems() {
-        val size = selection.size
-        viewModel.deleteSelected()
-        val text = context.getString(R.string.delete_snackbar_text, size)
-        Snackbar.make(this, text, Snackbar.LENGTH_LONG)
-            .setAnchorView(snackBarAnchor ?: this)
-            .setAction(R.string.delete_snackbar_undo_text) { viewModel.undoDelete() }
-            .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(a: Snackbar?, b: Int) = viewModel.emptyTrash()
-            }).show()
     }
 
     fun setExpandedItem(pos: Int?) {

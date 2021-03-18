@@ -20,7 +20,7 @@ import android.view.animation.AnimationUtils
  * The duration and interpolator of animations are the most important factors
  * in ensuring that separate but related animations are synchronized. Applying
  * the predefined AnimatorConfig instances wherever animations are used within
- * the app make it easier to achieve this. The provided configs are:
+ * an app make it easier to achieve this. The provided configs are:
  * - AnimatorConfig.translation: For translation or size changing of views
  * - AnimatorConfig.fadeIn: For views that fade in.
  * - AnimatorConfig.fadeOut: For views that fade out.

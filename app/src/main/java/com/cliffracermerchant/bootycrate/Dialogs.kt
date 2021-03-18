@@ -42,8 +42,9 @@ fun showColorPickerDialog(
 private enum class ShareOption { TextMessage, Email }
 
 class ShareDialog<Entity: ViewModelItem>(
+    private val subject: String,
     private val items: List<Entity>,
-    private val snackBarParent: View
+    private val snackBarAnchor: View
 ) : DialogFragment() {
     val ui = ShareDialogBinding.inflate(LayoutInflater.from(context))
 
@@ -80,15 +81,17 @@ class ShareDialog<Entity: ViewModelItem>(
                 intent.data = Uri.parse("smsto:")
             } ShareOption.Email -> {
                 intent.data = Uri.parse("mailto:")
-                val subject =  context?.getString(R.string.shopping_list_navigation_item_name)
                 intent.putExtra(Intent.EXTRA_SUBJECT, subject)
                 intent.putExtra(Intent.EXTRA_TEXT, message)
             }
         }
         try { requireContext().startActivity(intent) }
         catch (e: ActivityNotFoundException) {
-            Snackbar.make(snackBarParent, R.string.share_error_message, Snackbar.LENGTH_SHORT)
-                .setAnchorView(snackBarParent).show()
+            Snackbar.make(
+                snackBarAnchor,
+                R.string.share_error_message,
+                Snackbar.LENGTH_SHORT
+            ).setAnchorView(snackBarAnchor).show()
         }
     }
 }

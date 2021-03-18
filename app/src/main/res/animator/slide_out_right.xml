@@ -8,8 +8,6 @@
     <objectAnimator
         android:duration="@integer/fragmentTransitionLongDuration"
         android:propertyName="translationX"
-        android:valueFrom="0"
-        android:valueTo="0.5"
         android:interpolator="@anim/default_interpolator"/>
 
     <objectAnimator

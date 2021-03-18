@@ -57,6 +57,7 @@ class ExpandableItemAnimator(
 
     init {
         adapter?.let { registerAdapterDataObserver(it) }
+        this.animatorConfig = animatorConfig
     }
 
     fun notifyExpandedItemChanged(newlyExpandedItemPos: Int?) {

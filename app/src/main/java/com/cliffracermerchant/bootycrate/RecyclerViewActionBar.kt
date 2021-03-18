@@ -7,9 +7,12 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.LayerDrawable
+import android.os.Bundle
+import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.MenuItem
+import android.view.ViewGroup
 import android.widget.TextSwitcher
 import android.widget.TextView
 import androidx.appcompat.widget.PopupMenu
@@ -69,6 +72,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
 
 
     init {
+        layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         var a = context.obtainStyledAttributes(attrs, R.styleable.RecyclerViewActionBar)
         val changeSortMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_changeSortMenuResId, 0)
         val optionsMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_optionsMenuResId, 0)
@@ -84,6 +88,30 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
             else onDeleteButtonClickedListener?.invoke()
         }
         ui.menuButton.setOnClickListener{ optionsPopupMenu.show() }
+
+        ui.searchView.setOnSearchClickListener {
+            (ui.searchView.layoutParams as LayoutParams).startToEnd =
+                if (ui.searchView.isIconified) ui.backButton.id else -1
+            ui.backButton.isVisible = true
+            ui.customTitle.isVisible = false
+        }
+        ui.searchView.setOnCloseListener {
+            ui.backButton.isVisible = false
+            ui.customTitle.isVisible = true
+            false
+        }
+    }
+
+    override fun onSaveInstanceState() = Bundle().apply {
+        putParcelable("superState", super.onSaveInstanceState())
+        putBoolean("searchWasActive", !ui.searchView.isIconified)
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        val bundle = state as Bundle
+        super.onRestoreInstanceState(bundle.getParcelable("superState"))
+        val searchWasActive = bundle.getBoolean("searchWasActive", false)
+        ui.backButton.isVisible = searchWasActive
     }
 
     /**
@@ -121,8 +149,11 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         var actionBar: RecyclerViewActionBar? = null
         val isStarted get() = _isStarted
         var title: String? = null
-            set(value) { field = value
-                if (_isStarted) actionBar?.ui?.customTitle?.setCurrentText(title) }
+            set(value) {
+                field = value
+                if (_isStarted)
+                    actionBar?.ui?.customTitle?.setCurrentText(title)
+            }
 
         private var _isStarted = false
         private var titleBackup: String? = null
@@ -143,7 +174,6 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                 actionBar.ui.customTitle.setText(title)
                 actionBar.ui.backButton.alpha = 0f
                 actionBar.ui.backButton.isVisible = true
-                //actionBar.ui.backButton.animate().alpha(1f).withLayer().start()
                 onStart(actionBar)
             } else {
                 actionBar.ui.customTitle.setText(titleBackup)
@@ -199,15 +229,6 @@ class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewAct
         backgroundDrawable.gradient = backgroundGradient
         borderDrawable.gradient = borderGradient
         background = LayerDrawable(arrayOf(backgroundDrawable, borderDrawable))
-        ui.searchView.setOnSearchClickListener {
-            ui.backButton.isVisible = true
-            ui.customTitle.isVisible = false
-        }
-        ui.searchView.setOnCloseListener {
-            ui.backButton.isVisible = false
-            ui.customTitle.isVisible = true
-            false
-        }
     }
 }
 
