@@ -85,8 +85,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         if (!isActive) return
         ui.addButton.setOnClickListener {
             val activity = this.activity ?: return@setOnClickListener
-            NewShoppingListItemDialog(activity, viewModel)
-                .show(activity.supportFragmentManager, null)
+            NewShoppingListItemDialog(activity).show(activity.supportFragmentManager, null)
         }
         ui.checkoutButton.checkoutCallback = { viewModel.checkout() }
     }

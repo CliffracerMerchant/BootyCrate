@@ -32,7 +32,7 @@ import androidx.recyclerview.widget.RecyclerView
  * position so that this doesn't need to be done manually. ExpandableItemAnim-
  * ator will attempt to register itself automatically, but if the parent recy-
  * cler view does not have an adapter when ExpandableItemAnimator is construc-
- * ted this will have to be done manually.
+ * ted, this will have to be done manually.
  */
 class ExpandableItemAnimator(
     private val recyclerView: RecyclerView,
@@ -82,7 +82,8 @@ class ExpandableItemAnimator(
         // Animate the height change of the view
         val view = newHolder.itemView
         if (view !is ExpandableRecyclerViewItem)
-            throw IllegalStateException("The item views used with ExpandableItemAnimator must implement ExpandableItemAnimator.ExpandableRecyclerViewItem.")
+            throw IllegalStateException("The item views used with ExpandableItemAnimator must " +
+                                        "implement ExpandableItemAnimator.ExpandableRecyclerViewItem.")
         val pos = newHolder.adapterPosition
 
         // preInfo.top won't necessarily be the correct start value
@@ -158,7 +159,6 @@ class ExpandableItemAnimator(
         fun expand() = setExpanded(true)
         fun collapse() = setExpanded(false)
         fun setExpanded(expanding: Boolean, animate: Boolean = true)
-
         fun runPendingAnimations()
     }
 

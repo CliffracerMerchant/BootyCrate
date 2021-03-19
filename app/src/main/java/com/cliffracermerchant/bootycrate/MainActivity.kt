@@ -46,20 +46,19 @@ open class MainActivity : MultiFragmentActivity() {
         val prefs = getDefaultSharedPreferences(this)
      /* The activity's ViewModelStore will by default retain instances of the
         app's view models across activity restarts. In case this is not desired
-        (e.g. when the database was replaced with an external one, and the view-
-        models therefore need to be reset), setting the shared preference whose
-        key is equal to the value of R.string.pref_viewmodels_need_cleared to
-        true will cause MainActivity to call viewModelStore.clear() */
+        (e.g. when the database was replaced with an external one), setting the
+        shared preference whose key is equal to the value of
+        R.string.pref_view_models_need_cleared to true will cause MainActivity
+        to call viewModelStore.clear() */
         var prefKey = getString(R.string.pref_view_models_need_cleared)
         if (prefs.getBoolean(prefKey, false)) {
             viewModelStore.clear()
-            val editor = prefs.edit()
-            editor.putBoolean(prefKey, false)
-            editor.apply()
+            prefs.edit().putBoolean(prefKey, false).apply()
         }
 
         prefKey = getString(R.string.pref_light_dark_mode)
         val themeDefault = getString(R.string.sys_default_theme_description)
+        val sysDarkThemeIsActive = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
         setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
             getString(R.string.light_theme_description) -> R.style.LightTheme
             getString(R.string.dark_theme_description) ->  R.style.DarkTheme
@@ -71,29 +70,8 @@ open class MainActivity : MultiFragmentActivity() {
         fragmentContainerId = ui.fragmentContainer.id
         navigationBar = ui.bottomNavigationBar
         super.onCreate(savedInstanceState)
-
-        ui.topActionBar.ui.backButton.setOnClickListener {
-            val fragment = visibleFragment as? FragmentInterface
-            if (fragment?.onBackPressed() == false)
-                supportFragmentManager.popBackStack()
-        }
-        ui.topActionBar.onDeleteButtonClickedListener = {
-            onOptionsItemSelected(ui.topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
-        }
-        ui.topActionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
-        ui.topActionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
-        primaryFragmentTransitionAnimatorConfig = AnimatorConfig.transition
-        defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
-        defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
-
-        ui.bottomAppBar.indicatorAnimatorConfig = AnimatorConfig.transition
-        ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
-
-        ui.cradleLayout.layoutTransition = layoutTransition(AnimatorConfig.transition)
-        ui.cradleLayout.layoutTransition.doOnStart {
-            pendingCradleAnim?.start()
-            pendingCradleAnim = null
-        }
+        setupOnClickListeners()
+        initAnimatorConfigs()
         shoppingListViewModel.items.observe(this) { newList -> updateShoppingListBadge(newList) }
     }
 
@@ -208,8 +186,33 @@ open class MainActivity : MultiFragmentActivity() {
         }
     }
 
-    private val sysDarkThemeIsActive get() =
-        (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
+    private fun setupOnClickListeners() {
+        ui.topActionBar.ui.backButton.setOnClickListener {
+            val fragment = visibleFragment as? FragmentInterface
+            if (fragment?.onBackPressed() == false)
+                supportFragmentManager.popBackStack()
+        }
+        ui.topActionBar.onDeleteButtonClickedListener = {
+            onOptionsItemSelected(ui.topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
+        }
+        ui.topActionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
+        ui.topActionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
+    }
+
+    private fun initAnimatorConfigs() {
+        primaryFragmentTransitionAnimatorConfig = AnimatorConfig.transition
+        defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
+        defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
+
+        ui.bottomAppBar.indicatorAnimatorConfig = AnimatorConfig.transition
+        ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
+
+        ui.cradleLayout.layoutTransition = layoutTransition(AnimatorConfig.transition)
+        ui.cradleLayout.layoutTransition.doOnStart {
+            pendingCradleAnim?.start()
+            pendingCradleAnim = null
+        }
+    }
 
     /**
      * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.

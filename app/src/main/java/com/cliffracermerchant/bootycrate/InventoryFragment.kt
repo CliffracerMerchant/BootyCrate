@@ -10,7 +10,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import com.cliffracermerchant.bootycrate.databinding.InventoryFragmentBinding
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 
@@ -55,8 +54,7 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
         if (!isActive) return
         ui.addButton.setOnClickListener {
             val activity = this.activity ?: return@setOnClickListener
-            val viewModel: InventoryViewModel by viewModels()
-            NewInventoryItemDialog(activity, viewModel).show(activity.supportFragmentManager, null)
+            NewInventoryItemDialog(activity).show(activity.supportFragmentManager, null)
         }
         ui.checkoutButton.checkoutCallback = null
     }
