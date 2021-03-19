@@ -14,7 +14,6 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
@@ -38,7 +37,7 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 @Suppress("LeakingThis")
 @AndroidEntryPoint
-open class MainActivity : AppCompatActivity() {
+open class MainActivity : MultiFragmentActivity() {
     private var shoppingListSize = -1
     private var shoppingListNumNewItems = 0
     private var pendingCradleAnim: Animator? = null
@@ -47,7 +46,6 @@ open class MainActivity : AppCompatActivity() {
     lateinit var ui: MainActivityBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         val prefs = getDefaultSharedPreferences(this)
      /* The activity's ViewModelStore will by default retain instances of the
         app's view models across activity restarts. In case this is not desired
@@ -73,19 +71,23 @@ open class MainActivity : AppCompatActivity() {
         })
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
+        fragmentContainerId = ui.fragmentContainer.id
+        navigationBar = ui.bottomNavigationBar
+        super.onCreate(savedInstanceState)
 
         ui.topActionBar.ui.backButton.setOnClickListener {
-            val visibleFragment = ui.fragmentContainer.visibleFragment as? FragmentInterface
-            if (visibleFragment?.onBackPressed() == false)
-                ui.fragmentContainer.popBackStack()
+            val fragment = visibleFragment as? FragmentInterface
+            if (fragment?.onBackPressed() == false)
+                supportFragmentManager.popBackStack()
         }
         ui.topActionBar.onDeleteButtonClickedListener = {
             onOptionsItemSelected(ui.topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
         }
         ui.topActionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
         ui.topActionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
-        ui.fragmentContainer.onNewFragmentSelectedListener = ::updateUiForNewFragment
-        ui.fragmentContainer.primaryFragmentTransitionAnimatorConfig = AnimatorConfig.transition
+        primaryFragmentTransitionAnimatorConfig = AnimatorConfig.transition
+        defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
+        defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
 
         ui.bottomAppBar.indicatorAnimatorConfig = AnimatorConfig.transition
         ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
@@ -95,7 +97,6 @@ open class MainActivity : AppCompatActivity() {
             pendingCradleAnim?.start()
             pendingCradleAnim = null
         }
-
         shoppingListViewModel.items.observe(this) { newList -> updateShoppingListBadge(newList) }
     }
 
@@ -103,13 +104,13 @@ open class MainActivity : AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem) =
         if (item.itemId == R.id.settings_menu_item) {
-            ui.fragmentContainer.addSecondaryFragment(PreferencesFragment())
+            addSecondaryFragment(PreferencesFragment())
             true
         }
-        else ui.fragmentContainer.visibleFragment?.onOptionsItemSelected(item) ?: false
+        else visibleFragment?.onOptionsItemSelected(item) ?: false
 
     private var currentFragment: Fragment? = null
-    private fun updateUiForNewFragment(newFragment: Fragment) {
+    override fun onNewFragmentSelected(newFragment: Fragment) {
         currentFragment?.let {
             if (it is FragmentInterface)
                 it.onActiveStateChanged(isActive = false, ui)
@@ -124,15 +125,13 @@ open class MainActivity : AppCompatActivity() {
             showCheckoutButton(showing = newFragment.showsCheckoutButton())
         inputMethodManager(this)?.hideSoftInputFromWindow(ui.bottomAppBar.windowToken, 0)
 
-        val newMenuItemId = ui.fragmentContainer.visibleFragmentMenuItemId
-        if (newFragment.showsBottomAppBar() && newMenuItemId != null)
-            ui.bottomAppBar.moveIndicatorToNavBarItem(newMenuItemId)
+        if (newFragment.showsBottomAppBar())
+            ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
     }
 
-    private var showingBottomAppBar = true
+    private val showingBottomAppBar get() = ui.bottomAppBar.translationY == 0f
     private fun showBottomAppBar(show: Boolean = true) {
         if (showingBottomAppBar == show) return
-        showingBottomAppBar = show
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
         val views = arrayOf(ui.bottomAppBar, ui.addButton, ui.checkoutButton)
 
@@ -148,8 +147,7 @@ open class MainActivity : AppCompatActivity() {
         val translationEnd = if (show) 0f else translationAmount
         for (view in views) {
             view.translationY = translationStart
-            view.animate().withLayer()
-                .applyConfig(AnimatorConfig.transition)
+            view.animate().withLayer().applyConfig(AnimatorConfig.transition)
                 .translationY(translationEnd).start()
         }
     }
@@ -192,12 +190,15 @@ open class MainActivity : AppCompatActivity() {
     }
 
     private fun updateShoppingListBadge(newShoppingList: List<ShoppingListItem>) {
-        if (shoppingListSize == -1)
+        if (shoppingListSize == -1) {
             if (newShoppingList.isNotEmpty())
                 shoppingListSize = newShoppingList.size
-        else {
+        } else {
             val sizeChange = newShoppingList.size - shoppingListSize
-            if (ui.fragmentContainer.visibleFragment is InventoryFragment && sizeChange > 0) {
+            if (showingPrimaryFragment &&
+                selectedPrimaryFragment is InventoryFragment &&
+                sizeChange > 0
+            ) {
                 shoppingListNumNewItems += sizeChange
                 ui.shoppingListBadge.text = getString(R.string.shopping_list_badge_text,
                                                    shoppingListNumNewItems)

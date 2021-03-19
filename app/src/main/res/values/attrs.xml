@@ -112,16 +112,4 @@
         <attr name="state_edit_color" format="boolean" />
     </declare-styleable>
 
-    <declare-styleable name="FragmentContainer">
-        <!-- The resource id of the linked BottomNavigationView -->
-        <attr name="navBarResId" format="reference" />
-        <!-- The resource id of the string array that gives the name of the fragment (including the
-             package name) that should be associated with each corresponding navigation bar menu item. -->
-        <attr name="navBarMenuFragmentMapResId" format="reference" />
-        <!-- The resource id of the animator that will be used for the entering fragment during a transaction involving a secondary fragment. -->
-        <attr name="secondaryFragmentDefaultEnterAnimResId" format="reference" />
-        <!-- The resource id of the animator that will be used for the exiting fragment during a transaction involving a secondary fragment. -->
-        <attr name="secondaryFragmentDefaultExitAnimResId" format="reference" />
-    </declare-styleable>
-
 </resources>

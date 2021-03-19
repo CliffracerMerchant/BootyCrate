@@ -19,13 +19,6 @@
         <item name="fontFamily">@font/comfortaa</item>
     </style>
 
-    <style name="FragmentContainer">
-        <item name="navBarResId">@id/bottomNavigationBar</item>
-        <item name="navBarMenuFragmentMapResId">@array/nav_bar_menu_item_fragment_map</item>
-        <item name="secondaryFragmentDefaultEnterAnimResId">@animator/fragment_close_enter</item>
-        <item name="secondaryFragmentDefaultExitAnimResId">@animator/fragment_close_exit</item>
-    </style>
-
     <style name="BottomAppBar">
         <item name="contentInsetStart">0dp</item>
         <item name="cradleAlignmentMode">center</item>

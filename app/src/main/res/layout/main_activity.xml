@@ -19,12 +19,11 @@
         android:layout_height="?attr/actionBarSize"
         style="@style/TopActionBar" />
 
-    <com.cliffracermerchant.bootycrate.FragmentContainer
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize"
-        style="@style/FragmentContainer"/>
+        android:layout_marginTop="?attr/actionBarSize" />
 
     <com.cliffracermerchant.bootycrate.BottomAppBarWithIndicator
         android:id="@+id/bottomAppBar"

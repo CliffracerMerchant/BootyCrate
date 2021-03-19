@@ -11,10 +11,8 @@
         <item>@string/dark_theme_description</item>
     </string-array>
 
-    <string-array name="nav_bar_menu_item_fragment_map">
+    <string-array name="multi_fragment_activity_fragments">
         <item>"com.cliffracermerchant.bootycrate.ShoppingListFragment"</item>
-        <item></item>
-        <item></item>
         <item>com.cliffracermerchant.bootycrate.InventoryFragment</item>
     </string-array>
 
