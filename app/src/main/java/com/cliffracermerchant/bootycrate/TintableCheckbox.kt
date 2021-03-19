@@ -51,8 +51,8 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
         setOnClickListener {
             if (inColorEditMode) {
                 val activity = fragmentActivityFrom(context)
-                showColorPickerDialog(activity, activity.supportFragmentManager,
-                                      colorIndex, ::setColorIndex)
+                showViewModelItemColorPickerDialog(activity.supportFragmentManager,
+                                                   colorIndex, ::setColorIndex)
             }
             else isChecked = !isChecked
         }

@@ -34,7 +34,6 @@ import kotlin.math.atan
  * catorGradient, respectively.
  */
 open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
-
     enum class CradleAlignmentMode { Start, Center, End }
     val cradleAlignmentMode: CradleAlignmentMode
     var cradleWidth: Int = 0

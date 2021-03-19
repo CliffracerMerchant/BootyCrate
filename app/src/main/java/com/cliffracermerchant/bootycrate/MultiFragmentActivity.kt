@@ -87,8 +87,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         addOrRestoreFragments(savedInstanceState)
 
-        switchToNewPrimaryFragment(navigationBar.menu.findItem(navigationBar.selectedItemId))
-        if (!showingPrimaryFragment) onNewFragmentSelected(visibleFragment!!)
+        onNewFragmentSelected(visibleFragment!!)
         navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
         supportFragmentManager.addOnBackStackChangedListener {
             onNewFragmentSelected(visibleFragment!!)
