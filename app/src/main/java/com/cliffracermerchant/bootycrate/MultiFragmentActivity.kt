@@ -88,8 +88,8 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         addOrRestoreFragments(savedInstanceState)
 
         switchToNewPrimaryFragment(navigationBar.menu.findItem(navigationBar.selectedItemId))
+        if (!showingPrimaryFragment) onNewFragmentSelected(visibleFragment!!)
         navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
-
         supportFragmentManager.addOnBackStackChangedListener {
             onNewFragmentSelected(visibleFragment!!)
         }
@@ -182,11 +182,10 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         }
         val transaction = supportFragmentManager.beginTransaction()
             .runOnCommit { initPrimaryFragmentVisibility(savedInstanceState) }
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null)
             for (idAndFragment in navBarMenuItemFragmentMap)
                 transaction.add(fragmentContainerId, idAndFragment.value)
-            transaction.commit()
-        }
+        transaction.commit()
     }
 
     private fun initPrimaryFragmentVisibility(savedInstanceState: Bundle?) {

@@ -13,7 +13,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import com.cliffracermerchant.bootycrate.databinding.ShoppingListFragmentBinding
-import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * A fragment to display and modify the user's shopping list.
@@ -33,7 +32,6 @@ import dagger.hilt.android.AndroidEntryPoint
  * does not press the button again within two seconds, it will revert to its
  * normal state.
  */
-@AndroidEntryPoint
 class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override val viewModel: ShoppingListViewModel by activityViewModels()
     private val inventoryViewModel: InventoryViewModel by activityViewModels()
@@ -41,7 +39,6 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override val actionMode = ShoppingListActionMode()
     lateinit var ui: ShoppingListFragmentBinding
     private var checkoutButton: CheckoutButton? = null
-
 
     override fun onCreateView(
         inflater: LayoutInflater,

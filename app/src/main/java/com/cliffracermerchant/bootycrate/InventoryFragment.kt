@@ -13,7 +13,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import com.cliffracermerchant.bootycrate.databinding.InventoryFragmentBinding
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
-import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * A fragment to display and modify the user's inventory.
@@ -24,7 +23,6 @@ import dagger.hilt.android.AndroidEntryPoint
  * properties with values suitable for display of an InventoryRecyclerView,
  * and using its own action mode callback.
  */
-@AndroidEntryPoint
 class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
     override val viewModel: InventoryViewModel by activityViewModels()
     private val shoppingListViewModel: ShoppingListViewModel by activityViewModels()

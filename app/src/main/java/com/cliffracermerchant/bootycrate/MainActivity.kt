@@ -20,23 +20,20 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
-import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * A FragmentContainer hosting activity with a custom UI.
  *
- * MainActivity contains a FragmentContainer along with a custom UI inclu-
+ * MainActivity is a MultiFragmentActivity subclass with a custom UI inclu-
  * ding a RecyclerViewActionBar, a BottomAppBar, and a checkout button and
  * an add button in the cradle of the BottomAppBar. In order for fragments
- * displayed in the FragmentContainer to inform MainActivity which of
- * these UI elements should be displayed when they are active, the frag-
- * ment should implement MainActivity.FragmentInterface. While it is not
- * necessary for fragments to implement FragmentInterface, fragments that
- * do not will not be able to affect the visibility of the MainActivity UI
- * when they are displayed.
+ * to inform MainActivity which of these UI elements should be displayed
+ * when they are active, the fragment should implement MainActivity.Frag-
+ * mentInterface. While it is not necessary for fragments to implement
+ * FragmentInterface, fragments that do not will not be able to affect the
+ * visibility of the MainActivity UI when they are displayed.
  */
 @Suppress("LeakingThis")
-@AndroidEntryPoint
 open class MainActivity : MultiFragmentActivity() {
     private var shoppingListSize = -1
     private var shoppingListNumNewItems = 0
