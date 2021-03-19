@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.activity.viewModels
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
@@ -35,11 +34,6 @@ import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
  */
 @Suppress("LeakingThis")
 open class MainActivity : MultiFragmentActivity() {
-    private var shoppingListSize = -1
-    private var shoppingListNumNewItems = 0
-    private var pendingCradleAnim: Animator? = null
-
-    val shoppingListViewModel: ShoppingListViewModel by viewModels()
     lateinit var ui: MainActivityBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,7 +66,6 @@ open class MainActivity : MultiFragmentActivity() {
         super.onCreate(savedInstanceState)
         setupOnClickListeners()
         initAnimatorConfigs()
-        shoppingListViewModel.items.observe(this) { newList -> updateShoppingListBadge(newList) }
     }
 
     override fun onBackPressed() { ui.topActionBar.ui.backButton.performClick() }
@@ -127,6 +120,7 @@ open class MainActivity : MultiFragmentActivity() {
         }
     }
 
+    private var pendingCradleAnim: Animator? = null
     private fun showCheckoutButton(showing: Boolean, animate: Boolean = true) {
         if (ui.checkoutButton.isVisible == showing) return
         ui.checkoutButton.isVisible = showing
@@ -161,28 +155,6 @@ open class MainActivity : MultiFragmentActivity() {
             // layoutTransition's transition listener's transitionStart override
             // so that the animation is synced with the layout transition.
             pendingCradleAnim = this
-        }
-    }
-
-    private fun updateShoppingListBadge(newShoppingList: List<ShoppingListItem>) {
-        if (shoppingListSize == -1) {
-            if (newShoppingList.isNotEmpty())
-                shoppingListSize = newShoppingList.size
-        } else {
-            val sizeChange = newShoppingList.size - shoppingListSize
-            if (showingPrimaryFragment &&
-                selectedPrimaryFragment is InventoryFragment &&
-                sizeChange > 0
-            ) {
-                shoppingListNumNewItems += sizeChange
-                ui.shoppingListBadge.text = getString(R.string.shopping_list_badge_text,
-                                                   shoppingListNumNewItems)
-                ui.shoppingListBadge.clearAnimation()
-                ui.shoppingListBadge.alpha = 1f
-                ui.shoppingListBadge.animate().alpha(0f).setDuration(1000).setStartDelay(1500).
-                    withLayer().withEndAction { shoppingListNumNewItems = 0 }.start()
-            }
-            shoppingListSize = newShoppingList.size
         }
     }
 

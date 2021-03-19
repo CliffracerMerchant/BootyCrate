@@ -7,6 +7,7 @@ package com.cliffracermerchant.bootycrate
 import android.content.Intent
 import android.os.Bundle
 import androidx.core.view.isVisible
+import androidx.fragment.app.activityViewModels
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -49,7 +50,8 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.FragmentInt
 //            }
             getString(R.string.pref_sort_by_checked) -> {
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
-                (activity as? MainActivity)?.shoppingListViewModel?.sortByChecked = sortByChecked
+                val viewModel: ShoppingListViewModel by activityViewModels()
+                viewModel.sortByChecked = sortByChecked
             }
             getString(R.string.pref_about_app) ->
                 AboutAppDialog().show(parentFragmentManager, null)

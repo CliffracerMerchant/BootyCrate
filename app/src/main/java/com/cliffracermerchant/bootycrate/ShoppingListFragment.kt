@@ -9,6 +9,8 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
@@ -60,11 +62,13 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         recyclerView.sortByChecked = sortByChecked
 
         super.onViewCreated(view, savedInstanceState)
+        viewModel.items.observe(viewLifecycleOwner) { newList -> updateBadge(newList) }
     }
 
     override fun onDetach() {
         super.onDetach()
         checkoutButton = null
+        newItemsBadge = null
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
@@ -81,6 +85,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
         super.onActiveStateChanged(isActive, ui)
         checkoutButton = ui.checkoutButton
+        newItemsBadge = ui.shoppingListBadge
         ui.topActionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_menu_group, isActive)
         if (!isActive) return
         ui.addButton.setOnClickListener {
@@ -88,6 +93,28 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
             NewShoppingListItemDialog(activity).show(activity.supportFragmentManager, null)
         }
         ui.checkoutButton.checkoutCallback = { viewModel.checkout() }
+    }
+
+    private var shoppingListSize = -1
+    private var shoppingListNumNewItems = 0
+    private var newItemsBadge: TextView? = null
+    private fun updateBadge(newShoppingList: List<ShoppingListItem>) {
+        if (shoppingListSize == -1) {
+            if (newShoppingList.isNotEmpty())
+                shoppingListSize = newShoppingList.size
+        } else {
+            val sizeChange = newShoppingList.size - shoppingListSize
+            val badge = newItemsBadge ?: return
+            if (view?.isVisible == false && sizeChange > 0
+            ) {
+                shoppingListNumNewItems += sizeChange
+                badge.text = getString(R.string.shopping_list_badge_text, shoppingListNumNewItems)
+                badge.alpha = 1f
+                badge.animate().alpha(0f).setDuration(1000).setStartDelay(1500).
+                    withLayer().withEndAction { shoppingListNumNewItems = 0 }.start()
+            }
+            shoppingListSize = newShoppingList.size
+        }
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */
