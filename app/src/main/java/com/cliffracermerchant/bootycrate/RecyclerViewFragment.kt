@@ -79,6 +79,12 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
 
         if (savedInstanceState != null)
             searchIsActive = savedInstanceState.getBoolean(searchWasActivePrefKey, false)
+
+        val isActive = this.isActiveTemp ?: return
+        val ui = this.uiTemp ?: return
+        onActiveStateChanged(isActive, ui)
+        isActiveTemp = null
+        uiTemp = null
     }
 
     override fun onDestroyView() {
@@ -164,19 +170,33 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
         searchIsActive       -> { searchView?.isIconified = true; true }
         else                 -> false
     }
+
+    private var isActiveTemp: Boolean? = null
+    private var uiTemp: MainActivityBinding? = null
     @CallSuper override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
+        val recyclerView = this.recyclerView
+        if (recyclerView == null) {
+            // If recyclerView is null, the view probably hasn't been created yet. In
+            // this case, we'll store the parameter values and call onActiveStateChanged
+            // manually with the stored parameters at the end of onViewCreated.
+            isActiveTemp = isActive
+            uiTemp = ui
+            return
+        }
+
         if (!isActive) {
             actionMode.finish()
             actionMode.actionBar = null
             return
         }
-        recyclerView?.snackBarAnchor = ui.bottomAppBar
+
+        recyclerView.snackBarAnchor = ui.bottomAppBar
         actionMode.actionBar = ui.topActionBar
         searchView = ui.topActionBar.ui.searchView
         if (searchIsActive) ui.topActionBar.ui.searchView.performClick()
 
-        if (recyclerView?.selection?.isNotEmpty == true)
-            actionMode.onChanged(recyclerView?.selection?.items!!)
+        if (recyclerView.selection.isNotEmpty)
+            actionMode.onChanged(recyclerView.selection.items!!)
 
         ui.topActionBar.ui.searchView.apply {
             setOnCloseListener { searchIsActive = false; false }
@@ -184,18 +204,17 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
             setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String?) = true
                 override fun onQueryTextChange(newText: String?): Boolean {
-                    recyclerView?.searchFilter = newText
+                    recyclerView.searchFilter = newText
                     return true
                 }
             })
         }
-        ui.topActionBar.changeSortMenu.findItem(when (recyclerView?.sort) {
+        ui.topActionBar.changeSortMenu.findItem(when (recyclerView.sort) {
             ViewModelItem.Sort.Color ->      R.id.color_option
             ViewModelItem.Sort.NameAsc ->    R.id.name_ascending_option
             ViewModelItem.Sort.NameDesc ->   R.id.name_descending_option
             ViewModelItem.Sort.AmountAsc ->  R.id.amount_ascending_option
             ViewModelItem.Sort.AmountDesc -> R.id.amount_descending_option
-            else -> 0
         })?.isChecked = true
     }
 
