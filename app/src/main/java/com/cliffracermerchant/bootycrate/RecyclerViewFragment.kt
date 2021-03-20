@@ -50,8 +50,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
             field = value
             val stateView = view as? MultiStateView ?: return
             val emptyMessage = stateView.getView(MultiStateView.ViewState.EMPTY) as? TextView ?: return
-            emptyMessage.text = if (value) activity?.getString(R.string.no_search_results_message)
-                                else getString(R.string.empty_recycler_view_message,
+            emptyMessage.text = getString(if (value) R.string.no_search_results_message
+                                          else R.string.empty_recycler_view_message,
                                                recyclerView?.collectionName)
         }
     private lateinit var sortModePrefKey: String
@@ -77,8 +77,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
                                   else                    MultiStateView.ViewState.EMPTY
         }
 
-        if (savedInstanceState != null)
-            searchIsActive = savedInstanceState.getBoolean(searchWasActivePrefKey, false)
+        searchIsActive = savedInstanceState?.getBoolean(searchWasActivePrefKey, false) ?: false
 
         val isActive = this.isActiveTemp ?: return
         val ui = this.uiTemp ?: return
