@@ -108,9 +108,9 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             view.detailsUi.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
                 viewModel.updateAddToShoppingList(item.id, checked)
             }
-            view.detailsUi.addToShoppingListTriggerEdit.liveData.observeForever { value ->
-                if (adapterPosition == -1) return@observeForever
-                viewModel.updateAddToShoppingListTrigger(item.id, value)
+            view.detailsUi.addToShoppingListTriggerEdit.onValueChangedListener = { value ->
+                if (adapterPosition != -1)
+                    viewModel.updateAddToShoppingListTrigger(item.id, value)
             }
         }
     }

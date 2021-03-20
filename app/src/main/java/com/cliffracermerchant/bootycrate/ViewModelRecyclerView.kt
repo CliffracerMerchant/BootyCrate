@@ -137,9 +137,9 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
                     if (adapterPosition == -1) return@observeForever
                     viewModel.updateExtraInfo(item.id, value)
                 }
-                ui.amountEdit.liveData.observeForever { value ->
-                    if (adapterPosition == -1) return@observeForever
-                    viewModel.updateAmount(item.id, value)
+                ui.amountEdit.onValueChangedListener = { value ->
+                    if (adapterPosition != -1)
+                        viewModel.updateAmount(item.id, value)
                 }
             }
         }
