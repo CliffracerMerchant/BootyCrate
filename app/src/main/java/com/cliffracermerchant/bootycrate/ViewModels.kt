@@ -151,7 +151,7 @@ class ShoppingListViewModel @Inject constructor(app: Application) :
         set(value) { field = value; notifySortOptionsChanged() }
 
     override fun itemsSwitchMapFunc(): LiveData<List<ShoppingListItem>> {
-        val filter = "%${searchFilter}%"
+        val filter = "%${searchFilter ?: ""}%"
         return if (sortByChecked) when (sort) {
             ViewModelItem.Sort.Color -> dao.getAllSortedByColorAndChecked(filter)
             ViewModelItem.Sort.NameAsc -> dao.getAllSortedByNameAscAndChecked(filter)

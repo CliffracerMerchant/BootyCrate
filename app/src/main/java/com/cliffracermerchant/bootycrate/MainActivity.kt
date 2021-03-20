@@ -52,7 +52,8 @@ open class MainActivity : MultiFragmentActivity() {
 
         prefKey = getString(R.string.pref_light_dark_mode)
         val themeDefault = getString(R.string.sys_default_theme_description)
-        val sysDarkThemeIsActive = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
+        val sysDarkThemeIsActive = UI_MODE_NIGHT_YES == (resources.configuration.uiMode and
+                                                         Configuration.UI_MODE_NIGHT_MASK)
         setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
             getString(R.string.light_theme_description) -> R.style.LightTheme
             getString(R.string.dark_theme_description) ->  R.style.DarkTheme
