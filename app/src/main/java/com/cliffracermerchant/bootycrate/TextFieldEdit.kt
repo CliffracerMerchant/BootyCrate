@@ -16,34 +16,34 @@ import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
 import androidx.core.widget.doAfterTextChanged
-import androidx.lifecycle.MutableLiveData
 
 /**
  * A view to edit a single line text field.
  *
  * TextFieldEdit is an AppCompatEditText optimized for toggleable editing
- * of a single line. When isEditable is false, the TextFieldEdit will present
- * itself as a normal single line TextView. When isEditable is true, TextField-
- * Edit will request focus when it is tapped and display a soft input. If the
- * user presses the done action on the soft input or if the focus is changed,
- * the changes can be listened to through the member liveData. If the proposed
- * change would leave the field empty and the property canBeEmpty is false,
- * the value will instead be reverted to its previous value. Note that if the
- * canBeEmpty property is changed to false when the field is already empty,
- * it will not be enforced until the value is changed to a non-blank value.
+ * of a single line. When isEditable is false, the TextFieldEdit will pre-
+ * sent itself as a normal single line TextView. When isEditable is true,
+ * TextFieldEdit will request focus when it is tapped and display a soft
+ * input. If the user presses the done action on the soft input or if the
+ * focus is changed, the changes to the text can be acted upon through the
+ * property onTextChangedListener. If the proposed change would leave the
+ * field empty and the property canBeEmpty is false, the value will
+ * instead be reverted to its previous value. Note that if the canBeEmpty
+ * property is changed to false when the field is already empty, it will
+ * not be enforced until the value is changed to a non-blank value.
  *
- * When in editable mode, TextFieldEdit will underline itself to indicate this
- * to the user, and will set its minHeight to the value of the dimension
- * R.dimen.text_field_edit_editable_min_height to ensure that its touch tar-
- * get size is adequate. It will also animate changes in its editable state
- * (unless the function setEditable is called with the parameter animate =
- * equal to false). The animations will use the property animatorConfig for
- * their durations and interpolators.
+ * When in editable mode, TextFieldEdit will underline itself to indicate
+ * this to the user, and will set its minHeight to the value of the dimen-
+ * sion R.dimen.text_field_edit_editable_min_height to ensure that its
+ * touch target size is adequate. It will also animate changes in its edit-
+ * able state (unless the function setEditable is called with the parame-
+ * ter animate equal to false). The animations will use the property anim-
+ * atorConfig for their durations and interpolators.
  */
 open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     AppCompatEditText(context, attrs)
 {
-    val liveData = MutableLiveData<String>()
+    var onTextChangedListener: ((String) -> Unit)? = null
     var animatorConfig: AnimatorConfig? = null
     val isEditable get() = isFocusableInTouchMode
     var canBeEmpty: Boolean
@@ -65,18 +65,25 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
                                                       resources.displayMetrics)
     }
 
+    private fun setTextPrivate(newText: String) {
+        if (!canBeEmpty && text.isNullOrBlank())
+            setText(lastValue ?: "")
+        else setText(newText)
+        onTextChangedListener?.invoke(text.toString())
+    }
+
     override fun onEditorAction(actionCode: Int) {
         if (actionCode == EditorInfo.IME_ACTION_DONE) {
             clearFocus()
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
-            liveData.value = text.toString()
+            setTextPrivate(text.toString())
         }
         super.onEditorAction(actionCode)
     }
 
     override fun onFocusChanged(focused: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
         super.onFocusChanged(focused, direction, previouslyFocusedRect)
-        if (!focused) liveData.value = text.toString()
+        if (!focused) setTextPrivate(text.toString())
     }
 
     /**
@@ -103,10 +110,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
      * containing information about the internal animations set up during
      * the state change if @param animate == true, or null otherwise. */
     fun setEditable(editable: Boolean, animate: Boolean = true): AnimInfo? {
-        if (!canBeEmpty)
-            if (editable) lastValue = text.toString()
-            else if (text.isNullOrBlank()) setText(lastValue)
-
+        if (editable) lastValue = text.toString()
         isFocusableInTouchMode = editable
         /* Setting the input type here will prevent misspelling underlines from
          * being displayed when the TextFieldEdit is not in an editable state. */

@@ -8,10 +8,12 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
-import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
-import java.util.*
 
 /**
  * A RecyclerView for displaying the contents of a ViewModel<Entity>.
@@ -129,17 +131,14 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
                 ui.checkBox.onColorChangedListener = { color ->
                     viewModel.updateColor(item.id, ViewModelItem.Colors.indexOf(color))
                 }
-                ui.nameEdit.liveData.observeForever { value ->
-                    if (adapterPosition == -1) return@observeForever
-                    viewModel.updateName(item.id, value)
+                ui.nameEdit.onTextChangedListener = { newName ->
+                    if (adapterPosition != -1) viewModel.updateName(item.id, newName)
                 }
-                ui.extraInfoEdit.liveData.observeForever { value ->
-                    if (adapterPosition == -1) return@observeForever
-                    viewModel.updateExtraInfo(item.id, value)
+                ui.extraInfoEdit.onTextChangedListener = { newExtraInfo ->
+                    if (adapterPosition != -1) viewModel.updateExtraInfo(item.id, newExtraInfo)
                 }
                 ui.amountEdit.onValueChangedListener = { value ->
-                    if (adapterPosition != -1)
-                        viewModel.updateAmount(item.id, value)
+                    if (adapterPosition != -1) viewModel.updateAmount(item.id, value)
                 }
             }
         }

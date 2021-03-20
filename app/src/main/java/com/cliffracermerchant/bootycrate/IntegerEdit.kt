@@ -20,25 +20,24 @@ import com.cliffracermerchant.bootycrate.databinding.IntegerEditBinding
  *
  * IntegerEdit is a compound view that combines an EditText displaying an
  * integer with two image buttons on its left and right to act as decrease
- * and increase buttons. IntegerEdit provides a publicly accessible Live-
- * Data member to allow external entities to react to a change in its data.
+ * and increase buttons. The property onValueChangedListener can be set to
+ * invoke an action whenever the value is changed.
  *
  * The EditText is by default not focusable in touch mode, but this can be
- * changed by calling the function setValueIsDirectlyEditable. If set to
- * true, the user can edit the value directly (rather than through the use
- * of the decrease / increase buttons). When in the editable state, the
- * EditText will underline the current value to indicate this to the user,
- * and will, if necessary, expand the width of the value to
- * R.dimen.integer_edit_editable_value_min_width to make it a larger touch
- * target.
+ * changed by calling the function setValueIsFocusable. If set to true,
+ * the user can edit the value directly with a keyboard. When in the edit-
+ * able state, the EditText will underline the current value to indicate
+ * this to the user, and will, if necessary, expand the width of the value
+ * to R.dimen.integer_edit_editable_value_min_width to make it a larger
+ * touch target.
  *
- * Unless the function setValueIsDirectlyEditable is called with a value
- * of false for the parameter animate, the IntegerEdit will start an anim-
- * ation that uses the property animatorConfig for its duration and inter-
- * polator. In case an external layout needs to know information about
- * this animation to combine it with others, setValueIsDirectlyEditable
- * will return an AnimInfo object that contains the animator and the width
- * change that was animated, or null if no animation occurred.
+ * Unless the function setValueIsFocusable is called with a value of false
+ * for the parameter animate, the IntegerEdit will start an animation that
+ * uses the property animatorConfig for its duration and interpolator. In
+ * case an external layout needs to know information about this animation
+ * to combine it with others, setValueIsFocusable will return an AnimInfo
+ * object that contains the animator and the width change that was anim-
+ * ated, or null if no animation occurred.
  */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
@@ -52,11 +51,9 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
     var onValueChangedListener: ((Int)->Unit)? = null
     var value get() = try { ui.valueEdit.text.toString().toInt() }
                       catch (e: Exception) { 0 }
-              set(newValue) {
-                  val adjustedNewValue = newValue.coerceIn(minValue, maxValue)
+              set(newValue) { val adjustedNewValue = newValue.coerceIn(minValue, maxValue)
                               ui.valueEdit.setText(adjustedNewValue.toString())
-                              onValueChangedListener?.invoke(adjustedNewValue)
-              }
+                              onValueChangedListener?.invoke(adjustedNewValue) }
 
     val valueIsFocusable get() = ui.valueEdit.isFocusableInTouchMode
 
