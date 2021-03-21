@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.content.Context
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -66,19 +67,12 @@ import androidx.room.PrimaryKey
     }
 
     companion object {
-        val Colors = intArrayOf(
-            -3452848,
-            -3437488,
-            -3421360,
-            -7550128,
-            -11482288,
-            -11482228,
-            -11482165,
-            -11498293,
-            -11513653,
-            -7581493,
-            -3452725,
-            -3452788)
+        val Colors: List<Int> get() = _Colors
+        private lateinit var _Colors: List<Int>
+
+        fun initColors(context: Context) {
+            _Colors = context.resources.getIntArray(R.array.view_model_item_colors).asList()
+        }
     }
 }
 

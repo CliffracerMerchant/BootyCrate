@@ -18,7 +18,7 @@ import androidx.fragment.app.FragmentManager
 import com.cliffracermerchant.bootycrate.databinding.ShareDialogBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import com.thebluealliance.spectrum.SpectrumDialog
+import dev.sasikanth.colorsheet.ColorSheet
 
 /** Display a color picker dialog to choose from one of ViewModelItem's twelve colors,
  * then invoke @param callback with the chosen color index.
@@ -26,24 +26,24 @@ import com.thebluealliance.spectrum.SpectrumDialog
  * Note that the initial color parameter and the return value are the
  * indices of the chosen color, not the Android color value for the color.
  */
-fun showColorPickerDialog(
-    context: Context,
+fun showViewModelItemColorPickerDialog(
     fragmentManager: FragmentManager,
     initialColorIndex: Int,
     callback: (Int) -> Unit,
-) = SpectrumDialog.Builder(context)
-    .setColors(ViewModelItem.Colors)
-    .setSelectedColor(initialColorIndex)
-    .setOnColorSelectedListener { _, color ->
+) = ColorSheet().colorPicker(
+    colors = ViewModelItem.Colors.toIntArray(),
+    selectedColor = ViewModelItem.Colors[initialColorIndex],
+    listener = { color: Int ->
         val colorIndex = ViewModelItem.Colors.indexOf(color)
         callback(if (colorIndex != -1) colorIndex else 0)
-    }.build().show(fragmentManager, null)
+    }).show(fragmentManager)
 
 private enum class ShareOption { TextMessage, Email }
 
 class ShareDialog<Entity: ViewModelItem>(
+    private val subject: String,
     private val items: List<Entity>,
-    private val snackBarParent: View
+    private val snackBarAnchor: View
 ) : DialogFragment() {
     val ui = ShareDialogBinding.inflate(LayoutInflater.from(context))
 
@@ -80,15 +80,17 @@ class ShareDialog<Entity: ViewModelItem>(
                 intent.data = Uri.parse("smsto:")
             } ShareOption.Email -> {
                 intent.data = Uri.parse("mailto:")
-                val subject =  context?.getString(R.string.shopping_list_navigation_item_name)
                 intent.putExtra(Intent.EXTRA_SUBJECT, subject)
                 intent.putExtra(Intent.EXTRA_TEXT, message)
             }
         }
         try { requireContext().startActivity(intent) }
         catch (e: ActivityNotFoundException) {
-            Snackbar.make(snackBarParent, R.string.share_error_message, Snackbar.LENGTH_SHORT)
-                .setAnchorView(snackBarParent).show()
+            Snackbar.make(
+                snackBarAnchor,
+                R.string.share_error_message,
+                Snackbar.LENGTH_SHORT
+            ).setAnchorView(snackBarAnchor).show()
         }
     }
 }
@@ -105,29 +107,3 @@ fun themedAlertDialogBuilder(context: Context): MaterialAlertDialogBuilder {
     context.theme.resolveAttribute(R.attr.materialAlertDialogTheme, typedValue, true)
     return MaterialAlertDialogBuilder(context, typedValue.data)
 }
-
-/** Open a dialog to ask the user to the type of database import they want (merge
- * existing or overwrite, and recreate the given activity if the import requires it. */
-//fun importDatabaseFromUri(uri: Uri, activity: FragmentActivity?)  {
-//    themedAlertBuilder().
-//    setMessage(R.string.import_database_question_message).
-//    setNeutralButton(android.R.string.cancel) { _, _ -> }.
-//    setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
-//        BootyCrateDatabase.mergeWithBackup(context, uri)
-//    }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
-//        themedAlertBuilder().
-//        setMessage(R.string.import_database_overwrite_confirmation_message).
-//        setNegativeButton(android.R.string.no) { _, _ -> }.
-//        setPositiveButton(android.R.string.yes) { _, _ ->
-//            BootyCrateDatabase.replaceWithBackup(context, uri)
-            // The pref pref_viewmodels_need_cleared needs to be set to true so that
-            // when the MainActivity is recreated, it will clear its ViewModelStore
-            // and use the DAOs of the new database instead of the old one.
-//            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-//            val editor = prefs.edit()
-//            editor.putBoolean(context.getString(R.string.pref_viewmodels_need_cleared), true)
-//            editor.apply()
-//            activity?.recreate()
-//        }.show()
-//    }.show()
-//}

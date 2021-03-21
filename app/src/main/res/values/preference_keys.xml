@@ -6,9 +6,12 @@
 
 <resources>
     <string name="pref_sort">%1$s_sort</string>
-    <string name="pref_viewmodels_need_cleared">viewModelsNeedCleared</string>
+    <string name="pref_view_models_need_cleared">viewModelsNeedCleared</string>
 
-    <string name="pref_app_theme">dark_theme_active</string>
+    <string name="pref_light_dark_mode">dark_theme_active</string>
+<!--    <string name="pref_theme_gradient_screen">theme_gradient_screen</string>-->
+<!--    <string name="pref_theme_gradient_value">theme_gradient_value</string>-->
+<!--    <integer name="theme_gradient_max_value">360</integer>-->
 
     <string name="pref_sort_by_checked">sort_by_checked</string>
 

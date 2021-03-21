@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<set xmlns:android="http://schemas.android.com/apk/res/android">
+    <objectAnimator
+        android:duration="@integer/fragmentTransitionLongDuration"
+        android:propertyName="translationX"
+        android:interpolator="@anim/default_interpolator"/>
+
+    <objectAnimator
+        android:duration="@integer/fragmentTransitionLongDuration"
+        android:propertyName="alpha"
+        android:valueFrom="0.0"
+        android:valueTo="1.0"
+        android:interpolator="@anim/default_interpolator"/>
+</set>

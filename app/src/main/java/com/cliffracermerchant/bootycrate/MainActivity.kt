@@ -6,7 +6,6 @@ package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
 import android.animation.ValueAnimator
-import android.app.Application
 import android.content.res.Configuration
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
@@ -14,75 +13,39 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import android.widget.ImageView
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
-import com.google.android.material.bottomnavigation.BottomNavigationView
-
-class App : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        AnimatorConfig.initConfigs(this)
-    }
-}
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
- * The primary activity for BootyCrate
+ * A FragmentContainer hosting activity with a custom UI.
  *
- * Instead of switching between activities, nearly everything in BootyCrate is
- * accomplished in the ShoppingListFragment, InventoryFragment, or the Preferences-
- * Fragment. Instances of ShoppingListFragment and InventoryFragment are created
- * on app startup, and hidden/shown by the fragment manager as appropriate. The
- * currently shown fragment can be determined via the boolean members showing-
- * Inventory and showingPreferences as follows:
- * Shown fragment = if (showingPreferences)    PreferencesFragment
- *                  else if (showingInventory) InventoryFragment
- *                  else                       ShoppingListFragment
- * If showingPreferences is true, the value of showingInventory determines the
- * fragment "under" the preferences (i.e. the one that will be returned to on a
- * back button press or a navigate up).
+ * MainActivity is a MultiFragmentActivity subclass with a custom UI inclu-
+ * ding a RecyclerViewActionBar, a BottomAppBar, and a checkout button and
+ * an add button in the cradle of the BottomAppBar. In order for fragments
+ * to inform MainActivity which of these UI elements should be displayed
+ * when they are active, the fragment should implement MainActivity.Frag-
+ * mentInterface. While it is not necessary for fragments to implement
+ * FragmentInterface, fragments that do not will not be able to affect the
+ * visibility of the MainActivity UI when they are displayed.
  */
 @Suppress("LeakingThis")
-open class MainActivity : AppCompatActivity() {
-    private lateinit var shoppingListFragment: ShoppingListFragment
-    private lateinit var inventoryFragment: InventoryFragment
-    private var showingInventory = false
-    private var showingPreferences = false
-    val activeFragment get() = if (showingInventory) inventoryFragment
-                               else                  shoppingListFragment
-
-    private var shoppingListSize = -1
-    private var shoppingListNumNewItems = 0
-    private var pendingCradleAnim: Animator? = null
-
-    val shoppingListViewModel: ShoppingListViewModel by viewModels()
-    val inventoryViewModel: InventoryViewModel by viewModels()
+@AndroidEntryPoint
+open class MainActivity : MultiFragmentActivity() {
     lateinit var ui: MainActivityBinding
+    @Inject @TransitionAnimatorConfig lateinit var transitionAnimConfig: AnimatorConfig
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         val prefs = getDefaultSharedPreferences(this)
-     /* The activity's ViewModelStore will by default retain instances of the
-        app's view models across activity restarts. In case this is not desired
-        (e.g. when the database was replaced with an external one, and the view-
-        models therefore need to be reset), setting the shared preference whose
-        key is equal to the value of R.string.pref_viewmodels_need_cleared to
-        true will cause MainActivity to call viewModelStore.clear() */
-        var prefKey = getString(R.string.pref_viewmodels_need_cleared)
-        if (prefs.getBoolean(prefKey, false)) {
-            viewModelStore.clear()
-            val editor = prefs.edit()
-            editor.putBoolean(prefKey, false)
-            editor.apply()
-        }
-
-        prefKey = getString(R.string.pref_app_theme)
+        val prefKey = getString(R.string.pref_light_dark_mode)
         val themeDefault = getString(R.string.sys_default_theme_description)
+        val sysDarkThemeIsActive = UI_MODE_NIGHT_YES == (resources.configuration.uiMode and
+                                                         Configuration.UI_MODE_NIGHT_MASK)
         setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
             getString(R.string.light_theme_description) -> R.style.LightTheme
             getString(R.string.dark_theme_description) ->  R.style.DarkTheme
@@ -91,180 +54,91 @@ open class MainActivity : AppCompatActivity() {
         })
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
-
-        ui.cradleLayout.layoutTransition = layoutTransition(AnimatorConfig.transition)
-        ui.cradleLayout.layoutTransition.doOnStart {
-            pendingCradleAnim?.start()
-            pendingCradleAnim = null
-        }
-
-        ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
-        ui.bottomNavigationBar.setOnNavigationItemSelectedListener(onNavigationItemSelected)
-
-        supportFragmentManager.addOnBackStackChangedListener {
-            if (supportFragmentManager.backStackEntryCount == 0) {
-                showBottomAppBar()
-                showingPreferences = false
-                ui.topActionBar.ui.backButton.isVisible = false
-                activeFragment.isActive = true
-            }
-        }
-        initFragments(savedInstanceState)
-        val navButton = findViewById<View>(if (showingInventory) R.id.inventory_button
-                                           else                  R.id.shopping_list_button)
-        navButton.doOnNextLayout {
-            ui.bottomAppBar.indicatorXPos = (it.width - ui.bottomAppBar.indicatorWidth) / 2 + it.left
-        }
-        if (showingInventory)
-            showCheckoutButton(showing = false, animate = false)
-        ui.bottomAppBar.prepareCradleLayout(ui.cradleLayout)
-
-        shoppingListViewModel.items.observe(this) { newList ->
-            updateShoppingListBadge(newList)
-        }
-
-        ui.topActionBar.ui.backButton.setOnClickListener { onSupportNavigateUp() }
-        onCreateOptionsMenu(ui.topActionBar.optionsMenu)
-        ui.topActionBar.onDeleteButtonClickedListener = {
-            onOptionsItemSelected(ui.topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
-        }
-        ui.topActionBar.setOnSortOptionClickedListener { item ->
-            onOptionsItemSelected(item)
-        }
-        ui.topActionBar.setOnOptionsItemClickedListener { item ->
-            onOptionsItemSelected(item)
-        }
+        fragmentContainerId = ui.fragmentContainer.id
+        navigationBar = ui.bottomNavigationBar
+        super.onCreate(savedInstanceState)
+        setupOnClickListeners()
+        initAnimatorConfigs()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putBoolean("showingInventory", showingInventory)
-        supportFragmentManager.putFragment(outState, "shoppingListFragment", shoppingListFragment)
-        supportFragmentManager.putFragment(outState, "inventoryFragment",    inventoryFragment)
-        outState.putBoolean("showingPreferences", showingPreferences)
-    }
+    override fun onBackPressed() { ui.topActionBar.ui.backButton.performClick() }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem) =
         if (item.itemId == R.id.settings_menu_item) {
-            showPreferencesFragment()
-            return true
+            addSecondaryFragment(PreferencesFragment())
+            true
         }
-        return activeFragment.onOptionsItemSelected(item)
-    }
+        else visibleFragment?.onOptionsItemSelected(item) ?: false
 
-    override fun onSupportNavigateUp() = when {
-        showingPreferences -> {
-            supportFragmentManager.popBackStack()
-            true
-        } activeFragment.searchIsActive -> {
-            ui.topActionBar.ui.searchView.findViewById<ImageView>(
-                androidx.appcompat.R.id.search_close_btn)
-                .apply { performClick(); performClick() }
-            true
-        } activeFragment.actionMode.isStarted -> {
-            activeFragment.actionMode.finishAndClearSelection()
-            true
-        } else -> false
-    }
+    private var currentFragment: Fragment? = null
+    override fun onNewFragmentSelected(newFragment: Fragment) {
+        currentFragment?.let {
+            if (it is FragmentInterface)
+                it.onActiveStateChanged(isActive = false, ui)
+        }
+        ui.topActionBar.ui.backButton.isVisible = !showingPrimaryFragment
+        val needToAnimate = currentFragment != null
+        currentFragment = newFragment
 
-    override fun onBackPressed() {
-        if (showingPreferences) supportFragmentManager.popBackStack()
-        else                    super.onBackPressed()
-    }
-
-    private fun showPreferencesFragment(animate: Boolean = true) {
-        showingPreferences = true
-        inputMethodManager(this)?.hideSoftInputFromWindow(ui.bottomAppBar.windowToken, 0)
-        showBottomAppBar(false)
-        activeFragment.isActive = false
-        ui.topActionBar.ui.backButton.isVisible = true
-
-        val enterAnimResId = if (animate) R.animator.fragment_close_enter else 0
-        supportFragmentManager.beginTransaction().
-            setCustomAnimations(enterAnimResId, R.animator.fragment_close_exit,
-                                enterAnimResId, R.animator.fragment_close_exit).
-            hide(activeFragment).
-            add(R.id.fragmentContainer, PreferencesFragment()).
-            addToBackStack(null).commit()
-    }
-
-    private fun switchToInventory() = toggleMainFragments(switchingToInventory = true)
-    private fun switchToShoppingList() = toggleMainFragments(switchingToInventory = false)
-    private fun toggleMainFragments(switchingToInventory: Boolean) {
-        if (showingPreferences) return
-
-        val oldFragment = activeFragment
-        showingInventory = switchingToInventory
-        showCheckoutButton(showing = !showingInventory)
+        if (newFragment !is FragmentInterface) return
+        newFragment.onActiveStateChanged(isActive = true, ui = ui)
+        ui.topActionBar.optionsMenuVisible = newFragment.showsOptionsMenu()
+        showBottomAppBar(show = newFragment.showsBottomAppBar(), animate = needToAnimate)
+        if (newFragment.showsBottomAppBar())
+            showCheckoutButton(showing = newFragment.showsCheckoutButton(), animate = needToAnimate)
         inputMethodManager(this)?.hideSoftInputFromWindow(ui.bottomAppBar.windowToken, 0)
 
-        val newFragmentTranslationStart = ui.fragmentContainer.width * if (showingInventory) 1f else -1f
-        val fragmentTranslationAmount = ui.fragmentContainer.width * if (showingInventory) -1f else 1f
-
-        oldFragment.isActive = false
-        val oldFragmentView = oldFragment.view
-        oldFragmentView?.animate()
-            ?.translationXBy(fragmentTranslationAmount)
-            ?.applyConfig(AnimatorConfig.transition)
-            ?.withEndAction { oldFragmentView.visibility = View.INVISIBLE }
-            ?.start()
-
-        activeFragment.isActive = true
-        val newFragmentView = activeFragment.view
-        newFragmentView?.translationX = newFragmentTranslationStart
-        newFragmentView?.visibility = View.VISIBLE
-        newFragmentView?.animate()
-            ?.applyConfig(AnimatorConfig.transition)
-            ?.translationX(0f)?.start()
+        if (newFragment.showsBottomAppBar())
+            ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
     }
 
-    private fun showBottomAppBar(show: Boolean = true) {
+    private val showingBottomAppBar get() = ui.bottomAppBar.translationY == 0f
+    private fun showBottomAppBar(show: Boolean = true, animate: Boolean = true) {
+        if (showingBottomAppBar == show) return
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
         val views = arrayOf(ui.bottomAppBar, ui.addButton, ui.checkoutButton)
 
-        if (!show && ui.bottomAppBar.height == 0) {
-            ui.bottomAppBar.doOnNextLayout {
+        if (!animate) {
+            if (!show) ui.bottomAppBar.doOnNextLayout {
                 val translationAmount = screenHeight - ui.cradleLayout.top
                 for (view in views) view.translationY = translationAmount
             }
             return
         }
+
         val translationAmount = screenHeight - ui.cradleLayout.top
         val translationStart = if (show) translationAmount else 0f
-        val translationEnd =   if (show) 0f else translationAmount
+        val translationEnd = if (show) 0f else translationAmount
         for (view in views) {
             view.translationY = translationStart
-            view.animate().withLayer()
-                .applyConfig(AnimatorConfig.transition)
+            view.animate().withLayer().applyConfig(transitionAnimConfig)
                 .translationY(translationEnd).start()
         }
     }
 
+    private var pendingCradleAnim: Animator? = null
     private fun showCheckoutButton(showing: Boolean, animate: Boolean = true) {
         if (ui.checkoutButton.isVisible == showing) return
         ui.checkoutButton.isVisible = showing
 
-        val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        ui.cradleLayout.measure(wrapContentSpec, wrapContentSpec)
-        val cradleEndWidth = if (showing) ui.cradleLayout.measuredWidth
-                             else         ui.addButton.layoutParams.width
-
-        // These z values seem not to stick when set in XML, so we have to
-        // set them here every time to ensure that the addButton remains on
-        // top of the others.
+        val cradleEndWidth = if (!showing) ui.addButton.layoutParams.width else {
+            val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            ui.cradleLayout.measure(wrapContentSpec, wrapContentSpec)
+            ui.cradleLayout.measuredWidth
+        }
+        // These z values seem not to stick when set in XML, so we have to set them here
+        // every time to ensure that the addButton remains on top of the checkout button.
         ui.addButton.elevation = 5f
         ui.checkoutButton.elevation = -10f
         if (!animate) {
             ui.bottomAppBar.cradleWidth = cradleEndWidth
             return
         }
-        android.R.anim.accelerate_decelerate_interpolator
-        // Settings the checkout button's clip bounds prevents the
-        // right corners of the checkout button from sticking out
-        // underneath the FAB during the show / hide animation.
+        // Settings the checkout button's clip bounds prevents the right corners of the check-
+        // out button from sticking out underneath the FAB during the show / hide animation.
         val clipBounds = Rect(0, 0, 0, ui.checkoutButton.height)
         ValueAnimator.ofInt(ui.bottomAppBar.cradleWidth, cradleEndWidth).apply {
-            applyConfig(AnimatorConfig.transition)
+            applyConfig(transitionAnimConfig)
             addUpdateListener {
                 ui.bottomAppBar.cradleWidth = it.animatedValue as Int
                 clipBounds.right = ui.bottomAppBar.cradleWidth - ui.addButton.measuredWidth / 2
@@ -278,68 +152,50 @@ open class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateShoppingListBadge(newShoppingList: List<ShoppingListItem>) {
-        if (shoppingListSize == -1) {
-            if (newShoppingList.isNotEmpty())
-                shoppingListSize = newShoppingList.size
-        } else {
-            val sizeChange = newShoppingList.size - shoppingListSize
-            if (activeFragment == inventoryFragment && sizeChange > 0) {
-                shoppingListNumNewItems += sizeChange
-                ui.shoppingListBadge.text = getString(R.string.shopping_list_badge_text,
-                                                   shoppingListNumNewItems)
-                ui.shoppingListBadge.clearAnimation()
-                ui.shoppingListBadge.alpha = 1f
-                ui.shoppingListBadge.animate().alpha(0f).setDuration(1000).setStartDelay(1500).
-                    withLayer().withEndAction { shoppingListNumNewItems = 0 }.start()
-            }
-            shoppingListSize = newShoppingList.size
+    private fun setupOnClickListeners() {
+        ui.topActionBar.ui.backButton.setOnClickListener {
+            val fragment = visibleFragment as? FragmentInterface
+            if (fragment?.onBackPressed() == false)
+                supportFragmentManager.popBackStack()
+        }
+        ui.topActionBar.onDeleteButtonClickedListener = {
+            onOptionsItemSelected(ui.topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
+        }
+        ui.topActionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
+        ui.topActionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
+    }
+
+    private fun initAnimatorConfigs() {
+        defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
+        defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
+        ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
+        ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig)
+        ui.cradleLayout.layoutTransition.doOnStart {
+            pendingCradleAnim?.start()
+            pendingCradleAnim = null
         }
     }
 
-    private fun initFragments(savedInstanceState: Bundle?) {
-        showingInventory = savedInstanceState?.getBoolean("showingInventory") ?: false
-        showingPreferences = savedInstanceState?.getBoolean("showingPreferences") ?: false
-
-        if (savedInstanceState != null) {
-            shoppingListFragment = supportFragmentManager.getFragment(
-                savedInstanceState, "shoppingListFragment") as ShoppingListFragment
-            inventoryFragment = supportFragmentManager.getFragment(
-                savedInstanceState, "inventoryFragment") as InventoryFragment
-
-            if (showingPreferences) {
-                showBottomAppBar(false)
-                ui.topActionBar.ui.backButton.isVisible = true
-            }
-
-        } else {
-            shoppingListFragment = ShoppingListFragment(isActive = !showingInventory)
-            inventoryFragment = InventoryFragment(isActive = showingInventory)
-            supportFragmentManager.beginTransaction().
-                add(R.id.fragmentContainer, shoppingListFragment, "shoppingList").
-                add(R.id.fragmentContainer, inventoryFragment, "inventory").
-                commit()
-        }
+    /**
+     * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
+     *
+     * Fragment interface can be implemented by a Fragment subclass to inform the
+     * MainActivity as to how to alter its ui to suit the fragment, and to provide
+     * callbacks for certain user actions that might be forwarded to the fragment
+     * (e.g. a back button or options menu item press).
+     * */
+    interface FragmentInterface {
+        /** Return whether the top action bar's options menu (including its search view and change
+         * sort button) should be visible when the implementing fragment is. */
+        fun showsOptionsMenu(): Boolean
+        /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
+        fun showsBottomAppBar(): Boolean
+        /** Return whether the checkout button should be visible when the implementing fragment is.*/
+        fun showsCheckoutButton(): Boolean
+        /** Return whether the implementing fragment consumed the back button press. Note that
+         * this function is also called when the top action bar's back button is pressed. */
+        fun onBackPressed(): Boolean
+        /** Perform any additional actions on @param ui that the fragment desires, given its @param isActive state. */
+        fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) { }
     }
-
-    private val onNavigationItemSelected = BottomNavigationView.OnNavigationItemSelectedListener { item ->
-        if (item.isChecked) false // Selected item was already selected
-        else {
-            item.isChecked = true
-            toggleMainFragments(switchingToInventory = item.itemId == R.id.inventory_button)
-
-            val newIcon = findViewById<View>(
-                if (item.itemId == R.id.inventory_button) R.id.inventory_button
-                else                                      R.id.shopping_list_button)
-            val indicatorNewXPos = (newIcon.width - ui.bottomAppBar.indicatorWidth) / 2 + newIcon.left
-            ValueAnimator.ofInt(ui.bottomAppBar.indicatorXPos, indicatorNewXPos).apply {
-                addUpdateListener { ui.bottomAppBar.indicatorXPos = it.animatedValue as Int }
-                applyConfig(AnimatorConfig.transition)
-            }.start()
-            true
-        }
-    }
-
-    val sysDarkThemeIsActive get() =
-        (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == UI_MODE_NIGHT_YES
 }

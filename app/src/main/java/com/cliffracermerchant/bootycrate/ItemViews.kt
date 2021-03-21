@@ -104,7 +104,7 @@ open class ViewModelItemView<Entity: ViewModelItem>(
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
-    val animatorConfig: AnimatorConfig = AnimatorConfig.translation,
+    animatorConfig: AnimatorConfig? = null,
     useDefaultLayout: Boolean = true,
 ) : ViewModelItemView<Entity>(context, useDefaultLayout),
     ExpandableItemAnimator.ExpandableRecyclerViewItem
@@ -113,6 +113,11 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     private var _isExpanded = false
     private val gradientOutline: GradientDrawable
 
+    var animatorConfig: AnimatorConfig? = null
+        set(value) { field = value
+                     ui.nameEdit.animatorConfig = value
+                     ui.extraInfoEdit.animatorConfig = value
+                     ui.amountEdit.animatorConfig = value }
     var startAnimationsImmediately = true
     private val pendingAnimations = mutableListOf<Animator>()
     override fun runPendingAnimations() { for (anim in pendingAnimations)
@@ -135,9 +140,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         clipChildren = false
         if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }
-            ui.nameEdit.animatorConfig = animatorConfig
-            ui.extraInfoEdit.animatorConfig = animatorConfig
-            ui.amountEdit.animatorConfig = animatorConfig
+            this.animatorConfig = animatorConfig
         }
     }
 
@@ -150,13 +153,10 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        if (animate) valueAnimatorOfInt(
-            setter = gradientOutline::setAlpha,
-            fromValue = if (selected) 0 else 255,
-            toValue = if (selected) 255 else 0,
-            config = if (selected) AnimatorConfig.fadeIn
-                     else          AnimatorConfig.fadeOut
-        ).start()
+        if (animate) valueAnimatorOfInt(setter = gradientOutline::setAlpha,
+                                        fromValue = if (selected) 0 else 255,
+                                        toValue = if (selected) 255 else 0,
+                                        config = animatorConfig).start()
         else gradientOutline.alpha = if (selected) 255 else 0
     }
 
@@ -358,12 +358,9 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     protected fun View.showOrHideAfterFading(showing: Boolean): Animator {
         alpha = if (showing) 0f else 1f
         isVisible = true
-        val animator = valueAnimatorOfFloat(
-            setter = ::setAlpha, fromValue = alpha,
-            toValue = if (showing) 1f else 0f,
-            config = if (showing) AnimatorConfig.fadeIn
-                     else         AnimatorConfig.fadeOut)
-
+        val animator = valueAnimatorOfFloat(setter = ::setAlpha, fromValue = alpha,
+                                            toValue = if (showing) 1f else 0f,
+                                            config = animatorConfig)
         if (!showing) {
             val parent = parent as ViewGroup
             parent.overlay.add(this)
@@ -412,8 +409,9 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
  * setStrikeThroughEnabled that will set the strike through state for both the
  * name and extra info edit at the same time.
  */
-class ShoppingListItemView(context: Context) :
-    ExpandableSelectableItemView<ShoppingListItem>(context, AnimatorConfig.shoppingListItem)
+@SuppressLint("ViewConstructor")
+class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig?) :
+    ExpandableSelectableItemView<ShoppingListItem>(context, animatorConfig)
 {
     override fun update(item: ShoppingListItem) {
         ui.checkBox.initIsChecked(item.isChecked)
@@ -441,8 +439,9 @@ class ShoppingListItemView(context: Context) :
  * extra fields that InventoryItem adds to its parent class, and has a set-
  * Expanded override that also shows or hides these extra fields.
  */
-class InventoryItemView(context: Context) :
-    ExpandableSelectableItemView<InventoryItem>(context, useDefaultLayout = false)
+@SuppressLint("ViewConstructor")
+class InventoryItemView(context: Context, animatorConfig: AnimatorConfig?) :
+    ExpandableSelectableItemView<InventoryItem>(context, animatorConfig, useDefaultLayout = false)
 {
     val detailsUi: InventoryItemDetailsBinding
 
@@ -453,9 +452,7 @@ class InventoryItemView(context: Context) :
         ui.editButton.setOnClickListener { toggleExpanded() }
         ui.checkBox.inColorEditMode = true
         ui.amountEdit.minValue = 0
-        ui.nameEdit.animatorConfig = AnimatorConfig.translation
-        ui.extraInfoEdit.animatorConfig = AnimatorConfig.translation
-        ui.amountEdit.animatorConfig = AnimatorConfig.translation
+        this.animatorConfig = animatorConfig
     }
 
     override fun update(item: InventoryItem) {

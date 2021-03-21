@@ -5,24 +5,29 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <string-array name="app_theme_preference_entries">
+    <string-array name="light_dark_theme_preference_entries">
         <item>@string/sys_default_theme_description</item>
         <item>@string/light_theme_description</item>
         <item>@string/dark_theme_description</item>
     </string-array>
 
-    <integer-array name="color_picker_presets">
-        <item>-3452848</item><!-- CB, 50, 50-->
-        <item>-3437488</item><!-- CB, 8C, 50-->
-        <item>-3421360</item><!-- CB, CB, 50-->
-        <item>-7550128</item><!-- 8C, CB, 50-->
-        <item>-11482288</item><!--50, CB, 50-->
-        <item>-11482228</item><!--50, CB, 8C-->
-        <item>-11482165</item><!--50, CB, CB-->
-        <item>-11498293</item><!--50, 8C, CB-->
-        <item>-11513653</item><!--50, 50, CB-->
-        <item>-7581493</item><!-- 8C, 50, CB-->
-        <item>-3452725</item><!-- CB, 50, CB-->
-        <item>-3452788</item><!-- CB, 50, 8C-->
+    <string-array name="multi_fragment_activity_fragments">
+        <item>"com.cliffracermerchant.bootycrate.ShoppingListFragment"</item>
+        <item>com.cliffracermerchant.bootycrate.InventoryFragment</item>
+    </string-array>
+
+    <integer-array name="view_model_item_colors">
+        <item>@color/viewModelItemColor0</item>
+        <item>@color/viewModelItemColor1</item>
+        <item>@color/viewModelItemColor2</item>
+        <item>@color/viewModelItemColor3</item>
+        <item>@color/viewModelItemColor4</item>
+        <item>@color/viewModelItemColor5</item>
+        <item>@color/viewModelItemColor6</item>
+        <item>@color/viewModelItemColor7</item>
+        <item>@color/viewModelItemColor8</item>
+        <item>@color/viewModelItemColor9</item>
+        <item>@color/viewModelItemColor10</item>
+        <item>@color/viewModelItemColor11</item>
     </integer-array>
 </resources>

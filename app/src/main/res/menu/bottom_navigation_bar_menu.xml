@@ -8,15 +8,19 @@
 
     <item android:id="@+id/shopping_list_button"
           android:title="@string/shopping_list_navigation_item_name"
-          android:icon="@drawable/shopping_cart_icon" />
+          android:icon="@drawable/shopping_cart_icon"
+          android:orderInCategory="0" />
 
     <item android:enabled="false"
-          android:title="" />
+          android:title=""
+          android:orderInCategory="1" />
 
     <item android:enabled="false"
-          android:title="" />
+          android:title=""
+          android:orderInCategory="2" />
 
     <item android:id="@+id/inventory_button"
           android:title="@string/inventory_navigation_item_name"
-          android:icon="@drawable/inventory_icon" />
+          android:icon="@drawable/inventory_icon"
+          android:orderInCategory="3" />
 </menu>

@@ -13,75 +13,68 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import com.cliffracermerchant.bootycrate.databinding.IntegerEditBinding
 
 /**
  * A compound view to edit an integer quantity.
  *
  * IntegerEdit is a compound view that combines an EditText displaying an
- * integer with two image buttons on its left and right to act as decrease and
- * increase buttons. IntegerEdit provides a publicly accessible LiveData mem-
- * ber to allow external entities to react to a change in its data.
+ * integer with two image buttons on its left and right to act as decrease
+ * and increase buttons. The property onValueChangedListener can be set to
+ * invoke an action whenever the value is changed.
  *
  * The EditText is by default not focusable in touch mode, but this can be
- * changed by calling the function setValueIsDirectlyEditable. If set to true,
- * the user can edit the value directly (rather than through the use of the
- * decrease / increase buttons). When in the editable state, the EditText will
- * underline the current value to indicate this to the user, and will, if neces-
- * sary, expand the width of the value to R.dimen.integer_edit_editable_value_-
- * min_width to make it a larger touch target.
+ * changed by calling the function setValueIsFocusable. If set to true,
+ * the user can edit the value directly with a keyboard. When in the edit-
+ * able state, the EditText will underline the current value to indicate
+ * this to the user, and will, if necessary, expand the width of the value
+ * to R.dimen.integer_edit_editable_value_min_width to make it a larger
+ * touch target.
  *
- * Unless the function setValueIsDirectlyEditable is called with a value of
- * false for the parameter animate, the IntegerEdit will start an animation
- * that uses the property animatorConfig for its duration and interpolator. In
- * case an external layout needs to know information about this animation to
- * combine it with others, setValueIsDirectlyEditable will return an AnimInfo
- * object that contains the animator and the width change that was animated, or
- * null if no animation occurred.
+ * Unless the function setValueIsFocusable is called with a value of false
+ * for the parameter animate, the IntegerEdit will start an animation that
+ * uses the property animatorConfig for its duration and interpolator. In
+ * case an external layout needs to know information about this animation
+ * to combine it with others, setValueIsFocusable will return an AnimInfo
+ * object that contains the animator and the width change that was anim-
+ * ated, or null if no animation occurred.
  */
 class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
 
-    // this.value = this.value is not pointless due
-    // to value's custom getter and setter
-    private var _minValue = 0
-    private var _maxValue = 0
-    var minValue get() = _minValue
-                 set(value) { _minValue = value; this.value = this.value }
-    var maxValue get() = _maxValue
-                 set(value) { _maxValue = value; this.value = this.value }
+    // value = value is not pointless due to value's custom getter and setter
+    var minValue = 0
+        set(newMin) { field = newMin; value = value }
+    var maxValue = 0
+        set(newMax) { field = newMax; value = value }
     var stepSize: Int
 
-    private var _value get() = try { ui.valueEdit.text.toString().toInt() }
-                               catch (e: Exception) { 0 }
-                       set(value) { val newValue = value.coerceIn(minValue, maxValue)
-                                    ui.valueEdit.setText(newValue.toString()) }
-    var value get() = _value
-              set(newValue) { _value = newValue
-                              _liveData.value = value }
+    var onValueChangedListener: ((Int)->Unit)? = null
+    var value get() = try { ui.valueEdit.text.toString().toInt() }
+                      catch (e: Exception) { 0 }
+              set(newValue) { val adjustedNewValue = newValue.coerceIn(minValue, maxValue)
+                              ui.valueEdit.setText(adjustedNewValue.toString())
+                              onValueChangedListener?.invoke(adjustedNewValue) }
 
     val valueIsFocusable get() = ui.valueEdit.isFocusableInTouchMode
 
-    private val _liveData = MutableLiveData(value)
-    val liveData: LiveData<Int> get() = _liveData
+
 
     val ui = IntegerEditBinding.inflate(LayoutInflater.from(context), this)
-    var animatorConfig = AnimatorConfig.translation
+    var animatorConfig: AnimatorConfig? = null
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.IntegerEdit)
-        _value = a.getInt(R.styleable.IntegerEdit_initialValue, 0)
-        _minValue = a.getInt(R.styleable.IntegerEdit_minValue, 0)
-        _maxValue = a.getInt(R.styleable.IntegerEdit_maxValue, 99)
+        value = a.getInt(R.styleable.IntegerEdit_initialValue, 0)
+        maxValue = a.getInt(R.styleable.IntegerEdit_maxValue, 999)
+        minValue = a.getInt(R.styleable.IntegerEdit_minValue, 0)
         stepSize = a.getInt(R.styleable.IntegerEdit_stepSize, 1)
-        setValueIsFocusable(
-            a.getBoolean(R.styleable.IntegerEdit_valueIsFocusable, false),
-            animate = false)
+        setValueIsFocusable(a.getBoolean(R.styleable.IntegerEdit_valueIsFocusable, false),
+                            animate = false)
 
         a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.textSize))
         ui.valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimension(0, 0f))
-        ui.valueEdit.paint.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1f, resources.displayMetrics)//ui.valueEdit.textSize / 20
+        ui.valueEdit.paint.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1f,
+                                                                   resources.displayMetrics)
         a.recycle()
 
         ui.decreaseButton.setOnClickListener { decrement() }
@@ -99,7 +92,11 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         }
     }
 
-    fun initValue(newValue: Int) { _value = newValue }
+    fun initValue(newValue: Int) {
+        val adjustedNewValue = newValue.coerceIn(minValue, maxValue)
+        ui.valueEdit.setText(adjustedNewValue.toString())
+    }
+
     fun increment() = modifyValue(stepSize)
     fun decrement() = modifyValue(-stepSize)
     private fun modifyValue(stepSize: Int) { value += stepSize }

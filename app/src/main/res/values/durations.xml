@@ -5,7 +5,9 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <integer name="fragmentTransitionDuration">300</integer>
-    <integer name="viewTranslationDuration">300</integer>
-    <integer name="shoppingListItemViewTranslationDuration">250</integer>
+    <integer name="fragmentTransitionLongDuration">300</integer>
+    <integer name="fragmentTransitionShortDuration">150</integer>
+    <integer name="animationDefaultDuration">300</integer>
+    <integer name="shoppingListItemAnimationDuration">250</integer>
+    <integer name="checkoutButtonConfirmationTimeout">2000</integer>
 </resources>

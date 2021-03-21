@@ -8,10 +8,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
-import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
 
 /**
  * A ViewModelRecyclerView subclass that enables multi-selection and expansion of items.
@@ -25,24 +22,14 @@ import com.google.android.material.snackbar.Snackbar
  * custom view holder to enforce the use of an ExpandableSelectableItemView,
  * and a custom adapter that in turn enforces the use of ExpandableSelectable-
  * ItemViewHolder.
- *
- * Like its parent class, ExpandableSelectableRecyclerView requires the func-
- * tion finishInit to be called in order to provide it with an instance of
- * ExpandableSelectableItemViewModel and the animator config used for its
- * instance of ExpandableItemAnimator. ExpandableSelectableRecyclerView's
- * finishInit function, while not an override of ViewModelRecyclerView's ver-
- * sion due to requiring a different function signature, is designed to call
- * ViewModelRecyclerView's version to prevent the implementing activity or
- * fragment from needing to call both.
  */
 @Suppress("LeakingThis")
 abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem>(
     context: Context,
     attrs: AttributeSet
 ) : ViewModelRecyclerView<Entity>(context, attrs) {
-
     abstract override val viewModel: ExpandableSelectableItemViewModel<Entity>
-    private lateinit var itemAnimator: ExpandableItemAnimator
+    protected val itemAnimator = ExpandableItemAnimator(this, AnimatorConfig.translation(context))
 
     val selection = Selection()
 
@@ -50,25 +37,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         addItemDecoration(ItemSpacingDecoration(context))
         setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
-    }
-
-    fun finishInit(owner: LifecycleOwner, animatorConfig: AnimatorConfig) {
-        finishInit(owner)
-        itemAnimator = ExpandableItemAnimator(this, animatorConfig)
         setItemAnimator(itemAnimator)
-    }
-
-    open fun deleteSelectedItems() {
-        val size = selection.size
-        viewModel.deleteSelected()
-        val text = context.getString(R.string.delete_snackbar_text, size)
-        Snackbar.make(this, text, Snackbar.LENGTH_LONG).
-            setAnchorView(snackBarAnchor ?: this).
-            setAction(R.string.delete_snackbar_undo_text) { undoDelete() }.
-            addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(transientBottomBar: Snackbar?, event: Int)
-                    { viewModel.emptyTrash() }
-            }).show()
     }
 
     fun setExpandedItem(pos: Int?) {
@@ -110,7 +79,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
      * ViewModelAdapter that enforces the use of ExpandableSelectableItemViewHolder.
      */
     abstract inner class ExpandableSelectableItemAdapter<VHType: ExpandableSelectableItemViewHolder> :
-            ViewModelAdapter<VHType>() {
+            ViewModelRecyclerView<Entity>.ViewModelAdapter<VHType>() {
 
         override fun onBindViewHolder(holder: VHType, position: Int) {
             if (holder.item.isExpanded)
@@ -127,7 +96,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
      */
     open inner class ExpandableSelectableItemViewHolder(
         view: ExpandableSelectableItemView<Entity>
-    ) : ViewModelItemViewHolder(view) {
+    ) : ViewModelRecyclerView<Entity>.ViewModelItemViewHolder(view) {
         init {
             val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }
             val onLongClick = OnLongClickListener { selection.toggle(itemId); true }

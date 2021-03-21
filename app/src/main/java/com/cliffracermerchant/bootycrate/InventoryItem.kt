@@ -8,7 +8,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 
 /** A Room entity that represents an inventory item in the user's inventory. */
-@Suppress("")
 @Entity(tableName = "inventory_item")
 class InventoryItem(
     id: Long = 0,

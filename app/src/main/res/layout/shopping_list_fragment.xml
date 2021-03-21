@@ -15,6 +15,7 @@
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent"
     app:msv_emptyView="@layout/empty_recycler_view"
+    app:msv_errorView="@layout/empty_recycler_view"
     app:msv_loadingView="@layout/loading_recycler_view"
     app:msv_viewState="loading"
     app:msv_animateViewChanges="true" >

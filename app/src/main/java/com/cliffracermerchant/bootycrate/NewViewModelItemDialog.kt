@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Transformations
 import com.cliffracermerchant.bootycrate.databinding.NewItemDialogBinding
 
@@ -41,9 +42,9 @@ import com.cliffracermerchant.bootycrate.databinding.NewItemDialogBinding
  */
 abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     context: Context,
-    private val viewModel: ViewModel<Entity>,
     useDefaultLayout: Boolean = true
 ) : DialogFragment() {
+    abstract val viewModel: ViewModel<Entity>
     private val inputMethodManager = inputMethodManager(context)
     private val cancelButton get(): Button = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEUTRAL)
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
@@ -52,12 +53,10 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     protected val ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
     protected lateinit var newItemView: ViewModelItemView<Entity>
 
-    init {
-        if (useDefaultLayout) {
-            newItemView = ViewModelItemView(context)
-            ui.root.layoutTransition = layoutTransition(AnimatorConfig.translation)
-        }
-    }
+    init { if (useDefaultLayout) {
+        newItemView = ViewModelItemView(context)
+        ui.root.layoutTransition = layoutTransition(AnimatorConfig.translation(context))
+    }}
 
     override fun onCreateDialog(savedInstanceState: Bundle?): android.app.Dialog {
         ui.newItemViewContainer.addView(newItemView)
@@ -134,9 +133,10 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
 }
 
 /** Open a dialog to create a new shopping list item. */
-class NewShoppingListItemDialog(context: Context, viewModel: ShoppingListViewModel) :
-    NewViewModelItemDialog<ShoppingListItem>(context, viewModel)
+class NewShoppingListItemDialog(context: Context) :
+    NewViewModelItemDialog<ShoppingListItem>(context)
 {
+    override val viewModel: ShoppingListViewModel by activityViewModels()
     init { newItemView.ui.checkBox.inColorEditMode = true }
 
     override fun createItemFromView() = ShoppingListItem(
@@ -147,10 +147,11 @@ class NewShoppingListItemDialog(context: Context, viewModel: ShoppingListViewMod
 }
 
 /** Open a dialog to create a new inventory item. */
-class NewInventoryItemDialog(context: Context, viewModel: InventoryViewModel) :
-    NewViewModelItemDialog<InventoryItem>(context, viewModel, useDefaultLayout = false)
+class NewInventoryItemDialog(context: Context) :
+    NewViewModelItemDialog<InventoryItem>(context, useDefaultLayout = false)
 {
-    private val newInventoryItemView = InventoryItemView(context)
+    override val viewModel: InventoryViewModel by activityViewModels()
+    private val newInventoryItemView = InventoryItemView(context, null)
 
     init {
         newItemView = newInventoryItemView

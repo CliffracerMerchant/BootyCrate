@@ -9,7 +9,7 @@
         <item name="optionsMenuResId">@menu/action_bar_menu</item>
         <item name="changeSortMenuResId">@menu/change_sort</item>
         <item name="android:text">@string/app_name</item>
-        <item name="bottomBorderWidth">?attr/borderWidth</item>
+        <item name="bottomBorderWidth">4dp</item>
     </style>
 
     <style name="CustomTitle">
@@ -27,6 +27,9 @@
         <item name="cradleDepth">52dp</item>
         <item name="cradleContentsMargin">4dp</item>
         <item name="indicatorColor">@color/colorInBetweenPrimaryAccent1</item>
+        <item name="topBorderWidth">4dp</item>
+        <item name="cradleLayoutResId">@id/cradleLayout</item>
+        <item name="navigationBarResId">@id/bottomNavigationBar</item>
     </style>
 
     <style name="BottomNavigationView">
@@ -57,7 +60,7 @@
         <item name="android:text">@string/checkout_description</item>
         <item name="android:textSize" tools:ignore="SpUsage">15dp</item>
         <item name="android:transformPivotX">100dp</item>
-        <item name="outlineStrokeWidth">?attr/borderWidth</item>
+        <item name="outlineStrokeWidth">4dp</item>
         <item name="disabledBackgroundTint">@android:color/darker_gray</item>
         <item name="disabledOutlineAndTextTint">@color/colorTextLightSecondary</item>
     </style>
@@ -67,7 +70,11 @@
         <item name="outlinePathData">@string/add_button_outline_and_plus_path_data</item>
         <item name="pathWidth">56.0</item>
         <item name="pathHeight">56.0</item>
-        <item name="outlineStrokeWidth">?attr/borderWidth</item>
+        <item name="outlineStrokeWidth">4dp</item>
+    </style>
+
+    <style name="EmptyRecyclerViewStyle" parent="@style/TitleTextAppearance">
+        <item name="android:text">@string/no_search_results_message</item>
     </style>
 
     <style name="RecyclerViewFragment">

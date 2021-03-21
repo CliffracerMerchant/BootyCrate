@@ -4,16 +4,22 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.graphics.withClip
+import androidx.core.view.doOnNextLayout
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.shape.*
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlin.math.atan
 
 /**
@@ -22,27 +28,14 @@ import kotlin.math.atan
  * BottomAppBar functions mostly as a regular Toolbar, except that its custom
  * CradleTopEdgeTreatment used on its top edge gives it a cutout in its shape
  * that can be used to hold the contents of a layout. The layout in question
- * should be passed to the function prepareCradleLayout during app startup so
- * that BottomAppBar can set up its layout params.
- *
- * BottomAppBar can also draw an indicator along its top edge, in case it is
- * used in conjunction with a BottomNavigationView. The primary reason to use
- * BottomAppBar's indicator over, for example, one inside a BottomNavigation-
- * View subclass, is that BottomAppBar's indicator will always appear along
- * its top edge, taking into account the cradle layout cutaway. Unfortunately,
- * BottomAppBar has no way of knowing the exact on-screen positions of the
- * menu items displayed in the BottomNavigationView, so the position must be
- * manually set in pixels using the property indicatorXPos. The width (also in
- * pixels) can be set via the XML attribute indicatorWidth, or at runtime using
- * the property of the same name. The indicator color can be set using the XML
- * property indicatorColor.
+ * must be referenced by the XML attribute cradleLayoutResId, must be a sib-
+ * ling of the BottomAppBar, and both must have a CoordinatorLayout parent.
  *
  * The gradients used for the background, border, and indicator can be set
  * through the public properties backgroundGradient, borderGradient, and indi-
  * catorGradient, respectively.
  */
-class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
-
+open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
     enum class CradleAlignmentMode { Start, Center, End }
     val cradleAlignmentMode: CradleAlignmentMode
     var cradleWidth: Int = 0
@@ -54,25 +47,17 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     var cradleStartEndMargin: Int
     var cradleContentsMargin: Int
 
-    var indicatorXPos = 0
-    var indicatorWidth = 0
-    var indicatorColor: Int get() = indicatorPaint.color
-                            set(value) { indicatorPaint.color = value }
-
     var backgroundGradient: Shader? get() = backgroundPaint.shader
-                           set(gradient) { backgroundPaint.shader = gradient }
+                                    set(value) { backgroundPaint.shader = value }
     var borderGradient: Shader? get() = borderPaint.shader
-                                set(gradient) { borderPaint.shader = gradient }
-    var indicatorGradient: Shader?get() = indicatorPaint.shader
-                                  set(gradient) { indicatorPaint.shader = gradient }
+                                set(value) { borderPaint.shader = value }
 
     private val materialShapeDrawable = MaterialShapeDrawable()
-    private val outlinePath = Path()
-    private val topEdgePath = Path()
+    protected val outlinePath = Path()
+    protected val topEdgePath = Path()
 
-    private val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
-    private val borderPaint = Paint().apply { style = Paint.Style.STROKE }
-    private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
+    protected val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
+    protected val borderPaint = Paint().apply { style = Paint.Style.STROKE }
 
     private val arcQuarter = 90f
     private val angleRight = 0f
@@ -81,7 +66,6 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
     private val angleUp = 270f
 
     init {
-        setWillNotDraw(false)
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
         cradleAlignmentMode = CradleAlignmentMode.values()[
             a.getInt(R.styleable.BottomAppBar_cradleAlignmentMode, CradleAlignmentMode.Center.ordinal)]
@@ -90,32 +74,28 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
         cradleBottomCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0)
         cradleStartEndMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleStartEndMargin, 90)
         cradleContentsMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleContentsMargin, 0)
-        indicatorWidth = a.getDimensionPixelOffset(R.styleable.BottomAppBar_indicatorWidth, 0)
-        indicatorPaint.color = a.getColor(R.styleable.BottomAppBar_indicatorColor, 0)
+        borderPaint.strokeWidth = a.getDimensionPixelSize(R.styleable.BottomAppBar_topBorderWidth, 0).toFloat()
+        val cradleLayoutResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_cradleLayoutResId)
         a.recycle()
 
         materialShapeDrawable.shapeAppearanceModel = ShapeAppearanceModel.builder().
                                                      setTopEdge(CradleTopEdgeTreatment()).build()
         background = materialShapeDrawable
+        @Suppress("LeakingThis") setWillNotDraw(false)
 
-        val typedValue = TypedValue()
-        context.theme.resolveAttribute(R.attr.borderWidth, typedValue, true)
-        val borderWidth = TypedValue.complexToDimension(
-            typedValue.data, context.resources.displayMetrics)
-
-        borderPaint.strokeWidth = borderWidth
-        indicatorPaint.strokeWidth = 2.5f * borderWidth
+        doOnNextLayout {
+            val cradleLayout = (parent as ViewGroup).findViewById<ViewGroup>(cradleLayoutResId)
+            prepareCradleLayout(cradleLayout)
+        }
     }
 
     override fun onDraw(canvas: Canvas?) {
         if (canvas == null) return
         canvas.drawPath(outlinePath, backgroundPaint)
         canvas.drawPath(topEdgePath, borderPaint)
-        canvas.withClip(indicatorXPos, 0, indicatorXPos + indicatorWidth, bottom) {
-            drawPath(topEdgePath, indicatorPaint) }
     }
 
-    fun prepareCradleLayout(cradleLayout: ViewGroup) {
+    private fun prepareCradleLayout(cradleLayout: ViewGroup) {
         if (cradleLayout.parent !is CoordinatorLayout)
             throw IllegalStateException("The cradle layout should have a CoordinatorLayout as a parent.")
 
@@ -238,5 +218,68 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, att
             outlinePath.lineTo(0f, height.toFloat())
             outlinePath.close()
         }
+    }
+}
+
+/**
+ * A BottomAppBar that also draws an indicator above the selected navigation bar item.
+ *
+ * BottomAppBarWithIndicator extends BottomAppBar by also drawing an indicator,
+ * either with the solid color described by the @property indicatorColor, or
+ * with the shader object described by the @property indicatorGradient if set.
+ * The indicator can be moved to be above a given nav bar menu item by calling
+ * the function moveIndicatorToNavBarItem with the id of the menu item. The
+ * BottomNavigationView must be referenced through the XML attribute naviga-
+ * tionBarResId, and should be a descendant of the BottomAppBarWithIndicator.
+ */
+@AndroidEntryPoint
+class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
+    BottomAppBar(context, attrs)
+{
+    private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
+    private var indicatorXPos = 0
+    private lateinit var navBar: BottomNavigationView
+
+    @Inject @TransitionAnimatorConfig
+    lateinit var indicatorAnimatorConfig: AnimatorConfig
+    var indicatorWidth = 0
+    var indicatorColor: Int get() = indicatorPaint.color
+                            set(value) { indicatorPaint.color = value }
+    var indicatorGradient: Shader? get() = indicatorPaint.shader
+                                   set(gradient) { indicatorPaint.shader = gradient }
+
+    init {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBarWithIndicator)
+        indicatorWidth = a.getDimensionPixelOffset(R.styleable.BottomAppBarWithIndicator_indicatorWidth, 0)
+        indicatorPaint.color = a.getColor(R.styleable.BottomAppBarWithIndicator_indicatorColor, 0)
+        val navViewResId = a.getResourceIdOrThrow(R.styleable.BottomAppBarWithIndicator_navigationBarResId)
+        a.recycle()
+
+        setWillNotDraw(false)
+        indicatorPaint.strokeWidth = 2.5f * borderPaint.strokeWidth
+        doOnNextLayout {
+            navBar = findViewById(navViewResId)
+            moveIndicatorToNavBarItem(navBar.selectedItemId, false)
+        }
+    }
+
+    /** Move the indicator to be above the item with id equal to @param menuItemId,
+     * animating the change if @param animate is equal to true. */
+    fun moveIndicatorToNavBarItem(menuItemId: Int, animate: Boolean = true) {
+        if (!::navBar.isInitialized) return
+        navBar.findViewById<View>(menuItemId)?.let {
+            val newIndicatorXPos = (it.width - indicatorWidth) / 2 + it.left
+            if (!animate) indicatorXPos = newIndicatorXPos
+            else ValueAnimator.ofInt(indicatorXPos, newIndicatorXPos).apply {
+                addUpdateListener { indicatorXPos = animatedValue as Int }
+                applyConfig(indicatorAnimatorConfig)
+            }.start()
+        }
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        canvas?.withClip(indicatorXPos, 0, indicatorXPos + indicatorWidth, bottom) {
+            drawPath(topEdgePath, indicatorPaint) }
     }
 }
