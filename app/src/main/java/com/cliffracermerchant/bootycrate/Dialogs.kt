@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -100,7 +99,7 @@ class ShareDialog<Entity: ViewModelItem>(
 }
 
 class AboutAppDialog : DialogFragment() {
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+    override fun onCreateDialog(savedInstanceState: Bundle?) =
         themedAlertDialogBuilder(requireContext()).setView(R.layout.about_app_dialog).create()
 }
 
