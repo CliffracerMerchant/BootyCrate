@@ -35,7 +35,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         set(value) { viewModel.sortByChecked = value }
 
     init {
-        itemAnimator.animatorConfig = AnimatorConfig.shoppingListItem
+        itemAnimator.animatorConfig = AnimatorConfig.shoppingListItem(context)
         itemAnimator.registerAdapterDataObserver(adapter)
     }
 

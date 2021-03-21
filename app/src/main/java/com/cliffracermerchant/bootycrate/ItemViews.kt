@@ -153,13 +153,10 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        if (animate) valueAnimatorOfInt(
-            setter = gradientOutline::setAlpha,
-            fromValue = if (selected) 0 else 255,
-            toValue = if (selected) 255 else 0,
-            config = if (selected) AnimatorConfig.fadeIn
-                     else          AnimatorConfig.fadeOut
-        ).start()
+        if (animate) valueAnimatorOfInt(setter = gradientOutline::setAlpha,
+                                        fromValue = if (selected) 0 else 255,
+                                        toValue = if (selected) 255 else 0,
+                                        config = animatorConfig).start()
         else gradientOutline.alpha = if (selected) 255 else 0
     }
 
@@ -361,12 +358,9 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     protected fun View.showOrHideAfterFading(showing: Boolean): Animator {
         alpha = if (showing) 0f else 1f
         isVisible = true
-        val animator = valueAnimatorOfFloat(
-            setter = ::setAlpha, fromValue = alpha,
-            toValue = if (showing) 1f else 0f,
-            config = if (showing) AnimatorConfig.fadeIn
-                     else         AnimatorConfig.fadeOut)
-
+        val animator = valueAnimatorOfFloat(setter = ::setAlpha, fromValue = alpha,
+                                            toValue = if (showing) 1f else 0f,
+                                            config = animatorConfig)
         if (!showing) {
             val parent = parent as ViewGroup
             parent.overlay.add(this)

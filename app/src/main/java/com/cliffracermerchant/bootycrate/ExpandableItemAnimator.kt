@@ -127,7 +127,7 @@ class ExpandableItemAnimator(
         val view = holder?.itemView ?: return false
         pendingRemoveAnimators.add(view.animate()
             .alpha(0f).withLayer()
-            .applyConfig(AnimatorConfig.fadeOut)
+            .applyConfig(animatorConfig)
             .withStartAction { dispatchRemoveStarting(holder) }
             .withEndAction {
                 dispatchRemoveFinished(holder)

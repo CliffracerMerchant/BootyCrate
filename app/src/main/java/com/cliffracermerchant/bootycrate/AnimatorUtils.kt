@@ -36,31 +36,25 @@ import android.view.animation.AnimationUtils
  */
 data class AnimatorConfig(val duration: Long, val interpolator: TimeInterpolator) {
     companion object {
-        fun initConfigs(context: Context) {
-            val defaultDuration = context.resources.getInteger(R.integer.animationDefaultDuration).toLong()
-            val transitionDuration = context.resources.getInteger(R.integer.fragmentTransitionLongDuration).toLong()
-            val shoppingListItemDuration = context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong()
-            val defaultInterpolator = AnimationUtils.loadInterpolator(context, R.anim.default_interpolator)
-            val fadeInInterpolator = AnimationUtils.loadInterpolator(context, R.anim.fade_in_interpolator)
-            val fadeOutInterpolator = AnimationUtils.loadInterpolator(context, R.anim.fade_out_interpolator)
-            translationPrivate = AnimatorConfig(defaultDuration, defaultInterpolator)
-            fadeInPrivate = AnimatorConfig(defaultDuration, fadeInInterpolator)
-            fadeOutPrivate = AnimatorConfig(defaultDuration, fadeOutInterpolator)
-            transitionPrivate = AnimatorConfig(transitionDuration, defaultInterpolator)
-            shoppingListItemPrivate = AnimatorConfig(shoppingListItemDuration, defaultInterpolator)
-        }
+        fun translation(context: Context) = AnimatorConfig(
+            context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
+            AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
 
-        private lateinit var translationPrivate: AnimatorConfig
-        private lateinit var fadeInPrivate: AnimatorConfig
-        private lateinit var fadeOutPrivate: AnimatorConfig
-        private lateinit var transitionPrivate: AnimatorConfig
-        private lateinit var shoppingListItemPrivate: AnimatorConfig
+        fun shoppingListItem(context: Context) = AnimatorConfig(
+            context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
+            AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
 
-        val translation get() = translationPrivate
-        val fadeIn get() = fadeInPrivate
-        val fadeOut get() = fadeOutPrivate
-        val transition get() = transitionPrivate
-        val shoppingListItem get() = shoppingListItemPrivate
+        fun fadeIn(context: Context) = AnimatorConfig(
+            context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
+            AnimationUtils.loadInterpolator(context, R.anim.fade_in_interpolator))
+
+        fun fadeOut(context: Context) = AnimatorConfig(
+            context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
+            AnimationUtils.loadInterpolator(context, R.anim.fade_out_interpolator))
+
+        fun transition(context: Context) = AnimatorConfig(
+            context.resources.getInteger(R.integer.fragmentTransitionLongDuration).toLong(),
+            AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }
 }
 
@@ -110,12 +104,7 @@ fun valueAnimatorOfArgb(
     if (config != null) applyConfig(config)
 }
 
-/**
- * Return a LayoutTransition whose durations and interpolators match the given AnimatorConfig.
- *
- * Note that the APPEARING and DISAPPEARING transitions will use the AnimatorConfig.fadeIn
- * and AnimatorConfig.fadeOut interpolators instead of the interpolator of the config parameter.
- */
+/** Return a LayoutTransition whose durations and interpolators match the given AnimatorConfig. */
 fun layoutTransition(config: AnimatorConfig) = LayoutTransition().apply {
     setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
     setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
@@ -124,8 +113,8 @@ fun layoutTransition(config: AnimatorConfig) = LayoutTransition().apply {
     setStartDelay(LayoutTransition.CHANGING, 0)
     setInterpolator(LayoutTransition.CHANGE_APPEARING, config.interpolator)
     setInterpolator(LayoutTransition.CHANGE_DISAPPEARING, config.interpolator)
-    setInterpolator(LayoutTransition.APPEARING, AnimatorConfig.fadeIn.interpolator)
-    setInterpolator(LayoutTransition.DISAPPEARING, AnimatorConfig.fadeOut.interpolator)
+    setInterpolator(LayoutTransition.APPEARING, config.interpolator)
+    setInterpolator(LayoutTransition.DISAPPEARING, config.interpolator)
     setInterpolator(LayoutTransition.CHANGING, config.interpolator)
     setDuration(config.duration)
 }

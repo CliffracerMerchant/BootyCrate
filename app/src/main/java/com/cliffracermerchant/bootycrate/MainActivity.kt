@@ -35,6 +35,7 @@ import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 @Suppress("LeakingThis")
 open class MainActivity : MultiFragmentActivity() {
     lateinit var ui: MainActivityBinding
+    private val transitionAnimConfig = AnimatorConfig.transition(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val prefs = getDefaultSharedPreferences(this)
@@ -119,7 +120,7 @@ open class MainActivity : MultiFragmentActivity() {
         val translationEnd = if (show) 0f else translationAmount
         for (view in views) {
             view.translationY = translationStart
-            view.animate().withLayer().applyConfig(AnimatorConfig.transition)
+            view.animate().withLayer().applyConfig(transitionAnimConfig)
                 .translationY(translationEnd).start()
         }
     }
@@ -146,7 +147,7 @@ open class MainActivity : MultiFragmentActivity() {
         // out button from sticking out underneath the FAB during the show / hide animation.
         val clipBounds = Rect(0, 0, 0, ui.checkoutButton.height)
         ValueAnimator.ofInt(ui.bottomAppBar.cradleWidth, cradleEndWidth).apply {
-            applyConfig(AnimatorConfig.transition)
+            applyConfig(transitionAnimConfig)
             addUpdateListener {
                 ui.bottomAppBar.cradleWidth = it.animatedValue as Int
                 clipBounds.right = ui.bottomAppBar.cradleWidth - ui.addButton.measuredWidth / 2
@@ -174,14 +175,14 @@ open class MainActivity : MultiFragmentActivity() {
     }
 
     private fun initAnimatorConfigs() {
-        primaryFragmentTransitionAnimatorConfig = AnimatorConfig.transition
+        primaryFragmentTransitionAnimatorConfig = transitionAnimConfig
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
 
-        ui.bottomAppBar.indicatorAnimatorConfig = AnimatorConfig.transition
+        ui.bottomAppBar.indicatorAnimatorConfig = transitionAnimConfig
         ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
 
-        ui.cradleLayout.layoutTransition = layoutTransition(AnimatorConfig.transition)
+        ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig)
         ui.cradleLayout.layoutTransition.doOnStart {
             pendingCradleAnim?.start()
             pendingCradleAnim = null

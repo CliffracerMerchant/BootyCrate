@@ -140,12 +140,10 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
             config = animatorConfig
         ).apply { start() }
 
-        val underlineAnimator = valueAnimatorOfInt(
-            setter = ::setUnderlineAlpha,
-            fromValue = if (editable) 0 else 255,
-            toValue = newUnderlineAlpha,
-            config = if (editable) AnimatorConfig.fadeIn
-                     else          AnimatorConfig.fadeOut)
+        val underlineAnimator = valueAnimatorOfInt(setter = ::setUnderlineAlpha,
+                                                   fromValue = if (editable) 0 else 255,
+                                                   toValue = newUnderlineAlpha,
+                                                   config = animatorConfig)
         underlineAnimator.start()
         return AnimInfo(translateAnimator, underlineAnimator, heightChange, start, 0f)
     }

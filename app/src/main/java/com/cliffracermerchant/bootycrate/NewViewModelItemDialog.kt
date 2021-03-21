@@ -53,12 +53,10 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     protected val ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
     protected lateinit var newItemView: ViewModelItemView<Entity>
 
-    init {
-        if (useDefaultLayout) {
-            newItemView = ViewModelItemView(context)
-            ui.root.layoutTransition = layoutTransition(AnimatorConfig.translation)
-        }
-    }
+    init { if (useDefaultLayout) {
+        newItemView = ViewModelItemView(context)
+        ui.root.layoutTransition = layoutTransition(AnimatorConfig.translation(context))
+    }}
 
     override fun onCreateDialog(savedInstanceState: Bundle?): android.app.Dialog {
         ui.newItemViewContainer.addView(newItemView)
