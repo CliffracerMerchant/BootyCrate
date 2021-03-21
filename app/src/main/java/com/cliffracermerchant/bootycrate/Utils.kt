@@ -10,7 +10,6 @@ import android.content.ContextWrapper
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.Shader
-import android.util.AttributeSet
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.SearchView
@@ -56,20 +55,11 @@ fun Shader.translateBy(dx: Float, dy: Float) {
     setLocalMatrix(UtilsPrivate.matrix)
 }
 
-/** A SearchView that allows multiple onSearchClickListeners and onCloseListeners. */
-class MultiListenerSearchView(context: Context, attrs: AttributeSet) : SearchView(context, attrs) {
-    private val onOpenListeners = mutableListOf<OnClickListener>()
-    private val onCloseListeners = mutableListOf<OnCloseListener>()
-
-    init {
-        super.setOnSearchClickListener { for (l in onOpenListeners) l.onClick(this) }
-        super.setOnCloseListener { for (l in onCloseListeners) l.onClose(); false }
-    }
-
-    override fun setOnSearchClickListener(l: OnClickListener?) {
-        if (l != null) onOpenListeners.add(l)
-    }
-    override fun setOnCloseListener(l: OnCloseListener) { onCloseListeners.add(l) }
+fun SearchView.setOnQueryTextChangeListener(listener: (String?) -> Boolean) {
+    setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+        override fun onQueryTextSubmit(query: String?) = true
+        override fun onQueryTextChange(newText: String?) = listener.invoke(newText)
+    })
 }
 
 /** Return a InputMethodManager system service from the @param context. */

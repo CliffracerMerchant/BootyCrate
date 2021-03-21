@@ -43,19 +43,13 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
     protected abstract val viewModel: ExpandableSelectableItemViewModel<Entity>
     protected abstract var recyclerView: ExpandableSelectableRecyclerView<Entity>?
     protected open val actionMode = ActionMode()
+    private lateinit var sortModePrefKey: String
 
     private var searchView: SearchView? = null
-    private var searchIsActive = false
-        set(value) {
-            field = value
-            val stateView = view as? MultiStateView ?: return
-            val emptyMessage = stateView.getView(MultiStateView.ViewState.EMPTY) as? TextView ?: return
-            emptyMessage.text = getString(if (value) R.string.no_search_results_message
-                                          else R.string.empty_recycler_view_message,
-                                               recyclerView?.collectionName)
-        }
-    private lateinit var sortModePrefKey: String
-    private val searchWasActivePrefKey = "searchWasActive"
+    private var activeSearchQuery get() = searchView?.query
+        set(value) { searchView?.setQuery(value, false)
+                     searchView?.isIconified = value == null }
+    private val searchIsActive get() = activeSearchQuery != null
 
     init { setHasOptionsMenu(true) }
 
@@ -65,20 +59,24 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         sortModePrefKey = getString(R.string.pref_sort, recyclerView!!.collectionName)
         val sortStr = prefs.getString(sortModePrefKey, ViewModelItem.Sort.Color.toString())
-        recyclerView!!.apply {
+        recyclerView?.apply {
             sort = ViewModelItem.Sort.fromString(sortStr)
             selection.itemsLiveData.observe(viewLifecycleOwner, actionMode)
             observeViewModel(viewLifecycleOwner)
         }
 
+        val multiStateView = view as? MultiStateView
+        val emptyTextView = multiStateView?.getView(MultiStateView.ViewState.EMPTY) as? TextView
+        emptyTextView?.text = getString(R.string.empty_recycler_view_message, recyclerView?.collectionName)
+
         viewModel.items.observe(viewLifecycleOwner) { items ->
             val stateView = view as? MultiStateView ?: return@observe
-            stateView.viewState = if (items.isNotEmpty()) MultiStateView.ViewState.CONTENT
-                                  else                    MultiStateView.ViewState.EMPTY
+            stateView.viewState = when { items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
+                                         searchIsActive ->     MultiStateView.ViewState.ERROR
+                                         else ->               MultiStateView.ViewState.EMPTY }
         }
 
-        searchIsActive = savedInstanceState?.getBoolean(searchWasActivePrefKey, false) ?: false
-
+        activeSearchQuery = savedInstanceState?.getString("activeSearchQuery", null)
         val isActive = this.isActiveTemp ?: return
         val ui = this.uiTemp ?: return
         onActiveStateChanged(isActive, ui)
@@ -150,15 +148,13 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean(searchWasActivePrefKey, searchIsActive)
+        outState.putString("activeSearchQuery", activeSearchQuery.toString())
     }
 
     private fun saveSortingOption() {
         val context = this.context ?: return
-        PreferenceManager.getDefaultSharedPreferences(context)
-            .edit()
-            .putString(sortModePrefKey, recyclerView?.sort.toString())
-            .apply()
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+            .putString(sortModePrefKey, recyclerView?.sort.toString()).apply()
     }
 
     override fun showsOptionsMenu() = true
@@ -172,6 +168,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
 
     private var isActiveTemp: Boolean? = null
     private var uiTemp: MainActivityBinding? = null
+    private var searchQueryTemp: CharSequence? = null
     @CallSuper override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
         val recyclerView = this.recyclerView
         if (recyclerView == null) {
@@ -182,39 +179,35 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem>:
             uiTemp = ui
             return
         }
-
         if (!isActive) {
             actionMode.finish()
             actionMode.actionBar = null
-            return
+            if (searchIsActive)
+                searchQueryTemp = activeSearchQuery
+            activeSearchQuery = null
+        } else {
+            ui.topActionBar.ui.searchView.setOnQueryTextChangeListener { newText ->
+                recyclerView.searchFilter = newText; true
+            }
+            recyclerView.snackBarAnchor = ui.bottomAppBar
+            actionMode.actionBar = ui.topActionBar
+            searchView = ui.topActionBar.ui.searchView
+            if (searchQueryTemp?.isNotEmpty() == true) {
+                activeSearchQuery = searchQueryTemp
+                searchQueryTemp = null
+            }
+
+            if (recyclerView.selection.isNotEmpty)
+                actionMode.onChanged(recyclerView.selection.items!!)
+
+            ui.topActionBar.changeSortMenu.findItem(when (recyclerView.sort) {
+                ViewModelItem.Sort.Color ->      R.id.color_option
+                ViewModelItem.Sort.NameAsc ->    R.id.name_ascending_option
+                ViewModelItem.Sort.NameDesc ->   R.id.name_descending_option
+                ViewModelItem.Sort.AmountAsc ->  R.id.amount_ascending_option
+                ViewModelItem.Sort.AmountDesc -> R.id.amount_descending_option
+            })?.isChecked = true
         }
-
-        recyclerView.snackBarAnchor = ui.bottomAppBar
-        actionMode.actionBar = ui.topActionBar
-        searchView = ui.topActionBar.ui.searchView
-        if (searchIsActive) ui.topActionBar.ui.searchView.performClick()
-
-        if (recyclerView.selection.isNotEmpty)
-            actionMode.onChanged(recyclerView.selection.items!!)
-
-        ui.topActionBar.ui.searchView.apply {
-            setOnCloseListener { searchIsActive = false; false }
-            setOnSearchClickListener { searchIsActive = true }
-            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?) = true
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    recyclerView.searchFilter = newText
-                    return true
-                }
-            })
-        }
-        ui.topActionBar.changeSortMenu.findItem(when (recyclerView.sort) {
-            ViewModelItem.Sort.Color ->      R.id.color_option
-            ViewModelItem.Sort.NameAsc ->    R.id.name_ascending_option
-            ViewModelItem.Sort.NameDesc ->   R.id.name_descending_option
-            ViewModelItem.Sort.AmountAsc ->  R.id.amount_ascending_option
-            ViewModelItem.Sort.AmountDesc -> R.id.amount_descending_option
-        })?.isChecked = true
     }
 
     /**

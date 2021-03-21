@@ -90,8 +90,6 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         ui.menuButton.setOnClickListener{ optionsPopupMenu.show() }
 
         ui.searchView.setOnSearchClickListener {
-            (ui.searchView.layoutParams as LayoutParams).startToEnd =
-                if (ui.searchView.isIconified) ui.backButton.id else -1
             ui.backButton.isVisible = true
             ui.customTitle.isVisible = false
         }
@@ -111,7 +109,15 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         val bundle = state as Bundle
         super.onRestoreInstanceState(bundle.getParcelable("superState"))
         val searchWasActive = bundle.getBoolean("searchWasActive", false)
-        ui.backButton.isVisible = searchWasActive
+        if (!ui.backButton.isVisible && searchWasActive)
+            ui.backButton.isVisible = true
+        ui.customTitle.isVisible = !searchWasActive
+        ui.searchView.isIconified = !searchWasActive
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        ui.searchView.maxWidth = ui.searchView.right - ui.backButton.drawable.intrinsicWidth
     }
 
     /**
