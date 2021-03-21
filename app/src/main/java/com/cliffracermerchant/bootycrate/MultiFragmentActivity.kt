@@ -2,7 +2,6 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-
 package com.cliffracermerchant.bootycrate
 
 import android.animation.AnimatorInflater
@@ -24,33 +23,31 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
  *
  * MultiFragmentActivity will automatically add a fragment instance for
  * each menu item of the navigation bar menu that it is connected to.
- * These automatically generated fragments are known to MultiFragmentAct-
- * ivity as primary fragments. These primary fragments are intended to be
- * used for fragments that need to be switched between often, and for
- * which repeated destruction and recreation is undesirable. To facilitate
- * this, the primary fragments are never replaced, but instead will have
- * their views' visibilities set to View.GONE when not in use. Because
- * this increases memory consumption, it is not recommended to add more
- * than a few commonly used fragments. If other, less frequently used frag-
- * ments need to be used temporarily, this can be accomplished using the
- * function addSecondaryFragment.
+ * These automatically generated fragments are called primary fragments.
+ * These primary fragments are intended to be used for fragments that need
+ * to be switched between often, and for which repeated destruction and
+ * recreation is undesirable. To facilitate this, the primary fragments
+ * are never replaced, but instead will have their views' visibilities set
+ * to View.GONE when not in use. Because this increases memory consumption,
+ * it is not recommended to add more than a few commonly used fragments.
+ * If other, less frequently used fragments need to be used temporarily,
+ * this can be accomplished using the function addSecondaryFragment.
  *
  * In order for the primary fragment auto-generation to succeed, the prop-
  * erty navigationBar must be overridden in a subclass before MultiFrag-
  * mentActivity's onCreate is called, the property fragmentContainerId
- * must be set to the id of the container that the primary fragments will
- * be added to, and the resource pointed to by the id
- * R.array.multi_fragment_activity_fragments must be a string array that
- * contains the names of the primary fragments, including package name.
- * This being the case, MultiFragmentActivity will attempt to associate
- * each primary fragment in the order they are listed with a navigation
- * bar menu item, skipping disabled menu items. If the navigation menu
- * does not have at least as many enabled menu items as the number of pri-
- * mary fragments, an indexOutOfBoundsException will be thrown. If primary
- * fragment auto-generation succeeds, MultiFragmentActivity will set
- * itself as the OnNavigationItemSelectedListener for the navigation bar,
- * and will automatically switch to the corresponding fragment with an ani-
- * mation.
+ * must be set to the id of the container that the fragments will be added
+ * to, and the resource pointed to by the id R.array.multi_fragment_activity_fragments
+ * must be a string array that contains the names of the primary fragments,
+ * including package name. This being the case, MultiFragmentActivity will
+ * attempt to associate each primary fragment in the order they are listed
+ * with a navigation bar menu item, skipping disabled menu items. If the
+ * navigation menu does not have at least as many enabled menu items as
+ * the number of primary fragments, an indexOutOfBoundsException will be
+ * thrown. If primary fragment auto-generation succeeds, MultiFragment-
+ * Activity will set itself as the OnNavigationItemSelectedListener for
+ * the navigation bar, and will automatically switch to the corresponding
+ * fragment with an animation.
  *
  * FragmentContainer uses its own slide left or right animations for its
  * primary fragments, although the duration and the interpolators used for
@@ -66,7 +63,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
  * fragment becomes visible to the user, the open function onNewFragment-
  * Selected will be called. Override onNewFragmentSelected in subclasses
  * if special behavior when the visible fragment changes is desired.
- * */
+ */
 abstract class MultiFragmentActivity : AppCompatActivity() {
     protected var fragmentContainerId = 0
     protected lateinit var navigationBar: BottomNavigationView
@@ -86,12 +83,11 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         addOrRestoreFragments(savedInstanceState)
-
-        onNewFragmentSelected(visibleFragment!!)
         navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
         supportFragmentManager.addOnBackStackChangedListener {
             onNewFragmentSelected(visibleFragment!!)
         }
+        onNewFragmentSelected(visibleFragment!!)
     }
 
     /** Attempt to switch to a new active fragment corresponding to the @param
@@ -136,7 +132,6 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         val enterAnimResId = enterAnimResId ?: defaultSecondaryFragmentEnterAnimResId
         val exitAnimResId = exitAnimResId ?: defaultSecondaryFragmentExitAnimResId
         val tag = supportFragmentManager.backStackEntryCount.toString()
-        fragment.tag
         val transaction = supportFragmentManager.beginTransaction()
             .setCustomAnimations(enterAnimResId, exitAnimResId, enterAnimResId, exitAnimResId)
         if (showingPrimaryFragment) {
@@ -170,7 +165,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
                     fragmentFactory.instantiate(ClassLoader.getSystemClassLoader(), name)
                 else getFragment(savedInstanceState, menuItem.itemId.toString())
                     ?: throw IllegalStateException("The saved instance state must contain a " +
-                                                   "fragment for each navigation menu item id")
+                                                   "fragment for each navigation menu item id.")
             }
             navBarMenuItemFragmentMap[menuItem.itemId] = fragment
             assignedFragments++
@@ -193,6 +188,10 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
+            // Even though inactive fragments' visibilities are later set to View.GONE,
+            // we'll set them to View.INVISIBLE for the first time to ensure that they
+            // are fully inflated and that there is no delay when they are switched to
+            // for the first time.
             if (navigationBar.selectedItemId != menuItemId || !wasShowingPrimaryFragment)
                 fragment.view?.visibility = View.INVISIBLE
         }

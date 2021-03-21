@@ -84,14 +84,16 @@ open class MainActivity : MultiFragmentActivity() {
             if (it is FragmentInterface)
                 it.onActiveStateChanged(isActive = false, ui)
         }
+        ui.topActionBar.ui.backButton.isVisible = !showingPrimaryFragment
+        val needToAnimate = currentFragment != null
         currentFragment = newFragment
 
         if (newFragment !is FragmentInterface) return
         newFragment.onActiveStateChanged(isActive = true, ui = ui)
         ui.topActionBar.optionsMenuVisible = newFragment.showsOptionsMenu()
-        showBottomAppBar(show = newFragment.showsBottomAppBar())
+        showBottomAppBar(show = newFragment.showsBottomAppBar(), animate = needToAnimate)
         if (newFragment.showsBottomAppBar())
-            showCheckoutButton(showing = newFragment.showsCheckoutButton())
+            showCheckoutButton(showing = newFragment.showsCheckoutButton(), animate = needToAnimate)
         inputMethodManager(this)?.hideSoftInputFromWindow(ui.bottomAppBar.windowToken, 0)
 
         if (newFragment.showsBottomAppBar())
@@ -99,18 +101,19 @@ open class MainActivity : MultiFragmentActivity() {
     }
 
     private val showingBottomAppBar get() = ui.bottomAppBar.translationY == 0f
-    private fun showBottomAppBar(show: Boolean = true) {
+    private fun showBottomAppBar(show: Boolean = true, animate: Boolean = true) {
         if (showingBottomAppBar == show) return
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
         val views = arrayOf(ui.bottomAppBar, ui.addButton, ui.checkoutButton)
 
-        if (!show && ui.bottomAppBar.height == 0) {
-            ui.bottomAppBar.doOnNextLayout {
+        if (!animate) {
+            if (!show) ui.bottomAppBar.doOnNextLayout {
                 val translationAmount = screenHeight - ui.cradleLayout.top
                 for (view in views) view.translationY = translationAmount
             }
             return
         }
+
         val translationAmount = screenHeight - ui.cradleLayout.top
         val translationStart = if (show) translationAmount else 0f
         val translationEnd = if (show) 0f else translationAmount
@@ -126,23 +129,21 @@ open class MainActivity : MultiFragmentActivity() {
         if (ui.checkoutButton.isVisible == showing) return
         ui.checkoutButton.isVisible = showing
 
-        val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        ui.cradleLayout.measure(wrapContentSpec, wrapContentSpec)
-        val cradleEndWidth = if (showing) ui.cradleLayout.measuredWidth
-                             else         ui.addButton.layoutParams.width
-
-        // These z values seem not to stick when set in XML, so we have to
-        // set them here every time to ensure that the addButton remains on
-        // top of the others.
+        val cradleEndWidth = if (!showing) ui.addButton.layoutParams.width else {
+            val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            ui.cradleLayout.measure(wrapContentSpec, wrapContentSpec)
+            ui.cradleLayout.measuredWidth
+        }
+        // These z values seem not to stick when set in XML, so we have to set them here
+        // every time to ensure that the addButton remains on top of the checkout button.
         ui.addButton.elevation = 5f
         ui.checkoutButton.elevation = -10f
         if (!animate) {
             ui.bottomAppBar.cradleWidth = cradleEndWidth
             return
         }
-        // Settings the checkout button's clip bounds prevents the
-        // right corners of the checkout button from sticking out
-        // underneath the FAB during the show / hide animation.
+        // Settings the checkout button's clip bounds prevents the right corners of the check-
+        // out button from sticking out underneath the FAB during the show / hide animation.
         val clipBounds = Rect(0, 0, 0, ui.checkoutButton.height)
         ValueAnimator.ofInt(ui.bottomAppBar.cradleWidth, cradleEndWidth).apply {
             applyConfig(AnimatorConfig.transition)
@@ -207,6 +208,6 @@ open class MainActivity : MultiFragmentActivity() {
          * this function is also called when the top action bar's back button is pressed. */
         fun onBackPressed(): Boolean
         /** Perform any additional actions on @param ui that the fragment desires, given its @param isActive state. */
-        fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding)
+        fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) { }
     }
 }

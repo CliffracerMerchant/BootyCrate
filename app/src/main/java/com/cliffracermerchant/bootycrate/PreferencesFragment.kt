@@ -6,13 +6,11 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
-import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
 /** A fragment to display the BootyCrate app settings. */
@@ -46,7 +44,7 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.FragmentInt
                 viewModel.sortByChecked = sortByChecked
             }
             getString(R.string.pref_about_app) ->
-                AboutAppDialog().show(parentFragmentManager, null)
+                AboutAppDialog().show(childFragmentManager, null)
             getString(R.string.pref_open_source_libraries_used) -> {
                 val context = this.context ?: return false
                 startActivity(Intent(context, OssLicensesMenuActivity::class.java))
@@ -61,9 +59,6 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.FragmentInt
     // prevent the checkout button from needing to be animated
     override fun showsCheckoutButton() = true
     override fun onBackPressed() = false
-    override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
-        ui.topActionBar.ui.backButton.isVisible = isActive
-    }
 
 //    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
 //        val context = this.context ?: return@registerForActivityResult

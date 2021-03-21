@@ -112,7 +112,6 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         if (!ui.backButton.isVisible && searchWasActive)
             ui.backButton.isVisible = true
         ui.customTitle.isVisible = !searchWasActive
-        ui.searchView.isIconified = !searchWasActive
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
