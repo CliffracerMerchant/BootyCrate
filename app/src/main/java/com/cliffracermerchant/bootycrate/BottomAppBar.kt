@@ -18,6 +18,8 @@ import androidx.core.graphics.withClip
 import androidx.core.view.doOnNextLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.shape.*
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 import kotlin.math.atan
 
 /**
@@ -230,13 +232,16 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
  * BottomNavigationView must be referenced through the XML attribute naviga-
  * tionBarResId, and should be a descendant of the BottomAppBarWithIndicator.
  */
+@AndroidEntryPoint
 class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     BottomAppBar(context, attrs)
 {
     private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
     private var indicatorXPos = 0
     private lateinit var navBar: BottomNavigationView
-    var indicatorAnimatorConfig: AnimatorConfig? = null
+
+    @Inject @TransitionAnimatorConfig
+    lateinit var indicatorAnimatorConfig: AnimatorConfig
     var indicatorWidth = 0
     var indicatorColor: Int get() = indicatorPaint.color
                             set(value) { indicatorPaint.color = value }

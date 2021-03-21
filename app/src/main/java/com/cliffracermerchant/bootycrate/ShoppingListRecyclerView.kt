@@ -7,6 +7,7 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DiffUtil
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
@@ -35,7 +36,9 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         set(value) { viewModel.sortByChecked = value }
 
     init {
-        itemAnimator.animatorConfig = AnimatorConfig.shoppingListItem(context)
+        itemAnimator.animatorConfig = AnimatorConfig(
+            context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
+            AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
         itemAnimator.registerAdapterDataObserver(adapter)
     }
 

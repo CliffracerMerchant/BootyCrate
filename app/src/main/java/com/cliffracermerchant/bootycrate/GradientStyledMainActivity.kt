@@ -14,7 +14,6 @@ import android.widget.ImageView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnNextLayout
-import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * A styled subclass of MainActivity.
@@ -24,7 +23,6 @@ import dagger.hilt.android.AndroidEntryPoint
  * and bottom action bar) are impossible to accomplish in XML. GradientStyled-
  * MainActivity performs additional operations to initialize its style.
  */
-@AndroidEntryPoint
 class GradientStyledMainActivity : MainActivity() {
     private val topFgGradientBuilder = GradientBuilder()
     private lateinit var topBgGradientBuilder: GradientBuilder

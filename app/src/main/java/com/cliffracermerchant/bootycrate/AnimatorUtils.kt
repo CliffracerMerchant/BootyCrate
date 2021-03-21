@@ -14,46 +14,11 @@ import android.view.ViewGroup
 import android.view.ViewPropertyAnimator
 import android.view.animation.AnimationUtils
 
-/**
- * A data class that contains a TimeInterpolator and a duration for syncing animations, as well as predefined static instances.
- *
- * The duration and interpolator of animations are the most important factors
- * in ensuring that separate but related animations are synchronized. Applying
- * the predefined AnimatorConfig instances wherever animations are used within
- * an app make it easier to achieve this. The provided configs are:
- * - AnimatorConfig.translation: For translation or size changing of views
- * - AnimatorConfig.fadeIn: For views that fade in.
- * - AnimatorConfig.fadeOut: For views that fade out.
- * - AnimatorConfig.transition: For views involved in large scale transitions,
- *       e.g. between fragments.
- * - AnimatorConfig.shoppingListItem: Like the translation config, but for
- *       shopping list item views. It uses a slightly shorter duration due to
- *       the small size of shopping list item views making the default transla-
- *       tion duration look a little slow.
- *
- * The function init must be called with a context instance sometime before any
- * of the configs are accessed, or else an exception will be thrown.
- */
-data class AnimatorConfig(val duration: Long, val interpolator: TimeInterpolator) {
+/** A data class that contains a TimeInterpolator and a duration for syncing animations. */
+data class AnimatorConfig(var duration: Long, var interpolator: TimeInterpolator) {
     companion object {
         fun translation(context: Context) = AnimatorConfig(
             context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
-            AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
-
-        fun shoppingListItem(context: Context) = AnimatorConfig(
-            context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
-            AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
-
-        fun fadeIn(context: Context) = AnimatorConfig(
-            context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
-            AnimationUtils.loadInterpolator(context, R.anim.fade_in_interpolator))
-
-        fun fadeOut(context: Context) = AnimatorConfig(
-            context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
-            AnimationUtils.loadInterpolator(context, R.anim.fade_out_interpolator))
-
-        fun transition(context: Context) = AnimatorConfig(
-            context.resources.getInteger(R.integer.fragmentTransitionLongDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }
 }

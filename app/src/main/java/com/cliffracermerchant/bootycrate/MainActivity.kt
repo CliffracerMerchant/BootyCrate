@@ -19,6 +19,8 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager.getDefaultSharedPreferences
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * A FragmentContainer hosting activity with a custom UI.
@@ -33,9 +35,10 @@ import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
  * visibility of the MainActivity UI when they are displayed.
  */
 @Suppress("LeakingThis")
+@AndroidEntryPoint
 open class MainActivity : MultiFragmentActivity() {
     lateinit var ui: MainActivityBinding
-    private val transitionAnimConfig = AnimatorConfig.transition(this)
+    @Inject @TransitionAnimatorConfig lateinit var transitionAnimConfig: AnimatorConfig
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val prefs = getDefaultSharedPreferences(this)
@@ -175,13 +178,9 @@ open class MainActivity : MultiFragmentActivity() {
     }
 
     private fun initAnimatorConfigs() {
-        primaryFragmentTransitionAnimatorConfig = transitionAnimConfig
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
-
-        ui.bottomAppBar.indicatorAnimatorConfig = transitionAnimConfig
         ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
-
         ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig)
         ui.cradleLayout.layoutTransition.doOnStart {
             pendingCradleAnim?.start()

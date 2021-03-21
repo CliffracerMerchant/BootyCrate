@@ -15,6 +15,8 @@ import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /**
  * An activity that, when linked up with a navigation bar instance, will
@@ -64,6 +66,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
  * Selected will be called. Override onNewFragmentSelected in subclasses
  * if special behavior when the visible fragment changes is desired.
  */
+@AndroidEntryPoint
 abstract class MultiFragmentActivity : AppCompatActivity() {
     protected var fragmentContainerId = 0
     protected lateinit var navigationBar: BottomNavigationView
@@ -76,9 +79,10 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     val showingPrimaryFragment get() = supportFragmentManager.backStackEntryCount == 0
     val selectedPrimaryFragment get() = navBarMenuItemFragmentMap.getValue(navigationBar.selectedItemId)
 
-    var primaryFragmentTransitionAnimatorConfig: AnimatorConfig? = null
-    var defaultSecondaryFragmentEnterAnimResId: Int = 0
-    var defaultSecondaryFragmentExitAnimResId: Int = 0
+    @Inject @TransitionAnimatorConfig
+    lateinit var primaryFragmentTransitionAnimatorConfig: AnimatorConfig
+    protected var defaultSecondaryFragmentEnterAnimResId: Int = 0
+    protected var defaultSecondaryFragmentExitAnimResId: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
