@@ -42,19 +42,7 @@ open class MainActivity : MultiFragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val prefs = getDefaultSharedPreferences(this)
-     /* The activity's ViewModelStore will by default retain instances of the
-        app's view models across activity restarts. In case this is not desired
-        (e.g. when the database was replaced with an external one), setting the
-        shared preference whose key is equal to the value of
-        R.string.pref_view_models_need_cleared to true will cause MainActivity
-        to call viewModelStore.clear() */
-        var prefKey = getString(R.string.pref_view_models_need_cleared)
-        if (prefs.getBoolean(prefKey, false)) {
-            viewModelStore.clear()
-            prefs.edit().putBoolean(prefKey, false).apply()
-        }
-
-        prefKey = getString(R.string.pref_light_dark_mode)
+        val prefKey = getString(R.string.pref_light_dark_mode)
         val themeDefault = getString(R.string.sys_default_theme_description)
         val sysDarkThemeIsActive = UI_MODE_NIGHT_YES == (resources.configuration.uiMode and
                                                          Configuration.UI_MODE_NIGHT_MASK)

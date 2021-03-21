@@ -29,15 +29,7 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.FragmentInt
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         when (preference?.key) {
-//            getString(R.string.pref_theme_gradient_screen) -> {
-//                val activity = this.activity as? MainActivity ?: return false
-//                val container = activity.ui.fragmentContainer
-//                childFragmentManager.beginTransaction()
-//                    .setCustomAnimations(R.animator.fragment_close_enter, R.animator.fragment_close_exit,
-//                                         R.animator.fragment_close_enter, R.animator.fragment_close_exit,)
-//                    .add(container.id, CustomizeThemeGradientFragment())
-//                    .hide(this).addToBackStack("").commit()
-//            }
+//            getString(R.string.pref_theme_gradient_screen) -> { }
             getString(R.string.pref_sort_by_checked) -> {
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
                 val viewModel: ShoppingListViewModel by activityViewModels()
