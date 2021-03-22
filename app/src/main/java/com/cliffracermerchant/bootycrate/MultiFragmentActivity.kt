@@ -152,6 +152,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             supportFragmentManager.putFragment(
                 outState, idAndFragment.key.toString(), idAndFragment.value)
         outState.putBoolean("wasShowingPrimaryFragment", showingPrimaryFragment)
+        outState.putInt("selectedNavItemId", navigationBar.selectedItemId)
     }
 
     open fun onNewFragmentSelected(newFragment: Fragment) { }
@@ -189,6 +190,9 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     private fun initPrimaryFragmentVisibility(savedInstanceState: Bundle?) {
         val wasShowingPrimaryFragment =
             savedInstanceState?.getBoolean("wasShowingPrimaryFragment") ?: true
+        navigationBar.selectedItemId = savedInstanceState?.getInt("selectedNavItemId",
+                                                                  navigationBar.selectedItemId)
+                                                                ?: navigationBar.selectedItemId
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
@@ -196,7 +200,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             // we'll set them to View.INVISIBLE for the first time to ensure that they
             // are fully inflated and that there is no delay when they are switched to
             // for the first time.
-            if (navigationBar.selectedItemId != menuItemId || !wasShowingPrimaryFragment)
+            if (menuItemId != navigationBar.selectedItemId || !wasShowingPrimaryFragment)
                 fragment.view?.visibility = View.INVISIBLE
         }
     }
