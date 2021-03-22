@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,7 +16,6 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Transformations
 import com.cliffracermerchant.bootycrate.databinding.NewItemDialogBinding
 
 /**
@@ -23,10 +23,10 @@ import com.cliffracermerchant.bootycrate.databinding.NewItemDialogBinding
  *
  * NewViewModelItemDialog is an abstract DialogFragment for creating new View-
  * ModelItems. By default it fills the newItemViewContainer ui element with
- * a ViewModelItemView instance. If this needs to be overridden in a subclass,
- * call the constructor with the useDefaultLayoutParameter set to false. If
- * this is done, the subclass must initialize the newItemView member before on-
- * CreateDialog, or an exception will be thrown.
+ * a ExpandableSelectableItemView instance. If this needs to be overridden in
+ * a subclass, call the constructor with the useDefaultLayoutParameter set to
+ * false. If this is done, the subclass must initialize the newItemView member
+ * before onCreateDialog, or an exception will be thrown.
  *
  * The abstract function createItemFromView must be overridden in subclasses
  * with an implementation that returns an Entity instance that reflects the
@@ -51,24 +51,19 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
     protected val ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
-    protected lateinit var newItemView: ViewModelItemView<Entity>
+    protected lateinit var newItemView: ExpandableSelectableItemView<Entity>
 
-    init { if (useDefaultLayout) {
-        newItemView = ViewModelItemView(context)
-        ui.root.layoutTransition = layoutTransition(AnimatorConfig.translation(context))
-    }}
+    init { if (useDefaultLayout) newItemView = ExpandableSelectableItemView(context) }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): android.app.Dialog {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        viewModel.resetNewItemName()
         ui.newItemViewContainer.addView(newItemView)
         newItemView.apply {
+            setExpanded(true, animate = false)
             ui.amountEditSpacer.isVisible = false
             ui.checkBox.setColorIndex(0, animate = false)
-            ui.nameEdit.setEditable(true, animate = false)
-            ui.extraInfoEdit.setEditable(true, animate = false)
             background = null
             ui.editButton.visibility = View.GONE
-            ui.amountEdit.setValueIsFocusable(true, animate = false)
-            ui.amountEdit.initValue(1)
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
                 viewModel.newItemExtraInfo = text.toString()
             }
@@ -81,8 +76,8 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
                 okButton.isEnabled = true
             }
         }
-        Transformations.distinctUntilChanged(viewModel.newItemNameIsAlreadyUsed).observe(this) {
-            nameIsAlreadyUsed -> ui.duplicateNameWarning.isVisible = nameIsAlreadyUsed
+        viewModel.newItemNameIsAlreadyUsed.observe(this) { nameIsAlreadyUsed ->
+            ui.duplicateNameWarning.isVisible = nameIsAlreadyUsed
         }
         return themedAlertDialogBuilder(requireContext())
             .setBackgroundInsetStart(0)
@@ -93,14 +88,11 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
             .setPositiveButton(android.R.string.ok) { _, _ -> }
             .setView(ui.root)
             .create().apply {
-                setOnDismissListener { viewModel.resetNewItemName() }
                 setOnShowListener {
                     okButton.setOnClickListener { if (addItem()) dismiss() }
                     // Override the add another button's default on click listener
                     // to prevent it from closing the dialog when clicked
-                    addAnotherButton.setOnClickListener {
-                        if (addItem()) resetNewItemView()
-                    }
+                    addAnotherButton.setOnClickListener { if (addItem()) resetNewItemView() }
                     newItemView.ui.nameEdit.requestFocus()
                     inputMethodManager?.showSoftInput(newItemView.ui.nameEdit,
                                                       InputMethodManager.SHOW_IMPLICIT)
@@ -155,7 +147,7 @@ class NewInventoryItemDialog(context: Context) :
 
     init {
         newItemView = newInventoryItemView
-        newInventoryItemView.expand()
+        newInventoryItemView.setExpanded(true, animate = false)
         newInventoryItemView.detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
     }
 

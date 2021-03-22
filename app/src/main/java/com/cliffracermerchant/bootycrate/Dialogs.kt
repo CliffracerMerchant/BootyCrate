@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.app.Dialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -45,23 +44,27 @@ class ShareDialog<Entity: ViewModelItem>(
     private val items: List<Entity>,
     private val snackBarAnchor: View
 ) : DialogFragment() {
-    val ui = ShareDialogBinding.inflate(LayoutInflater.from(context))
+    lateinit var ui: ShareDialogBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        ui = ShareDialogBinding.inflate(LayoutInflater.from(context))
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?) =
         themedAlertDialogBuilder(requireContext())
-        .setView(ui.root)
-        .create().apply {
-            setOnShowListener {
-                ui.shareTextMessageOption.setOnClickListener {
-                    shareList(ShareOption.TextMessage)
-                    dismiss()
-                }
-                ui.shareEmailOption.setOnClickListener {
-                    shareList(ShareOption.Email)
-                    dismiss()
+            .setView(ui.root).create().apply {
+                setOnShowListener {
+                    ui.shareTextMessageOption.setOnClickListener {
+                        shareList(ShareOption.TextMessage)
+                        dismiss()
+                    }
+                    ui.shareEmailOption.setOnClickListener {
+                        shareList(ShareOption.Email)
+                        dismiss()
+                    }
                 }
             }
-        }
 
     /** Export the list of items via the selected share option. */
     private fun shareList(shareOption: ShareOption) {
@@ -96,7 +99,7 @@ class ShareDialog<Entity: ViewModelItem>(
 }
 
 class AboutAppDialog : DialogFragment() {
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
+    override fun onCreateDialog(savedInstanceState: Bundle?) =
         themedAlertDialogBuilder(requireContext()).setView(R.layout.about_app_dialog).create()
 }
 
