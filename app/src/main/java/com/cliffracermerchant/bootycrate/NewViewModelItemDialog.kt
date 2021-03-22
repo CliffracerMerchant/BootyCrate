@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -15,7 +16,6 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.Transformations
 import com.cliffracermerchant.bootycrate.databinding.NewItemDialogBinding
 
 /**
@@ -53,12 +53,10 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
     protected val ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
     protected lateinit var newItemView: ExpandableSelectableItemView<Entity>
 
-    init { if (useDefaultLayout) {
-        newItemView = ExpandableSelectableItemView(context)
-        ui.root.layoutTransition = layoutTransition(AnimatorConfig.translation(context))
-    }}
+    init { if (useDefaultLayout) newItemView = ExpandableSelectableItemView(context) }
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): android.app.Dialog {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        viewModel.resetNewItemName()
         ui.newItemViewContainer.addView(newItemView)
         newItemView.apply {
             setExpanded(true, animate = false)
@@ -78,8 +76,8 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
                 okButton.isEnabled = true
             }
         }
-        Transformations.distinctUntilChanged(viewModel.newItemNameIsAlreadyUsed).observe(this) {
-            nameIsAlreadyUsed -> ui.duplicateNameWarning.isVisible = nameIsAlreadyUsed
+        viewModel.newItemNameIsAlreadyUsed.observe(this) { nameIsAlreadyUsed ->
+            ui.duplicateNameWarning.isVisible = nameIsAlreadyUsed
         }
         return themedAlertDialogBuilder(requireContext())
             .setBackgroundInsetStart(0)
@@ -90,7 +88,6 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
             .setPositiveButton(android.R.string.ok) { _, _ -> }
             .setView(ui.root)
             .create().apply {
-                setOnDismissListener { viewModel.resetNewItemName() }
                 setOnShowListener {
                     okButton.setOnClickListener { if (addItem()) dismiss() }
                     // Override the add another button's default on click listener
