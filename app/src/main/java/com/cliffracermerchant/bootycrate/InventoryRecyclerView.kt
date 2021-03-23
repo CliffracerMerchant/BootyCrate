@@ -73,10 +73,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.Amount) &&
                         ui.amountEdit.value != item.amount)
                             ui.amountEdit.value = item.amount
-                    if (changes.contains(InventoryItem.Field.IsExpanded))
-                        holder.view.setExpanded(item.isExpanded)
-                    if (changes.contains(InventoryItem.Field.IsSelected))
-                        holder.view.setSelectedState(item.isSelected)
+                    if (changes.contains(InventoryItem.Field.IsExpanded) &&
+                        holder.view.isExpanded != item.isExpanded)
+                            holder.view.setExpanded(item.isExpanded)
+                    if (changes.contains(InventoryItem.Field.IsSelected) &&
+                        holder.view.isInSelectedState != item.isSelected)
+                            holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(InventoryItem.Field.AddToShoppingList) &&
                         detailsUi.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
                             detailsUi.addToShoppingListCheckBox.isChecked = item.addToShoppingList

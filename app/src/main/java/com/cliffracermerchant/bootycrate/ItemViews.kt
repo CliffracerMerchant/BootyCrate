@@ -82,11 +82,14 @@ open class ViewModelItemView<Entity: ViewModelItem>(
  * selection and expansion state of the ExpandableSelectableItem passed to it.
  *
  * The interface for selection and deselection consists of the functions
- * select, deselect, and setSelectedState. With the default background these
- * functions will give the view a surrounding gradient outline or hide the
- * outline depending on the item's selection state. Unless setSelectedState is
- * called with the parameter animate set to false, the change in selection
- * state will be animated with a fade in or out animation.
+ * isInSelectedState, select, deselect, and setSelectedState. With the
+ * default background these functions will give the view a surrounding
+ * gradient outline or hide the outline depending on the item's selection
+ * state. Unless setSelectedState is called with the parameter animate set
+ * to false, the change in selection state will be animated with a fade in
+ * or out animation. Note that setSelected and isSelected are part of the
+ * Android framework's View's API, and has nothing to do with the selection
+ * API added by ExpandableSelectableItemView.
  *
  * The interface for item expansion consists of expand, collapse, setExpanded,
  * and toggleExpanded. If subclasses need to alter the visibility of additional
@@ -150,6 +153,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         setSelectedState(item.isSelected, animate = false)
     }
 
+    val isInSelectedState get() = gradientOutline.alpha != 0
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
@@ -310,9 +314,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             setter = ui.nameEdit::setRight,
             fromValue = ui.nameEdit.right,
             toValue = ui.nameEdit.right + amountLeftChange,
-            config = animatorConfig).apply {
-            doOnStart { nameLockedWidth = null }
-        })
+            config = animatorConfig
+        ).apply { doOnStart { nameLockedWidth = null } })
 
         if (ui.extraInfoEdit.text.isNullOrBlank()) return
         extraInfoLockedWidth = ui.extraInfoEdit.width
@@ -320,9 +323,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             setter = ui.extraInfoEdit::setRight,
             fromValue = ui.extraInfoEdit.right,
             toValue = ui.extraInfoEdit.right + amountLeftChange,
-            config = animatorConfig).apply {
-            doOnStart { extraInfoLockedWidth = null }
-        })
+            config = animatorConfig
+        ).apply { doOnStart { extraInfoLockedWidth = null } })
     }
 
     private fun updateEditButtonState(expanding: Boolean, animate: Boolean) {
@@ -333,8 +335,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             ui.editButton.translationY = -heightChange.toFloat()
             val editButtonAnim = valueAnimatorOfFloat(
                 setter = ui.editButton::setTranslationY,
-                fromValue = -heightChange * 1f,
-                toValue = 0f, config = animatorConfig)
+                fromValue = -heightChange * 1f, 0f,
+                config = animatorConfig)
             // editButton uses a state list animator with state_activated as the trigger.
             editButtonAnim.doOnStart { ui.editButton.isActivated = expanding }
             pendingAnimations.add(editButtonAnim)
@@ -358,9 +360,11 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     protected fun View.showOrHideAfterFading(showing: Boolean): Animator {
         alpha = if (showing) 0f else 1f
         isVisible = true
-        val animator = valueAnimatorOfFloat(setter = ::setAlpha, fromValue = alpha,
-                                            toValue = if (showing) 1f else 0f,
-                                            config = animatorConfig)
+        val animator = valueAnimatorOfFloat(
+            setter = ::setAlpha,
+            fromValue = alpha,
+            toValue = if (showing) 1f else 0f,
+            config = animatorConfig)
         if (!showing) {
             val parent = parent as ViewGroup
             parent.overlay.add(this)
