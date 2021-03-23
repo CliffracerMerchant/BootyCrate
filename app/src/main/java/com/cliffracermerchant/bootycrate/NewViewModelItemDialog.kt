@@ -129,7 +129,7 @@ class NewShoppingListItemDialog(context: Context) :
     NewViewModelItemDialog<ShoppingListItem>(context)
 {
     override val viewModel: ShoppingListViewModel by activityViewModels()
-    init { newItemView.ui.checkBox.inColorEditMode = true }
+    init { newItemView.ui.checkBox.setInColorEditMode(true, animate = false) }
 
     override fun createItemFromView() = ShoppingListItem(
         name = newItemView.ui.nameEdit.text.toString(),

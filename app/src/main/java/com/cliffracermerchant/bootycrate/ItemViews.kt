@@ -424,7 +424,7 @@ class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig?) :
     }
 
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
-        ui.checkBox.inColorEditMode = expanded
+        ui.checkBox.setInColorEditMode(expanded, animate)
     }
 
     fun setStrikeThroughEnabled(enabled: Boolean, animate: Boolean = true) {
@@ -454,7 +454,7 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig?) :
         ui = ViewModelItemBinding.bind(tempUi.root)
         detailsUi = InventoryItemDetailsBinding.bind(tempUi.root)
         ui.editButton.setOnClickListener { toggleExpanded() }
-        ui.checkBox.inColorEditMode = true
+        ui.checkBox.setInColorEditMode(true, animate = false)
         ui.amountEdit.minValue = 0
         this.animatorConfig = animatorConfig
     }

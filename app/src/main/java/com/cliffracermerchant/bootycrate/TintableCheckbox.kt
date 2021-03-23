@@ -5,6 +5,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
+import android.graphics.drawable.AnimatedStateListDrawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.View
@@ -18,16 +19,17 @@ import androidx.core.content.ContextCompat
  * normal checkbox mode (where the checked state can be toggled) and a color
  * editing mode (where the checkbox will morph into a tinted circle, and a
  * click will open a color picker dialog). The mode is changed via the pro-
- * perty inColorEditMode, while the current color is changed through the
- * property color (or colorIndex if setting the color to an value of View-
- * ModelItem.Colors is preferred.
+ * perty inColorEditMode or the function setInColorEditMode (which also
+ * allows skipping the animation when the parameter animate == false). The
+ * current color is changed through the property color (or colorIndex if
+ * setting the color to an value of ViewModelItem.Colors is preferred.
  */
 class TintableCheckbox(context: Context, attrs: AttributeSet) :
     AppCompatImageButton(context, attrs)
 {
-    var inColorEditMode = false
-        set(value) { field = value
-                     refreshDrawableState() }
+    private var _inColorEditMode = false
+    var inColorEditMode get() = _inColorEditMode
+                        set(value) = setInColorEditMode(value)
     private var _isChecked = false
     var isChecked get() = _isChecked
         set(checked) { _isChecked = checked
@@ -55,6 +57,15 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
                                                    colorIndex, ::setColorIndex)
             }
             else isChecked = !isChecked
+        }
+    }
+
+    fun setInColorEditMode(inColorEditMode: Boolean, animate: Boolean = true) {
+        _inColorEditMode = inColorEditMode
+        refreshDrawableState()
+        if (!animate) (drawable as? LayerDrawable)?.apply {
+            (getDrawable(0) as? AnimatedStateListDrawable)?.jumpToCurrentState()
+            (getDrawable(1) as? AnimatedStateListDrawable)?.jumpToCurrentState()
         }
     }
 
@@ -89,11 +100,9 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
         }
     }
 
-    override fun onCreateDrawableState(extraSpace: Int): IntArray {
-        return if (inColorEditMode)
-            super.onCreateDrawableState(extraSpace + 1).apply {
-                mergeDrawableStates(this, intArrayOf(R.attr.state_edit_color))
-            }
-        else super.onCreateDrawableState(extraSpace)
-    }
+    override fun onCreateDrawableState(extraSpace: Int): IntArray =
+        if (!_inColorEditMode) super.onCreateDrawableState(extraSpace)
+        else super.onCreateDrawableState(extraSpace + 1).apply {
+            mergeDrawableStates(this, intArrayOf(R.attr.state_edit_color))
+        }
 }
