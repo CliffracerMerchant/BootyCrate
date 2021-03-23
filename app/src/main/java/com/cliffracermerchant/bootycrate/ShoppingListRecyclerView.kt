@@ -9,7 +9,6 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DiffUtil
-import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 import kotlin.collections.set
 
@@ -22,7 +21,6 @@ import kotlin.collections.set
  * ViewModel property, for convenience. sortByChecked should not be changed
  * the property viewModel is initialized, or an exception will be thrown.
  */
-@AndroidEntryPoint
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs)
 {

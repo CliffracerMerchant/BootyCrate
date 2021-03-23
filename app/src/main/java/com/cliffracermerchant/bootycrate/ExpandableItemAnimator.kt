@@ -6,6 +6,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.animation.Animator
+import android.view.View
 import android.view.ViewPropertyAnimator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
@@ -60,9 +61,19 @@ class ExpandableItemAnimator(
         this.animatorConfig = animatorConfig
     }
 
+    private var remainingScrollDistance = 0
     fun notifyExpandedItemChanged(newlyExpandedItemPos: Int?) {
         collapsingItemPos = expandedItemPos
         _expandedItemPos = newlyExpandedItemPos
+        // The recyclerView's remaining scroll distance is sometimes needed during change
+        // animations to determine whether the animated view needs to have an additional
+        // translation animation performed. Unfortunately if this calculation is performed
+        // at that time the value will reflect the remaining scroll distance after the
+        // animations are finished, rather than before. This value is therefore calculated
+        // here and stored in case it ends up being needed.
+        remainingScrollDistance = recyclerView.computeVerticalScrollRange() -
+                                  recyclerView.computeVerticalScrollOffset() -
+                                  recyclerView.computeVerticalScrollExtent()
     }
 
     override fun animateChange(
@@ -101,26 +112,37 @@ class ExpandableItemAnimator(
                     collapsingItemPos = null
             }
         })
-
-        // If another view is expanding as this one is collapsing,
-        // the view on bottom must be translated by the same amount
-        // as its height change to prevent visual artifacts.
-        val collapsingPos = collapsingItemPos
-        val expandingPos = expandedItemPos
-        if (collapsingPos != null && expandingPos != null) {
-            val viewIsOnBottom = if (collapsingPos == pos) collapsingPos > expandingPos
-                                 else                      expandingPos > collapsingPos
-            if (viewIsOnBottom) {
-                view.translationY = heightChange.toFloat()
-                pendingChangeAnimators.add(valueAnimatorOfFloat(
-                    setter = view::setTranslationY,
-                    fromValue = view.translationY,
-                    toValue = 0f, config = animatorConfig))
-            }
-        }
-
+        setupTranslationAnimIfNeeded(view, pos, heightChange)
         changingViews.add(view)
         return true
+    }
+
+    /**
+     * Perform any needed translation animations on the view to prevent it from jumping.
+     *
+     * If another view is expanding as this one is collapsing and this is the view on
+     * bottom, or if the recycler view is scrolled down all the way when this view is
+     * being collapsed, the view must be translated by up to its height change to
+     * prevent visual artifacts.
+     */
+    private fun setupTranslationAnimIfNeeded(view: View, pos: Int, heightChange: Int ) {
+        val collapsingPos = collapsingItemPos
+        val expandingPos = expandedItemPos
+        val translationAmount = when {
+            collapsingPos != null && expandingPos != null -> {
+                val viewIsOnBottom = if (collapsingPos == pos) collapsingPos > expandingPos
+                                     else                      expandingPos > collapsingPos
+                if (viewIsOnBottom) heightChange.toFloat() else 0f
+            }
+            heightChange > 0 -> 0f
+            else -> (heightChange + remainingScrollDistance).coerceAtMost(0).toFloat()
+        }
+        if (translationAmount != 0f) {
+            view.translationY = translationAmount
+            pendingChangeAnimators.add(valueAnimatorOfFloat(setter = view::setTranslationY,
+                                                            fromValue = view.translationY,
+                                                            toValue = 0f, config = animatorConfig))
+        }
     }
 
     override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {

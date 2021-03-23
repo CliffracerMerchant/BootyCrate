@@ -8,13 +8,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
-import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 
 /**
  * A RecyclerView to display the data provided by an InventoryViewModel
  */
-@AndroidEntryPoint
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<InventoryItem>(context, attrs)
 {
