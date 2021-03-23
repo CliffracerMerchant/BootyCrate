@@ -45,8 +45,8 @@ class ExpandableItemAnimator(
     private var _expandedItemPos: Int? = null
     private var collapsingItemPos: Int? = null
 
-    private val pendingChangeAnimators = mutableListOf<Animator>()
-    private val pendingRemoveAnimators = mutableListOf<ViewPropertyAnimator>()
+    private val pendingAnimators = mutableListOf<Animator>()
+    private val pendingViewPropAnimators = mutableListOf<ViewPropertyAnimator>()
     private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
 
     var animatorConfig = animatorConfig
@@ -99,11 +99,11 @@ class ExpandableItemAnimator(
 
         // preInfo.top won't necessarily be the correct start value
         // if the view is on bottom and also needs to be translated.
-        val start = view.top + preInfo.bottom - preInfo.top
-        view.bottom = start
-        pendingChangeAnimators.add(valueAnimatorOfInt(
-            setter = view::setBottom, fromValue = start,
-            toValue = postInfo.bottom, config = animatorConfig
+        val startHeight = preInfo.bottom - preInfo.top
+        view.setHeight(startHeight)
+        pendingAnimators.add(valueAnimatorOfInt(
+            setter = view::setHeight, fromValue = startHeight,
+            toValue = startHeight + heightChange, config = animatorConfig
         ).apply {
             doOnStart { dispatchChangeStarting(newHolder, true) }
             doOnEnd {
@@ -139,15 +139,14 @@ class ExpandableItemAnimator(
         }
         if (translationAmount != 0f) {
             view.translationY = translationAmount
-            pendingChangeAnimators.add(valueAnimatorOfFloat(setter = view::setTranslationY,
-                                                            fromValue = view.translationY,
-                                                            toValue = 0f, config = animatorConfig))
+            pendingViewPropAnimators.add(
+                view.animate().translationY(0f).applyConfig(animatorConfig))
         }
     }
 
     override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
         val view = holder?.itemView ?: return false
-        pendingRemoveAnimators.add(view.animate()
+        pendingViewPropAnimators.add(view.animate()
             .alpha(0f).withLayer()
             .applyConfig(animatorConfig)
             .withStartAction { dispatchRemoveStarting(holder) }
@@ -160,11 +159,11 @@ class ExpandableItemAnimator(
 
     override fun runPendingAnimations() {
         super.runPendingAnimations()
-        for (anim in pendingChangeAnimators) anim.start()
-        for (anim in pendingRemoveAnimators) anim.start()
+        for (anim in pendingAnimators) anim.start()
+        for (anim in pendingViewPropAnimators) anim.start()
         for (view in changingViews) view.runPendingAnimations()
-        pendingChangeAnimators.clear()
-        pendingRemoveAnimators.clear()
+        pendingAnimators.clear()
+        pendingViewPropAnimators.clear()
         changingViews.clear()
     }
 

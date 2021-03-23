@@ -76,3 +76,5 @@ fun fragmentActivityFrom(context: Context) =
         }
     }
 
+fun View.setHeight(height: Int) { bottom = top + height }
+
