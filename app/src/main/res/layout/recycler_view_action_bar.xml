@@ -22,13 +22,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Space
+        android:id="@+id/backButtonSpacer"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:src="@drawable/ic_arrow_back_black_24dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/customTitle"/>
+
     <com.cliffracermerchant.bootycrate.ShaderTextSwitcher
         android:id="@+id/customTitle"
         style="@style/CustomTitle"
         android:layout_width="0dp"
         android:layout_height="44dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/backButton"
+        app:layout_constraintStart_toEndOf="@id/backButtonSpacer"
         app:layout_constraintEnd_toStartOf="@id/searchView"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_goneMarginStart="20dp" />

@@ -14,7 +14,7 @@
     tools:context=".MainActivity" >
 
     <com.cliffracermerchant.bootycrate.GradientActionBar
-        android:id="@+id/topActionBar"
+        android:id="@+id/actionBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         style="@style/TopActionBar" />

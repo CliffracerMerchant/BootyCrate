@@ -49,7 +49,7 @@
 
     <style name="ExpandableSelectableItemDivider">
         <item name="android:background">?android:attr/listDivider</item>
-        <item name="android:backgroundTint">?attr/textColor</item>
+        <item name="android:backgroundTint">?android:attr/textColorPrimary</item>
     </style>
 
     <style name="ExpandableSelectableItemCollapseButton">

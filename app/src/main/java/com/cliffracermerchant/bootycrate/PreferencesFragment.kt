@@ -14,7 +14,7 @@ import androidx.preference.SwitchPreferenceCompat
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
 /** A fragment to display the BootyCrate app settings. */
-class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.FragmentInterface {
+class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivityFragment {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)

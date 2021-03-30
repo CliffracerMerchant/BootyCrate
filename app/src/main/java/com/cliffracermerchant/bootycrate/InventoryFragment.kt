@@ -7,7 +7,6 @@ package com.cliffracermerchant.bootycrate
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
-import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import com.cliffracermerchant.bootycrate.databinding.InventoryFragmentBinding
@@ -25,38 +24,38 @@ import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
     override val viewModel: InventoryViewModel by activityViewModels()
     private val shoppingListViewModel: ShoppingListViewModel by activityViewModels()
-    override var recyclerView: ExpandableSelectableRecyclerView<InventoryItem>? = null
+    override var recyclerView: InventoryRecyclerView? = null
     override val actionMode = InventoryActionMode()
-    lateinit var ui: InventoryFragmentBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View {
-        ui = InventoryFragmentBinding.inflate(inflater, container, false)
-        return ui.root
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ) = InventoryFragmentBinding.inflate(inflater, container, false).apply {
+        recyclerView = inventoryRecyclerView
+    }.root
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        recyclerView = null
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerView = ui.inventoryRecyclerView
-        super.onViewCreated(view, savedInstanceState)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return if (item.itemId == R.id.add_to_shopping_list_button) {
+    override fun onOptionsItemSelected(item: MenuItem) =
+        if (item.itemId == R.id.add_to_shopping_list_button) {
             shoppingListViewModel.addFromSelectedInventoryItems()
             actionMode.finishAndClearSelection()
             true
         } else super.onOptionsItemSelected(item)
-    }
 
-    override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
-        super.onActiveStateChanged(isActive, ui,)
-        ui.topActionBar.optionsMenu.setGroupVisible(R.id.inventory_view_menu_group, isActive)
+    override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
+        super.onActiveStateChanged(isActive, activityUi)
+        activityUi.actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_menu_group, isActive)
         if (!isActive) return
-        ui.addButton.setOnClickListener {
+        activityUi.addButton.setOnClickListener {
             val activity = this.activity ?: return@setOnClickListener
             NewInventoryItemDialog(activity).show(activity.supportFragmentManager, null)
         }
-        ui.checkoutButton.checkoutCallback = null
+        activityUi.checkoutButton.checkoutCallback = null
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */

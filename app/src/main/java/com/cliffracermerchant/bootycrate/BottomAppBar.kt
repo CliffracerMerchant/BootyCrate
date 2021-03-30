@@ -17,7 +17,10 @@ import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.graphics.withClip
 import androidx.core.view.doOnNextLayout
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.shape.*
+import com.google.android.material.shape.EdgeTreatment
+import com.google.android.material.shape.MaterialShapeDrawable
+import com.google.android.material.shape.ShapeAppearanceModel
+import com.google.android.material.shape.ShapePath
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.math.atan
@@ -74,7 +77,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
         cradleBottomCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0)
         cradleStartEndMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleStartEndMargin, 90)
         cradleContentsMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleContentsMargin, 0)
-        borderPaint.strokeWidth = a.getDimensionPixelSize(R.styleable.BottomAppBar_topBorderWidth, 0).toFloat()
+        borderPaint.strokeWidth = a.getDimension(R.styleable.BottomAppBar_topBorderWidth, 0f)
         val cradleLayoutResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_cradleLayoutResId)
         a.recycle()
 
@@ -92,7 +95,8 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
     override fun onDraw(canvas: Canvas?) {
         if (canvas == null) return
         canvas.drawPath(outlinePath, backgroundPaint)
-        canvas.drawPath(topEdgePath, borderPaint)
+        if (borderPaint.strokeWidth != 0f)
+            canvas.drawPath(topEdgePath, borderPaint)
     }
 
     private fun prepareCradleLayout(cradleLayout: ViewGroup) {
@@ -107,8 +111,8 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
                     marginStart = cradleStartEndMargin + cradleContentsMargin
                 } CradleAlignmentMode.Center -> {
                     gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-                    this@BottomAppBar.measure(wrapContentSpec, wrapContentSpec)
-                    bottomMargin = this@BottomAppBar.measuredHeight + cradleContentsMargin - cradleDepth
+                    measure(wrapContentSpec, wrapContentSpec)
+                    bottomMargin = measuredHeight + cradleContentsMargin - cradleDepth
                 } CradleAlignmentMode.End -> {
                     gravity = Gravity.BOTTOM or Gravity.END
                     marginEnd = cradleStartEndMargin + cradleContentsMargin
@@ -205,8 +209,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
                 // elsewhere, that causes the y value after the above arc to be slightly
                 // off. This will cause a tilt in the final horizontal line. The follo-
                 // wing lineTo puts the current y at pathOffset, where it should be.
-                @Suppress("DEPRECATION")
-                lineTo(endX, pathOffset)
+                @Suppress("DEPRECATION") lineTo(endX, pathOffset)
                 lineTo(width.toFloat(), pathOffset)
             }
             // Copy the shapePath to topEdgePath and outlinePath, and additionally
@@ -230,7 +233,9 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
  * The indicator can be moved to be above a given nav bar menu item by calling
  * the function moveIndicatorToNavBarItem with the id of the menu item. The
  * BottomNavigationView must be referenced through the XML attribute naviga-
- * tionBarResId, and should be a descendant of the BottomAppBarWithIndicator.
+ * tionBarResId, and must be a descendant of the BottomAppBarWithIndicator.
+ * The XML attributes indicatorThickness and indicatorWidth are used to define
+ * the dimensions of the indicator.
  */
 @AndroidEntryPoint
 class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
@@ -243,6 +248,8 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     @Inject @TransitionAnimatorConfig
     lateinit var indicatorAnimatorConfig: AnimatorConfig
     var indicatorWidth = 0
+    var indicatorThickness get() = indicatorPaint.strokeWidth
+                           set(value) { indicatorPaint.strokeWidth = value }
     var indicatorColor: Int get() = indicatorPaint.color
                             set(value) { indicatorPaint.color = value }
     var indicatorGradient: Shader? get() = indicatorPaint.shader
@@ -250,16 +257,16 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBarWithIndicator)
+        indicatorThickness = a.getDimension(R.styleable.BottomAppBarWithIndicator_indicatorThickness, 0f)
         indicatorWidth = a.getDimensionPixelOffset(R.styleable.BottomAppBarWithIndicator_indicatorWidth, 0)
         indicatorPaint.color = a.getColor(R.styleable.BottomAppBarWithIndicator_indicatorColor, 0)
         val navViewResId = a.getResourceIdOrThrow(R.styleable.BottomAppBarWithIndicator_navigationBarResId)
         a.recycle()
 
         setWillNotDraw(false)
-        indicatorPaint.strokeWidth = 2.5f * borderPaint.strokeWidth
         doOnNextLayout {
             navBar = findViewById(navViewResId)
-            moveIndicatorToNavBarItem(navBar.selectedItemId, false)
+            moveIndicatorToNavBarItem(navBar.selectedItemId, animate = false)
         }
     }
 

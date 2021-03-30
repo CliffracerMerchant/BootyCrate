@@ -21,16 +21,18 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 /**
- * A button with a vector background and an outline that are both tintable with gradients.
+ * A button with a vector background, outline, and icon that are all tintable with gradients.
  *
- * OutlinedGradientButton is a button that accepts two paths that define its
- * vector background and outline, backgroundPathData and outlinePathData. Both
- * of these paths' gradients can be set independently of each other via the
- * properties backgroundGradient and outlineGradient. In addition to the out-
- * line, the outlineGradient property will also be used as the shader for any
- * text. In order for the path data to be interpreted correctly, the XML prop-
- * erties pathWidth and pathHeight must also be set in XML. The stroke width
- * of the outline can be set through the XML property outlineStrokeWidth.
+ * OutlinedGradientButton is a button that uses GradientVectorDrawables
+ * for its background, outline, and icon. The path data used for these
+ * drawables are defined in XML using the attributes backgroundPathData,
+ * outlinePathData, and iconPathData. The stroke width for the outline is
+ * set using the attributes outlineStrokeWidth. The gradient shader used
+ * for the background drawaable can be set through the property background-
+ * Gradient, while the gradient for the outline, the icon, and any text is
+ * set through the property foregroundGradient. In order for the path data
+ * attributes to be interpreted correctly, the XML properties pathWidth
+ * and pathHeight must also be set in XML.
  */
 open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
     AppCompatButton(context, attrs)
@@ -39,16 +41,20 @@ open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
         set(gradient) { backgroundDrawable.gradient = gradient }
     var outlineGradient get() = outlineDrawable.gradient
         set(gradient) { outlineDrawable.gradient = gradient
+                        iconDrawable.gradient = gradient
                         paint.shader = gradient }
 
     protected var backgroundDrawable: GradientVectorDrawable
     protected var outlineDrawable: GradientVectorDrawable
+    protected var iconDrawable: GradientVectorDrawable
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.OutlinedGradientButton)
         val backgroundPathData = a.getString(R.styleable.OutlinedGradientButton_backgroundPathData) ?: ""
         val outlinePathData = a.getString(R.styleable.OutlinedGradientButton_outlinePathData) ?: ""
         val outlineStrokeWidth = a.getDimension(R.styleable.OutlinedGradientButton_outlineStrokeWidth, 0f)
+        val iconPathData = a.getString(R.styleable.OutlinedGradientButton_iconPathData) ?: ""
+        val iconStrokeWidth = a.getDimension(R.styleable.OutlinedGradientButton_iconStrokeWidth, 0f)
         // Apparently if more than one attr is retrieved with a manual
         // IntArray, they must be in numerical id order to work.
         // Log.d("", "R.attr.pathWidth = ${R.attr.pathWidth}, R.attr.pathHeight=${R.attr.pathHeight}")
@@ -60,9 +66,14 @@ open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
 
         backgroundDrawable = GradientVectorDrawable(pathWidth, pathHeight, backgroundPathData )
         outlineDrawable = GradientVectorDrawable(pathWidth, pathHeight, outlinePathData)
+        iconDrawable = GradientVectorDrawable(pathWidth, pathHeight, iconPathData)
         outlineDrawable.strokeWidth = outlineStrokeWidth
         outlineDrawable.style = Paint.Style.STROKE
-        this.background = LayerDrawable(arrayOf(backgroundDrawable, outlineDrawable))
+        if (iconStrokeWidth != 0f) {
+            iconDrawable.strokeWidth = iconStrokeWidth
+            iconDrawable.style = Paint.Style.STROKE
+        }
+        this.background = LayerDrawable(arrayOf(backgroundDrawable, outlineDrawable, iconDrawable))
     }
 }
 

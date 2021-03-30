@@ -10,10 +10,6 @@
     android:id="@+id/inventoryFragmentView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent"
     app:msv_emptyView="@layout/empty_recycler_view"
     app:msv_errorView="@layout/empty_recycler_view"
     app:msv_loadingView="@layout/loading_recycler_view"
@@ -23,10 +19,6 @@
         android:id="@+id/inventoryRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        style="@style/RecyclerViewFragment" />
+        style="@style/RecyclerView" />
 
 </com.kennyc.view.MultiStateView>

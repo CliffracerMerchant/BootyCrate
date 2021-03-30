@@ -11,8 +11,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.HiltAndroidApp
-import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.qualifiers.ActivityContext
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import javax.inject.Qualifier
 
 @HiltAndroidApp
@@ -26,15 +26,15 @@ class BootyCrateApplication : Application() {
 @Qualifier @Retention annotation class ViewTranslationAnimatorConfig
 @Qualifier @Retention annotation class TransitionAnimatorConfig
 
-@Module @InstallIn(ActivityComponent::class)
+@Module @InstallIn(SingletonComponent::class)
 object AnimatorConfigProvider {
     @Provides @ViewTranslationAnimatorConfig
-    fun provideViewTranslationAnimatorConfig(@ActivityContext context: Context) = AnimatorConfig(
+    fun provideViewTranslationAnimatorConfig(@ApplicationContext context: Context) = AnimatorConfig(
         context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
         AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
 
     @Provides @TransitionAnimatorConfig
-    fun provideTransitionAnimatorConfig(@ActivityContext  context: Context) = AnimatorConfig(
+    fun provideTransitionAnimatorConfig(@ApplicationContext context: Context) = AnimatorConfig(
         context.resources.getInteger(R.integer.fragmentTransitionLongDuration).toLong(),
         AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
 }

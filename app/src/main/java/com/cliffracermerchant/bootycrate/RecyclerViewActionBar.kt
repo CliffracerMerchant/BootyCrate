@@ -5,7 +5,8 @@
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.Paint
+import android.graphics.Shader
 import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.os.Parcelable
@@ -53,6 +54,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     ConstraintLayout(context, attrs)
 {
     val ui = RecyclerViewActionBarBinding.inflate(LayoutInflater.from(context), this)
+    var animatorConfig: AnimatorConfig? = null
 
     var onDeleteButtonClickedListener: (() -> Unit)? = null
     fun setOnSortOptionClickedListener(listener: (MenuItem) -> Boolean) =
@@ -90,11 +92,11 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         ui.menuButton.setOnClickListener{ optionsPopupMenu.show() }
 
         ui.searchView.setOnSearchClickListener {
-            ui.backButton.isVisible = true
+            setBackButtonVisible(true, animate = true)
             ui.customTitle.isVisible = false
         }
         ui.searchView.setOnCloseListener {
-            ui.backButton.isVisible = false
+            setBackButtonVisible(false, animate = true)
             ui.customTitle.isVisible = true
             false
         }
@@ -110,7 +112,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         super.onRestoreInstanceState(bundle.getParcelable("superState"))
         val searchWasActive = bundle.getBoolean("searchWasActive", false)
         if (!ui.backButton.isVisible && searchWasActive)
-            ui.backButton.isVisible = true
+            setBackButtonVisible(true, animate = false)
         ui.customTitle.isVisible = !searchWasActive
     }
 
@@ -119,6 +121,17 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         ui.searchView.maxWidth = ui.searchView.right - ui.backButton.drawable.intrinsicWidth
     }
 
+    fun setBackButtonVisible(visible: Boolean, animate: Boolean = true) {
+        if (ui.backButtonSpacer.isVisible == visible) return
+        if (!animate) ui.backButton.isVisible = visible
+        else {
+            ui.backButton.isVisible = true
+            ui.backButton.animate().withLayer()
+                .alpha(if (visible) 1f else 0f)
+                .applyConfig(animatorConfig).start()
+        }
+        ui.backButtonSpacer.isVisible = visible
+    }
     /**
      * An reimplementation of ActionMode that uses an instance of RecyclerViewActionBar.
      *
@@ -127,8 +140,8 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
      * laying the support action bar. It requires an instance of RecyclerView-
      * ActionBar, which can be passed in during the constructor, or set through
      * the property actionBar. The property is nullable and public so that frag-
-     * ments that use a RecyclerViewActionMode can null the property during
-     * their onDestroyView.
+     * ments that use a RecyclerViewActionBar.ActionMode can null the property
+     * during their onDestroyView.
      *
      * Once the property actionBar is set, calling start will start the action
      * mode, display the back button on the action bar, switch the action bar's
@@ -169,21 +182,24 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
 
         fun finish() = startOrFinish(starting = false)
 
+        private var backButtonWasVisible = false
         private fun startOrFinish(starting: Boolean) {
             if (_isStarted == starting) return
             val actionBar = actionBar ?: return
             _isStarted = starting
-            actionBar.ui.backButton.isVisible = starting
             if (starting) {
                 titleBackup = actionBar.ui.customTitle.text
                 actionBar.ui.customTitle.setText(title)
-                actionBar.ui.backButton.alpha = 0f
-                actionBar.ui.backButton.isVisible = true
+                actionBar.ui.customTitle.isVisible = true
+                backButtonWasVisible = actionBar.ui.backButtonSpacer.isVisible
+                if (!backButtonWasVisible)
+                    actionBar.setBackButtonVisible(true)
                 onStart(actionBar)
             } else {
                 actionBar.ui.customTitle.setText(titleBackup)
                 titleBackup = null
-                actionBar.ui.backButton.isVisible = false
+                if (!backButtonWasVisible)
+                    actionBar.setBackButtonVisible(false)
                 onFinish(actionBar)
             }
         }
@@ -238,7 +254,8 @@ class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewAct
 }
 
 /**
- * A preconfigured TextSwitcher that comes with two text views and a property that allows setting a paint shader for both TextViews at once.
+ * A preconfigured TextSwitcher that comes with two text views and a property
+ * that allows setting a paint shader for both TextViews at once.
  *
  * ShaderTextSwitcher is a TextSwitcher that adds two TextViews, passes xml
  * attributes on to these text views, preconfigures short fade in and out anim-
@@ -271,12 +288,13 @@ class ShaderTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitcher(c
         val font = ResourcesCompat.getFont(context, fontId)
         (currentView as TextView).typeface = font
         (nextView as TextView).typeface = font
+    }
 
-        addOnLayoutChangeListener { _, left, top, _, _, _, _, _, _ ->
-            val textView = currentView as TextView
-            if (textView.paint.shader == null) return@addOnLayoutChangeListener
-            val textTop = top.toFloat() + textView.baseline + textView.paint.fontMetrics.top
-            textView.paint.shader.translateBy(left * -1f, -textTop)
-        }
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        val textView = currentView as TextView
+        if (textView.paint.shader == null) return
+        val textTop = top.toFloat() + textView.baseline + textView.paint.fontMetrics.top
+        textView.paint.shader.translateBy(left * -1f, -textTop)
     }
 }

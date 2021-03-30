@@ -7,7 +7,6 @@ package com.cliffracermerchant.bootycrate
 import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.res.Configuration
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -17,7 +16,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.preference.PreferenceManager.getDefaultSharedPreferences
+import androidx.preference.PreferenceManager
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -38,20 +37,11 @@ import javax.inject.Inject
 @AndroidEntryPoint
 open class MainActivity : MultiFragmentActivity() {
     lateinit var ui: MainActivityBinding
-    @Inject @TransitionAnimatorConfig lateinit var transitionAnimConfig: AnimatorConfig
+    @Inject @TransitionAnimatorConfig
+    lateinit var transitionAnimConfig: AnimatorConfig
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val prefs = getDefaultSharedPreferences(this)
-        val prefKey = getString(R.string.pref_light_dark_mode)
-        val themeDefault = getString(R.string.sys_default_theme_description)
-        val sysDarkThemeIsActive = UI_MODE_NIGHT_YES == (resources.configuration.uiMode and
-                                                         Configuration.UI_MODE_NIGHT_MASK)
-        setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
-            getString(R.string.light_theme_description) -> R.style.LightTheme
-            getString(R.string.dark_theme_description) ->  R.style.DarkTheme
-            else -> if (sysDarkThemeIsActive) R.style.DarkTheme
-                    else                      R.style.LightTheme
-        })
+        setThemeFromPreferences()
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
         fragmentContainerId = ui.fragmentContainer.id
@@ -61,7 +51,7 @@ open class MainActivity : MultiFragmentActivity() {
         initAnimatorConfigs()
     }
 
-    override fun onBackPressed() { ui.topActionBar.ui.backButton.performClick() }
+    override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
 
     override fun onOptionsItemSelected(item: MenuItem) =
         if (item.itemId == R.id.settings_menu_item) {
@@ -73,16 +63,16 @@ open class MainActivity : MultiFragmentActivity() {
     private var currentFragment: Fragment? = null
     override fun onNewFragmentSelected(newFragment: Fragment) {
         currentFragment?.let {
-            if (it is FragmentInterface)
+            if (it is MainActivityFragment)
                 it.onActiveStateChanged(isActive = false, ui)
         }
-        ui.topActionBar.ui.backButton.isVisible = !showingPrimaryFragment
+        ui.actionBar.setBackButtonVisible(!showingPrimaryFragment)
         val needToAnimate = currentFragment != null
         currentFragment = newFragment
 
-        if (newFragment !is FragmentInterface) return
-        newFragment.onActiveStateChanged(isActive = true, ui = ui)
-        ui.topActionBar.optionsMenuVisible = newFragment.showsOptionsMenu()
+        if (newFragment !is MainActivityFragment) return
+        newFragment.onActiveStateChanged(isActive = true, activityUi = ui)
+        ui.actionBar.optionsMenuVisible = newFragment.showsOptionsMenu()
         showBottomAppBar(show = newFragment.showsBottomAppBar(), animate = needToAnimate)
         if (newFragment.showsBottomAppBar())
             showCheckoutButton(showing = newFragment.showsCheckoutButton(), animate = needToAnimate)
@@ -152,17 +142,31 @@ open class MainActivity : MultiFragmentActivity() {
         }
     }
 
+    private fun setThemeFromPreferences() {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        val prefKey = getString(R.string.pref_light_dark_mode)
+        val themeDefault = getString(R.string.sys_default_theme_description)
+        val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
+            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
+        setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
+            getString(R.string.light_theme_description) -> R.style.LightTheme
+            getString(R.string.dark_theme_description) ->  R.style.DarkTheme
+            else -> if (sysDarkThemeIsActive) R.style.DarkTheme
+                    else                      R.style.LightTheme
+        })
+    }
+
     private fun setupOnClickListeners() {
-        ui.topActionBar.ui.backButton.setOnClickListener {
-            val fragment = visibleFragment as? FragmentInterface
+        ui.actionBar.ui.backButton.setOnClickListener {
+            val fragment = visibleFragment as? MainActivityFragment
             if (fragment?.onBackPressed() == false)
                 supportFragmentManager.popBackStack()
         }
-        ui.topActionBar.onDeleteButtonClickedListener = {
-            onOptionsItemSelected(ui.topActionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
+        ui.actionBar.onDeleteButtonClickedListener = {
+            onOptionsItemSelected(ui.actionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
         }
-        ui.topActionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
-        ui.topActionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
+        ui.actionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
+        ui.actionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
     }
 
     private fun initAnimatorConfigs() {
@@ -179,12 +183,12 @@ open class MainActivity : MultiFragmentActivity() {
     /**
      * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
      *
-     * Fragment interface can be implemented by a Fragment subclass to inform the
-     * MainActivity as to how to alter its ui to suit the fragment, and to provide
-     * callbacks for certain user actions that might be forwarded to the fragment
-     * (e.g. a back button or options menu item press).
-     * */
-    interface FragmentInterface {
+     * MainActivityFragment can be implemented by a Fragment subclass to inform
+     * the MainActivity as to how to alter its ui to suit the fragment, and to
+     * provide callbacks for certain user actions that might be forwarded to the
+     * fragment (e.g. a back button or options menu item press).
+     */
+    interface MainActivityFragment {
         /** Return whether the top action bar's options menu (including its search view and change
          * sort button) should be visible when the implementing fragment is. */
         fun showsOptionsMenu(): Boolean
@@ -192,10 +196,9 @@ open class MainActivity : MultiFragmentActivity() {
         fun showsBottomAppBar(): Boolean
         /** Return whether the checkout button should be visible when the implementing fragment is.*/
         fun showsCheckoutButton(): Boolean
-        /** Return whether the implementing fragment consumed the back button press. Note that
-         * this function is also called when the top action bar's back button is pressed. */
+        /** Return whether the implementing fragment consumed the back button press. */
         fun onBackPressed(): Boolean
         /** Perform any additional actions on @param ui that the fragment desires, given its @param isActive state. */
-        fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) { }
+        fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) { }
     }
 }

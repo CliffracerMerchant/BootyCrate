@@ -5,10 +5,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
@@ -37,32 +34,33 @@ import com.cliffracermerchant.bootycrate.databinding.ShoppingListFragmentBinding
 class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override val viewModel: ShoppingListViewModel by activityViewModels()
     private val inventoryViewModel: InventoryViewModel by activityViewModels()
-    override var recyclerView: ExpandableSelectableRecyclerView<ShoppingListItem>? = null
+    override var recyclerView: ShoppingListRecyclerView? = null
     override val actionMode = ShoppingListActionMode()
-    lateinit var ui: ShoppingListFragmentBinding
     private var checkoutButton: CheckoutButton? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ) = ShoppingListFragmentBinding.inflate(inflater, container, false)
-        .apply { ui = this }.root
+    ) = ShoppingListFragmentBinding.inflate(inflater, container, false).apply {
+        recyclerView = shoppingListRecyclerView
+    }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val recyclerView = ui.shoppingListRecyclerView
-        this.recyclerView = recyclerView
-
-        recyclerView.checkedItems.sizeLiveData.observe(viewLifecycleOwner)
-            { newSize -> checkoutButton?.isEnabled = newSize != 0 }
-
-        val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked)
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        val sortByChecked = prefs.getBoolean(sortByCheckedPrefKey, false)
-        recyclerView.sortByChecked = sortByChecked
-
         super.onViewCreated(view, savedInstanceState)
+        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+        val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked)
+        val sortByCheckedPrefValue = prefs.getBoolean(sortByCheckedPrefKey, false)
+        recyclerView?.sortByChecked = sortByCheckedPrefValue
+        recyclerView?.checkedItems?.sizeLiveData?.observe(viewLifecycleOwner) { newSize ->
+            checkoutButton?.isEnabled = newSize != 0
+        }
         viewModel.items.observe(viewLifecycleOwner) { newList -> updateBadge(newList) }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        recyclerView = null
     }
 
     override fun onDetach() {
@@ -82,17 +80,17 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     }
 
     override fun showsCheckoutButton() = true
-    override fun onActiveStateChanged(isActive: Boolean, ui: MainActivityBinding) {
-        super.onActiveStateChanged(isActive, ui)
-        checkoutButton = ui.checkoutButton
-        newItemsBadge = ui.shoppingListBadge
-        ui.topActionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_menu_group, isActive)
+    override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
+        super.onActiveStateChanged(isActive, activityUi)
+        checkoutButton = activityUi.checkoutButton
+        newItemsBadge = activityUi.shoppingListBadge
+        activityUi.actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_menu_group, isActive)
         if (!isActive) return
-        ui.addButton.setOnClickListener {
+        activityUi.addButton.setOnClickListener {
             val activity = this.activity ?: return@setOnClickListener
             NewShoppingListItemDialog(activity).show(activity.supportFragmentManager, null)
         }
-        ui.checkoutButton.checkoutCallback = { viewModel.checkout() }
+        activityUi.checkoutButton.checkoutCallback = { viewModel.checkout() }
     }
 
     private var shoppingListSize = -1

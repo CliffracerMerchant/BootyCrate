@@ -9,6 +9,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -133,9 +134,13 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         gradientOutline.setTintList(null)
         gradientOutline.orientation = GradientDrawable.Orientation.LEFT_RIGHT
         val colors = IntArray(5)
-        colors[0] = ContextCompat.getColor(context, R.color.colorInBetweenPrimaryAccent2)
-        colors[1] = ContextCompat.getColor(context, R.color.colorInBetweenPrimaryAccent1)
-        colors[2] = ContextCompat.getColor(context, R.color.colorPrimary)
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
+        colors[0] = typedValue.data
+        context.theme.resolveAttribute(R.attr.colorInBetweenPrimaryAccent, typedValue, true)
+        colors[1] = typedValue.data
+        context.theme.resolveAttribute(android.R.attr.colorAccent, typedValue, true)
+        colors[2] = typedValue.data
         colors[3] = colors[1]
         colors[4] = colors[0]
         gradientOutline.colors = colors

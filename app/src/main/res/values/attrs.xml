@@ -5,20 +5,27 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <!-- Used to indicate that a theme is a dark theme. -->
-    <attr name="isDarkTheme"   format="boolean" />
     <!-- Used as the background color for recycler view items. -->
-    <attr name="recyclerViewItemColor"  format="color" />
-    <!-- Used as the background color of an item selected in a RecyclerView. -->
-    <attr name="colorSelected" format="color" />
-    <!-- A text color. Used in some places instead of @android.attr.textColor
-         due to dev.sasikanth.colorsheet.ColorSheet picking its background
-         color based on the android attribute. -->
-    <attr name="textColor"     format="color" />
-    <!-- The width of the canvas a path is drawn on. -->
-    <attr name="pathWidth"     format="float" />
-    <!-- The height of the canvas a path is drawn  on. -->
-    <attr name="pathHeight"    format="float" />
+    <attr name="recyclerViewItemColor" format="color" />
+    <!-- The width of the canvas a path is drawn o. -->
+    <attr name="pathWidth" format="float" />
+    <!-- The height of the canvas a path is drawn on. -->
+    <attr name="pathHeight" format="float" />
+    <!-- A color in between the theme's colorPrimary and colorAccent on the color wheel.
+         Used in the creation of the top and bottom bar gradients. -->
+    <attr name="colorInBetweenPrimaryAccent" format="color" />
+    <!-- The color that is blended with the theme's colorAccent, colorInBetweenPrimaryAccent,
+         and colorPrimary to create the background gradient. -->
+    <attr name="backgroundGradientBlendColor" format="color" />
+    <!-- The color that is blended with the theme's colorAccent, colorInBetweenPrimaryAccent,
+         and colorPrimary to create the foreground gradient. -->
+    <attr name="foregroundGradientBlendColor" format="color" />
+    <!-- The alpha value used for the colorAccent, colorInBetweenPrimaryAccent,
+         and colorPrimary gradient when it is overlaid on backgroundGradientBlendColor. -->
+    <attr name="backgroundGradientBlendAlpha" format="integer" />
+    <!-- The alpha value used for the colorAccent, colorInBetweenPrimaryAccent,
+         and colorPrimary gradient when it is overlaid on foregroundGradientBlendColor. -->
+    <attr name="foregroundGradientBlendAlpha" format="integer" />
 
     <declare-styleable name="BottomAppBar">
         <!-- Where the cradle is drawn on the BottomAppBar. -->
@@ -44,7 +51,9 @@
     </declare-styleable>
 
     <declare-styleable name="BottomAppBarWithIndicator">
-        <!-- The initial width of the indicator. -->
+        <!-- The thickness of the indicator. -->
+        <attr name="indicatorThickness"  format="dimension" />
+        <!-- The width of the indicator. -->
         <attr name="indicatorWidth"     format="dimension" />
         <!-- The initial color of the indicator. -->
         <attr name="indicatorColor"     format="color" />
@@ -97,8 +106,12 @@
         <attr name="backgroundPathData" format="string" />
         <!-- The path data to use for the vector outline. -->
         <attr name="outlinePathData"    format="string" />
+        <!-- The path data to use for the icon. -->
+        <attr name="iconPathData" format="string" />
         <!-- The stroke width of the outline. -->
         <attr name="outlineStrokeWidth" format="dimension" />
+        <!-- The stroke width of the icon. A value of 0 will use Paint.FILL instead of Paint.STROKE. -->
+        <attr name="iconStrokeWidth" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="DisableableOutlinedGradientButton">
