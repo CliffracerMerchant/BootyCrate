@@ -116,9 +116,8 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 ) : ViewModel<Entity>(app) {
 
     abstract override val dao : ExpandableSelectableItemDao<Entity>
-    /* Selection size is initialized lazily to prevent getSelectedItems() from
-     * being called on the dao during initialization of ExpandableSelectable-
-     * ItemViewModel, before it is overridden in the descendant class. */
+    // Selection size is initialized lazily to prevent it from being
+    // accessed before dao is overridden in descendant classes.
     val selectedItems: LiveData<List<Entity>> by lazy { dao.getSelectedItems() }
 
     fun resetExpandedItemAndSelection() {
@@ -144,8 +143,8 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 class ShoppingListViewModel @Inject constructor(app: Application) :
     ExpandableSelectableItemViewModel<ShoppingListItem>(app)
 {
-    override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
-    val checkedItemsSize = dao.getCheckedItemsSize()
+    @Inject override lateinit var dao: ShoppingListItemDao
+    val checkedItemsSize: LiveData<Int> by lazy { dao.getCheckedItemsSize() }
 
     var sortByChecked = false
         set(value) { field = value; notifySortOptionsChanged() }
@@ -161,8 +160,6 @@ class ShoppingListViewModel @Inject constructor(app: Application) :
         }
         else super.itemsSwitchMapFunc()
     }
-
-    init { viewModelScope.launch{ dao.emptyTrash() } }
 
     fun addFromSelectedInventoryItems() {
         viewModelScope.launch { dao.addFromSelectedInventoryItems() }
@@ -183,9 +180,7 @@ class ShoppingListViewModel @Inject constructor(app: Application) :
 class InventoryViewModel @Inject constructor(app: Application) :
     ExpandableSelectableItemViewModel<InventoryItem>(app)
 {
-    override val dao = BootyCrateDatabase.get(app).inventoryItemDao()
-
-    init { viewModelScope.launch{ dao.emptyTrash() } }
+    @Inject override lateinit var dao: InventoryItemDao
 
     fun addFromSelectedShoppingListItems() {
         viewModelScope.launch { dao.addFromSelectedShoppingListItems() }
