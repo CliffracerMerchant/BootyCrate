@@ -103,10 +103,11 @@ class AboutAppDialog : DialogFragment() {
         themedAlertDialogBuilder(requireContext()).setView(R.layout.about_app_dialog).create()
 }
 
-fun themedAlertDialogBuilder(context: Context): MaterialAlertDialogBuilder {
-    // AlertDialog seems to ignore the theme's alertDialogTheme value, making it
-    // necessary to pass it's value in manually to the AlertDialog.builder constructor.
+fun dialogThemedContext(context: Context): Int {
     val typedValue = TypedValue()
     context.theme.resolveAttribute(R.attr.materialAlertDialogTheme, typedValue, true)
-    return MaterialAlertDialogBuilder(context, typedValue.data)
+    return typedValue.data
 }
+
+fun themedAlertDialogBuilder(context: Context) =
+    MaterialAlertDialogBuilder(context, dialogThemedContext(context))
