@@ -35,7 +35,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override val viewModel: ShoppingListViewModel by activityViewModels()
     private val inventoryViewModel: InventoryViewModel by activityViewModels()
     override var recyclerView: ShoppingListRecyclerView? = null
-    override val actionMode = ShoppingListActionMode()
+    override val actionModeCallback = ShoppingListActionMode()
     private var checkoutButton: CheckoutButton? = null
 
     override fun onCreateView(
@@ -72,7 +72,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.add_to_inventory_button -> {
             inventoryViewModel.addFromSelectedShoppingListItems()
-            actionMode.finishAndClearSelection()
+            recyclerView?.selection?.clear()
             true
         } R.id.check_all_menu_item -> { viewModel.checkAll(); true }
         R.id.uncheck_all_menu_item -> { viewModel.uncheckAll(); true }
@@ -116,15 +116,13 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */
-    inner class ShoppingListActionMode : RecyclerViewFragment<ShoppingListItem>.ActionMode() {
-        override fun onStart(actionBar: RecyclerViewActionBar) {
-            super.onStart(actionBar)
-            actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, true)
-        }
+    inner class ShoppingListActionMode : ActionModeCallback() {
+        override fun onStart(actionBar: RecyclerViewActionBar) =
+            actionBar.optionsMenu.setGroupVisible(
+                R.id.shopping_list_view_action_mode_menu_group, true)
 
-        override fun onFinish(actionBar: RecyclerViewActionBar) {
-            super.onFinish(actionBar)
-            actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
-        }
+        override fun onFinish(actionBar: RecyclerViewActionBar) =
+            actionBar.optionsMenu.setGroupVisible(
+                R.id.shopping_list_view_action_mode_menu_group, false)
     }
 }

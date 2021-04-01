@@ -125,4 +125,10 @@
         <attr name="state_edit_color" format="boolean" />
     </declare-styleable>
 
+    <declare-styleable name="ShaderActionBarTitle">
+        <attr name="titleFont" format="reference" />
+        <attr name="searchViewFont" format="reference" />
+        <attr name="actionModeTitleFont" format="reference" />
+    </declare-styleable>
+
 </resources>

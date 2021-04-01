@@ -20,7 +20,7 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/aboutAppDialogBody"
         android:layout_marginBottom="6dp"
-        style="@style/CustomTitle"/>
+        style="@style/ActionBarTitle"/>
 
     <TextView
         android:id="@+id/aboutAppDialogBody"

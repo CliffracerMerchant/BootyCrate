@@ -4,7 +4,9 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.animation.LayoutTransition
 import android.content.Context
+import android.content.res.Resources
 import android.graphics.Paint
 import android.graphics.Shader
 import android.graphics.drawable.LayerDrawable
@@ -14,12 +16,16 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.ViewGroup
-import android.widget.TextSwitcher
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.ViewFlipper
+import androidx.appcompat.widget.AppCompatTextView
 import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
+import androidx.core.widget.doAfterTextChanged
 import com.cliffracermerchant.bootycrate.databinding.RecyclerViewActionBarBinding
 
 /**
@@ -55,6 +61,9 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
 {
     val ui = RecyclerViewActionBarBinding.inflate(LayoutInflater.from(context), this)
     var animatorConfig: AnimatorConfig? = null
+        set(value) { field = value
+                     if (value != null)
+                        layoutTransition = layoutTransition(value) }
 
     var onDeleteButtonClickedListener: (() -> Unit)? = null
     fun setOnSortOptionClickedListener(listener: (MenuItem) -> Boolean) =
@@ -68,43 +77,51 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     val optionsMenu get() = optionsPopupMenu.menu
     var optionsMenuVisible: Boolean = true
         set(value) { field = value
-                     ui.searchView.isVisible = value
+                     ui.searchButton.isVisible = value
                      ui.changeSortButton.isVisible = value
                      ui.menuButton.isVisible = value }
 
+    val actionMode get() = _actionMode
+    private var _actionMode: ActionMode? = null
+        set(value) { field?.finish()
+                     field = value }
+    fun startActionMode(callback: ActionModeCallback) { _actionMode = ActionMode(callback)
+                                                        _actionMode?.start() }
+
+    var activeSearchQuery get() = if (!ui.customTitle.showingSearchView) null
+                                  else ui.customTitle.searchQuery
+                          set(value) = _setActiveSearchQuery(value)
+    var onSearchQueryChangedListener get() = ui.customTitle.onSearchQueryChangedListener
+                                     set(value) { ui.customTitle.onSearchQueryChangedListener = value }
+    private val imm = inputMethodManager(context)
 
     init {
-        layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT)
         var a = context.obtainStyledAttributes(attrs, R.styleable.RecyclerViewActionBar)
         val changeSortMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_changeSortMenuResId, 0)
         val optionsMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_optionsMenuResId, 0)
         a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.text))
-        ui.customTitle.setCurrentText(a.getString(0))
+        ui.customTitle.title = a.getString(0)
         a.recycle()
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
         optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
 
-        layoutTransition = layoutTransition(AnimatorConfig.translation(context))
+        layoutTransition = LayoutTransition()
+        ui.searchButton.setOnClickListener {
+            _setActiveSearchQuery(if (activeSearchQuery == null) "" else null)
+        }
         ui.changeSortButton.setOnClickListener {
-            if (!ui.changeSortButton.isActivated) changeSortPopupMenu.show()
+            if (!ui.changeSortButton.isActivated)
+                changeSortPopupMenu.show()
             else onDeleteButtonClickedListener?.invoke()
         }
         ui.menuButton.setOnClickListener{ optionsPopupMenu.show() }
-
-        ui.searchView.setOnSearchClickListener {
-            setBackButtonVisible(true, animate = true)
-            ui.customTitle.isVisible = false
-        }
-        ui.searchView.setOnCloseListener {
-            setBackButtonVisible(false, animate = true)
-            ui.customTitle.isVisible = true
-            false
-        }
     }
 
     override fun onSaveInstanceState() = Bundle().apply {
         putParcelable("superState", super.onSaveInstanceState())
-        putBoolean("searchWasActive", !ui.searchView.isIconified)
+        //putBoolean("searchWasActive", !ui.searchView.isIconified)
     }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
@@ -113,12 +130,6 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         val searchWasActive = bundle.getBoolean("searchWasActive", false)
         if (!ui.backButton.isVisible && searchWasActive)
             setBackButtonVisible(true, animate = false)
-        ui.customTitle.isVisible = !searchWasActive
-    }
-
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
-        ui.searchView.maxWidth = ui.searchView.right - ui.backButton.drawable.intrinsicWidth
     }
 
     fun setBackButtonVisible(visible: Boolean, animate: Boolean = true) {
@@ -132,6 +143,28 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         }
         ui.backButtonSpacer.isVisible = visible
     }
+
+    private var backButtonWasVisible = false
+    private fun _setActiveSearchQuery(query: CharSequence?) {
+        val searchWasActive = activeSearchQuery != null
+        if (query != null) {
+            ui.customTitle.searchQuery = query
+            if (!searchWasActive) {
+                ui.customTitle.showSearchQuery()
+                ui.searchButton.isActivated = true
+                backButtonWasVisible = ui.backButtonSpacer.isVisible
+                if (!backButtonWasVisible)
+                    setBackButtonVisible(true)
+            }
+        } else {
+            ui.customTitle.setSearchQuery("")
+            ui.customTitle.showTitle()
+            ui.searchButton.isActivated = false
+            if (!backButtonWasVisible)
+                setBackButtonVisible(false)
+        }
+    }
+
     /**
      * An reimplementation of ActionMode that uses an instance of RecyclerViewActionBar.
      *
@@ -163,49 +196,42 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
      * up to the implementing activity or fragment to make the backButton finish
      * the action mode.
      */
-    open class ActionMode(actionBar: RecyclerViewActionBar? = null) {
-        var actionBar: RecyclerViewActionBar? = null
-        val isStarted get() = _isStarted
+    inner class ActionMode(private val callback: ActionModeCallback) {
         var title: String? = null
-            set(value) {
-                field = value
-                if (_isStarted)
-                    actionBar?.ui?.customTitle?.setCurrentText(title)
-            }
-
-        private var _isStarted = false
-        private var titleBackup: String? = null
-
-        init { this.actionBar = actionBar }
-
-        fun start() = startOrFinish(starting = true)
-
-        fun finish() = startOrFinish(starting = false)
-
+            set(value) { field = value
+                         ui.customTitle.actionModeTitle = value ?: "" }
         private var backButtonWasVisible = false
-        private fun startOrFinish(starting: Boolean) {
-            if (_isStarted == starting) return
-            val actionBar = actionBar ?: return
-            _isStarted = starting
-            if (starting) {
-                titleBackup = actionBar.ui.customTitle.text
-                actionBar.ui.customTitle.setText(title)
-                actionBar.ui.customTitle.isVisible = true
-                backButtonWasVisible = actionBar.ui.backButtonSpacer.isVisible
-                if (!backButtonWasVisible)
-                    actionBar.setBackButtonVisible(true)
-                onStart(actionBar)
-            } else {
-                actionBar.ui.customTitle.setText(titleBackup)
-                titleBackup = null
-                if (!backButtonWasVisible)
-                    actionBar.setBackButtonVisible(false)
-                onFinish(actionBar)
-            }
+        private var searchWasActive = false
+
+        fun start() {
+            ui.customTitle.setActionModeTitle(title ?: "", switchTo = true)
+            backButtonWasVisible = ui.backButtonSpacer.isVisible
+            if (!backButtonWasVisible) setBackButtonVisible(true)
+            searchWasActive = ui.customTitle.showingSearchView
+            ui.searchButton.isVisible = false
+            ui.changeSortButton.isActivated = true
+            callback.onStart(this@RecyclerViewActionBar)
         }
 
-        open fun onStart(actionBar: RecyclerViewActionBar) { }
-        open fun onFinish(actionBar: RecyclerViewActionBar) { }
+        fun finish() {
+            // The layout transition should take care of the search button fade in animation but doesn't for some reason.
+            ui.searchButton.alpha = 0f
+            ui.searchButton.isVisible = true
+            ui.searchButton.animate().alpha(1f).withLayer().applyConfig(animatorConfig).start()
+            ui.changeSortButton.isActivated = false
+            if (searchWasActive)
+                ui.customTitle.showSearchQuery()
+            else {
+                ui.customTitle.showTitle()
+                if (!backButtonWasVisible) setBackButtonVisible(false)
+            }
+            callback.onFinish(this@RecyclerViewActionBar)
+        }
+    }
+
+    interface ActionModeCallback {
+        fun onStart(actionBar: RecyclerViewActionBar)
+        fun onFinish(actionBar: RecyclerViewActionBar)
     }
 }
 
@@ -266,35 +292,79 @@ class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewAct
  * Views are moving relative to it, instead of the shader moving with the Text-
  * Views.
  */
-class ShaderTextSwitcher(context: Context, attrs: AttributeSet) : TextSwitcher(context, attrs) {
-    val text get() = (currentView as TextView).text.toString()
+class ShaderActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(context, attrs) {
     var shader: Shader? get() = (currentView as TextView).paint.shader
-        set(value) { val textView = currentView as TextView
-                     val textTop = top.toFloat() + textView.baseline +
-                                   textView.paint.fontMetrics.top
-                     value?.translateBy(left * -1f, -textTop)
-                     (currentView as TextView).paint.shader = value
-                     (nextView as TextView).paint.shader = value }
+        set(value) { _title.paint.shader = value
+                     _searchView.paint.shader = value
+                     _actionModeTitle.paint.shader = value }
+
+    private val imm = inputMethodManager(context)
+    private val titlePos = 0
+    private val searchViewPos = 1
+    private val actionModeTitlePos = 2
+    private val _title = AppCompatTextView(context, attrs)
+    val _searchView = EditText(context, attrs)
+    private val _actionModeTitle = AppCompatTextView (context, attrs)
+
+    var title get() = _title.text
+              set(value) = setTitle(value)
+    var searchQuery: CharSequence get() = _searchView.text.toString()
+                                  set(value) = setSearchQuery(value)
+    var actionModeTitle: CharSequence get() = _actionModeTitle.text
+                                      set(value) = setActionModeTitle(value)
+    var onSearchQueryChangedListener: ((CharSequence?) -> Unit)? = null
+
+    val showingTitle get() = displayedChild == titlePos
+    val showingSearchView get() = displayedChild == searchViewPos
+    val showingActionModeTitle get() = displayedChild == actionModeTitlePos
 
     init {
-        addView(TextView(context, attrs))
-        addView(TextView(context, attrs))
+        addView(_title, titlePos)
+        addView(_searchView, searchViewPos)
+        addView(_actionModeTitle, actionModeTitlePos)
         setInAnimation(context, R.anim.fade_in)
         setOutAnimation(context, R.anim.fade_out)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.ShaderActionBarTitle)
+        var fontId = a.getResourceId(R.styleable.ShaderActionBarTitle_titleFont, 0)
+        _title.typeface = try { ResourcesCompat.getFont(context, fontId) }
+                          catch(e: Resources.NotFoundException) { null }
 
-        val a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.fontFamily))
-        val fontId = a.getResourceId(0, 0)
+        fontId = a.getResourceId(R.styleable.ShaderActionBarTitle_searchViewFont, 0)
+        _searchView.typeface = try { ResourcesCompat.getFont(context, fontId) }
+                               catch(e: Resources.NotFoundException) { null }
+
+        fontId = a.getResourceId(R.styleable.ShaderActionBarTitle_actionModeTitleFont, 0)
+        _actionModeTitle.typeface = try { ResourcesCompat.getFont(context, fontId) }
+                                    catch(e: Resources.NotFoundException) { null }
+
         a.recycle()
-        val font = ResourcesCompat.getFont(context, fontId)
-        (currentView as TextView).typeface = font
-        (nextView as TextView).typeface = font
+
+        _searchView.doAfterTextChanged { text -> onSearchQueryChangedListener?.invoke(text) }
     }
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
-        val textView = currentView as TextView
-        if (textView.paint.shader == null) return
-        val textTop = top.toFloat() + textView.baseline + textView.paint.fontMetrics.top
-        textView.paint.shader.translateBy(left * -1f, -textTop)
+    fun showTitle() { displayedChild = titlePos
+                      hideSearchViewKeyboard() }
+    fun showSearchQuery() { displayedChild = searchViewPos
+                            imm?.showSoftInput(_searchView, InputMethodManager.SHOW_IMPLICIT) }
+    fun showActionModeTitle() { displayedChild = actionModeTitlePos
+                                hideSearchViewKeyboard() }
+
+    private fun hideSearchViewKeyboard() {
+        if (_searchView.isFocused) imm?.hideSoftInputFromWindow(windowToken, 0)
+    }
+
+    fun setTitle(title: CharSequence, switchTo: Boolean = false) {
+        _title.text = title
+        if (switchTo) showTitle()
+    }
+
+    fun setSearchQuery(query: CharSequence, switchTo: Boolean = false) {
+        _searchView.setText(query)
+        if (switchTo) showSearchQuery()
+    }
+
+    fun setActionModeTitle(title: CharSequence, switchTo: Boolean = false) {
+        _actionModeTitle.text = title
+        if (switchTo) showActionModeTitle()
     }
 }

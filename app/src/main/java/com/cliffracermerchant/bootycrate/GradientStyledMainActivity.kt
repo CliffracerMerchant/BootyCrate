@@ -9,8 +9,6 @@ import android.graphics.*
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
-import android.widget.EditText
-import android.widget.ImageView
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnNextLayout
 
@@ -130,15 +128,8 @@ class GradientStyledMainActivity : MainActivity() {
         ui.actionBar.ui.customTitle.shader = topFgGradient//topFgGradientBuilder.buildRadialGradient()
 
         // Search view
-        ui.actionBar.ui.searchView.apply {
-            val color = topFgGradientBitmap.getPixelAtCenter(this)
-            var view = findViewById<ImageView>(androidx.appcompat.R.id.search_button)
-            view?.drawable?.setTint(color)
-            view = findViewById(androidx.appcompat.R.id.search_close_btn)
-            view?.drawable?.setTint(color)
-            val searchEditText = findViewById<EditText>(androidx.appcompat.R.id.search_src_text)
-            searchEditText.paint.shader = ui.actionBar.ui.customTitle.shader
-        }
+        ui.actionBar.ui.searchButton.drawable?.setTint(
+            topFgGradientBitmap.getPixelAtCenter(ui.actionBar.ui.searchButton))
 
         // Change sort icon
         ui.actionBar.ui.changeSortButton.drawable.setTint(

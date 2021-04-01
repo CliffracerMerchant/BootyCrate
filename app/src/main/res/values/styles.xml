@@ -32,7 +32,7 @@
         <item name="backgroundGradientBlendAlpha">165</item>
         <item name="foregroundGradientBlendColor">#000000</item>
         <item name="foregroundGradientBlendAlpha">240</item>
-        <item name="borderWidth">3dp</item>
+        <item name="borderWidth">0dp</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">

@@ -12,12 +12,11 @@
         <item name="bottomBorderWidth">?attr/borderWidth</item>
     </style>
 
-    <style name="CustomTitle">
-        <item name="android:text">@string/app_name</item>
+    <style name="ActionBarTitle">
         <item name="android:gravity">center_vertical</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
         <item name="android:textSize">19sp</item>
-        <item name="fontFamily">@font/comfortaa</item>
+        <item name="titleFont">@font/comfortaa</item>
     </style>
 
     <style name="BottomAppBar">
@@ -27,7 +26,7 @@
         <item name="cradleBottomCornerRadius">34dp</item>
         <item name="cradleDepth">52dp</item>
         <item name="cradleContentsMargin">4dp</item>
-        <item name="indicatorThickness">8dp</item>
+        <item name="indicatorThickness">10dp</item>
         <item name="indicatorColor">@color/colorInBetweenPrimaryAccent1</item>
         <item name="topBorderWidth">?attr/borderWidth</item>
         <item name="cradleLayoutResId">@id/cradleLayout</item>

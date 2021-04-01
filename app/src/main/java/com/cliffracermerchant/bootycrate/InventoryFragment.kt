@@ -25,7 +25,7 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
     override val viewModel: InventoryViewModel by activityViewModels()
     private val shoppingListViewModel: ShoppingListViewModel by activityViewModels()
     override var recyclerView: InventoryRecyclerView? = null
-    override val actionMode = InventoryActionMode()
+    override val actionModeCallback = InventoryActionMode()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,7 +43,7 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
     override fun onOptionsItemSelected(item: MenuItem) =
         if (item.itemId == R.id.add_to_shopping_list_button) {
             shoppingListViewModel.addFromSelectedInventoryItems()
-            actionMode.finishAndClearSelection()
+            recyclerView?.selection?.clear()
             true
         } else super.onOptionsItemSelected(item)
 
@@ -59,15 +59,11 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */
-    inner class InventoryActionMode : RecyclerViewFragment<InventoryItem>.ActionMode() {
-        override fun onStart(actionBar: RecyclerViewActionBar) {
-            super.onStart(actionBar)
+    inner class InventoryActionMode : ActionModeCallback() {
+        override fun onStart(actionBar: RecyclerViewActionBar) =
             actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
-        }
 
-        override fun onFinish(actionBar: RecyclerViewActionBar) {
-            super.onFinish(actionBar)
+        override fun onFinish(actionBar: RecyclerViewActionBar) =
             actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, false)
-        }
     }
 }
