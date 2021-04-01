@@ -116,7 +116,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to shopping list items. */
-    inner class ShoppingListActionMode : ActionModeCallback() {
+    inner class ShoppingListActionMode : RecyclerViewActionBar.ActionModeCallback {
         override fun onStart(actionBar: RecyclerViewActionBar) =
             actionBar.optionsMenu.setGroupVisible(
                 R.id.shopping_list_view_action_mode_menu_group, true)

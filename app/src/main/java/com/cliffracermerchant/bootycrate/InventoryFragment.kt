@@ -59,7 +59,7 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
     }
 
     /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */
-    inner class InventoryActionMode : ActionModeCallback() {
+    inner class InventoryActionMode : RecyclerViewActionBar.ActionModeCallback {
         override fun onStart(actionBar: RecyclerViewActionBar) =
             actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
 

@@ -10,7 +10,6 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.preference.PreferenceManager
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import com.google.android.material.snackbar.BaseTransientBottomBar
@@ -18,21 +17,18 @@ import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 
 /**
- * An fragment to display a SelectableExpandableRecyclerView to the user.
+ * An fragment to display a ExpandableSelectableRecyclerView to the user.
  *
- * RecyclerViewFragment is an abstract fragment whose main purpose is to dis-
- * play an instance of a ExpandableSelectableRecyclerView to the user. It has
- * two abstract properties, viewModel and recyclerView, that must be overrid-
- * den in subclasses with concrete implementations of ExpandableSelectableView-
- * Model and ExpandableSelectableRecyclerView respectively. Because Recycler-
- * ViewFragment's implementation of onViewCreated references its abstract
- * recyclerView property, it is important that subclasses override the recy-
- * clerView property and initialize it before calling super.onViewCreated,
- * or an exception will occur.
- *
- * The open property actionMode is the ActionMode instance used when the recy-
- * clerView has a selection. Subclasses can override this property with their
- * own instance of ActionMode if they wish to specialize this behavior.
+ * RecyclerViewFragment is an abstract fragment whose main purpose is to
+ * display an instance of a ExpandableSelectableRecyclerView to the user.
+ * It has three abstract properties, viewModel, recyclerView, and action-
+ * ModeCallback, that must be overridden in subclasses with concrete
+ * implementations of ExpandableSelectableViewModel, ExpandableSelectable-
+ * RecyclerView, and a RecyclerViewActionBar.ActionModeCallback respecti-
+ * vely. Because RecyclerViewFragment's implementation of onViewCreated
+ * references its abstract recyclerView property, it is important that
+ * subclasses override the recyclerView property and initialize it before
+ * calling super.onViewCreated, or an exception will occur.
  */
 @Suppress("LeakingThis")
 abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
@@ -40,7 +36,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 {
     protected abstract val viewModel: ExpandableSelectableItemViewModel<Entity>
     protected abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>?
-    protected abstract val actionModeCallback: ActionModeCallback
+    protected abstract val actionModeCallback: RecyclerViewActionBar.ActionModeCallback
     private lateinit var sortModePrefKey: String
 
     private var actionBar: RecyclerViewActionBar? = null
@@ -57,7 +53,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         val sortStr = prefs.getString(sortModePrefKey, ViewModelItem.Sort.Color.toString())
         recyclerView?.apply {
             sort = ViewModelItem.Sort.fromString(sortStr)
-            selection.itemsLiveData.observe(viewLifecycleOwner, actionModeCallback)
+            selection.itemsLiveData.observe(viewLifecycleOwner, ::onSelectionChanged)
             observeViewModel(viewLifecycleOwner)
         }
 
@@ -82,6 +78,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 
     override fun onDetach() {
         super.onDetach()
+        actionBar = null
         recyclerView?.snackBarAnchor = null
     }
 
@@ -141,13 +138,22 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         return true
     }
 
+    private fun onSelectionChanged(newList: List<Entity>) {
+        if (newList.isNotEmpty()) {
+            if (!actionModeIsStarted)
+                actionBar?.startActionMode(actionModeCallback)
+            actionBar?.actionMode?.title =
+                activity?.getString(R.string.action_mode_title, newList.size) ?: ""
+        } else actionBar?.actionMode?.finish()
+    }
+
     override fun showsOptionsMenu() = true
     override fun showsBottomAppBar() = true
     override fun showsCheckoutButton() = false
     override fun onBackPressed() = when {
-        actionModeStarted  -> { recyclerView?.selection?.clear(); true }
-        searchIsActive     -> { actionBar?.activeSearchQuery = null; true }
-        else               -> false
+        actionModeIsStarted  -> { recyclerView?.selection?.clear(); true }
+        searchIsActive       -> { actionBar?.activeSearchQuery = null; true }
+        else                 -> false
     }
 
     private var isActiveTemp: Boolean? = null
@@ -162,15 +168,23 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
             activityUiTemp = activityUi
             return
         }
-        if (!isActive) actionBar = null
-        else {
+        if (!isActive) {
+            if (searchIsActive)
+                viewModel.searchFilter = null
+            actionBar?.actionMode?.finish()
+            actionBar = null
+        } else {
             recyclerView.snackBarAnchor = activityUi.bottomAppBar
             actionBar = activityUi.actionBar
             activityUi.actionBar.onSearchQueryChangedListener = { newText ->
                 recyclerView.searchFilter = newText.toString()
             }
-            if (recyclerView.selection.isNotEmpty)
-                actionModeCallback.onChanged(recyclerView.selection.items!!)
+            when { recyclerView.selection.isNotEmpty ->
+                       onSelectionChanged(recyclerView.selection.items!!)
+                   activityUi.actionBar.actionMode != null ->
+                       activityUi.actionBar.actionMode?.finish()
+                   activityUi.actionBar.activeSearchQuery != null ->
+                       activityUi.actionBar.activeSearchQuery = null }
 
             activityUi.actionBar.changeSortMenu.findItem(when (recyclerView.sort) {
                 ViewModelItem.Sort.Color ->      R.id.color_option
@@ -179,34 +193,6 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
                 ViewModelItem.Sort.AmountAsc ->  R.id.amount_ascending_option
                 ViewModelItem.Sort.AmountDesc -> R.id.amount_descending_option
             })?.isChecked = true
-        }
-    }
-
-    private var actionModeStarted = false
-    /**
-     * The default ActionMode used by RecyclerViewFragment.
-     *
-     * RecyclerViewActionMode implements Observer<Int>, and is intended to
-     * be used as an observer of the recyclerView.selection.sizeLiveData.
-     * When the number of selected items increases above zero the action
-     * mode will be started. If the number of selected items ever
-     * decreases to zero, the action mode will be ended.
-     *
-     * Note that finish will not clear the selection in case ending the
-     * action mode but not the selection is desired. To clear the selec-
-     * tion and end the action mode, either clear the selection manually,
-     * which will end the action mode, or call finishAndClearSelection.
-     */
-    abstract inner class ActionModeCallback :
-        RecyclerViewActionBar.ActionModeCallback, Observer<List<Entity>>
-    {
-        override fun onChanged(newList: List<Entity>) {
-            if (newList.isNotEmpty()) {
-                if (!actionModeStarted)
-                    actionBar?.startActionMode(this)
-                actionBar?.actionMode?.title =
-                    activity?.getString(R.string.action_mode_title, newList.size)
-            } else actionBar?.actionMode?.finish()
         }
     }
 }

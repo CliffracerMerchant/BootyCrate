@@ -69,15 +69,17 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     val optionsMenu get() = optionsPopupMenu.menu
     var optionsMenuVisible: Boolean = true
         set(value) { field = value
-                     ui.searchButton.isVisible = value
-                     ui.changeSortButton.isVisible = value
-                     ui.menuButton.isVisible = value }
+                     if (ui.searchButton.isVisible != value)
+                         ui.searchButton.isVisible = value
+                     if (ui.changeSortButton.isVisible != value)
+                         ui.changeSortButton.isVisible = value
+                     if (ui.menuButton.isVisible != value)
+                         ui.menuButton.isVisible = value }
 
     val actionMode get() = _actionMode
     private var _actionMode: ActionMode? = null
-        set(value) { field?.finish()
-                     field = value }
-    fun startActionMode(callback: ActionModeCallback) { _actionMode = ActionMode(callback)
+    fun startActionMode(callback: ActionModeCallback) { _actionMode?.finish()
+                                                        _actionMode = ActionMode(callback)
                                                         _actionMode?.start() }
 
     var activeSearchQuery get() = if (!ui.actionBarTitle.showingSearchView) null
@@ -85,7 +87,6 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                           set(value) = _setActiveSearchQuery(value)
     var onSearchQueryChangedListener get() = ui.actionBarTitle.onSearchQueryChangedListener
                                      set(value) { ui.actionBarTitle.onSearchQueryChangedListener = value }
-    private val imm = inputMethodManager(context)
 
     init {
         layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -111,10 +112,10 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         ui.menuButton.setOnClickListener{ optionsPopupMenu.show() }
     }
 
-    override fun onSaveInstanceState() = Bundle().apply {
-        putParcelable("superState", super.onSaveInstanceState())
-        //putBoolean("searchWasActive", !ui.searchView.isIconified)
-    }
+//    override fun onSaveInstanceState() = Bundle().apply {
+//        putParcelable("superState", super.onSaveInstanceState())
+//        putBoolean("searchWasActive", !ui.searchView.isIconified)
+//    }
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         val bundle = state as Bundle
@@ -160,43 +161,41 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     /**
      * An reimplementation of ActionMode that uses an instance of RecyclerViewActionBar.
      *
-     * RecyclerViewActionBar.ActionMode is intended to be a replacement for an
-     * Android ActionMode that reuses a RecyclerViewActionBar instead of over-
-     * laying the support action bar. It requires an instance of RecyclerView-
-     * ActionBar, which can be passed in during the constructor, or set through
-     * the property actionBar. The property is nullable and public so that frag-
-     * ments that use a RecyclerViewActionBar.ActionMode can null the property
-     * during their onDestroyView.
+     * RecyclerViewActionBar.ActionMode is intended to be a replacement
+     * for an Android ActionMode that reuses a RecyclerViewActionBar
+     * instead of overlaying the support action bar. An implementation of
+     * the ActionModeCallback interface is required to be passed in to the
+     * constructor.
      *
-     * Once the property actionBar is set, calling start will start the action
-     * mode, display the back button on the action bar, switch the action bar's
-     * changeSortButton to a delete icon, and switch the title to the action
-     * mode's title, accessed through the property title. The function finish can
-     * be called when desired to end the ActionMode and switch the custom title
-     * back to its original text.
+     * Once the action mode is created with a callback, calling start will
+     * start the action mode, display the back button on the action bar,
+     * switch the action bar's changeSortButton to a delete icon, and
+     * switch the title to the action mode's title, accessed through the
+     * property title. The function finish can be called when desired to
+     * end the ActionMode and switch the title back to the app/activity/
+     * fragment title.
      *
-     * Sub-classes should override onStart and onFinish to make the desired
-     * changes to the action bar UI while the action mode is started. Because the
-     * action bar's original options menu is used, the implementing activity or
-     * fragment will have to respond to action item clicks in the action bar's
-     * onOptionsItemSelectedListener.
+     * Implementors of ActionModeCallback should make any desired changes
+     * to the action bar menu in their implementation of onStart and onFin-
+     * ish. Because the action bar's original options menu is used, the
+     * implementing activity or fragment will have to respond to action
+     * item clicks in the action bar's onOptionsItemSelectedListener.
      *
-     * Due to the fact that the same action bar can be used for multiple Recycler-
-     * ViewActionModes, and because the actionBar backButton can be used for mul-
-     * tiple purpose, RecyclerViewActionBar.ActionMode does not set the onClick-
-     * Listener of the action bar's backButton despite making it visible. It is
-     * up to the implementing activity or fragment to make the backButton finish
-     * the action mode.
+     * Due to the fact that the same action bar can be used for multiple
+     * ActionMode, and because the actionBar backButton can be used for
+     * multiple purpose, ActionMode does not set the onClickListener of
+     * the action bar's backButton despite making it visible. It is up to
+     * the implementing activity or fragment to make the backButton finish
+     * the action mode if this is desired.
      */
     inner class ActionMode(private val callback: ActionModeCallback) {
-        var title: String? = null
-            set(value) { field = value
-                         ui.actionBarTitle.actionModeTitle = value ?: "" }
+        var title get() = ui.actionBarTitle.actionModeTitle
+                  set(value) { ui.actionBarTitle.actionModeTitle = value }
         private var backButtonWasVisible = false
         private var searchWasActive = false
 
         fun start() {
-            ui.actionBarTitle.setActionModeTitle(title ?: "", switchTo = true)
+            ui.actionBarTitle.setActionModeTitle(title, switchTo = true)
             backButtonWasVisible = ui.backButtonSpacer.isVisible
             if (!backButtonWasVisible) setBackButtonVisible(true)
             searchWasActive = ui.actionBarTitle.showingSearchView
@@ -218,6 +217,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                 if (!backButtonWasVisible) setBackButtonVisible(false)
             }
             callback.onFinish(this@RecyclerViewActionBar)
+            _actionMode = null
         }
     }
 
@@ -236,9 +236,9 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
  * e.g. a ShapeDrawable with a gradient fill) allows for more customization
  * (e.g. a radial gradient with different x and y radii).
  *
- * The border width is derived from the attr borderWidth. The background and
- * border gradients can be set independently of each other through the prop-
- * erties backgroundGradient and borderGradient.
+ * The border width is derived from the XML attribute bottomBorderWidth. The
+ * background and border gradients can be set independently of each other
+ * through the properties backgroundGradient and borderGradient.
  */
 class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewActionBar(context, attrs) {
     private val backgroundDrawable: GradientVectorDrawable

@@ -71,15 +71,13 @@ open class MainActivity : MultiFragmentActivity() {
         currentFragment = newFragment
 
         if (newFragment !is MainActivityFragment) return
-        newFragment.onActiveStateChanged(isActive = true, activityUi = ui)
         ui.actionBar.optionsMenuVisible = newFragment.showsOptionsMenu()
         showBottomAppBar(show = newFragment.showsBottomAppBar(), animate = needToAnimate)
-        if (newFragment.showsBottomAppBar())
+        if (newFragment.showsBottomAppBar()) {
             showCheckoutButton(showing = newFragment.showsCheckoutButton(), animate = needToAnimate)
-        inputMethodManager(this)?.hideSoftInputFromWindow(ui.bottomAppBar.windowToken, 0)
-
-        if (newFragment.showsBottomAppBar())
             ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
+        }
+        newFragment.onActiveStateChanged(isActive = true, activityUi = ui)
     }
 
     private val showingBottomAppBar get() = ui.bottomAppBar.translationY == 0f
