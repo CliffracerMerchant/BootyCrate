@@ -9,8 +9,6 @@ import android.content.Context
 import android.graphics.Paint
 import android.graphics.Shader
 import android.graphics.drawable.LayerDrawable
-import android.os.Bundle
-import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -25,27 +23,46 @@ import com.cliffracermerchant.bootycrate.databinding.RecyclerViewActionBarBindin
  *
  * RecyclerViewActionBar acts as an entirely custom (i.e. it eschews the
  * Android setSupportActionBar API in favor of its own) action bar with an
- * interface tailored towards activities or fragments that primarily show a
- * recycler view. Through its binding property ui, the ui elements available
- * are:
+ * interface tailored towards activities or fragments that primarily show
+ * a recycler view. Through its binding property ui, the ui elements avail-
+ * able are:
  *     - backButton, similar to the home as up indicator, hidden by default
- *     - customTitle, a TextSwitcher that can be used as an activity or frag-
- *       ment title, or an action mode title. The attribute android.R.attr.-
- *       text is used as the default text for the title.
- *     - searchView, a SearchView
- *     - changeSortButton, a button whose default on click action opens the
- *       changeSortMenu, but can also have isActivated set to true to change
- *       to a delete icon and call the property onDeleteButtonClickedListener
- *       instead.
+ *     - actionBarTitle, an ActionBarTitle that is used as an activity or
+ *       fragment title, an action mode title, or a search query entry.
+ *       The attribute android.R.attr.text is used as the default text for
+ *       the title.
+ *     - searchButton, a button that changes the actionBarTitle to its
+ *       search query entry mode.
+ *     - changeSortButton, a button that opens the changeSortMenu, but can
+ *       also have isActivated set to true to change to a delete icon and
+ *       call the property onDeleteButtonClickedListener instead.
  *     - menuButton, which opens the optionsMenu member.
- * The contents of the changeSortMenu and the optionsMenu can be set in XML
- * with the attributes R.attr.changeSortMenuResId and R.attr.optionsMenuResId.
- * The callbacks for the menu items being clicked can be set through the func-
- * tions setOnSortOptionClickedListener and setOnOptionsItemClickedListener.
- * If the default Android action bar menu item callback functionality (every
- * click being routed through onOptionsItemSelected) is desired, the functions
- * can be passed a lambda that manually calls onOptionsItemSelected for the
- * activity or fragment being used.
+ * If the activity or fragment using RecyclerViewActionBar wants to show
+ * only the title, the property optionsMenuVisible can be set to false to
+ * hide the search button, change sort button, and the options menu button
+ * all at once.
+ *
+ * The contents of the changeSortMenu and the optionsMenu can be set in
+ * XML with the attributes R.attr.changeSortMenuResId and R.attr.options-
+ * MenuResId. The callbacks for the menu items being clicked can be set
+ * through the functions setOnSortOptionClickedListener and setOnOptions-
+ * ItemClickedListener. If the default Android action bar menu item call-
+ * back functionality (every click being routed through onOptionsItemSel-
+ * ected) is desired, the functions can be passed a lambda that manually
+ * calls onOptionsItemSelected for the activity or fragment being used.
+ *
+ * RecyclerViewActionBar uses its own implementation of an action mode in
+ * its inner class ActionMode. An action mode can be started by calling
+ * the function startActionMode with an implementation of the ActionMode-
+ * Callback interface. If another action mode was already started when a
+ * new one is started, the old action mode will be finished. The current
+ * action mode, or null if there isn't one, can be queried through the
+ * property actionMode.
+ *
+ * The text entered in the search query view, or null if the search query
+ * view is not shown, can be queried or set through the property active-
+ * SearchQuery. Changes in the search query entry can be listened to
+ * through by setting the property onSearchQueryChangedListener.
  */
 @Suppress("LeakingThis")
 open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
@@ -116,14 +133,14 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
 //        putParcelable("superState", super.onSaveInstanceState())
 //        putBoolean("searchWasActive", !ui.searchView.isIconified)
 //    }
-
-    override fun onRestoreInstanceState(state: Parcelable?) {
-        val bundle = state as Bundle
-        super.onRestoreInstanceState(bundle.getParcelable("superState"))
-        val searchWasActive = bundle.getBoolean("searchWasActive", false)
-        if (!ui.backButton.isVisible && searchWasActive)
-            setBackButtonVisible(true, animate = false)
-    }
+//
+//    override fun onRestoreInstanceState(state: Parcelable?) {
+//        val bundle = state as Bundle
+//        super.onRestoreInstanceState(bundle.getParcelable("superState"))
+//        val searchWasActive = bundle.getBoolean("searchWasActive", false)
+//        if (!ui.backButton.isVisible && searchWasActive)
+//            setBackButtonVisible(true, animate = false)
+//    }
 
     fun setBackButtonVisible(visible: Boolean, animate: Boolean = true) {
         if (ui.backButtonSpacer.isVisible == visible) return
