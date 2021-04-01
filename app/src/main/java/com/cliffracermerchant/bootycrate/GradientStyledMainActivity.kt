@@ -112,7 +112,6 @@ class GradientStyledMainActivity : MainActivity() {
         ui.actionBar.backgroundGradient = topBgGradient
         ui.actionBar.borderGradient = topFgGradient
 
-        // Back icon
         // For some reason, using getPixelAtCenter with the backButton does
         // not work here, even though it should be laid out by this point.
         val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -120,21 +119,13 @@ class GradientStyledMainActivity : MainActivity() {
         ui.actionBar.ui.backButton.drawable.setTint(
             topFgGradientBitmap.getPixel(ui.actionBar.ui.backButton.measuredWidth / 2,
                                          ui.actionBar.height / 2))
-
-        // Custom title
-        // Because the custom title moves its shader around when it is moved,
-        // and we don't want the top action bar's shader to be moved around
-        // with it, the custom title's shader needs to be a separate instance.
-        ui.actionBar.ui.customTitle.shader = topFgGradient//topFgGradientBuilder.buildRadialGradient()
-
-        // Search view
+        ui.actionBar.ui.actionBarTitle.titleView.paint.shader = topFgGradient
+        ui.actionBar.ui.actionBarTitle.searchQueryView.paint.shader = topFgGradient
+        ui.actionBar.ui.actionBarTitle.actionModeTitleView.paint.shader = topFgGradient
         ui.actionBar.ui.searchButton.drawable?.setTint(
             topFgGradientBitmap.getPixelAtCenter(ui.actionBar.ui.searchButton))
-
-        // Change sort icon
         ui.actionBar.ui.changeSortButton.drawable.setTint(
             topFgGradientBitmap.getPixelAtCenter(ui.actionBar.ui.changeSortButton))
-        // Overflow icon
         ui.actionBar.ui.menuButton.drawable.setTint(
             topFgGradientBitmap.getPixelAtCenter(ui.actionBar.ui.menuButton))
     }

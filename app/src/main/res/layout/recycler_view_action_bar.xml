@@ -32,10 +32,10 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/customTitle"/>
+        app:layout_constraintEnd_toStartOf="@id/actionBarTitle"/>
 
-    <com.cliffracermerchant.bootycrate.ShaderActionBarTitle
-        android:id="@+id/customTitle"
+    <com.cliffracermerchant.bootycrate.ActionBarTitle
+        android:id="@+id/actionBarTitle"
         style="@style/ActionBarTitle"
         android:layout_width="0dp"
         android:layout_height="44dp"
