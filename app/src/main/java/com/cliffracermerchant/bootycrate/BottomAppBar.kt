@@ -22,7 +22,6 @@ import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.shape.ShapePath
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 import kotlin.math.atan
 
 /**
@@ -245,8 +244,7 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     private var indicatorXPos = 0
     private lateinit var navBar: BottomNavigationView
 
-    @Inject @TransitionAnimatorConfig
-    lateinit var indicatorAnimatorConfig: AnimatorConfig
+    var indicatorAnimatorConfig: AnimatorConfig? = null
     var indicatorWidth = 0
     var indicatorThickness get() = indicatorPaint.strokeWidth
                            set(value) { indicatorPaint.strokeWidth = value }

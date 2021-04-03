@@ -5,15 +5,7 @@
 package com.cliffracermerchant.bootycrate
 
 import android.app.Application
-import android.content.Context
-import android.view.animation.AnimationUtils
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
 import dagger.hilt.android.HiltAndroidApp
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Qualifier
 
 @HiltAndroidApp
 class BootyCrateApplication : Application() {
@@ -21,20 +13,4 @@ class BootyCrateApplication : Application() {
         super.onCreate()
         ViewModelItem.initColors(this)
     }
-}
-
-@Qualifier @Retention annotation class ViewTranslationAnimatorConfig
-@Qualifier @Retention annotation class TransitionAnimatorConfig
-
-@Module @InstallIn(SingletonComponent::class)
-object AnimatorConfigProvider {
-    @Provides @ViewTranslationAnimatorConfig
-    fun provideViewTranslationAnimatorConfig(@ApplicationContext context: Context) = AnimatorConfig(
-        context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
-        AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
-
-    @Provides @TransitionAnimatorConfig
-    fun provideTransitionAnimatorConfig(@ApplicationContext context: Context) = AnimatorConfig(
-        context.resources.getInteger(R.integer.fragmentTransitionLongDuration).toLong(),
-        AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
 }

@@ -11,6 +11,7 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
+import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
 /** A fragment to display the BootyCrate app settings. */
@@ -45,12 +46,14 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
         return true
     }
 
-    override fun showsOptionsMenu() = false
     override fun showsBottomAppBar() = false
-    // Since the bottom app bar will be hidden we might as well
-    // prevent the checkout button from needing to be animated
-    override fun showsCheckoutButton() = true
-    override fun onBackPressed() = false
+    override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
+        if (isActive) activityUi.actionBar.transition(
+            backButtonVisible = true,
+            searchButtonVisible = false,
+            changeSortButtonVisible = false,
+            menuButtonVisible = false)
+    }
 
 //    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
 //        val context = this.context ?: return@registerForActivityResult

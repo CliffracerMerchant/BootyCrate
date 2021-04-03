@@ -18,7 +18,6 @@ import androidx.annotation.CallSuper
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.doOnNextLayout
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 /**
  * A button with a vector background, outline, and icon that are all tintable with gradients.
@@ -86,9 +85,10 @@ open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
  * The disabled drawable will look like the OutlinedGradientButton back-
  * ground, but with these alternative tint values and no gradient shaders.
  * When the button is enabled or disabled via the View property isEnabled,
- * the button will animate to or from its disabled state. Note that the
- * disabled background will not reflect any changes to the button's text
- * that occur after initialization.
+ * the button will animate to or from its disabled state, using the value
+ * of the property animatorConfig for the animation's duration and inter-
+ * polator. Note that the disabled background will not reflect any changes
+ * to the button's text that occur after initialization.
  *
  * If any additional changes are desired when the isEnabledState is
  * changed, they can be defined in a subclass override of View.setEnabled.
@@ -98,7 +98,7 @@ open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeS
     OutlinedGradientButton(context, attrs)
 {
     private var disabledOverlay: Drawable? = null
-    @Inject @ViewTranslationAnimatorConfig lateinit var animatorConfig: AnimatorConfig
+    var animatorConfig: AnimatorConfig? = null
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.DisableableOutlinedGradientButton)

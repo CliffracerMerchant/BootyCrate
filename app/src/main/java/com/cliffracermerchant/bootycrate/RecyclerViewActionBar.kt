@@ -17,6 +17,7 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import com.cliffracermerchant.bootycrate.databinding.RecyclerViewActionBarBinding
+import java.util.*
 
 /**
  * A toolbar tailored towards interacting with a recycler view.
@@ -63,6 +64,12 @@ import com.cliffracermerchant.bootycrate.databinding.RecyclerViewActionBarBindin
  * view is not shown, can be queried or set through the property active-
  * SearchQuery. Changes in the search query entry can be listened to
  * through by setting the property onSearchQueryChangedListener.
+ *
+ * If multiple changes to the action bar UI are desired at once (e.g. when
+ * transitioning between displayed fragments), the function transition
+ * should be called with parameters that describe the desired state of the
+ * UI. This will ensure that any given combination of UI states is anima-
+ * ted between smoothly.
  */
 @Suppress("LeakingThis")
 open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
@@ -84,20 +91,9 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     private val optionsPopupMenu = PopupMenu(context, ui.menuButton)
     val changeSortMenu get() = changeSortPopupMenu.menu
     val optionsMenu get() = optionsPopupMenu.menu
-    var optionsMenuVisible: Boolean = true
-        set(value) { field = value
-                     if (ui.searchButton.isVisible != value)
-                         ui.searchButton.isVisible = value
-                     if (ui.changeSortButton.isVisible != value)
-                         ui.changeSortButton.isVisible = value
-                     if (ui.menuButton.isVisible != value)
-                         ui.menuButton.isVisible = value }
 
     val actionMode get() = _actionMode
     private var _actionMode: ActionMode? = null
-    fun startActionMode(callback: ActionModeCallback) { _actionMode?.finish()
-                                                        _actionMode = ActionMode(callback)
-                                                        _actionMode?.start() }
 
     var activeSearchQuery get() = if (!ui.actionBarTitle.showingSearchView) null
                                   else ui.actionBarTitle.searchQuery
@@ -129,19 +125,6 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         ui.menuButton.setOnClickListener{ optionsPopupMenu.show() }
     }
 
-//    override fun onSaveInstanceState() = Bundle().apply {
-//        putParcelable("superState", super.onSaveInstanceState())
-//        putBoolean("searchWasActive", !ui.searchView.isIconified)
-//    }
-//
-//    override fun onRestoreInstanceState(state: Parcelable?) {
-//        val bundle = state as Bundle
-//        super.onRestoreInstanceState(bundle.getParcelable("superState"))
-//        val searchWasActive = bundle.getBoolean("searchWasActive", false)
-//        if (!ui.backButton.isVisible && searchWasActive)
-//            setBackButtonVisible(true, animate = false)
-//    }
-
     fun setBackButtonVisible(visible: Boolean, animate: Boolean = true) {
         if (ui.backButtonSpacer.isVisible == visible) return
         if (!animate) ui.backButton.isVisible = visible
@@ -154,7 +137,39 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         ui.backButtonSpacer.isVisible = visible
     }
 
-    private var backButtonWasVisible = false
+    /**
+     * Transition the action bar's visual state to match the one described by the parameters.
+     *
+     * Using transitionTo rather than making UI changes manually is recom-
+     * mended when making multiple changes at once. For example, if a frag-
+     * ment ends it action mode as another fragment begins its own, the title
+     * will be briefly visible in between. Using the transition function will
+     * ensure that any combination of UI states is animated between smoothly.
+     */
+    fun transition(
+        backButtonVisible: Boolean = false,
+        activeActionModeCallback: ActionModeCallback? = null,
+        activeSearchQuery: CharSequence? = null,
+        searchButtonVisible: Boolean = true,
+        changeSortButtonVisible: Boolean = true,
+        menuButtonVisible: Boolean = true
+    ) {
+        setBackButtonVisible(backButtonVisible)
+        if (searchButtonVisible != ui.searchButton.isVisible)
+            ui.searchButton.isVisible = searchButtonVisible
+        if (changeSortButtonVisible != ui.changeSortButton.isVisible)
+            ui.changeSortButton.isVisible = changeSortButtonVisible
+        if (menuButtonVisible != ui.menuButton.isVisible)
+            ui.menuButton.isVisible = menuButtonVisible
+        ui.actionBarTitle.setSearchQuery(activeSearchQuery ?: "", switchTo = false)
+        activeActionModeCallback?.let { startActionMode(it) }
+        if (activeActionModeCallback == null) {
+            actionMode?.finish()
+            if (activeSearchQuery != null)
+                _setActiveSearchQuery(activeSearchQuery)
+        }
+    }
+
     private fun _setActiveSearchQuery(query: CharSequence?) {
         val searchWasActive = activeSearchQuery != null
         if (query != null) {
@@ -162,17 +177,24 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
             if (!searchWasActive) {
                 ui.actionBarTitle.showSearchQuery()
                 ui.searchButton.isActivated = true
-                backButtonWasVisible = ui.backButtonSpacer.isVisible
-                if (!backButtonWasVisible)
+                if (!ui.backButtonSpacer.isVisible)
                     setBackButtonVisible(true)
             }
         } else {
             ui.actionBarTitle.setSearchQuery("")
             ui.actionBarTitle.showTitle()
             ui.searchButton.isActivated = false
-            if (!backButtonWasVisible)
+            if (ui.backButtonSpacer.isVisible)
                 setBackButtonVisible(false)
         }
+    }
+
+    private var transitioningToAnotherActionMode = false
+    fun startActionMode(callback: ActionModeCallback) {
+        transitioningToAnotherActionMode = actionMode != null
+        _actionMode?.finish()
+        _actionMode = ActionMode(callback)
+        _actionMode?.start()
     }
 
     /**
@@ -205,44 +227,49 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
      * the implementing activity or fragment to make the backButton finish
      * the action mode if this is desired.
      */
-    inner class ActionMode(private val callback: ActionModeCallback) {
+    inner class ActionMode(val callback: ActionModeCallback) {
         var title get() = ui.actionBarTitle.actionModeTitle
                   set(value) { ui.actionBarTitle.actionModeTitle = value }
-        private var backButtonWasVisible = false
-        private var searchWasActive = false
 
         fun start() {
             ui.actionBarTitle.setActionModeTitle(title, switchTo = true)
-            backButtonWasVisible = ui.backButtonSpacer.isVisible
-            if (!backButtonWasVisible) setBackButtonVisible(true)
-            searchWasActive = ui.actionBarTitle.showingSearchView
-            ui.searchButton.isVisible = false
-            ui.changeSortButton.isActivated = true
+            if (!ui.backButtonSpacer.isVisible)
+                setBackButtonVisible(true)
+            if (ui.searchButton.isVisible)
+                ui.searchButton.isVisible = false
+            if (!ui.changeSortButton.isActivated)
+                ui.changeSortButton.isActivated = true
             callback.onStart(this@RecyclerViewActionBar)
         }
 
         fun finish() {
-            // The layout transition should take care of the search button fade in animation but doesn't for some reason.
-            ui.searchButton.alpha = 0f
-            ui.searchButton.isVisible = true
-            ui.searchButton.animate().alpha(1f).withLayer().applyConfig(animatorConfig).start()
-            ui.changeSortButton.isActivated = false
-            if (searchWasActive)
-                ui.actionBarTitle.showSearchQuery()
-            else {
+            if (!transitioningToAnotherActionMode) {
+                // The layout transition should take care of the search button fade in animation but doesn't for some reason.
+                if (!ui.searchButton.isVisible) {
+                    ui.searchButton.alpha = 0f
+                    ui.searchButton.isVisible = true
+                    ui.searchButton.animate().alpha(1f).withLayer().applyConfig(animatorConfig).start()
+                }
+                ui.changeSortButton.isActivated = false
+                if (ui.actionBarTitle.searchQuery.isNotEmpty())
+                    ui.actionBarTitle.showSearchQuery()
                 ui.actionBarTitle.showTitle()
-                if (!backButtonWasVisible) setBackButtonVisible(false)
+                setBackButtonVisible(false)
             }
+            else transitioningToAnotherActionMode = false
             callback.onFinish(this@RecyclerViewActionBar)
             _actionMode = null
         }
     }
 
+    /** An interface to describe what happens when a RecyclerViewActionBar.ActionMode starts or finishes. */
     interface ActionModeCallback {
         fun onStart(actionBar: RecyclerViewActionBar)
         fun onFinish(actionBar: RecyclerViewActionBar)
     }
 }
+
+
 
 /**
  * A RecyclerViewActionBar that has a bottom border and allows setting a gradient as a background and / or border.

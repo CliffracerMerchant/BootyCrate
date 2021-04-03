@@ -70,11 +70,14 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         searchQueryView.doAfterTextChanged { text -> onSearchQueryChangedListener?.invoke(text) }
     }
 
-    fun showTitle() { displayedChild = titlePos
+    fun showTitle() { if (showingTitle) return
+                      displayedChild = titlePos
                       imm?.hideSoftInputFromWindow(windowToken, 0) }
-    fun showActionModeTitle() { displayedChild = actionModeTitlePos
+    fun showActionModeTitle() { if (showingActionModeTitle) return
+                                displayedChild = actionModeTitlePos
                                 imm?.hideSoftInputFromWindow(windowToken, 0) }
-    fun showSearchQuery() { displayedChild = searchViewPos
+    fun showSearchQuery() { if (showingSearchView) return
+                            displayedChild = searchViewPos
                             searchQueryView.requestFocus()
                             imm?.showSoftInput(searchQueryView, InputMethodManager.SHOW_IMPLICIT) }
 

@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
+import android.view.animation.AnimationUtils
 import androidx.core.animation.doOnEnd
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
@@ -19,7 +20,6 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 /**
  * A FragmentContainer hosting activity with a custom UI.
@@ -37,8 +37,6 @@ import javax.inject.Inject
 @AndroidEntryPoint
 open class MainActivity : MultiFragmentActivity() {
     lateinit var ui: MainActivityBinding
-    @Inject @TransitionAnimatorConfig
-    lateinit var transitionAnimConfig: AnimatorConfig
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setThemeFromPreferences()
@@ -66,15 +64,13 @@ open class MainActivity : MultiFragmentActivity() {
             if (it is MainActivityFragment)
                 it.onActiveStateChanged(isActive = false, ui)
         }
-        ui.actionBar.setBackButtonVisible(!showingPrimaryFragment)
         val needToAnimate = currentFragment != null
         currentFragment = newFragment
 
         if (newFragment !is MainActivityFragment) return
-        ui.actionBar.optionsMenuVisible = newFragment.showsOptionsMenu()
-        showBottomAppBar(show = newFragment.showsBottomAppBar(), animate = needToAnimate)
+        showBottomAppBar(newFragment.showsBottomAppBar(), animate = needToAnimate)
         if (newFragment.showsBottomAppBar()) {
-            showCheckoutButton(showing = newFragment.showsCheckoutButton(), animate = needToAnimate)
+            showCheckoutButton(show = newFragment.showsCheckoutButton(), animate = needToAnimate)
             ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
         }
         newFragment.onActiveStateChanged(isActive = true, activityUi = ui)
@@ -99,17 +95,17 @@ open class MainActivity : MultiFragmentActivity() {
         val translationEnd = if (show) 0f else translationAmount
         for (view in views) {
             view.translationY = translationStart
-            view.animate().withLayer().applyConfig(transitionAnimConfig)
+            view.animate().withLayer().applyConfig(primaryFragmentTransitionAnimatorConfig)
                 .translationY(translationEnd).start()
         }
     }
 
     private var pendingCradleAnim: Animator? = null
-    private fun showCheckoutButton(showing: Boolean, animate: Boolean = true) {
-        if (ui.checkoutButton.isVisible == showing) return
-        ui.checkoutButton.isVisible = showing
+    private fun showCheckoutButton(show: Boolean, animate: Boolean = true) {
+        if (ui.checkoutButton.isVisible == show) return
+        ui.checkoutButton.isVisible = show
 
-        val cradleEndWidth = if (!showing) ui.addButton.layoutParams.width else {
+        val cradleEndWidth = if (!show) ui.addButton.layoutParams.width else {
             val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
             ui.cradleLayout.measure(wrapContentSpec, wrapContentSpec)
             ui.cradleLayout.measuredWidth
@@ -126,7 +122,7 @@ open class MainActivity : MultiFragmentActivity() {
         // out button from sticking out underneath the FAB during the show / hide animation.
         val clipBounds = Rect(0, 0, 0, ui.checkoutButton.height)
         ValueAnimator.ofInt(ui.bottomAppBar.cradleWidth, cradleEndWidth).apply {
-            applyConfig(transitionAnimConfig)
+            applyConfig(primaryFragmentTransitionAnimatorConfig)
             addUpdateListener {
                 ui.bottomAppBar.cradleWidth = it.animatedValue as Int
                 clipBounds.right = ui.bottomAppBar.cradleWidth - ui.addButton.measuredWidth / 2
@@ -168,10 +164,16 @@ open class MainActivity : MultiFragmentActivity() {
     }
 
     private fun initAnimatorConfigs() {
+        val transitionAnimConfig = AnimatorConfig(
+            resources.getInteger(R.integer.fragmentTransitionLongDuration).toLong(),
+            AnimationUtils.loadInterpolator(this, R.anim.default_interpolator))
+        primaryFragmentTransitionAnimatorConfig = transitionAnimConfig
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
         ui.actionBar.animatorConfig = transitionAnimConfig
         ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
+        ui.bottomAppBar.indicatorAnimatorConfig = transitionAnimConfig
+        ui.checkoutButton.animatorConfig = transitionAnimConfig
         ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig)
         ui.cradleLayout.layoutTransition.doOnStart {
             pendingCradleAnim?.start()
@@ -182,22 +184,24 @@ open class MainActivity : MultiFragmentActivity() {
     /**
      * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
      *
-     * MainActivityFragment can be implemented by a Fragment subclass to inform
-     * the MainActivity as to how to alter its ui to suit the fragment, and to
-     * provide callbacks for certain user actions that might be forwarded to the
-     * fragment (e.g. a back button or options menu item press).
+     * MainActivityFragment can be implemented by a Fragment subclass to
+     * inform the MainActivity how its ui should be displayed when the frag-
+     * ment is in the foreground, and to provide a callback for back button
+     * (either the hardware/software bottom back button or the action bar's
+     * back button) presses. Fragments should always indicate their desired
+     * bottom app bar and checkout button states through an override of the
+     * appropriate function instead of changing their visibility manually to
+     * ensure that the appropriate hide/show animations are played.
      */
     interface MainActivityFragment {
-        /** Return whether the top action bar's options menu (including its search view and change
-         * sort button) should be visible when the implementing fragment is. */
-        fun showsOptionsMenu(): Boolean
         /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
-        fun showsBottomAppBar(): Boolean
+        fun showsBottomAppBar() = true
         /** Return whether the checkout button should be visible when the implementing fragment is.*/
-        fun showsCheckoutButton(): Boolean
+        fun showsCheckoutButton() = true
         /** Return whether the implementing fragment consumed the back button press. */
-        fun onBackPressed(): Boolean
-        /** Perform any additional actions on @param ui that the fragment desires, given its @param isActive state. */
+        fun onBackPressed() = false
+        /** Perform any additional actions on the @param activityUi that the fragment desires,
+         * given its @param isActive state. */
         fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) { }
     }
 }

@@ -41,7 +41,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 
     private var actionBar: RecyclerViewActionBar? = null
     private val searchIsActive get() = actionBar?.activeSearchQuery != null
-    private val actionModeIsStarted get() = actionBar?.actionMode != null
+    private val actionModeIsStarted get() = actionBar?.actionMode?.callback == actionModeCallback
 
     init { setHasOptionsMenu(true) }
 
@@ -147,9 +147,6 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         } else actionBar?.actionMode?.finish()
     }
 
-    override fun showsOptionsMenu() = true
-    override fun showsBottomAppBar() = true
-    override fun showsCheckoutButton() = false
     override fun onBackPressed() = when {
         actionModeIsStarted  -> { recyclerView?.selection?.clear(); true }
         searchIsActive       -> { actionBar?.activeSearchQuery = null; true }
@@ -171,7 +168,6 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         if (!isActive) {
             if (searchIsActive)
                 viewModel.searchFilter = null
-            actionBar?.actionMode?.finish()
             actionBar = null
         } else {
             recyclerView.snackBarAnchor = activityUi.bottomAppBar
@@ -179,12 +175,11 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
             activityUi.actionBar.onSearchQueryChangedListener = { newText ->
                 recyclerView.searchFilter = newText.toString()
             }
-            when { recyclerView.selection.isNotEmpty ->
-                       onSelectionChanged(recyclerView.selection.items!!)
-                   activityUi.actionBar.actionMode != null ->
-                       activityUi.actionBar.actionMode?.finish()
-                   activityUi.actionBar.activeSearchQuery != null ->
-                       activityUi.actionBar.activeSearchQuery = null }
+
+            activityUi.actionBar.transition(
+                activeActionModeCallback = if (recyclerView.selection.isEmpty) null
+                                           else actionModeCallback,
+                searchButtonVisible = recyclerView.selection.isEmpty)
 
             activityUi.actionBar.changeSortMenu.findItem(when (recyclerView.sort) {
                 ViewModelItem.Sort.Color ->      R.id.color_option

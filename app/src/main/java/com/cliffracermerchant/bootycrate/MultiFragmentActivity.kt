@@ -16,7 +16,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 /**
  * An activity that, when linked up with a navigation bar instance, will
@@ -79,8 +78,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     val showingPrimaryFragment get() = supportFragmentManager.backStackEntryCount == 0
     val selectedPrimaryFragment get() = navBarMenuItemFragmentMap.getValue(navigationBar.selectedItemId)
 
-    @Inject @TransitionAnimatorConfig
-    lateinit var primaryFragmentTransitionAnimatorConfig: AnimatorConfig
+    var primaryFragmentTransitionAnimatorConfig: AnimatorConfig? = null
     protected var defaultSecondaryFragmentEnterAnimResId: Int = 0
     protected var defaultSecondaryFragmentExitAnimResId: Int = 0
 
