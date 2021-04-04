@@ -21,14 +21,18 @@ import com.kennyc.view.MultiStateView
  *
  * RecyclerViewFragment is an abstract fragment whose main purpose is to
  * display an instance of a ExpandableSelectableRecyclerView to the user.
- * It has three abstract properties, viewModel, recyclerView, and action-
- * ModeCallback, that must be overridden in subclasses with concrete
- * implementations of ExpandableSelectableViewModel, ExpandableSelectable-
- * RecyclerView, and a RecyclerViewActionBar.ActionModeCallback respecti-
- * vely. Because RecyclerViewFragment's implementation of onViewCreated
- * references its abstract recyclerView property, it is important that
- * subclasses override the recyclerView property and initialize it before
- * calling super.onViewCreated, or an exception will occur.
+ * It has two abstract properties, viewModel and recyclerView, that must
+ * be overridden in subclasses with concrete implementations of Expandable-
+ * SelectableViewModel and ExpandableSelectableRecyclerView, respectively.
+ * Because RecyclerViewFragment's implementation of onViewCreated referen-
+ * ces its abstract recyclerView property, it is important that subclasses
+ * override the recyclerView property and initialize it before calling
+ * super.onViewCreated, or an exception will occur.
+ *
+ * The value of the open property actionModeCallback will be used as the
+ * callback when an action mode is started. Subclasses can override it
+ * with a descendant of SelectionActionModeCallback if they wish to per-
+ * form work when the action action mde starts or finishes.
  */
 @Suppress("LeakingThis")
 abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
@@ -36,7 +40,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 {
     protected abstract val viewModel: ExpandableSelectableItemViewModel<Entity>
     protected abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>?
-    protected abstract val actionModeCallback: RecyclerViewActionBar.ActionModeCallback
+    protected open val actionModeCallback = SelectionActionModeCallback()
     private lateinit var sortModePrefKey: String
 
     private var actionBar: RecyclerViewActionBar? = null
@@ -142,8 +146,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         if (newList.isNotEmpty()) {
             if (!actionModeIsStarted)
                 actionBar?.startActionMode(actionModeCallback)
-            actionBar?.actionMode?.title =
-                activity?.getString(R.string.action_mode_title, newList.size) ?: ""
+            else actionBar?.actionMode?.title = actionModeTitle(newList.size)
         } else actionBar?.actionMode?.finish()
     }
 
@@ -176,10 +179,9 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
                 recyclerView.searchFilter = newText.toString()
             }
 
-            activityUi.actionBar.transition(
-                activeActionModeCallback = if (recyclerView.selection.isEmpty) null
-                                           else actionModeCallback,
-                searchButtonVisible = recyclerView.selection.isEmpty)
+            val actionModeCallback = if (recyclerView.selection.isEmpty) null
+                                     else this.actionModeCallback
+            activityUi.actionBar.transition(activeActionModeCallback = actionModeCallback)
 
             activityUi.actionBar.changeSortMenu.findItem(when (recyclerView.sort) {
                 ViewModelItem.Sort.Color ->      R.id.color_option
@@ -190,4 +192,17 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
             })?.isChecked = true
         }
     }
+
+    open inner class SelectionActionModeCallback : RecyclerViewActionBar.ActionModeCallback {
+        @CallSuper override fun onStart(
+            actionMode: RecyclerViewActionBar.ActionMode,
+            actionBar: RecyclerViewActionBar
+        ) {
+            val selectionSize = recyclerView?.selection?.size ?: 0
+            actionMode.title = actionModeTitle(selectionSize)
+        }
+    }
+
+    private fun actionModeTitle(selectionSize: Int) =
+        activity?.getString(R.string.action_mode_title, selectionSize) ?: ""
 }

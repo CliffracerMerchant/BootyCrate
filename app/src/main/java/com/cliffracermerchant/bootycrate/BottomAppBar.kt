@@ -281,7 +281,7 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
             val newIndicatorXPos = rect.centerX() - indicatorWidth / 2
             if (!animate) indicatorXPos = newIndicatorXPos
             else ValueAnimator.ofInt(indicatorXPos, newIndicatorXPos).apply {
-                addUpdateListener { indicatorXPos = animatedValue as Int }
+                addUpdateListener { indicatorXPos = animatedValue as Int; invalidate() }
                 applyConfig(indicatorAnimatorConfig)
             }.start()
         }

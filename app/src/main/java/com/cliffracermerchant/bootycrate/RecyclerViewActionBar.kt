@@ -77,9 +77,12 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
 {
     val ui = RecyclerViewActionBarBinding.inflate(LayoutInflater.from(context), this)
     var animatorConfig: AnimatorConfig? = null
-        set(value) { field = value
-                     if (value != null)
-                        layoutTransition = layoutTransition(value) }
+        set(value) { field = value; layoutTransition.applyConfig(value) }
+
+    private val changeSortPopupMenu = PopupMenu(context, ui.changeSortButton)
+    private val optionsPopupMenu = PopupMenu(context, ui.menuButton)
+    val changeSortMenu get() = changeSortPopupMenu.menu
+    val optionsMenu get() = optionsPopupMenu.menu
 
     var onDeleteButtonClickedListener: (() -> Unit)? = null
     fun setOnSortOptionClickedListener(listener: (MenuItem) -> Boolean) =
@@ -87,19 +90,18 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     fun setOnOptionsItemClickedListener(listener: (MenuItem) -> Boolean) =
         optionsPopupMenu.setOnMenuItemClickListener(listener)
 
-    private val changeSortPopupMenu = PopupMenu(context, ui.changeSortButton)
-    private val optionsPopupMenu = PopupMenu(context, ui.menuButton)
-    val changeSortMenu get() = changeSortPopupMenu.menu
-    val optionsMenu get() = optionsPopupMenu.menu
-
     val actionMode get() = _actionMode
     private var _actionMode: ActionMode? = null
+    fun startActionMode(callback: ActionModeCallback) {
+        _actionMode?.finish(updateActionBarUi = false)
+        _actionMode = ActionMode(callback).apply { start() }
+    }
 
-    var activeSearchQuery get() = if (!ui.actionBarTitle.showingSearchView) null
-                                  else ui.actionBarTitle.searchQuery
+    var activeSearchQuery get() = if (!ui.titleSwitcher.showingSearchView) null
+                                  else ui.titleSwitcher.searchQuery
                           set(value) = _setActiveSearchQuery(value)
-    var onSearchQueryChangedListener get() = ui.actionBarTitle.onSearchQueryChangedListener
-                                     set(value) { ui.actionBarTitle.onSearchQueryChangedListener = value }
+    var onSearchQueryChangedListener get() = ui.titleSwitcher.onSearchQueryChangedListener
+                                     set(value) { ui.titleSwitcher.onSearchQueryChangedListener = value }
 
     init {
         layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
@@ -108,7 +110,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         val changeSortMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_changeSortMenuResId, 0)
         val optionsMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_optionsMenuResId, 0)
         a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.text))
-        ui.actionBarTitle.title = a.getString(0) ?: ""
+        ui.titleSwitcher.title = a.getString(0) ?: ""
         a.recycle()
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
         optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
@@ -128,11 +130,9 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     fun setBackButtonVisible(visible: Boolean, animate: Boolean = true) {
         if (ui.backButtonSpacer.isVisible == visible) return
         if (!animate) ui.backButton.isVisible = visible
-        else {
-            ui.backButton.isVisible = true
-            ui.backButton.animate().withLayer()
-                .alpha(if (visible) 1f else 0f)
-                .applyConfig(animatorConfig).start()
+        else ui.backButton.apply {
+            isVisible = true
+            animate().withLayer().alpha(if (visible) 1f else 0f).applyConfig(animatorConfig).start()
         }
         ui.backButtonSpacer.isVisible = visible
     }
@@ -155,13 +155,13 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         menuButtonVisible: Boolean = true
     ) {
         setBackButtonVisible(backButtonVisible)
-        if (searchButtonVisible != ui.searchButton.isVisible)
+        if (searchButtonVisible != ui.searchButton.isVisible && activeActionModeCallback == null)
             ui.searchButton.isVisible = searchButtonVisible
         if (changeSortButtonVisible != ui.changeSortButton.isVisible)
             ui.changeSortButton.isVisible = changeSortButtonVisible
         if (menuButtonVisible != ui.menuButton.isVisible)
             ui.menuButton.isVisible = menuButtonVisible
-        ui.actionBarTitle.setSearchQuery(activeSearchQuery ?: "", switchTo = false)
+        ui.titleSwitcher.setSearchQuery(activeSearchQuery ?: "", switchTo = false)
         activeActionModeCallback?.let { startActionMode(it) }
         if (activeActionModeCallback == null) {
             actionMode?.finish()
@@ -173,28 +173,20 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     private fun _setActiveSearchQuery(query: CharSequence?) {
         val searchWasActive = activeSearchQuery != null
         if (query != null) {
-            ui.actionBarTitle.searchQuery = query
+            ui.titleSwitcher.searchQuery = query
             if (!searchWasActive) {
-                ui.actionBarTitle.showSearchQuery()
+                ui.titleSwitcher.showSearchQuery()
                 ui.searchButton.isActivated = true
                 if (!ui.backButtonSpacer.isVisible)
                     setBackButtonVisible(true)
             }
         } else {
-            ui.actionBarTitle.setSearchQuery("")
-            ui.actionBarTitle.showTitle()
+            ui.titleSwitcher.setSearchQuery("")
+            ui.titleSwitcher.showTitle()
             ui.searchButton.isActivated = false
             if (ui.backButtonSpacer.isVisible)
                 setBackButtonVisible(false)
         }
-    }
-
-    private var transitioningToAnotherActionMode = false
-    fun startActionMode(callback: ActionModeCallback) {
-        transitioningToAnotherActionMode = actionMode != null
-        _actionMode?.finish()
-        _actionMode = ActionMode(callback)
-        _actionMode?.start()
     }
 
     /**
@@ -212,38 +204,42 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
      * switch the title to the action mode's title, accessed through the
      * property title. The function finish can be called when desired to
      * end the ActionMode and switch the title back to the app/activity/
-     * fragment title.
+     * fragment title. If another action mode is going to be started imme-
+     * diately after this one is finished, finish should be called with
+     * the parameter updateActionBarUi set to false so that the new action
+     * mode won't immediately undo the ui changes caused by the first one
+     * ending and cause flickering.
+
+     * Due to the fact that the same action bar can be used for multiple
+     * ActionModes, and because the actionBar backButton can be used for
+     * multiple purpose, ActionMode does not set the onClickListener of
+     * the action bar's backButton despite making it visible. It is up to
+     * the implementing activity or fragment to make the backButton finish
+     * the action mode if this is desired.
      *
      * Implementors of ActionModeCallback should make any desired changes
      * to the action bar menu in their implementation of onStart and onFin-
      * ish. Because the action bar's original options menu is used, the
      * implementing activity or fragment will have to respond to action
      * item clicks in the action bar's onOptionsItemSelectedListener.
-     *
-     * Due to the fact that the same action bar can be used for multiple
-     * ActionMode, and because the actionBar backButton can be used for
-     * multiple purpose, ActionMode does not set the onClickListener of
-     * the action bar's backButton despite making it visible. It is up to
-     * the implementing activity or fragment to make the backButton finish
-     * the action mode if this is desired.
      */
     inner class ActionMode(val callback: ActionModeCallback) {
-        var title get() = ui.actionBarTitle.actionModeTitle
-                  set(value) { ui.actionBarTitle.actionModeTitle = value }
+        var title get() = ui.titleSwitcher.actionModeTitle
+                  set(value) { ui.titleSwitcher.actionModeTitle = value }
 
         fun start() {
-            ui.actionBarTitle.setActionModeTitle(title, switchTo = true)
+            ui.titleSwitcher.setActionModeTitle(title, switchTo = true)
             if (!ui.backButtonSpacer.isVisible)
                 setBackButtonVisible(true)
             if (ui.searchButton.isVisible)
                 ui.searchButton.isVisible = false
             if (!ui.changeSortButton.isActivated)
                 ui.changeSortButton.isActivated = true
-            callback.onStart(this@RecyclerViewActionBar)
+            callback.onStart(this, this@RecyclerViewActionBar)
         }
 
-        fun finish() {
-            if (!transitioningToAnotherActionMode) {
+        fun finish(updateActionBarUi: Boolean = true) {
+            if (updateActionBarUi) {
                 // The layout transition should take care of the search button fade in animation but doesn't for some reason.
                 if (!ui.searchButton.isVisible) {
                     ui.searchButton.alpha = 0f
@@ -251,21 +247,20 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                     ui.searchButton.animate().alpha(1f).withLayer().applyConfig(animatorConfig).start()
                 }
                 ui.changeSortButton.isActivated = false
-                if (ui.actionBarTitle.searchQuery.isNotEmpty())
-                    ui.actionBarTitle.showSearchQuery()
-                ui.actionBarTitle.showTitle()
+                if (ui.titleSwitcher.searchQuery.isNotEmpty())
+                    ui.titleSwitcher.showSearchQuery()
+                ui.titleSwitcher.showTitle()
                 setBackButtonVisible(false)
             }
-            else transitioningToAnotherActionMode = false
-            callback.onFinish(this@RecyclerViewActionBar)
+            callback.onFinish(this, this@RecyclerViewActionBar)
             _actionMode = null
         }
     }
 
     /** An interface to describe what happens when a RecyclerViewActionBar.ActionMode starts or finishes. */
     interface ActionModeCallback {
-        fun onStart(actionBar: RecyclerViewActionBar)
-        fun onFinish(actionBar: RecyclerViewActionBar)
+        fun onStart(actionMode: ActionMode, actionBar: RecyclerViewActionBar) { }
+        fun onFinish(actionMode: ActionMode, actionBar: RecyclerViewActionBar) { }
     }
 }
 

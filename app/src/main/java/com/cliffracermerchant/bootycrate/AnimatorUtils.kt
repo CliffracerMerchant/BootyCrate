@@ -23,18 +23,29 @@ data class AnimatorConfig(var duration: Long, var interpolator: TimeInterpolator
     }
 }
 
-/** Apply an AnimatorConfig to an Animator object and return the object. */
+/** Apply an AnimatorConfig to an Animator object and return the Animator. */
 fun <T: Animator>T.applyConfig(config: AnimatorConfig?) = apply {
     if (config == null) return@apply
     duration = config.duration
     interpolator = config.interpolator
 }
 
-/** Apply an AnimatorConfig to a ViewPropertyAnimator object and return the object. */
+/** Apply an AnimatorConfig to a ViewPropertyAnimator object and return the ViewPropertyAnimator. */
 fun ViewPropertyAnimator.applyConfig(config: AnimatorConfig?) = apply {
     if (config == null) return@apply
     duration = config.duration
     interpolator = config.interpolator
+}
+
+/** Apply an AnimatorConfig to a LayoutTransition and return the LayoutTransition. */
+fun LayoutTransition.applyConfig(config: AnimatorConfig?) = apply {
+    if (config == null) return@apply
+    setInterpolator(LayoutTransition.CHANGE_APPEARING, config.interpolator)
+    setInterpolator(LayoutTransition.CHANGE_DISAPPEARING, config.interpolator)
+    setInterpolator(LayoutTransition.APPEARING, config.interpolator)
+    setInterpolator(LayoutTransition.DISAPPEARING, config.interpolator)
+    setInterpolator(LayoutTransition.CHANGING, config.interpolator)
+    setDuration(config.duration)
 }
 
 // The following value animator returning functions can be used similarly to object animators,
@@ -69,20 +80,14 @@ fun valueAnimatorOfArgb(
     if (config != null) applyConfig(config)
 }
 
-/** Return a LayoutTransition whose durations and interpolators match the given AnimatorConfig. */
-fun layoutTransition(config: AnimatorConfig) = LayoutTransition().apply {
-    setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
-    setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
-    setStartDelay(LayoutTransition.APPEARING, 0)
-    setStartDelay(LayoutTransition.DISAPPEARING, 0)
-    setStartDelay(LayoutTransition.CHANGING, 0)
-    setInterpolator(LayoutTransition.CHANGE_APPEARING, config.interpolator)
-    setInterpolator(LayoutTransition.CHANGE_DISAPPEARING, config.interpolator)
-    setInterpolator(LayoutTransition.APPEARING, config.interpolator)
-    setInterpolator(LayoutTransition.DISAPPEARING, config.interpolator)
-    setInterpolator(LayoutTransition.CHANGING, config.interpolator)
-    setDuration(config.duration)
-}
+/** Return a delayless LayoutTransition with the given AnimatorConfig applied. */
+fun layoutTransition(config: AnimatorConfig) = LayoutTransition().applyConfig(config).apply {
+        setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
+        setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
+        setStartDelay(LayoutTransition.APPEARING, 0)
+        setStartDelay(LayoutTransition.DISAPPEARING, 0)
+        setStartDelay(LayoutTransition.CHANGING, 0)
+    }
 
 /** Apply a onStart action to a LayoutTransition. */
 fun LayoutTransition.doOnStart(onStart: () -> Unit) {

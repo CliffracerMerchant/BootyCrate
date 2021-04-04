@@ -119,9 +119,9 @@ class GradientStyledMainActivity : MainActivity() {
         ui.actionBar.ui.backButton.drawable.setTint(
             topFgGradientBitmap.getPixel(ui.actionBar.ui.backButton.measuredWidth / 2,
                                          ui.actionBar.height / 2))
-        ui.actionBar.ui.actionBarTitle.titleView.paint.shader = topFgGradient
-        ui.actionBar.ui.actionBarTitle.searchQueryView.paint.shader = topFgGradient
-        ui.actionBar.ui.actionBarTitle.actionModeTitleView.paint.shader = topFgGradient
+        ui.actionBar.ui.titleSwitcher.titleView.paint.shader = topFgGradient
+        ui.actionBar.ui.titleSwitcher.searchQueryView.paint.shader = topFgGradient
+        ui.actionBar.ui.titleSwitcher.actionModeTitleView.paint.shader = topFgGradient
         ui.actionBar.ui.searchButton.drawable?.setTint(
             topFgGradientBitmap.getPixelAtCenter(ui.actionBar.ui.searchButton))
         ui.actionBar.ui.changeSortButton.drawable.setTint(

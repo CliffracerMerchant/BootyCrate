@@ -25,7 +25,7 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
     override val viewModel: InventoryViewModel by activityViewModels()
     private val shoppingListViewModel: ShoppingListViewModel by activityViewModels()
     override var recyclerView: InventoryRecyclerView? = null
-    override val actionModeCallback = InventoryActionMode()
+    override val actionModeCallback = InventoryActionModeCallback()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -58,12 +58,14 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
         activityUi.checkoutButton.checkoutCallback = null
     }
 
-    /** An override of RecyclerViewActionMode that alters the visibility of menu items specific to inventory items. */
-    inner class InventoryActionMode : RecyclerViewActionBar.ActionModeCallback {
-        override fun onStart(actionBar: RecyclerViewActionBar) =
+    /** An override of SelectionActionModeCallback that alters the visibility of menu items specific to inventory items. */
+    inner class InventoryActionModeCallback : SelectionActionModeCallback() {
+        override fun onStart(actionMode: RecyclerViewActionBar.ActionMode, actionBar: RecyclerViewActionBar) {
+            super.onStart(actionMode, actionBar)
             actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
+        }
 
-        override fun onFinish(actionBar: RecyclerViewActionBar) =
+        override fun onFinish(actionMode: RecyclerViewActionBar.ActionMode, actionBar: RecyclerViewActionBar) =
             actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, false)
     }
 }
