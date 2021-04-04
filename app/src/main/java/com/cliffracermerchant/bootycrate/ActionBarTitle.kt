@@ -54,6 +54,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         setInAnimation(context, R.anim.fade_in)
         setOutAnimation(context, R.anim.fade_out)
         val a = context.obtainStyledAttributes(attrs, R.styleable.ActionBarTitle)
+
         var fontId = a.getResourceId(R.styleable.ActionBarTitle_titleFont, 0)
         titleView.typeface = try { ResourcesCompat.getFont(context, fontId) }
                           catch(e: Resources.NotFoundException) { null }
@@ -67,6 +68,9 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
                                     catch(e: Resources.NotFoundException) { null }
         a.recycle()
 
+        // For some reason if saveFromParentEnabled == true the title will
+        // be "restored" to a blank string across activity restarts.
+        isSaveFromParentEnabled = false
         searchQueryView.doAfterTextChanged { text -> onSearchQueryChangedListener?.invoke(text) }
     }
 

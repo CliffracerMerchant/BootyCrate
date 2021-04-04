@@ -22,6 +22,7 @@
         <item name="checkboxStyle">@style/CheckBox</item>
         <item name="snackbarTextViewStyle">?android:attr/textViewStyle</item>
         <item name="snackbarButtonStyle">@style/SnackbarActionTextAppearance</item>
+        <item name="actionBarTitleStyle">@style/ActionBarTitle</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
 
         <item name="colorAccent">@color/colorAccent</item>

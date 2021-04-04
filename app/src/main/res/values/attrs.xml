@@ -88,9 +88,17 @@
         <attr name="optionsMenuResId" format="reference" />
     </declare-styleable>
 
+    <attr name="actionBarTitleStyle" format="reference" />
+
     <declare-styleable name="GradientActionBar">
         <!-- The width of the bottom border. -->
         <attr name="bottomBorderWidth" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="ActionBarTitle">
+        <attr name="titleFont" format="reference" />
+        <attr name="searchViewFont" format="reference" />
+        <attr name="actionModeTitleFont" format="reference" />
     </declare-styleable>
 
     <!-- Due to the project's target API level of 21's inability to inflate custom
@@ -123,12 +131,6 @@
 
     <declare-styleable name="ToggleableTintedCheckbox">
         <attr name="state_edit_color" format="boolean" />
-    </declare-styleable>
-
-    <declare-styleable name="ActionBarTitle">
-        <attr name="titleFont" format="reference" />
-        <attr name="searchViewFont" format="reference" />
-        <attr name="actionModeTitleFont" format="reference" />
     </declare-styleable>
 
 </resources>

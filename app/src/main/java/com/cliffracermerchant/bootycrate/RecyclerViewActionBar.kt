@@ -105,11 +105,9 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     init {
         layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.WRAP_CONTENT)
-        var a = context.obtainStyledAttributes(attrs, R.styleable.RecyclerViewActionBar)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.RecyclerViewActionBar)
         val changeSortMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_changeSortMenuResId, 0)
         val optionsMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_optionsMenuResId, 0)
-        a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.text))
-        ui.titleSwitcher.title = a.getString(0) ?: ""
         a.recycle()
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
         optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
