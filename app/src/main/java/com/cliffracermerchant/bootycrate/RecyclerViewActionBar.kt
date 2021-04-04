@@ -171,8 +171,11 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                 ui.titleSwitcher.showTitle()
                 ui.changeSortButton.isActivated = false
             }
-            if (activeSearchQuery != null)
-                _setActiveSearchQuery(activeSearchQuery)
+            _setActiveSearchQuery(activeSearchQuery)
+            // If activeSearchQuery == null, _setActiveSearchQuery will hide the
+            // back button, possibly overriding the backButtonVisible parameter.
+            if (activeSearchQuery == null)
+                setBackButtonVisible(backButtonVisible)
         }
     }
 
@@ -255,8 +258,10 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                 ui.changeSortButton.isActivated = false
                 if (ui.titleSwitcher.searchQuery.isNotEmpty())
                     ui.titleSwitcher.showSearchQuery()
-                ui.titleSwitcher.showTitle()
-                setBackButtonVisible(false)
+                else {
+                    ui.titleSwitcher.showTitle()
+                    setBackButtonVisible(false)
+                }
             }
             callback.onFinish(this, this@RecyclerViewActionBar)
             _actionMode = null
