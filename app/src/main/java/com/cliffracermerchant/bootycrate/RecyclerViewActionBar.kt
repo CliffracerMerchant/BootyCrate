@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
-import android.animation.LayoutTransition
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.Shader
@@ -115,7 +114,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
         optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
 
-        layoutTransition = LayoutTransition()
+        layoutTransition = layoutTransition(config = null)
         ui.searchButton.setOnClickListener {
             _setActiveSearchQuery(if (activeSearchQuery == null) "" else null)
         }
@@ -157,14 +156,23 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         setBackButtonVisible(backButtonVisible)
         if (searchButtonVisible != ui.searchButton.isVisible && activeActionModeCallback == null)
             ui.searchButton.isVisible = searchButtonVisible
-        if (changeSortButtonVisible != ui.changeSortButton.isVisible)
+
+        if (activeActionModeCallback != null && !ui.changeSortButton.isVisible)
+            ui.changeSortButton.isVisible = true
+        else if (changeSortButtonVisible != ui.changeSortButton.isVisible)
             ui.changeSortButton.isVisible = changeSortButtonVisible
+
         if (menuButtonVisible != ui.menuButton.isVisible)
             ui.menuButton.isVisible = menuButtonVisible
+
         ui.titleSwitcher.setSearchQuery(activeSearchQuery ?: "", switchTo = false)
         activeActionModeCallback?.let { startActionMode(it) }
         if (activeActionModeCallback == null) {
-            actionMode?.finish()
+            actionMode?.apply {
+                finish(updateActionBarUi = false)
+                ui.titleSwitcher.showTitle()
+                ui.changeSortButton.isActivated = false
+            }
             if (activeSearchQuery != null)
                 _setActiveSearchQuery(activeSearchQuery)
         }
