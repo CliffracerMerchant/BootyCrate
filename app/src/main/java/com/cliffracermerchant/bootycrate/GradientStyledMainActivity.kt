@@ -119,9 +119,7 @@ class GradientStyledMainActivity : MainActivity() {
         ui.actionBar.ui.backButton.drawable.setTint(
             topFgGradientBitmap.getPixel(ui.actionBar.ui.backButton.measuredWidth / 2,
                                          ui.actionBar.height / 2))
-        ui.actionBar.ui.titleSwitcher.titleView.paint.shader = topFgGradient
-        ui.actionBar.ui.titleSwitcher.searchQueryView.paint.shader = topFgGradient
-        ui.actionBar.ui.titleSwitcher.actionModeTitleView.paint.shader = topFgGradient
+        ui.actionBar.ui.titleSwitcher.setShader(topFgGradient)
         ui.actionBar.ui.searchButton.drawable?.setTint(
             topFgGradientBitmap.getPixelAtCenter(ui.actionBar.ui.searchButton))
         ui.actionBar.ui.changeSortButton.drawable.setTint(
@@ -160,5 +158,12 @@ class GradientStyledMainActivity : MainActivity() {
         val activeColor = bottomFgGradientBitmap.getPixelAtCenter(shoppingListButton)
         ui.bottomNavigationBar.itemIconTintList = ColorStateList.valueOf(activeColor)
         ui.bottomNavigationBar.itemTextColor = ui.bottomNavigationBar.itemIconTintList
+    }
+
+    fun ActionBarTitle.setShader(shader: Shader?) {
+        titleView.paint.shader = shader
+        actionModeTitleView.paint.shader = shader
+        searchQueryView.paint.shader = shader
+        (searchQueryView.background as? GradientVectorDrawable)?.gradient = shader
     }
 }

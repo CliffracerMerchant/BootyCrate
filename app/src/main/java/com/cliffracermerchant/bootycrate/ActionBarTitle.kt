@@ -6,10 +6,12 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
 import android.widget.ViewFlipper
+import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.doAfterTextChanged
@@ -32,7 +34,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
     private val searchViewPos = 2
     val titleView = AppCompatTextView(context, attrs)
     val actionModeTitleView = AppCompatTextView(context, attrs)
-    val searchQueryView = EditText(context, attrs)
+    val searchQueryView = AppCompatEditText(context, attrs)
 
     var title: CharSequence get() = titleView.text
                             set(value) = setTitle(value)
@@ -53,6 +55,13 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         addView(searchQueryView, searchViewPos)
         setInAnimation(context, R.anim.fade_in)
         setOutAnimation(context, R.anim.fade_out)
+
+        searchQueryView.isFocusableInTouchMode = true
+        searchQueryView.background = GradientVectorDrawable(1f, "M0,0.8 H 1").apply {
+            style = Paint.Style.STROKE
+            strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1.25f,
+                                                    resources.displayMetrics)
+        }
         val a = context.obtainStyledAttributes(attrs, R.styleable.ActionBarTitle)
 
         var fontId = a.getResourceId(R.styleable.ActionBarTitle_titleFont, 0)
