@@ -7,9 +7,11 @@ package com.cliffracermerchant.bootycrate
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.graphics.Shader
+import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.widget.SearchView
@@ -78,3 +80,5 @@ fun fragmentActivityFrom(context: Context) =
 
 fun View.setHeight(height: Int) { bottom = top + height }
 
+fun dpToPixels(dp: Float, resources: Resources) =
+    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources.displayMetrics)

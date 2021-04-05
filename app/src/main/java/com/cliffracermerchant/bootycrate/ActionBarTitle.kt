@@ -7,8 +7,9 @@ package com.cliffracermerchant.bootycrate
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Paint
+import android.text.InputType
 import android.util.AttributeSet
-import android.util.TypedValue
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.ViewFlipper
 import androidx.appcompat.widget.AppCompatEditText
@@ -56,11 +57,15 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         setInAnimation(context, R.anim.fade_in)
         setOutAnimation(context, R.anim.fade_out)
 
-        searchQueryView.isFocusableInTouchMode = true
-        searchQueryView.background = GradientVectorDrawable(1f, "M0,0.8 H 1").apply {
-            style = Paint.Style.STROKE
-            strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1.25f,
-                                                    resources.displayMetrics)
+        searchQueryView.apply {
+            maxLines = 1
+            imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
+            inputType = InputType.TYPE_CLASS_TEXT
+            isFocusableInTouchMode = true
+            background = GradientVectorDrawable(1f, "M0,0.8 H 1").apply {
+                style = Paint.Style.STROKE
+                strokeWidth = dpToPixels(1.25f, resources)
+            }
         }
         val a = context.obtainStyledAttributes(attrs, R.styleable.ActionBarTitle)
 
@@ -89,10 +94,13 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
     fun showActionModeTitle() { if (showingActionModeTitle) return
                                 displayedChild = actionModeTitlePos
                                 imm?.hideSoftInputFromWindow(windowToken, 0) }
-    fun showSearchQuery() { if (showingSearchView) return
-                            displayedChild = searchViewPos
-                            searchQueryView.requestFocus()
-                            imm?.showSoftInput(searchQueryView, InputMethodManager.SHOW_IMPLICIT) }
+    fun showSearchQuery(showSoftInput: Boolean = true) {
+        if (showingSearchView) return
+        displayedChild = searchViewPos
+        searchQueryView.requestFocus()
+        if (showSoftInput)
+            imm?.showSoftInput(searchQueryView, InputMethodManager.SHOW_IMPLICIT)
+    }
 
     fun setTitle(title: CharSequence, switchTo: Boolean = false) {
         titleView.text = title
@@ -104,7 +112,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         if (switchTo) showActionModeTitle()
     }
 
-    fun setSearchQuery(query: CharSequence, switchTo: Boolean = false) {
+    fun setSearchQuery(query: CharSequence?, switchTo: Boolean = false) {
         searchQueryView.setText(query)
         if (!switchTo) return
         showSearchQuery()

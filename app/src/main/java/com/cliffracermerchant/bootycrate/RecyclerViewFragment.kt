@@ -44,8 +44,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
     private lateinit var sortModePrefKey: String
 
     private var actionBar: RecyclerViewActionBar? = null
-    private val searchIsActive get() = actionBar?.activeSearchQuery != null
     private val actionModeIsStarted get() = actionBar?.actionMode?.callback == actionModeCallback
+    private val searchIsActive get() = actionBar?.activeSearchQuery != null
 
     init { setHasOptionsMenu(true) }
 
@@ -72,7 +72,6 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
                                          else ->               MultiStateView.ViewState.EMPTY }
         }
 
-        //activeSearchQuery = savedInstanceState?.getString("activeSearchQuery", null)
         val isActive = this.isActiveTemp ?: return
         val activityUi = this.activityUiTemp ?: return
         onActiveStateChanged(isActive, activityUi)
@@ -98,11 +97,6 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
             R.id.amount_descending_option -> { saveSortingOption(ViewModelItem.Sort.AmountDesc, item) }
             else -> activity?.onOptionsItemSelected(item) ?: false
         }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        //outState.putString("activeSearchQuery", activeSearchQuery.toString())
-    }
 
     /** Open a ShareDialog.
      * @return whether the dialog was successfully started. */
@@ -169,7 +163,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
             return
         }
         if (!isActive) {
-            if (searchIsActive)
+            if (viewModel.searchFilter?.isBlank() == true)
                 viewModel.searchFilter = null
             actionBar = null
         } else {
@@ -181,7 +175,9 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 
             val actionModeCallback = if (recyclerView.selection.isEmpty) null
                                      else this.actionModeCallback
-            activityUi.actionBar.transition(activeActionModeCallback = actionModeCallback)
+            activityUi.actionBar.transition(
+                activeActionModeCallback = actionModeCallback,
+                activeSearchQuery = viewModel.searchFilter)
 
             activityUi.actionBar.changeSortMenu.findItem(when (recyclerView.sort) {
                 ViewModelItem.Sort.Color ->      R.id.color_option

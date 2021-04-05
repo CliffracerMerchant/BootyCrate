@@ -6,15 +6,13 @@ package com.cliffracermerchant.bootycrate
 
 import android.content.Context
 import android.graphics.Rect
-import android.util.TypedValue
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 
 /** A RecyclerView.ItemDecoration to add spacing between items. */
 class ItemSpacingDecoration(context: Context) :
     RecyclerView.ItemDecoration() {
-    private val spacing = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 8f,
-                                                    context.resources.displayMetrics).toInt()
+    private val spacing = dpToPixels(8f, context.resources).toInt()
 
     override fun getItemOffsets(
         outRect: Rect,
