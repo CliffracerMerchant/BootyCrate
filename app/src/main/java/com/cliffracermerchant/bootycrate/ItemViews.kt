@@ -172,12 +172,21 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     fun toggleExpanded() = setExpanded(!isExpanded)
     open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
 
+    private fun View.clearFocusAndHideSoftInput(imm: InputMethodManager) {
+        // Clearing the focus before hiding the soft input prevents a flickering
+        // issue when the view is collapsed on some older API levels.
+        if (!isFocused) return
+        clearFocus()
+        imm.hideSoftInputFromWindow(windowToken, 0)
+    }
+
     override fun setExpanded(expanding: Boolean, animate: Boolean) {
         _isExpanded = expanding
-        if (!expanding && ui.nameEdit.isFocused ||
-                          ui.extraInfoEdit.isFocused ||
-                          ui.amountEdit.ui.valueEdit.isFocused)
-            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
+        if (!expanding) inputMethodManager?.let {
+            ui.nameEdit.clearFocusAndHideSoftInput(it)
+            ui.extraInfoEdit.clearFocusAndHideSoftInput(it)
+            ui.amountEdit.ui.valueEdit.clearFocusAndHideSoftInput(it)
+        }
 
      /* While a LayoutTransition would achieve the same thing as all of the following
         custom animations and would be much more readable, it is unfortunately imposs-
@@ -186,7 +195,6 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         ting after they are prepared, for the animators it uses internally. Unless this
         is changed, the internal expand / collapse animations must be done manually in
         case they need to be synchronized with other animations. */
-
         val editableTextFieldHeight = resources.getDimension(R.dimen.editable_text_field_min_height)
         ui.spacer.layoutParams.height =
             (editableTextFieldHeight * if (expanding) 2 else 1).toInt()
