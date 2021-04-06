@@ -274,9 +274,8 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     fun moveIndicatorToNavBarItem(menuItemId: Int, animate: Boolean = true) {
         if (!::navBar.isInitialized) return
         navBar.findViewById<View>(menuItemId)?.let {
-            // While it would be simpler to use iconView.centerX() instead of getting
-            // the global visible rect's centerX, it results in a slightly incorrect
-            // value when in landscape mode.
+            // Using it.centerX() instead of getting the global visible rect's centerX
+            // seems to result in a slightly incorrect value when in landscape mode.
             it.getGlobalVisibleRect(rect)
             val newIndicatorXPos = rect.centerX() - indicatorWidth / 2
             if (!animate) indicatorXPos = newIndicatorXPos

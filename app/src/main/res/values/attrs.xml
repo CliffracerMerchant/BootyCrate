@@ -27,6 +27,26 @@
          and colorPrimary gradient when it is overlaid on foregroundGradientBlendColor. -->
     <attr name="foregroundGradientBlendAlpha" format="integer" />
 
+    <declare-styleable name="RecyclerViewActionBar">
+        <!-- The resource id of the menu to be used as the contents of the change sort menu. -->
+        <attr name="changeSortMenuResId" format="reference" />
+        <!-- The resource id of the menu to be used as the contents of the options menu. -->
+        <attr name="optionsMenuResId" format="reference" />
+    </declare-styleable>
+
+    <attr name="actionBarTitleStyle" format="reference" />
+
+    <declare-styleable name="GradientActionBar">
+        <!-- The width of the bottom border. -->
+        <attr name="bottomBorderWidth" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="ActionBarTitle">
+        <attr name="titleFont" format="reference" />
+        <attr name="searchViewFont" format="reference" />
+        <attr name="actionModeTitleFont" format="reference" />
+    </declare-styleable>
+
     <declare-styleable name="BottomAppBar">
         <!-- Where the cradle is drawn on the BottomAppBar. -->
         <attr name="cradleAlignmentMode" format="enum" >
@@ -79,26 +99,6 @@
         <attr name="stepSize"     format="integer" />
         <!-- Whether the user is able to directly input the value. -->
         <attr name="valueIsFocusable" format="boolean" />
-    </declare-styleable>
-
-    <declare-styleable name="RecyclerViewActionBar">
-        <!-- The resource id of the menu to be used as the contents of the change sort menu. -->
-        <attr name="changeSortMenuResId" format="reference" />
-        <!-- The resource id of the menu to be used as the contents of the options menu. -->
-        <attr name="optionsMenuResId" format="reference" />
-    </declare-styleable>
-
-    <attr name="actionBarTitleStyle" format="reference" />
-
-    <declare-styleable name="GradientActionBar">
-        <!-- The width of the bottom border. -->
-        <attr name="bottomBorderWidth" format="dimension" />
-    </declare-styleable>
-
-    <declare-styleable name="ActionBarTitle">
-        <attr name="titleFont" format="reference" />
-        <attr name="searchViewFont" format="reference" />
-        <attr name="actionModeTitleFont" format="reference" />
     </declare-styleable>
 
     <!-- Due to the project's target API level of 21's inability to inflate custom
