@@ -37,6 +37,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override var recyclerView: ShoppingListRecyclerView? = null
     override val actionModeCallback = ShoppingListActionModeCallback()
     private var checkoutButton: CheckoutButton? = null
+    private var checkoutButtonShouldBeEnabled = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,8 +53,12 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked)
         val sortByCheckedPrefValue = prefs.getBoolean(sortByCheckedPrefKey, false)
         recyclerView?.sortByChecked = sortByCheckedPrefValue
-        recyclerView?.checkedItems?.sizeLiveData?.observe(viewLifecycleOwner) { newSize ->
+        viewModel.checkedItemsSize.observe(viewLifecycleOwner) { newSize ->
             checkoutButton?.isEnabled = newSize != 0
+            // Sometimes onChanged is called before onActiveStateChanged is called, causing
+            // the checkout button to still be null. In this case we'll store the value
+            // and initialize the checkout button's state in onActiveStateChanged.
+            checkoutButtonShouldBeEnabled =  newSize != 0
         }
         viewModel.items.observe(viewLifecycleOwner) { newList -> updateBadge(newList) }
     }
@@ -79,10 +84,12 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
         else -> super.onOptionsItemSelected(item)
     }
 
-    override fun showsCheckoutButton() = true
     override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
         super.onActiveStateChanged(isActive, activityUi)
-        checkoutButton = activityUi.checkoutButton
+        if (checkoutButton == null) {
+            checkoutButton = activityUi.checkoutButton
+            activityUi.checkoutButton.isEnabled = checkoutButtonShouldBeEnabled
+        }
         newItemsBadge = activityUi.shoppingListBadge
         activityUi.actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_menu_group, isActive)
         if (!isActive) return

@@ -47,6 +47,7 @@ class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
             true
         } else super.onOptionsItemSelected(item)
 
+    override fun showsCheckoutButton() = false
     override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
         super.onActiveStateChanged(isActive, activityUi)
         activityUi.actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_menu_group, isActive)

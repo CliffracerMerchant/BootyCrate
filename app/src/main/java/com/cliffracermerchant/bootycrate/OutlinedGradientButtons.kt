@@ -17,7 +17,6 @@ import android.util.AttributeSet
 import androidx.annotation.CallSuper
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.doOnNextLayout
-import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * A button with a vector background, outline, and icon that are all tintable with gradients.
@@ -93,7 +92,6 @@ open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
  * If any additional changes are desired when the isEnabledState is
  * changed, they can be defined in a subclass override of View.setEnabled.
  */
-@AndroidEntryPoint
 open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeSet) :
     OutlinedGradientButton(context, attrs)
 {

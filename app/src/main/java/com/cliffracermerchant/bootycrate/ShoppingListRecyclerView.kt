@@ -28,7 +28,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     override val adapter = ShoppingListAdapter()
     override val collectionName = context.getString(R.string.shopping_list_item_collection_name)
     override val viewModel = shoppingListViewModel(context)
-    val checkedItems = CheckedItems()
 
     var sortByChecked get() = viewModel.sortByChecked
         set(value) { viewModel.sortByChecked = value }
@@ -123,15 +122,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 view.setStrikeThroughEnabled(checked)
             }
         }
-    }
-
-    /** A memberless class to make accessing the checked items of the shopping list more idiomatic. */
-    inner class CheckedItems {
-        val sizeLiveData get() = viewModel.checkedItemsSize
-        val size get() = sizeLiveData.value
-        val isEmpty get() = size == 0
-        fun checkAll() = viewModel.checkAll()
-        fun clear() = viewModel.uncheckAll()
     }
 
     /**

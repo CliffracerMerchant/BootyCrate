@@ -160,7 +160,7 @@ class GradientStyledMainActivity : MainActivity() {
         ui.bottomNavigationBar.itemTextColor = ui.bottomNavigationBar.itemIconTintList
     }
 
-    fun ActionBarTitle.setShader(shader: Shader?) {
+    private fun ActionBarTitle.setShader(shader: Shader?) {
         titleView.paint.shader = shader
         actionModeTitleView.paint.shader = shader
         searchQueryView.paint.shader = shader
