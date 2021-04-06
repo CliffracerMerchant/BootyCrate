@@ -128,6 +128,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         if (ui.backButtonSpacer.isVisible == visible) return
         if (!animate) ui.backButton.isVisible = visible
         else ui.backButton.apply {
+            alpha = if (visible) 0f else 1f
             isVisible = true
             animate().withLayer().alpha(if (visible) 1f else 0f).applyConfig(animatorConfig).start()
         }

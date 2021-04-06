@@ -162,11 +162,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
             activityUiTemp = activityUi
             return
         }
-        if (!isActive) {
-            if (viewModel.searchFilter?.isBlank() == true)
-                viewModel.searchFilter = null
-            actionBar = null
-        } else {
+        if (!isActive) actionBar = null
+        else {
             recyclerView.snackBarAnchor = activityUi.bottomAppBar
             actionBar = activityUi.actionBar
             activityUi.actionBar.onSearchQueryChangedListener = { newText ->
@@ -175,9 +172,11 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 
             val actionModeCallback = if (recyclerView.selection.isEmpty) null
                                      else this.actionModeCallback
+            val activeSearchQuery = if (viewModel.searchFilter.isNullOrBlank()) null
+                                    else viewModel.searchFilter
             activityUi.actionBar.transition(
                 activeActionModeCallback = actionModeCallback,
-                activeSearchQuery = viewModel.searchFilter)
+                activeSearchQuery = activeSearchQuery)
 
             activityUi.actionBar.changeSortMenu.findItem(when (recyclerView.sort) {
                 ViewModelItem.Sort.Color ->      R.id.color_option

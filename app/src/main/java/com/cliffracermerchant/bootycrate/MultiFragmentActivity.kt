@@ -95,7 +95,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     /** Attempt to switch to a new active fragment corresponding to the @param
      * menuItem, and @return whether or not the switch was successful. */
     private fun switchToNewPrimaryFragment(menuItem: MenuItem): Boolean {
-        if (menuItem.itemId == navigationBar.selectedItemId) return false
+        if (menuItem.itemId == navigationBar.selectedItemId || !showingPrimaryFragment) return false
         if (!navBarMenuItemFragmentMap.containsKey(menuItem.itemId)) return false
         val newFragment = navBarMenuItemFragmentMap[menuItem.itemId]
 
@@ -188,9 +188,8 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     private fun initPrimaryFragmentVisibility(savedInstanceState: Bundle?) {
         val wasShowingPrimaryFragment =
             savedInstanceState?.getBoolean("wasShowingPrimaryFragment") ?: true
-        navigationBar.selectedItemId = savedInstanceState?.getInt("selectedNavItemId",
-                                                                  navigationBar.selectedItemId)
-                                                                ?: navigationBar.selectedItemId
+        val savedNavItemId = savedInstanceState?.getInt("selectedNavItemId")
+        savedNavItemId?.let { navigationBar.selectedItemId = it }
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
