@@ -5,27 +5,27 @@
 package com.cliffracermerchant.bootycrate
 
 import android.content.res.ColorStateList
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Shader
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.View
-import androidx.core.view.doOnNextLayout
+import android.view.WindowManager
+import androidx.core.content.ContextCompat
 
 /**
  * A styled subclass of MainActivity.
  *
- * Unfortunately many of the desired aspects of MainActivity's style (e.g. the
- * menu item icons being tinted to match the gradient background of the top
- * and bottom action bar) are impossible to accomplish in XML. GradientStyled-
- * MainActivity performs additional operations to initialize its style. Its
- * foreground gradient is made by creating a radial gradient using the values
- * of the XML attributes colorAccent, colorInBetweenPrimaryAccent, and color-
- * Primary, setting the alpha component of this gradient to the value of the
- * attribute foregroundGradientBlendAlpha, and then overlaying it onto a solid
- * background with a color equal to the value of the attribute foregroundGrad-
- * ientBlendColor. The same process is repeated for the background gradient
- * using the values of backgroundGradientBlendAlpha and backgroundGradient-
- * BlendColor.
+ * Unfortunately many of the desired aspects of MainActivity's style (e.g.
+ * the menu item icons being tinted to match the gradient background of
+ * the top and bottom action bar) are impossible to accomplish in XML.
+ * GradientStyledMainActivity performs additional operations to initialize
+ * its style. Its foreground gradient is made by creating a linear gradi-
+ * ent using the values of the XML attributes foregroundGradientColorLeft,
+ * foregroundGradientColorMiddle, and foregroundGradientColorRight. The
+ * background gradient is made from the colors colorAccent, colorInBetween-
+ * PrimaryAccent, and colorPrimary. It is assumed that
  */
 class GradientStyledMainActivity : MainActivity() {
     private val topFgGradientBuilder = GradientBuilder()
@@ -42,100 +42,90 @@ class GradientStyledMainActivity : MainActivity() {
     private val bgColors = IntArray(3)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+        window.statusBarColor = ContextCompat.getColor(this, android.R.color.transparent)
         super.onCreate(savedInstanceState)
-        fgColors[0] = theme.resolveIntAttribute(R.attr.foregroundGradientColorLeft)
-        fgColors[1] = theme.resolveIntAttribute(R.attr.foregroundGradientColorMiddle)
-        fgColors[2] = theme.resolveIntAttribute(R.attr.foregroundGradientColorRight)
-        bgColors[0] = theme.resolveIntAttribute(android.R.attr.colorAccent)
-        bgColors[1] = theme.resolveIntAttribute(R.attr.colorInBetweenPrimaryAccent)
-        bgColors[2] = theme.resolveIntAttribute(android.R.attr.colorPrimary)
+        window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
         initGradients()
     }
 
     private fun initGradients() {
         val screenWidth = resources.displayMetrics.widthPixels
-        val typedValue = TypedValue()
-        theme.resolveAttribute(R.attr.actionBarSize, typedValue, true)
-        val actionBarHeight = typedValue.getDimension(resources.displayMetrics)
+        val actionBarHeight = theme.resolveIntAttribute(R.attr.actionBarSize).toFloat()
 
-        topFgGradientBuilder.setX1(screenWidth / 2f).setY1(actionBarHeight)
-                            .setX2(screenWidth * 0.85f).setY2(actionBarHeight * 1.5f)
-        topBgGradientBuilder = topFgGradientBuilder.copy()
-        bottomFgGradientBuilder = topFgGradientBuilder.copy(y1 = 0f)
-        bottomBgGradientBuilder = bottomFgGradientBuilder.copy()
+        val fgColors = intArrayOf(theme.resolveIntAttribute(R.attr.foregroundGradientColorLeft),
+                                  theme.resolveIntAttribute(R.attr.foregroundGradientColorMiddle),
+                                  theme.resolveIntAttribute(R.attr.foregroundGradientColorRight))
+        val bgColors = intArrayOf(theme.resolveIntAttribute(R.attr.colorAccent),
+                                  theme.resolveIntAttribute(R.attr.colorInBetweenPrimaryAccent),
+                                  theme.resolveIntAttribute(R.attr.colorPrimary))
 
-        topFgGradient = topFgGradientBuilder.setColors(fgColors).buildRadialGradient()
-        topBgGradient = topBgGradientBuilder.setColors(bgColors).buildRadialGradient()
-        bottomFgGradient = bottomFgGradientBuilder.setColors(fgColors).buildRadialGradient()
-        bottomBgGradient = bottomBgGradientBuilder.setColors(bgColors).buildRadialGradient()
-
-        val topFgGradientBitmap =
-                Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
-        val bottomFgGradientBitmap =
-                Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(topFgGradientBitmap)
+        val fgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+        val bgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
         val paint = Paint()
         paint.style = Paint.Style.FILL
-        paint.shader = topFgGradient
+
+        val fgGradientBuilder = GradientBuilder(x2 = screenWidth.toFloat(), colors = fgColors)
+        val fgGradientShader = fgGradientBuilder.buildLinearGradient()
+        paint.shader = fgGradientShader
+        val canvas = Canvas(fgGradientBitmap)
         canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
-        canvas.setBitmap(bottomFgGradientBitmap)
-        paint.shader = bottomFgGradient
+        val bgGradientBuilder = fgGradientBuilder.copy(colors  = bgColors)
+        val bgGradientShader = bgGradientBuilder.buildLinearGradient()
+        paint.shader = bgGradientShader
+        canvas.setBitmap(bgGradientBitmap)
         canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
-        styleActionBar(topFgGradientBitmap)
-        styleBottomAppBar(screenWidth, bottomFgGradientBitmap)
+        styleActionBarContents(fgGradientShader, fgGradientBitmap)
+        ui.bottomAppBar.backgroundGradient = bgGradientShader
+        ui.bottomAppBar.indicatorGradient = fgGradientShader
+        styleBottomAppBar(screenWidth, fgGradientBitmap, fgGradientBuilder, bgGradientBuilder)
     }
 
-    private fun styleActionBar(topFgGradientBitmap: Bitmap) {
-        if (!ui.actionBar.isLaidOut)
-            ui.actionBar.doOnNextLayout { styleActionBar(topFgGradientBitmap) }
+    private fun styleActionBarContents(fgGradientShader: Shader, fgGradientBitmap: Bitmap) {
+        val buttonWidth = ui.actionBar.ui.backButton.drawable.intrinsicWidth
+        var x = buttonWidth / 2
+        ui.actionBar.ui.backButton.drawable.setTint(fgGradientBitmap.getPixel(x, 0))
+        ui.actionBar.ui.titleSwitcher.setShader(fgGradientShader)
 
-        // For some reason, using getPixelAtCenter with the backButton does
-        // not work here, even though it should be laid out by this point.
-        val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        ui.actionBar.ui.backButton.measure(wrapContent, wrapContent)
-        ui.actionBar.ui.backButton.drawable.setTint(
-            topFgGradientBitmap.getPixel(ui.actionBar.ui.backButton.measuredWidth / 2,
-                                         ui.actionBar.height / 2))
-        ui.actionBar.ui.titleSwitcher.setShader(topFgGradient)
-        ui.actionBar.ui.searchButton.drawable?.setTint(
-            topFgGradientBitmap.getPixelAtCenter(ui.actionBar.ui.searchButton))
-        ui.actionBar.ui.changeSortButton.drawable.setTint(
-            topFgGradientBitmap.getPixelAtCenter(ui.actionBar.ui.changeSortButton))
-        ui.actionBar.ui.menuButton.drawable.setTint(
-            topFgGradientBitmap.getPixelAtCenter(ui.actionBar.ui.menuButton))
+        x = resources.displayMetrics.widthPixels - buttonWidth / 2
+        ui.actionBar.ui.menuButton.drawable.setTint(fgGradientBitmap.getPixel(x, 0))
+        x -= buttonWidth
+        ui.actionBar.ui.changeSortButton.drawable.setTint(fgGradientBitmap.getPixel(x, 0))
+        x -= buttonWidth
+        ui.actionBar.ui.searchButton.drawable?.setTint(fgGradientBitmap.getPixel(x, 0))
     }
 
-    private fun styleBottomAppBar(screenWidth: Int, bottomFgGradientBitmap: Bitmap) {
-        if (!ui.bottomAppBar.isLaidOut)
-            ui.bottomAppBar.doOnNextLayout { styleBottomAppBar(screenWidth, bottomFgGradientBitmap) }
-        ui.bottomAppBar.backgroundGradient = bottomBgGradient
-        ui.bottomAppBar.indicatorGradient = bottomFgGradient
-
+    private fun styleBottomAppBar(screenWidth: Int, fgGradientBitmap: Bitmap,
+                                  fgGradientBuilder: GradientBuilder,
+                                  bgGradientBuilder: GradientBuilder) {
         // Checkout button
-        val rect = Rect()
-        ui.checkoutButton.getGlobalVisibleRect(rect)
-        ui.checkoutButton.foregroundGradient = bottomFgGradientBuilder
-            .copy(x1 = ui.checkoutButton.width * 3f / 4f).buildRadialGradient()
-        ui.checkoutButton.backgroundGradient = bottomBgGradientBuilder
-            .copy(x1 = ui.checkoutButton.width * 3f / 4f).buildRadialGradient()
+        val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        ui.cradleLayout.measure(wrapContent, wrapContent)
+        val cradleWidth = ui.cradleLayout.measuredWidth
+        val cradleLeft = (screenWidth - cradleWidth) / 2f
+        ui.checkoutButton.foregroundGradient = fgGradientBuilder
+                .setX1(-cradleLeft).setX2(screenWidth - cradleLeft).buildLinearGradient()
+        ui.checkoutButton.backgroundGradient = bgGradientBuilder
+                .setX1(-cradleLeft).setX2(screenWidth - cradleLeft).buildLinearGradient()
 
         // Add button
-        ui.addButton.foregroundGradient = bottomFgGradientBuilder.copy(
-            x1 = ui.addButton.width / 2f, y1 = ui.addButton.height / 4f,
-            x2 = bottomFgGradientBuilder.y2 * 0.75f,
-            y2 = bottomFgGradientBuilder.y2 * 0.75f
-        ).buildRadialGradient()
-        ui.addButton.backgroundGradient = bottomBgGradientBuilder.copy(
-            x1 = ui.addButton.width / 2f, y1 = ui.addButton.height / 4f
-        ).buildRadialGradient()
+        val addButtonWidth = ui.addButton.layoutParams.width
+        val addButtonLeft = cradleLeft + cradleWidth - addButtonWidth * 1f
+        ui.addButton.foregroundGradient = fgGradientBuilder
+                .setX1(-addButtonLeft).setX2(screenWidth - addButtonLeft).buildLinearGradient()
+        ui.addButton.backgroundGradient = bgGradientBuilder
+                .setX1(-addButtonLeft).setX2(screenWidth - addButtonLeft).buildLinearGradient()
 
-        // BottomNavigationView active colors
-        val shoppingListButton = ui.bottomNavigationBar.findViewById<View>(R.id.shopping_list_button)
-        val activeColor = bottomFgGradientBitmap.getPixelAtCenter(shoppingListButton)
-        ui.bottomNavigationBar.itemIconTintList = ColorStateList.valueOf(activeColor)
-        ui.bottomNavigationBar.itemTextColor = ui.bottomNavigationBar.itemIconTintList
+        val menuSize = ui.bottomNavigationBar.menu.size()
+        for (i in 0 until menuSize) {
+            val center = ((i + 0.5f) / menuSize * screenWidth).toInt()
+            val tint = ColorStateList.valueOf(fgGradientBitmap.getPixel(center, 0))
+            ui.bottomNavigationBar.getIconAt(i).imageTintList = tint
+            ui.bottomNavigationBar.setTextTintList(i, tint)
+        }
+        //ui.bottomNavigationBar.invalidate()
     }
 
     private fun ActionBarTitle.setShader(shader: Shader?) {

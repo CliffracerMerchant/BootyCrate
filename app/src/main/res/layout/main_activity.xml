@@ -51,7 +51,7 @@
                 android:layout_marginTop="2dp"
                 style="@style/ShoppingListBadge" />
 
-        </com.google.android.material.bottomnavigation.BottomNavigationView>
+        </com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx>
 
     </com.cliffracermerchant.bootycrate.BottomAppBarWithIndicator>
 

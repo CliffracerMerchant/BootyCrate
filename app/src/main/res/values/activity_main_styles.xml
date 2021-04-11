@@ -8,7 +8,7 @@
     <style name="TopActionBar">
         <item name="optionsMenuResId">@menu/action_bar_menu</item>
         <item name="changeSortMenuResId">@menu/change_sort</item>
-<!--        <item name="android:background">@drawable/background_foreground_gradient_preview</item>-->
+        <item name="android:background">@drawable/background_foreground_gradient_preview</item>
     </style>
 
     <style name="ActionBarTitle">
