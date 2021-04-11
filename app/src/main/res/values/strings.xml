@@ -17,10 +17,7 @@
     <string name="amount_descending_description">Amount descending</string>
 
     <string name="checkout_button_background_path_data">M108,0 h-90 A 20.5 20.5 0 0 0 0,18 A 28 28 0 0 0 28,46 h90 A 32,32 0 0 1 108,0 Z</string>
-    <string name="checkout_button_outline_path_data">M104.5,1.5 h-88.5 A 19 19 0 0 0 1.5,18 A 26.5 26.5 0 0 0 28,44.5 h85.5 A 33.5,33.5 0 0 1 105.2,1.5 Z</string>
-    <string name="checkout_button_outline_clip_path_data">M80,3 h40 v 40 h-40 Z</string>
     <string name="add_button_background_path_data">M 28,0 A 28,28 0 1 1 28,56 A 28,28 0 1 1 28,0</string>
-    <string name="add_button_outline_path_data">M 28,1.5 A 26.5,26.5 0 1 1 28,54.5 A 26.5,26.5 0 1 1 28,1.5</string>
     <string name="add_button_plus_path_data">M 28,19 L 28,37 M 19,28 L 37,28</string>
 
     <string name="add_item_button_name">Add new item</string>

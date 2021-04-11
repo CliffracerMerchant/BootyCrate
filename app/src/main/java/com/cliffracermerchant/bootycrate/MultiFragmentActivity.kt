@@ -35,7 +35,7 @@ import dagger.hilt.android.AndroidEntryPoint
  * this can be accomplished using the function addSecondaryFragment.
  *
  * In order for the primary fragment auto-generation to succeed, the prop-
- * erty navigationBar must be overridden in a subclass before MultiFrag-
+ * erty navigationBar must be initialized in a subclass before MultiFrag-
  * mentActivity's onCreate is called, the property fragmentContainerId
  * must be set to the id of the container that the fragments will be added
  * to, and the resource pointed to by the id R.array.multi_fragment_activity_fragments
@@ -174,7 +174,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             assignedFragments++
         }}
         catch (e: IndexOutOfBoundsException) { throw IndexOutOfBoundsException(
-            "The navigation menu of the navigation bar must have at least as many non-empty menu" +
+            "The navigation menu of the navigation bar must have at least as many enabled menu" +
             "items as the number of fragments named in R.array.multi_fragment_activity_fragments.")
         }
         val transaction = supportFragmentManager.beginTransaction()

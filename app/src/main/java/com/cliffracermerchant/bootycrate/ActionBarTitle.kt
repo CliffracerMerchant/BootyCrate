@@ -73,7 +73,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         titleView.typeface = try { ResourcesCompat.getFont(context, fontId) }
                           catch(e: Resources.NotFoundException) { null }
 
-        fontId = a.getResourceId(R.styleable.ActionBarTitle_searchViewFont, 0)
+        fontId = a.getResourceId(R.styleable.ActionBarTitle_searchQueryFont, 0)
         searchQueryView.typeface = try { ResourcesCompat.getFont(context, fontId) }
                                catch(e: Resources.NotFoundException) { null }
 

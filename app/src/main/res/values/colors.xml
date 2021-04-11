@@ -5,10 +5,6 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <color name="colorPrimary">#8C50CB</color>
-    <color name="colorInBetweenPrimaryAccent1">#CB508C</color>
-    <color name="colorInBetweenPrimaryAccent2">#CB5050</color>
-    <color name="colorAccent">#CB8C50</color>
     <color name="colorWindowBackgroundLight">#f1f3f5</color>
     <color name="colorWindowBackgroundDark">#212529</color>
     <color name="colorRecyclerViewItemLight">#dee2e6</color>
@@ -31,4 +27,26 @@
     <color name="viewModelItemColor9">#B141DA</color>
     <color name="viewModelItemColor10">#DB70A6</color>
     <color name="viewModelItemColor11">#808080</color>
+
+    <color name="lightThemeFgGradientLeft">#EEEEEE</color>
+    <color name="lightThemeFgGradientMiddle">#EEEEEE</color>
+    <color name="lightThemeFgGradientRight">#EEEEEE</color>
+    <color name="lightThemeBgGradientLeft">#E89162</color>
+    <color name="lightThemeBgGradientMiddle">#FF7474</color>
+    <color name="lightThemeBgGradientRight">#D57DA0</color>
+
+    <color name="darkThemeFgGradientLeft">#EEEEEE</color>
+    <color name="darkThemeFgGradientMiddle">#EEEEEE</color>
+    <color name="darkThemeFgGradientRight">#EEEEEE</color>
+    <color name="darkThemeBgGradientLeft">#BF754C</color>
+    <color name="darkThemeBgGradientMiddle">#CC5656</color>
+    <color name="darkThemeBgGradientRight">#C15A86</color>
+
+<!--    <color name="darkThemeFgGradientLeft">#4A9DB6</color>-->
+<!--    <color name="darkThemeFgGradientMiddle">#4A69B6</color>-->
+<!--    <color name="darkThemeFgGradientRight">#AE5CD1</color>-->
+<!--    <color name="darkThemeBgGradientLeft">#36505C</color>-->
+<!--    <color name="darkThemeBgGradientMiddle">#3E4568</color>-->
+<!--    <color name="darkThemeBgGradientRight">#5A3961</color>-->
+
 </resources>

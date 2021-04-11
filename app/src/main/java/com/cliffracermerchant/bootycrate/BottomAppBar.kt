@@ -13,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.Toolbar
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.graphics.withClip
 import androidx.core.view.doOnNextLayout
@@ -21,26 +22,23 @@ import com.google.android.material.shape.EdgeTreatment
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.shape.ShapePath
-import dagger.hilt.android.AndroidEntryPoint
 import kotlin.math.atan
 
 /**
  * A custom toolbar that has a cutout in its top edge to hold the contents of a layout.
  *
- * BottomAppBar functions mostly as a regular Toolbar, except that its custom
- * CradleTopEdgeTreatment used on its top edge gives it a cutout in its shape
- * that can be used to hold the contents of a layout. The layout in question
- * must be referenced by the XML attribute cradleLayoutResId, must be a sib-
- * ling of the BottomAppBar, and both must have a CoordinatorLayout parent.
- *
- * The gradients used for the background, border, and indicator can be set
- * through the public properties backgroundGradient, borderGradient, and indi-
- * catorGradient, respectively.
+ * BottomAppBar functions mostly as a regular Toolbar, except that its cus-
+ * tom CradleTopEdgeTreatment used on its top edge gives it a cutout in
+ * its shape that can be used to hold the contents of a layout. The layout
+ * in question must be referenced by the XML attribute cradleLayoutResId,
+ * must be a sibling of the BottomAppBar, and both must have a Coordinator-
+ * Layout parent. The gradient used for the background can be set through
+ * the public property backgroundGradient.
  */
 open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
     enum class CradleAlignmentMode { Start, Center, End }
     val cradleAlignmentMode: CradleAlignmentMode
-    var cradleWidth: Int = 0
+    var cradleWidth = 0
         set(value) { field = value
                      materialShapeDrawable.invalidateSelf() }
     var cradleDepth: Int
@@ -51,15 +49,11 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
 
     var backgroundGradient: Shader? get() = backgroundPaint.shader
                                     set(value) { backgroundPaint.shader = value }
-    var borderGradient: Shader? get() = borderPaint.shader
-                                set(value) { borderPaint.shader = value }
-
     private val materialShapeDrawable = MaterialShapeDrawable()
     protected val outlinePath = Path()
     protected val topEdgePath = Path()
 
     protected val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
-    protected val borderPaint = Paint().apply { style = Paint.Style.STROKE }
 
     private val arcQuarter = 90f
     private val angleRight = 0f
@@ -76,7 +70,6 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
         cradleBottomCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0)
         cradleStartEndMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleStartEndMargin, 90)
         cradleContentsMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleContentsMargin, 0)
-        borderPaint.strokeWidth = a.getDimension(R.styleable.BottomAppBar_topBorderWidth, 0f)
         val cradleLayoutResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_cradleLayoutResId)
         a.recycle()
 
@@ -94,8 +87,6 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
     override fun onDraw(canvas: Canvas?) {
         if (canvas == null) return
         canvas.drawPath(outlinePath, backgroundPaint)
-        if (borderPaint.strokeWidth != 0f)
-            canvas.drawPath(topEdgePath, borderPaint)
     }
 
     private fun prepareCradleLayout(cradleLayout: ViewGroup) {
@@ -126,13 +117,10 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
 
     /** An EdgeTreatment used to draw a cradle cutout for the BottomAppBar.
      *
-     *  CradleTopEdgeTreatment's getEdgePath draws a cutout shape for the Bottom-
-     *  AppBar to hold the contents of the BottomAppBar's cradle layout. It uses
-     *  BottomAppBar's members (e.g. cradleHorizontalOffset or cradleDepth) to
-     *  accomplish this, and is therefore not usable outside its outer class.
-     *
-     *  CradleTopEdgeTreatment does not support the interpolation feature of
-     *  EdgeTreatment. */
+     *  CradleTopEdgeTreatment's getEdgePath draws a cutout shape for the
+     *  BottomAppBar to hold the contents of the BottomAppBar's cradle lay-
+     *  out. CradleTopEdgeTreatment does not support the interpolation fea-
+     *  ture of EdgeTreatment. */
     inner class CradleTopEdgeTreatment : EdgeTreatment() {
         override fun getEdgePath(
             length: Float,
@@ -140,11 +128,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
             interpolation: Float,
             shapePath: ShapePath
         ) {
-            // The path needs to be offset by half of the border paint's strokeWidth
-            // value to ensure that the border is drawn entirely within the canvas.
-            val pathOffset = borderPaint.strokeWidth / 2f
-
-            val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin + 2 * pathOffset
+            val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin
             // start will be the x coordinate of the start of the cradle if cradleTopCornerRadius is zero
             val start = when (cradleAlignmentMode) {
                 CradleAlignmentMode.Start ->  left + cradleStartEndMargin
@@ -160,56 +144,50 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
             val cradleVerticalSideLength = cradleDepth - cradleTopCornerRadius -
                                            cradleBottomCornerRadius.toFloat()
             val topCornerArc = if (cradleVerticalSideLength < 0) {
-                val distanceX = cradleTopCornerRadius - pathOffset
+                val distanceX = cradleTopCornerRadius
                 val distanceY = -cradleVerticalSideLength.toDouble()
                 val arcOffset = Math.toDegrees(atan(distanceY / distanceX))
                 (arcQuarter - arcOffset.toFloat()).coerceAtMost(90f)
             } else arcQuarter
             val bottomCornerArc = if (cradleVerticalSideLength < 0) {
-                val distanceX = cradleBottomCornerRadius + pathOffset
+                val distanceX = cradleBottomCornerRadius
                 val distanceY = -cradleVerticalSideLength.toDouble()
                 val arcOffset = Math.toDegrees(atan(distanceY / distanceX))
                 (arcOffset.toFloat() - arcQuarter).coerceAtLeast(-90f)
             } else -arcQuarter
 
             shapePath.apply {
-                lineTo(0f, pathOffset)
-                lineTo(start - cradleTopCornerRadius, pathOffset)
+                lineTo(start - cradleTopCornerRadius, 0f)
                 addArc(/*left*/       start - 2 * cradleTopCornerRadius,
-                       /*top*/        pathOffset,
+                       /*top*/        0f,
                        /*right*/      start,
-                       /*bottom*/     2f * cradleTopCornerRadius + pathOffset,
+                       /*bottom*/     2f * cradleTopCornerRadius,
                        /*startAngle*/ angleUp,
                        /*sweepAngle*/ topCornerArc)
                 if (cradleVerticalSideLength > 0)
-                    lineTo(start, cradleDepth - cradleBottomCornerRadius + pathOffset)
+                    lineTo(start, cradleDepth - cradleBottomCornerRadius.toFloat())
                 addArc(/*left*/       start,
-                       /*top*/        cradleDepth - 2 * cradleBottomCornerRadius + pathOffset,
+                       /*top*/        cradleDepth - 2f * cradleBottomCornerRadius,
                        /*right*/      start + 2 * cradleBottomCornerRadius,
-                       /*bottom*/     cradleDepth + pathOffset,
+                       /*bottom*/     cradleDepth.toFloat(),
                        /*startAngle*/ angleDown + topCornerArc,
                        /*sweepAngle*/ bottomCornerArc)
-                lineTo(end - cradleBottomCornerRadius, cradleDepth + pathOffset)
+                lineTo(end - cradleBottomCornerRadius, cradleDepth.toFloat())
                 addArc(/*left*/       end - 2 * cradleBottomCornerRadius,
-                       /*top*/        cradleDepth - 2 * cradleBottomCornerRadius + pathOffset,
+                       /*top*/        cradleDepth - 2f * cradleBottomCornerRadius,
                        /*right*/      end,
-                       /*bottom*/     cradleDepth + pathOffset,
+                       /*bottom*/     cradleDepth.toFloat(),
                        /*startAngle*/ angleDown,
                        /*sweepAngle*/ bottomCornerArc)
                 if (cradleVerticalSideLength > 0)
-                    lineTo(end, cradleDepth - cradleBottomCornerRadius + pathOffset)
+                    lineTo(end, cradleDepth - cradleBottomCornerRadius.toFloat())
                 addArc(/*left*/       end,
-                       /*top*/        pathOffset,
+                       /*top*/        0f,
                        /*right*/      end + 2 * cradleTopCornerRadius,
-                       /*bottom*/     2 * cradleTopCornerRadius + pathOffset,
+                       /*bottom*/     2f * cradleTopCornerRadius,
                        /*startAngle*/ angleUp + bottomCornerArc,
                        /*sweepAngle*/ topCornerArc)
-                // There seems to be some slight miscalculation in the topCornerArc, or
-                // elsewhere, that causes the y value after the above arc to be slightly
-                // off. This will cause a tilt in the final horizontal line. The follo-
-                // wing lineTo puts the current y at pathOffset, where it should be.
-                @Suppress("DEPRECATION") lineTo(endX, pathOffset)
-                lineTo(width.toFloat(), pathOffset)
+                lineTo(width.toFloat(), 0f)
             }
             // Copy the shapePath to topEdgePath and outlinePath, and additionally
             // finish the outlinePath so that it goes all the way around the view.
@@ -226,17 +204,16 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
 /**
  * A BottomAppBar that also draws an indicator above the selected navigation bar item.
  *
- * BottomAppBarWithIndicator extends BottomAppBar by also drawing an indicator,
- * either with the solid color described by the @property indicatorColor, or
- * with the shader object described by the @property indicatorGradient if set.
- * The indicator can be moved to be above a given nav bar menu item by calling
- * the function moveIndicatorToNavBarItem with the id of the menu item. The
- * BottomNavigationView must be referenced through the XML attribute naviga-
- * tionBarResId, and must be a descendant of the BottomAppBarWithIndicator.
- * The XML attributes indicatorThickness and indicatorWidth are used to define
- * the dimensions of the indicator.
+ * BottomAppBarWithIndicator extends BottomAppBar by also drawing an indi-
+ * cator, either with the solid color described by the @property indicator-
+ * Color, or with the shader object described by the @property indicator-
+ * Gradient if set. The indicator can be moved to be above a given nav bar
+ * menu item by calling the function moveIndicatorToNavBarItem with the id
+ * of the menu item. The BottomNavigationView must be referenced through
+ * the XML attribute navigationBarResId, and must be a descendant of the
+ * BottomAppBarWithIndicator. The XML attributes indicatorThickness and
+ * indicatorWidth are used to define the dimensions of the indicator.
  */
-@AndroidEntryPoint
 class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     BottomAppBar(context, attrs)
 {
@@ -257,7 +234,8 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBarWithIndicator)
         indicatorThickness = a.getDimension(R.styleable.BottomAppBarWithIndicator_indicatorThickness, 0f)
         indicatorWidth = a.getDimensionPixelOffset(R.styleable.BottomAppBarWithIndicator_indicatorWidth, 0)
-        indicatorPaint.color = a.getColor(R.styleable.BottomAppBarWithIndicator_indicatorColor, 0)
+        indicatorPaint.color = a.getColor(R.styleable.BottomAppBarWithIndicator_indicatorColor,
+                                          ContextCompat.getColor(context, android.R.color.black))
         val navViewResId = a.getResourceIdOrThrow(R.styleable.BottomAppBarWithIndicator_navigationBarResId)
         a.recycle()
 

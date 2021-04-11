@@ -9,7 +9,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -78,10 +77,11 @@ open class ViewModelItemView<Entity: ViewModelItem>(
 /**
  * A ViewModelItemView subclass that provides an interface for a selection and expansion of the view.
  *
- * ExpandableSelectableItemView will display the information of an instance of
- * ExpandableSelectableItem, while also providing an interface for expansion
- * and selection. The update override will update the view to reflect the
- * selection and expansion state of the ExpandableSelectableItem passed to it.
+ * ExpandableSelectableItemView will display the information of an
+ * instance of ExpandableSelectableItem, while also providing an interface
+ * for expansion and selection. The update override will update the view
+ * to reflect the selection and expansion state of the ExpandableSelect-
+ * ableItem passed to it.
  *
  * The interface for selection and deselection consists of the functions
  * isInSelectedState, select, deselect, and setSelectedState. With the
@@ -90,22 +90,19 @@ open class ViewModelItemView<Entity: ViewModelItem>(
  * state. Unless setSelectedState is called with the parameter animate set
  * to false, the change in selection state will be animated with a fade in
  * or out animation. Note that setSelected and isSelected are part of the
- * Android framework's View's API, and has nothing to do with the selection
- * API added by ExpandableSelectableItemView.
+ * Android framework's View's API, and has nothing to do with the selec-
+ * tion API added by ExpandableSelectableItemView.
  *
- * The interface for item expansion consists of expand, collapse, setExpanded,
- * and toggleExpanded. If subclasses need to alter the visibility of additional
- * views during expansion or collapse, they can override the function
- * onExpandedChanged with their additional changes. Like setSelectedState, set-
- * Expanded will animate the changes inside the view unless it is called with
- * the parameter animate equal to false.
- *
- * In order to allow for easier synchronization with concurrent animations out-
- * side the view, ExpandableSelectableItemView has the property animatorConfig,
- * which will determine the animator config used for the view's internal anim-
- * ations. The default value of AnimatorConfig.translation can be overridden in
- * order to make sure the view's animations use the same config as others out-
- * side the view. */
+ * The interface for item expansion consists of expand, collapse, set-
+ * Expanded, and toggleExpanded. If subclasses need to alter the visibil-
+ * ity of additional views during expansion or collapse, they can override
+ * the function onExpandedChanged with their additional changes. Like set-
+ * SelectedState, setExpanded will animate the changes inside the view
+ * unless it is called with the parameter animate equal to false. In order
+ * to allow for easier synchronization with concurrent animations outside
+ * the view, all of ExpandableSelectableItemView's internal animations use
+ * the AnimatorConfig defined by the property animatorConfig.
+ */
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
@@ -132,19 +129,6 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     init {
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
         gradientOutline = (background.getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
-        gradientOutline.setTintList(null)
-        gradientOutline.orientation = GradientDrawable.Orientation.LEFT_RIGHT
-        val colors = IntArray(5)
-        val typedValue = TypedValue()
-        context.theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
-        colors[0] = typedValue.data
-        context.theme.resolveAttribute(R.attr.colorInBetweenPrimaryAccent, typedValue, true)
-        colors[1] = typedValue.data
-        context.theme.resolveAttribute(android.R.attr.colorAccent, typedValue, true)
-        colors[2] = typedValue.data
-        colors[3] = colors[1]
-        colors[4] = colors[0]
-        gradientOutline.colors = colors
         this.background = background
         clipChildren = false
         if (useDefaultLayout) {

@@ -9,7 +9,6 @@ import android.graphics.*
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
-import androidx.core.graphics.ColorUtils
 import androidx.core.view.doOnNextLayout
 
 /**
@@ -44,33 +43,13 @@ class GradientStyledMainActivity : MainActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setGradientColors()
+        fgColors[0] = theme.resolveIntAttribute(R.attr.foregroundGradientColorLeft)
+        fgColors[1] = theme.resolveIntAttribute(R.attr.foregroundGradientColorMiddle)
+        fgColors[2] = theme.resolveIntAttribute(R.attr.foregroundGradientColorRight)
+        bgColors[0] = theme.resolveIntAttribute(android.R.attr.colorAccent)
+        bgColors[1] = theme.resolveIntAttribute(R.attr.colorInBetweenPrimaryAccent)
+        bgColors[2] = theme.resolveIntAttribute(android.R.attr.colorPrimary)
         initGradients()
-    }
-
-    private fun setGradientColors() {
-        val typedValue = TypedValue()
-        theme.resolveAttribute(android.R.attr.colorAccent, typedValue, true)
-        fgColors[0] = typedValue.data
-        theme.resolveAttribute(R.attr.colorInBetweenPrimaryAccent, typedValue, true)
-        fgColors[1] = typedValue.data
-        theme.resolveAttribute(android.R.attr.colorPrimary, typedValue, true)
-        fgColors[2] = typedValue.data
-
-        theme.resolveAttribute(R.attr.backgroundGradientBlendAlpha, typedValue, true)
-        val bgBlendAlpha = typedValue.data
-        theme.resolveAttribute(R.attr.foregroundGradientBlendAlpha, typedValue, true)
-        val fgBlendAlpha = typedValue.data
-        theme.resolveAttribute(R.attr.backgroundGradientBlendColor, typedValue, true)
-        val bgBlendColor = typedValue.data
-        theme.resolveAttribute(R.attr.foregroundGradientBlendColor, typedValue, true)
-        val fgBlendColor = typedValue.data
-        for (i in fgColors.indices) {
-            var colorWithTransparency = ColorUtils.setAlphaComponent(fgColors[i], bgBlendAlpha)
-            bgColors[i] = ColorUtils.compositeColors(colorWithTransparency, bgBlendColor)
-            colorWithTransparency = ColorUtils.setAlphaComponent(fgColors[i], fgBlendAlpha)
-            fgColors[i] = ColorUtils.compositeColors(colorWithTransparency, fgBlendColor)
-        }
     }
 
     private fun initGradients() {
@@ -90,8 +69,10 @@ class GradientStyledMainActivity : MainActivity() {
         bottomFgGradient = bottomFgGradientBuilder.setColors(fgColors).buildRadialGradient()
         bottomBgGradient = bottomBgGradientBuilder.setColors(bgColors).buildRadialGradient()
 
-        val topFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
-        val bottomFgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+        val topFgGradientBitmap =
+                Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+        val bottomFgGradientBitmap =
+                Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
         val canvas = Canvas(topFgGradientBitmap)
         val paint = Paint()
         paint.style = Paint.Style.FILL
@@ -109,8 +90,6 @@ class GradientStyledMainActivity : MainActivity() {
     private fun styleActionBar(topFgGradientBitmap: Bitmap) {
         if (!ui.actionBar.isLaidOut)
             ui.actionBar.doOnNextLayout { styleActionBar(topFgGradientBitmap) }
-        ui.actionBar.backgroundGradient = topBgGradient
-        ui.actionBar.borderGradient = topFgGradient
 
         // For some reason, using getPixelAtCenter with the backButton does
         // not work here, even though it should be laid out by this point.
@@ -132,19 +111,18 @@ class GradientStyledMainActivity : MainActivity() {
         if (!ui.bottomAppBar.isLaidOut)
             ui.bottomAppBar.doOnNextLayout { styleBottomAppBar(screenWidth, bottomFgGradientBitmap) }
         ui.bottomAppBar.backgroundGradient = bottomBgGradient
-        ui.bottomAppBar.borderGradient = bottomFgGradient
         ui.bottomAppBar.indicatorGradient = bottomFgGradient
 
         // Checkout button
         val rect = Rect()
         ui.checkoutButton.getGlobalVisibleRect(rect)
-        ui.checkoutButton.outlineGradient = bottomFgGradientBuilder
+        ui.checkoutButton.foregroundGradient = bottomFgGradientBuilder
             .copy(x1 = ui.checkoutButton.width * 3f / 4f).buildRadialGradient()
         ui.checkoutButton.backgroundGradient = bottomBgGradientBuilder
             .copy(x1 = ui.checkoutButton.width * 3f / 4f).buildRadialGradient()
 
         // Add button
-        ui.addButton.outlineGradient = bottomFgGradientBuilder.copy(
+        ui.addButton.foregroundGradient = bottomFgGradientBuilder.copy(
             x1 = ui.addButton.width / 2f, y1 = ui.addButton.height / 4f,
             x2 = bottomFgGradientBuilder.y2 * 0.75f,
             y2 = bottomFgGradientBuilder.y2 * 0.75f

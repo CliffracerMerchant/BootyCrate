@@ -5,9 +5,6 @@
 package com.cliffracermerchant.bootycrate
 
 import android.content.Context
-import android.graphics.Paint
-import android.graphics.Shader
-import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -165,7 +162,10 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
             ui.menuButton.isVisible = menuButtonVisible
 
         ui.titleSwitcher.setSearchQuery(activeSearchQuery ?: "", switchTo = false)
-        activeActionModeCallback?.let { startActionMode(it) }
+        activeActionModeCallback?.let {
+            startActionMode(it)
+            ui.searchButton.isActivated = false
+        }
         if (activeActionModeCallback == null) {
             actionMode?.apply {
                 finish(updateActionBarUi = false)
@@ -270,51 +270,5 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     interface ActionModeCallback {
         fun onStart(actionMode: ActionMode, actionBar: RecyclerViewActionBar) { }
         fun onFinish(actionMode: ActionMode, actionBar: RecyclerViewActionBar) { }
-    }
-}
-
-
-
-/**
- * A RecyclerViewActionBar that has a bottom border and allows setting a gradient as a background and / or border.
- *
- * GradientActionBar acts as an RecyclerViewActionBar, except that a gradient
- * (in the form of a Shader) can be set as the background or as the paint to
- * use for its border. Setting a gradient background this way (as opposed to,
- * e.g. a ShapeDrawable with a gradient fill) allows for more customization
- * (e.g. a radial gradient with different x and y radii).
- *
- * The border width is derived from the XML attribute bottomBorderWidth. The
- * background and border gradients can be set independently of each other
- * through the properties backgroundGradient and borderGradient.
- */
-class GradientActionBar(context: Context, attrs: AttributeSet) : RecyclerViewActionBar(context, attrs) {
-    private val backgroundDrawable: GradientVectorDrawable
-    private val borderDrawable: GradientVectorDrawable
-
-    var backgroundGradient: Shader? = null
-        set(value) { field = value; backgroundDrawable.gradient = value }
-    var borderGradient: Shader? = null
-        set(value) { field = value; borderDrawable.gradient = value }
-
-    init {
-        var a = context.obtainStyledAttributes(attrs, R.styleable.GradientActionBar)
-        val borderWidth = a.getDimension(R.styleable.GradientActionBar_bottomBorderWidth, 0f)
-        a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.layout_height))
-        val height = a.getDimensionPixelSize(0, 0)
-        a.recycle()
-
-        val width = context.resources.displayMetrics.widthPixels
-        val backgroundPathData = "L $width,0 L $width,$height L 0,$height Z"
-        backgroundDrawable = GradientVectorDrawable(width * 1f, height * 1f, backgroundPathData)
-
-        val borderPathData = "M 0,${height - borderWidth / 2} L $width,${height - borderWidth / 2}"
-        borderDrawable = GradientVectorDrawable(width * 1f, height * 1f, borderPathData)
-        borderDrawable.style = Paint.Style.STROKE
-        borderDrawable.strokeWidth = borderWidth
-
-        backgroundDrawable.gradient = backgroundGradient
-        borderDrawable.gradient = borderGradient
-        background = LayerDrawable(arrayOf(backgroundDrawable, borderDrawable))
     }
 }

@@ -19,10 +19,9 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
-import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * A FragmentContainer hosting activity with a custom UI.
+ * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
  *
  * MainActivity is a MultiFragmentActivity subclass with a custom UI inclu-
  * ding a RecyclerViewActionBar, a BottomAppBar, and a checkout button and
@@ -34,7 +33,6 @@ import dagger.hilt.android.AndroidEntryPoint
  * visibility of the MainActivity UI when they are displayed.
  */
 @Suppress("LeakingThis")
-@AndroidEntryPoint
 open class MainActivity : MultiFragmentActivity() {
     lateinit var ui: MainActivityBinding
 
@@ -73,7 +71,7 @@ open class MainActivity : MultiFragmentActivity() {
             showCheckoutButton(show = newFragment.showsCheckoutButton(), animate = needToAnimate)
             ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
         }
-        newFragment.onActiveStateChanged(isActive = true, activityUi = ui)
+        newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
     private val showingBottomAppBar get() = ui.bottomAppBar.translationY == 0f
@@ -106,8 +104,8 @@ open class MainActivity : MultiFragmentActivity() {
         ui.checkoutButton.isVisible = show
 
         val cradleEndWidth = if (!show) ui.addButton.layoutParams.width else {
-            val wrapContentSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            ui.cradleLayout.measure(wrapContentSpec, wrapContentSpec)
+            val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            ui.cradleLayout.measure(wrapContent, wrapContent)
             ui.cradleLayout.measuredWidth
         }
         // These z values seem not to stick when set in XML, so we have to set them here

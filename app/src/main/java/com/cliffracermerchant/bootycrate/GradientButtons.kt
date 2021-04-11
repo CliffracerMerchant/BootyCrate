@@ -19,40 +19,35 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.core.view.doOnNextLayout
 
 /**
- * A button with a vector background, outline, and icon that are all tintable with gradients.
+ * A button with a vector background and icon that are both tintable with gradients.
  *
  * OutlinedGradientButton is a button that uses GradientVectorDrawables
- * for its background, outline, and icon. The path data used for these
- * drawables are defined in XML using the attributes backgroundPathData,
- * outlinePathData, and iconPathData. The stroke width for the outline is
- * set using the attributes outlineStrokeWidth. The gradient shader used
- * for the background drawaable can be set through the property background-
- * Gradient, while the gradient for the outline, the icon, and any text is
- * set through the property foregroundGradient. In order for the path data
- * attributes to be interpreted correctly, the XML properties pathWidth
- * and pathHeight must also be set in XML.
+ * for its background and icon. The path data used for these drawables are
+ * defined in XML using the attributes backgroundPathData and iconPathData.
+ * The gradient shader used for the background drawable can be set through
+ * the property backgroundGradient, while the gradient for the icon and
+ * any text is set through the property foregroundGradient. The stroke
+ * width of the icon drawable can be set through the property iconStroke-
+ * Width; the icon will be drawn in Paint.FILL mode instead if the stroke
+ * width is 0. In order for the path data attributes to be interpreted cor-
+ * rectly, the XML properties pathWidth and pathHeight must also be set in
+ * XML.
  */
-open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
-    AppCompatButton(context, attrs)
-{
+open class GradientButton(context: Context, attrs: AttributeSet) : AppCompatButton(context, attrs) {
     var backgroundGradient get() = backgroundDrawable.gradient
         set(gradient) { backgroundDrawable.gradient = gradient }
-    var outlineGradient get() = outlineDrawable.gradient
-        set(gradient) { outlineDrawable.gradient = gradient
-                        iconDrawable.gradient = gradient
+    var foregroundGradient get() = iconDrawable.gradient
+        set(gradient) { iconDrawable.gradient = gradient
                         paint.shader = gradient }
 
     protected var backgroundDrawable: GradientVectorDrawable
-    protected var outlineDrawable: GradientVectorDrawable
     protected var iconDrawable: GradientVectorDrawable
 
     init {
-        var a = context.obtainStyledAttributes(attrs, R.styleable.OutlinedGradientButton)
-        val backgroundPathData = a.getString(R.styleable.OutlinedGradientButton_backgroundPathData) ?: ""
-        val outlinePathData = a.getString(R.styleable.OutlinedGradientButton_outlinePathData) ?: ""
-        val outlineStrokeWidth = a.getDimension(R.styleable.OutlinedGradientButton_outlineStrokeWidth, 0f)
-        val iconPathData = a.getString(R.styleable.OutlinedGradientButton_iconPathData) ?: ""
-        val iconStrokeWidth = a.getDimension(R.styleable.OutlinedGradientButton_iconStrokeWidth, 0f)
+        var a = context.obtainStyledAttributes(attrs, R.styleable.GradientButton)
+        val backgroundPathData = a.getString(R.styleable.GradientButton_backgroundPathData) ?: ""
+        val iconPathData = a.getString(R.styleable.GradientButton_iconPathData) ?: ""
+        val iconStrokeWidth = a.getDimension(R.styleable.GradientButton_iconStrokeWidth, 0f)
         // Apparently if more than one attr is retrieved with a manual
         // IntArray, they must be in numerical id order to work.
         // Log.d("", "R.attr.pathWidth = ${R.attr.pathWidth}, R.attr.pathHeight=${R.attr.pathHeight}")
@@ -63,45 +58,42 @@ open class OutlinedGradientButton(context: Context, attrs: AttributeSet) :
         a.recycle()
 
         backgroundDrawable = GradientVectorDrawable(pathWidth, pathHeight, backgroundPathData )
-        outlineDrawable = GradientVectorDrawable(pathWidth, pathHeight, outlinePathData)
         iconDrawable = GradientVectorDrawable(pathWidth, pathHeight, iconPathData)
-        outlineDrawable.strokeWidth = outlineStrokeWidth
-        outlineDrawable.style = Paint.Style.STROKE
         if (iconStrokeWidth != 0f) {
             iconDrawable.strokeWidth = iconStrokeWidth
             iconDrawable.style = Paint.Style.STROKE
         }
-        this.background = LayerDrawable(arrayOf(backgroundDrawable, outlineDrawable, iconDrawable))
+        this.background = LayerDrawable(arrayOf(backgroundDrawable, iconDrawable))
     }
 }
 
 /**
- * An OutlinedGradientButton with disable/enable functionality.
+ * A GradientButton with disable/enable functionality.
  *
- * DisableableOutlinedGradientButton automatically creates a disabled draw-
- * able for itself based on the OutlinedGradientButton background and the
- * XML attributes disabledBackgroundTint and disabledOutlineAndTextTint.
- * The disabled drawable will look like the OutlinedGradientButton back-
- * ground, but with these alternative tint values and no gradient shaders.
- * When the button is enabled or disabled via the View property isEnabled,
- * the button will animate to or from its disabled state, using the value
- * of the property animatorConfig for the animation's duration and inter-
- * polator. Note that the disabled background will not reflect any changes
- * to the button's text that occur after initialization.
+ * DisableableGradientButton automatically creates a disabled drawable for
+ * itself based on the OutlinedGradientButton background and the XML attri-
+ * butes disabledBackgroundTint and disabledIconAndTextTint. The disabled
+ * drawable will look like the GradientButton background, but with these
+ * alternative tint values and no gradient shaders. When the button is
+ * enabled or disabled via the View property isEnabled, the button will
+ * animate to or from its disabled state, using the value of the property
+ * animatorConfig for the animation's duration and interpolator. Note that
+ * the disabled background will not reflect any changes to the button's
+ * text or icon that occur after initialization.
  *
  * If any additional changes are desired when the isEnabledState is
  * changed, they can be defined in a subclass override of View.setEnabled.
  */
-open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeSet) :
-    OutlinedGradientButton(context, attrs)
+open class DisableableGradientButton(context: Context, attrs: AttributeSet) :
+    GradientButton(context, attrs)
 {
     private var disabledOverlay: Drawable? = null
     var animatorConfig: AnimatorConfig? = null
 
     init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.DisableableOutlinedGradientButton)
-        val disabledBackgroundTint = a.getColor(R.styleable.DisableableOutlinedGradientButton_disabledBackgroundTint, 0)
-        val disabledOutlineAndTextTint = a.getColor(R.styleable.DisableableOutlinedGradientButton_disabledOutlineAndTextTint, 0)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.DisableableGradientButton)
+        val disabledBackgroundTint = a.getColor(R.styleable.DisableableGradientButton_disabledBackgroundTint, 0)
+        val disabledIconAndTextTint = a.getColor(R.styleable.DisableableGradientButton_disabledIconAndTextTint, 0)
         a.recycle()
 
         doOnNextLayout {
@@ -109,12 +101,12 @@ open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeS
             val canvas = Canvas(bitmap)
 
             val backupBackgroundGradient = backgroundGradient
-            val backupOutlineGradient = outlineGradient
+            val backupForegroundGradient = foregroundGradient
             backgroundGradient = null
-            outlineGradient = null
+            foregroundGradient = null
             ((background as LayerDrawable).getDrawable(0) as GradientVectorDrawable).setTint(disabledBackgroundTint)
-            ((background as LayerDrawable).getDrawable(1) as GradientVectorDrawable).setTint(disabledOutlineAndTextTint)
-            setTextColor(disabledOutlineAndTextTint)
+            ((background as LayerDrawable).getDrawable(1) as GradientVectorDrawable).setTint(disabledIconAndTextTint)
+            setTextColor(disabledIconAndTextTint)
 
             draw(canvas)
             disabledOverlay = BitmapDrawable(context.resources, bitmap).apply {
@@ -122,7 +114,7 @@ open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeS
                 bounds = background.bounds
             }
             backgroundGradient = backupBackgroundGradient
-            outlineGradient = backupOutlineGradient
+            foregroundGradient = backupForegroundGradient
         }
     }
 
@@ -147,22 +139,22 @@ open class DisableableOutlinedGradientButton(context: Context, attrs: AttributeS
 /**
  * An button with a custom shape and a double tap to use functionality.
  *
- * CheckoutButton is a DisableableOutlinedGradientButton with extra func-
- * tionality that is intended to be used as the button to execute the shop-
- * ping list checkout function (see ShoppingListItemDao.checkout() for
- * more information). Its normal text reads checkout, but when tapped its
- * text will change to indicate to the user that it is in a confirmatory
- * state. An additional tap will then actually execute the callback set
- * via the property checkoutCallback. If the user does not tap the button
- * again before the value of R.integer.checkoutButtonConfirmationTimeout,
- * the button will reset to its normal state.
+ * CheckoutButton is a DisableableGradientButton with extra functionality
+ * that is intended to be used as the button to execute the shopping list
+ * checkout function (see ShoppingListItemDao.checkout() for more informa-
+ * tion). Its normal text reads checkout, but when tapped its text will
+ * change to indicate to the user that it is in a confirmatory state. An
+ * additional tap will then actually execute the callback set via the pro-
+ * perty checkoutCallback. If the user does not tap the button again
+ * before the value of R.integer.checkoutButtonConfirmationTimeout, the
+ * button will reset to its normal state.
  *
  * Confirmation is requested due to the checkout function being irrevers-
  * ible, and because a double tap for users who know what they are doing
  * is faster than having to answer yes to a confirmatory alert dialog.
  */
 class CheckoutButton(context: Context, attrs: AttributeSet) :
-    DisableableOutlinedGradientButton(context, attrs)
+    DisableableGradientButton(context, attrs)
 {
     private val normalText = context.getString(R.string.checkout_description)
     private val confirmText = context.getString(R.string.checkout_confirm_description)
@@ -173,16 +165,6 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
 
     init {
         text = normalText
-
-        val strokeWidth = outlineDrawable.strokeWidth
-        outlineDrawable = ClippedGradientVectorDrawable(120f, 46f,
-            context.getString(R.string.checkout_button_outline_path_data),
-            context.getString(R.string.checkout_button_outline_clip_path_data))
-        outlineDrawable.strokeWidth = strokeWidth
-        outlineDrawable.style = Paint.Style.STROKE
-        (background as LayerDrawable).setId(1, 1)
-        (background as LayerDrawable).setDrawableByLayerId(1, outlineDrawable)
-
         setOnClickListener {
             val currentTime = System.currentTimeMillis()
             if (currentTime < checkoutButtonLastPressTimeStamp + confirmTimeout) {

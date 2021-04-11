@@ -11,21 +11,14 @@
     <attr name="pathWidth" format="float" />
     <!-- The height of the canvas a path is drawn on. -->
     <attr name="pathHeight" format="float" />
-    <!-- A color in between the theme's colorPrimary and colorAccent on the color wheel.
-         Used in the creation of the top and bottom bar gradients. -->
+    <!-- A color in between colorPrimary and colorAccent. -->
     <attr name="colorInBetweenPrimaryAccent" format="color" />
-    <!-- The color that is blended with the theme's colorAccent, colorInBetweenPrimaryAccent,
-         and colorPrimary to create the background gradient. -->
-    <attr name="backgroundGradientBlendColor" format="color" />
-    <!-- The color that is blended with the theme's colorAccent, colorInBetweenPrimaryAccent,
-         and colorPrimary to create the foreground gradient. -->
-    <attr name="foregroundGradientBlendColor" format="color" />
-    <!-- The alpha value used for the colorAccent, colorInBetweenPrimaryAccent,
-         and colorPrimary gradient when it is overlaid on backgroundGradientBlendColor. -->
-    <attr name="backgroundGradientBlendAlpha" format="integer" />
-    <!-- The alpha value used for the colorAccent, colorInBetweenPrimaryAccent,
-         and colorPrimary gradient when it is overlaid on foregroundGradientBlendColor. -->
-    <attr name="foregroundGradientBlendAlpha" format="integer" />
+    <!-- The left color of the foreground gradient. -->
+    <attr name="foregroundGradientColorLeft" format="color" />
+    <!-- The middle color of the foreground gradient. -->
+    <attr name="foregroundGradientColorMiddle" format="color" />
+    <!-- The right color of the foreground gradient. -->
+    <attr name="foregroundGradientColorRight" format="color" />
 
     <declare-styleable name="RecyclerViewActionBar">
         <!-- The resource id of the menu to be used as the contents of the change sort menu. -->
@@ -36,15 +29,13 @@
 
     <attr name="actionBarTitleStyle" format="reference" />
 
-    <declare-styleable name="GradientActionBar">
-        <!-- The width of the bottom border. -->
-        <attr name="bottomBorderWidth" format="dimension" />
-    </declare-styleable>
-
     <declare-styleable name="ActionBarTitle">
+        <!-- The font to use for the activity / fragment title. -->
         <attr name="titleFont" format="reference" />
-        <attr name="searchViewFont" format="reference" />
+        <!-- The font to use for the action mode title. -->
         <attr name="actionModeTitleFont" format="reference" />
+        <!-- The font to use for the search query entry. -->
+        <attr name="searchQueryFont" format="reference" />
     </declare-styleable>
 
     <declare-styleable name="BottomAppBar">
@@ -64,8 +55,6 @@
         <attr name="cradleStartEndMargin"     format="dimension" />
         <!-- The margin in between the cradle and the cradle layout contents. -->
         <attr name="cradleContentsMargin"     format="dimension" />
-        <!-- The width of the top border. -->
-        <attr name="topBorderWidth"           format="dimension" />
         <!-- The id of the contained cradle layout. -->
         <attr name="cradleLayoutResId"        format="reference" />
     </declare-styleable>
@@ -80,6 +69,10 @@
         <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
         <attr name="navigationBarResId" format="reference" />
     </declare-styleable>
+
+    <attr name="recyclerViewItemSelectionLeftGradientColor" format="color" />
+    <attr name="recyclerViewItemSelectionMiddleGradientColor" format="color" />
+    <attr name="recyclerViewItemSelectionRightGradientColor" format="color" />
 
     <declare-styleable name="TextFieldEdit">
         <!-- Whether the TextFieldEdit will start in an editable state. -->
@@ -109,27 +102,23 @@
         <attr name="pathData" format="string" />
     </declare-styleable>
 
-    <declare-styleable name="OutlinedGradientButton">
+    <declare-styleable name="GradientButton">
         <!-- The path data to use for the vector background. -->
         <attr name="backgroundPathData" format="string" />
-        <!-- The path data to use for the vector outline. -->
-        <attr name="outlinePathData"    format="string" />
         <!-- The path data to use for the icon. -->
         <attr name="iconPathData" format="string" />
-        <!-- The stroke width of the outline. -->
-        <attr name="outlineStrokeWidth" format="dimension" />
         <!-- The stroke width of the icon. A value of 0 will use Paint.FILL instead of Paint.STROKE. -->
         <attr name="iconStrokeWidth" format="dimension" />
     </declare-styleable>
 
-    <declare-styleable name="DisableableOutlinedGradientButton">
+    <declare-styleable name="DisableableGradientButton">
         <!-- The tint that will be used for the disabled overlay background. -->
         <attr name="disabledBackgroundTint" format="color" />
-        <!-- The tint that will be used for the disabled overlay outline and text. -->
-        <attr name="disabledOutlineAndTextTint" format="color" />
+        <!-- The tint that will be used for the disabled overlay icon and text. -->
+        <attr name="disabledIconAndTextTint" format="color" />
     </declare-styleable>
 
-    <declare-styleable name="ToggleableTintedCheckbox">
+    <declare-styleable name="TintableCheckbox">
         <attr name="state_edit_color" format="boolean" />
     </declare-styleable>
 

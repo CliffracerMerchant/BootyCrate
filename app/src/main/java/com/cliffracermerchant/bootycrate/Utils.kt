@@ -9,12 +9,9 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.Matrix
-import android.graphics.Shader
 import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.FragmentActivity
 
 /**
@@ -42,28 +39,6 @@ fun View.centerX() = left + width / 2
 fun View.centerY() = top + height / 2
 fun Bitmap.getPixelAtCenter(view: View) = getPixel(view.centerX(), view.centerY())
 
-internal object UtilsPrivate {
-    val matrix = Matrix()
-    val matrixValues = FloatArray(9)
-}
-
-/** Translate the shader by dx, dy; will not affect the Shader's scale.*/
-fun Shader.translateBy(dx: Float, dy: Float) {
-    getLocalMatrix(UtilsPrivate.matrix)
-    UtilsPrivate.matrix.getValues(UtilsPrivate.matrixValues)
-    UtilsPrivate.matrixValues[2] = dx
-    UtilsPrivate.matrixValues[5] = dy
-    UtilsPrivate.matrix.setValues(UtilsPrivate.matrixValues)
-    setLocalMatrix(UtilsPrivate.matrix)
-}
-
-fun SearchView.setOnQueryTextChangeListener(listener: (String?) -> Boolean) {
-    setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-        override fun onQueryTextSubmit(query: String?) = true
-        override fun onQueryTextChange(newText: String?) = listener.invoke(newText)
-    })
-}
-
 /** Return a InputMethodManager system service from the @param context. */
 fun inputMethodManager(context: Context) =
     context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
@@ -82,3 +57,9 @@ fun View.setHeight(height: Int) { bottom = top + height }
 
 fun dpToPixels(dp: Float, resources: Resources) =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, resources.displayMetrics)
+
+private val typedValue = TypedValue()
+fun Resources.Theme.resolveIntAttribute(attr: Int): Int {
+    resolveAttribute(attr, typedValue, true)
+    return typedValue.data
+}
