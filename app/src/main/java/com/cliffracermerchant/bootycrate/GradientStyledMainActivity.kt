@@ -10,9 +10,15 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Shader
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.widget.doAfterTextChanged
+import com.google.android.material.bottomnavigation.BottomNavigationItemView
 
 /**
  * A styled subclass of MainActivity.
@@ -78,8 +84,8 @@ class GradientStyledMainActivity : MainActivity() {
         canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
         styleActionBarContents(fgGradientShader, fgGradientBitmap)
-        ui.bottomAppBar.backgroundGradient = bgGradientShader
-        ui.bottomAppBar.indicatorGradient = fgGradientShader
+        ui.bottomAppBar.backgroundPaint.shader = bgGradientShader
+        ui.bottomAppBar.indicatorPaint.shader = fgGradientShader
         styleBottomAppBar(screenWidth, fgGradientBitmap, fgGradientBuilder, bgGradientBuilder)
     }
 
@@ -96,7 +102,7 @@ class GradientStyledMainActivity : MainActivity() {
         x -= buttonWidth
         ui.actionBar.ui.searchButton.drawable?.setTint(fgGradientBitmap.getPixel(x, 0))
     }
-
+    val handler = Handler(Looper.getMainLooper())
     private fun styleBottomAppBar(screenWidth: Int, fgGradientBitmap: Bitmap,
                                   fgGradientBuilder: GradientBuilder,
                                   bgGradientBuilder: GradientBuilder) {
@@ -125,7 +131,7 @@ class GradientStyledMainActivity : MainActivity() {
             ui.bottomNavigationBar.getIconAt(i).imageTintList = tint
             ui.bottomNavigationBar.setTextTintList(i, tint)
         }
-        //ui.bottomNavigationBar.invalidate()
+        ui.bottomNavigationBar.invalidate()
     }
 
     private fun ActionBarTitle.setShader(shader: Shader?) {

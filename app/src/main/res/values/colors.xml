@@ -28,19 +28,13 @@
     <color name="viewModelItemColor10">#DB70A6</color>
     <color name="viewModelItemColor11">#808080</color>
 
-    <color name="lightThemeFgGradientLeft">#EEEEEE</color>
-    <color name="lightThemeFgGradientMiddle">#EEEEEE</color>
-    <color name="lightThemeFgGradientRight">#EEEEEE</color>
     <color name="lightThemeBgGradientLeft">#E89162</color>
     <color name="lightThemeBgGradientMiddle">#FF7474</color>
     <color name="lightThemeBgGradientRight">#D57DA0</color>
-
-    <color name="darkThemeFgGradientLeft">#EEEEEE</color>
-    <color name="darkThemeFgGradientMiddle">#EEEEEE</color>
-    <color name="darkThemeFgGradientRight">#EEEEEE</color>
     <color name="darkThemeBgGradientLeft">#BF754C</color>
     <color name="darkThemeBgGradientMiddle">#CC5656</color>
     <color name="darkThemeBgGradientRight">#C15A86</color>
+    <color name="foregroundColor">#DDDDDD</color>
 
 <!--    <color name="darkThemeFgGradientLeft">#4A9DB6</color>-->
 <!--    <color name="darkThemeFgGradientMiddle">#4A69B6</color>-->

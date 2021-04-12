@@ -8,7 +8,6 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.Resources
-import android.graphics.Bitmap
 import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
@@ -26,28 +25,24 @@ import androidx.fragment.app.FragmentActivity
 fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, moveCount: Int): Int {
     val oldRange = moveStartPos until moveStartPos + moveCount
     val newRange = moveEndPos until moveEndPos + moveCount
-    return if (pos in oldRange)
-         pos + moveEndPos - moveStartPos
-    else if (pos < oldRange.first && pos >= newRange.first)
-        pos + moveCount
-    else if (pos > oldRange.last && pos <= newRange.first)
-        pos - moveCount
-    else pos
+    return when { pos in oldRange ->
+                      pos + moveEndPos - moveStartPos
+                  pos < oldRange.first && pos >= newRange.first ->
+                      pos + moveCount
+                  pos > oldRange.last && pos <= newRange.first ->
+                      pos - moveCount
+                  else -> pos }
 }
-
-fun View.centerX() = left + width / 2
-fun View.centerY() = top + height / 2
-fun Bitmap.getPixelAtCenter(view: View) = getPixel(view.centerX(), view.centerY())
 
 /** Return a InputMethodManager system service from the @param context. */
 fun inputMethodManager(context: Context) =
     context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
 
 /** Return @param context as a FragmentActivity. */
-fun fragmentActivityFrom(context: Context) =
-    try { context as FragmentActivity }
+fun Context.asFragmentActivity() =
+    try { this as FragmentActivity }
     catch(e: ClassCastException) {
-        try { (context as ContextWrapper).baseContext as FragmentActivity }
+        try { (this as ContextWrapper).baseContext as FragmentActivity }
         catch(e: ClassCastException) {
             throw ClassCastException("The provided context must be an instance of FragmentActivity")
         }
@@ -62,4 +57,16 @@ private val typedValue = TypedValue()
 fun Resources.Theme.resolveIntAttribute(attr: Int): Int {
     resolveAttribute(attr, typedValue, true)
     return typedValue.data
+}
+
+/** Return the IntArray pointed to by @param arrayResId, resolving theme attributes if necessary. */
+fun Context.getIntArray(arrayResId: Int): IntArray {
+    val ta = resources.obtainTypedArray(arrayResId)
+    val array = IntArray(ta.length()) {
+        if (ta.peekValue(it).type == TypedValue.TYPE_ATTRIBUTE)
+            theme.resolveIntAttribute(ta.peekValue(it).data)
+        else ta.getColor(it, 0)
+    }
+    ta.recycle()
+    return array
 }

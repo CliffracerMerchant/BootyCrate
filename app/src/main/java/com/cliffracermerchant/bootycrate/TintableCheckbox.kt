@@ -52,7 +52,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
         checkMarkDrawable.setTint(ContextCompat.getColor(context, android.R.color.black))
         setOnClickListener {
             if (inColorEditMode) {
-                val activity = fragmentActivityFrom(context)
+                val activity = context.asFragmentActivity()
                 showViewModelItemColorPickerDialog(activity.supportFragmentManager,
                                                    colorIndex, ::setColorIndex)
             }

@@ -32,15 +32,15 @@
     </integer-array>
 
     <integer-array name="foreground_gradient">
-        <item>?attr/colorAccent</item>
-        <item>?attr/colorInBetweenPrimaryAccent</item>
-        <item>?attr/colorPrimary</item>
-    </integer-array>
-
-    <integer-array name="background_gradient">
         <item>?attr/foregroundGradientColorLeft</item>
         <item>?attr/foregroundGradientColorMiddle</item>
         <item>?attr/foregroundGradientColorRight</item>
+    </integer-array>
+
+    <integer-array name="background_gradient">
+        <item>?attr/colorAccent</item>
+        <item>?attr/colorInBetweenPrimaryAccent</item>
+        <item>?attr/colorPrimary</item>
     </integer-array>
 
 </resources>

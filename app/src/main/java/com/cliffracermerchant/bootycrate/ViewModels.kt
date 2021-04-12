@@ -194,7 +194,7 @@ class InventoryViewModel @Inject constructor(app: Application) :
 }
 
 fun inventoryViewModel(context: Context) =
-    ViewModelProvider(fragmentActivityFrom(context)).get(InventoryViewModel::class.java)
+    ViewModelProvider(context.asFragmentActivity()).get(InventoryViewModel::class.java)
 
 fun shoppingListViewModel(context: Context) =
-    ViewModelProvider(fragmentActivityFrom(context)).get(ShoppingListViewModel::class.java)
+    ViewModelProvider(context.asFragmentActivity()).get(ShoppingListViewModel::class.java)

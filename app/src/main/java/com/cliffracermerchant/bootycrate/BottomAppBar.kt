@@ -32,8 +32,12 @@ import kotlin.math.atan
  * its shape that can be used to hold the contents of a layout. The layout
  * in question must be referenced by the XML attribute cradleLayoutResId,
  * must be a sibling of the BottomAppBar, and both must have a Coordinator-
- * Layout parent. The gradient used for the background can be set through
- * the public property backgroundGradient.
+ * Layout parent.
+ *
+ * Like the Material library BottomAppBar, BottomAppBar manages its own
+ * background. In order to tint the background a solid color, the property
+ * backgroundTint can be set in XML or programmatically to an int color
+ * code.
  */
 open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
     enum class CradleAlignmentMode { Start, Center, End }
@@ -47,18 +51,16 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
     var cradleStartEndMargin: Int
     var cradleContentsMargin: Int
 
-    var backgroundGradient: Shader? get() = backgroundPaint.shader
-                                    set(value) { backgroundPaint.shader = value }
     private val materialShapeDrawable = MaterialShapeDrawable()
     protected val outlinePath = Path()
     protected val topEdgePath = Path()
 
-    protected val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
+    val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
+    var backgroundTint: Int get() = backgroundPaint.color
+                            set(value) { backgroundPaint.color = value }
 
     private val arcQuarter = 90f
-    private val angleRight = 0f
     private val angleDown = 90f
-    private val angleLeft = 180f
     private val angleUp = 270f
 
     init {
@@ -71,10 +73,12 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
         cradleStartEndMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleStartEndMargin, 90)
         cradleContentsMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleContentsMargin, 0)
         val cradleLayoutResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_cradleLayoutResId)
+        backgroundTint = a.getColor(R.styleable.BottomAppBar_backgroundTint,
+                                    ContextCompat.getColor(context, android.R.color.white))
         a.recycle()
 
-        materialShapeDrawable.shapeAppearanceModel = ShapeAppearanceModel.builder().
-                                                     setTopEdge(CradleTopEdgeTreatment()).build()
+        materialShapeDrawable.shapeAppearanceModel =
+            ShapeAppearanceModel.builder().setTopEdge(CradleTopEdgeTreatment()).build()
         background = materialShapeDrawable
         @Suppress("LeakingThis") setWillNotDraw(false)
 
@@ -214,21 +218,18 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
  * BottomAppBarWithIndicator. The XML attributes indicatorThickness and
  * indicatorWidth are used to define the dimensions of the indicator.
  */
-class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
+open class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     BottomAppBar(context, attrs)
 {
-    private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
-    private var indicatorXPos = 0
-    private lateinit var navBar: BottomNavigationView
-
-    var indicatorAnimatorConfig: AnimatorConfig? = null
+    protected lateinit var navBar: BottomNavigationView
+    val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
     var indicatorWidth = 0
     var indicatorThickness get() = indicatorPaint.strokeWidth
                            set(value) { indicatorPaint.strokeWidth = value }
     var indicatorColor: Int get() = indicatorPaint.color
                             set(value) { indicatorPaint.color = value }
-    var indicatorGradient: Shader? get() = indicatorPaint.shader
-                                   set(gradient) { indicatorPaint.shader = gradient }
+    private var indicatorXPos = 0
+    var indicatorAnimatorConfig: AnimatorConfig? = null
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBarWithIndicator)
