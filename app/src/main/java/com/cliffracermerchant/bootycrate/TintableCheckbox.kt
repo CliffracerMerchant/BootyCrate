@@ -8,7 +8,6 @@ import android.content.Context
 import android.graphics.drawable.AnimatedStateListDrawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
-import android.view.View
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 
@@ -87,17 +86,6 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) :
         _isChecked = isChecked
         val newState = android.R.attr.state_checked * if (isChecked) 1 else -1
         setImageState(intArrayOf(newState), true)
-    }
-
-    // For some reason when the CheckboxAndColorEdit's visibility is set to gone
-    // and later made visible again, the drawable state is not preserved correctly.
-    // Setting inColorEditMode to false and then true again is a workaround.
-    override fun onVisibilityChanged(changedView: View, visibility: Int) {
-        super.onVisibilityChanged(changedView, visibility)
-        if (visibility == View.VISIBLE && inColorEditMode) {
-            inColorEditMode = false
-            inColorEditMode = true
-        }
     }
 
     override fun onCreateDrawableState(extraSpace: Int): IntArray =
