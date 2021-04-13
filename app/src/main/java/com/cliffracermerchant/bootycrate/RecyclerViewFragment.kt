@@ -12,8 +12,6 @@ import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 
 /**
@@ -85,22 +83,21 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         recyclerView?.snackBarAnchor = null
     }
 
-    override fun onOptionsItemSelected(item: MenuItem) =
-        if (item.isChecked) false
-        else when (item.itemId) {
-            R.id.share_menu_item -> { openShareDialog() }
-            R.id.select_all_menu_item -> {  recyclerView?.selection?.addAll(); true }
-            R.id.color_option -> { saveSortingOption(ViewModelItem.Sort.Color, item) }
-            R.id.name_ascending_option -> { saveSortingOption(ViewModelItem.Sort.NameAsc, item) }
-            R.id.name_descending_option -> { saveSortingOption(ViewModelItem.Sort.NameDesc, item) }
-            R.id.amount_ascending_option -> { saveSortingOption(ViewModelItem.Sort.AmountAsc, item) }
-            R.id.amount_descending_option -> { saveSortingOption(ViewModelItem.Sort.AmountDesc, item) }
-            else -> activity?.onOptionsItemSelected(item) ?: false
-        }
+    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+        R.id.delete_selected_menu_item -> deleteSelectedItems()
+        R.id.share_menu_item -> openShareDialog()
+        R.id.select_all_menu_item -> {  recyclerView?.selection?.addAll(); true }
+        R.id.color_option -> { saveSortingOption(ViewModelItem.Sort.Color, item) }
+        R.id.name_ascending_option -> { saveSortingOption(ViewModelItem.Sort.NameAsc, item) }
+        R.id.name_descending_option -> { saveSortingOption(ViewModelItem.Sort.NameDesc, item) }
+        R.id.amount_ascending_option -> { saveSortingOption(ViewModelItem.Sort.AmountAsc, item) }
+        R.id.amount_descending_option -> { saveSortingOption(ViewModelItem.Sort.AmountDesc, item) }
+        else -> false
+    }
 
     /** Open a ShareDialog.
      * @return whether the dialog was successfully started. */
-    private fun openShareDialog() : Boolean {
+    private fun openShareDialog(): Boolean {
         val recyclerView = this.recyclerView ?: return false
         val items = if (viewModel.selectedItems.value?.isNotEmpty() == true)
             viewModel.selectedItems.value ?: emptyList()
@@ -111,17 +108,12 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         return true
     }
 
-    private fun onDeleteButtonClicked() {
-        val view = this.view ?: return
+    private fun deleteSelectedItems(): Boolean {
+        val recyclerView = this.recyclerView ?: return false
         val size = viewModel.selectedItems.value?.size ?: 0
         viewModel.deleteSelected()
-        val text = getString(R.string.delete_snackbar_text, size)
-        Snackbar.make(view, text, Snackbar.LENGTH_LONG)
-            .setAnchorView(R.id.bottomAppBar)
-            .setAction(R.string.delete_snackbar_undo_text) { viewModel.undoDelete() }
-            .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(a: Snackbar?, b: Int) = viewModel.emptyTrash()
-            }).show()
+        recyclerView.showDeletedItemsSnackBar(size)
+        return true
     }
 
     /** Set the recyclerView's sort to @param sort, check the @param

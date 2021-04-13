@@ -71,15 +71,20 @@ abstract class ViewModelRecyclerView<Entity: ViewModelItem>(
     init {
         val swipeCallback = SwipeToDeleteCallback(context) { pos ->
             viewModel.delete(LongArray(1) { adapter.getItemId(pos) })
-            val text = context.getString(R.string.delete_snackbar_text, 1)
-            Snackbar.make(this, text, Snackbar.LENGTH_LONG)
-                .setAnchorView(snackBarAnchor ?: this)
-                .setAction(R.string.delete_snackbar_undo_text) { viewModel.undoDelete() }
-                .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                    override fun onDismissed(a: Snackbar?, b: Int) = viewModel.emptyTrash()
-                }).show()
+            showDeletedItemsSnackBar(1)
         }
         ItemTouchHelper(swipeCallback).attachToRecyclerView(this)
+    }
+
+    fun showDeletedItemsSnackBar(numDeletedItems: Int) {
+        val text = context.getString(R.string.delete_snackbar_text, numDeletedItems)
+        Snackbar.make(this, text, Snackbar.LENGTH_LONG)
+            .setAnchorView(snackBarAnchor ?: this)
+            .setAction(R.string.delete_snackbar_undo_text) { viewModel.undoDelete() }
+            .setActionTextColor(context.theme.resolveIntAttribute(R.attr.colorAccent))
+            .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                override fun onDismissed(a: Snackbar?, b: Int) = viewModel.emptyTrash()
+            }).show()
     }
 
     fun observeViewModel(owner: LifecycleOwner) {

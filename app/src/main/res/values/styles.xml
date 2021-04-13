@@ -105,11 +105,11 @@
     </style>
 
     <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
-        <item name="android:background">?attr/recyclerViewItemColor</item>
+        <item name="backgroundTint">?attr/recyclerViewItemColor</item>
     </style>
 
     <style name="SnackbarActionTextAppearance" parent="Widget.MaterialComponents.Button.TextButton.Snackbar">
-        <item name="android:textColor">?android:attr/textColorLink</item>
+        <item name="android:textColor">?attr/colorAccent</item>
     </style>
 
     <style name="AboutAppBody" parent="@style/SecondaryTextAppearance">
