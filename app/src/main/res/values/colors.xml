@@ -5,37 +5,42 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <color name="colorPrimary">#CB8C50</color>
-    <color name="colorPrimaryDimmed">#704040</color>
-    <!-- Because it is used as the status bar color and the action bar has a gradient
-         background that ends on the top end with colorAccent, colorPrimaryDark is
-         actually a darker version of colorAccent rather than colorPrimary -->
-    <color name="colorPrimaryDark">#CC803485</color>
-    <color name="colorInBetweenPrimaryAccent1">#CB5050</color>
-    <color name="colorInBetweenPrimaryAccent2">#CB508C</color>
-    <color name="colorAccent">#8C50CB</color>
-    <color name="colorAccentDark">#3D0E5C</color>
-    <color name="colorWindowBackgroundLight">#FFFFFF</color>
-    <color name="colorWindowBackgroundDark">#252525</color>
-    <color name="colorRecyclerViewItemLight">#EEEEEE</color>
-    <color name="colorRecyclerViewItemDark">#353535</color>
-    <color name="colorTextLight">#BBBBBB</color>
-    <color name="colorTextLightSecondary">#808080</color>
-    <color name="colorTextDark">#202020</color>
-    <color name="colorTextDarkSecondary">#353535</color>
+    <color name="colorWindowBackgroundLight">#f1f3f5</color>
+    <color name="colorWindowBackgroundDark">#212529</color>
+    <color name="colorRecyclerViewItemLight">#dee2e6</color>
+    <color name="colorRecyclerViewItemDark">#2F3335</color>
+    <color name="colorTextLight">#adb5bd</color>
+    <color name="colorTextLightSecondary">#868e96</color>
+    <color name="colorTextDark">#343a40</color>
+    <color name="colorTextDarkSecondary">#495057</color>
     <color name="colorTextLink">#58ECFF</color>
-    <color name="checkoutButtonEnabledColor">#CB6C50</color>
 
     <color name="viewModelItemColor0">#D65C5C</color>
     <color name="viewModelItemColor1">#D6995C</color>
     <color name="viewModelItemColor2">#D6D65C</color>
-    <color name="viewModelItemColor3">#A7D65C</color>
-    <color name="viewModelItemColor4">#61D161</color>
-    <color name="viewModelItemColor5">#5CD6A7</color>
-    <color name="viewModelItemColor6">#5CC7D6</color>
-    <color name="viewModelItemColor7">#5C99D6</color>
-    <color name="viewModelItemColor8">#7070DB</color>
-    <color name="viewModelItemColor9">#A670DB</color>
-    <color name="viewModelItemColor10">#D270DB</color>
-    <color name="viewModelItemColor11">#DB70A6</color>
+    <color name="viewModelItemColor3">#97CF3D</color>
+    <color name="viewModelItemColor4">#3FBA3F</color>
+    <color name="viewModelItemColor5">#53E393</color>
+    <color name="viewModelItemColor6">#2CC4DA</color>
+    <color name="viewModelItemColor7">#3F7EDD</color>
+    <color name="viewModelItemColor8">#8359E6</color>
+    <color name="viewModelItemColor9">#B141DA</color>
+    <color name="viewModelItemColor10">#DB70A6</color>
+    <color name="viewModelItemColor11">#808080</color>
+
+    <color name="lightThemeBgGradientLeft">#E89162</color>
+    <color name="lightThemeBgGradientMiddle">#FF7474</color>
+    <color name="lightThemeBgGradientRight">#D57DA0</color>
+    <color name="darkThemeBgGradientLeft">#BF754C</color>
+    <color name="darkThemeBgGradientMiddle">#CC5656</color>
+    <color name="darkThemeBgGradientRight">#C15A86</color>
+    <color name="foregroundColor">#DDDDDD</color>
+
+<!--    <color name="darkThemeFgGradientLeft">#4A9DB6</color>-->
+<!--    <color name="darkThemeFgGradientMiddle">#4A69B6</color>-->
+<!--    <color name="darkThemeFgGradientRight">#AE5CD1</color>-->
+<!--    <color name="darkThemeBgGradientLeft">#36505C</color>-->
+<!--    <color name="darkThemeBgGradientMiddle">#3E4568</color>-->
+<!--    <color name="darkThemeBgGradientRight">#5A3961</color>-->
+
 </resources>

@@ -11,10 +11,12 @@
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:clipChildren="false"
     tools:context=".MainActivity" >
 
-    <com.cliffracermerchant.bootycrate.GradientActionBar
-        android:id="@+id/topActionBar"
+    <com.cliffracermerchant.bootycrate.RecyclerViewActionBar
+        android:id="@+id/actionBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         style="@style/TopActionBar" />
@@ -32,11 +34,16 @@
         android:layout_gravity="bottom"
         style="@style/BottomAppBar" >
 
-        <com.google.android.material.bottomnavigation.BottomNavigationView
+        <!-- BottomNavigationViewEx is used instead of the default Android Bottom-
+             NavigationView because it makes it easier to access the views used to
+             represent menu items (which is need for some of the gradient styling). -->
+        <com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx
             android:id="@+id/bottomNavigationBar"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             style="@style/BottomNavigationView">
 
             <TextView
@@ -47,37 +54,39 @@
                 android:layout_marginTop="2dp"
                 style="@style/ShoppingListBadge" />
 
-        </com.google.android.material.bottomnavigation.BottomNavigationView>
+        </com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cradleLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:elevation="10dp"
+            android:layout_marginBottom="10dp" >
+
+            <com.cliffracermerchant.bootycrate.CheckoutButton
+                android:id="@+id/checkout_button"
+                android:layout_width="120dp"
+                android:layout_height="46dp"
+                android:layout_gravity="bottom"
+                tools:ignore="RtlHardcoded"
+                android:layout_marginRight="42dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                style="@style/CheckoutButton" />
+
+            <com.cliffracermerchant.bootycrate.GradientButton
+                android:id="@+id/add_button"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                style="@style/AddButton" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </com.cliffracermerchant.bootycrate.BottomAppBarWithIndicator>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/cradleLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        tools:layout_gravity="bottom|center_horizontal"
-        tools:layout_marginBottom="10dp">
-
-        <com.cliffracermerchant.bootycrate.CheckoutButton
-            android:id="@+id/checkout_button"
-            android:layout_width="120dp"
-            android:layout_height="46dp"
-            android:layout_gravity="bottom"
-            tools:ignore="RtlHardcoded"
-            android:layout_marginRight="42dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            style="@style/CheckoutButton" />
-
-        <com.cliffracermerchant.bootycrate.OutlinedGradientButton
-            android:id="@+id/add_button"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            style="@style/AddButton" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

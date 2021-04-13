@@ -8,34 +8,29 @@
     <style name="TopActionBar">
         <item name="optionsMenuResId">@menu/action_bar_menu</item>
         <item name="changeSortMenuResId">@menu/change_sort</item>
-        <item name="android:text">@string/app_name</item>
-        <item name="bottomBorderWidth">4dp</item>
+        <item name="android:background">@drawable/background_gradient</item>
     </style>
 
-    <style name="CustomTitle">
-        <item name="android:text">@string/app_name</item>
+    <style name="ActionBarTitle">
         <item name="android:gravity">center_vertical</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
         <item name="android:textSize">19sp</item>
-        <item name="fontFamily">@font/comfortaa</item>
+        <item name="titleFont">@font/comfortaa</item>
+        <item name="android:text">@string/app_name</item>
     </style>
 
     <style name="BottomAppBar">
         <item name="contentInsetStart">0dp</item>
-        <item name="cradleAlignmentMode">center</item>
         <item name="cradleTopCornerRadius">25dp</item>
         <item name="cradleBottomCornerRadius">34dp</item>
         <item name="cradleDepth">52dp</item>
-        <item name="cradleContentsMargin">4dp</item>
-        <item name="indicatorColor">@color/colorInBetweenPrimaryAccent1</item>
-        <item name="topBorderWidth">4dp</item>
+        <item name="cradleContentsMargin">5dp</item>
+        <item name="indicatorThickness">10dp</item>
         <item name="cradleLayoutResId">@id/cradleLayout</item>
-        <item name="navigationBarResId">@id/bottomNavigationBar</item>
+        <item name="navBarResId">@id/bottomNavigationBar</item>
     </style>
 
     <style name="BottomNavigationView">
-        <item name="itemIconTint">@color/bottom_navigation_view_item_color</item>
-        <item name="itemTextColor">@color/bottom_navigation_view_item_color</item>
         <item name="labelVisibilityMode">labeled</item>
         <!-- Unless its background is set explicitly, BottomNavigationView will
            ~ create its own background, covering up BottomAppBar's background.
@@ -48,7 +43,7 @@
         <item name="android:alpha">0</item>
         <item name="android:paddingLeft">4dp</item>
         <item name="android:paddingRight">4dp</item>
-        <item name="android:textColor">@color/colorInBetweenPrimaryAccent2</item>
+        <item name="android:textColor">?attr/foregroundGradientColorLeft</item>
         <item name="android:textSize" tools:ignore="SpUsage">22dp</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -61,24 +56,23 @@
         <item name="android:text">@string/checkout_description</item>
         <item name="android:textSize" tools:ignore="SpUsage">15dp</item>
         <item name="android:transformPivotX">100dp</item>
-        <item name="outlineStrokeWidth">4dp</item>
-        <item name="disabledBackgroundTint">@android:color/darker_gray</item>
-        <item name="disabledOutlineAndTextTint">@color/colorTextLightSecondary</item>
+        <item name="disabledBackgroundTint">#909090</item>
+        <item name="disabledIconAndTextTint">#757575</item>
     </style>
 
     <style name="AddButton">
         <item name="backgroundPathData">@string/add_button_background_path_data</item>
-        <item name="outlinePathData">@string/add_button_outline_and_plus_path_data</item>
+        <item name="iconPathData">@string/add_button_plus_path_data</item>
         <item name="pathWidth">56.0</item>
         <item name="pathHeight">56.0</item>
-        <item name="outlineStrokeWidth">4dp</item>
+        <item name="iconStrokeWidth">4dp</item>
     </style>
 
     <style name="EmptyRecyclerViewStyle" parent="@style/TitleTextAppearance">
         <item name="android:text">@string/no_search_results_message</item>
     </style>
 
-    <style name="RecyclerViewFragment">
+    <style name="RecyclerView">
         <item name="android:clipToPadding">false</item>
         <item name="android:paddingBottom">?attr/actionBarSize</item>
         <item name="android:paddingTop">4dp</item>

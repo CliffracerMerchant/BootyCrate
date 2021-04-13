@@ -9,7 +9,6 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DiffUtil
-import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 import kotlin.collections.set
 
@@ -22,7 +21,6 @@ import kotlin.collections.set
  * ViewModel property, for convenience. sortByChecked should not be changed
  * the property viewModel is initialized, or an exception will be thrown.
  */
-@AndroidEntryPoint
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs)
 {
@@ -30,7 +28,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     override val adapter = ShoppingListAdapter()
     override val collectionName = context.getString(R.string.shopping_list_item_collection_name)
     override val viewModel = shoppingListViewModel(context)
-    val checkedItems = CheckedItems()
 
     var sortByChecked get() = viewModel.sortByChecked
         set(value) { viewModel.sortByChecked = value }
@@ -95,7 +92,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                         holder.view.isExpanded != item.isExpanded)
                             holder.view.setExpanded(item.isExpanded)
                     if (changes.contains(ShoppingListItem.Field.IsSelected) &&
-                        holder.view.isSelected != item.isSelected)
+                        holder.view.isInSelectedState != item.isSelected)
                             holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(ShoppingListItem.Field.IsChecked) &&
                         ui.checkBox.isChecked != item.isChecked)
@@ -125,15 +122,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 view.setStrikeThroughEnabled(checked)
             }
         }
-    }
-
-    /** A memberless class to make accessing the checked items of the shopping list more idiomatic. */
-    inner class CheckedItems {
-        val sizeLiveData get() = viewModel.checkedItemsSize
-        val size get() = sizeLiveData.value
-        val isEmpty get() = size == 0
-        fun checkAll() = viewModel.checkAll()
-        fun clear() = viewModel.uncheckAll()
     }
 
     /**

@@ -6,41 +6,52 @@
 
 <resources>
     <style name="LightTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="isDarkTheme">false</item>
         <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
         <item name="recyclerViewItemColor">@color/colorRecyclerViewItemLight</item>
         <item name="popupMenuBackground">@color/colorWindowBackgroundLight</item>
         <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
+        <item name="alertDialogTheme">@style/LightAlertDialog</item>
         <item name="snackbarStyle">@style/SnackbarStyle</item>
-
-        <item name="textColor">@color/colorTextDark</item>
         <item name="android:textColorPrimary">@color/colorTextDark</item>
         <item name="android:textColorSecondary">@color/colorTextDarkSecondary</item>
         <item name="android:textColorHint">@color/colorTextDarkSecondary</item>
 
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
         <item name="imageButtonStyle">@style/ImageButton</item>
         <item name="android:textViewStyle">@style/TextAppearance</item>
         <item name="editTextStyle">?android:attr/textAppearance</item>
         <item name="checkboxStyle">@style/CheckBox</item>
         <item name="snackbarTextViewStyle">?android:attr/textViewStyle</item>
         <item name="snackbarButtonStyle">@style/SnackbarActionTextAppearance</item>
+        <item name="actionBarTitleStyle">@style/ActionBarTitle</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
+
+        <item name="colorAccent">@color/lightThemeBgGradientLeft</item>
+        <item name="colorInBetweenPrimaryAccent">@color/lightThemeBgGradientMiddle</item>
+        <item name="colorPrimary">@color/lightThemeBgGradientRight</item>
+        <item name="foregroundGradientColorLeft">@color/colorWindowBackgroundLight</item>
+        <item name="foregroundGradientColorMiddle">@color/colorWindowBackgroundLight</item>
+        <item name="foregroundGradientColorRight">@color/colorWindowBackgroundLight</item>
+        <item name="recyclerViewItemSelectionLeftGradientColor">?attr/colorAccent</item>
+        <item name="recyclerViewItemSelectionMiddleGradientColor">?attr/colorInBetweenPrimaryAccent</item>
+        <item name="recyclerViewItemSelectionRightGradientColor">?attr/colorPrimary</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">
-        <item name="isDarkTheme">true</item>
         <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
         <item name="recyclerViewItemColor">@color/colorRecyclerViewItemDark</item>
         <item name="popupMenuBackground">@color/colorWindowBackgroundDark</item>
         <item name="materialAlertDialogTheme">@style/DarkAlertDialog</item>
-
-        <item name="textColor">@color/colorTextLight</item>
+        <item name="alertDialogTheme">@style/DarkAlertDialog</item>
         <item name="android:textColorPrimary">@color/colorTextLight</item>
         <item name="android:textColorSecondary">@color/colorTextLightSecondary</item>
         <item name="android:textColorHint">@color/colorTextLightSecondary</item>
+
+        <item name="colorAccent">@color/darkThemeBgGradientLeft</item>
+        <item name="colorInBetweenPrimaryAccent">@color/darkThemeBgGradientMiddle</item>
+        <item name="colorPrimary">@color/darkThemeBgGradientRight</item>
+        <item name="foregroundGradientColorLeft">@color/colorTextDark</item>
+        <item name="foregroundGradientColorMiddle">@color/colorTextDark</item>
+        <item name="foregroundGradientColorRight">@color/colorTextDark</item>
     </style>
 
     <style name="TextAppearance" parent="TextAppearance.AppCompat">
@@ -73,15 +84,19 @@
 
     <style name="LightAlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
         <item name="shapeAppearanceOverlay">@style/DialogCorners</item>
-        <item name="colorPrimary">@color/colorAccent</item>
-        <item name="android:background">@color/colorWindowBackgroundLight</item>
-        <item name="android:textColor">@color/colorTextDark</item>
+        <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
+        <item name="android:backgroundTint">@color/colorWindowBackgroundLight</item>
         <item name="android:windowTitleStyle">@style/TitleTextAppearance</item>
+        <item name="android:textColor">@color/colorTextDark</item>
+        <item name="textColorAlertDialogListItem">@color/colorTextDark</item>
+
     </style>
 
     <style name="DarkAlertDialog" parent="LightAlertDialog">
-        <item name="android:background">@color/colorWindowBackgroundDark</item>
+        <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
+        <item name="android:backgroundTint">@color/colorWindowBackgroundDark</item>
         <item name="android:textColor">@color/colorTextLight</item>
+        <item name="textColorAlertDialogListItem">@color/colorTextLight</item>
     </style>
 
     <style name="DialogCorners">
@@ -90,11 +105,11 @@
     </style>
 
     <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
-        <item name="android:background">?attr/recyclerViewItemColor</item>
+        <item name="backgroundTint">?attr/recyclerViewItemColor</item>
     </style>
 
     <style name="SnackbarActionTextAppearance" parent="Widget.MaterialComponents.Button.TextButton.Snackbar">
-        <item name="android:textColor">?android:attr/textColorLink</item>
+        <item name="android:textColor">?attr/colorAccent</item>
     </style>
 
     <style name="AboutAppBody" parent="@style/SecondaryTextAppearance">

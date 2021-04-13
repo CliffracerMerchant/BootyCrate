@@ -16,7 +16,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 /**
  * An activity that, when linked up with a navigation bar instance, will
@@ -36,7 +35,7 @@ import javax.inject.Inject
  * this can be accomplished using the function addSecondaryFragment.
  *
  * In order for the primary fragment auto-generation to succeed, the prop-
- * erty navigationBar must be overridden in a subclass before MultiFrag-
+ * erty navigationBar must be initialized in a subclass before MultiFrag-
  * mentActivity's onCreate is called, the property fragmentContainerId
  * must be set to the id of the container that the fragments will be added
  * to, and the resource pointed to by the id R.array.multi_fragment_activity_fragments
@@ -79,8 +78,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     val showingPrimaryFragment get() = supportFragmentManager.backStackEntryCount == 0
     val selectedPrimaryFragment get() = navBarMenuItemFragmentMap.getValue(navigationBar.selectedItemId)
 
-    @Inject @TransitionAnimatorConfig
-    lateinit var primaryFragmentTransitionAnimatorConfig: AnimatorConfig
+    var primaryFragmentTransitionAnimatorConfig: AnimatorConfig? = null
     protected var defaultSecondaryFragmentEnterAnimResId: Int = 0
     protected var defaultSecondaryFragmentExitAnimResId: Int = 0
 
@@ -97,7 +95,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     /** Attempt to switch to a new active fragment corresponding to the @param
      * menuItem, and @return whether or not the switch was successful. */
     private fun switchToNewPrimaryFragment(menuItem: MenuItem): Boolean {
-        if (menuItem.itemId == navigationBar.selectedItemId) return false
+        if (menuItem.itemId == navigationBar.selectedItemId || !showingPrimaryFragment) return false
         if (!navBarMenuItemFragmentMap.containsKey(menuItem.itemId)) return false
         val newFragment = navBarMenuItemFragmentMap[menuItem.itemId]
 
@@ -152,6 +150,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             supportFragmentManager.putFragment(
                 outState, idAndFragment.key.toString(), idAndFragment.value)
         outState.putBoolean("wasShowingPrimaryFragment", showingPrimaryFragment)
+        outState.putInt("selectedNavItemId", navigationBar.selectedItemId)
     }
 
     open fun onNewFragmentSelected(newFragment: Fragment) { }
@@ -175,7 +174,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             assignedFragments++
         }}
         catch (e: IndexOutOfBoundsException) { throw IndexOutOfBoundsException(
-            "The navigation menu of the navigation bar must have at least as many non-empty menu" +
+            "The navigation menu of the navigation bar must have at least as many enabled menu" +
             "items as the number of fragments named in R.array.multi_fragment_activity_fragments.")
         }
         val transaction = supportFragmentManager.beginTransaction()
@@ -189,6 +188,8 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     private fun initPrimaryFragmentVisibility(savedInstanceState: Bundle?) {
         val wasShowingPrimaryFragment =
             savedInstanceState?.getBoolean("wasShowingPrimaryFragment") ?: true
+        val savedNavItemId = savedInstanceState?.getInt("selectedNavItemId")
+        savedNavItemId?.let { navigationBar.selectedItemId = it }
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
@@ -196,7 +197,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             // we'll set them to View.INVISIBLE for the first time to ensure that they
             // are fully inflated and that there is no delay when they are switched to
             // for the first time.
-            if (navigationBar.selectedItemId != menuItemId || !wasShowingPrimaryFragment)
+            if (menuItemId != navigationBar.selectedItemId || !wasShowingPrimaryFragment)
                 fragment.view?.visibility = View.INVISIBLE
         }
     }

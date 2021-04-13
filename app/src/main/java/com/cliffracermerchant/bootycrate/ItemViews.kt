@@ -12,6 +12,7 @@ import android.graphics.drawable.LayerDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
@@ -76,31 +77,32 @@ open class ViewModelItemView<Entity: ViewModelItem>(
 /**
  * A ViewModelItemView subclass that provides an interface for a selection and expansion of the view.
  *
- * ExpandableSelectableItemView will display the information of an instance of
- * ExpandableSelectableItem, while also providing an interface for expansion
- * and selection. The update override will update the view to reflect the
- * selection and expansion state of the ExpandableSelectableItem passed to it.
+ * ExpandableSelectableItemView will display the information of an
+ * instance of ExpandableSelectableItem, while also providing an interface
+ * for expansion and selection. The update override will update the view
+ * to reflect the selection and expansion state of the ExpandableSelect-
+ * ableItem passed to it.
  *
  * The interface for selection and deselection consists of the functions
- * select, deselect, and setSelectedState. With the default background these
- * functions will give the view a surrounding gradient outline or hide the
- * outline depending on the item's selection state. Unless setSelectedState is
- * called with the parameter animate set to false, the change in selection
- * state will be animated with a fade in or out animation.
+ * isInSelectedState, select, deselect, and setSelectedState. With the
+ * default background these functions will give the view a surrounding
+ * gradient outline or hide the outline depending on the item's selection
+ * state. Unless setSelectedState is called with the parameter animate set
+ * to false, the change in selection state will be animated with a fade in
+ * or out animation. Note that setSelected and isSelected are part of the
+ * Android framework's View's API, and has nothing to do with the selec-
+ * tion API added by ExpandableSelectableItemView.
  *
- * The interface for item expansion consists of expand, collapse, setExpanded,
- * and toggleExpanded. If subclasses need to alter the visibility of additional
- * views during expansion or collapse, they can override the function
- * onExpandedChanged with their additional changes. Like setSelectedState, set-
- * Expanded will animate the changes inside the view unless it is called with
- * the parameter animate equal to false.
- *
- * In order to allow for easier synchronization with concurrent animations out-
- * side the view, ExpandableSelectableItemView has the property animatorConfig,
- * which will determine the animator config used for the view's internal anim-
- * ations. The default value of AnimatorConfig.translation can be overridden in
- * order to make sure the view's animations use the same config as others out-
- * side the view. */
+ * The interface for item expansion consists of expand, collapse, set-
+ * Expanded, and toggleExpanded. If subclasses need to alter the visibil-
+ * ity of additional views during expansion or collapse, they can override
+ * the function onExpandedChanged with their additional changes. Like set-
+ * SelectedState, setExpanded will animate the changes inside the view
+ * unless it is called with the parameter animate equal to false. In order
+ * to allow for easier synchronization with concurrent animations outside
+ * the view, all of ExpandableSelectableItemView's internal animations use
+ * the AnimatorConfig defined by the property animatorConfig.
+ */
 @SuppressLint("ViewConstructor")
 open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     context: Context,
@@ -127,15 +129,6 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     init {
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
         gradientOutline = (background.getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
-        gradientOutline.setTintList(null)
-        gradientOutline.orientation = GradientDrawable.Orientation.LEFT_RIGHT
-        val colors = IntArray(5)
-        colors[0] = ContextCompat.getColor(context, R.color.colorInBetweenPrimaryAccent2)
-        colors[1] = ContextCompat.getColor(context, R.color.colorInBetweenPrimaryAccent1)
-        colors[2] = ContextCompat.getColor(context, R.color.colorPrimary)
-        colors[3] = colors[1]
-        colors[4] = colors[0]
-        gradientOutline.colors = colors
         this.background = background
         clipChildren = false
         if (useDefaultLayout) {
@@ -150,6 +143,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         setSelectedState(item.isSelected, animate = false)
     }
 
+    val isInSelectedState get() = gradientOutline.alpha != 0
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
@@ -163,12 +157,21 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     fun toggleExpanded() = setExpanded(!isExpanded)
     open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
 
+    private fun View.clearFocusAndHideSoftInput(imm: InputMethodManager) {
+        // Clearing the focus before hiding the soft input prevents a flickering
+        // issue when the view is collapsed on some older API levels.
+        if (!isFocused) return
+        clearFocus()
+        imm.hideSoftInputFromWindow(windowToken, 0)
+    }
+
     override fun setExpanded(expanding: Boolean, animate: Boolean) {
         _isExpanded = expanding
-        if (!expanding && ui.nameEdit.isFocused ||
-                          ui.extraInfoEdit.isFocused ||
-                          ui.amountEdit.ui.valueEdit.isFocused)
-            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
+        if (!expanding) inputMethodManager?.let {
+            ui.nameEdit.clearFocusAndHideSoftInput(it)
+            ui.extraInfoEdit.clearFocusAndHideSoftInput(it)
+            ui.amountEdit.ui.valueEdit.clearFocusAndHideSoftInput(it)
+        }
 
      /* While a LayoutTransition would achieve the same thing as all of the following
         custom animations and would be much more readable, it is unfortunately imposs-
@@ -177,7 +180,6 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         ting after they are prepared, for the animators it uses internally. Unless this
         is changed, the internal expand / collapse animations must be done manually in
         case they need to be synchronized with other animations. */
-
         val editableTextFieldHeight = resources.getDimension(R.dimen.editable_text_field_min_height)
         ui.spacer.layoutParams.height =
             (editableTextFieldHeight * if (expanding) 2 else 1).toInt()
@@ -310,9 +312,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             setter = ui.nameEdit::setRight,
             fromValue = ui.nameEdit.right,
             toValue = ui.nameEdit.right + amountLeftChange,
-            config = animatorConfig).apply {
-            doOnStart { nameLockedWidth = null }
-        })
+            config = animatorConfig
+        ).apply { doOnStart { nameLockedWidth = null } })
 
         if (ui.extraInfoEdit.text.isNullOrBlank()) return
         extraInfoLockedWidth = ui.extraInfoEdit.width
@@ -320,9 +321,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             setter = ui.extraInfoEdit::setRight,
             fromValue = ui.extraInfoEdit.right,
             toValue = ui.extraInfoEdit.right + amountLeftChange,
-            config = animatorConfig).apply {
-            doOnStart { extraInfoLockedWidth = null }
-        })
+            config = animatorConfig
+        ).apply { doOnStart { extraInfoLockedWidth = null } })
     }
 
     private fun updateEditButtonState(expanding: Boolean, animate: Boolean) {
@@ -333,8 +333,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
             ui.editButton.translationY = -heightChange.toFloat()
             val editButtonAnim = valueAnimatorOfFloat(
                 setter = ui.editButton::setTranslationY,
-                fromValue = -heightChange * 1f,
-                toValue = 0f, config = animatorConfig)
+                fromValue = -heightChange * 1f, 0f,
+                config = animatorConfig)
             // editButton uses a state list animator with state_activated as the trigger.
             editButtonAnim.doOnStart { ui.editButton.isActivated = expanding }
             pendingAnimations.add(editButtonAnim)
@@ -358,9 +358,11 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     protected fun View.showOrHideAfterFading(showing: Boolean): Animator {
         alpha = if (showing) 0f else 1f
         isVisible = true
-        val animator = valueAnimatorOfFloat(setter = ::setAlpha, fromValue = alpha,
-                                            toValue = if (showing) 1f else 0f,
-                                            config = animatorConfig)
+        val animator = valueAnimatorOfFloat(
+            setter = ::setAlpha,
+            fromValue = alpha,
+            toValue = if (showing) 1f else 0f,
+            config = animatorConfig)
         if (!showing) {
             val parent = parent as ViewGroup
             parent.overlay.add(this)
@@ -420,7 +422,7 @@ class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig?) :
     }
 
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
-        ui.checkBox.inColorEditMode = expanded
+        ui.checkBox.setInColorEditMode(expanded, animate)
     }
 
     fun setStrikeThroughEnabled(enabled: Boolean, animate: Boolean = true) {
@@ -450,7 +452,7 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig?) :
         ui = ViewModelItemBinding.bind(tempUi.root)
         detailsUi = InventoryItemDetailsBinding.bind(tempUi.root)
         ui.editButton.setOnClickListener { toggleExpanded() }
-        ui.checkBox.inColorEditMode = true
+        ui.checkBox.setInColorEditMode(true, animate = false)
         ui.amountEdit.minValue = 0
         this.animatorConfig = animatorConfig
     }

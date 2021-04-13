@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import androidx.fragment.app.DialogFragment
@@ -103,10 +102,5 @@ class AboutAppDialog : DialogFragment() {
         themedAlertDialogBuilder(requireContext()).setView(R.layout.about_app_dialog).create()
 }
 
-fun themedAlertDialogBuilder(context: Context): MaterialAlertDialogBuilder {
-    // AlertDialog seems to ignore the theme's alertDialogTheme value, making it
-    // necessary to pass it's value in manually to the AlertDialog.builder constructor.
-    val typedValue = TypedValue()
-    context.theme.resolveAttribute(R.attr.materialAlertDialogTheme, typedValue, true)
-    return MaterialAlertDialogBuilder(context, typedValue.data)
-}
+fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
+    context, context.theme.resolveIntAttribute(R.attr.materialAlertDialogTheme))

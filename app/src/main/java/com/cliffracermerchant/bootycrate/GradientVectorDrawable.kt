@@ -26,7 +26,7 @@ open class GradientVectorDrawable(
     private val pathHeight: Float,
     pathData: String
 ) : Drawable() {
-    private val paint = Paint().apply { style = Paint.Style.FILL }
+    private val paint = Paint()
     private val originalPath: Path = PathParser.createPathFromPathData(pathData)
     protected var path = Path()
     protected val matrix = Matrix()
@@ -50,7 +50,10 @@ open class GradientVectorDrawable(
 
     override fun setTint(tintColor: Int) { paint.color = tintColor }
 
-    override fun draw(canvas: Canvas) = canvas.drawPath(path, paint)
+    override fun draw(canvas: Canvas) {
+        if (paint.style != Paint.Style.STROKE || paint.strokeWidth != 0f)
+            canvas.drawPath(path, paint)
+    }
 
     override fun setAlpha(alpha: Int) { paint.alpha = alpha }
 

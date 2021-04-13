@@ -22,47 +22,58 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.cliffracermerchant.bootycrate.ShaderTextSwitcher
-        android:id="@+id/customTitle"
-        style="@style/CustomTitle"
+    <Space
+        android:id="@+id/backButtonSpacer"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:src="@drawable/ic_arrow_back_black_24dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/title_switcher"/>
+
+    <com.cliffracermerchant.bootycrate.ActionBarTitle
+        android:id="@+id/title_switcher"
         android:layout_width="0dp"
         android:layout_height="44dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/backButton"
-        app:layout_constraintEnd_toStartOf="@id/searchView"
+        app:layout_constraintStart_toEndOf="@id/backButtonSpacer"
+        app:layout_constraintEnd_toStartOf="@id/searchButton"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_goneMarginStart="20dp" />
+        app:layout_goneMarginStart="20dp"
+        style="?attr/actionBarTitleStyle" />
 
     <!-- Without a maxWidth, the searchView will expand until it covers up the
          back button, even when it is constrained to the end of customTitle -->
-    <androidx.appcompat.widget.SearchView
-        android:id="@+id/searchView"
-        android:layout_width="wrap_content"
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/searchButton"
+        android:layout_width="44dp"
         android:layout_height="44dp"
         app:layout_constraintEnd_toStartOf="@id/changeSortButton"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:imeOptions="flagNoExtractUi|actionSearch"
-        app:searchHintIcon="@null" />
+        android:padding="10dp"
+        android:src="@drawable/search_and_close" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/changeSortButton"
         android:layout_width="44dp"
         android:layout_height="44dp"
-        android:padding="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/menuButton"
         app:layout_constraintTop_toTopOf="parent"
+        android:padding="10dp"
         android:src="@drawable/change_sort_and_delete" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/menuButton"
         android:layout_width="44dp"
         android:layout_height="44dp"
-        android:padding="10dp"
-        android:gravity="end"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        android:padding="10dp"
         android:src="@drawable/ic_more_vert_black_24dp" />
 </merge>

@@ -73,8 +73,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
 
         a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.textSize))
         ui.valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimension(0, 0f))
-        ui.valueEdit.paint.strokeWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 1f,
-                                                                   resources.displayMetrics)
+        ui.valueEdit.paint.strokeWidth = dpToPixels(1f, resources)
         a.recycle()
 
         ui.decreaseButton.setOnClickListener { decrement() }
@@ -145,8 +144,7 @@ class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(con
         val result = super.drawChild(canvas, child, drawingTime)
         if (child !== ui.valueEdit || underlineAlpha == 0) return result
 
-        val y = ui.valueEdit.baseline + TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                                                  2f, resources.displayMetrics)
+        val y = ui.valueEdit.baseline + dpToPixels(2f, resources)
         val paintOldAlpha = ui.valueEdit.paint.alpha
         ui.valueEdit.paint.alpha = underlineAlpha
         val startX = ui.decreaseButton.x + ui.decreaseButton.width

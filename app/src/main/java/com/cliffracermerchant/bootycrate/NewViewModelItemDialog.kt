@@ -62,7 +62,7 @@ abstract class NewViewModelItemDialog<Entity: ExpandableSelectableItem>(
             setExpanded(true, animate = false)
             ui.amountEditSpacer.isVisible = false
             ui.checkBox.setColorIndex(0, animate = false)
-            background = null
+            setSelectedState(false, animate = false)
             ui.editButton.visibility = View.GONE
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
                 viewModel.newItemExtraInfo = text.toString()
@@ -129,7 +129,7 @@ class NewShoppingListItemDialog(context: Context) :
     NewViewModelItemDialog<ShoppingListItem>(context)
 {
     override val viewModel: ShoppingListViewModel by activityViewModels()
-    init { newItemView.ui.checkBox.inColorEditMode = true }
+    init { newItemView.ui.checkBox.setInColorEditMode(true, animate = false) }
 
     override fun createItemFromView() = ShoppingListItem(
         name = newItemView.ui.nameEdit.text.toString(),

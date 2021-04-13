@@ -8,13 +8,11 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
-import dagger.hilt.android.AndroidEntryPoint
 import java.util.*
 
 /**
  * A RecyclerView to display the data provided by an InventoryViewModel
  */
-@AndroidEntryPoint
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<InventoryItem>(context, attrs)
 {
@@ -75,10 +73,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.Amount) &&
                         ui.amountEdit.value != item.amount)
                             ui.amountEdit.value = item.amount
-                    if (changes.contains(InventoryItem.Field.IsExpanded))
-                        holder.view.setExpanded(item.isExpanded)
-                    if (changes.contains(InventoryItem.Field.IsSelected))
-                        holder.view.setSelectedState(item.isSelected)
+                    if (changes.contains(InventoryItem.Field.IsExpanded) &&
+                        holder.view.isExpanded != item.isExpanded)
+                            holder.view.setExpanded(item.isExpanded)
+                    if (changes.contains(InventoryItem.Field.IsSelected) &&
+                        holder.view.isInSelectedState != item.isSelected)
+                            holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(InventoryItem.Field.AddToShoppingList) &&
                         detailsUi.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
                             detailsUi.addToShoppingListCheckBox.isChecked = item.addToShoppingList
