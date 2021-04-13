@@ -12,26 +12,23 @@ import android.graphics.Shader
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.view.WindowManager
-import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.core.widget.doAfterTextChanged
-import com.google.android.material.bottomnavigation.BottomNavigationItemView
 
 /**
  * A styled subclass of MainActivity.
  *
- * Unfortunately many of the desired aspects of MainActivity's style (e.g.
- * the menu item icons being tinted to match the gradient background of
- * the top and bottom action bar) are impossible to accomplish in XML.
- * GradientStyledMainActivity performs additional operations to initialize
- * its style. Its foreground gradient is made by creating a linear gradi-
- * ent using the values of the XML attributes foregroundGradientColorLeft,
- * foregroundGradientColorMiddle, and foregroundGradientColorRight. The
- * background gradient is made from the colors colorAccent, colorInBetween-
- * PrimaryAccent, and colorPrimary. It is assumed that
+ * Unfortunately many of the desired aspects of MainActivity's style (e.g. the
+ * menu item icons being tinted to match the gradient background of the top and
+ * bottom action bar) are impossible to accomplish in XML. GradientStyledMainActivity
+ * performs additional operations to initialize its style. Its foreground
+ * gradient is made by creating a linear gradient using the values of the XML
+ * attributes foregroundGradientColorLeft, foregroundGradientColorMiddle, and
+ * foregroundGradientColorRight. The background gradient is made from the
+ * colors colorAccent, colorInBetweenPrimaryAccent, and colorPrimary. It is
+ * assumed that the action bar will have had its background set correctly in
+ * XML to match the background gradient.
  */
 class GradientStyledMainActivity : MainActivity() {
     private val topFgGradientBuilder = GradientBuilder()

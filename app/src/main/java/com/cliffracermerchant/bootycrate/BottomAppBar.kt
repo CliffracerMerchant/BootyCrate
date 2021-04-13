@@ -8,11 +8,9 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.Toolbar
-import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.graphics.withClip
@@ -27,28 +25,29 @@ import kotlin.math.atan
 /**
  * A custom toolbar that has a cutout in its top edge to hold the contents of a layout.
  *
- * BottomAppBar functions mostly as a regular Toolbar, except that its cus-
- * tom CradleTopEdgeTreatment used on its top edge gives it a cutout in
- * its shape that can be used to hold the contents of a layout. The layout
- * in question must be referenced by the XML attribute cradleLayoutResId,
- * must be a sibling of the BottomAppBar, and both must have a Coordinator-
- * Layout parent.
+ * BottomAppBar functions mostly as a regular Toolbar, except that its custom
+ * CradleTopEdgeTreatment used on its top edge gives it a cutout in its shape
+ * that can be used to hold the contents of a layout. The layout in question
+ * must be referenced by the XML attribute cradleLayoutResId, and must be a
+ * child of the BottomAppBar. The activity or fragment that uses a BottomAppbar
+ * is responsible for setting the correct on screen position of the cradle
+ * layout contents. This being the case, BottomAppBar will draw the cradle
+ * around the cradle layout using the values of the parameters cradleWidth,
+ * cradleDepth, cradleTopCornerRadius, cradleBottomCornerRadius, and
+ * cradleContentsMargin.
  *
  * Like the Material library BottomAppBar, BottomAppBar manages its own
  * background. In order to tint the background a solid color, the property
- * backgroundTint can be set in XML or programmatically to an int color
- * code.
+ * backgroundTint can be set in XML or programmatically to an int color code.
  */
-open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context, attrs) {
-    enum class CradleAlignmentMode { Start, Center, End }
-    val cradleAlignmentMode: CradleAlignmentMode
+open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs) {
+    private var cradleLayout: ViewGroup? = null
     var cradleWidth = 0
         set(value) { field = value
                      materialShapeDrawable.invalidateSelf() }
     var cradleDepth: Int
     var cradleTopCornerRadius: Int
     var cradleBottomCornerRadius: Int
-    var cradleStartEndMargin: Int
     var cradleContentsMargin: Int
 
     private val materialShapeDrawable = MaterialShapeDrawable()
@@ -59,18 +58,11 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
     var backgroundTint: Int get() = backgroundPaint.color
                             set(value) { backgroundPaint.color = value }
 
-    private val arcQuarter = 90f
-    private val angleDown = 90f
-    private val angleUp = 270f
-
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
-        cradleAlignmentMode = CradleAlignmentMode.values()[
-            a.getInt(R.styleable.BottomAppBar_cradleAlignmentMode, CradleAlignmentMode.Center.ordinal)]
         cradleDepth = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleDepth, 0)
         cradleTopCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleTopCornerRadius, 0)
         cradleBottomCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0)
-        cradleStartEndMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleStartEndMargin, 90)
         cradleContentsMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleContentsMargin, 0)
         val cradleLayoutResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_cradleLayoutResId)
         backgroundTint = a.getColor(R.styleable.BottomAppBar_backgroundTint,
@@ -81,10 +73,14 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
             ShapeAppearanceModel.builder().setTopEdge(CradleTopEdgeTreatment()).build()
         background = materialShapeDrawable
         @Suppress("LeakingThis") setWillNotDraw(false)
-
         doOnNextLayout {
-            val cradleLayout = (parent as ViewGroup).findViewById<ViewGroup>(cradleLayoutResId)
-            prepareCradleLayout(cradleLayout)
+            val cradleLayout = findViewById<ViewGroup>(cradleLayoutResId)
+            this.cradleLayout = cradleLayout
+            cradleLayout.clipChildren = false
+            val wrapContent= MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+            cradleLayout.measure(wrapContent, wrapContent)
+            cradleWidth = cradleLayout.measuredWidth
+            materialShapeDrawable.invalidateSelf()
         }
     }
 
@@ -93,38 +89,15 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
         canvas.drawPath(outlinePath, backgroundPaint)
     }
 
-    private fun prepareCradleLayout(cradleLayout: ViewGroup) {
-        if (cradleLayout.parent !is CoordinatorLayout)
-            throw IllegalStateException("The cradle layout should have a CoordinatorLayout as a parent.")
-
-        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        (cradleLayout.layoutParams as CoordinatorLayout.LayoutParams).apply {
-            when (cradleAlignmentMode) {
-                CradleAlignmentMode.Start -> {
-                    gravity = Gravity.BOTTOM or Gravity.START
-                    marginStart = cradleStartEndMargin + cradleContentsMargin
-                } CradleAlignmentMode.Center -> {
-                    gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
-                    measure(wrapContentSpec, wrapContentSpec)
-                    bottomMargin = measuredHeight + cradleContentsMargin - cradleDepth
-                } CradleAlignmentMode.End -> {
-                    gravity = Gravity.BOTTOM or Gravity.END
-                    marginEnd = cradleStartEndMargin + cradleContentsMargin
-                }
-            }
-        }
-        cradleLayout.clipChildren = false
-        cradleLayout.measure(wrapContentSpec, wrapContentSpec)
-        cradleWidth = cradleLayout.measuredWidth
-        materialShapeDrawable.invalidateSelf()
-    }
+    private val arcQuarter = 90f
+    private val angleDown = 90f
+    private val angleUp = 270f
 
     /** An EdgeTreatment used to draw a cradle cutout for the BottomAppBar.
      *
-     *  CradleTopEdgeTreatment's getEdgePath draws a cutout shape for the
-     *  BottomAppBar to hold the contents of the BottomAppBar's cradle lay-
-     *  out. CradleTopEdgeTreatment does not support the interpolation fea-
-     *  ture of EdgeTreatment. */
+     *  CradleTopEdgeTreatment's getEdgePath draws a cutout shape for the BottomAppBar
+     *  to hold the contents of the BottomAppBar's cradle layout. CradleTopEdgeTreatment
+     *  does not support the interpolation feature of EdgeTreatment. */
     inner class CradleTopEdgeTreatment : EdgeTreatment() {
         override fun getEdgePath(
             length: Float,
@@ -134,11 +107,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
         ) {
             val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin
             // start will be the x coordinate of the start of the cradle if cradleTopCornerRadius is zero
-            val start = when (cradleAlignmentMode) {
-                CradleAlignmentMode.Start ->  left + cradleStartEndMargin
-                CradleAlignmentMode.Center -> left + (width - cradleFullWidth) / 2
-                CradleAlignmentMode.End ->    right - cradleStartEndMargin - cradleFullWidth
-            }.toFloat()
+            val start = (cradleLayout?.x ?: return) - cradleContentsMargin
             val end = start + cradleFullWidth
 
             // If the top and bottom corner radii combined are less than the cradle depth,
@@ -208,16 +177,16 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : Toolbar(context
 /**
  * A BottomAppBar that also draws an indicator above the selected navigation bar item.
  *
- * BottomAppBarWithIndicator extends BottomAppBar by also drawing an indi-
- * cator, either with the solid color described by the @property indicator-
- * Color, or with the shader object described by the @property indicator-
- * Gradient if set. The indicator can be moved to be above a given nav bar
- * menu item by calling the function moveIndicatorToNavBarItem with the id
- * of the menu item. The BottomNavigationView must be referenced through
- * the XML attribute navigationBarResId, and must be a descendant of the
- * BottomAppBarWithIndicator. The XML attributes indicatorThickness and
- * indicatorWidth are used to define the dimensions of the indicator.
+ * BottomAppBarWithIndicator extends BottomAppBar by also drawing an indicator
+ * with the solid color described by the @property indicatorColor. The
+ * indicator can be moved to be above a given nav bar menu item by calling the
+ * function moveIndicatorToNavBarItem with the id of the menu item. The
+ * BottomNavigationView must be referenced through the XML attribute
+ * navBarResId, and must be a descendant of the BottomAppBarWithIndicator.
+ * The XML attributes indicatorThickness and indicatorWidth are used to define
+ * the dimensions of the indicator.
  */
+@Suppress("LeakingThis")
 open class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     BottomAppBar(context, attrs)
 {
@@ -237,12 +206,12 @@ open class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
         indicatorWidth = a.getDimensionPixelOffset(R.styleable.BottomAppBarWithIndicator_indicatorWidth, 0)
         indicatorPaint.color = a.getColor(R.styleable.BottomAppBarWithIndicator_indicatorColor,
                                           ContextCompat.getColor(context, android.R.color.black))
-        val navViewResId = a.getResourceIdOrThrow(R.styleable.BottomAppBarWithIndicator_navigationBarResId)
+        val navBarResId = a.getResourceIdOrThrow(R.styleable.BottomAppBarWithIndicator_navBarResId)
         a.recycle()
 
         setWillNotDraw(false)
         doOnNextLayout {
-            navBar = findViewById(navViewResId)
+            navBar = findViewById(navBarResId)
             moveIndicatorToNavBarItem(navBar.selectedItemId, animate = false)
         }
     }

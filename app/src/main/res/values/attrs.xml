@@ -39,20 +39,12 @@
     </declare-styleable>
 
     <declare-styleable name="BottomAppBar">
-        <!-- Where the cradle is drawn on the BottomAppBar. -->
-        <attr name="cradleAlignmentMode" format="enum" >
-            <enum name="start"  value="0" />
-            <enum name="center" value="1" />
-            <enum name="end"    value="2" />
-        </attr>
         <!-- The depth of the BottomAppBar cradle. -->
         <attr name="cradleDepth"              format="dimension" />
         <!-- The radius of the cradle curved top corners. -->
         <attr name="cradleTopCornerRadius"    format="dimension" />
         <!-- The radius of the cradle curved bottom corners. -->
         <attr name="cradleBottomCornerRadius" format="dimension" />
-        <!-- The margin from the start or end of the BottomAppBar to the cradle. -->
-        <attr name="cradleStartEndMargin"     format="dimension" />
         <!-- The margin in between the cradle and the cradle layout contents. -->
         <attr name="cradleContentsMargin"     format="dimension" />
         <!-- The id of the contained cradle layout. -->
@@ -67,7 +59,7 @@
         <!-- The initial color of the indicator. -->
         <attr name="indicatorColor"     format="color" />
         <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
-        <attr name="navigationBarResId" format="reference" />
+        <attr name="navBarResId" format="reference" />
     </declare-styleable>
 
     <attr name="recyclerViewItemSelectionLeftGradientColor" format="color" />
