@@ -1,9 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Copyright 2020 Nicholas Hochstetler
-  ~  You may not use this file except in compliance with the Apache License
-  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
-  ~  or in the file LICENSE in the project's root directory. -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -19,44 +14,38 @@
   <defs
      id="defs3989">
     <linearGradient
-       id="linearGradient861">
-      <stop
-         id="stop853"
-         offset="0"
-         style="stop-color:#cb8c50;stop-opacity:1" />
-      <stop
-         style="stop-color:#cb5050;stop-opacity:1"
+       id="linearGradient870">
+      <stop id="stop864"
+         style="stop-color:#CC7748;stop-opacity:1"
+         offset="0" />
+      <stop id="stop866"
          offset="0.5"
-         id="stop855" />
-      <stop
-         style="stop-color:#cb508c;stop-opacity:1"
+         style="stop-color:#CC5656;stop-opacity:1" />
+      <stop id="stop868"
          offset="1"
-         id="stop857" />
+         style="stop-color:#C34F81;stop-opacity:1" />
     </linearGradient>
-    <linearGradient
-        xlink:href="#linearGradient861"
-        id="linearGradient923"
-        x1="54"
-        y1="20"
-        x2="54"
-        y2="88"
-        gradientUnits="userSpaceOnUse"  />
-    <linearGradient
-        xlink:href="#linearGradient861"
-        id="linearGradient977"
-        x1="54"
-        y1="20"
-        x2="54"
-        y2="88"
-        gradientUnits="userSpaceOnUse" />
-    <linearGradient
-        xlink:href="#linearGradient861"
-        id="linearGradient869"
-        x1="54"
-        y1="20"
-        x2="54"
-        y2="88"
-        gradientUnits="userSpaceOnUse" />
+    <linearGradient id="linearGradient923"
+       xlink:href="#linearGradient870"
+       x1="27"
+       y1="54"
+       x2="81"
+       y2="54"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient id="linearGradient977"
+       xlink:href="#linearGradient870"
+       x1="27"
+       y1="54"
+       x2="81"
+       y2="54"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient id="linearGradient869"
+       xlink:href="#linearGradient870"
+       x1="27"
+       y1="54"
+       x2="81"
+       y2="54"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <metadata
      id="metadata3992">
