@@ -149,7 +149,9 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         changeSortButtonVisible: Boolean = true,
         menuButtonVisible: Boolean = true
     ) {
-        setBackButtonVisible(backButtonVisible)
+        if (activeActionModeCallback == null && activeSearchQuery == null)
+            setBackButtonVisible(backButtonVisible)
+
         if (searchButtonVisible != ui.searchButton.isVisible && activeActionModeCallback == null)
             ui.searchButton.isVisible = searchButtonVisible
 
@@ -169,20 +171,23 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         if (activeActionModeCallback == null) {
             actionMode?.apply {
                 finish(updateActionBarUi = false)
-                ui.titleSwitcher.showTitle()
-                ui.changeSortButton.isActivated = false
+                if (activeSearchQuery == null) {
+                    ui.titleSwitcher.showTitle()
+                    ui.changeSortButton.isActivated = false
+                }
             }
-            setSearchQueryPrivate(activeSearchQuery, showSoftInput = false)
-            // If activeSearchQuery == null, _setActiveSearchQuery will hide the
-            // back button, possibly overriding the backButtonVisible parameter.
-            if (activeSearchQuery == null && backButtonVisible)
-                setBackButtonVisible(true)
+            setSearchQueryPrivate(activeSearchQuery, showSoftInput = false,
+                                  hideBackButtonWhenDone = false)
         }
     }
 
-    private fun setSearchQueryPrivate(query: CharSequence?, showSoftInput: Boolean = true) {
+    private fun setSearchQueryPrivate(
+            query: CharSequence?,
+            showSoftInput: Boolean = true,
+            hideBackButtonWhenDone: Boolean = true) {
         val searchWasActive = activeSearchQuery != null
-        setBackButtonVisible(query != null)
+        if (hideBackButtonWhenDone || query != null)
+            setBackButtonVisible(query != null)
         if (query != null) {
             ui.titleSwitcher.searchQuery = query
             if (!searchWasActive) {
