@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
-import android.view.WindowManager
 import androidx.core.content.ContextCompat
 
 /**
@@ -45,14 +44,9 @@ class GradientStyledMainActivity : MainActivity() {
     private val bgColors = IntArray(3)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = ContextCompat.getColor(this, android.R.color.transparent)
         super.onCreate(savedInstanceState)
         window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
-        initGradients()
-    }
 
-    private fun initGradients() {
         val screenWidth = resources.displayMetrics.widthPixels
         val actionBarHeight = theme.resolveIntAttribute(R.attr.actionBarSize).toFloat()
 

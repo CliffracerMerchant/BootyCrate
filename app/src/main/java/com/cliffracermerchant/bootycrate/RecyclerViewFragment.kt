@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracermerchant.bootycrate
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -13,6 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracermerchant.bootycrate.databinding.MainActivityBinding
 import com.kennyc.view.MultiStateView
+import java.util.*
 
 /**
  * An fragment to display a ExpandableSelectableRecyclerView to the user.
@@ -85,7 +87,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.delete_selected_menu_item -> deleteSelectedItems()
-        R.id.share_menu_item -> openShareDialog()
+        R.id.share_menu_item -> shareList()
         R.id.select_all_menu_item -> {  recyclerView?.selection?.addAll(); true }
         R.id.color_option -> { saveSortingOption(ViewModelItem.Sort.Color, item) }
         R.id.name_ascending_option -> { saveSortingOption(ViewModelItem.Sort.NameAsc, item) }
@@ -97,14 +99,33 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 
     /** Open a ShareDialog.
      * @return whether the dialog was successfully started. */
-    private fun openShareDialog(): Boolean {
+    private fun shareList(): Boolean {
+        val context = this.context ?: return false
         val recyclerView = this.recyclerView ?: return false
-        val items = if (viewModel.selectedItems.value?.isNotEmpty() == true)
-            viewModel.selectedItems.value ?: emptyList()
-        else viewModel.items.value ?: emptyList()
-        ShareDialog(recyclerView.collectionName, items,
-                    recyclerView.snackBarAnchor ?: recyclerView)
-                    .show(childFragmentManager, null)
+        val selectionIsEmpty = viewModel.selectedItems.value?.isEmpty() ?: true
+        val items = if (!selectionIsEmpty) viewModel.selectedItems.value ?: emptyList()
+                    else                   viewModel.items.value ?: emptyList()
+        if (items.isEmpty()) return false
+
+        val locale = context.resources.configuration.locale
+        val collectionName = recyclerView.collectionName.toLowerCase(locale)
+
+        val stringResId = if (selectionIsEmpty) R.string.share_whole_list_title
+                          else                  R.string.share_selected_items_title
+        val messageTitle = context.getString(stringResId, collectionName)
+
+        var message = ""
+        for (i in 0 until items.size - 1)
+            message += items[i].toString() + "\n"
+        if (items.isNotEmpty())
+            message += items.last().toString()
+
+        val intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, message)
+            type = "text/plain"
+        }
+        context.startActivity(Intent.createChooser(intent, messageTitle))
         return true
     }
 
