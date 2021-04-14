@@ -181,8 +181,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         is changed, the internal expand / collapse animations must be done manually in
         case they need to be synchronized with other animations. */
         val editableTextFieldHeight = resources.getDimension(R.dimen.editable_text_field_min_height)
-        ui.spacer.layoutParams.height =
-            (editableTextFieldHeight * if (expanding) 2 else 1).toInt()
+        ui.spacer.layoutParams.height = (editableTextFieldHeight * if (expanding) 2 else 1).toInt()
 
         if (itemIsLinked)
             if (!animate) ui.linkIndicator.isVisible = expanding
@@ -209,8 +208,8 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         pendingAnimations.add(checkBoxAnim)
     }
 
-    /** Update the editable state of nameEdit, animating if @param animate == true,
-     * and @return the height change of the nameEdit, or 0 if no animation occurred. */
+    /** Update the editable state of nameEdit, animating if param animate == true,
+     * and return the height change of the nameEdit, or 0 if no animation occurred. */
     private fun updateNameEditState(expanding: Boolean, animate: Boolean): Int {
         val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animate) ?: return 0
         nameEditAnimInfo.translateAnimator.pause()
@@ -224,10 +223,10 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
                          else paddingTop - nameEditAnimInfo.heightChange / 2
             val topChange = newTop - ui.nameEdit.top
 
-            val startAdjustment = if (expanding) -topChange.toFloat() else 0f
-            val endAdjustment = if (expanding) 0f else topChange.toFloat()
-            ui.nameEdit.translationY += startAdjustment
-            nameEditAnimInfo.adjustTranslationStartEnd(startAdjustment, endAdjustment)
+            val transYStartAdjust = if (expanding) -topChange.toFloat() else 0f
+            val transYEndAdjust = if (expanding) 0f else topChange.toFloat()
+            ui.nameEdit.translationY += transYStartAdjust
+            nameEditAnimInfo.adjustTranslationStartEnd(transYStartAdjust, transYEndAdjust)
             // If the ending translationY value is not zero, it needs to be set to zero
             // on the new layout after the animation has ended to avoid flickering.
             if (!expanding) nameEditAnimInfo.translateAnimator.doOnEnd {
@@ -238,7 +237,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     }
 
     /** Update the editable state of extraInfoEdit, animating if
-     * @param animate == true and the extraInfoEdit is not blank. */
+     * param animate == true and the extraInfoEdit is not blank. */
     private fun updateExtraInfoState(expanding: Boolean, animate: Boolean, nameEditHeightChange: Int) {
         val extraInfoIsBlank = ui.extraInfoEdit.text.isNullOrBlank()
         // If the extra info is blank and the view is being expanded, we can
@@ -283,7 +282,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         }
     }
 
-    /** Update the editable state of amountEdit, animating if @param animate == true. */
+    /** Update the editable state of amountEdit, animating if param animate == true. */
     private fun updateAmountEditState(expanding: Boolean, animate: Boolean) {
         val amountEditAnimInfo = ui.amountEdit.setValueIsFocusable(expanding, animate)
             ?: return
@@ -343,7 +342,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     }
 
     /**
-     * Show or hide the child view with a fade in or out animation, and @return the animator.
+     * Show or hide the child view with a fade in or out animation, and return the animator.
      *
      * showOrHideWithAnimation differs from a simple fade in/out animation
      * in that it temporarily removes the view from its parent so that

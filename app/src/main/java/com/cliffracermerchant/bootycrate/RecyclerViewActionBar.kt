@@ -171,6 +171,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         if (activeActionModeCallback == null) {
             actionMode?.apply {
                 finish(updateActionBarUi = false)
+                ui.changeSortButton.isActivated = false
                 if (activeSearchQuery == null) {
                     ui.titleSwitcher.showTitle()
                     ui.changeSortButton.isActivated = false
