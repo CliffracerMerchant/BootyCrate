@@ -10,7 +10,7 @@
     tools:layout_height="wrap_content"
     tools:style="@style/RecyclerViewItemStyle" >
 
-    <include layout="@layout/view_model_item" />
+    <include layout="@layout/booty_crate_item" />
 
     <include layout="@layout/inventory_item_details" />
 

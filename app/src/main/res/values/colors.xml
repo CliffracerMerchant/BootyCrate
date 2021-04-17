@@ -15,18 +15,18 @@
     <color name="colorTextDarkSecondary">#495057</color>
     <color name="colorTextLink">#58ECFF</color>
 
-    <color name="viewModelItemColor0">#D65C5C</color>
-    <color name="viewModelItemColor1">#D6995C</color>
-    <color name="viewModelItemColor2">#D6D65C</color>
-    <color name="viewModelItemColor3">#97CF3D</color>
-    <color name="viewModelItemColor4">#3FBA3F</color>
-    <color name="viewModelItemColor5">#53E393</color>
-    <color name="viewModelItemColor6">#2CC4DA</color>
-    <color name="viewModelItemColor7">#3F7EDD</color>
-    <color name="viewModelItemColor8">#8359E6</color>
-    <color name="viewModelItemColor9">#B141DA</color>
-    <color name="viewModelItemColor10">#DB70A6</color>
-    <color name="viewModelItemColor11">#808080</color>
+    <color name="bootyCrateItemColor0">#D65C5C</color>
+    <color name="bootyCrateItemColor1">#D6995C</color>
+    <color name="bootyCrateItemColor2">#D6D65C</color>
+    <color name="bootyCrateItemColor3">#97CF3D</color>
+    <color name="bootyCrateItemColor4">#3FBA3F</color>
+    <color name="bootyCrateItemColor5">#53E393</color>
+    <color name="bootyCrateItemColor6">#2CC4DA</color>
+    <color name="bootyCrateItemColor7">#3F7EDD</color>
+    <color name="bootyCrateItemColor8">#8359E6</color>
+    <color name="bootyCrateItemColor9">#B141DA</color>
+    <color name="bootyCrateItemColor10">#DB70A6</color>
+    <color name="bootyCrateItemColor11">#808080</color>
 
     <color name="lightThemeBgGradientLeft">#E89162</color>
     <color name="lightThemeBgGradientMiddle">#FF7474</color>

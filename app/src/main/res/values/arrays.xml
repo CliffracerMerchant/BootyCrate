@@ -12,23 +12,23 @@
     </string-array>
 
     <string-array name="multi_fragment_activity_fragments">
-        <item>"com.cliffracermerchant.bootycrate.ShoppingListFragment"</item>
-        <item>com.cliffracermerchant.bootycrate.InventoryFragment</item>
+        <item>"com.cliffracermerchant.bootycrate.fragment.ShoppingListFragment"</item>
+        <item>com.cliffracermerchant.bootycrate.fragment.InventoryFragment</item>
     </string-array>
 
-    <integer-array name="view_model_item_colors">
-        <item>@color/viewModelItemColor0</item>
-        <item>@color/viewModelItemColor1</item>
-        <item>@color/viewModelItemColor2</item>
-        <item>@color/viewModelItemColor3</item>
-        <item>@color/viewModelItemColor4</item>
-        <item>@color/viewModelItemColor5</item>
-        <item>@color/viewModelItemColor6</item>
-        <item>@color/viewModelItemColor7</item>
-        <item>@color/viewModelItemColor8</item>
-        <item>@color/viewModelItemColor9</item>
-        <item>@color/viewModelItemColor10</item>
-        <item>@color/viewModelItemColor11</item>
+    <integer-array name="bootycrate_item_colors">
+        <item>@color/bootyCrateItemColor0</item>
+        <item>@color/bootyCrateItemColor1</item>
+        <item>@color/bootyCrateItemColor2</item>
+        <item>@color/bootyCrateItemColor3</item>
+        <item>@color/bootyCrateItemColor4</item>
+        <item>@color/bootyCrateItemColor5</item>
+        <item>@color/bootyCrateItemColor6</item>
+        <item>@color/bootyCrateItemColor7</item>
+        <item>@color/bootyCrateItemColor8</item>
+        <item>@color/bootyCrateItemColor9</item>
+        <item>@color/bootyCrateItemColor10</item>
+        <item>@color/bootyCrateItemColor11</item>
     </integer-array>
 
     <integer-array name="foreground_gradient">

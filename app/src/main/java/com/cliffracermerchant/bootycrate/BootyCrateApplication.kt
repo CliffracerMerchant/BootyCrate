@@ -11,6 +11,6 @@ import dagger.hilt.android.HiltAndroidApp
 class BootyCrateApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        ViewModelItem.initColors(this)
+        BootyCrateItem.initColors(this)
     }
 }
