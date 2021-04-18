@@ -28,14 +28,23 @@
     <color name="bootyCrateItemColor10">#DB70A6</color>
     <color name="bootyCrateItemColor11">#808080</color>
 
-    <color name="lightThemeBgGradientLeft">#E89162</color>
-    <color name="lightThemeBgGradientMiddle">#FF7474</color>
-    <color name="lightThemeBgGradientRight">#D57DA0</color>
-    <color name="darkThemeBgGradientLeft">#BF754C</color>
-    <color name="darkThemeBgGradientMiddle">#CC5656</color>
-    <color name="darkThemeBgGradientRight">#C15A86</color>
-    <color name="foregroundColor">#DDDDDD</color>
+    <color name="lightThemeBgGradientLeft">#53E393</color>
+    <color name="lightThemeBgGradientMiddle">#41F3BB</color>
+    <color name="lightThemeBgGradientRight">#30FFE0</color>
+    <color name="darkThemeBgGradientLeft">#47B88A</color>
+    <color name="darkThemeBgGradientMiddle">#36B59C</color>
+    <color name="darkThemeBgGradientRight">#30BDCA</color>
 
+<!-- Light and dark orange-red-pink theme -->
+<!--    <color name="lightThemeBgGradientLeft">#E89162</color>-->
+<!--    <color name="lightThemeBgGradientMiddle">#FF7474</color>-->
+<!--    <color name="lightThemeBgGradientRight">#D57DA0</color>-->
+<!--    <color name="darkThemeBgGradientLeft">#BF754C</color>-->
+<!--    <color name="darkThemeBgGradientMiddle">#CC5656</color>-->
+<!--    <color name="darkThemeBgGradientRight">#C15A86</color>-->
+<!--    <color name="lightThemeFgColor">#DDDDDD</color>-->
+
+<!-- Dark cyan-magenta theme -->
 <!--    <color name="darkThemeFgGradientLeft">#4A9DB6</color>-->
 <!--    <color name="darkThemeFgGradientMiddle">#4A69B6</color>-->
 <!--    <color name="darkThemeFgGradientRight">#AE5CD1</color>-->

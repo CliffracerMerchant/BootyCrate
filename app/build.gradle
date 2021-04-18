@@ -13,7 +13,7 @@ android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
     defaultConfig {
-        applicationId 'com.cliffracermerchant.bootycrate'
+        applicationId 'com.cliffracertech.bootycrate'
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1

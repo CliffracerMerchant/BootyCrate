@@ -6,46 +6,36 @@
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:xlink="http://www.w3.org/1999/xlink"
-   width="108"
-   height="108"
-   viewBox="0 0 108 108"
+   id="svg3995"
    version="1.1"
-   id="svg3995">
+   viewBox="0 0 108 108"
+   height="108"
+   width="108">
   <defs
      id="defs3989">
     <linearGradient
        id="linearGradient870">
-      <stop id="stop864"
-         style="stop-color:#CC7748;stop-opacity:1"
-         offset="0" />
-      <stop id="stop866"
+      <stop
+         offset="0"
+         style="stop-color:#46d573;stop-opacity:1"
+         id="stop864" />
+      <stop
+         style="stop-color:#32cb9b;stop-opacity:1"
          offset="0.5"
-         style="stop-color:#CC5656;stop-opacity:1" />
-      <stop id="stop868"
+         id="stop866" />
+      <stop
+         style="stop-color:#2bd2d7;stop-opacity:1"
          offset="1"
-         style="stop-color:#C34F81;stop-opacity:1" />
+         id="stop868" />
     </linearGradient>
-    <linearGradient id="linearGradient923"
-       xlink:href="#linearGradient870"
-       x1="27"
-       y1="54"
-       x2="81"
+    <linearGradient
+       gradientUnits="userSpaceOnUse"
        y2="54"
-       gradientUnits="userSpaceOnUse" />
-    <linearGradient id="linearGradient977"
-       xlink:href="#linearGradient870"
-       x1="27"
-       y1="54"
        x2="81"
-       y2="54"
-       gradientUnits="userSpaceOnUse" />
-    <linearGradient id="linearGradient869"
-       xlink:href="#linearGradient870"
-       x1="27"
        y1="54"
-       x2="81"
-       y2="54"
-       gradientUnits="userSpaceOnUse" />
+       x1="27"
+       xlink:href="#linearGradient870"
+       id="linearGradient923" />
   </defs>
   <metadata
      id="metadata3992">
@@ -61,9 +51,9 @@
   </metadata>
   <g
      id="layer1"
-     style="display:inline">
+     style="display:inline;fill:none;stroke-width:4;stroke-miterlimit:4;stroke-dasharray:none;paint-order:normal">
     <rect
-       style="display:inline;fill:#353535;fill-opacity:1;stroke:url(#linearGradient869);stroke-width:3.5;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       style="display:inline;fill:#353535;fill-opacity:1;stroke:url(#linearGradient923);stroke-width:4;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
        id="rect4560"
        width="50.5"
        height="50.5"
@@ -72,12 +62,12 @@
        rx="10"
        ry="10" />
     <path
-       style="display:inline;fill:none;fill-opacity:1;stroke:url(#linearGradient977);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-       d="m 48.75,70.85 -11.6,-11.6 v -16 l 11.1,11.1 -1.85,7.4 7.4,-1.85 11.1,11.1 z"
+       style="display:inline;fill:none;fill-opacity:1;stroke:url(#linearGradient923);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       d="M 47.335786,69.435786 38.564214,60.664214 A 4.8284271,4.8284271 67.5 0 1 37.15,57.25 v -8 a 2.4852814,2.4852814 157.5 0 1 4.242641,-1.757359 l 5.028932,5.028932 a 5.8196001,5.8196001 79.502004 0 1 1.201225,6.482495 L 46.4,61.75 49.145932,60.527202 a 5.8196001,5.8196001 10.497996 0 1 6.482495,1.201225 l 5.028932,5.028932 a 2.4527003,2.4527003 112.76607 0 1 -1.7571,4.186916 l -8.150345,-0.0757 a 4.8925668,4.8925668 22.766072 0 1 -3.414128,-1.432789 z"
        id="path903" />
     <path
-       style="display:inline;fill:none;stroke:url(#linearGradient923);stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 70.95,48.75 v 16.1 l -27.7,-27.7 h 16.1"
+       style="display:inline;fill:none;stroke:url(#linearGradient923);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       d="m 70.95,48.75 v 10.1 a 2.4852814,2.4852814 157.5 0 1 -4.242641,1.757359 L 47.492641,41.392641 A 2.4852814,2.4852814 112.5 0 1 49.25,37.15 h 10.1"
        id="path915" />
   </g>
 </svg>

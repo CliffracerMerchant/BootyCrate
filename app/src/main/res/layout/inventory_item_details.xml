@@ -30,7 +30,7 @@
         android:layout_marginStart="6dp"
         style="@style/InventoryItemAddToShoppingListCheckbox"/>
 
-    <com.cliffracermerchant.bootycrate.view.IntegerEdit
+    <com.cliffracertech.bootycrate.view.IntegerEdit
         android:id="@+id/addToShoppingListTriggerEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
