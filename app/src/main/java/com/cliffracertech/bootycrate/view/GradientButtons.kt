@@ -9,10 +9,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import androidx.annotation.CallSuper
 import androidx.appcompat.widget.AppCompatButton
@@ -24,33 +22,22 @@ import com.cliffracertech.bootycrate.utils.valueAnimatorOfInt
 /**
  * A button with a vector background and icon that are both tintable with gradients.
  *
- * OutlinedGradientButton is a button that uses GradientVectorDrawables
- * for its background and icon. The path data used for these drawables are
- * defined in XML using the attributes backgroundPathData and iconPathData.
- * The gradient shader used for the background drawable can be set through
- * the property backgroundGradient, while the gradient for the icon and
- * any text is set through the property foregroundGradient. The stroke
- * width of the icon drawable can be set through the property iconStroke-
- * Width; the icon will be drawn in Paint.FILL mode instead if the stroke
- * width is 0. In order for the path data attributes to be interpreted cor-
- * rectly, the XML properties pathWidth and pathHeight must also be set in
- * XML.
+ * GradientButton is a button that uses a GradientVectorDrawable for its
+ * background. The path data used for the background is defined in XML using
+ * the attribute backgroundPathData. The gradient shader used for the
+ * background drawable can be set through the property backgroundGradient.
+ * In order for the path data attribute to be interpreted correctly, the XML
+ * properties pathWidth and pathHeight must also be set in XML.
  */
 open class GradientButton(context: Context, attrs: AttributeSet) : AppCompatButton(context, attrs) {
     var backgroundGradient get() = backgroundDrawable.gradient
         set(gradient) { backgroundDrawable.gradient = gradient }
-    var foregroundGradient get() = iconDrawable.gradient
-        set(gradient) { iconDrawable.gradient = gradient
-                        paint.shader = gradient }
 
     protected var backgroundDrawable: GradientVectorDrawable
-    protected var iconDrawable: GradientVectorDrawable
 
     init {
         var a = context.obtainStyledAttributes(attrs, R.styleable.GradientButton)
         val backgroundPathData = a.getString(R.styleable.GradientButton_backgroundPathData) ?: ""
-        val iconPathData = a.getString(R.styleable.GradientButton_iconPathData) ?: ""
-        val iconStrokeWidth = a.getDimension(R.styleable.GradientButton_iconStrokeWidth, 0f)
         // Apparently if more than one attr is retrieved with a manual
         // IntArray, they must be in numerical id order to work.
         // Log.d("", "R.attr.pathWidth = ${R.attr.pathWidth}, R.attr.pathHeight=${R.attr.pathHeight}")
@@ -61,12 +48,7 @@ open class GradientButton(context: Context, attrs: AttributeSet) : AppCompatButt
         a.recycle()
 
         backgroundDrawable = GradientVectorDrawable(pathWidth, pathHeight, backgroundPathData )
-        iconDrawable = GradientVectorDrawable(pathWidth, pathHeight, iconPathData)
-        if (iconStrokeWidth != 0f) {
-            iconDrawable.strokeWidth = iconStrokeWidth
-            iconDrawable.style = Paint.Style.STROKE
-        }
-        this.background = LayerDrawable(arrayOf(backgroundDrawable, iconDrawable))
+        background = backgroundDrawable
     }
 }
 
@@ -96,7 +78,7 @@ open class DisableableGradientButton(context: Context, attrs: AttributeSet) :
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.DisableableGradientButton)
         val disabledBackgroundTint = a.getColor(R.styleable.DisableableGradientButton_disabledBackgroundTint, 0)
-        val disabledIconAndTextTint = a.getColor(R.styleable.DisableableGradientButton_disabledIconAndTextTint, 0)
+        val disabledTextColor = a.getColor(R.styleable.DisableableGradientButton_disabledTextColor, 0)
         a.recycle()
 
         doOnNextLayout {
@@ -104,12 +86,10 @@ open class DisableableGradientButton(context: Context, attrs: AttributeSet) :
             val canvas = Canvas(bitmap)
 
             val backupBackgroundGradient = backgroundGradient
-            val backupForegroundGradient = foregroundGradient
+            val backupTextColor = currentTextColor
             backgroundGradient = null
-            foregroundGradient = null
-            ((background as LayerDrawable).getDrawable(0) as GradientVectorDrawable).setTint(disabledBackgroundTint)
-            ((background as LayerDrawable).getDrawable(1) as GradientVectorDrawable).setTint(disabledIconAndTextTint)
-            setTextColor(disabledIconAndTextTint)
+            background.setTint(disabledBackgroundTint)
+            setTextColor(disabledTextColor)
 
             draw(canvas)
             disabledOverlay = BitmapDrawable(context.resources, bitmap).apply {
@@ -117,7 +97,7 @@ open class DisableableGradientButton(context: Context, attrs: AttributeSet) :
                 bounds = background.bounds
             }
             backgroundGradient = backupBackgroundGradient
-            foregroundGradient = backupForegroundGradient
+            setTextColor(backupTextColor)
         }
     }
 
@@ -162,8 +142,7 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
     private val normalText = context.getString(R.string.checkout_description)
     private val confirmText = context.getString(R.string.checkout_confirm_description)
     private var checkoutButtonLastPressTimeStamp = 0L
-    private val confirmTimeout =
-        resources.getInteger(R.integer.checkoutButtonConfirmationTimeout).toLong()
+    private val confirmTimeout = resources.getInteger(R.integer.checkoutButtonConfirmationTimeout).toLong()
     var checkoutCallback: (() -> Unit)? = null
 
     init {

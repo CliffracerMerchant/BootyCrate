@@ -15,7 +15,7 @@
     android:clipChildren="false"
     tools:context=".activity.MainActivity" >
 
-    <com.cliffracertech.bootycrate.view.RecyclerViewActionBar
+    <com.cliffracertech.bootycrate.view.TintableRecyclerViewActionBar
         android:id="@+id/actionBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
@@ -37,7 +37,7 @@
         <!-- BottomNavigationViewEx is used instead of the default Android Bottom-
              NavigationView because it makes it easier to access the views used to
              represent menu items (which is need for some of the gradient styling). -->
-        <com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx
+        <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottomNavigationBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -54,7 +54,7 @@
                 android:layout_marginTop="2dp"
                 style="@style/ShoppingListBadge" />
 
-        </com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx>
+        </com.google.android.material.bottomnavigation.BottomNavigationView>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/cradleLayout"
@@ -78,12 +78,13 @@
                 app:layout_constraintLeft_toLeftOf="parent"
                 style="@style/CheckoutButton" />
 
-            <com.cliffracertech.bootycrate.view.GradientButton
+            <ImageButton
                 android:id="@+id/add_button"
                 android:layout_width="56dp"
                 android:layout_height="56dp"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
+                android:contentDescription="@string/add_item_button_name"
                 style="@style/AddButton" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 

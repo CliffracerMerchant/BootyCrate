@@ -63,28 +63,3 @@ open class GradientVectorDrawable(
                                                           255  -> PixelFormat.OPAQUE
                                                           else -> PixelFormat.TRANSLUCENT }
 }
-
-/** A GradientVectorDrawable that additionally takes a clipPathData parameter to describe a clip region. */
-class ClippedGradientVectorDrawable(
-    pathWidth: Float,
-    pathHeight: Float,
-    pathData: String,
-    clipPathData: String
-) : GradientVectorDrawable(pathWidth, pathHeight, pathData) {
-    private val originalClipPath = PathParser.createPathFromPathData(clipPathData)
-    private var clipPath = Path()
-
-    override fun onBoundsChange(bounds: Rect?) {
-        super.onBoundsChange(bounds)
-        clipPath.set(originalClipPath)
-        clipPath.transform(matrix)
-    }
-
-    override fun draw(canvas: Canvas) {
-        canvas.save()
-        @Suppress("DEPRECATION")
-        canvas.clipPath(clipPath, Region.Op.DIFFERENCE)
-        super.draw(canvas)
-        canvas.restore()
-    }
-}

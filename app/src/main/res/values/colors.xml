@@ -34,6 +34,7 @@
     <color name="darkThemeBgGradientLeft">#47B88A</color>
     <color name="darkThemeBgGradientMiddle">#36B59C</color>
     <color name="darkThemeBgGradientRight">#30BDCA</color>
+    <color name="ic_launcher_background">#353535</color>
 
 <!-- Light and dark orange-red-pink theme -->
 <!--    <color name="lightThemeBgGradientLeft">#E89162</color>-->

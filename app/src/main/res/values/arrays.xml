@@ -31,16 +31,10 @@
         <item>@color/bootyCrateItemColor11</item>
     </integer-array>
 
-    <integer-array name="foreground_gradient">
-        <item>?attr/foregroundGradientColorLeft</item>
-        <item>?attr/foregroundGradientColorMiddle</item>
-        <item>?attr/foregroundGradientColorRight</item>
-    </integer-array>
-
     <integer-array name="background_gradient">
-        <item>?attr/colorAccent</item>
-        <item>?attr/colorInBetweenPrimaryAccent</item>
-        <item>?attr/colorPrimary</item>
+        <item>?attr/backgroundGradientColorLeft</item>
+        <item>?attr/backgroundGradientColorMiddle</item>
+        <item>?attr/backgroundGradientColorRight</item>
     </integer-array>
 
 </resources>

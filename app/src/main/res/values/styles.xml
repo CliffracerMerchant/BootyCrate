@@ -27,15 +27,15 @@
         <item name="actionBarTitleStyle">@style/ActionBarTitle</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
 
-        <item name="colorAccent">@color/lightThemeBgGradientLeft</item>
-        <item name="colorInBetweenPrimaryAccent">@color/lightThemeBgGradientMiddle</item>
-        <item name="colorPrimary">@color/lightThemeBgGradientRight</item>
-        <item name="foregroundGradientColorLeft">@color/colorTextDark</item>
-        <item name="foregroundGradientColorMiddle">@color/colorTextDark</item>
-        <item name="foregroundGradientColorRight">@color/colorTextDark</item>
-        <item name="recyclerViewItemSelectionLeftGradientColor">?attr/colorAccent</item>
-        <item name="recyclerViewItemSelectionMiddleGradientColor">?attr/colorInBetweenPrimaryAccent</item>
-        <item name="recyclerViewItemSelectionRightGradientColor">?attr/colorPrimary</item>
+        <item name="colorPrimary">#44CA7F</item>
+        <item name="colorAccent">#27C5AD</item>
+        <item name="topBottomBarForegroundColor">@color/colorTextDark</item>
+        <item name="backgroundGradientColorLeft">@color/lightThemeBgGradientLeft</item>
+        <item name="backgroundGradientColorMiddle">@color/lightThemeBgGradientMiddle</item>
+        <item name="backgroundGradientColorRight">@color/lightThemeBgGradientRight</item>
+        <item name="recyclerViewItemSelectionLeftGradientColor">?attr/backgroundGradientColorLeft</item>
+        <item name="recyclerViewItemSelectionMiddleGradientColor">?attr/backgroundGradientColorMiddle</item>
+        <item name="recyclerViewItemSelectionRightGradientColor">?attr/backgroundGradientColorRight</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">
@@ -48,10 +48,10 @@
         <item name="android:textColorSecondary">@color/colorTextLightSecondary</item>
         <item name="android:textColorHint">@color/colorTextLightSecondary</item>
 
+        <item name="backgroundGradientColorLeft">@color/darkThemeBgGradientLeft</item>
+        <item name="backgroundGradientColorMiddle">@color/darkThemeBgGradientMiddle</item>
+        <item name="backgroundGradientColorRight">@color/darkThemeBgGradientRight</item>
         <item name="colorAccent">@color/darkThemeBgGradientLeft</item>
-        <item name="colorInBetweenPrimaryAccent">@color/darkThemeBgGradientMiddle</item>
-        <item name="colorPrimary">@color/darkThemeBgGradientRight</item>
-
     </style>
 
     <style name="TextAppearance" parent="TextAppearance.AppCompat">

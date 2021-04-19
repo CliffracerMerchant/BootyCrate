@@ -9,6 +9,7 @@
         <item name="optionsMenuResId">@menu/action_bar_menu</item>
         <item name="changeSortMenuResId">@menu/change_sort</item>
         <item name="android:background">@drawable/background_gradient</item>
+        <item name="iconAndTextTint">?attr/topBottomBarForegroundColor</item>
     </style>
 
     <style name="ActionBarTitle">
@@ -36,6 +37,8 @@
            ~ create its own background, covering up BottomAppBar's background.
            ~ Setting the background to a transparent rectangle is used to prevent this. -->
         <item name="android:background">@drawable/transparent_rectangle_background</item>
+        <item name="itemIconTint">?attr/topBottomBarForegroundColor</item>
+        <item name="itemTextColor">?attr/topBottomBarForegroundColor</item>
         <item name="menu">@menu/bottom_navigation_bar_menu</item>
     </style>
 
@@ -43,7 +46,7 @@
         <item name="android:alpha">0</item>
         <item name="android:paddingLeft">4dp</item>
         <item name="android:paddingRight">4dp</item>
-        <item name="android:textColor">?attr/foregroundGradientColorLeft</item>
+        <item name="android:textColor">?attr/topBottomBarForegroundColor</item>
         <item name="android:textSize" tools:ignore="SpUsage">22dp</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -57,15 +60,12 @@
         <item name="android:textSize" tools:ignore="SpUsage">15dp</item>
         <item name="android:transformPivotX">100dp</item>
         <item name="disabledBackgroundTint">#909090</item>
-        <item name="disabledIconAndTextTint">#757575</item>
+        <item name="disabledTextColor">#757575</item>
     </style>
 
     <style name="AddButton">
-        <item name="backgroundPathData">@string/add_button_background_path_data</item>
-        <item name="iconPathData">@string/add_button_plus_path_data</item>
-        <item name="pathWidth">56.0</item>
-        <item name="pathHeight">56.0</item>
-        <item name="iconStrokeWidth">4dp</item>
+        <item name="android:src">@drawable/ic_baseline_add_24</item>
+        <item name="android:padding">4dp</item>
     </style>
 
     <style name="EmptyRecyclerViewStyle" parent="@style/TitleTextAppearance">

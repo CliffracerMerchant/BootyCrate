@@ -1,0 +1,15 @@
+<!-- Copyright 2020 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="56dp"
+    android:height="56dp"
+    android:viewportWidth="56"
+    android:viewportHeight="56" >
+  <path
+      android:strokeColor="#000000"
+      android:strokeWidth="4"
+      android:pathData="M 28,19 L 28,37 M 19,28 L 37,28"/>
+</vector>

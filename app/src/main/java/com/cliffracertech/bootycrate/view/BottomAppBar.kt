@@ -42,6 +42,8 @@ import kotlin.math.atan
  * Like the Material library BottomAppBar, BottomAppBar manages its own
  * background. In order to tint the background a solid color, the property
  * backgroundTint can be set in XML or programmatically to an int color code.
+ * Alternatively the background can be set to a Shader instance using the
+ * property backgroundGradient.
  */
 open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs) {
     private var cradleLayout: ViewGroup? = null
@@ -57,9 +59,11 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
     protected val outlinePath = Path()
     protected val topEdgePath = Path()
 
-    val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
+    protected val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
     var backgroundTint: Int get() = backgroundPaint.color
                             set(value) { backgroundPaint.color = value }
+    var backgroundGradient get() = backgroundPaint.shader
+                           set(value) { backgroundPaint.shader = value }
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
@@ -190,11 +194,11 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
  * the dimensions of the indicator.
  */
 @Suppress("LeakingThis")
-open class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
+class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     BottomAppBar(context, attrs)
 {
-    protected lateinit var navBar: BottomNavigationView
-    val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
+    private lateinit var navBar: BottomNavigationView
+    private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
     var indicatorWidth = 0
     var indicatorThickness get() = indicatorPaint.strokeWidth
                            set(value) { indicatorPaint.strokeWidth = value }

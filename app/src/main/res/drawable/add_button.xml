@@ -4,10 +4,9 @@
    ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
    ~ or in the file LICENSE in the project's root directory. -->
 
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <gradient
-        android:startColor="?attr/foregroundGradientColorLeft"
-        android:centerColor="?attr/foregroundGradientColorMiddle"
-        android:endColor="?attr/foregroundGradientColorRight"
-        android:angle="0" />
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval" >
+    <gradient android:angle="0"
+        android:startColor="?attr/backgroundGradientColorLeft"
+        android:endColor="?attr/backgroundGradientColorMiddle" />
 </shape>

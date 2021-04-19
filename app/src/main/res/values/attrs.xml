@@ -11,20 +11,25 @@
     <attr name="pathWidth" format="float" />
     <!-- The height of the canvas a path is drawn on. -->
     <attr name="pathHeight" format="float" />
-    <!-- A color in between colorPrimary and colorAccent. -->
-    <attr name="colorInBetweenPrimaryAccent" format="color" />
+    <!-- The color used for text and icons in the top and bottom app bars. -->
+    <attr name="topBottomBarForegroundColor" format="color" />
     <!-- The left color of the foreground gradient. -->
-    <attr name="foregroundGradientColorLeft" format="color" />
+    <attr name="backgroundGradientColorLeft" format="color" />
     <!-- The middle color of the foreground gradient. -->
-    <attr name="foregroundGradientColorMiddle" format="color" />
+    <attr name="backgroundGradientColorMiddle" format="color" />
     <!-- The right color of the foreground gradient. -->
-    <attr name="foregroundGradientColorRight" format="color" />
+    <attr name="backgroundGradientColorRight" format="color" />
 
     <declare-styleable name="RecyclerViewActionBar">
         <!-- The resource id of the menu to be used as the contents of the change sort menu. -->
         <attr name="changeSortMenuResId" format="reference" />
         <!-- The resource id of the menu to be used as the contents of the options menu. -->
         <attr name="optionsMenuResId" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="TintableRecyclerViewActionBar">
+        <!-- The tint that will be applied to all of the buttons and text in the action bar. -->
+        <attr name="iconAndTextTint" format="color" />
     </declare-styleable>
 
     <attr name="actionBarTitleStyle" format="reference" />
@@ -97,17 +102,13 @@
     <declare-styleable name="GradientButton">
         <!-- The path data to use for the vector background. -->
         <attr name="backgroundPathData" format="string" />
-        <!-- The path data to use for the icon. -->
-        <attr name="iconPathData" format="string" />
-        <!-- The stroke width of the icon. A value of 0 will use Paint.FILL instead of Paint.STROKE. -->
-        <attr name="iconStrokeWidth" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="DisableableGradientButton">
         <!-- The tint that will be used for the disabled overlay background. -->
         <attr name="disabledBackgroundTint" format="color" />
-        <!-- The tint that will be used for the disabled overlay icon and text. -->
-        <attr name="disabledIconAndTextTint" format="color" />
+        <!-- The color that will be used for the disabled overlay text. -->
+        <attr name="disabledTextColor" format="color" />
     </declare-styleable>
 
     <declare-styleable name="TintableCheckbox">
