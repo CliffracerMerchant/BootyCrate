@@ -87,11 +87,9 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         addOrRestoreFragments(savedInstanceState)
-        navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
         supportFragmentManager.addOnBackStackChangedListener {
             onNewFragmentSelected(visibleFragment!!)
         }
-        onNewFragmentSelected(visibleFragment!!)
     }
 
     /** Attempt to switch to a new active fragment corresponding to the @param
@@ -191,7 +189,6 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         val wasShowingPrimaryFragment =
             savedInstanceState?.getBoolean("wasShowingPrimaryFragment") ?: true
         val savedNavItemId = savedInstanceState?.getInt("selectedNavItemId")
-        savedNavItemId?.let { navigationBar.selectedItemId = it }
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
@@ -202,5 +199,9 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             if (menuItemId != navigationBar.selectedItemId || !wasShowingPrimaryFragment)
                 fragment.view?.visibility = View.INVISIBLE
         }
+        if (savedNavItemId != null)
+            navigationBar.selectedItemId = savedNavItemId
+        navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
+        onNewFragmentSelected(visibleFragment!!)
     }
 }

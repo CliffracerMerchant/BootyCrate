@@ -51,7 +51,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     val colors: IntArray
     val color get() = colors[_colorIndex]
     private var _colorIndex = 0
-    var colorIndex get() = colors.indexOf(_colorIndex)
+    var colorIndex get() = _colorIndex
                    set(value) = setColorIndex(value)
 
     init {

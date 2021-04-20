@@ -80,15 +80,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
             ShapeAppearanceModel.builder().setTopEdge(CradleTopEdgeTreatment()).build()
         background = materialShapeDrawable
         @Suppress("LeakingThis") setWillNotDraw(false)
-        doOnNextLayout {
-            val cradleLayout = findViewById<ViewGroup>(cradleLayoutResId)
-            this.cradleLayout = cradleLayout
-            cradleLayout.clipChildren = false
-            val wrapContent= MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-            cradleLayout.measure(wrapContent, wrapContent)
-            cradleWidth = cradleLayout.measuredWidth
-            materialShapeDrawable.invalidateSelf()
-        }
+        doOnNextLayout { cradleLayout = findViewById(cradleLayoutResId) }
     }
 
     override fun onDraw(canvas: Canvas?) {

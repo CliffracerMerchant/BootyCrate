@@ -107,9 +107,11 @@ open class MainActivity : MultiFragmentActivity() {
         }
     }
 
+    private var showingCheckoutButton: Boolean? = null
     private var pendingCradleAnim: Animator? = null
     private fun showCheckoutButton(show: Boolean, animate: Boolean = true) {
-        if (ui.checkoutButton.isVisible == show) return
+        if (showingCheckoutButton == show) return
+        showingCheckoutButton = show
         ui.checkoutButton.isVisible = show
 
         val cradleEndWidth = if (!show) ui.addButton.layoutParams.width else {
