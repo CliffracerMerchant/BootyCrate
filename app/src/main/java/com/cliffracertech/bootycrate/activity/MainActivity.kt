@@ -20,7 +20,6 @@ import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
-import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
@@ -73,37 +72,31 @@ open class MainActivity : MultiFragmentActivity() {
         }
         val needToAnimate = currentFragment != null
         currentFragment = newFragment
-
         if (newFragment !is MainActivityFragment) return
-        showBottomAppBar(newFragment.showsBottomAppBar(), animate = needToAnimate)
-        if (newFragment.showsBottomAppBar()) {
-            showCheckoutButton(show = newFragment.showsCheckoutButton(), animate = needToAnimate)
-            ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
-        }
+
+        val needToAnimateCheckoutButton = needToAnimate && ui.bottomAppBar.isVisible
+        showBottomAppBar(show = newFragment.showsBottomAppBar(), animate = needToAnimate)
+        val showsCheckoutButton = newFragment.showsCheckoutButton()
+        if (showsCheckoutButton != null)
+            showCheckoutButton(show = showsCheckoutButton, animate = needToAnimateCheckoutButton)
+        ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
-    private val showingBottomAppBar get() = ui.bottomAppBar.translationY == 0f
     private fun showBottomAppBar(show: Boolean = true, animate: Boolean = true) {
-        if (showingBottomAppBar == show) return
+        if (ui.bottomAppBar.isVisible == show) return
         val screenHeight = resources.displayMetrics.heightPixels.toFloat()
-        val views = arrayOf(ui.bottomAppBar, ui.addButton, ui.checkoutButton)
 
-        if (!animate) {
-            if (!show) ui.bottomAppBar.doOnNextLayout {
-                val translationAmount = screenHeight - ui.cradleLayout.top
-                for (view in views) view.translationY = translationAmount
-            }
-            return
-        }
-
-        val translationAmount = screenHeight - ui.cradleLayout.top - ui.bottomAppBar.top
-        val translationStart = if (show) translationAmount else 0f
-        val translationEnd = if (show) 0f else translationAmount
-        for (view in views) {
-            view.translationY = translationStart
-            view.animate().withLayer().applyConfig(primaryFragmentTransitionAnimatorConfig)
-               .translationY(translationEnd).start()
+        if (!animate) ui.bottomAppBar.isVisible = show
+        else {
+            val translationAmount = screenHeight - ui.cradleLayout.top - ui.bottomAppBar.top
+            val translationStart = if (show) translationAmount else 0f
+            val translationEnd = if (show) 0f else translationAmount
+            ui.bottomAppBar.translationY = translationStart
+            ui.bottomAppBar.isVisible = true
+            ui.bottomAppBar.animate().translationY(translationEnd)
+                .applyConfig(primaryFragmentTransitionAnimatorConfig)
+                .withEndAction { if (!show) ui.bottomAppBar.isVisible = false }.start()
         }
     }
 
@@ -119,29 +112,24 @@ open class MainActivity : MultiFragmentActivity() {
             ui.cradleLayout.measure(wrapContent, wrapContent)
             ui.cradleLayout.measuredWidth
         }
-        // These z values seem not to stick when set in XML, so we have to set them here
-        // every time to ensure that the addButton remains on top of the checkout button.
-        ui.addButton.elevation = 5f
-        ui.checkoutButton.elevation = -10f
-        if (!animate) {
-            ui.bottomAppBar.cradleWidth = cradleEndWidth
-            return
-        }
-        // Settings the checkout button's clip bounds prevents the right corners of the check-
-        // out button from sticking out underneath the FAB during the show / hide animation.
-        val clipBounds = Rect(0, 0, 0, ui.checkoutButton.height)
-        ValueAnimator.ofInt(ui.bottomAppBar.cradleWidth, cradleEndWidth).apply {
-            applyConfig(primaryFragmentTransitionAnimatorConfig)
-            addUpdateListener {
-                ui.bottomAppBar.cradleWidth = it.animatedValue as Int
-                clipBounds.right = ui.bottomAppBar.cradleWidth - ui.addButton.measuredWidth / 2
-                ui.checkoutButton.clipBounds = clipBounds
+        if (!animate) ui.bottomAppBar.cradleWidth = cradleEndWidth
+        else {
+            // Settings the checkout button's clip bounds prevents the right corners of the check-
+            // out button from sticking out underneath the FAB during the show / hide animation.
+            val clipBounds = Rect(0, 0, 0, ui.checkoutButton.height)
+            ValueAnimator.ofInt(ui.bottomAppBar.cradleWidth, cradleEndWidth).apply {
+                applyConfig(primaryFragmentTransitionAnimatorConfig)
+                addUpdateListener {
+                    ui.bottomAppBar.cradleWidth = it.animatedValue as Int
+                    clipBounds.right = ui.bottomAppBar.cradleWidth - ui.addButton.measuredWidth / 2
+                    ui.checkoutButton.clipBounds = clipBounds
+                }
+                doOnEnd { ui.checkoutButton.clipBounds = null }
+                // The anim is stored here and started in the cradle layout's
+                // layoutTransition's transition listener's transitionStart override
+                // so that the animation is synced with the layout transition.
+                pendingCradleAnim = this
             }
-            doOnEnd { ui.checkoutButton.clipBounds = null }
-            // The anim is stored here and started in the cradle layout's
-            // layoutTransition's transition listener's transitionStart override
-            // so that the animation is synced with the layout transition.
-            pendingCradleAnim = this
         }
     }
 
@@ -205,8 +193,9 @@ open class MainActivity : MultiFragmentActivity() {
     interface MainActivityFragment {
         /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
         fun showsBottomAppBar() = true
-        /** Return whether the checkout button should be visible when the implementing fragment is.*/
-        fun showsCheckoutButton() = true
+        /** Return whether the checkout button should be visible when the implementing fragment
+         * is, or null if the implementing fragment's showsBottomAppBar returns false.*/
+        fun showsCheckoutButton(): Boolean? = null
         /** Return whether the implementing fragment consumed the back button press. */
         fun onBackPressed() = false
         /** Perform any additional actions on the @param activityUi that the fragment desires,
