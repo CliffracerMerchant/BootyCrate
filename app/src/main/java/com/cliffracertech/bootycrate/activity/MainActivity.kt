@@ -97,7 +97,7 @@ open class MainActivity : MultiFragmentActivity() {
             return
         }
 
-        val translationAmount = screenHeight - ui.cradleLayout.top
+        val translationAmount = screenHeight - ui.cradleLayout.top - ui.bottomAppBar.top
         val translationStart = if (show) translationAmount else 0f
         val translationEnd = if (show) 0f else translationAmount
         for (view in views) {
