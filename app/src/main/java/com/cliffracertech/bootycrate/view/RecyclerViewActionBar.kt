@@ -250,6 +250,8 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                 setBackButtonVisible(true)
             if (ui.searchButton.isVisible)
                 ui.searchButton.isVisible = false
+            if (ui.searchButton.isActivated)
+                ui.searchButton.isActivated = false
             if (!ui.changeSortButton.isActivated)
                 ui.changeSortButton.isActivated = true
             callback.onStart(this, this@RecyclerViewActionBar)
@@ -264,9 +266,10 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                     ui.searchButton.animate().alpha(1f).withLayer().applyConfig(animatorConfig).start()
                 }
                 ui.changeSortButton.isActivated = false
-                if (ui.titleSwitcher.searchQuery.isNotEmpty())
+                if (ui.titleSwitcher.searchQuery.isNotEmpty()) {
                     ui.titleSwitcher.showSearchQuery()
-                else {
+                    ui.searchButton.isActivated = true
+                } else {
                     ui.titleSwitcher.showTitle()
                     setBackButtonVisible(false)
                 }
