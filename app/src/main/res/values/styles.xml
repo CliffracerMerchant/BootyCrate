@@ -27,8 +27,8 @@
         <item name="actionBarTitleStyle">@style/ActionBarTitle</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
 
-        <item name="colorPrimary">@color/bootyCrateItemColor7</item>
-        <item name="colorAccent">@color/bootyCrateItemColor7</item>
+        <item name="colorPrimary">@color/lightThemeBgGradientLeft</item>
+        <item name="colorAccent">@color/lightThemeBgGradientLeft</item>
         <item name="backgroundGradientColorLeft">@color/lightThemeBgGradientLeft</item>
         <item name="backgroundGradientColorMiddle">@color/lightThemeBgGradientMiddle</item>
         <item name="backgroundGradientColorRight">@color/lightThemeBgGradientRight</item>
@@ -50,17 +50,14 @@
         <item name="android:textColorSecondary">@color/colorTextLightSecondary</item>
         <item name="android:textColorHint">@color/colorTextLightSecondary</item>
 
-        <item name="colorPrimary">@color/bootyCrateItemColor6</item>
-        <item name="colorAccent">@color/bootyCrateItemColor6</item>
+        <item name="colorPrimary">@color/darkThemeBgGradientLeft</item>
+        <item name="colorAccent">@color/darkThemeBgGradientLeft</item>
         <item name="backgroundGradientColorLeft">@color/darkThemeBgGradientLeft</item>
         <item name="backgroundGradientColorMiddle">@color/darkThemeBgGradientMiddle</item>
         <item name="backgroundGradientColorRight">@color/darkThemeBgGradientRight</item>
-        <item name="foregroundGradientColorLeft">@color/darkThemeFgGradientLeft</item>
-        <item name="foregroundGradientColorMiddle">@color/darkThemeFgGradientMiddle</item>
-        <item name="foregroundGradientColorRight">@color/darkThemeFgGradientRight</item>
-        <item name="recyclerViewItemSelectionLeftGradientColor">@color/darkThemeFgGradientLeft</item>
-        <item name="recyclerViewItemSelectionMiddleGradientColor">@color/darkThemeFgGradientMiddle</item>
-        <item name="recyclerViewItemSelectionRightGradientColor">@color/darkThemeFgGradientRight</item>
+        <item name="foregroundGradientColorLeft">@color/colorWindowBackgroundDark</item>
+        <item name="foregroundGradientColorMiddle">@color/colorWindowBackgroundDark</item>
+        <item name="foregroundGradientColorRight">@color/colorWindowBackgroundDark</item>
     </style>
 
     <style name="TextAppearance" parent="TextAppearance.AppCompat">

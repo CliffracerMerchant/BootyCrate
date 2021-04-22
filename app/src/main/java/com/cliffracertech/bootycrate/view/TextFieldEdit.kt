@@ -61,7 +61,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         maxLines = 1
         imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
         ellipsize = TextUtils.TruncateAt.END
-        paint.strokeWidth = dpToPixels(1f, resources)
+        paint.strokeWidth = resources.dpToPixels(1f)
     }
 
     private fun setTextPrivate(newText: String) {
@@ -150,7 +150,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     override fun draw(canvas: Canvas?) {
         super.draw(canvas)
         if (underlineAlpha == 0) return
-        val y = baseline + dpToPixels(2f, resources)
+        val y = baseline + resources.dpToPixels(2f)
         val paintOldAlpha = paint.alpha
         paint.alpha = underlineAlpha
         canvas?.drawLine(0f, y, width.toFloat(), y, paint)

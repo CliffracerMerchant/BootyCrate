@@ -67,22 +67,22 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
             isFocusableInTouchMode = true
             background = GradientVectorDrawable(1f, "M0,0.8 H 1").apply {
                 style = Paint.Style.STROKE
-                strokeWidth = dpToPixels(1.25f, resources)
+                strokeWidth = resources.dpToPixels(1.25f)
             }
         }
         val a = context.obtainStyledAttributes(attrs, R.styleable.ActionBarTitle)
 
         var fontId = a.getResourceId(R.styleable.ActionBarTitle_titleFont, 0)
         titleView.typeface = try { ResourcesCompat.getFont(context, fontId) }
-                          catch(e: Resources.NotFoundException) { null }
+                             catch(e: Resources.NotFoundException) { null }
 
         fontId = a.getResourceId(R.styleable.ActionBarTitle_searchQueryFont, 0)
         searchQueryView.typeface = try { ResourcesCompat.getFont(context, fontId) }
-                               catch(e: Resources.NotFoundException) { null }
+                                   catch(e: Resources.NotFoundException) { null }
 
         fontId = a.getResourceId(R.styleable.ActionBarTitle_actionModeTitleFont, 0)
         actionModeTitleView.typeface = try { ResourcesCompat.getFont(context, fontId) }
-                                    catch(e: Resources.NotFoundException) { null }
+                                       catch(e: Resources.NotFoundException) { null }
         a.recycle()
 
         // For some reason if saveFromParentEnabled == true the title will
