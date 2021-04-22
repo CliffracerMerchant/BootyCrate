@@ -6,6 +6,7 @@ package com.cliffracertech.bootycrate.view
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Paint
 import android.text.InputType
 import android.util.AttributeSet
 import android.view.inputmethod.EditorInfo
@@ -13,10 +14,10 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.ViewFlipper
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatTextView
-import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.doAfterTextChanged
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.inputMethodManager
 
 /**
@@ -64,7 +65,10 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
             imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
             inputType = InputType.TYPE_CLASS_TEXT
             isFocusableInTouchMode = true
-            background = ContextCompat.getDrawable(context, R.drawable.search_query_view_background)
+            background = GradientVectorDrawable(1f, "M0,0.8 H 1").apply {
+                style = Paint.Style.STROKE
+                strokeWidth = dpToPixels(1.25f, resources)
+            }
         }
         val a = context.obtainStyledAttributes(attrs, R.styleable.ActionBarTitle)
 

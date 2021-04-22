@@ -11,14 +11,18 @@
     <attr name="pathWidth" format="float" />
     <!-- The height of the canvas a path is drawn on. -->
     <attr name="pathHeight" format="float" />
-    <!-- The color used for text and icons in the top and bottom app bars. -->
-    <attr name="topBottomBarForegroundColor" format="color" />
-    <!-- The left color of the foreground gradient. -->
+    <!-- The left color of the background gradient. -->
     <attr name="backgroundGradientColorLeft" format="color" />
-    <!-- The middle color of the foreground gradient. -->
+    <!-- The middle color of the background gradient. -->
     <attr name="backgroundGradientColorMiddle" format="color" />
-    <!-- The right color of the foreground gradient. -->
+    <!-- The right color of the background gradient. -->
     <attr name="backgroundGradientColorRight" format="color" />
+    <!-- The left color of the foreground gradient. -->
+    <attr name="foregroundGradientColorLeft" format="color" />
+    <!-- The middle color of the foreground gradient. -->
+    <attr name="foregroundGradientColorMiddle" format="color" />
+    <!-- The right color of the foreground gradient. -->
+    <attr name="foregroundGradientColorRight" format="color" />
 
     <declare-styleable name="RecyclerViewActionBar">
         <!-- The resource id of the menu to be used as the contents of the change sort menu. -->
@@ -58,18 +62,18 @@
 
     <declare-styleable name="BottomAppBarWithIndicator">
         <!-- The thickness of the indicator. -->
-        <attr name="indicatorThickness"  format="dimension" />
+        <attr name="indicatorThickness" format="dimension" />
         <!-- The width of the indicator. -->
         <attr name="indicatorWidth"     format="dimension" />
-        <!-- The initial color of the indicator. -->
-        <attr name="indicatorColor"     format="color" />
+        <!-- The initial tint of the indicator. -->
+        <attr name="indicatorTint"      format="color" />
         <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
-        <attr name="navBarResId" format="reference" />
+        <attr name="navBarResId"        format="reference" />
     </declare-styleable>
 
-    <attr name="recyclerViewItemSelectionLeftGradientColor" format="color" />
+    <attr name="recyclerViewItemSelectionLeftGradientColor"   format="color" />
     <attr name="recyclerViewItemSelectionMiddleGradientColor" format="color" />
-    <attr name="recyclerViewItemSelectionRightGradientColor" format="color" />
+    <attr name="recyclerViewItemSelectionRightGradientColor"  format="color" />
 
     <declare-styleable name="TextFieldEdit">
         <!-- Whether the TextFieldEdit will start in an editable state. -->
@@ -102,13 +106,17 @@
     <declare-styleable name="GradientButton">
         <!-- The path data to use for the vector background. -->
         <attr name="backgroundPathData" format="string" />
+        <!-- The path data to use for the icon. -->
+        <attr name="iconPathData" format="string" />
+        <!-- The stroke width of the icon. A value of 0 will use Paint.FILL instead of Paint.STROKE. -->
+        <attr name="iconStrokeWidth" format="dimension" />
     </declare-styleable>
 
     <declare-styleable name="DisableableGradientButton">
         <!-- The tint that will be used for the disabled overlay background. -->
         <attr name="disabledBackgroundTint" format="color" />
-        <!-- The color that will be used for the disabled overlay text. -->
-        <attr name="disabledTextColor" format="color" />
+        <!-- The tint that will be used for the disabled overlay icon and text. -->
+        <attr name="disabledIconAndTextTint" format="color" />
     </declare-styleable>
 
     <declare-styleable name="TintableCheckbox">

@@ -11,7 +11,6 @@ import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.RecyclerViewActionBarBinding
@@ -281,30 +280,5 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     interface ActionModeCallback {
         fun onStart(actionMode: ActionMode, actionBar: RecyclerViewActionBar) { }
         fun onFinish(actionMode: ActionMode, actionBar: RecyclerViewActionBar) { }
-    }
-}
-
-/** A RecyclerViewActionBar that allows setting the tint for all text and icons
- * at once using the XML property iconAndTextTint or the function setIconAndTextTint. */
-class TintableRecyclerViewActionBar(context: Context, attrs: AttributeSet) :
-    RecyclerViewActionBar(context, attrs)
-{
-    init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.TintableRecyclerViewActionBar)
-        val iconAndTextTint = a.getColor(R.styleable.TintableRecyclerViewActionBar_iconAndTextTint,
-                                         ContextCompat.getColor(context, android.R.color.black))
-        a.recycle()
-        setIconAndTextTint(iconAndTextTint)
-    }
-
-    fun setIconAndTextTint(tint: Int) {
-        ui.titleSwitcher.titleView.setTextColor(tint)
-        ui.titleSwitcher.actionModeTitleView.setTextColor(tint)
-        ui.titleSwitcher.searchQueryView.setTextColor(tint)
-        ui.titleSwitcher.searchQueryView.background.setTint(tint)
-        ui.backButton.drawable.setTint(tint)
-        ui.menuButton.drawable.setTint(tint)
-        ui.changeSortButton.drawable.setTint(tint)
-        ui.searchButton.drawable?.setTint(tint)
     }
 }

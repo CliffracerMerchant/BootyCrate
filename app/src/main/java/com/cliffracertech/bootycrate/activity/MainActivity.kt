@@ -6,27 +6,24 @@ package com.cliffracertech.bootycrate.activity
 
 import android.animation.Animator
 import android.animation.ValueAnimator
-import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
 import android.graphics.Rect
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.core.animation.doOnEnd
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.PreferencesFragment
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.applyConfig
+import com.cliffracertech.bootycrate.utils.doOnStart
+import com.cliffracertech.bootycrate.utils.layoutTransition
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -53,7 +50,6 @@ open class MainActivity : MultiFragmentActivity() {
         super.onCreate(savedInstanceState)
         setupOnClickListeners()
         initAnimatorConfigs()
-        initGradients()
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
@@ -201,58 +197,5 @@ open class MainActivity : MultiFragmentActivity() {
         /** Perform any additional actions on the @param activityUi that the fragment desires,
          * given its @param isActive state. */
         fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {}
-    }
-
-    /**
-     * Unfortunately many of the desired aspects of MainActivity's style (e.g. the
-     * checkout and add buttons background gradient matching the bottom app bar's
-     * background gradient) are impossible to accomplish in XML. initGradients
-     * performs additional operations to initialize its style. The background
-     * gradient used for the bottom app bar is made by creating a linear gradient
-     * using the values of the XML attributes backgroundGradientColorLeft,
-     * backgroundGradientColorMiddle, and backgroundGradientColorRight. It is
-     * assumed that the action bar will have had its background set correctly in
-     * XML to match the background gradient.
-     */
-    private fun initGradients() {
-        window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
-
-        val screenWidth = resources.displayMetrics.widthPixels
-        val actionBarHeight = theme.resolveIntAttribute(R.attr.actionBarSize)
-
-        val fgColor = theme.resolveIntAttribute(R.attr.topBottomBarForegroundColor)
-        val bgColors = intArrayOf(theme.resolveIntAttribute(R.attr.backgroundGradientColorLeft),
-                                  theme.resolveIntAttribute(R.attr.backgroundGradientColorMiddle),
-                                  theme.resolveIntAttribute(R.attr.backgroundGradientColorRight))
-
-        val gradientBuilder = GradientBuilder(x2 = screenWidth.toFloat(), colors = bgColors)
-        val gradientShader = gradientBuilder.buildLinearGradient()
-
-        val gradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(gradientBitmap)
-        val paint = Paint().apply { shader = gradientShader }
-        canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight.toFloat(), paint)
-
-        ui.bottomAppBar.backgroundGradient = gradientShader
-        ui.bottomAppBar.indicatorColor = fgColor
-
-        // Checkout button
-        val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        ui.cradleLayout.measure(wrapContent, wrapContent)
-        val cradleWidth = ui.cradleLayout.measuredWidth
-        val cradleLeft = (screenWidth - cradleWidth) / 2f
-        ui.checkoutButton.setTextColor(fgColor)
-        ui.checkoutButton.backgroundGradient = gradientBuilder
-            .setX1(-cradleLeft).setX2(screenWidth - cradleLeft).buildLinearGradient()
-
-        // Add button
-        val addButtonWidth = ui.addButton.layoutParams.width
-        val addButtonLeft = cradleLeft + cradleWidth - addButtonWidth * 1f
-        ui.addButton.imageTintList = ColorStateList.valueOf(fgColor)
-        // Setting the background for the add button in XML doesn't work for some reason?
-        ui.addButton.background = ContextCompat.getDrawable(this, R.drawable.add_button)
-        (ui.addButton.background as? GradientDrawable)?.colors = intArrayOf(
-            gradientBitmap.getPixel(addButtonLeft.toInt(), 0),
-            gradientBitmap.getPixel(addButtonLeft.toInt() + addButtonWidth, 0))
     }
 }

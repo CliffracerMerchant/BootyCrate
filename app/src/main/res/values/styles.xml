@@ -27,15 +27,17 @@
         <item name="actionBarTitleStyle">@style/ActionBarTitle</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
 
-        <item name="colorPrimary">#44CA7F</item>
-        <item name="colorAccent">#27C5AD</item>
-        <item name="topBottomBarForegroundColor">@color/colorTextDark</item>
+        <item name="colorPrimary">@color/bootyCrateItemColor7</item>
+        <item name="colorAccent">@color/bootyCrateItemColor7</item>
         <item name="backgroundGradientColorLeft">@color/lightThemeBgGradientLeft</item>
         <item name="backgroundGradientColorMiddle">@color/lightThemeBgGradientMiddle</item>
         <item name="backgroundGradientColorRight">@color/lightThemeBgGradientRight</item>
-        <item name="recyclerViewItemSelectionLeftGradientColor">?attr/backgroundGradientColorLeft</item>
-        <item name="recyclerViewItemSelectionMiddleGradientColor">?attr/backgroundGradientColorMiddle</item>
-        <item name="recyclerViewItemSelectionRightGradientColor">?attr/backgroundGradientColorRight</item>
+        <item name="foregroundGradientColorLeft">@color/colorWindowBackgroundLight</item>
+        <item name="foregroundGradientColorMiddle">@color/colorWindowBackgroundLight</item>
+        <item name="foregroundGradientColorRight">@color/colorWindowBackgroundLight</item>
+        <item name="recyclerViewItemSelectionLeftGradientColor">@color/lightThemeBgGradientLeft</item>
+        <item name="recyclerViewItemSelectionMiddleGradientColor">@color/lightThemeBgGradientMiddle</item>
+        <item name="recyclerViewItemSelectionRightGradientColor">@color/lightThemeBgGradientRight</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">
@@ -48,10 +50,17 @@
         <item name="android:textColorSecondary">@color/colorTextLightSecondary</item>
         <item name="android:textColorHint">@color/colorTextLightSecondary</item>
 
+        <item name="colorPrimary">@color/bootyCrateItemColor6</item>
+        <item name="colorAccent">@color/bootyCrateItemColor6</item>
         <item name="backgroundGradientColorLeft">@color/darkThemeBgGradientLeft</item>
         <item name="backgroundGradientColorMiddle">@color/darkThemeBgGradientMiddle</item>
         <item name="backgroundGradientColorRight">@color/darkThemeBgGradientRight</item>
-        <item name="colorAccent">@color/darkThemeBgGradientLeft</item>
+        <item name="foregroundGradientColorLeft">@color/darkThemeFgGradientLeft</item>
+        <item name="foregroundGradientColorMiddle">@color/darkThemeFgGradientMiddle</item>
+        <item name="foregroundGradientColorRight">@color/darkThemeFgGradientRight</item>
+        <item name="recyclerViewItemSelectionLeftGradientColor">@color/darkThemeFgGradientLeft</item>
+        <item name="recyclerViewItemSelectionMiddleGradientColor">@color/darkThemeFgGradientMiddle</item>
+        <item name="recyclerViewItemSelectionRightGradientColor">@color/darkThemeFgGradientRight</item>
     </style>
 
     <style name="TextAppearance" parent="TextAppearance.AppCompat">

@@ -177,13 +177,14 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
  * A BottomAppBar that also draws an indicator above the selected navigation bar item.
  *
  * BottomAppBarWithIndicator extends BottomAppBar by also drawing an indicator
- * with the solid color described by the @property indicatorColor. The
- * indicator can be moved to be above a given nav bar menu item by calling the
- * function moveIndicatorToNavBarItem with the id of the menu item. The
- * BottomNavigationView must be referenced through the XML attribute
- * navBarResId, and must be a descendant of the BottomAppBarWithIndicator.
- * The XML attributes indicatorThickness and indicatorWidth are used to define
- * the dimensions of the indicator.
+ * with the solid color described by the @property indicatorTint. The indicator
+ * can be moved to be above a given nav bar menu item by calling the function
+ * moveIndicatorToNavBarItem with the id of the menu item. The BottomNavigationView
+ * must be referenced through the XML attribute navBarResId, and must be a
+ * descendant of the BottomAppBarWithIndicator. The XML attributes indicatorThickness
+ * and indicatorWidth are used to define the dimensions of the indicator.
+ * Besides a solid color tint, the indicator can also be painted with a Shader
+ * object using the property indicatorGradient.
  */
 @Suppress("LeakingThis")
 class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
@@ -194,8 +195,10 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     var indicatorWidth = 0
     var indicatorThickness get() = indicatorPaint.strokeWidth
                            set(value) { indicatorPaint.strokeWidth = value }
-    var indicatorColor: Int get() = indicatorPaint.color
+    var indicatorTint: Int get() = indicatorPaint.color
                             set(value) { indicatorPaint.color = value }
+    var indicatorGradient get() = indicatorPaint.shader
+                          set(value) { indicatorPaint.shader = value }
     private var indicatorXPos = 0
     var indicatorAnimatorConfig: AnimatorConfig? = null
 
@@ -203,7 +206,7 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBarWithIndicator)
         indicatorThickness = a.getDimension(R.styleable.BottomAppBarWithIndicator_indicatorThickness, 0f)
         indicatorWidth = a.getDimensionPixelOffset(R.styleable.BottomAppBarWithIndicator_indicatorWidth, 0)
-        indicatorPaint.color = a.getColor(R.styleable.BottomAppBarWithIndicator_indicatorColor,
+        indicatorPaint.color = a.getColor(R.styleable.BottomAppBarWithIndicator_indicatorTint,
                                           ContextCompat.getColor(context, android.R.color.black))
         val navBarResId = a.getResourceIdOrThrow(R.styleable.BottomAppBarWithIndicator_navBarResId)
         a.recycle()
