@@ -107,19 +107,20 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         val oldFragment = navBarMenuItemFragmentMap.getValue(oldFragmentMenuItem.itemId)
         oldFragment.view?.apply {
             val animResId = if (leftToRight) R.animator.slide_out_left
-                            else R.animator.slide_out_right
+                            else             R.animator.slide_out_right
             val anim = AnimatorInflater.loadAnimator(context, animResId)
             anim.setTarget(this)
             ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
                 .setFloatValues(0f, width / 2f * if (leftToRight) -1f else 1f)
-            anim.doOnEnd { visibility = View.GONE }
+            // alpha == 0f is checked to prevent the view from being hidden if the animation was cancelled.
+            anim.doOnEnd { if (alpha == 0f) visibility = View.GONE }
             anim.start()
         }
         newFragment.view?.apply {
             alpha = 0f
             isVisible = true
             val animResId = if (leftToRight) R.animator.slide_in_right
-                            else R.animator.slide_in_left
+                            else             R.animator.slide_in_left
             val anim = AnimatorInflater.loadAnimator(context, animResId)
             anim.setTarget(this)
             ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
