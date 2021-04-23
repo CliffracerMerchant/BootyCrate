@@ -10,11 +10,10 @@ buildscript {
     }
     ext.hilt_version = '2.33-beta'
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.2'
+        classpath 'com.android.tools.build:gradle:4.1.3'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.30"
-        classpath 'com.google.android.gms:oss-licenses-plugin:0.10.2'
+        classpath 'com.google.android.gms:oss-licenses-plugin:0.10.4'
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
-
     }
 }
 

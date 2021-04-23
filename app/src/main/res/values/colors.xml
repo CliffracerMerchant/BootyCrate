@@ -14,33 +14,48 @@
     <color name="colorTextDark">#343a40</color>
     <color name="colorTextDarkSecondary">#495057</color>
     <color name="colorTextLink">#58ECFF</color>
+    <color name="ic_launcher_background">#353535</color>
 
-    <color name="viewModelItemColor0">#D65C5C</color>
-    <color name="viewModelItemColor1">#D6995C</color>
-    <color name="viewModelItemColor2">#D6D65C</color>
-    <color name="viewModelItemColor3">#97CF3D</color>
-    <color name="viewModelItemColor4">#3FBA3F</color>
-    <color name="viewModelItemColor5">#53E393</color>
-    <color name="viewModelItemColor6">#2CC4DA</color>
-    <color name="viewModelItemColor7">#3F7EDD</color>
-    <color name="viewModelItemColor8">#8359E6</color>
-    <color name="viewModelItemColor9">#B141DA</color>
-    <color name="viewModelItemColor10">#DB70A6</color>
-    <color name="viewModelItemColor11">#808080</color>
+    <color name="bootyCrateItemColor0">#D65C5C</color>
+    <color name="bootyCrateItemColor1">#D6995C</color>
+    <color name="bootyCrateItemColor2">#D6D65C</color>
+    <color name="bootyCrateItemColor3">#97CF3D</color>
+    <color name="bootyCrateItemColor4">#3FBA3F</color>
+    <color name="bootyCrateItemColor5">#53E393</color>
+    <color name="bootyCrateItemColor6">#2CC4DA</color>
+    <color name="bootyCrateItemColor7">#3F7EDD</color>
+    <color name="bootyCrateItemColor8">#8359E6</color>
+    <color name="bootyCrateItemColor9">#B141DA</color>
+    <color name="bootyCrateItemColor10">#DB70A6</color>
+    <color name="bootyCrateItemColor11">#808080</color>
 
-    <color name="lightThemeBgGradientLeft">#E89162</color>
-    <color name="lightThemeBgGradientMiddle">#FF7474</color>
-    <color name="lightThemeBgGradientRight">#D57DA0</color>
-    <color name="darkThemeBgGradientLeft">#BF754C</color>
-    <color name="darkThemeBgGradientMiddle">#CC5656</color>
-    <color name="darkThemeBgGradientRight">#C15A86</color>
-    <color name="foregroundColor">#DDDDDD</color>
+<!-- default theme -->
+    <color name="lightThemeBgGradientLeft">#E8865A</color>
+    <color name="lightThemeBgGradientMiddle">#FF8181</color>
+    <color name="lightThemeBgGradientRight">#EF7487</color>
 
-<!--    <color name="darkThemeFgGradientLeft">#4A9DB6</color>-->
-<!--    <color name="darkThemeFgGradientMiddle">#4A69B6</color>-->
-<!--    <color name="darkThemeFgGradientRight">#AE5CD1</color>-->
-<!--    <color name="darkThemeBgGradientLeft">#36505C</color>-->
-<!--    <color name="darkThemeBgGradientMiddle">#3E4568</color>-->
-<!--    <color name="darkThemeBgGradientRight">#5A3961</color>-->
+    <color name="darkThemeBgGradientLeft">#BF6844</color>
+    <color name="darkThemeBgGradientMiddle">#CF5F5F</color>
+    <color name="darkThemeBgGradientRight">#C15A7E</color>
+    <color name="lightThemeFgColor">#DDDDDD</color>
 
+<!-- teal-cyan theme -->
+<!--    <color name="lightThemeBgGradientLeft">#53E393</color>-->
+<!--    <color name="lightThemeBgGradientMiddle">#41F3BB</color>-->
+<!--    <color name="lightThemeBgGradientRight">#30FFE0</color>-->
+<!--    <color name="darkThemeBgGradientLeft">#47B88A</color>-->
+<!--    <color name="darkThemeBgGradientMiddle">#36B59C</color>-->
+<!--    <color name="darkThemeBgGradientRight">#30BDCA</color>-->
+
+<!-- cyan-blue-magenta theme -->
+<!--    <color name="lightThemeBgGradientLeft">#68CAE8</color>-->
+<!--    <color name="lightThemeBgGradientMiddle">#A0AFFF</color>-->
+<!--    <color name="lightThemeBgGradientRight">#B59AFF</color>-->
+
+<!--    <color name="darkThemeBgGradientLeft">#426B7C</color>-->
+<!--    <color name="darkThemeBgGradientMiddle">#696AAC</color>-->
+<!--    <color name="darkThemeBgGradientRight">#6E50A5</color>-->
+<!--    <color name="darkThemeFgGradientLeft">#30D0FF</color>-->
+<!--    <color name="darkThemeFgGradientMiddle">#96A6FF</color>-->
+<!--    <color name="darkThemeFgGradientRight">#C491FF</color>-->
 </resources>

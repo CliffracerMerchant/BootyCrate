@@ -11,8 +11,12 @@
     <attr name="pathWidth" format="float" />
     <!-- The height of the canvas a path is drawn on. -->
     <attr name="pathHeight" format="float" />
-    <!-- A color in between colorPrimary and colorAccent. -->
-    <attr name="colorInBetweenPrimaryAccent" format="color" />
+    <!-- The left color of the background gradient. -->
+    <attr name="backgroundGradientColorLeft" format="color" />
+    <!-- The middle color of the background gradient. -->
+    <attr name="backgroundGradientColorMiddle" format="color" />
+    <!-- The right color of the background gradient. -->
+    <attr name="backgroundGradientColorRight" format="color" />
     <!-- The left color of the foreground gradient. -->
     <attr name="foregroundGradientColorLeft" format="color" />
     <!-- The middle color of the foreground gradient. -->
@@ -25,6 +29,11 @@
         <attr name="changeSortMenuResId" format="reference" />
         <!-- The resource id of the menu to be used as the contents of the options menu. -->
         <attr name="optionsMenuResId" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="TintableRecyclerViewActionBar">
+        <!-- The tint that will be applied to all of the buttons and text in the action bar. -->
+        <attr name="iconAndTextTint" format="color" />
     </declare-styleable>
 
     <attr name="actionBarTitleStyle" format="reference" />
@@ -53,18 +62,18 @@
 
     <declare-styleable name="BottomAppBarWithIndicator">
         <!-- The thickness of the indicator. -->
-        <attr name="indicatorThickness"  format="dimension" />
+        <attr name="indicatorThickness" format="dimension" />
         <!-- The width of the indicator. -->
         <attr name="indicatorWidth"     format="dimension" />
-        <!-- The initial color of the indicator. -->
-        <attr name="indicatorColor"     format="color" />
+        <!-- The initial tint of the indicator. -->
+        <attr name="indicatorTint"      format="color" />
         <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
-        <attr name="navBarResId" format="reference" />
+        <attr name="navBarResId"        format="reference" />
     </declare-styleable>
 
-    <attr name="recyclerViewItemSelectionLeftGradientColor" format="color" />
+    <attr name="recyclerViewItemSelectionLeftGradientColor"   format="color" />
     <attr name="recyclerViewItemSelectionMiddleGradientColor" format="color" />
-    <attr name="recyclerViewItemSelectionRightGradientColor" format="color" />
+    <attr name="recyclerViewItemSelectionRightGradientColor"  format="color" />
 
     <declare-styleable name="TextFieldEdit">
         <!-- Whether the TextFieldEdit will start in an editable state. -->
@@ -112,6 +121,7 @@
 
     <declare-styleable name="TintableCheckbox">
         <attr name="state_edit_color" format="boolean" />
+        <attr name="colorsResId" format="reference" />
     </declare-styleable>
 
 </resources>

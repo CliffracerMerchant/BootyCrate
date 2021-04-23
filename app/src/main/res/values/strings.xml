@@ -58,10 +58,8 @@
     <string name="checkout_confirm_description">Confirm?</string>
 
     <string name="share_description">Share</string>
-    <string name="share_dialog_title">Share via…</string>
-    <string name="share_text_message_option">Text message</string>
-    <string name="share_email_option">Email</string>
-    <string name="share_error_message">No app that can send the list was found</string>
+    <string name="share_whole_list_title">Share %1$s</string>
+    <string name="share_selected_items_title">Share selected %1$s items. </string>
 
     <string name="theme_preference_category_name">App theme</string>
     <string name="sys_default_theme_description">Use system default</string>

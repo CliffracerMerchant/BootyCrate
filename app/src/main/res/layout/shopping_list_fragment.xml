@@ -15,7 +15,7 @@
     app:msv_loadingView="@layout/loading_recycler_view"
     app:msv_viewState="loading" >
 
-    <com.cliffracermerchant.bootycrate.ShoppingListRecyclerView
+    <com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
         android:id="@+id/shoppingListRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

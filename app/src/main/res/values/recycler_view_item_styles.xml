@@ -11,14 +11,15 @@
         <item name="android:paddingBottom">4dp</item>
     </style>
 
-    <style name="ViewModelItemColorEdit">
+    <style name="BootyCrateItemColorEdit">
         <item name="android:paddingStart">11dp</item>
         <item name="android:paddingEnd">11dp</item>
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">12dp</item>
+        <item name="colorsResId">@array/bootycrate_item_colors</item>
     </style>
 
-    <style name="ViewModelItemNameEdit" parent="@style/NormalTextAppearance">
+    <style name="BootyCrateItemNameEdit" parent="@style/NormalTextAppearance">
         <item name="android:hint">@string/item_name_description</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
@@ -26,7 +27,7 @@
         <item name="android:gravity">center_vertical</item>
     </style>
 
-    <style name="ViewModelItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
+    <style name="BootyCrateItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
         <item name="android:hint">@string/item_extra_info_description</item>
         <item name="android:textColor">@color/colorTextLightSecondary</item>
         <item name="android:ellipsize">end</item>
@@ -34,12 +35,12 @@
         <item name="android:gravity">center_vertical</item>
     </style>
 
-    <style name="ViewModelItemAmountEdit" parent="@style/TextAppearance">
+    <style name="BootyCrateItemAmountEdit" parent="@style/TextAppearance">
         <item name="android:textSize">22sp</item>
         <item name="minValue">1</item>
     </style>
 
-    <style name="ViewModelItemEditButton">
+    <style name="BootyCrateItemEditButton">
         <item name="android:src">@drawable/edit_and_collapse_button</item>
         <item name="android:paddingStart">8dp</item>
         <item name="android:paddingEnd">8dp</item>
@@ -47,22 +48,12 @@
         <item name="android:paddingBottom">11dp</item>
     </style>
 
-    <style name="ExpandableSelectableItemDivider">
-        <item name="android:background">?android:attr/listDivider</item>
-        <item name="android:backgroundTint">?android:attr/textColorPrimary</item>
-    </style>
-
-    <style name="ExpandableSelectableItemCollapseButton">
-        <item name="android:src">@drawable/ic_expand_less_black_24dp</item>
-        <item name="android:padding">9dp</item>
-    </style>
-
     <style name="ShoppingListItemLinkIndicator" parent="@style/SecondaryTextAppearance">
         <item name="android:padding">10dp</item>
         <item name="android:src">@drawable/ic_baseline_link_24</item>
     </style>
 
-    <style name="InventoryItemColorEdit" parent="@style/ViewModelItemColorEdit">
+    <style name="InventoryItemColorEdit" parent="@style/BootyCrateItemColorEdit">
         <item name="android:src">@drawable/animated_circle_to_checkbox_checked_background</item>
     </style>
 
@@ -70,7 +61,7 @@
         <item name="android:text">@string/add_to_shopping_list_checkbox_text</item>
     </style>
 
-    <style name="InventoryItemAddToShoppingListTriggerEdit" parent="@style/ViewModelItemAmountEdit">
+    <style name="InventoryItemAddToShoppingListTriggerEdit" parent="@style/BootyCrateItemAmountEdit">
         <item name="valueIsFocusable">true</item>
     </style>
 

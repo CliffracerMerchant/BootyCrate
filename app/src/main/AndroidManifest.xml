@@ -5,19 +5,18 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.cliffracermerchant.bootycrate">
+    package="com.cliffracertech.bootycrate">
 
     <application
-        android:name=".BootyCrateApplication"
+        android:name="com.cliffracertech.bootycrate.BootyCrateApplication"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/LightTheme" >
         <activity
-            android:name=".GradientStyledMainActivity"
+            android:name="com.cliffracertech.bootycrate.activity.GradientStyledMainActivity"
             android:label="@string/app_name"
             android:windowSoftInputMode="adjustPan"
             android:launchMode="standard">
