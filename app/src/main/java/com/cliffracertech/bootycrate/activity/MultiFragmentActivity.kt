@@ -109,29 +109,27 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         oldFragment.view?.apply {
             exitingFragmentView = this
             val animResId = if (leftToRight) R.animator.slide_out_left
-            else R.animator.slide_out_right
-            AnimatorInflater.loadAnimator(context, animResId).apply {
-                setTarget(this)
-                ((this as AnimatorSet).childAnimations[0] as ObjectAnimator)
-                    .setFloatValues(0f, width / 2f * if (leftToRight) -1f else 1f)
-                // this === exitingFragmentView is checked to prevent the current fragment
-                // view from disappearing when the user switches between fragments quickly.
-                doOnEnd { if (this === exitingFragmentView) {
-                    visibility = View.GONE
-                    exitingFragmentView = null
-                }}
-            }.start()
+                            else             R.animator.slide_out_right
+            val anim = AnimatorInflater.loadAnimator(context, animResId)
+            anim.setTarget(this)
+            ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
+                .setFloatValues(0f, width / 2f * if (leftToRight) -1f else 1f)
+            anim.doOnEnd { if (this === exitingFragmentView) {
+                visibility = View.GONE
+                exitingFragmentView = null
+            }}
+            anim.start()
         }
         newFragment.view?.apply {
             alpha = 0f
             isVisible = true
             val animResId = if (leftToRight) R.animator.slide_in_right
                             else             R.animator.slide_in_left
-            AnimatorInflater.loadAnimator(context, animResId).apply {
-                setTarget(this)
-                ((this as AnimatorSet).childAnimations[0] as ObjectAnimator)
-                    .setFloatValues(width / 2f * if (leftToRight) 1f else -1f, 0f)
-            }.start()
+            val anim = AnimatorInflater.loadAnimator(context, animResId)
+            anim.setTarget(this)
+            ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
+                .setFloatValues(width / 2f * if (leftToRight) 1f else -1f, 0f)
+            anim.start()
         }
         return true
     }
