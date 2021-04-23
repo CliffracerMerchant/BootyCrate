@@ -218,9 +218,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
     /** Update the editable state of nameEdit, animating if param animate == true,
      * and return the height change of the nameEdit, or 0 if no animation occurred. */
     private fun updateNameEditState(expanding: Boolean, animate: Boolean): Int {
-        val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animate) ?: return 0
-        nameEditAnimInfo.translateAnimator.pause()
-        nameEditAnimInfo.underlineAnimator.pause()
+        val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animate, false) ?: return 0
         pendingAnimations.add(nameEditAnimInfo.translateAnimator)
         pendingAnimations.add(nameEditAnimInfo.underlineAnimator)
         // If the extra info edit is going to appear or disappear, then nameEdit's
@@ -254,7 +252,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         // out animation.
         val editableStateNeedsAnimated = animate && (!expanding || !extraInfoIsBlank)
         val animInfo = ui.extraInfoEdit.setEditable(
-            editable = expanding, animate = editableStateNeedsAnimated)
+            editable = expanding, animate = editableStateNeedsAnimated, false)
         if (!animate) {
             // Since we have already set the editable state, if no animation
             // is needed we can just set the visibility and exit early.
@@ -263,9 +261,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         }
 
         if (editableStateNeedsAnimated) {
-            animInfo!!.translateAnimator.pause()
-            animInfo.underlineAnimator.pause()
-            pendingAnimations.add(animInfo.translateAnimator)
+            pendingAnimations.add(animInfo!!.translateAnimator)
             pendingAnimations.add(animInfo.underlineAnimator)
             if (!extraInfoIsBlank) {
                 // We have to adjust the extraInfoEdit starting translation by the

@@ -169,6 +169,11 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
             valueAnimatorOfInt(::setUnderlineAlphaPrivate, underlineStartAlpha, underlineEndAlpha, animatorConfig))
         if (startAnimationsImmediately)
             for (anim in anims) anim.start()
+        else {
+            // Set the view translationX properties to their starting value to prevent flickering
+            ui.valueEdit.translationX = -widthChange / 2f
+            ui.increaseButton.translationX = -widthChange.toFloat()
+        }
         return AnimInfo(anims, widthChange)
     }
 }
