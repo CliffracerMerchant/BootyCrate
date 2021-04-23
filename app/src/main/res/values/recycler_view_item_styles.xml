@@ -48,11 +48,6 @@
         <item name="android:paddingBottom">11dp</item>
     </style>
 
-    <style name="ExpandableSelectableItemCollapseButton">
-        <item name="android:src">@drawable/ic_expand_less_black_24dp</item>
-        <item name="android:padding">9dp</item>
-    </style>
-
     <style name="ShoppingListItemLinkIndicator" parent="@style/SecondaryTextAppearance">
         <item name="android:padding">10dp</item>
         <item name="android:src">@drawable/ic_baseline_link_24</item>

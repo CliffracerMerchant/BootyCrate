@@ -35,7 +35,7 @@
         <!-- Unless its background is set explicitly, BottomNavigationView will
            ~ create its own background, covering up BottomAppBar's background.
            ~ Setting the background to a transparent rectangle is used to prevent this. -->
-        <item name="android:background">@drawable/transparent_rectangle_background</item>
+        <item name="android:background">@drawable/transparent_rectangle</item>
         <item name="menu">@menu/bottom_navigation_bar_menu</item>
     </style>
 
