@@ -291,10 +291,10 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
 
     /** Update the editable state of amountEdit, animating if param animate == true. */
     private fun updateAmountEditState(expanding: Boolean, animate: Boolean) {
-        val amountEditAnimInfo = ui.amountEdit.setValueIsFocusable(expanding, animate)
-            ?: return
-
-        for (anim in amountEditAnimInfo.animators) anim.pause()
+        val amountEditAnimInfo = ui.amountEdit.setValueIsFocusable(
+            focusable = expanding,
+            animate = animate,
+            startAnimationsImmediately = false) ?: return
         pendingAnimations.addAll(amountEditAnimInfo.animators)
 
         // IntegerEdit's internal animation will only take into account its

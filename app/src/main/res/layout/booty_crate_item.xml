@@ -60,7 +60,7 @@
         tools:layout_height="@dimen/editable_text_field_min_height"
         style="@style/BootyCrateItemExtraInfoEdit" />
 
-    <com.cliffracertech.bootycrate.view.IntegerEdit
+    <com.cliffracertech.bootycrate.view.AnimatedIntegerEdit
         android:id="@+id/amountEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
