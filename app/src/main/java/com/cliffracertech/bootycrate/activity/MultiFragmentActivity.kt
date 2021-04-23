@@ -194,6 +194,8 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         val wasShowingPrimaryFragment =
             savedInstanceState?.getBoolean("wasShowingPrimaryFragment") ?: true
         val savedNavItemId = savedInstanceState?.getInt("selectedNavItemId")
+        if (savedNavItemId != null)
+            navigationBar.selectedItemId = savedNavItemId
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
@@ -204,8 +206,6 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             if (menuItemId != navigationBar.selectedItemId || !wasShowingPrimaryFragment)
                 fragment.view?.visibility = View.INVISIBLE
         }
-        if (savedNavItemId != null)
-            navigationBar.selectedItemId = savedNavItemId
         navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
         onNewFragmentSelected(visibleFragment!!)
     }
