@@ -27,8 +27,8 @@ import com.cliffracertech.bootycrate.utils.*
  * input. If the user presses the done action on the soft input or if the
  * focus is changed, the changes to the text can be acted upon through the
  * property onTextChangedListener. If the proposed change would leave the
- * field empty and the property canBeEmpty is false, the value will
- * instead be reverted to its previous value. Note that if the canBeEmpty
+ * field empty and the property canBeBlank is false, the value will
+ * instead be reverted to its previous value. Note that if the canBeBlank
  * property is changed to false when the field is already empty, it will
  * not be enforced until the value is changed to a non-blank value.
  *
@@ -42,7 +42,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
 {
     var onTextChangedListener: ((String) -> Unit)? = null
     val isEditable get() = isFocusableInTouchMode
-    var canBeEmpty: Boolean
+    var canBeBlank: Boolean
 
     protected var underlineAlpha = 0
     protected var lastValue: String? = null
@@ -51,7 +51,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
         setEditable(a.getBoolean(R.styleable.TextFieldEdit_isEditable, false))
-        canBeEmpty = a.getBoolean(R.styleable.TextFieldEdit_canBeBlank, true)
+        canBeBlank = a.getBoolean(R.styleable.TextFieldEdit_canBeBlank, true)
         a.recycle()
 
         maxLines = 1
@@ -61,7 +61,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
     }
 
     private fun setTextPrivate(newText: String) {
-        if (!canBeEmpty && text.isNullOrBlank())
+        if (!canBeBlank && text.isNullOrBlank())
             setText(lastValue ?: "")
         else setText(newText)
         onTextChangedListener?.invoke(text.toString())
