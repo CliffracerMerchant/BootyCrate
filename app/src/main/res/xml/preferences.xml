@@ -10,7 +10,7 @@
     <PreferenceCategory android:title="@string/theme_preference_category_name">
         <ListPreference
             android:key="@string/pref_light_dark_mode"
-            android:title="Light / Dark mode"
+            android:title="@string/light_dark_mode_pref_description"
             android:entries="@array/light_dark_theme_preference_entries"
             android:entryValues="@array/light_dark_theme_preference_entries"
             android:persistent="true"/>
