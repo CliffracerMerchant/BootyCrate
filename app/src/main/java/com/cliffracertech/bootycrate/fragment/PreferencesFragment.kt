@@ -6,15 +6,16 @@ package com.cliffracertech.bootycrate.fragment
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.fragment.app.activityViewModels
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import com.cliffracertech.bootycrate.AboutAppDialog
-import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ShoppingListViewModel
+import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
@@ -30,6 +31,14 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
                 true
             }
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // The view's id is set so that it can be tested easier. Unfortunately
+        // I couldn't find any other way to check if the preferences fragment
+        // was showing.
+        view.id = R.id.settings_menu_item
     }
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {

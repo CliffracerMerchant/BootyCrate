@@ -27,35 +27,31 @@ import com.cliffracertech.bootycrate.utils.*
  * input. If the user presses the done action on the soft input or if the
  * focus is changed, the changes to the text can be acted upon through the
  * property onTextChangedListener. If the proposed change would leave the
- * field empty and the property canBeEmpty is false, the value will
- * instead be reverted to its previous value. Note that if the canBeEmpty
+ * field empty and the property canBeBlank is false, the value will
+ * instead be reverted to its previous value. Note that if the canBeBlank
  * property is changed to false when the field is already empty, it will
  * not be enforced until the value is changed to a non-blank value.
  *
  * When in editable mode, TextFieldEdit will underline itself to indicate
  * this to the user, and will set its minHeight to the value of the dimen-
  * sion R.dimen.text_field_edit_editable_min_height to ensure that its
- * touch target size is adequate. It will also animate changes in its edit-
- * able state (unless the function setEditable is called with the parame-
- * ter animate equal to false). The animations will use the property anim-
- * atorConfig for their durations and interpolators.
+ * touch target size is adequate.
  */
-open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
+open class TextFieldEdit(context: Context, attrs: AttributeSet) :
     AppCompatEditText(context, attrs)
 {
     var onTextChangedListener: ((String) -> Unit)? = null
-    var animatorConfig: AnimatorConfig? = null
     val isEditable get() = isFocusableInTouchMode
-    var canBeEmpty: Boolean
+    var canBeBlank: Boolean
 
-    private var underlineAlpha = 0
-    private var lastValue: String? = null
-    private val inputMethodManager = inputMethodManager(context)
+    protected var underlineAlpha = 0
+    protected var lastValue: String? = null
+    protected val inputMethodManager = inputMethodManager(context)
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
-        setEditable(a.getBoolean(R.styleable.TextFieldEdit_isEditable, false), animate = false)
-        canBeEmpty = a.getBoolean(R.styleable.TextFieldEdit_canBeBlank, true)
+        setEditable(a.getBoolean(R.styleable.TextFieldEdit_isEditable, false))
+        canBeBlank = a.getBoolean(R.styleable.TextFieldEdit_canBeBlank, true)
         a.recycle()
 
         maxLines = 1
@@ -65,7 +61,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     }
 
     private fun setTextPrivate(newText: String) {
-        if (!canBeEmpty && text.isNullOrBlank())
+        if (!canBeBlank && text.isNullOrBlank())
             setText(lastValue ?: "")
         else setText(newText)
         onTextChangedListener?.invoke(text.toString())
@@ -85,6 +81,87 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         if (!focused) setTextPrivate(text.toString())
     }
 
+    fun setEditable(editable: Boolean) {
+        if (editable) lastValue = text.toString()
+        isFocusableInTouchMode = editable
+        /* Setting the input type here will prevent misspelling underlines from
+         * being displayed when the TextFieldEdit is not in an editable state. */
+        inputType = if (editable) InputType.TYPE_CLASS_TEXT
+                    else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        if (!editable && isFocused) clearFocus()
+        minHeight = if (!editable) 0 else
+            resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
+        underlineAlpha = if (editable) 255 else 0
+    }
+
+    override fun draw(canvas: Canvas?) {
+        super.draw(canvas)
+        if (underlineAlpha == 0) return
+        val y = baseline + resources.dpToPixels(2f)
+        val paintOldAlpha = paint.alpha
+        paint.alpha = underlineAlpha
+        canvas?.drawLine(0f, y, width.toFloat(), y, paint)
+        paint.alpha = paintOldAlpha
+    }
+}
+
+/** A TextFieldEdit subclass that allows the toggling of a strike-through
+ * effect, using the public function setStrikeThroughEnabled. */
+open class StrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
+    TextFieldEdit(context, attrs)
+{
+    protected val normalTextColor = currentTextColor
+    protected var strikeThroughIsRtl = false
+    protected var strikeThroughLength: Float? = null
+
+    init {
+        doAfterTextChanged { text ->
+            if (strikeThroughLength != null)
+                strikeThroughLength = paint.measureText(text, 0, text?.length ?: 0)
+        }
+    }
+
+    fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean) {
+        strikeThroughIsRtl = !strikeThroughEnabled
+        strikeThroughLength = if (!strikeThroughEnabled) null
+                              else paint.measureText(text, 0, text?.length ?: 0)
+        setTextColor(if (strikeThroughEnabled) currentHintTextColor
+                     else                      normalTextColor)
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        val strikeThroughLength = this.strikeThroughLength ?: return
+        val truncatedStrikeThroughLength = kotlin.math.min(strikeThroughLength, width.toFloat())
+        val truncatedTextLength = kotlin.math.min(paint.measureText(text, 0, text?.length ?: 0),
+                                                  width.toFloat())
+
+        paint.strokeWidth = textSize / 12
+        val begin = if (!strikeThroughIsRtl) 0f
+                    else truncatedStrikeThroughLength
+        val end = if (strikeThroughIsRtl) truncatedTextLength
+                  else truncatedStrikeThroughLength
+        val baselineOffset = paint.fontMetrics.ascent * 0.35f
+        val y = baseline + baselineOffset
+        canvas?.drawLine(begin, y, end, y, paint)
+    }
+}
+
+/**
+ * An extension of StrikeThroughTextFieldEdit that animates changes in editable state or the length of the strike through.
+ *
+ * AnimatedStrikeThroughTextFieldEdit has overloads of the functions setEditable
+ * and setStrikeThroughEnabled that also take a boolean animate parameter,
+ * which when true will animate changes in the editable state or the strike
+ * through length. The animations will use the property animatorConfig for
+ * their durations and interpolators.
+ */
+
+class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
+    StrikeThroughTextFieldEdit(context, attrs)
+{
+    var animatorConfig: AnimatorConfig? = null
+
     /**
      * Information about the internal animations played when setEditable is called.
      *
@@ -102,17 +179,24 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
     ) {
         fun adjustTranslationStartEnd(startAdjustment: Float, endAdjustment: Float) =
             translateAnimator.setFloatValues(startTranslationY + startAdjustment,
-                                             endTranslationY + endAdjustment)
+                endTranslationY + endAdjustment)
     }
 
-    /** Set the editable state of the TextFieldEdit and return the AnimInfo
+    /** Set the editable state of the TextFieldEdit, and return the AnimInfo
      * containing information about the internal animations set up during
      * the state change if @param animate == true, or null otherwise. */
-    fun setEditable(editable: Boolean, animate: Boolean = true): AnimInfo? {
+    fun setEditable(
+        editable: Boolean,
+        animate: Boolean = true,
+        startAnimationsImmediately: Boolean = true
+    ): AnimInfo? {
+        if (!animate) {
+            super.setEditable(editable)
+            return null
+        }
+
         if (editable) lastValue = text.toString()
         isFocusableInTouchMode = editable
-        /* Setting the input type here will prevent misspelling underlines from
-         * being displayed when the TextFieldEdit is not in an editable state. */
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         if (!editable && isFocused) clearFocus()
@@ -122,10 +206,6 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
         val newUnderlineAlpha = if (editable) 255 else 0
-        if (!animate) {
-            underlineAlpha = newUnderlineAlpha
-            return null
-        }
 
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
@@ -136,87 +216,37 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet?) :
         val translateAnimator = valueAnimatorOfFloat(
             setter = ::setTranslationY,
             fromValue = start, toValue = 0f,
-            config = animatorConfig
-        ).apply { start() }
+            config = animatorConfig)
+        val underlineAnimator = valueAnimatorOfInt(
+            setter = ::setUnderlineAlphaPrivate,
+            fromValue = if (editable) 0 else 255,
+            toValue = newUnderlineAlpha,
+            config = animatorConfig)
 
-        val underlineAnimator = valueAnimatorOfInt(setter = ::setUnderlineAlpha,
-                                                   fromValue = if (editable) 0 else 255,
-                                                   toValue = newUnderlineAlpha,
-                                                   config = animatorConfig)
-        underlineAnimator.start()
+        if (startAnimationsImmediately) {
+            translateAnimator.start()
+            underlineAnimator.start()
+        } else translationY = start
         return AnimInfo(translateAnimator, underlineAnimator, heightChange, start, 0f)
     }
 
-    override fun draw(canvas: Canvas?) {
-        super.draw(canvas)
-        if (underlineAlpha == 0) return
-        val y = baseline + resources.dpToPixels(2f)
-        val paintOldAlpha = paint.alpha
-        paint.alpha = underlineAlpha
-        canvas?.drawLine(0f, y, width.toFloat(), y, paint)
-        paint.alpha = paintOldAlpha
+    fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean, animate: Boolean = true) {
+        if (!animate) {
+            super.setStrikeThroughEnabled(strikeThroughEnabled)
+            return
+        }
+
+        strikeThroughIsRtl = !strikeThroughEnabled
+        val fullLength = paint.measureText(text, 0, text?.length ?: 0)
+        val endColor = if (strikeThroughEnabled) currentHintTextColor
+                       else                      normalTextColor
+        valueAnimatorOfArgb(::setTextColor, currentTextColor, endColor, animatorConfig).start()
+        valueAnimatorOfFloat(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
+            if (!strikeThroughEnabled) doOnEnd { strikeThroughLength = null }
+        }.start()
     }
 
     // So that the property can be used in a ObjectAnimator or one of the AnimatorUtils valueAnimator functions.
-    private fun setUnderlineAlpha(value: Int) { underlineAlpha = value; invalidate() }
-}
-
-/**
- * A TextFieldEdit subclass that allows the toggling of a strike-through
- * effect, optionally with an animation, using the public function setStrike-
- * throughEnabled.
- */
-class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
-    TextFieldEdit(context, attrs)
-{
-    private val normalTextColor = currentTextColor
-    private var strikeThroughAnimIsReversed = false
-    private var strikeThroughLength: Float? = null
-    // So that the setter can be passed to valueAnimatorOfFloat
-    private fun setStrikeThroughLength(value: Float) {
-        strikeThroughLength = value
-        invalidate()
-    }
-
-    init {
-        doAfterTextChanged { text ->
-            if (strikeThroughLength != null)
-                strikeThroughLength = paint.measureText(text, 0, text?.length ?: 0)
-        }
-    }
-
-    fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean, animate: Boolean = true) {
-        strikeThroughAnimIsReversed = !strikeThroughEnabled
-        val fullLength = paint.measureText(text, 0, text?.length ?: 0)
-        if (animate) {
-            val endColor = if (strikeThroughEnabled) currentHintTextColor
-                           else                      normalTextColor
-            valueAnimatorOfArgb(::setTextColor, currentTextColor, endColor, animatorConfig).start()
-            valueAnimatorOfFloat(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
-                if (!strikeThroughEnabled)
-                    doOnEnd { strikeThroughLength = null }
-            }.start()
-        } else {
-            strikeThroughLength = if (strikeThroughEnabled) fullLength else null
-            setTextColor(if (strikeThroughEnabled) currentHintTextColor
-                         else                      normalTextColor)
-        }
-    }
-
-    override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
-        val strikeThroughLength = this.strikeThroughLength ?: return
-        val truncatedStrikeThroughLength = kotlin.math.min(strikeThroughLength, width.toFloat())
-        val truncatedTextLength = kotlin.math.min(paint.measureText(text, 0, text?.length ?: 0),
-                                                  width.toFloat())
-
-        paint.strokeWidth = textSize / 12
-        val begin = if (!strikeThroughAnimIsReversed) 0f
-                    else truncatedStrikeThroughLength
-        val end = if (strikeThroughAnimIsReversed) truncatedTextLength
-                  else truncatedStrikeThroughLength
-        val baselineOffset = paint.fontMetrics.ascent * 0.35f
-        val y = baseline + baselineOffset
-        canvas?.drawLine(begin, y, end, y, paint)
-    }
+    private fun setUnderlineAlphaPrivate(value: Int) { underlineAlpha = value; invalidate() }
+    private fun setStrikeThroughLength(value: Float) { strikeThroughLength = value; invalidate() }
 }

@@ -53,6 +53,12 @@ fun View.setHeight(height: Int) { bottom = top + height }
 fun Resources.dpToPixels(dp: Float) =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, displayMetrics)
 
+fun Resources.spToPixels(sp: Float) =
+    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, displayMetrics)
+
+fun Context.dpToPixels(dp: Float) = resources.dpToPixels(dp)
+fun Context.spToPixels(sp: Float) = resources.spToPixels(sp)
+
 private val typedValue = TypedValue()
 fun Resources.Theme.resolveIntAttribute(attr: Int): Int {
     resolveAttribute(attr, typedValue, true)

@@ -13,7 +13,7 @@ import com.cliffracertech.bootycrate.utils.dpToPixels
 /** A RecyclerView.ItemDecoration to add spacing between items. */
 class ItemSpacingDecoration(context: Context) :
     RecyclerView.ItemDecoration() {
-    private val spacing = context.resources.dpToPixels(8f).toInt()
+    private val spacing = context.dpToPixels(8f).toInt()
 
     override fun getItemOffsets(
         outRect: Rect,
