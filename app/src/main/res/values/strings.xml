@@ -78,7 +78,7 @@
     <string name="uncheck_all_description">Uncheck all</string>
     <string name="no_search_results_message">No items match the query</string>
 
-    <string name="update_shopping_list_reminder_description">Remind me to update my shopping list or inventory</string>
+    <string name="update_list_reminder_description">Remind me to update my shopping list or inventory</string>
     <string name="repeat_description">Repeat</string>
 
 </resources>

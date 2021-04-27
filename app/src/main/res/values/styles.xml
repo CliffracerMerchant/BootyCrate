@@ -11,6 +11,9 @@
         <item name="popupMenuBackground">@color/colorWindowBackgroundLight</item>
         <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
         <item name="alertDialogTheme">@style/LightAlertDialog</item>
+        <item name="colorSurface">@color/colorWindowBackgroundLight</item>
+        <item name="colorOnPrimary">@color/colorWindowBackgroundDark</item>
+        <item name="colorOnSurface">@color/colorWindowBackgroundDark</item>
         <item name="snackbarStyle">@style/SnackbarStyle</item>
         <item name="android:textColorPrimary">@color/color_text_dark</item>
         <item name="android:textColorSecondary">@color/color_text_dark_secondary</item>
@@ -32,9 +35,9 @@
         <item name="backgroundGradientColorLeft">@color/lightThemeBgGradientLeft</item>
         <item name="backgroundGradientColorMiddle">@color/lightThemeBgGradientMiddle</item>
         <item name="backgroundGradientColorRight">@color/lightThemeBgGradientRight</item>
-        <item name="foregroundGradientColorLeft">@color/colorWindowBackgroundLight</item>
-        <item name="foregroundGradientColorMiddle">@color/colorWindowBackgroundLight</item>
-        <item name="foregroundGradientColorRight">@color/colorWindowBackgroundLight</item>
+        <item name="foregroundGradientColorLeft">@color/colorRecyclerViewItemLight</item>
+        <item name="foregroundGradientColorMiddle">@color/colorRecyclerViewItemLight</item>
+        <item name="foregroundGradientColorRight">@color/colorRecyclerViewItemLight</item>
         <item name="recyclerViewItemSelectionLeftGradientColor">@color/lightThemeBgGradientLeft</item>
         <item name="recyclerViewItemSelectionMiddleGradientColor">@color/lightThemeBgGradientMiddle</item>
         <item name="recyclerViewItemSelectionRightGradientColor">@color/lightThemeBgGradientRight</item>
@@ -49,15 +52,18 @@
         <item name="android:textColorPrimary">@color/color_text_light</item>
         <item name="android:textColorSecondary">@color/color_text_light_secondary</item>
         <item name="android:textColorHint">@color/color_text_light_secondary</item>
+        <item name="colorSurface">@color/colorWindowBackgroundDark</item>
+        <item name="colorOnPrimary">@color/colorWindowBackgroundLight</item>
+        <item name="colorOnSurface">@color/colorWindowBackgroundLight</item>
 
         <item name="colorPrimary">@color/darkThemeBgGradientLeft</item>
         <item name="colorAccent">@color/darkThemeBgGradientLeft</item>
         <item name="backgroundGradientColorLeft">@color/darkThemeBgGradientLeft</item>
         <item name="backgroundGradientColorMiddle">@color/darkThemeBgGradientMiddle</item>
         <item name="backgroundGradientColorRight">@color/darkThemeBgGradientRight</item>
-        <item name="foregroundGradientColorLeft">@color/colorWindowBackgroundDark</item>
-        <item name="foregroundGradientColorMiddle">@color/colorWindowBackgroundDark</item>
-        <item name="foregroundGradientColorRight">@color/colorWindowBackgroundDark</item>
+        <item name="foregroundGradientColorLeft">@color/colorRecyclerViewItemDark</item>
+        <item name="foregroundGradientColorMiddle">@color/colorRecyclerViewItemDark</item>
+        <item name="foregroundGradientColorRight">@color/colorRecyclerViewItemDark</item>
     </style>
 
     <style name="TextAppearance" parent="TextAppearance.AppCompat">
@@ -107,7 +113,7 @@
 
     <style name="DialogCorners">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">5dp</item>
+        <item name="cornerSize">6dp</item>
     </style>
 
     <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
@@ -145,11 +151,10 @@
     </style>
 
     <style name="UpdateListReminderEnableCheckBox" parent="@style/NormalTextAppearance">
-        <item name="android:text">@string/update_shopping_list_reminder_description</item>
+        <item name="android:text">@string/update_list_reminder_description</item>
     </style>
 
     <style name="UpdateListReminderTimeView" parent="@style/NormalTextAppearance">
-        <item name="android:textColor">@color/disableable_accent_tint</item>
         <item name="android:textSize">30sp</item>
     </style>
 
