@@ -5,14 +5,16 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <color name="colorWindowBackgroundLight">#f1f3f5</color>
+    <color name="colorWindowBackgroundLight">#F1F3F5</color>
     <color name="colorWindowBackgroundDark">#212529</color>
-    <color name="colorRecyclerViewItemLight">#dee2e6</color>
+    <color name="colorRecyclerViewItemLight">#DEE2E6</color>
     <color name="colorRecyclerViewItemDark">#2F3335</color>
-    <color name="colorTextLight">#adb5bd</color>
-    <color name="colorTextLightSecondary">#868e96</color>
-    <color name="colorTextDark">#343a40</color>
+    <color name="colorTextLightEnabled">#ADB5BD</color>
+    <color name="colorTextLightSecondary">#868E96</color>
+    <color name="colorTextLightDisabled">#656A6E</color>
+    <color name="colorTextDarkEnabled">#343A40</color>
     <color name="colorTextDarkSecondary">#495057</color>
+    <color name="colorTextDarkDisabled">#8D969E</color>
     <color name="colorTextLink">#58ECFF</color>
     <color name="ic_launcher_background">#353535</color>
 

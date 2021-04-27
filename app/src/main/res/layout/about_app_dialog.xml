@@ -19,7 +19,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/aboutAppDialogBody"
-        android:layout_marginBottom="6dp"
+        android:layout_marginBottom="8dp"
+        android:textSize="22sp"
         style="@style/ActionBarTitle"/>
 
     <TextView

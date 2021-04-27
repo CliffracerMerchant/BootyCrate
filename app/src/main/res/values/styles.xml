@@ -12,9 +12,9 @@
         <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
         <item name="alertDialogTheme">@style/LightAlertDialog</item>
         <item name="snackbarStyle">@style/SnackbarStyle</item>
-        <item name="android:textColorPrimary">@color/colorTextDark</item>
-        <item name="android:textColorSecondary">@color/colorTextDarkSecondary</item>
-        <item name="android:textColorHint">@color/colorTextDarkSecondary</item>
+        <item name="android:textColorPrimary">@color/color_text_dark</item>
+        <item name="android:textColorSecondary">@color/color_text_dark_secondary</item>
+        <item name="android:textColorHint">@color/color_text_dark_secondary</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
 
@@ -46,9 +46,9 @@
         <item name="popupMenuBackground">@color/colorWindowBackgroundDark</item>
         <item name="materialAlertDialogTheme">@style/DarkAlertDialog</item>
         <item name="alertDialogTheme">@style/DarkAlertDialog</item>
-        <item name="android:textColorPrimary">@color/colorTextLight</item>
-        <item name="android:textColorSecondary">@color/colorTextLightSecondary</item>
-        <item name="android:textColorHint">@color/colorTextLightSecondary</item>
+        <item name="android:textColorPrimary">@color/color_text_light</item>
+        <item name="android:textColorSecondary">@color/color_text_light_secondary</item>
+        <item name="android:textColorHint">@color/color_text_light_secondary</item>
 
         <item name="colorPrimary">@color/darkThemeBgGradientLeft</item>
         <item name="colorAccent">@color/darkThemeBgGradientLeft</item>
@@ -93,16 +93,16 @@
         <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
         <item name="android:backgroundTint">@color/colorWindowBackgroundLight</item>
         <item name="android:windowTitleStyle">@style/TitleTextAppearance</item>
-        <item name="android:textColor">@color/colorTextDark</item>
-        <item name="textColorAlertDialogListItem">@color/colorTextDark</item>
+        <item name="android:textColor">@color/color_text_dark</item>
+        <item name="textColorAlertDialogListItem">@color/color_text_dark</item>
 
     </style>
 
     <style name="DarkAlertDialog" parent="LightAlertDialog">
         <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
         <item name="android:backgroundTint">@color/colorWindowBackgroundDark</item>
-        <item name="android:textColor">@color/colorTextLight</item>
-        <item name="textColorAlertDialogListItem">@color/colorTextLight</item>
+        <item name="android:textColor">@color/color_text_light</item>
+        <item name="textColorAlertDialogListItem">@color/color_text_light</item>
     </style>
 
     <style name="DialogCorners">
@@ -118,7 +118,7 @@
         <item name="android:textColor">?attr/colorAccent</item>
     </style>
 
-    <style name="AboutAppBody" parent="@style/SecondaryTextAppearance">
+    <style name="AboutAppBody" parent="@style/NormalTextAppearance">
         <item name="android:autoLink">web</item>
         <item name="android:linksClickable">true</item>
         <item name="android:text">@string/about_app_body</item>
