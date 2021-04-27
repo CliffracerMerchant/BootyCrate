@@ -7,7 +7,6 @@ package com.cliffracertech.bootycrate
 
 import android.content.Context
 import android.content.res.Configuration
-import android.content.res.Resources
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
@@ -67,8 +66,6 @@ class MainActivityFragmentSwitchingTest {
         activityRule.scenario.close()
     }
 
-    private fun Resources.Theme.isLightTheme() = resolveIntAttribute(android.R.attr.colorBackground) == R.color.colorWindowBackgroundLight
-
     @Test fun mainActivity_changingTheme() {
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
             (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
@@ -78,7 +75,7 @@ class MainActivityFragmentSwitchingTest {
         var resetTheme = false
         activityRule.scenario.onActivity { activity ->
             if (!resetTheme) {
-                val key = activity.getString(R.string.pref_light_dark_mode)
+                val key = activity.getString(R.string.pref_light_dark_mode_key)
                 val editor = PreferenceManager.getDefaultSharedPreferences(activity).edit().remove(key)
                 editor.commit()
                 return@onActivity
@@ -98,16 +95,16 @@ class MainActivityFragmentSwitchingTest {
 
         onView(withId(R.id.menuButton)).perform(click())
         onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
-        onView(withText(R.string.light_dark_mode_pref_description)).perform(click())
+        onView(withText(R.string.pref_light_dark_mode_title)).perform(click())
         expectedTheme = R.style.LightTheme
-        onView(withText(R.string.light_theme_description)).perform(click())
+        onView(withText(R.string.pref_theme_light_theme_title)).perform(click())
 
-        onView(withText(R.string.light_dark_mode_pref_description)).perform(click())
+        onView(withText(R.string.pref_light_dark_mode_title)).perform(click())
         expectedTheme = R.style.DarkTheme
-        onView(withText(R.string.dark_theme_description)).perform(click())
+        onView(withText(R.string.pref_theme_dark_theme_title)).perform(click())
 
-        onView(withText(R.string.light_dark_mode_pref_description)).perform(click())
+        onView(withText(R.string.pref_light_dark_mode_title)).perform(click())
         expectedTheme = if (sysDarkThemeIsActive) darkTheme else lightTheme
-        onView(withText(R.string.sys_default_theme_description)).perform(click())
+        onView(withText(R.string.pref_theme_sys_default_title)).perform(click())
     }
 }

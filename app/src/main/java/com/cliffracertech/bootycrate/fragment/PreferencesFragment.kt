@@ -25,7 +25,7 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
 
-        findPreference<ListPreference>(getString(R.string.pref_light_dark_mode))?.apply {
+        findPreference<ListPreference>(getString(R.string.pref_light_dark_mode_key))?.apply {
             setOnPreferenceChangeListener { _, _ ->
                 activity?.recreate()
                 true
@@ -44,14 +44,14 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         when (preference?.key) {
 //            getString(R.string.pref_theme_gradient_screen) -> { }
-            getString(R.string.pref_sort_by_checked) -> {
+            getString(R.string.pref_sort_by_checked_key) -> {
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
                 val viewModel: ShoppingListViewModel by activityViewModels()
                 viewModel.sortByChecked = sortByChecked
             }
             getString(R.string.pref_about_app) ->
                 AboutAppDialog().show(childFragmentManager, null)
-            getString(R.string.pref_open_source_libraries_used) -> {
+            getString(R.string.pref_open_source_libraries_used_key) -> {
                 val context = this.context ?: return false
                 startActivity(Intent(context, OssLicensesMenuActivity::class.java))
             } else -> return super.onPreferenceTreeClick(preference)

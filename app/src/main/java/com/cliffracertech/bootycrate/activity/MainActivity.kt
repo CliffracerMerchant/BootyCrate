@@ -131,13 +131,13 @@ open class MainActivity : MultiFragmentActivity() {
 
     private fun setThemeFromPreferences() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        val prefKey = getString(R.string.pref_light_dark_mode)
-        val themeDefault = getString(R.string.sys_default_theme_description)
+        val prefKey = getString(R.string.pref_light_dark_mode_key)
+        val themeDefault = getString(R.string.pref_theme_sys_default_title)
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
         setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
-            getString(R.string.light_theme_description) -> R.style.LightTheme
-            getString(R.string.dark_theme_description) ->  R.style.DarkTheme
+            getString(R.string.pref_theme_light_theme_title) -> R.style.LightTheme
+            getString(R.string.pref_theme_dark_theme_title) ->  R.style.DarkTheme
             else -> if (sysDarkThemeIsActive) R.style.DarkTheme
                     else                      R.style.LightTheme
         })
@@ -146,7 +146,7 @@ open class MainActivity : MultiFragmentActivity() {
     private fun setupOnClickListeners() {
         ui.actionBar.ui.backButton.setOnClickListener {
             val fragment = visibleFragment as? MainActivityFragment
-            if (fragment?.onBackPressed() == false)
+            if (fragment?.onBackPressed() != true)
                 supportFragmentManager.popBackStack()
         }
         ui.actionBar.onDeleteButtonClickedListener = {

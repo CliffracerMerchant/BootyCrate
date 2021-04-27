@@ -76,6 +76,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     val visibleFragment get() =
         if (showingPrimaryFragment) selectedPrimaryFragment
         else supportFragmentManager.run { findFragmentByTag(getBackStackEntryAt(backStackEntryCount - 1).name) }
+            ?: supportFragmentManager.fragments.last()
 
     val showingPrimaryFragment get() = supportFragmentManager.backStackEntryCount == 0
     val selectedPrimaryFragment get() = navBarMenuItemFragmentMap.getValue(navigationBar.selectedItemId)
@@ -89,6 +90,11 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         addOrRestoreFragments(savedInstanceState)
         supportFragmentManager.addOnBackStackChangedListener {
             onNewFragmentSelected(visibleFragment!!)
+            // The hidden primary fragments seem to have their
+            // visibility reset at this point for some reason.
+            if (!showingPrimaryFragment)
+                for (fragment in navBarMenuItemFragmentMap.values)
+                    fragment.view?.isVisible = false
         }
     }
 

@@ -58,7 +58,7 @@ class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked)
+        val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked_key)
         val sortByCheckedPrefValue = prefs.getBoolean(sortByCheckedPrefKey, false)
         recyclerView?.sortByChecked = sortByCheckedPrefValue
         viewModel.checkedItemsSize.observe(viewLifecycleOwner) { newSize ->
