@@ -16,6 +16,7 @@ import com.cliffracertech.bootycrate.AboutAppDialog
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ShoppingListViewModel
 import com.cliffracertech.bootycrate.activity.MainActivity
+import com.cliffracertech.bootycrate.activity.MultiFragmentActivity
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
@@ -48,8 +49,10 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
                 val viewModel: ShoppingListViewModel by activityViewModels()
                 viewModel.sortByChecked = sortByChecked
-            }
-            getString(R.string.pref_about_app) ->
+            } getString(R.string.pref_update_list_reminder_enabled_key) -> {
+                val activity = activity as? MultiFragmentActivity ?: return false
+                activity.addSecondaryFragment(UpdateListReminderFragment())
+            } getString(R.string.pref_about_app_key) ->
                 AboutAppDialog().show(childFragmentManager, null)
             getString(R.string.pref_open_source_libraries_used_key) -> {
                 val context = this.context ?: return false

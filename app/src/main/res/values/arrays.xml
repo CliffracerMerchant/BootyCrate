@@ -37,4 +37,8 @@
         <item>?attr/backgroundGradientColorRight</item>
     </integer-array>
 
+    <integer-array name="color_accent">
+        <item>?attr/colorAccent</item>
+    </integer-array>
+
 </resources>
