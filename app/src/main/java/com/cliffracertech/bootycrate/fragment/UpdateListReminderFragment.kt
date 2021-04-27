@@ -7,19 +7,27 @@
 
 package com.cliffracertech.bootycrate.fragment
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import ca.antonious.materialdaypicker.MaterialDayPicker
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.databinding.UpdateListReminderFragmentBinding
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
+import com.cliffracertech.bootycrate.utils.notificationManager
 import com.google.android.material.timepicker.MaterialTimePicker
 import java.text.SimpleDateFormat
 import java.util.*
@@ -43,7 +51,6 @@ class UpdateListReminderFragment : Fragment() {
         var repeat: Boolean = false,
         var repeatDays: List<MaterialDayPicker.Weekday> = emptyList())
     private var currentSettings = ReminderSettings()
-    var onSettingsChangedListener: ((ReminderSettings) -> Unit)? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -83,7 +90,7 @@ class UpdateListReminderFragment : Fragment() {
             enableReminderSettings(checked)
             sharedPreferences.edit().putBoolean(enabledKey, checked).apply()
             currentSettings.enabled = checked
-            onSettingsChangedListener?.invoke(currentSettings)
+            onSettingsChanged()
         }
         ui.reminderTimeView.setOnClickListener {
             val context = this.context ?: return@setOnClickListener
@@ -96,7 +103,7 @@ class UpdateListReminderFragment : Fragment() {
                         currentSettings.hour = hour
                         currentSettings.minute = minute
                         ui.reminderTimeView.text = timeText(currentSettings.time)
-                        onSettingsChangedListener?.invoke(currentSettings)
+                        onSettingsChanged()
                         sharedPreferences.edit().putString(timeKey, currentSettings.time.toString())
                             .apply()
                     }
@@ -105,13 +112,13 @@ class UpdateListReminderFragment : Fragment() {
         ui.reminderRepeatCheckBox.setOnCheckedChangeListener { _, checked ->
             enableRepeatDays(checked && ui.reminderSwitch.isChecked)
             currentSettings.repeat = checked
-            onSettingsChangedListener?.invoke(currentSettings)
+            onSettingsChanged()
             sharedPreferences.edit().putBoolean(repeatKey, checked).apply()
         }
         ui.reminderRepeatDayPicker.setDaySelectionChangedListener { selectedDays ->
             currentSettings.repeatDays = selectedDays
             sharedPreferences.edit().putString(repeatDaysKey, selectedDays.serialize()).apply()
-            onSettingsChangedListener?.invoke(currentSettings)
+            onSettingsChanged()
         }
     }
 
@@ -139,5 +146,31 @@ class UpdateListReminderFragment : Fragment() {
         val formatStr = if (sys24HourClock) "kk:mm" else "hh:mm a"
         val format = SimpleDateFormat(formatStr, Locale.getDefault())
         return format.format(time)
+    }
+
+    private fun onSettingsChanged() {
+        val context = this.context ?: return
+        val notificationManager = notificationManager(context) ?: return
+
+        val notificationIntent = Intent(context, GradientStyledMainActivity::class.java).apply {
+            action = Intent.ACTION_MAIN
+            addCategory(Intent.CATEGORY_LAUNCHER)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        val notification = NotificationCompat.Builder(context, "reminder")
+            .setSmallIcon(R.drawable.shopping_cart_icon)
+            .setContentTitle(context.getString(R.string.update_list_reminder_message))
+            .setContentIntent(PendingIntent.getActivity(context, 0, notificationIntent, 0))
+            .build()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val id = getString(R.string.update_list_notification_channel_id)
+            val title = getString(R.string.update_list_notification_channel_name)
+            val channel = NotificationChannel(id, title, importance)
+            channel.description = getString(R.string.update_list_notification_channel_description)
+            notificationManager.createNotificationChannel(channel)
+        }
+        notificationManager.notify(0, notification)
     }
 }

@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.utils
 
 import android.app.Activity
+import android.app.NotificationManager
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.res.Resources
@@ -34,9 +35,12 @@ fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, move
                   else -> pos }
 }
 
-/** Return a InputMethodManager system service from the @param context. */
+/** Return a InputMethodManager system service from the context. */
 fun inputMethodManager(context: Context) =
     context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
+/** Return a NotificationManager system service from the context. */
+fun notificationManager(context: Context) =
+    context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
 
 /** Return @param context as a FragmentActivity. */
 fun Context.asFragmentActivity() =
