@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.utils
 
 import android.app.Activity
+import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.Context
 import android.content.ContextWrapper
@@ -41,6 +42,9 @@ fun inputMethodManager(context: Context) =
 /** Return a NotificationManager system service from the context. */
 fun notificationManager(context: Context) =
     context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+/** Return an AlarmManager system service from the context. */
+fun alarmManager(context: Context) =
+        context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
 
 /** Return @param context as a FragmentActivity. */
 fun Context.asFragmentActivity() =

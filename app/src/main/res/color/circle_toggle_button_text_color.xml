@@ -19,7 +19,7 @@
     <item
         android:state_checked="false"
         android:state_enabled="true"
-        android:color="?android:attr/textColorSecondary" />
+        android:color="?android:attr/textColorPrimary" />
 
     <item
         android:state_checked="true"

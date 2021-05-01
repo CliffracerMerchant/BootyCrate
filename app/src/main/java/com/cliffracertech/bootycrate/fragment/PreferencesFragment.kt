@@ -51,7 +51,7 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
                 viewModel.sortByChecked = sortByChecked
             } getString(R.string.pref_update_list_reminder_enabled_key) -> {
                 val activity = activity as? MultiFragmentActivity ?: return false
-                activity.addSecondaryFragment(UpdateListReminderFragment())
+                activity.addSecondaryFragment(UpdateListReminder.SettingsFragment())
             } getString(R.string.pref_about_app_key) ->
                 AboutAppDialog().show(childFragmentManager, null)
             getString(R.string.pref_open_source_libraries_used_key) -> {

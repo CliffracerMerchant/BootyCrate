@@ -26,7 +26,8 @@
     <string name="pref_category_utility_title">Utility</string>
     <string name="pref_update_list_reminder_title">Update shopping list / inventory reminder</string>
     <string name="pref_update_list_reminder_enabled_key">update_list_reminder</string>
-    <string name="pref_update_list_reminder_time_key">update_list_reminder_time</string>
+    <string name="pref_update_list_reminder_hour_key">update_list_reminder_hour</string>
+    <string name="pref_update_list_reminder_minute_key">update_list_reminder_minute</string>
     <string name="pref_update_list_reminder_repeat_enabled_key">update_list_reminder_repeat_enabled</string>
     <string name="pref_update_list_reminder_repeat_days_key">update_list_reminder_repeat_days</string>
 
