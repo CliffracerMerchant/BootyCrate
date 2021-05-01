@@ -33,12 +33,18 @@ import com.google.android.material.timepicker.MaterialTimePicker
 import java.text.SimpleDateFormat
 import java.util.*
 
+/** An object containing functions and classes relating the the update list reminder. */
 object UpdateListReminder {
 
+    /** A data class that contains members indicating the user's settings for the update list reminder. */
     data class Settings(
+        /** Whether or not the update list reminder is enabled */
         var enabled: Boolean = false,
+        /** The time of the day that the reminder notification will be sent (only hours and minutes are used) */
         var time: Calendar = Calendar.getInstance(),
+        /** Whether the reminder notifications will repeat every given day at the specified time */
         var repeat: Boolean = false,
+        /** The days that a reminder notification will be sent, if repeat is enabled */
         var repeatDays: List<MaterialDayPicker.Weekday> = emptyList()
     ) {
         companion object {
@@ -48,6 +54,7 @@ object UpdateListReminder {
             const val repeatKey = "UpdateListReminder_repeat"
             const val repeatDaysKey = "UpdateListReminder_repeatDays"
 
+            /** Return a UpdateListReminder.Settings object with values obtained from the applications share preferences. */
             fun fromSharedPreferences(prefs: SharedPreferences) = Settings(
                 enabled = prefs.getBoolean(enabledKey, false),
                 time = Calendar.getInstance().apply {
@@ -60,6 +67,7 @@ object UpdateListReminder {
         }
     }
 
+    /** Schedule reminder notification(s) given the parameters provided in settings. */
     fun scheduleNotification(context: Context, settings: Settings) {
         val intent = Intent(context, SendNotificationReceiver::class.java)
         val alarmManager = alarmManager(context) ?: return
@@ -83,6 +91,7 @@ object UpdateListReminder {
         }
     }
 
+    /** A fragment to display and alter UpdateListReminder.Settings parameters. */
     class SettingsFragment : Fragment() {
         private lateinit var ui: UpdateListReminderSettingsFragmentBinding
         private lateinit var currentSettings: Settings
@@ -93,7 +102,7 @@ object UpdateListReminder {
             container: ViewGroup?,
             savedInstanceState: Bundle?
         ) = UpdateListReminderSettingsFragmentBinding.inflate(inflater, container, false)
-            .apply { ui = this }.root
+            .also { ui = it }.root
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
             super.onViewCreated(view, savedInstanceState)
@@ -166,6 +175,8 @@ object UpdateListReminder {
         }
     }
 
+    /** A BroadcastReceiver that receives intents with the action 'android.intent.action.BOOT_COMPLETED'
+     * in order to reschedule any reminder notifications that were lost when the device restarted. */
     class DeviceRestartReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (intent.action != "android.intent.action.BOOT_COMPLETED") return
@@ -175,6 +186,7 @@ object UpdateListReminder {
         }
     }
 
+    /** A BroadcastReceiver that sends a notification to the user to remind them to update their shopping list or inventory. */
     class SendNotificationReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val notificationManager = notificationManager(context) ?: return
