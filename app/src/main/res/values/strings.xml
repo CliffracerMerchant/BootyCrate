@@ -84,6 +84,7 @@
 
     <string name="update_list_reminder_description">Remind me to update my shopping list or inventory</string>
     <string name="repeat_description">Repeat</string>
+    <string name="update_list_reminder_title">Reminder</string>
     <string name="update_list_reminder_message">Remember to update your shopping list / inventory.</string>
 
 </resources>

@@ -4,10 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.fragment
 
-import android.app.AlarmManager
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -37,8 +34,7 @@ import java.util.*
 object UpdateListReminder {
 
     /** A data class that contains members indicating the user's settings for the update list reminder. */
-    data class Settings(
-        /** Whether or not the update list reminder is enabled */
+    data class Settings(/** Whether or not the update list reminder is enabled */
         var enabled: Boolean = false,
         /** The time of the day that the reminder notification will be sent (only hours and minutes are used) */
         var time: Calendar = Calendar.getInstance(),
@@ -68,26 +64,23 @@ object UpdateListReminder {
     }
 
     /** Schedule reminder notification(s) given the parameters provided in settings. */
-    fun scheduleNotification(context: Context, settings: Settings) {
+    fun scheduleNotifications(context: Context, settings: Settings) {
         val intent = Intent(context, SendNotificationReceiver::class.java)
         val alarmManager = alarmManager(context) ?: return
+        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0)
+        alarmManager.cancel(pendingIntent)
+        if (!settings.enabled || (settings.repeat && settings.repeatDays.isEmpty()))
+            return
 
         val now = Calendar.getInstance()
-        val nowMillis = now.timeInMillis
-        val days = if (settings.repeat && settings.repeatDays.isNotEmpty())
-                       settings.repeatDays.map { it.ordinal }
-                   else listOf(now.get(Calendar.DAY_OF_WEEK))
+        val days = if (settings.repeat) settings.repeatDays.map { it.ordinal + 1 } // Since Calendar.SUNDAY == 1
+                   else                 listOf(now.get(Calendar.DAY_OF_WEEK))
         for (day in days) {
-            val pendingIntent = PendingIntent.getBroadcast(context, day, intent, 0)
-            alarmManager.cancel(pendingIntent)
-            if (settings.enabled) {
-                var wait = settings.time.timeInMillis - nowMillis
-                if (wait < 0) {
-                    settings.time.add(Calendar.DAY_OF_WEEK, 7)
-                    wait += settings.time.timeInMillis - nowMillis
-                }
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, wait, pendingIntent)
-            }
+            settings.time.set(Calendar.WEEK_OF_YEAR, now.get(Calendar.WEEK_OF_YEAR))
+            settings.time.set(Calendar.DAY_OF_WEEK, day)
+            if (settings.time < now)
+                settings.time.add(Calendar.DAY_OF_WEEK, if (settings.repeat) 7 else 1)
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, settings.time.timeInMillis, pendingIntent)
         }
     }
 
@@ -126,7 +119,7 @@ object UpdateListReminder {
                 enableReminderSettings(checked)
                 sharedPreferences.edit().putBoolean(Settings.enabledKey, checked).apply()
                 currentSettings.enabled = checked
-                context?.let { scheduleNotification(it, currentSettings) }
+                context?.let { scheduleNotifications(it, currentSettings) }
             }
             ui.reminderTimeView.setOnClickListener {
                 val context = this.context ?: return@setOnClickListener
@@ -141,20 +134,20 @@ object UpdateListReminder {
                             sharedPreferences.edit()
                                 .putInt(Settings.hourKey, hour)
                                 .putInt(Settings.minuteKey, minute).apply()
-                            scheduleNotification(context, currentSettings)
+                            scheduleNotifications(context, currentSettings)
                         }
                     }.show(context.asFragmentActivity().supportFragmentManager, "")
             }
             ui.reminderRepeatCheckBox.setOnCheckedChangeListener { _, checked ->
                 enableRepeatDays(checked && ui.reminderSwitch.isChecked)
                 currentSettings.repeat = checked
-                context?.let { scheduleNotification(it, currentSettings) }
+                context?.let { scheduleNotifications(it, currentSettings) }
                 sharedPreferences.edit().putBoolean(Settings.repeatKey, checked).apply()
             }
             ui.reminderRepeatDayPicker.setDaySelectionChangedListener { selectedDays ->
                 currentSettings.repeatDays = selectedDays
                 sharedPreferences.edit().putString(Settings.repeatDaysKey, selectedDays.serialize()).apply()
-                context?.let { scheduleNotification(it, currentSettings) }
+                context?.let { scheduleNotifications(it, currentSettings) }
             }
         }
 
@@ -182,11 +175,12 @@ object UpdateListReminder {
             if (intent.action != "android.intent.action.BOOT_COMPLETED") return
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
             val settings = Settings.fromSharedPreferences(prefs)
-            scheduleNotification(context, settings)
+            scheduleNotifications(context, settings)
         }
     }
 
-    /** A BroadcastReceiver that sends a notification to the user to remind them to update their shopping list or inventory. */
+    /** A BroadcastReceiver that sends a notification to the user to remind them to update their shopping list or inventory,
+     * and schedules another one next week if Settings.repeat is true. */
     class SendNotificationReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val notificationManager = notificationManager(context) ?: return
@@ -195,21 +189,41 @@ object UpdateListReminder {
                 addCategory(Intent.CATEGORY_LAUNCHER)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
+            val channelId = context.getString(R.string.update_list_notification_channel_id)
             val notification = NotificationCompat.Builder(context, "reminder")
                 .setSmallIcon(R.drawable.shopping_cart_icon)
-                .setContentTitle(context.getString(R.string.update_list_reminder_message))
+                .setContentTitle(context.getString(R.string.update_list_reminder_title))
+                .setContentText(context.getString(R.string.update_list_reminder_message))
                 .setContentIntent(PendingIntent.getActivity(context, 0, notificationIntent, 0))
-                .build()
+                .setChannelId(channelId).build()
+            notification.flags = notification.flags or Notification.FLAG_AUTO_CANCEL
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val importance = NotificationManager.IMPORTANCE_DEFAULT
-                val id = context.getString(R.string.update_list_notification_channel_id)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                notificationManager.getNotificationChannel(channelId) == null
+            ) {
                 val title = context.getString(R.string.update_list_notification_channel_name)
-                val channel = NotificationChannel(id, title, importance)
-                channel.description = context.getString(R.string.update_list_notification_channel_description)
+                val description = context.getString(R.string.update_list_notification_channel_description)
+                val importance = NotificationManager.IMPORTANCE_DEFAULT
+                val channel = NotificationChannel(channelId, title, importance)
+                channel.description = description
                 notificationManager.createNotificationChannel(channel)
             }
             notificationManager.notify(0, notification)
+            val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+            val settings = Settings.fromSharedPreferences(prefs)
+            if (settings.repeat) {
+                val targetDate = Calendar.getInstance().apply {
+                    add(Calendar.DAY_OF_YEAR, 7)
+                    set(Calendar.HOUR_OF_DAY, settings.time.get(Calendar.HOUR_OF_DAY))
+                    set(Calendar.MINUTE, settings.time.get(Calendar.MINUTE))
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val alarmManager = alarmManager(context) ?: return
+                val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0)
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, targetDate.timeInMillis, pendingIntent)
+            }
+            else prefs.edit().putBoolean(Settings.enabledKey, false).apply()
         }
     }
 }
