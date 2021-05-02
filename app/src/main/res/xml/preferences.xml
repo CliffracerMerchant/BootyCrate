@@ -5,12 +5,17 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <PreferenceScreen
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:iconSpaceReserved="false" >
 
-    <PreferenceCategory android:title="@string/theme_preference_category_name">
+    <PreferenceCategory android:title="@string/pref_category_theme_title"
+        android:layout="@layout/preference_category" >
+
         <ListPreference
-            android:key="@string/pref_light_dark_mode"
-            android:title="@string/light_dark_mode_pref_description"
+            android:layout="@layout/preference"
+            android:key="@string/pref_light_dark_mode_key"
+            android:title="@string/pref_light_dark_mode_title"
             android:entries="@array/light_dark_theme_preference_entries"
             android:entryValues="@array/light_dark_theme_preference_entries"
             android:persistent="true"/>
@@ -19,29 +24,51 @@
 <!--            android:title="@string/theme_gradient_description" />-->
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/shopping_list_navigation_item_name">
+    <PreferenceCategory
+        android:title="@string/shopping_list_navigation_item_name"
+        android:layout="@layout/preference_category"
+        app:allowDividerAbove="false" >
+
         <SwitchPreferenceCompat
-            android:title="@string/sort_by_checked_description"
-            android:summary="@string/sort_by_checked_summary"
-            android:key="@string/pref_sort_by_checked"/>
+            android:layout="@layout/preference"
+            android:widgetLayout="@layout/switch_preference"
+            android:title="@string/pref_sort_by_checked_title"
+            android:summary="@string/pref_sort_by_checked_summary"
+            android:key="@string/pref_sort_by_checked_key"/>
+
     </PreferenceCategory>
 
-<!--    <PreferenceCategory android:title="@string/backup_and_restore_preference_category_name">-->
+    <PreferenceCategory
+        android:title="@string/pref_category_utility_title"
+        android:layout="@layout/preference_category"
+        app:allowDividerAbove="false" >
+
+        <Preference
+            android:layout="@layout/preference"
+            android:key="@string/pref_update_list_reminder_enabled_key"
+            android:title="@string/pref_update_list_reminder_title" />
 <!--        <Preference-->
 <!--            android:key="@string/pref_export_database"-->
 <!--            android:title="@string/export_database_description" />-->
 <!--        <Preference-->
 <!--            android:key="@string/pref_import_database"-->
 <!--            android:title="@string/import_database_description" />-->
-<!--    </PreferenceCategory>-->
+    </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/about_preference_category_name">
+    <PreferenceCategory
+        android:title="@string/pref_category_about_title"
+        android:layout="@layout/preference_category"
+        app:allowDividerAbove="false" >
+
         <Preference
-            android:key="@string/pref_about_app"
-            android:title="@string/about_app_description" />
+            android:layout="@layout/preference"
+            android:key="@string/pref_about_app_key"
+            android:title="@string/pref_about_app_title" />
         <Preference
-            android:key="@string/pref_open_source_libraries_used"
-            android:title="@string/open_source_libraries_used_description" />
+            android:layout="@layout/preference"
+            android:key="@string/pref_open_source_libraries_used_key"
+            android:title="@string/pref_open_source_libraries_used_title" />
+
     </PreferenceCategory>
 
 </PreferenceScreen>

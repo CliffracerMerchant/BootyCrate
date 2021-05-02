@@ -60,17 +60,6 @@
     <string name="share_description">Share</string>
     <string name="share_whole_list_title">Share %1$s</string>
     <string name="share_selected_items_title">Share selected %1$s items. </string>
-
-    <string name="theme_preference_category_name">App theme</string>
-    <string name="light_dark_mode_pref_description">Light / Dark mode</string>
-    <string name="sys_default_theme_description">Use system default</string>
-    <string name="light_theme_description">Light</string>
-    <string name="dark_theme_description">Dark</string>
-<!--    <string name="theme_gradient_description">Top and bottom bar gradient</string>-->
-
-    <string name="backup_and_restore_preference_category_name">Backup and Restore</string>
-    <string name="export_database_description">Export database</string>
-    <string name="import_database_description">Import database</string>
     <string name="import_database_question_message">
         Would you like to merge the imported database with the existing one, or overwrite it?</string>
     <string name="import_database_question_merge_option">Merge</string>
@@ -79,9 +68,6 @@
         Overwriting the existing database is irreversible. Are you sure?</string>
     <string name="exported_database_default_name">BootyCrateDatabase.sqlite</string>
 
-    <string name="about_preference_category_name">About</string>
-    <string name="open_source_libraries_used_description">Open source libraries used</string>
-    <string name="about_app_description">About BootyCrate</string>
     <string name="about_app_body">
         Copyright 2020 Nicholas Hochstetler. \nBootyCrate is an open-source shopping list and
         inventory management app, licensed under the terms of the Apache License, version 2.0.
@@ -91,7 +77,14 @@
     <string name="check_all_description">Check all</string>
     <string name="uncheck_all_description">Uncheck all</string>
     <string name="no_search_results_message">No items match the query</string>
-    <string name="sort_by_checked_description">Sort by checked</string>
-    <string name="sort_by_checked_summary">Move checked items to the bottom of the shopping list.</string>
+
+    <string name="update_list_notification_channel_id">update_list_reminder</string>
+    <string name="update_list_notification_channel_name">Update list reminder</string>
+    <string name="update_list_notification_channel_description">Reminders to update your shopping list / inventory.</string>
+
+    <string name="update_list_reminder_description">Remind me to update my shopping list or inventory</string>
+    <string name="repeat_description">Repeat</string>
+    <string name="update_list_reminder_title">Reminder</string>
+    <string name="update_list_reminder_message">Remember to update your shopping list / inventory.</string>
 
 </resources>

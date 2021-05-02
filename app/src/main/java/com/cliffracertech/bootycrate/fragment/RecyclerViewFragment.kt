@@ -128,11 +128,9 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         if (items.isNotEmpty())
             message += items.last().toString()
 
-        val intent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, message)
-            type = "text/plain"
-        }
+        val intent = Intent(Intent.ACTION_SEND)
+        intent.putExtra(Intent.EXTRA_TEXT, message)
+        intent.type = "text/plain"
         context.startActivity(Intent.createChooser(intent, messageTitle))
         return true
     }

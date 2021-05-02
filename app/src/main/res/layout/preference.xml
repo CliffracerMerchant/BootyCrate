@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:layout_marginBottom="10dp"
+    android:layout_marginEnd="20dp"
+    android:layout_marginStart="30dp">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/editable_text_field_min_height" >
+
+        <TextView
+            android:id="@android:id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            tools:text="Preference name"
+            style="@style/NormalTextAppearance" />
+
+        <TextView
+            android:id="@android:id/summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:visibility="gone"
+            tools:text="Preference summary"
+            style="@style/SecondaryTextAppearance" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@android:id/widget_frame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

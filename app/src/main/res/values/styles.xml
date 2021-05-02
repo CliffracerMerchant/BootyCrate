@@ -11,10 +11,13 @@
         <item name="popupMenuBackground">@color/colorWindowBackgroundLight</item>
         <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
         <item name="alertDialogTheme">@style/LightAlertDialog</item>
+        <item name="colorSurface">@color/colorWindowBackgroundLight</item>
+        <item name="colorOnPrimary">@color/colorWindowBackgroundDark</item>
+        <item name="colorOnSurface">@color/colorWindowBackgroundDark</item>
         <item name="snackbarStyle">@style/SnackbarStyle</item>
-        <item name="android:textColorPrimary">@color/colorTextDark</item>
-        <item name="android:textColorSecondary">@color/colorTextDarkSecondary</item>
-        <item name="android:textColorHint">@color/colorTextDarkSecondary</item>
+        <item name="android:textColorPrimary">@color/color_text_dark</item>
+        <item name="android:textColorSecondary">@color/color_text_dark_secondary</item>
+        <item name="android:textColorHint">@color/color_text_dark_secondary</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
 
@@ -32,9 +35,9 @@
         <item name="backgroundGradientColorLeft">@color/lightThemeBgGradientLeft</item>
         <item name="backgroundGradientColorMiddle">@color/lightThemeBgGradientMiddle</item>
         <item name="backgroundGradientColorRight">@color/lightThemeBgGradientRight</item>
-        <item name="foregroundGradientColorLeft">@color/colorWindowBackgroundLight</item>
-        <item name="foregroundGradientColorMiddle">@color/colorWindowBackgroundLight</item>
-        <item name="foregroundGradientColorRight">@color/colorWindowBackgroundLight</item>
+        <item name="foregroundGradientColorLeft">@color/colorRecyclerViewItemLight</item>
+        <item name="foregroundGradientColorMiddle">@color/colorRecyclerViewItemLight</item>
+        <item name="foregroundGradientColorRight">@color/colorRecyclerViewItemLight</item>
         <item name="recyclerViewItemSelectionLeftGradientColor">@color/lightThemeBgGradientLeft</item>
         <item name="recyclerViewItemSelectionMiddleGradientColor">@color/lightThemeBgGradientMiddle</item>
         <item name="recyclerViewItemSelectionRightGradientColor">@color/lightThemeBgGradientRight</item>
@@ -46,18 +49,21 @@
         <item name="popupMenuBackground">@color/colorWindowBackgroundDark</item>
         <item name="materialAlertDialogTheme">@style/DarkAlertDialog</item>
         <item name="alertDialogTheme">@style/DarkAlertDialog</item>
-        <item name="android:textColorPrimary">@color/colorTextLight</item>
-        <item name="android:textColorSecondary">@color/colorTextLightSecondary</item>
-        <item name="android:textColorHint">@color/colorTextLightSecondary</item>
+        <item name="android:textColorPrimary">@color/color_text_light</item>
+        <item name="android:textColorSecondary">@color/color_text_light_secondary</item>
+        <item name="android:textColorHint">@color/color_text_light_secondary</item>
+        <item name="colorSurface">@color/colorWindowBackgroundDark</item>
+        <item name="colorOnPrimary">@color/colorWindowBackgroundLight</item>
+        <item name="colorOnSurface">@color/colorWindowBackgroundLight</item>
 
         <item name="colorPrimary">@color/darkThemeBgGradientLeft</item>
         <item name="colorAccent">@color/darkThemeBgGradientLeft</item>
         <item name="backgroundGradientColorLeft">@color/darkThemeBgGradientLeft</item>
         <item name="backgroundGradientColorMiddle">@color/darkThemeBgGradientMiddle</item>
         <item name="backgroundGradientColorRight">@color/darkThemeBgGradientRight</item>
-        <item name="foregroundGradientColorLeft">@color/colorWindowBackgroundDark</item>
-        <item name="foregroundGradientColorMiddle">@color/colorWindowBackgroundDark</item>
-        <item name="foregroundGradientColorRight">@color/colorWindowBackgroundDark</item>
+        <item name="foregroundGradientColorLeft">@color/colorRecyclerViewItemDark</item>
+        <item name="foregroundGradientColorMiddle">@color/colorRecyclerViewItemDark</item>
+        <item name="foregroundGradientColorRight">@color/colorRecyclerViewItemDark</item>
     </style>
 
     <style name="TextAppearance" parent="TextAppearance.AppCompat">
@@ -93,21 +99,21 @@
         <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
         <item name="android:backgroundTint">@color/colorWindowBackgroundLight</item>
         <item name="android:windowTitleStyle">@style/TitleTextAppearance</item>
-        <item name="android:textColor">@color/colorTextDark</item>
-        <item name="textColorAlertDialogListItem">@color/colorTextDark</item>
+        <item name="android:textColor">@color/color_text_dark</item>
+        <item name="textColorAlertDialogListItem">@color/color_text_dark</item>
 
     </style>
 
     <style name="DarkAlertDialog" parent="LightAlertDialog">
         <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
         <item name="android:backgroundTint">@color/colorWindowBackgroundDark</item>
-        <item name="android:textColor">@color/colorTextLight</item>
-        <item name="textColorAlertDialogListItem">@color/colorTextLight</item>
+        <item name="android:textColor">@color/color_text_light</item>
+        <item name="textColorAlertDialogListItem">@color/color_text_light</item>
     </style>
 
     <style name="DialogCorners">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">5dp</item>
+        <item name="cornerSize">6dp</item>
     </style>
 
     <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
@@ -118,7 +124,7 @@
         <item name="android:textColor">?attr/colorAccent</item>
     </style>
 
-    <style name="AboutAppBody" parent="@style/SecondaryTextAppearance">
+    <style name="AboutAppBody" parent="@style/NormalTextAppearance">
         <item name="android:autoLink">web</item>
         <item name="android:linksClickable">true</item>
         <item name="android:text">@string/about_app_body</item>
@@ -142,6 +148,33 @@
     <style name="AddNewItemDialogNameRequiredMessage" parent="@style/AddNewItemDialogMessage">
         <item name="android:text">Item must have a name</item>
         <item name="android:drawableStart">@drawable/ic_baseline_error_24</item>
+    </style>
+
+    <style name="UpdateListReminderEnableCheckBox" parent="@style/NormalTextAppearance">
+        <item name="android:text">@string/update_list_reminder_description</item>
+    </style>
+
+    <style name="UpdateListReminderTimeView" parent="@style/NormalTextAppearance">
+        <item name="android:textSize">30sp</item>
+    </style>
+
+    <style name="UpdateListReminderRepeatCheckBox" parent="@style/NormalTextAppearance">
+        <item name="android:text">@string/repeat_description</item>
+        <item name="android:textColorSecondary">?attr/colorAccent</item>
+        <item name="android:labelFor">@id/reminderRepeatCheckBox</item>
+    </style>
+
+    <style name="AccentedTextAppearance" parent="NormalTextAppearance">
+        <item name="android:textColor">@color/disableable_accent_tint</item>
+    </style>
+
+    <style name="MaterialDayPickerToggle" parent="@style/Widget.AppCompat.Button.Borderless">
+        <item name="android:layout_width">@dimen/day_button_size</item>
+        <item name="android:layout_height">@dimen/day_button_size</item>
+        <item name="android:background">@drawable/circle_toggle_button</item>
+        <item name="android:textSize">@dimen/day_button_max_font_size</item>
+        <item name="android:textColor">@color/circle_toggle_button_text_color</item>
+        <item name="android:textAllCaps">false</item>
     </style>
 
 </resources>

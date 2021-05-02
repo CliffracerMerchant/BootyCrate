@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2020 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<!-- This is a slight modification of circle_toggle_button_text_color.xml used in the
+     MaterialDayPicker library to use theme color references instead of static color references. -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:enterFadeDuration="@android:integer/config_shortAnimTime"
+    android:exitFadeDuration="@android:integer/config_shortAnimTime">
+
+    <item
+        android:state_checked="true"
+        android:state_enabled="true"
+        android:color="?android:attr/colorBackground" />
+
+    <item
+        android:state_checked="false"
+        android:state_enabled="true"
+        android:color="?android:attr/textColorPrimary" />
+
+    <item
+        android:state_checked="true"
+        android:state_enabled="false"
+        android:color="?android:attr/colorBackground" />
+
+    <item
+        android:state_checked="false"
+        android:state_enabled="false"
+        android:color="?android:attr/textColorSecondary" />
+
+</selector>
