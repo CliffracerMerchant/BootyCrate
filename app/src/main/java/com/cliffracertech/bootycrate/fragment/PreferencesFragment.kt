@@ -6,7 +6,6 @@ package com.cliffracertech.bootycrate.fragment
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import androidx.fragment.app.activityViewModels
 import androidx.preference.ListPreference
 import androidx.preference.Preference
@@ -16,7 +15,6 @@ import com.cliffracertech.bootycrate.AboutAppDialog
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ShoppingListViewModel
 import com.cliffracertech.bootycrate.activity.MainActivity
-import com.cliffracertech.bootycrate.activity.MultiFragmentActivity
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
@@ -34,14 +32,6 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
         }
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        // The view's id is set so that it can be tested easier. Unfortunately
-        // I couldn't find any other way to check if the preferences fragment
-        // was showing.
-        view.id = R.id.settings_menu_item
-    }
-
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         when (preference?.key) {
 //            getString(R.string.pref_theme_gradient_screen) -> { }
@@ -49,10 +39,9 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
                 val viewModel: ShoppingListViewModel by activityViewModels()
                 viewModel.sortByChecked = sortByChecked
-            } getString(R.string.pref_update_list_reminder_enabled_key) -> {
-                val activity = activity as? MultiFragmentActivity ?: return false
-                activity.addSecondaryFragment(UpdateListReminder.SettingsFragment())
-            } getString(R.string.pref_about_app_key) ->
+            } getString(R.string.pref_update_list_reminder_enabled_key) ->
+                addSecondaryFragment(UpdateListReminder.SettingsFragment())
+            getString(R.string.pref_about_app_key) ->
                 AboutAppDialog().show(childFragmentManager, null)
             getString(R.string.pref_open_source_libraries_used_key) -> {
                 val context = this.context ?: return false

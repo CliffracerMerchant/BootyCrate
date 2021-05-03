@@ -184,7 +184,9 @@ open class MainActivity : MultiFragmentActivity() {
      * back button) presses. Fragments should always indicate their desired
      * bottom app bar and checkout button states through an override of the
      * appropriate function instead of changing their visibility manually to
-     * ensure that the appropriate hide/show animations are played.
+     * ensure that the appropriate hide/show animations are played. The
+     * function addSecondaryFragment allows implementing fragments to add a
+     * secondary fragment themselves.
      */
     interface MainActivityFragment {
         /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
@@ -197,5 +199,11 @@ open class MainActivity : MultiFragmentActivity() {
         /** Perform any additional actions on the @param activityUi that the fragment desires,
          * given its @param isActive state. */
         fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {}
+
+        fun addSecondaryFragment(fragment: Fragment) {
+            val mainActivityFragment = this as? Fragment ?:
+                throw IllegalStateException("Implementors of MainActivityFragment must inherit from androidx.fragment.app.Fragment")
+            (mainActivityFragment.activity as? MainActivity)?.addSecondaryFragment(fragment)
+        }
     }
 }
