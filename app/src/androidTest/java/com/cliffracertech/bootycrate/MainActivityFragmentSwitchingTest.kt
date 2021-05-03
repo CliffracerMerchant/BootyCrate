@@ -41,28 +41,28 @@ class MainActivityFragmentSwitchingTest {
         onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
 
         onView(withId(R.id.inventory_button)).perform(click())
-        onView(withId(R.id.shoppingListFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.shoppingListFragmentView)).check(matches(not(isCompletelyDisplayed())))
         onView(withId(R.id.inventoryFragmentView)).check(matches(isDisplayed()))
 
         onView(withId(R.id.shopping_list_button)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isCompletelyDisplayed())))
 
         onView(withId(R.id.menuButton)).perform(click())
         onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
-        onView(withId(R.id.settings_menu_item)).check(matches(isDisplayed()))
+        onView(withText(R.string.pref_light_dark_mode_title)).check(matches(isDisplayed()))
 
         pressBack()
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
         onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
-        onView(withId(R.id.settings_menu_item)).check(matches(not(isDisplayed())))
+        onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
 
         onView(withId(R.id.menuButton)).perform(click())
         onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
         onView(withId(R.id.backButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
         onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
-        onView(withId(R.id.settings_menu_item)).check(matches(not(isDisplayed())))
+        onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
 
         activityRule.scenario.close()
     }
