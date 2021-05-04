@@ -145,7 +145,7 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 class ShoppingListViewModel @Inject constructor(app: Application) :
     ExpandableSelectableItemViewModel<ShoppingListItem>(app)
 {
-     @Inject override lateinit var dao: ShoppingListItemDao
+    @Inject override lateinit var dao: ShoppingListItemDao
     val checkedItemsSize: LiveData<Int> by lazy { dao.getCheckedItemsSize() }
 
     var sortByChecked = false

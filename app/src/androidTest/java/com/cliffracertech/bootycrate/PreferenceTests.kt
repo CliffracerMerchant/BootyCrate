@@ -28,8 +28,7 @@ import org.junit.runner.RunWith
 @LargeTest
 class PreferenceTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    @get:Rule var activityRule: ActivityScenarioRule<GradientStyledMainActivity> =
-        ActivityScenarioRule(GradientStyledMainActivity::class.java)
+    @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
 
     @Test fun changingAppTheme() {
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==

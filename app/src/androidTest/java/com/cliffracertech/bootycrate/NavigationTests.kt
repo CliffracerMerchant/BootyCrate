@@ -5,8 +5,6 @@
 
 package com.cliffracertech.bootycrate
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
@@ -27,19 +25,22 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class NavigationTests {
+    @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
 
-    private val context = ApplicationProvider.getApplicationContext<Context>()
-    @get:Rule var activityRule: ActivityScenarioRule<GradientStyledMainActivity>
-        = ActivityScenarioRule(GradientStyledMainActivity::class.java)
-
-    @Test fun switchingPrimaryFragments() {
+    @Test fun startingFragmentVisibility() {
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
         onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
+    }
 
+    @Test fun switchingToInventoryFragment() {
+        startingFragmentVisibility()
         onView(withId(R.id.inventory_button)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(not(isCompletelyDisplayed())))
         onView(withId(R.id.inventoryFragmentView)).check(matches(isDisplayed()))
+    }
 
+    @Test fun switchingBackToShoppingListFragment() {
+        switchingToInventoryFragment()
         onView(withId(R.id.shopping_list_button)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
         onView(withId(R.id.inventoryFragmentView)).check(matches(not(isCompletelyDisplayed())))
@@ -49,17 +50,43 @@ class NavigationTests {
         onView(withId(R.id.menuButton)).perform(click())
         onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
         onView(withText(R.string.pref_light_dark_mode_title)).check(matches(isDisplayed()))
+    }
 
+    @Test fun navigatingUpFromPreferencesUsingNavigationBackButton() {
+        navigatingToPreferencesFragment()
         pressBack()
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
         onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
+    }
 
-        onView(withId(R.id.menuButton)).perform(click())
-        onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
+    @Test fun navigatingUpFromPreferencesUsingActionBarBackButton() {
+        navigatingToPreferencesFragment()
         onView(withId(R.id.backButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
         onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
     }
+
+    @Test fun navigatingToNestedPreferenceScreen() {
+        navigatingToPreferencesFragment()
+        onView(withText(R.string.pref_update_list_reminder_title)).perform(click())
+        onView(withText(R.string.pref_update_list_reminder_title)).check(doesNotExist())
+        onView(withText(R.string.update_list_reminder_description)).check(matches(isDisplayed()))
+    }
+
+    @Test fun navigatingUpFromNestedPreferenceScreenUsingNavigationBackButton() {
+        navigatingToNestedPreferenceScreen()
+        pressBack()
+        onView(withText(R.string.pref_light_dark_mode_title)).check(matches(isDisplayed()))
+        onView(withText(R.string.update_list_reminder_description)).check(doesNotExist())
+    }
+
+    @Test fun navigatingUpFromNestedPreferencesScreenUsingActionBarBackButton() {
+        navigatingToNestedPreferenceScreen()
+        onView(withId(R.id.backButton)).perform(click())
+        onView(withText(R.string.pref_light_dark_mode_title)).check(matches(isDisplayed()))
+        onView(withText(R.string.update_list_reminder_description)).check(doesNotExist())
+    }
+
 }

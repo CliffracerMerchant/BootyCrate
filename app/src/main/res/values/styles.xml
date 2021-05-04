@@ -146,7 +146,7 @@
     </style>
 
     <style name="AddNewItemDialogNameRequiredMessage" parent="@style/AddNewItemDialogMessage">
-        <item name="android:text">Item must have a name</item>
+        <item name="android:text">@string/new_item_no_name_error</item>
         <item name="android:drawableStart">@drawable/ic_baseline_error_24</item>
     </style>
 
