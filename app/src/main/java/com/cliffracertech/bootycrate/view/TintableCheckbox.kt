@@ -17,13 +17,13 @@ import com.cliffracertech.bootycrate.utils.valueAnimatorOfArgb
 import dev.sasikanth.colorsheet.ColorSheet
 
 /**
- * A button that acts as a checkbox with easily an customizable color.
+ * A button that acts as a checkbox with an easily customizable color.
  *
  * TintableCheckbox acts as a tinted checkbox that can be toggled between a
  * normal checkbox mode (where the checked state can be toggled) and a color
  * editing mode (where the checkbox will morph into a tinted circle, and a
  * click will open a color picker dialog). The mode is changed via the property
- * inColorEditMode or the function setInColorEditMode (which also allows
+ * inColorEditMode, or the function setInColorEditMode (which also allows
  * skipping the animation when the parameter animate == false).
  *
  * The current color is accessed through the property color. The color index
