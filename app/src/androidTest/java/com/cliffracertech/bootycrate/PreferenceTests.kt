@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,7 +33,7 @@ class PreferenceTests {
 
     @Test fun changingAppTheme() {
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
-                (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
+            (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
         val lightTheme = R.style.LightTheme
         val darkTheme = R.style.DarkTheme
         var expectedTheme = if (sysDarkThemeIsActive) darkTheme else lightTheme
@@ -46,9 +47,7 @@ class PreferenceTests {
             val expectedThemeContext = ContextThemeWrapper(context, expectedTheme)
             val expectedBgColor = expectedThemeContext.theme.resolveIntAttribute(android.R.attr.colorBackground)
             val actualBgColor = activity.theme.resolveIntAttribute(android.R.attr.colorBackground)
-            if (actualBgColor != expectedBgColor) throw IllegalStateException(
-                    "The current theme's background color does not match the expected " +
-                            "one (expected: $expectedBgColor, actual: $actualBgColor")
+            assertThat(actualBgColor).isEqualTo(expectedBgColor)
         }
         if (!resetTheme) {
             resetTheme = true
