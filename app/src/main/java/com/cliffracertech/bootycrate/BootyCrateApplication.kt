@@ -6,9 +6,7 @@ package com.cliffracertech.bootycrate
 
 import android.app.Application
 import com.cliffracertech.bootycrate.database.BootyCrateItem
-import dagger.hilt.android.HiltAndroidApp
 
-@HiltAndroidApp
 class BootyCrateApplication : Application() {
     override fun onCreate() {
         super.onCreate()

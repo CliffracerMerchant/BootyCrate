@@ -17,7 +17,6 @@ import androidx.fragment.app.Fragment
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * An activity that, when linked up with a navigation bar instance, will
@@ -67,7 +66,6 @@ import dagger.hilt.android.AndroidEntryPoint
  * Selected will be called. Override onNewFragmentSelected in subclasses
  * if special behavior when the visible fragment changes is desired.
  */
-@AndroidEntryPoint
 abstract class MultiFragmentActivity : AppCompatActivity() {
     protected var fragmentContainerId = 0
     protected lateinit var navigationBar: BottomNavigationView

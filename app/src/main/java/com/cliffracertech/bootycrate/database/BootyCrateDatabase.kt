@@ -4,17 +4,11 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.database
 
-import android.content.Context
+import android.app.Application
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 
 /**
  * A Room database to access the tables shopping_list_item and inventory_item.
@@ -51,17 +45,12 @@ abstract class BootyCrateDatabase : RoomDatabase() {
     abstract fun inventoryItemDao(): InventoryItemDao
     abstract fun shoppingListItemDao(): ShoppingListItemDao
 
-    @Module @InstallIn(SingletonComponent::class)
-    object BootyCrateDatabaseModule {
-        @Provides @Singleton
-        fun provideBootyCrateDatabase(@ApplicationContext context: Context) =
-            Room.databaseBuilder(context, BootyCrateDatabase::class.java, "booty-crate-db")
-                .addCallback(callback).build()
-        @Provides fun provideShoppingListItemDao(db: BootyCrateDatabase) = db.shoppingListItemDao()
-        @Provides fun provideInventoryItemDao(db: BootyCrateDatabase) = db.inventoryItemDao()
-    }
-
     companion object {
+        var instance: BootyCrateDatabase? = null
+        fun get(app: Application) = instance ?: Room.databaseBuilder(
+            app, BootyCrateDatabase::class.java, "booty-crate-db")
+            .addCallback(callback).build().apply { instance = this }
+
 //        fun backup(context: Context, backupUri: Uri) {
 //            val db = provideBootyCrateDatabase(context)
 //            val databasePath = db.openHelper.readableDatabase.path
