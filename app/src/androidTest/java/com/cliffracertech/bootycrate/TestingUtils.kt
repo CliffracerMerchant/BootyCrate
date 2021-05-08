@@ -20,11 +20,8 @@ fun <T>doStuff(method: (view: T) -> Unit): ViewAction {
     return object: ViewAction {
         override fun getDescription() = method.toString()
         override fun getConstraints() = isEnabled()
-        override fun perform(uiController: UiController?, view: View?) {
-            val t = view as? T ?: throw IllegalStateException("The matched view is null or not of type T")
-            method(t)
-        }
-
+        override fun perform(uiController: UiController?, view: View) =
+            method(view as? T ?: throw IllegalStateException("The matched view is null or not of type T"))
     }
 }
 

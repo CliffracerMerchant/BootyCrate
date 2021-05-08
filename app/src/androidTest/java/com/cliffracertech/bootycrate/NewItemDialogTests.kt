@@ -4,9 +4,9 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate
 
+import android.app.Application
 import android.content.Context
 import android.view.View
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
@@ -26,7 +26,6 @@ import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.google.common.truth.Truth.assertThat
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.Matcher
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -36,13 +35,7 @@ fun inNewItemDialog(matcher: Matcher<View>) =
 class NewShoppingListItemDialogTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
-    lateinit var viewModel: ShoppingListViewModel
-
-    @Before fun setup() {
-        activityRule.scenario.onActivity {
-            viewModel = ViewModelProvider(it).get(ShoppingListViewModel::class.java)
-        }
-    }
+    private val viewModel = ShoppingListViewModel(context as Application)
 
     private fun addTestShoppingListItems(leaveNewItemDialogOpen: Boolean, vararg items: ShoppingListItem) {
         val lastItem = items.last()
@@ -189,14 +182,9 @@ class NewShoppingListItemDialogTests {
 }
 
 class NewInventoryItemDialogTests {
+    private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
-    lateinit var viewModel: InventoryViewModel
-
-    @Before fun setup() {
-        activityRule.scenario.onActivity {
-            viewModel = ViewModelProvider(it).get(InventoryViewModel::class.java)
-        }
-    }
+    private val viewModel = InventoryViewModel(context as Application)
 
     private fun amountIncreaseButton() = allOf(withId(R.id.increaseButton),
         isDescendantOfA(withId(R.id.amountEdit)))
