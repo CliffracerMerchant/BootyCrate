@@ -138,9 +138,7 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 
 
 /** A ExpandableSelectableItemViewModel subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
-class ShoppingListViewModel(app: Application) :
-    ExpandableSelectableItemViewModel<ShoppingListItem>(app)
-{
+class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewModel<ShoppingListItem>(app) {
     override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
     val checkedItemsSize = dao.getCheckedItemsSize()
 

@@ -13,9 +13,9 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.BootyCrateItemView
-import com.cliffracertech.bootycrate.database.BootyCrateViewModel
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
+import com.cliffracertech.bootycrate.database.BootyCrateViewModel
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -60,7 +60,7 @@ abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
 ) : RecyclerView(context, attrs) {
     protected abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
     abstract val adapter: Adapter<out ViewHolder>
-    protected abstract val viewModel: BootyCrateViewModel<Entity>
+    abstract val viewModel: BootyCrateViewModel<Entity>
     var snackBarAnchor: View? = null
 
     var sort get() = viewModel.sort
