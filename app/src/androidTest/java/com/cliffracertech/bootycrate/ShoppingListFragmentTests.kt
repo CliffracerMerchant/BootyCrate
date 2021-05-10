@@ -6,14 +6,13 @@ package com.cliffracertech.bootycrate
 
 import android.app.Application
 import android.content.Context
-import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
-import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
@@ -57,7 +56,7 @@ class ShoppingListFragmentTests {
 
     @Test fun sortByColor() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.color_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(redItem0)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(orangeItem1)
@@ -68,7 +67,7 @@ class ShoppingListFragmentTests {
 
     @Test fun sortByNameAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.name_ascending_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.name_ascending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(grayItem11)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(orangeItem1)
@@ -79,7 +78,7 @@ class ShoppingListFragmentTests {
 
     @Test fun sortByNameDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.name_descending_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.name_descending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(yellowItem2)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(redItem0)
@@ -90,7 +89,7 @@ class ShoppingListFragmentTests {
 
     @Test fun sortByAmountAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.amount_ascending_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.amount_ascending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(yellowItem2)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(orangeItem1)
@@ -101,7 +100,7 @@ class ShoppingListFragmentTests {
 
     @Test fun sortByAmountDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.amount_descending_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.amount_descending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(grayItem11)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(redItem0)
@@ -150,91 +149,93 @@ class ShoppingListFragmentTests {
         expandedState.assertOnlyOneExpandedIndex(3)
     }
 
-    @Test fun expandedItemSurvivesSwitchingToInventory() {
+    private fun expandedItemSurvives(action: Runnable) {
         expandItem()
         val expandedItemState = ExpandedItemsState(1)
+        action.run()
+        expandedItemState.assertOnlyOneExpandedIndex(1)
+    }
+
+    @Test fun expandedItemSurvivesSwitchingToInventory() = expandedItemSurvives {
         onView(withId(R.id.inventory_button)).perform(click())
         onView(withId(R.id.shopping_list_button)).perform(click())
-        expandedItemState.assertOnlyOneExpandedIndex(1)
     }
 
-    @Test fun expandedItemSurvivesSwitchingToPreferences() {
-        expandItem()
-        val expandedItemState = ExpandedItemsState(1)
+    @Test fun expandedItemSurvivesSwitchingToPreferences() = expandedItemSurvives {
         onView(withId(R.id.menuButton)).perform(click())
-        onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.settings_description)).perform(click())
         onView(withId(R.id.backButton)).perform(click())
-        expandedItemState.assertOnlyOneExpandedIndex(1)
     }
 
-    @Test fun expandedItemSurvivesActivityRecreation() {
-        expandItem()
-        val expandedItemState = ExpandedItemsState(1)
+    @Test fun expandedItemSurvivesOrientationChange() = expandedItemSurvives {
         uiDevice.setOrientationLeft()
-        uiDevice.setOrientationNatural();
-        expandedItemState.assertOnlyOneExpandedIndex(1)
+        uiDevice.setOrientationNatural()
     }
 
-    private fun View.assertIsShoppingListItemViewWithCheckedState(checked: Boolean) {
-        assertThat(this as? ShoppingListItemView).isNotNull()
-        val ui = (this as ShoppingListItemView).ui
-        assertThat(ui.checkBox.isChecked).isEqualTo(checked)
-        assertThat(ui.nameEdit.hasStrikeThrough).isEqualTo(checked)
-        if (ui.extraInfoEdit.text?.isNotBlank() == true)
-            assertThat(ui.extraInfoEdit.hasStrikeThrough).isEqualTo(checked)
+    @Test fun expandedItemSurvivesOrientationChangeWhileInOtherFragment() = expandedItemSurvives {
+        onView(withId(R.id.inventory_button)).perform(click())
+        uiDevice.setOrientationLeft()
+        uiDevice.setOrientationNatural()
+        onView(withId(R.id.shopping_list_button)).perform(click())
     }
+
+    @Test fun expandedItemSurvivesOrientationChangeWhileInPreferences() = expandedItemSurvives {
+        onView(withId(R.id.menuButton)).perform(click())
+        onPopupView(withText(R.string.settings_description)).perform(click())
+        uiDevice.setOrientationLeft()
+        uiDevice.setOrientationNatural()
+        onView(withId(R.id.backButton)).perform(click())
+    }
+
+    private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->
+        if (view == null) throw e
+        assertThat(view).isInstanceOf(ShoppingListRecyclerView::class.java)
+        val it = view as ShoppingListRecyclerView
+        for (i in 0 until it.adapter.itemCount) {
+            val ui = (it.findViewHolderForAdapterPosition(i)!!.itemView as ShoppingListItemView).ui
+            val shouldBeChecked = checkedItemsIndices.contains(i)
+            assertThat(ui.checkBox.isChecked).isEqualTo(shouldBeChecked)
+            assertThat(ui.nameEdit.hasStrikeThrough).isEqualTo(shouldBeChecked)
+            if (ui.extraInfoEdit.text?.isNotBlank() == true)
+                assertThat(ui.extraInfoEdit.hasStrikeThrough).isEqualTo(shouldBeChecked)
+        }
+    }
+
+    private fun clickCheckBox() = actionOnChildWithId(R.id.checkBox, click())
 
     @Test fun checkIndividualItems() {
         runBlocking { db.shoppingListItemDao().uncheckAll() }
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, actionOnChildWithId(R.id.checkBox, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2, actionOnChildWithId(R.id.checkBox, click())),
-            doStuff<ShoppingListRecyclerView> {
-                it.findViewHolderForAdapterPosition(0)!!.itemView.assertIsShoppingListItemViewWithCheckedState(true)
-                it.findViewHolderForAdapterPosition(1)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-                it.findViewHolderForAdapterPosition(2)!!.itemView.assertIsShoppingListItemViewWithCheckedState(true)
-                it.findViewHolderForAdapterPosition(3)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-            })
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickCheckBox()),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2, clickCheckBox())
+        ).check(hasOnlyCheckedItemsAtIndices(0, 2))
     }
 
     @Test fun uncheckIndividualItems() {
         checkIndividualItems()
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, actionOnChildWithId(R.id.checkBox, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2, actionOnChildWithId(R.id.checkBox, click())),
-            doStuff<ShoppingListRecyclerView> {
-                it.findViewHolderForAdapterPosition(0)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-                it.findViewHolderForAdapterPosition(1)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-                it.findViewHolderForAdapterPosition(2)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-                it.findViewHolderForAdapterPosition(3)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-            })
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickCheckBox()),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2, clickCheckBox())
+        ).check(hasOnlyCheckedItemsAtIndices())
     }
 
     @Test fun checkAllItems() {
         runBlocking { db.shoppingListItemDao().uncheckAll() }
         onView(withId(R.id.menuButton)).perform(click())
-        onView(withText(R.string.check_all_description)).inRoot(isPlatformPopup()).perform(click())
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-            it.findViewHolderForAdapterPosition(0)!!.itemView.assertIsShoppingListItemViewWithCheckedState(true)
-            it.findViewHolderForAdapterPosition(1)!!.itemView.assertIsShoppingListItemViewWithCheckedState(true)
-            it.findViewHolderForAdapterPosition(2)!!.itemView.assertIsShoppingListItemViewWithCheckedState(true)
-            it.findViewHolderForAdapterPosition(3)!!.itemView.assertIsShoppingListItemViewWithCheckedState(true)
-        })
+        onPopupView(withText(R.string.check_all_description)).perform(click())
+        onView(withId(R.id.shoppingListRecyclerView))
+            .check(hasOnlyCheckedItemsAtIndices(0, 1, 2, 3))
     }
 
     @Test fun uncheckAllItems() {
         checkAllItems()
         onView(withId(R.id.menuButton)).perform(click())
-        onView(withText(R.string.uncheck_all_description)).inRoot(isPlatformPopup()).perform(click())
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-            it.findViewHolderForAdapterPosition(0)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-            it.findViewHolderForAdapterPosition(1)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-            it.findViewHolderForAdapterPosition(2)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-            it.findViewHolderForAdapterPosition(3)!!.itemView.assertIsShoppingListItemViewWithCheckedState(false)
-        })
+        onPopupView(withText(R.string.uncheck_all_description)).perform(click())
+        onView(withId(R.id.shoppingListRecyclerView))
+            .check(hasOnlyCheckedItemsAtIndices())
     }
 
-    @Test fun checkoutButtonEnablesAfterCheckingIndividualItems() {
+    @Test fun checkoutButtonEnabledAfterCheckingIndividualItems() {
         runBlocking { db.shoppingListItemDao().uncheckAll() }
         onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
@@ -245,8 +246,8 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
     }
 
-    @Test fun checkoutButtonDisablesAfterUncheckingIndividualItems() {
-        checkoutButtonEnablesAfterCheckingIndividualItems()
+    @Test fun checkoutButtonDisabledAfterUncheckingIndividualItems() {
+        checkoutButtonEnabledAfterCheckingIndividualItems()
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionOnItemAtPosition<RecyclerView.ViewHolder>(0, actionOnChildWithId(R.id.checkBox, click())))
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
@@ -259,7 +260,7 @@ class ShoppingListFragmentTests {
         runBlocking { db.shoppingListItemDao().uncheckAll() }
         onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
         onView(withId(R.id.menuButton)).perform(click())
-        onView(withText(R.string.check_all_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.check_all_description)).perform(click())
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
     }
 
@@ -267,7 +268,7 @@ class ShoppingListFragmentTests {
         runBlocking { db.shoppingListItemDao().checkAll() }
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
         onView(withId(R.id.menuButton)).perform(click())
-        onView(withText(R.string.uncheck_all_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.uncheck_all_description)).perform(click())
         onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
     }
 }

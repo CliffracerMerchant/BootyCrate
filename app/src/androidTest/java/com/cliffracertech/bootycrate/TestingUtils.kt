@@ -5,8 +5,10 @@
 package com.cliffracertech.bootycrate
 
 import android.view.View
+import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
+import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
@@ -14,6 +16,7 @@ import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.google.common.truth.Truth.assertThat
 import org.hamcrest.Description
+import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
 
 /** Thanks to the author of this blog post for the idea.
@@ -64,3 +67,5 @@ class isEnabled : TypeSafeMatcher<View>() {
     override fun describeTo(description: Description) { description.appendText("is enabled: ") }
     override fun matchesSafely(item: View) = item.isEnabled
 }
+
+fun onPopupView(viewMatcher: Matcher<View>) = onView(viewMatcher).inRoot(isPlatformPopup())

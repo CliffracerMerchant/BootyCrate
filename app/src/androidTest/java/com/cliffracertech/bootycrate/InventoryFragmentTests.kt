@@ -6,22 +6,20 @@ package com.cliffracertech.bootycrate
 
 import android.app.Application
 import android.content.Context
-import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
-import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
@@ -34,9 +32,9 @@ import org.junit.runner.RunWith
 class InventoryFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
-    private val db = Room.inMemoryDatabaseBuilder(context as Application, BootyCrateDatabase::class.java)
-                                                    .allowMainThreadQueries().build()
-    private val dao = db.inventoryItemDao()
+    private val db = BootyCrateDatabase.get(context as Application)
+    private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
+
     private val redItem0 = InventoryItem(name = "Red", color = 0, amount = 8)
     private val orangeItem1 = InventoryItem(name = "Orange", color = 1, amount = 2)
     private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1)
@@ -44,15 +42,15 @@ class InventoryFragmentTests {
 
     @Before fun setup() {
         runBlocking {
-            dao.deleteAll()
-            dao.add(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
+            db.inventoryItemDao().deleteAll()
+            db.inventoryItemDao().add(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
         onView(withId(R.id.inventory_button)).perform(click())
     }
 
     @Test fun sortByColor() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.color_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).perform(doStuff<InventoryRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(redItem0)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(orangeItem1)
@@ -63,7 +61,7 @@ class InventoryFragmentTests {
 
     @Test fun sortByNameAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.name_ascending_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.name_ascending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).perform(doStuff<InventoryRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(grayItem11)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(orangeItem1)
@@ -74,7 +72,7 @@ class InventoryFragmentTests {
 
     @Test fun sortByNameDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.name_descending_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.name_descending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).perform(doStuff<InventoryRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(yellowItem2)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(redItem0)
@@ -85,7 +83,7 @@ class InventoryFragmentTests {
 
     @Test fun sortByAmountAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.amount_ascending_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.amount_ascending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).perform(doStuff<InventoryRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(yellowItem2)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(orangeItem1)
@@ -96,7 +94,7 @@ class InventoryFragmentTests {
 
     @Test fun sortByAmountDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withText(R.string.amount_descending_description)).inRoot(isPlatformPopup()).perform(click())
+        onPopupView(withText(R.string.amount_descending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).perform(doStuff<InventoryRecyclerView> {
             assertThat(it.itemFromVhAtPos(0)).isEqualTo(grayItem11)
             assertThat(it.itemFromVhAtPos(1)).isEqualTo(redItem0)
