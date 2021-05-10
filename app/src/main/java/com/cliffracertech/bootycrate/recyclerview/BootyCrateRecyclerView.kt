@@ -60,7 +60,7 @@ abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
 ) : RecyclerView(context, attrs) {
     protected abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
     abstract val adapter: Adapter<out ViewHolder>
-    abstract val viewModel: BootyCrateViewModel<Entity>
+    protected abstract val viewModel: BootyCrateViewModel<Entity>
     var snackBarAnchor: View? = null
 
     var sort get() = viewModel.sort
