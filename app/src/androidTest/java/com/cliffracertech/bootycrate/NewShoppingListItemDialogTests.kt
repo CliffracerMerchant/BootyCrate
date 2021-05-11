@@ -17,12 +17,13 @@ import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
+import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.database.ShoppingListViewModel
-import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
 import org.hamcrest.Matcher
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -32,7 +33,16 @@ fun inNewItemDialog(matcher: Matcher<View>) =
 class NewShoppingListItemDialogTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
-    private val viewModel = ShoppingListViewModel(context as Application)
+    private val db = BootyCrateDatabase.get(context as Application)
+
+    @Before fun setup() {
+        runBlocking {
+            db.shoppingListItemDao().deleteAll()
+            db.inventoryItemDao().deleteAll()
+        }
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
+    }
 
     private fun addTestShoppingListItems(leaveNewItemDialogOpen: Boolean, vararg items: ShoppingListItem) {
         val lastItem = items.last()
@@ -83,7 +93,6 @@ class NewShoppingListItemDialogTests {
     }
 
     @Test fun correctValuesAfterAddAnother() {
-        viewModel.deleteAll()
         correctStartingValues()
         val testItem = ShoppingListItem(name = "Test Item 1",
                                         extraInfo = "Test Item 1 Extra Info",
@@ -127,7 +136,6 @@ class NewShoppingListItemDialogTests {
     }
 
     @Test fun duplicateNameWarningAppears() {
-        viewModel.deleteAll()
         addItem()
         onView(withId(R.id.add_button)).perform(click())
         onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))
@@ -148,20 +156,16 @@ class NewShoppingListItemDialogTests {
     }
 
     @Test fun addItem() {
-        viewModel.deleteAll()
         appears()
         val testItem = ShoppingListItem(name = "Test Item 1",
                                         extraInfo = "Test Item 1 Extra Info",
                                         color = 5, amount = 3)
         addTestShoppingListItems(leaveNewItemDialogOpen = false, testItem)
-
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-            assertThat(it.itemFromVhAtPos(0)).isEqualTo(testItem)
-        })
+        onView(withId(R.id.shoppingListRecyclerView))
+            .check(onlyShownShoppingListItemsAre(testItem))
     }
 
     @Test fun addSeveralItems() {
-        viewModel.deleteAll()
         appears()
         val testItem1 = ShoppingListItem(name = "Test Item 1",
                                          extraInfo = "Test Item 1 Extra Info",
@@ -170,10 +174,7 @@ class NewShoppingListItemDialogTests {
                                          extraInfo = "Test Item 2 Extra Info",
                                          color = 7, amount = 8)
         addTestShoppingListItems(leaveNewItemDialogOpen = false, testItem1, testItem2)
-
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-            assertThat(it.itemFromVhAtPos(0)).isEqualTo(testItem1)
-            assertThat(it.itemFromVhAtPos(1)).isEqualTo(testItem2)
-        })
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(testItem1, testItem2))
     }
 }

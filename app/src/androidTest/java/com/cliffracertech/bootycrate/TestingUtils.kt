@@ -6,16 +6,16 @@ package com.cliffracertech.bootycrate
 
 import android.view.View
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
+import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
-import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
-import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.google.common.truth.Truth.assertThat
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -27,35 +27,10 @@ fun <T>doStuff(method: (view: T) -> Unit): ViewAction {
     return object: ViewAction {
         override fun getDescription() = method.toString()
         override fun getConstraints() = isEnabled()
+        @Suppress("UNCHECKED_CAST")
         override fun perform(uiController: UiController?, view: View) =
             method(view as? T ?: throw IllegalStateException("The matched view is null or not of type T"))
     }
-}
-
-fun InventoryRecyclerView.itemFromVhAtPos(pos: Int): InventoryItem {
-    val vh = findViewHolderForAdapterPosition(pos)
-    assertThat(vh).isNotNull()
-    val itemView = vh!!.itemView as? InventoryItemView
-    assertThat(itemView).isNotNull()
-    return InventoryItem(
-        name = itemView!!.ui.nameEdit.text.toString(),
-        extraInfo = itemView.ui.extraInfoEdit.text.toString(),
-        color = itemView.ui.checkBox.colorIndex,
-        amount = itemView.ui.amountEdit.value,
-        addToShoppingList = itemView.detailsUi.addToShoppingListCheckBox.isChecked,
-        addToShoppingListTrigger = itemView.detailsUi.addToShoppingListTriggerEdit.value)
-}
-
-fun ShoppingListRecyclerView.itemFromVhAtPos(pos: Int): ShoppingListItem {
-    val vh = findViewHolderForAdapterPosition(pos)
-    assertThat(vh).isNotNull()
-    val itemView = vh!!.itemView as? ShoppingListItemView
-    assertThat(itemView).isNotNull()
-    return ShoppingListItem(
-        name = itemView!!.ui.nameEdit.text.toString(),
-        extraInfo = itemView.ui.extraInfoEdit.text.toString(),
-        color = itemView.ui.checkBox.colorIndex,
-        amount = itemView.ui.amountEdit.value)
 }
 
 fun actionOnChildWithId(viewId: Int, action: ViewAction) = object : ViewAction {
@@ -98,4 +73,48 @@ fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
         val itemView = vh.itemView as ExpandableSelectableItemView<*>
         assertThat(itemView.isInSelectedState).isEqualTo(shouldBeSelected)
     }
+}
+
+/** Asserts that the view is an ExpandableSelectableRecyclerView that
+    contains only the specified items of type T, in the order given. */
+abstract class onlyShownItemsAre<T: ExpandableSelectableItem>(vararg items: T) : ViewAssertion
+{
+    private val items = items.asList()
+
+    abstract fun itemFromView(view: ExpandableSelectableItemView<*>) : T
+
+    override fun check(view: View?, noViewFoundException: NoMatchingViewException?) {
+        if (view == null) throw noViewFoundException!!
+        assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
+        val it = view as ExpandableSelectableRecyclerView<*>
+        for (i in 0 until it.adapter.itemCount) {
+            val vh = it.findViewHolderForAdapterPosition(i)
+            assertThat(vh).isNotNull()
+            val itemView = vh!!.itemView as? ExpandableSelectableItemView<*>
+            assertThat(itemView).isNotNull()
+            assertThat(itemFromView(itemView!!)).isEqualTo(items[i])
+        }
+    }
+}
+
+class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
+    onlyShownItemsAre<ShoppingListItem>(*items)
+{
+    override fun itemFromView(view: ExpandableSelectableItemView<*>) = ShoppingListItem(
+        name = view.ui.nameEdit.text.toString(),
+        extraInfo = view.ui.extraInfoEdit.text.toString(),
+        color = view.ui.checkBox.colorIndex,
+        amount = view.ui.amountEdit.value)
+}
+
+class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
+    onlyShownItemsAre<InventoryItem>(*items)
+{
+    override fun itemFromView(view: ExpandableSelectableItemView<*>) = InventoryItem(
+        name = view.ui.nameEdit.text.toString(),
+        extraInfo = view.ui.extraInfoEdit.text.toString(),
+        color = view.ui.checkBox.colorIndex,
+        amount = view.ui.amountEdit.value,
+        addToShoppingList = (view as InventoryItemView).detailsUi.addToShoppingListCheckBox.isChecked,
+        addToShoppingListTrigger = view.detailsUi.addToShoppingListTriggerEdit.value)
 }

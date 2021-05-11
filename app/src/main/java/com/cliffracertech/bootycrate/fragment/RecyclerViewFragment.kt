@@ -125,9 +125,9 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 
         var message = ""
         for (i in 0 until items.size - 1)
-            message += items[i].toString() + "\n"
+            message += items[i].toUserFacingString() + "\n"
         if (items.isNotEmpty())
-            message += items.last().toString()
+            message += items.last().toUserFacingString()
 
         val intent = Intent(Intent.ACTION_SEND)
         intent.putExtra(Intent.EXTRA_TEXT, message)

@@ -33,7 +33,7 @@ class ShoppingListItem(
                this.isChecked == other.isChecked
     }
 
-    override fun toDebugString() = super.toString() + "\nisChecked = $isChecked"
+    override fun toString() = super.toString() + "\nisChecked = $isChecked"
 
     /** The enum class Field identifies user facing fields that are potentially
      *  editable by the user. */

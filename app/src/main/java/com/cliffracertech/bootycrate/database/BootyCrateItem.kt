@@ -45,8 +45,7 @@ import com.cliffracertech.bootycrate.R
                this.linkedItemId == other.linkedItemId
     }
 
-    // For debugging purposes, when all info is desired
-    open fun toDebugString() ="""
+    override fun toString() ="""
         id = $id
         name = $name
         extraInfo = $extraInfo
@@ -55,7 +54,7 @@ import com.cliffracertech.bootycrate.R
         linkedItemId = $linkedItemId"""
 
     // For a user-facing string representation of the object
-    override fun toString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
+    open fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
     enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
         companion object {
@@ -90,6 +89,6 @@ import com.cliffracertech.bootycrate.R
     @ColumnInfo(name="isSelected", defaultValue = "0") var isSelected: Boolean = false
 ) : BootyCrateItem(id, name, extraInfo, color, amount, linkedItemId, inTrash) {
 
-    override fun toDebugString() = super.toString() +
+    override fun toString() = super.toString() +
             "\nisExpanded = $isExpanded\nisSelected = $isSelected"
 }

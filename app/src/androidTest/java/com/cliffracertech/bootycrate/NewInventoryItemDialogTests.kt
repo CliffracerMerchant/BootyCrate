@@ -8,18 +8,18 @@ import android.app.Application
 import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
-import androidx.test.espresso.Espresso
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
-import androidx.test.espresso.contrib.RecyclerViewActions
-import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.InventoryViewModel
-import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
-import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
 import org.hamcrest.CoreMatchers
+import org.hamcrest.CoreMatchers.not
 import org.junit.Rule
 import org.junit.Test
 
@@ -29,58 +29,45 @@ class NewInventoryItemDialogTests {
     private val viewModel = InventoryViewModel(context as Application)
 
     private fun amountIncreaseButton() = CoreMatchers.allOf(
-        ViewMatchers.withId(R.id.increaseButton),
-        ViewMatchers.isDescendantOfA(ViewMatchers.withId(R.id.amountEdit))
+        withId(R.id.increaseButton),
+        isDescendantOfA(withId(R.id.amountEdit))
     )
     private fun autoAddTriggerIncreaseButton() = CoreMatchers.allOf(
-        ViewMatchers.withId(R.id.increaseButton),
-        ViewMatchers.isDescendantOfA(ViewMatchers.withId(R.id.addToShoppingListTriggerEdit))
+        withId(R.id.increaseButton),
+        isDescendantOfA(withId(R.id.addToShoppingListTriggerEdit))
     )
 
     private fun addTestInventoryItems(leaveNewItemDialogOpen: Boolean, vararg items: InventoryItem) {
         val lastItem = items.last()
         for (item in items) {
-            Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.nameEdit)))
-                .perform(ViewActions.click(), ViewActions.typeText(item.name))
-            Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.extraInfoEdit)))
-                .perform(ViewActions.click(), ViewActions.typeText(item.extraInfo))
-            Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.checkBox)))
-                .perform(ViewActions.click())
-            Espresso.onView(ViewMatchers.withId(R.id.colorSheetList)).perform(
-                RecyclerViewActions.actionOnItemAtPosition<RecyclerView.ViewHolder>(
-                    item.color,
-                    ViewActions.click()
-                )
-            )
+            onView(inNewItemDialog( withId(R.id.nameEdit))).perform(click(), typeText(item.name))
+            onView(inNewItemDialog(withId(R.id.extraInfoEdit))).perform(click(), typeText(item.extraInfo))
+            onView(inNewItemDialog(withId(R.id.checkBox))).perform(click())
+            onView(withId(R.id.colorSheetList)).perform(
+                actionOnItemAtPosition<RecyclerView.ViewHolder>(item.color, click()))
             val amountIncreaseButton = inNewItemDialog(amountIncreaseButton())
             for (i in 1 until item.amount)
-                Espresso.onView(amountIncreaseButton).perform(ViewActions.click())
-            Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.addToShoppingListCheckBox)))
-                .perform(ViewActions.click())
+                onView(amountIncreaseButton).perform(click())
+            onView(inNewItemDialog(withId(R.id.addToShoppingListCheckBox))).perform(click())
             val autoAddTriggerIncreaseButton = inNewItemDialog(autoAddTriggerIncreaseButton())
             for (i in 1 until item.addToShoppingListTrigger)
-                Espresso.onView(autoAddTriggerIncreaseButton).perform(ViewActions.click())
+                onView(autoAddTriggerIncreaseButton).perform(click())
             if (item != lastItem)
-                Espresso.onView(ViewMatchers.withText(R.string.add_another_item_button_description))
-                    .perform(ViewActions.click())
+                onView(withText(R.string.add_another_item_button_description)).perform(click())
             else if (!leaveNewItemDialogOpen)
-                Espresso.onView(ViewMatchers.withText(android.R.string.ok))
-                    .perform(ViewActions.click())
+                onView(withText(android.R.string.ok)).perform(click())
         }
     }
 
     @Test
     fun appears() {
-        Espresso.onView(ViewMatchers.withId(R.id.inventory_button)).perform(ViewActions.click())
-        Espresso.onView(ViewMatchers.withId(R.id.add_button)).perform(ViewActions.click())
-        Espresso.onView(ViewMatchers.withId(R.id.newItemViewContainer))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-        Espresso.onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_duplicate_name_warning))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_no_name_error))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
+        onView(withId(R.id.inventory_button)).perform(click())
+        onView(withId(R.id.add_button)).perform(click())
+        onView(withId(R.id.newItemViewContainer)).check(matches(isDisplayed()))
+        onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
+            .check(matches(isDisplayed()))
+        onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))
+        onView(withText(R.string.new_item_no_name_error)).check(matches(not(isDisplayed())))
     }
 
     @Test
@@ -90,29 +77,23 @@ class NewInventoryItemDialogTests {
     }
 
     private fun testCorrectStartingValues() {
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.nameEdit)))
-            .check(ViewAssertions.matches(ViewMatchers.withText("")))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.extraInfoEdit)))
-            .check(ViewAssertions.matches(ViewMatchers.withText("")))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.linkIndicator)))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.editButton)))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.addToShoppingListCheckBox)))
-            .check(ViewAssertions.matches(ViewMatchers.isNotChecked()))
-        Espresso.onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
+        onView(inNewItemDialog(withId(R.id.nameEdit))).check(matches(withText("")))
+        onView(inNewItemDialog(withId(R.id.extraInfoEdit))).check(matches(withText("")))
+        onView(inNewItemDialog(withId(R.id.linkIndicator))).check(matches(not(isDisplayed())))
+        onView(inNewItemDialog(withId(R.id.editButton))).check(matches(not(isDisplayed())))
+        onView(inNewItemDialog(withId(R.id.addToShoppingListCheckBox))).check(matches(isNotChecked()))
+        onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
             .perform(doStuff<InventoryItemView> {
-                Truth.assertThat(it.ui.checkBox.colorIndex).isEqualTo(0)
-                Truth.assertThat(it.ui.checkBox.inColorEditMode).isTrue()
-                Truth.assertThat(it.ui.nameEdit.isEditable).isTrue()
-                Truth.assertThat(it.ui.extraInfoEdit.isEditable).isTrue()
-                Truth.assertThat(it.ui.amountEdit.value).isEqualTo(1)
-                Truth.assertThat(it.ui.amountEdit.minValue).isEqualTo(0)
-                Truth.assertThat(it.ui.amountEdit.valueIsFocusable).isTrue()
-                Truth.assertThat(it.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(1)
-                Truth.assertThat(it.detailsUi.addToShoppingListTriggerEdit.minValue).isEqualTo(1)
-                Truth.assertThat(it.detailsUi.addToShoppingListTriggerEdit.valueIsFocusable)
-                    .isTrue()
+                assertThat(it.ui.checkBox.colorIndex).isEqualTo(0)
+                assertThat(it.ui.checkBox.inColorEditMode).isTrue()
+                assertThat(it.ui.nameEdit.isEditable).isTrue()
+                assertThat(it.ui.extraInfoEdit.isEditable).isTrue()
+                assertThat(it.ui.amountEdit.value).isEqualTo(1)
+                assertThat(it.ui.amountEdit.minValue).isEqualTo(0)
+                assertThat(it.ui.amountEdit.valueIsFocusable).isTrue()
+                assertThat(it.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(1)
+                assertThat(it.detailsUi.addToShoppingListTriggerEdit.minValue).isEqualTo(1)
+                assertThat(it.detailsUi.addToShoppingListTriggerEdit.valueIsFocusable).isTrue()
             })
     }
 
@@ -128,95 +109,73 @@ class NewInventoryItemDialogTests {
             addToShoppingListTrigger = 4
         )
         addTestInventoryItems(leaveNewItemDialogOpen = true, testItem)
-        Espresso.onView(ViewMatchers.withText(R.string.add_another_item_button_description))
-            .perform(ViewActions.click())
+        onView(withText(R.string.add_another_item_button_description)).perform(click())
 
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.nameEdit)))
-            .check(ViewAssertions.matches(ViewMatchers.withText("")))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.extraInfoEdit)))
-            .check(ViewAssertions.matches(ViewMatchers.withText("")))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.linkIndicator)))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.editButton)))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.addToShoppingListCheckBox)))
-            .check(ViewAssertions.matches(ViewMatchers.isNotChecked()))
-        Espresso.onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
+        onView(inNewItemDialog(withId(R.id.nameEdit))).check(matches(withText("")))
+        onView(inNewItemDialog(withId(R.id.extraInfoEdit))).check(matches(withText("")))
+        onView(inNewItemDialog(withId(R.id.linkIndicator))).check(matches(not(isDisplayed())))
+        onView(inNewItemDialog(withId(R.id.editButton))).check(matches(not(isDisplayed())))
+        onView(inNewItemDialog(withId(R.id.addToShoppingListCheckBox))).check(matches(isNotChecked()))
+        onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
             .perform(doStuff<InventoryItemView> {
                 // The color edit is intended to stay the same value after the add another button
                 // is pressed, but the rest of the fields should be reset to their default values.
-                Truth.assertThat(it.ui.checkBox.colorIndex).isEqualTo(testItem.color)
-                Truth.assertThat(it.ui.checkBox.inColorEditMode).isTrue()
-                Truth.assertThat(it.ui.nameEdit.isEditable).isTrue()
-                Truth.assertThat(it.ui.extraInfoEdit.isEditable).isTrue()
-                Truth.assertThat(it.ui.amountEdit.value).isEqualTo(1)
-                Truth.assertThat(it.ui.amountEdit.valueIsFocusable).isTrue()
-                Truth.assertThat(it.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(1)
-                Truth.assertThat(it.detailsUi.addToShoppingListTriggerEdit.valueIsFocusable)
-                    .isTrue()
+                assertThat(it.ui.checkBox.colorIndex).isEqualTo(testItem.color)
+                assertThat(it.ui.checkBox.inColorEditMode).isTrue()
+                assertThat(it.ui.nameEdit.isEditable).isTrue()
+                assertThat(it.ui.extraInfoEdit.isEditable).isTrue()
+                assertThat(it.ui.amountEdit.value).isEqualTo(1)
+                assertThat(it.ui.amountEdit.valueIsFocusable).isTrue()
+                assertThat(it.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(1)
+                assertThat(it.detailsUi.addToShoppingListTriggerEdit.valueIsFocusable).isTrue()
             })
     }
 
     @Test
     fun noNameErrorMessageAppears() {
         appears()
-        Espresso.onView(ViewMatchers.withText(android.R.string.ok)).perform(ViewActions.click())
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_no_name_error))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        onView(withText(android.R.string.ok)).perform(click())
+        onView(withText(R.string.new_item_no_name_error)).check(matches(isDisplayed()))
     }
     @Test
     fun noNameErrorMessageDisappears() {
         noNameErrorMessageAppears()
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.nameEdit)))
-            .perform(ViewActions.click(), ViewActions.typeText("a"))
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_no_name_error))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
+        onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("a"))
+        onView(withText(R.string.new_item_no_name_error)).check(matches(not(isDisplayed())))
     }
     @Test
     fun noNameErrorMessageAppearsAfterHavingAlreadyDisappeared() {
         noNameErrorMessageDisappears()
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.nameEdit)))
-            .perform(ViewActions.clearText())
-        Espresso.onView(ViewMatchers.withText(android.R.string.ok)).perform(ViewActions.click())
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_no_name_error))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        onView(inNewItemDialog(withId(R.id.nameEdit))).perform(clearText())
+        onView(withText(android.R.string.ok)).perform(click())
+        onView(withText(R.string.new_item_no_name_error)).check(matches(isDisplayed()))
     }
 
     @Test
     fun duplicateNameWarningAppears() {
         viewModel.deleteAll()
         addItem()
-        Espresso.onView(ViewMatchers.withId(R.id.add_button)).perform(ViewActions.click())
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_duplicate_name_warning))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.nameEdit)))
-            .perform(ViewActions.click(), ViewActions.typeText("Test Item 1"))
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_duplicate_name_warning))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.extraInfoEdit)))
-            .perform(ViewActions.click(), ViewActions.typeText("Test Item 1 Extra Info"))
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_duplicate_name_warning))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        onView(withId(R.id.add_button)).perform(click())
+        onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))
+        onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("Test Item 1"))
+        onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))
+        onView(inNewItemDialog(withId(R.id.extraInfoEdit)))
+            .perform(click(), typeText("Test Item 1 Extra Info"))
+        onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(isDisplayed()))
     }
     @Test
     fun duplicateNameWarningDisappears() {
         duplicateNameWarningAppears()
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.nameEdit)))
-            .perform(ViewActions.click(), ViewActions.typeText("a"))
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_duplicate_name_warning))
-            .check(ViewAssertions.matches(CoreMatchers.not(ViewMatchers.isDisplayed())))
+        onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("a"))
+        onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))
     }
-    @Test
-    fun duplicateNameWarningAppearsAfterHavingAlreadyDisappeared() {
+    @Test fun duplicateNameWarningAppearsAfterHavingAlreadyDisappeared() {
         duplicateNameWarningAppears()
-        Espresso.onView(inNewItemDialog(ViewMatchers.withId(R.id.nameEdit)))
-            .perform(ViewActions.clearText(), ViewActions.typeText("Test Item 1"))
-        Espresso.onView(ViewMatchers.withText(R.string.new_item_duplicate_name_warning))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        onView(inNewItemDialog(withId(R.id.nameEdit))).perform(clearText(), typeText("Test Item 1"))
+        onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(isDisplayed()))
     }
 
-    @Test
-    fun addItem() {
+    @Test fun addItem() {
         viewModel.deleteAll()
         appears()
         val testItem = InventoryItem(
@@ -227,15 +186,11 @@ class NewInventoryItemDialogTests {
             addToShoppingListTrigger = 4
         )
         addTestInventoryItems(leaveNewItemDialogOpen = false, testItem)
-
-        Espresso.onView(ViewMatchers.withId(R.id.inventoryRecyclerView))
-            .perform(doStuff<InventoryRecyclerView> {
-                Truth.assertThat(it.itemFromVhAtPos(0)).isEqualTo(testItem)
-            })
+        onView(withId(R.id.inventoryRecyclerView))
+            .check(onlyShownInventoryItemsAre(testItem))
     }
 
-    @Test
-    fun addSeveralItems() {
+    @Test fun addSeveralItems() {
         viewModel.deleteAll()
         appears()
         val testItem1 = InventoryItem(
@@ -253,11 +208,7 @@ class NewInventoryItemDialogTests {
             addToShoppingListTrigger = 2
         )
         addTestInventoryItems(leaveNewItemDialogOpen = false, testItem1, testItem2)
-
-        Espresso.onView(ViewMatchers.withId(R.id.inventoryRecyclerView))
-            .perform(doStuff<InventoryRecyclerView> {
-                Truth.assertThat(it.itemFromVhAtPos(0)).isEqualTo(testItem1)
-                Truth.assertThat(it.itemFromVhAtPos(1)).isEqualTo(testItem2)
-            })
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(testItem1, testItem2))
     }
 }

@@ -33,11 +33,11 @@ class InventoryItem(
         if (other === this) return true
         if (other == null || other !is InventoryItem) return false
         return super.equals(other) &&
-               this.addToShoppingList == other.addToShoppingList &&
-               this.addToShoppingListTrigger == other.addToShoppingListTrigger
+           this.addToShoppingList == other.addToShoppingList &&
+           this.addToShoppingListTrigger == other.addToShoppingListTrigger
     }
 
-    override fun toDebugString() = super.toString() +
+    override fun toString() = super.toString() +
        "\nautoAddToShoppingList = $addToShoppingList" +
        "\nautoAddToShoppingListTrigger = $addToShoppingListTrigger"
 

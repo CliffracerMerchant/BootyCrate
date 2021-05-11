@@ -60,57 +60,37 @@ class ShoppingListFragmentTests {
     @Test fun sortByColor() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-            assertThat(it.itemFromVhAtPos(0)).isEqualTo(redItem0)
-            assertThat(it.itemFromVhAtPos(1)).isEqualTo(orangeItem1)
-            assertThat(it.itemFromVhAtPos(2)).isEqualTo(yellowItem2)
-            assertThat(it.itemFromVhAtPos(3)).isEqualTo(grayItem11)
-        })
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
     }
 
     @Test fun sortByNameAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.name_ascending_description)).perform(click())
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-            assertThat(it.itemFromVhAtPos(0)).isEqualTo(grayItem11)
-            assertThat(it.itemFromVhAtPos(1)).isEqualTo(orangeItem1)
-            assertThat(it.itemFromVhAtPos(2)).isEqualTo(redItem0)
-            assertThat(it.itemFromVhAtPos(3)).isEqualTo(yellowItem2)
-        })
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(grayItem11, orangeItem1, redItem0, yellowItem2))
     }
 
     @Test
     fun sortByNameDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.name_descending_description)).perform(click())
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-            assertThat(it.itemFromVhAtPos(0)).isEqualTo(yellowItem2)
-            assertThat(it.itemFromVhAtPos(1)).isEqualTo(redItem0)
-            assertThat(it.itemFromVhAtPos(2)).isEqualTo(orangeItem1)
-            assertThat(it.itemFromVhAtPos(3)).isEqualTo(grayItem11)
-        })
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(yellowItem2, redItem0, orangeItem1, grayItem11))
     }
 
     @Test fun sortByAmountAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.amount_ascending_description)).perform(click())
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-            assertThat(it.itemFromVhAtPos(0)).isEqualTo(yellowItem2)
-            assertThat(it.itemFromVhAtPos(1)).isEqualTo(orangeItem1)
-            assertThat(it.itemFromVhAtPos(2)).isEqualTo(redItem0)
-            assertThat(it.itemFromVhAtPos(3)).isEqualTo(grayItem11)
-        })
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11))
     }
 
     @Test fun sortByAmountDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.amount_descending_description)).perform(click())
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-            assertThat(it.itemFromVhAtPos(0)).isEqualTo(grayItem11)
-            assertThat(it.itemFromVhAtPos(1)).isEqualTo(redItem0)
-            assertThat(it.itemFromVhAtPos(2)).isEqualTo(orangeItem1)
-            assertThat(it.itemFromVhAtPos(3)).isEqualTo(yellowItem2)
-        })
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(grayItem11, redItem0, orangeItem1, yellowItem2))
     }
 
     private var collapsedItemHeight = 0
@@ -157,6 +137,12 @@ class ShoppingListFragmentTests {
         uiDevice.setOrientationNatural()
     }
 
+    private fun changeOrientationWhileInInventory() {
+        onView(withId(R.id.inventory_button)).perform(click())
+        changeOrientationAndBack()
+        onView(withId(R.id.shopping_list_button)).perform(click())
+    }
+
     private fun changeOrientationWhileInPreferences() {
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.settings_description)).perform(click())
@@ -168,6 +154,7 @@ class ShoppingListFragmentTests {
     @Test fun expandedItemSurvivesSwitchingToInventory() = expandedItemSurvives(::switchToInventoryAndBack)
     @Test fun expandedItemSurvivesSwitchingToPreferences() = expandedItemSurvives(::switchToPreferencesAndBack)
     @Test fun expandedItemSurvivesOrientationChange() = expandedItemSurvives(::changeOrientationAndBack)
+    @Test fun expandedItemSurvivesOrientationChangeWhileInInventory() = expandedItemSurvives(::changeOrientationWhileInInventory)
     @Test fun expandedItemSurvivesOrientationChangeWhileInPreferences() = expandedItemSurvives(::changeOrientationWhileInPreferences)
 
     @Test fun selectIndividualItems() {
@@ -221,6 +208,7 @@ class ShoppingListFragmentTests {
     @Test fun selectionSurvivesSwitchingToInventory() = selectionSurvives(::switchToInventoryAndBack)
     @Test fun selectionSurvivesSwitchingToPreferences() = selectionSurvives(::switchToPreferencesAndBack)
     @Test fun selectionSurvivesOrientationChange() = selectionSurvives(::changeOrientationAndBack)
+    @Test fun selectionSurvivesOrientationChangeWhileInInventory() = selectionSurvives(::changeOrientationWhileInInventory)
     @Test fun selectionSurvivesOrientationChangeWhileInPreferences() = selectionSurvives(::changeOrientationWhileInPreferences)
 
     private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->
