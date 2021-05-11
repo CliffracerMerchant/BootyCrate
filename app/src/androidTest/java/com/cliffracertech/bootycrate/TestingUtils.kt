@@ -8,10 +8,12 @@ import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
+import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.google.common.truth.Truth.assertThat
@@ -69,3 +71,31 @@ class isEnabled : TypeSafeMatcher<View>() {
 }
 
 fun onPopupView(viewMatcher: Matcher<View>) = onView(viewMatcher).inRoot(isPlatformPopup())
+
+/** Assert that the view is an ExpandableSelectableRecyclerView with only one expanded item at
+ * index expandedIndex. The height of collapsed items must also be provided. */
+fun onlyExpandedIndexIs(expandedIndex: Int?, collapsedHeight: Int) = ViewAssertion { view, e ->
+    if (view == null) throw e!!
+    assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
+    val it = view as ExpandableSelectableRecyclerView<*>
+    for (i in 0 until it.adapter.itemCount) {
+        val vh = it.findViewHolderForAdapterPosition(i)
+        if (i != expandedIndex) assertThat(vh!!.itemView.height).isEqualTo(collapsedHeight)
+        else                    assertThat(vh!!.itemView.height).isGreaterThan(collapsedHeight)
+    }
+}
+
+/** Asserts that the view is an ExpandableSelectableRecyclerView, with the items
+ * at the specified indices all selected, and with no other selected items. */
+fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
+    if (view == null) throw e!!
+    assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
+    val it = view as ExpandableSelectableRecyclerView<*>
+    for (i in 0 until it.adapter.itemCount) {
+        val vh = it.findViewHolderForAdapterPosition(i)!! as ExpandableSelectableRecyclerView<*>.ViewHolder
+        val shouldBeSelected = i in indices
+        assertThat(vh.item.isSelected).isEqualTo(shouldBeSelected)
+        val itemView = vh.itemView as ExpandableSelectableItemView<*>
+        assertThat(itemView.isInSelectedState).isEqualTo(shouldBeSelected)
+    }
+}

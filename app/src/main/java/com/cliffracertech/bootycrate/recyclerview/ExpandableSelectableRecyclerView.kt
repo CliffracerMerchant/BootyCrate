@@ -10,8 +10,8 @@ import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.cliffracertech.bootycrate.ExpandableSelectableItemView
-import com.cliffracertech.bootycrate.database.ExpandableSelectableItemViewModel
 import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
+import com.cliffracertech.bootycrate.database.ExpandableSelectableItemViewModel
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 
 /**
@@ -98,7 +98,7 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
      * ExpandableSelectableRecyclerView.ViewHolder updates the onClickListeners of
      * the wrapped item view to enable the selection and expansion of the items.
      */
-    open inner class ViewHolder( view: ExpandableSelectableItemView<Entity>) :
+    open inner class ViewHolder(view: ExpandableSelectableItemView<Entity>) :
         BootyCrateRecyclerView<Entity>.ViewHolder(view)
     {
         init {

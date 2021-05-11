@@ -1,16 +1,20 @@
-/* Copyright 2020 Nicholas Hochstetler
+/*
+ * Copyright 2020 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
- * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+ * or in the file LICENSE in the project's root directory.
+ */
+package com.cliffracertech.bootycrate.recyclerview
 
 import android.app.Application
 import android.content.Context
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -20,11 +24,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
+import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.recyclerview.ExpandableItemAnimator
-import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.Matchers.not
@@ -76,7 +79,8 @@ class ShoppingListFragmentTests {
         })
     }
 
-    @Test fun sortByNameDescending() {
+    @Test
+    fun sortByNameDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.name_descending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
@@ -109,83 +113,115 @@ class ShoppingListFragmentTests {
         })
     }
 
-    private class ExpandedItemsState(initialExpandedItemIndex: Int?) {
-        val collapsedHeight = run {
-            var h = 0
-            onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-                val nonExpandedIndex = (0 until it.adapter.itemCount).find { it != initialExpandedItemIndex }
-                h = it.findViewHolderForAdapterPosition(nonExpandedIndex!!)!!.itemView.height
-            })
-            h
-        }
-
-        fun assertOnlyOneExpandedIndex(expandedIndex: Int? = null) {
-            onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
-                for (i in 0 until it.adapter.itemCount) {
-                    val vh = it.findViewHolderForAdapterPosition(i)
-                    if (i != expandedIndex) assertThat(vh!!.itemView.height).isEqualTo(collapsedHeight)
-                    else                    assertThat(vh!!.itemView.height).isGreaterThan(collapsedHeight)
-        }})}
-    }
-
+    private var collapsedItemHeight = 0
     @Test fun expandItem() {
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<ShoppingListRecyclerView> {
+        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<RecyclerView> {
             (it.itemAnimator as ExpandableItemAnimator).notifyExpandedItemChanged(null)
-        })
-        val expandedState = ExpandedItemsState(null)
-        expandedState.assertOnlyOneExpandedIndex(null)
+            collapsedItemHeight = it.findViewHolderForAdapterPosition(0)!!.itemView.height
+        }).check(onlyExpandedIndexIs(null, collapsedItemHeight))
+
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionOnItemAtPosition<ShoppingListRecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.editButton, click())))
-        expandedState.assertOnlyOneExpandedIndex(1)
+                actionOnChildWithId(R.id.editButton, click()))
+        ).check(onlyExpandedIndexIs(1, collapsedItemHeight))
     }
 
     @Test fun expandAnotherItem() {
         expandItem()
-        val expandedState = ExpandedItemsState(1)
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionOnItemAtPosition<ShoppingListRecyclerView.ViewHolder>(3,
-                actionOnChildWithId(R.id.editButton, click())))
-        expandedState.assertOnlyOneExpandedIndex(3)
+                actionOnChildWithId(R.id.editButton, click()))
+        ).check(onlyExpandedIndexIs(3, collapsedItemHeight))
     }
 
     private fun expandedItemSurvives(action: Runnable) {
         expandItem()
-        val expandedItemState = ExpandedItemsState(1)
         action.run()
-        expandedItemState.assertOnlyOneExpandedIndex(1)
+        onView(withId(R.id.shoppingListRecyclerView))
+            .check(onlyExpandedIndexIs(1, collapsedItemHeight))
     }
 
-    @Test fun expandedItemSurvivesSwitchingToInventory() = expandedItemSurvives {
+    private fun switchToInventoryAndBack() {
         onView(withId(R.id.inventory_button)).perform(click())
         onView(withId(R.id.shopping_list_button)).perform(click())
     }
 
-    @Test fun expandedItemSurvivesSwitchingToPreferences() = expandedItemSurvives {
+    private fun switchToPreferencesAndBack() {
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.settings_description)).perform(click())
         onView(withId(R.id.backButton)).perform(click())
     }
 
-    @Test fun expandedItemSurvivesOrientationChange() = expandedItemSurvives {
+    private fun changeOrientationAndBack() {
         uiDevice.setOrientationLeft()
         uiDevice.setOrientationNatural()
     }
 
-    @Test fun expandedItemSurvivesOrientationChangeWhileInOtherFragment() = expandedItemSurvives {
-        onView(withId(R.id.inventory_button)).perform(click())
-        uiDevice.setOrientationLeft()
-        uiDevice.setOrientationNatural()
-        onView(withId(R.id.shopping_list_button)).perform(click())
-    }
-
-    @Test fun expandedItemSurvivesOrientationChangeWhileInPreferences() = expandedItemSurvives {
+    private fun changeOrientationWhileInPreferences() {
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.settings_description)).perform(click())
         uiDevice.setOrientationLeft()
         uiDevice.setOrientationNatural()
         onView(withId(R.id.backButton)).perform(click())
     }
+
+    @Test fun expandedItemSurvivesSwitchingToInventory() = expandedItemSurvives(::switchToInventoryAndBack)
+    @Test fun expandedItemSurvivesSwitchingToPreferences() = expandedItemSurvives(::switchToPreferencesAndBack)
+    @Test fun expandedItemSurvivesOrientationChange() = expandedItemSurvives(::changeOrientationAndBack)
+    @Test fun expandedItemSurvivesOrientationChangeWhileInPreferences() = expandedItemSurvives(::changeOrientationWhileInPreferences)
+
+    @Test fun selectIndividualItems() {
+        runBlocking { db.shoppingListItemDao().clearSelection() }
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, longClick())
+        ).check(onlySelectedIndicesAre(1))
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(3, click())
+        ).check(onlySelectedIndicesAre(1, 3))
+    }
+
+    @Test fun deselectIndividualItems() {
+        selectIndividualItems()
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click())
+        ).check(onlySelectedIndicesAre(3))
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(3, click())
+        ).check(onlySelectedIndicesAre())
+    }
+
+    @Test fun selectAllItems() {
+        runBlocking { db.shoppingListItemDao().clearSelection() }
+        onView(withId(R.id.menuButton)).perform(click())
+        onPopupView(withText(R.string.select_all_description)).perform(click())
+        onView(withId(R.id.shoppingListRecyclerView))
+            .check(onlySelectedIndicesAre(0, 1, 2, 3))
+    }
+
+    @Test fun deselectAllItemsWithActionBarBackButton() {
+        runBlocking { db.shoppingListItemDao().selectAll() }
+        onView(withId(R.id.backButton)).perform(click())
+        onView(withId(R.id.shoppingListRecyclerView))
+            .check(onlySelectedIndicesAre())
+    }
+
+    @Test fun deselectAllItemsWithNavigationBackButton() {
+        runBlocking { db.shoppingListItemDao().selectAll() }
+        pressBack()
+        onView(withId(R.id.shoppingListRecyclerView))
+            .check(onlySelectedIndicesAre())
+    }
+
+    private fun selectionSurvives(action: Runnable) {
+        selectIndividualItems()
+        action.run()
+        onView(withId(R.id.shoppingListRecyclerView))
+            .check(onlySelectedIndicesAre(1, 3))
+    }
+    @Test fun selectionSurvivesSwitchingToInventory() = selectionSurvives(::switchToInventoryAndBack)
+    @Test fun selectionSurvivesSwitchingToPreferences() = selectionSurvives(::switchToPreferencesAndBack)
+    @Test fun selectionSurvivesOrientationChange() = selectionSurvives(::changeOrientationAndBack)
+    @Test fun selectionSurvivesOrientationChangeWhileInPreferences() = selectionSurvives(::changeOrientationWhileInPreferences)
 
     private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->
         if (view == null) throw e
