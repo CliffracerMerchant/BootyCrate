@@ -19,9 +19,7 @@ import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.google.common.truth.Truth.assertThat
-import org.hamcrest.Description
 import org.hamcrest.Matcher
-import org.hamcrest.TypeSafeMatcher
 
 /** Thanks to the author of this blog post for the idea.
  * https://medium.com/android-news/call-view-methods-when-testing-by-espresso-and-kotlin-in-android-781262f7348e */
@@ -40,11 +38,6 @@ fun actionOnChildWithId(viewId: Int, action: ViewAction) = object : ViewAction {
     override fun getDescription() = "Click on a child view with specified id."
     override fun perform(uiController: UiController, view: View) =
         action.perform(uiController, view.findViewById(viewId))
-}
-
-class isEnabled : TypeSafeMatcher<View>() {
-    override fun describeTo(description: Description) { description.appendText("is enabled: ") }
-    override fun matchesSafely(item: View) = item.isEnabled
 }
 
 fun onPopupView(viewMatcher: Matcher<View>) = onView(viewMatcher).inRoot(isPlatformPopup())

@@ -17,8 +17,7 @@ import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
@@ -32,6 +31,7 @@ import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.utils.*
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
+import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matchers.not
 import org.junit.Before
 import org.junit.Rule
@@ -280,6 +280,46 @@ class ShoppingListFragmentTests {
     @Test fun searchQuerySurvivesOrientationChangeWhileInInventory() = searchQuerySurvives(::changeOrientationWhileInInventory)
     @Test fun searchQuerySurvivesOrientationChangeWhileInPreferences() = searchQuerySurvives(::changeOrientationWhileInPreferences)
     @Test fun searchQuerySurvivesSelectionAndDeselection() = searchQuerySurvives(::deselectAllWithActionBarBackButton)
+
+    private fun emptySearchResultsMessage() = allOf(withId(R.id.emptyRecyclerViewMessage),
+                                                    withParent(withId(R.id.shoppingListFragmentView)),
+                                                    withText(R.string.no_search_results_message))
+    private fun emptyRecyclerViewMessage() = allOf(withId(R.id.emptyRecyclerViewMessage),
+                                                   withParent(withId(R.id.shoppingListFragmentView)),
+                                                   not(withText(R.string.no_search_results_message)))
+
+    @Test fun emptyMessageAppears() {
+        runBlocking { db.shoppingListItemDao().deleteAll() }
+        Thread.sleep(30L)
+        onView(emptyRecyclerViewMessage()).check(matches(isDisplayed()))
+        onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
+        onView(withId(R.id.shoppingListRecyclerView)).check(matches(not(isDisplayed())))
+    }
+
+    @Test fun emptyMessageDisappears() {
+        emptyMessageAppears()
+        runBlocking{ db.shoppingListItemDao().add(ShoppingListItem(name = "new item")) }
+        Thread.sleep(30L)
+        onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
+        onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
+        onView(withId(R.id.shoppingListRecyclerView)).check(matches(isDisplayed()))
+    }
+
+    @Test fun noSearchResultsMessageAppears() {
+        onView(withId(R.id.searchButton)).perform(click())
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("Nonexistent item"))
+        onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
+        onView(emptySearchResultsMessage()).check(matches(isDisplayed()))
+        onView(withId(R.id.shoppingListRecyclerView)).check(matches(not(isDisplayed())))
+    }
+
+    @Test fun noSearchResultsMessageDisappears() {
+        noSearchResultsMessageAppears()
+        onView(withId(R.id.backButton)).perform(click())
+        onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
+        onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
+        onView(withId(R.id.shoppingListRecyclerView)).check(matches(isDisplayed()))
+    }
 
     private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->
         if (view == null) throw e
