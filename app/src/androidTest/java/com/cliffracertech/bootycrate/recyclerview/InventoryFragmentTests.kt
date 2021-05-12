@@ -160,7 +160,6 @@ class InventoryFragmentTests {
     @Test fun expandedItemSurvivesOrientationChangeWhileInPreferences() = expandedItemSurvives(::changeOrientationWhileInPreferences)
 
     @Test fun selectIndividualItems() {
-        runBlocking { db.inventoryItemDao().clearSelection() }
         onView(withId(R.id.inventoryRecyclerView)).perform(
             actionOnItemAtPosition<RecyclerView.ViewHolder>(1, longClick())
         ).check(onlySelectedIndicesAre(1))
@@ -180,7 +179,6 @@ class InventoryFragmentTests {
     }
 
     @Test fun selectAll() {
-        runBlocking { db.inventoryItemDao().clearSelection() }
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.select_all_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView))
@@ -320,5 +318,22 @@ class InventoryFragmentTests {
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
         onView(withId(R.id.inventoryRecyclerView)).check(matches(isDisplayed()))
+    }
+
+    @Test fun deleteItemsViaSwiping() {
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, swipeLeft())
+        ).check(onlyShownInventoryItemsAre(redItem0, yellowItem2, grayItem11))
+
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2, swipeRight())
+        ).check(onlyShownInventoryItemsAre(redItem0, yellowItem2))
+    }
+
+    @Test fun deleteItemsViaActionBarDeleteButton() {
+        selectIndividualItems()
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(redItem0, yellowItem2))
     }
 }

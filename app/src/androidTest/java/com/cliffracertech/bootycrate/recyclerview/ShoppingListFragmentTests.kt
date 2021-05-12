@@ -163,7 +163,6 @@ class ShoppingListFragmentTests {
     @Test fun expandedItemSurvivesOrientationChangeWhileInPreferences() = expandedItemSurvives(::changeOrientationWhileInPreferences)
 
     @Test fun selectIndividualItems() {
-        runBlocking { db.shoppingListItemDao().clearSelection() }
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionOnItemAtPosition<RecyclerView.ViewHolder>(1, longClick())
         ).check(onlySelectedIndicesAre(1))
@@ -183,7 +182,6 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun selectAll() {
-        runBlocking { db.shoppingListItemDao().clearSelection() }
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.select_all_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView))
@@ -321,6 +319,23 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.shoppingListRecyclerView)).check(matches(isDisplayed()))
     }
 
+    @Test fun deleteItemsViaSwiping() {
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, swipeLeft())
+        ).check(onlyShownShoppingListItemsAre(redItem0, yellowItem2, grayItem11))
+
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2, swipeRight())
+        ).check(onlyShownShoppingListItemsAre(redItem0, yellowItem2))
+    }
+
+    @Test fun deleteItemsViaActionBarDeleteButton() {
+        selectIndividualItems()
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(redItem0, yellowItem2))
+    }
+
     private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->
         if (view == null) throw e
         assertThat(view).isInstanceOf(ShoppingListRecyclerView::class.java)
@@ -338,7 +353,6 @@ class ShoppingListFragmentTests {
     private fun clickCheckBox() = actionOnChildWithId(R.id.checkBox, click())
 
     @Test fun checkIndividualItems() {
-        runBlocking { db.shoppingListItemDao().uncheckAll() }
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickCheckBox()),
             actionOnItemAtPosition<RecyclerView.ViewHolder>(2, clickCheckBox())
@@ -354,7 +368,6 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun checkAllItems() {
-        runBlocking { db.shoppingListItemDao().uncheckAll() }
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.check_all_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView))
@@ -370,7 +383,6 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun checkoutButtonEnabledAfterCheckingIndividualItems() {
-        runBlocking { db.shoppingListItemDao().uncheckAll() }
         onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionOnItemAtPosition<RecyclerView.ViewHolder>(0, actionOnChildWithId(R.id.checkBox, click())))
@@ -391,7 +403,6 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun checkoutButtonEnabledAfterCheckingAllItems() {
-        runBlocking { db.shoppingListItemDao().uncheckAll() }
         onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.check_all_description)).perform(click())
