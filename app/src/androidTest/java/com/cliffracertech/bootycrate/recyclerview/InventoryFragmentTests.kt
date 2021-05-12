@@ -6,11 +6,14 @@ package com.cliffracertech.bootycrate.recyclerview
 
 import android.app.Application
 import android.content.Context
+import android.view.KeyEvent
+import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -19,11 +22,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
-import com.cliffracertech.bootycrate.*
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.InventoryItem
+import com.cliffracertech.bootycrate.utils.*
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -37,8 +42,8 @@ class InventoryFragmentTests {
     private val db = BootyCrateDatabase.get(context as Application)
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
-    private val redItem0 = InventoryItem(name = "Red", color = 0, amount = 8)
-    private val orangeItem1 = InventoryItem(name = "Orange", color = 1, amount = 2)
+    private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
+    private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
     private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1)
     private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9)
 
@@ -48,46 +53,45 @@ class InventoryFragmentTests {
             db.inventoryItemDao().add(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
         onView(withId(R.id.inventory_button)).perform(click())
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
+
+    @After fun finish() { activityRule.scenario.moveToState(Lifecycle.State.DESTROYED) }
 
     @Test fun sortByColor() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(
-            onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11)
-        )
+            onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
     }
 
     @Test fun sortByNameAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.name_ascending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(
-            onlyShownInventoryItemsAre(grayItem11, orangeItem1, redItem0, yellowItem2)
-        )
+            onlyShownInventoryItemsAre(grayItem11, orangeItem1, redItem0, yellowItem2))
     }
 
     @Test fun sortByNameDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.name_descending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(
-            onlyShownInventoryItemsAre(yellowItem2, redItem0, orangeItem1, grayItem11)
-        )
+            onlyShownInventoryItemsAre(yellowItem2, redItem0, orangeItem1, grayItem11))
     }
 
     @Test fun sortByAmountAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.amount_ascending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(
-            onlyShownInventoryItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11)
-        )
+            onlyShownInventoryItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11))
     }
 
     @Test fun sortByAmountDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.amount_descending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(
-            onlyShownInventoryItemsAre(grayItem11, redItem0, orangeItem1, yellowItem2)
-        )
+            onlyShownInventoryItemsAre(grayItem11, redItem0, orangeItem1, yellowItem2))
     }
 
     private var collapsedItemHeight = 0
@@ -211,4 +215,68 @@ class InventoryFragmentTests {
     @Test fun selectionSurvivesOrientationChange() = selectionSurvives(::changeOrientationAndBack)
     @Test fun selectionSurvivesOrientationChangeWhileInShoppingList() = selectionSurvives(::changeOrientationWhileInShoppingList)
     @Test fun selectionSurvivesOrientationChangeWhileInPreferences() = selectionSurvives(::changeOrientationWhileInPreferences)
+
+    @Test fun searching() {
+        onView(withId(R.id.searchButton)).perform(click())
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("y"))
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(yellowItem2, grayItem11))
+    }
+
+    @Test fun addingToExistingSearchQuery() {
+        searching()
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("e"))
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(yellowItem2))
+    }
+
+    @Test fun searchingExtraInfo() {
+        onView(withId(R.id.searchButton)).perform(click())
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("extra info"))
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(redItem0, orangeItem1))
+    }
+
+    @Test fun clearingSearchQueryViaBackspace() {
+        addingToExistingSearchQuery()
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(pressKey(KeyEvent.KEYCODE_DEL))
+        Thread.sleep(30L) // Test works fine with a small sleep, or if stepping through while debugging
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(yellowItem2, grayItem11))
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(pressKey(KeyEvent.KEYCODE_DEL))
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
+    }
+
+    @Test fun clearingSearchQueryViaActionBarBackButton() {
+        searching()
+        onView(withId(R.id.backButton)).perform(click())
+        onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("")))
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
+    }
+
+    @Test fun clearingSearchQueryViaNavigationBackButton() {
+        searching()
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(closeSoftKeyboard())
+        pressBack()
+        onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("")))
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
+    }
+
+    private fun searchQuerySurvives(action: Runnable) {
+        searchingExtraInfo()
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(closeSoftKeyboard())
+        action.run()
+        onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("extra info")))
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(redItem0, orangeItem1))
+    }
+
+    @Test fun searchQuerySurvivesSwitchingToShoppingList() = searchQuerySurvives(::switchToShoppingListAndBack)
+    @Test fun searchQuerySurvivesSwitchingToPreferences() = searchQuerySurvives(::switchToPreferencesAndBack)
+    @Test fun searchQuerySurvivesOrientationChange() = searchQuerySurvives(::changeOrientationAndBack)
+    @Test fun searchQuerySurvivesOrientationChangeWhileInShoppingList() = searchQuerySurvives(::changeOrientationWhileInShoppingList)
+    @Test fun searchQuerySurvivesOrientationChangeWhileInPreferences() = searchQuerySurvives(::changeOrientationWhileInPreferences)
 }

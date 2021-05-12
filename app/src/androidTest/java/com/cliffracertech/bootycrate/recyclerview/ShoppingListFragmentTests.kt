@@ -8,13 +8,13 @@ package com.cliffracertech.bootycrate.recyclerview
 
 import android.app.Application
 import android.content.Context
+import android.view.KeyEvent
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.ViewAssertion
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.longClick
+import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -24,10 +24,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
-import com.cliffracertech.bootycrate.*
+import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.ShoppingListItemView
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.utils.*
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.Matchers.not
@@ -55,6 +57,8 @@ class ShoppingListFragmentTests {
             db.shoppingListItemDao().deleteAll()
             db.shoppingListItemDao().add(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test fun sortByColor() {
@@ -83,7 +87,8 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.amount_ascending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
-            onlyShownShoppingListItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11))
+            onlyShownShoppingListItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11)
+        )
     }
 
     @Test fun sortByAmountDescending() {
@@ -210,6 +215,70 @@ class ShoppingListFragmentTests {
     @Test fun selectionSurvivesOrientationChange() = selectionSurvives(::changeOrientationAndBack)
     @Test fun selectionSurvivesOrientationChangeWhileInInventory() = selectionSurvives(::changeOrientationWhileInInventory)
     @Test fun selectionSurvivesOrientationChangeWhileInPreferences() = selectionSurvives(::changeOrientationWhileInPreferences)
+
+    @Test fun searching() {
+        onView(withId(R.id.searchButton)).perform(click())
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("y"))
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(yellowItem2, grayItem11))
+    }
+
+    @Test fun addingToExistingSearchQuery() {
+        searching()
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("e"))
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(yellowItem2))
+    }
+
+    @Test fun searchingExtraInfo() {
+        onView(withId(R.id.searchButton)).perform(click())
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("extra info"))
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(redItem0, orangeItem1))
+    }
+
+    @Test fun clearingSearchQueryViaBackspace() {
+        addingToExistingSearchQuery()
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(pressKey(KeyEvent.KEYCODE_DEL))
+        Thread.sleep(30L) // Test works fine with a small sleep, or if stepping through while debugging
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownShoppingListItemsAre(yellowItem2, grayItem11))
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(pressKey(KeyEvent.KEYCODE_DEL))
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
+    }
+
+    @Test fun clearingSearchQueryViaActionBarBackButton() {
+        searching()
+        onView(withId(R.id.backButton)).perform(click())
+        onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("")))
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
+    }
+
+    @Test fun clearingSearchQueryViaNavigationBackButton() {
+        searching()
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(closeSoftKeyboard())
+        pressBack()
+        onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("")))
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
+    }
+
+    private fun searchQuerySurvives(action: Runnable) {
+        searchingExtraInfo()
+        onView(withId(R.id.actionBarTitle_searchQuery)).perform(closeSoftKeyboard())
+        action.run()
+        onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("extra info")))
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(redItem0, orangeItem1))
+    }
+
+    @Test fun searchQuerySurvivesSwitchingToInventory() = searchQuerySurvives(::switchToInventoryAndBack)
+    @Test fun searchQuerySurvivesSwitchingToPreferences() = searchQuerySurvives(::switchToPreferencesAndBack)
+    @Test fun searchQuerySurvivesOrientationChange() = searchQuerySurvives(::changeOrientationAndBack)
+    @Test fun searchQuerySurvivesOrientationChangeWhileInInventory() = searchQuerySurvives(::changeOrientationWhileInInventory)
+    @Test fun searchQuerySurvivesOrientationChangeWhileInPreferences() = searchQuerySurvives(::changeOrientationWhileInPreferences)
 
     private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->
         if (view == null) throw e
