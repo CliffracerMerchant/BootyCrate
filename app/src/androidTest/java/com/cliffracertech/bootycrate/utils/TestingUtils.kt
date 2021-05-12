@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.utils
 
 import android.view.View
 import androidx.test.espresso.Espresso.onView
@@ -12,6 +12,8 @@ import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
+import com.cliffracertech.bootycrate.ExpandableSelectableItemView
+import com.cliffracertech.bootycrate.InventoryItemView
 import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
@@ -87,6 +89,7 @@ abstract class onlyShownItemsAre<T: ExpandableSelectableItem>(vararg items: T) :
         if (view == null) throw noViewFoundException!!
         assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
         val it = view as ExpandableSelectableRecyclerView<*>
+        assertThat(items.size).isEqualTo(it.adapter.itemCount)
         for (i in 0 until it.adapter.itemCount) {
             val vh = it.findViewHolderForAdapterPosition(i)
             assertThat(vh).isNotNull()

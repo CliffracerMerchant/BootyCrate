@@ -19,6 +19,9 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.utils.doStuff
+import com.cliffracertech.bootycrate.utils.onPopupView
+import com.cliffracertech.bootycrate.utils.onlyShownShoppingListItemsAre
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*

@@ -17,6 +17,8 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.InventoryViewModel
+import com.cliffracertech.bootycrate.utils.doStuff
+import com.cliffracertech.bootycrate.utils.onlyShownInventoryItemsAre
 import com.google.common.truth.Truth.assertThat
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.not

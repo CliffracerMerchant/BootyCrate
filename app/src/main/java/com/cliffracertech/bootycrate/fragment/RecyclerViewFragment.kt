@@ -182,8 +182,10 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
             activityUiTemp = activityUi
             return
         }
-        if (!isActive) actionBar = null
-        else {
+        if (!isActive) {
+            actionBar = null
+            activityUi.actionBar.onSearchQueryChangedListener = null
+        } else {
             recyclerView.snackBarAnchor = activityUi.bottomAppBar
             actionBar = activityUi.actionBar
             activityUi.actionBar.onSearchQueryChangedListener = { newText ->
