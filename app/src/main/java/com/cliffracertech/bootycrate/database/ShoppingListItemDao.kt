@@ -138,6 +138,9 @@ import androidx.room.Transaction
     @Query("UPDATE shopping_list_item set isSelected = 1")
     abstract override suspend fun selectAll()
 
+    @Query("UPDATE shopping_list_item set isSelected = 1 WHERE id in (:ids)")
+    abstract override suspend fun selectAllIds(ids: List<Long>)
+
     @Query("UPDATE shopping_list_item SET isSelected = 0")
     abstract override suspend fun clearSelection()
 

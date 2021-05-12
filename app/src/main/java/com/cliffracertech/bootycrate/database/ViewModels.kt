@@ -132,7 +132,9 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 
     fun deleteSelected() { viewModelScope.launch { dao.deleteSelected() }}
 
-    fun selectAll() { viewModelScope.launch { dao.selectAll() }}
+    fun selectAll() { viewModelScope.launch {
+        dao.selectAllIds(items.value?.map { it.id } ?: emptyList())
+    }}
 
     fun clearSelection() { viewModelScope.launch { dao.clearSelection() }}
 }
