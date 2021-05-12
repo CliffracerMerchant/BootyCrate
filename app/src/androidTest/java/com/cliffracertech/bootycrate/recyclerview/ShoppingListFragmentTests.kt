@@ -182,7 +182,7 @@ class ShoppingListFragmentTests {
         ).check(onlySelectedIndicesAre())
     }
 
-    @Test fun selectAllItems() {
+    @Test fun selectAll() {
         runBlocking { db.shoppingListItemDao().clearSelection() }
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.select_all_description)).perform(click())
@@ -190,14 +190,14 @@ class ShoppingListFragmentTests {
             .check(onlySelectedIndicesAre(0, 1, 2, 3))
     }
 
-    @Test fun deselectAllItemsWithActionBarBackButton() {
+    @Test fun deselectAllWithActionBarBackButton() {
         runBlocking { db.shoppingListItemDao().selectAll() }
         onView(withId(R.id.backButton)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView))
             .check(onlySelectedIndicesAre())
     }
 
-    @Test fun deselectAllItemsWithNavigationBackButton() {
+    @Test fun deselectAllWithNavigationBackButton() {
         runBlocking { db.shoppingListItemDao().selectAll() }
         pressBack()
         onView(withId(R.id.shoppingListRecyclerView))
@@ -279,6 +279,7 @@ class ShoppingListFragmentTests {
     @Test fun searchQuerySurvivesOrientationChange() = searchQuerySurvives(::changeOrientationAndBack)
     @Test fun searchQuerySurvivesOrientationChangeWhileInInventory() = searchQuerySurvives(::changeOrientationWhileInInventory)
     @Test fun searchQuerySurvivesOrientationChangeWhileInPreferences() = searchQuerySurvives(::changeOrientationWhileInPreferences)
+    @Test fun searchQuerySurvivesSelectionAndDeselection() = searchQuerySurvives(::deselectAllWithActionBarBackButton)
 
     private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->
         if (view == null) throw e

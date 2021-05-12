@@ -178,7 +178,7 @@ class InventoryFragmentTests {
         ).check(onlySelectedIndicesAre())
     }
 
-    @Test fun selectAllItems() {
+    @Test fun selectAll() {
         runBlocking { db.inventoryItemDao().clearSelection() }
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.select_all_description)).perform(click())
@@ -186,7 +186,7 @@ class InventoryFragmentTests {
             .check(onlySelectedIndicesAre(0, 1, 2, 3))
     }
 
-    @Test fun deselectAllItemsWithActionBarBackButton() {
+    @Test fun deselectAllWithActionBarBackButton() {
         runBlocking { db.inventoryItemDao().selectAll() }
         // This test mysteriously works without the sleep for the shopping list,
         // but not for the inventory?
@@ -196,7 +196,7 @@ class InventoryFragmentTests {
             .check(onlySelectedIndicesAre())
     }
 
-    @Test fun deselectAllItemsWithNavigationBackButton() {
+    @Test fun deselectAllWithNavigationBackButton() {
         runBlocking { db.inventoryItemDao().selectAll() }
         pressBack()
         onView(withId(R.id.inventoryRecyclerView))
@@ -279,4 +279,5 @@ class InventoryFragmentTests {
     @Test fun searchQuerySurvivesOrientationChange() = searchQuerySurvives(::changeOrientationAndBack)
     @Test fun searchQuerySurvivesOrientationChangeWhileInShoppingList() = searchQuerySurvives(::changeOrientationWhileInShoppingList)
     @Test fun searchQuerySurvivesOrientationChangeWhileInPreferences() = searchQuerySurvives(::changeOrientationWhileInPreferences)
+    @Test fun searchQuerySurvivesSelectionAndDeselection() = searchQuerySurvives(::deselectAllWithActionBarBackButton)
 }

@@ -68,11 +68,12 @@ abstract class BootyCrateViewModel<Entity: BootyCrateItem>(app: Application): An
         set(value) { field = value; newItemNameChanged.value = true }
     var newItemExtraInfo: String? = null
         set(value) { field = value; newItemNameChanged.value = true }
+    fun resetNewItemName() { newItemName = null; newItemExtraInfo = null }
+
     private val newItemNameChanged = MutableLiveData<Boolean>()
     val newItemNameIsAlreadyUsed = Transformations.switchMap(newItemNameChanged) {
         dao.itemWithNameAlreadyExists(newItemName ?: "", newItemExtraInfo ?: "")
     }
-    fun resetNewItemName() { newItemName = null; newItemExtraInfo = null }
 
     private var _newlyAddedItemId = AtomicLong()
     val newlyAddedItemId get() = _newlyAddedItemId.get()
