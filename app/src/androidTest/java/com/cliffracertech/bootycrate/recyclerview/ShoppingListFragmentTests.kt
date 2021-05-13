@@ -30,6 +30,7 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ShoppingListItemView
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
+import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.utils.*
 import com.google.common.truth.Truth.assertThat
@@ -131,8 +132,8 @@ class ShoppingListFragmentTests {
     }
 
     private fun switchToInventoryAndBack() {
-        onView(withId(R.id.inventory_button)).perform(click())
-        onView(withId(R.id.shopping_list_button)).perform(click())
+        onView(withId(R.id.inventoryButton)).perform(click())
+        onView(withId(R.id.shoppingListButton)).perform(click())
     }
 
     private fun switchToPreferencesAndBack() {
@@ -147,9 +148,9 @@ class ShoppingListFragmentTests {
     }
 
     private fun changeOrientationWhileInInventory() {
-        onView(withId(R.id.inventory_button)).perform(click())
+        onView(withId(R.id.inventoryButton)).perform(click())
         changeOrientationAndBack()
-        onView(withId(R.id.shopping_list_button)).perform(click())
+        onView(withId(R.id.shoppingListButton)).perform(click())
     }
 
     private fun changeOrientationWhileInPreferences() {
@@ -375,6 +376,19 @@ class ShoppingListFragmentTests {
                                hasExtra(Intent.EXTRA_TITLE, intendedTitle),
                                hasExtra(equalTo(Intent.EXTRA_INTENT), innerIntent)))
         Intents.release()
+    }
+
+    @Test fun addToInventory() {
+        selectIndividualItems()
+        onView(withId(R.id.menuButton)).perform(click())
+        onPopupView(withText(R.string.add_to_inventory_description)).perform(click())
+        onView(withId(R.id.inventoryButton)).perform(click())
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
+        onView(withId(R.id.inventoryRecyclerView)).check(onlyShownInventoryItemsAre(
+            InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
+                          amount = 1, color = orangeItem1.color),
+            InventoryItem(name = grayItem11.name, amount = 1, color = grayItem11.color)))
     }
 
     private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->

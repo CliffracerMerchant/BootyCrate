@@ -61,9 +61,8 @@ class NewInventoryItemDialogTests {
         }
     }
 
-    @Test
-    fun appears() {
-        onView(withId(R.id.inventory_button)).perform(click())
+    @Test fun appears() {
+        onView(withId(R.id.inventoryButton)).perform(click())
         onView(withId(R.id.add_button)).perform(click())
         onView(withId(R.id.newItemViewContainer)).check(matches(isDisplayed()))
         onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
@@ -72,8 +71,7 @@ class NewInventoryItemDialogTests {
         onView(withText(R.string.new_item_no_name_error)).check(matches(not(isDisplayed())))
     }
 
-    @Test
-    fun correctStartingValues() {
+    @Test fun correctStartingValues() {
         appears()
         testCorrectStartingValues()
     }
@@ -99,8 +97,7 @@ class NewInventoryItemDialogTests {
             })
     }
 
-    @Test
-    fun correctValuesAfterAddAnother() {
+    @Test fun correctValuesAfterAddAnother() {
         viewModel.deleteAll()
         correctStartingValues()
         val testItem = InventoryItem(
@@ -133,28 +130,24 @@ class NewInventoryItemDialogTests {
             })
     }
 
-    @Test
-    fun noNameErrorMessageAppears() {
+    @Test fun noNameErrorMessageAppears() {
         appears()
         onView(withText(android.R.string.ok)).perform(click())
         onView(withText(R.string.new_item_no_name_error)).check(matches(isDisplayed()))
     }
-    @Test
-    fun noNameErrorMessageDisappears() {
+    @Test fun noNameErrorMessageDisappears() {
         noNameErrorMessageAppears()
         onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("a"))
         onView(withText(R.string.new_item_no_name_error)).check(matches(not(isDisplayed())))
     }
-    @Test
-    fun noNameErrorMessageAppearsAfterHavingAlreadyDisappeared() {
+    @Test fun noNameErrorMessageAppearsAfterHavingAlreadyDisappeared() {
         noNameErrorMessageDisappears()
         onView(inNewItemDialog(withId(R.id.nameEdit))).perform(clearText())
         onView(withText(android.R.string.ok)).perform(click())
         onView(withText(R.string.new_item_no_name_error)).check(matches(isDisplayed()))
     }
 
-    @Test
-    fun duplicateNameWarningAppears() {
+    @Test fun duplicateNameWarningAppears() {
         viewModel.deleteAll()
         addItem()
         onView(withId(R.id.add_button)).perform(click())
@@ -165,8 +158,7 @@ class NewInventoryItemDialogTests {
             .perform(click(), typeText("Test Item 1 Extra Info"))
         onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(isDisplayed()))
     }
-    @Test
-    fun duplicateNameWarningDisappears() {
+    @Test fun duplicateNameWarningDisappears() {
         duplicateNameWarningAppears()
         onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("a"))
         onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))

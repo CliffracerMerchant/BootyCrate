@@ -28,6 +28,7 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.InventoryItem
+import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.utils.*
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.allOf
@@ -54,10 +55,11 @@ class InventoryFragmentTests {
 
     @Before fun setup() {
         runBlocking {
+            db.shoppingListItemDao().deleteAll()
             db.inventoryItemDao().deleteAll()
             db.inventoryItemDao().add(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
-        onView(withId(R.id.inventory_button)).perform(click())
+        onView(withId(R.id.inventoryButton)).perform(click())
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
     }
@@ -128,8 +130,8 @@ class InventoryFragmentTests {
     }
 
     private fun switchToShoppingListAndBack() {
-        onView(withId(R.id.shopping_list_button)).perform(click())
-        onView(withId(R.id.inventory_button)).perform(click())
+        onView(withId(R.id.shoppingListButton)).perform(click())
+        onView(withId(R.id.inventoryButton)).perform(click())
     }
 
     private fun switchToPreferencesAndBack() {
@@ -144,9 +146,9 @@ class InventoryFragmentTests {
     }
 
     private fun changeOrientationWhileInShoppingList() {
-        onView(withId(R.id.shopping_list_button)).perform(click())
+        onView(withId(R.id.shoppingListButton)).perform(click())
         changeOrientationAndBack()
-        onView(withId(R.id.inventory_button)).perform(click())
+        onView(withId(R.id.inventoryButton)).perform(click())
     }
 
     private fun changeOrientationWhileInPreferences() {
@@ -376,5 +378,18 @@ class InventoryFragmentTests {
                                hasExtra(Intent.EXTRA_TITLE, intendedTitle),
                                hasExtra(equalTo(Intent.EXTRA_INTENT), innerIntent)))
         Intents.release()
+    }
+
+    @Test fun addToShoppingList() {
+        selectIndividualItems()
+        onView(withId(R.id.menuButton)).perform(click())
+        onPopupView(withText(R.string.add_to_shopping_list_description)).perform(click())
+        onView(withId(R.id.shoppingListButton)).perform(click())
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
+        onView(withId(R.id.shoppingListRecyclerView)).check(onlyShownShoppingListItemsAre(
+            ShoppingListItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
+                             amount = 1, color = orangeItem1.color),
+            ShoppingListItem(name = grayItem11.name, amount = 1, color = grayItem11.color)))
     }
 }
