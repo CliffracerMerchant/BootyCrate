@@ -8,6 +8,7 @@ package com.cliffracertech.bootycrate.recyclerview
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.view.KeyEvent
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
@@ -17,6 +18,8 @@ import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
+import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.matcher.IntentMatchers.*
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -32,6 +35,7 @@ import com.cliffracertech.bootycrate.utils.*
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.Matchers.not
 import org.junit.Before
 import org.junit.Rule
@@ -334,6 +338,43 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.changeSortButton)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(redItem0, yellowItem2))
+    }
+
+    @Test fun shareEntireList() {
+        Intents.init()
+        onView(withId(R.id.menuButton)).perform(click())
+        onPopupView(withText(R.string.share_description)).perform(click())
+        val intendedMessage = redItem0.toUserFacingString() + "\n" +
+                orangeItem1.toUserFacingString() + "\n" +
+                yellowItem2.toUserFacingString() + "\n" +
+                grayItem11.toUserFacingString()
+        val innerIntent = allOf(hasAction(Intent.ACTION_SEND),
+                                hasType("text/plain"),
+                                hasExtra(Intent.EXTRA_TEXT, intendedMessage))
+        val collectionName = context.getString(R.string.shopping_list_item_collection_name)
+        val intendedTitle = context.getString(R.string.share_whole_list_title, collectionName)
+        Intents.intended(allOf(hasAction(Intent.ACTION_CHOOSER),
+                               hasExtra(Intent.EXTRA_TITLE, intendedTitle),
+                               hasExtra(equalTo(Intent.EXTRA_INTENT), innerIntent)))
+        Intents.release()
+    }
+
+    @Test fun shareSelectedItems() {
+        selectIndividualItems()
+        Intents.init()
+        onView(withId(R.id.menuButton)).perform(click())
+        onPopupView(withText(R.string.share_description)).perform(click())
+        val intendedMessage = orangeItem1.toUserFacingString() + "\n" +
+                grayItem11.toUserFacingString()
+        val innerIntent = allOf(hasAction(Intent.ACTION_SEND),
+                                hasType("text/plain"),
+                                hasExtra(Intent.EXTRA_TEXT, intendedMessage))
+        val collectionName = context.getString(R.string.shopping_list_item_collection_name)
+        val intendedTitle = context.getString(R.string.share_selected_items_title, collectionName)
+        Intents.intended(allOf(hasAction(Intent.ACTION_CHOOSER),
+                               hasExtra(Intent.EXTRA_TITLE, intendedTitle),
+                               hasExtra(equalTo(Intent.EXTRA_INTENT), innerIntent)))
+        Intents.release()
     }
 
     private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->

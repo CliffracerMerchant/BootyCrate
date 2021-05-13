@@ -114,8 +114,8 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
     private fun shareList(): Boolean {
         val context = this.context ?: return false
         val selectionIsEmpty = viewModel.selectedItems.value?.isEmpty() ?: true
-        val items = if (!selectionIsEmpty) viewModel.selectedItems.value ?: emptyList()
-                    else                   viewModel.items.value ?: emptyList()
+        val items = if (!selectionIsEmpty) viewModel.selectedItems.value ?: return false
+                    else                   viewModel.items.value ?: return false
         if (items.isEmpty()) return false
 
         val collectionName = collectionName.toLowerCase(Locale.getDefault())
