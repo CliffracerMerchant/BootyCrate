@@ -32,12 +32,10 @@ class NewInventoryItemDialogTests {
 
     private fun amountIncreaseButton() = CoreMatchers.allOf(
         withId(R.id.increaseButton),
-        isDescendantOfA(withId(R.id.amountEdit))
-    )
+        isDescendantOfA(withId(R.id.amountEdit)))
     private fun autoAddTriggerIncreaseButton() = CoreMatchers.allOf(
         withId(R.id.increaseButton),
-        isDescendantOfA(withId(R.id.addToShoppingListTriggerEdit))
-    )
+        isDescendantOfA(withId(R.id.addToShoppingListTriggerEdit)))
 
     private fun addTestInventoryItems(leaveNewItemDialogOpen: Boolean, vararg items: InventoryItem) {
         val lastItem = items.last()

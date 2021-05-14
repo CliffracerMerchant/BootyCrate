@@ -21,7 +21,8 @@ import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerVi
 import com.google.common.truth.Truth.assertThat
 import org.hamcrest.Matcher
 
-/** Thanks to the author of this blog post for the idea.
+/** A ViewAction that allows direct operation on a view.
+ * Thanks to the author of this blog post for the idea.
  * https://medium.com/android-news/call-view-methods-when-testing-by-espresso-and-kotlin-in-android-781262f7348e */
 fun <T>doStuff(method: (view: T) -> Unit): ViewAction {
     return object: ViewAction {
@@ -33,11 +34,13 @@ fun <T>doStuff(method: (view: T) -> Unit): ViewAction {
     }
 }
 
-fun actionOnChildWithId(viewId: Int, action: ViewAction) = object : ViewAction {
+fun actionOnChildWithId(viewId: Int, vararg actions: ViewAction) = object : ViewAction {
     override fun getConstraints() = null
-    override fun getDescription() = "Click on a child view with specified id."
-    override fun perform(uiController: UiController, view: View) =
-        action.perform(uiController, view.findViewById(viewId))
+    override fun getDescription() = "Perform an action on a child view with specified id."
+    override fun perform(uiController: UiController, view: View) {
+        val child = view.findViewById<View>(viewId)
+        for (action in actions) action.perform(uiController, child)
+    }
 }
 
 fun onPopupView(viewMatcher: Matcher<View>) = onView(viewMatcher).inRoot(isPlatformPopup())
@@ -72,8 +75,7 @@ fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
 
 /** Asserts that the view is an ExpandableSelectableRecyclerView that
     contains only the specified items of type T, in the order given. */
-abstract class onlyShownItemsAre<T: ExpandableSelectableItem>(vararg items: T) : ViewAssertion
-{
+abstract class onlyShownItemsAre<T: ExpandableSelectableItem>(vararg items: T) : ViewAssertion {
     private val items = items.asList()
 
     abstract fun itemFromView(view: ExpandableSelectableItemView<*>) : T

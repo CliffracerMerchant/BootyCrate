@@ -10,6 +10,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
@@ -62,8 +63,6 @@ class ShoppingListFragmentTests {
             db.shoppingListItemDao().deleteAll()
             db.shoppingListItemDao().add(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
-        onView(withId(R.id.changeSortButton)).perform(click())
-        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test fun sortByColor() {
@@ -78,6 +77,8 @@ class ShoppingListFragmentTests {
         onPopupView(withText(R.string.name_ascending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(grayItem11, orangeItem1, redItem0, yellowItem2))
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test
@@ -86,14 +87,17 @@ class ShoppingListFragmentTests {
         onPopupView(withText(R.string.name_descending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(yellowItem2, redItem0, orangeItem1, grayItem11))
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test fun sortByAmountAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.amount_ascending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
-            onlyShownShoppingListItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11)
-        )
+            onlyShownShoppingListItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11))
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test fun sortByAmountDescending() {
@@ -101,6 +105,8 @@ class ShoppingListFragmentTests {
         onPopupView(withText(R.string.amount_descending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(grayItem11, redItem0, orangeItem1, yellowItem2))
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     private var collapsedItemHeight = 0
@@ -389,6 +395,89 @@ class ShoppingListFragmentTests {
             InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
                           amount = 1, color = orangeItem1.color),
             InventoryItem(name = grayItem11.name, amount = 1, color = grayItem11.color)))
+    }
+
+    @Test fun changeItemColor() {
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.checkBox, click())))
+        onView(withId(R.id.colorSheetList)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(6, click()))
+        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<RecyclerView> {
+            val item = (it.adapter as ListAdapter<*, *>).currentList[2] as ShoppingListItem
+            assertThat(item.color).isEqualTo(6)
+            val vh = it.findViewHolderForAdapterPosition(2) as ShoppingListRecyclerView.ViewHolder
+            assertThat(vh.view.ui.checkBox.colorIndex).isEqualTo(6)
+        })
+    }
+
+    @Test fun changeItemName() {
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.nameEdit, click(), typeText("er"))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.editButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[2] as ShoppingListItem
+                assertThat(item.name).isEqualTo("Yellower")
+                val vh = it.findViewHolderForAdapterPosition(2) as ShoppingListRecyclerView.ViewHolder
+                assertThat(vh.view.ui.nameEdit.text.toString()).isEqualTo("Yellower")
+            })
+    }
+
+    @Test fun changeItemExtraInfo() {
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.extraInfoEdit, click(), typeText(" 2.0"))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
+                assertThat(item.extraInfo).isEqualTo("Extra info 2.0")
+                val vh = it.findViewHolderForAdapterPosition(1) as ShoppingListRecyclerView.ViewHolder
+                assertThat(vh.view.ui.extraInfoEdit.text.toString()).isEqualTo("Extra info 2.0")
+            })
+    }
+
+    @Test fun changeItemAmountUsingButtons() {
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.increaseButton, click(), click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
+                assertThat(item.amount).isEqualTo(4)
+                val vh = it.findViewHolderForAdapterPosition(1) as ShoppingListRecyclerView.ViewHolder
+                assertThat(vh.view.ui.amountEdit.value).isEqualTo(4)
+            }, actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.decreaseButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
+                assertThat(item.amount).isEqualTo(3)
+                val vh = it.findViewHolderForAdapterPosition(1) as ShoppingListRecyclerView.ViewHolder
+                assertThat(vh.view.ui.amountEdit.value).isEqualTo(3)
+            })
+    }
+
+    @Test fun changeItemAmountUsingKeyBoard() {
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.valueEdit, click(), replaceText("9"))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
+                assertThat(item.amount).isEqualTo(9)
+                val vh = it.findViewHolderForAdapterPosition(1) as ShoppingListRecyclerView.ViewHolder
+                assertThat(vh.view.ui.amountEdit.value).isEqualTo(9)
+            })
     }
 
     private fun hasOnlyCheckedItemsAtIndices(vararg checkedItemsIndices: Int) = ViewAssertion { view, e ->

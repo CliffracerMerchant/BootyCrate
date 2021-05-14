@@ -9,10 +9,12 @@ import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
 import androidx.lifecycle.Lifecycle
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.Espresso.pressBack
+import androidx.test.espresso.ViewAction
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
@@ -30,6 +32,7 @@ import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.utils.*
+import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.equalTo
@@ -60,8 +63,6 @@ class InventoryFragmentTests {
             db.inventoryItemDao().add(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
         onView(withId(R.id.inventoryButton)).perform(click())
-        onView(withId(R.id.changeSortButton)).perform(click())
-        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @After fun finish() { activityRule.scenario.moveToState(Lifecycle.State.DESTROYED) }
@@ -78,6 +79,8 @@ class InventoryFragmentTests {
         onPopupView(withText(R.string.name_ascending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(grayItem11, orangeItem1, redItem0, yellowItem2))
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test fun sortByNameDescending() {
@@ -85,6 +88,8 @@ class InventoryFragmentTests {
         onPopupView(withText(R.string.name_descending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(yellowItem2, redItem0, orangeItem1, grayItem11))
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test fun sortByAmountAscending() {
@@ -92,6 +97,8 @@ class InventoryFragmentTests {
         onPopupView(withText(R.string.amount_ascending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11))
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test fun sortByAmountDescending() {
@@ -99,6 +106,8 @@ class InventoryFragmentTests {
         onPopupView(withText(R.string.amount_descending_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(grayItem11, redItem0, orangeItem1, yellowItem2))
+        onView(withId(R.id.changeSortButton)).perform(click())
+        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     private var collapsedItemHeight = 0
@@ -203,7 +212,7 @@ class InventoryFragmentTests {
 
     @Test fun deselectAllWithNavigationBackButton() {
         runBlocking { db.inventoryItemDao().selectAll() }
-        pressBack()
+        Espresso.pressBack()
         onView(withId(R.id.inventoryRecyclerView))
             .check(onlySelectedIndicesAre())
     }
@@ -249,6 +258,7 @@ class InventoryFragmentTests {
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(yellowItem2, grayItem11))
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(pressKey(KeyEvent.KEYCODE_DEL))
+        Thread.sleep(30L)
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
     }
@@ -264,7 +274,7 @@ class InventoryFragmentTests {
     @Test fun clearingSearchQueryViaNavigationBackButton() {
         searching()
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(closeSoftKeyboard())
-        pressBack()
+        Espresso.pressBack()
         onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("")))
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
@@ -391,5 +401,148 @@ class InventoryFragmentTests {
             ShoppingListItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
                              amount = 1, color = orangeItem1.color),
             ShoppingListItem(name = grayItem11.name, amount = 1, color = grayItem11.color)))
+    }
+
+    @Test fun changeItemColor() {
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.checkBox, click())))
+        onView(withId(R.id.colorSheetList)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(6, click()))
+        onView(withId(R.id.inventoryRecyclerView)).perform(doStuff<RecyclerView> {
+            val item = (it.adapter as ListAdapter<*, *>).currentList[2] as InventoryItem
+            assertThat(item.color).isEqualTo(6)
+            val vh = it.findViewHolderForAdapterPosition(2) as InventoryRecyclerView.ViewHolder
+            assertThat(vh.view.ui.checkBox.colorIndex).isEqualTo(6)
+        })
+    }
+
+    @Test fun changeItemName() {
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.nameEdit, click(), typeText("er"))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.editButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[2] as InventoryItem
+                assertThat(item.name).isEqualTo("Yellower")
+                val vh = it.findViewHolderForAdapterPosition(2) as InventoryRecyclerView.ViewHolder
+                assertThat(vh.view.ui.nameEdit.text.toString()).isEqualTo("Yellower")
+            })
+    }
+
+    @Test fun changeItemExtraInfo() {
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.extraInfoEdit, click(), typeText(" 2.0"))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
+                assertThat(item.extraInfo).isEqualTo("Extra info 2.0")
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                assertThat(vh.view.ui.extraInfoEdit.text.toString()).isEqualTo("Extra info 2.0")
+            })
+    }
+
+    @Test fun changeItemAmountUsingButtons() {
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.increaseButton, click(), click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
+                assertThat(item.amount).isEqualTo(4)
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                assertThat(vh.view.ui.amountEdit.value).isEqualTo(4)
+            }, actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.decreaseButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
+                assertThat(item.amount).isEqualTo(3)
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                assertThat(vh.view.ui.amountEdit.value).isEqualTo(3)
+            })
+    }
+
+    @Test fun changeItemAmountUsingKeyBoard() {
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.amountEdit,
+                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("9")))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
+                assertThat(item.amount).isEqualTo(9)
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                assertThat(vh.view.ui.amountEdit.value).isEqualTo(9)
+            })
+    }
+
+    @Test fun changeItemAddToShoppingList() {
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.addToShoppingListCheckBox, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
+                assertThat(item.addToShoppingList).isTrue()
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                assertThat(vh.view.detailsUi.addToShoppingListCheckBox.isChecked).isTrue()
+            })
+    }
+
+    private fun actionOnAddToShoppingListTriggerEditChildWithId(id: Int, vararg actions: ViewAction) =
+        actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
+            actionOnChildWithId(id), *actions)
+
+    @Test fun changeItemAddToShoppingListAmountUsingButtons() {
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
+                    actionOnChildWithId(R.id.increaseButton, click(), click()))),
+            doStuff<RecyclerView> {
+                Thread.sleep(50L)
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
+                assertThat(item.addToShoppingListTrigger).isEqualTo(3)
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                assertThat(vh.view.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(3)
+            }, actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
+                    actionOnChildWithId(R.id.decreaseButton, click()))),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
+                assertThat(item.addToShoppingListTrigger).isEqualTo(2)
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                assertThat(vh.view.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(2)
+            })
+    }
+
+    @Test fun changeItemAddToShoppingListAmountUsingKeyBoard() {
+        onView(withId(R.id.inventoryRecyclerView)).perform(
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
+                    actionOnChildWithId(R.id.valueEdit, click(), typeText("2")))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            doStuff<RecyclerView> {
+                val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
+                assertThat(item.addToShoppingListTrigger).isEqualTo(12)
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                assertThat(vh.view.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(12)
+            })
     }
 }
