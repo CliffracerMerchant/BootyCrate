@@ -5,13 +5,11 @@
 package com.cliffracertech.bootycrate.utils
 
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewAssertion
-import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import com.cliffracertech.bootycrate.ExpandableSelectableItemView
@@ -46,12 +44,6 @@ fun actionOnChildWithId(viewId: Int, vararg actions: ViewAction) = object : View
 }
 
 fun onPopupView(viewMatcher: Matcher<View>) = onView(viewMatcher).inRoot(isPlatformPopup())
-
-fun actionsOnItemAtPosition(pos: Int, vararg actions: ViewAction): ViewAction {
-    for (action in actions)
-        actionOnItemAtPosition<RecyclerView.ViewHolder>(pos, action)
-    return actions.last()
-}
 
 /** Assert that the view is an ExpandableSelectableRecyclerView with only one expanded item at
  * index expandedIndex. The height of collapsed items must also be provided. */

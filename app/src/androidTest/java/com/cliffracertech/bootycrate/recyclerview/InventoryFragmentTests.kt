@@ -418,9 +418,11 @@ class InventoryFragmentTests {
 
     @Test fun changeItemName() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
-            actionsOnItemAtPosition(2,
-                actionOnChildWithId(R.id.editButton, click()),
-                actionOnChildWithId(R.id.nameEdit, click(), typeText("er")),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+                actionOnChildWithId(R.id.nameEdit, click(), typeText("er"))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
                 actionOnChildWithId(R.id.editButton, click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[2] as InventoryItem
@@ -432,9 +434,11 @@ class InventoryFragmentTests {
 
     @Test fun changeItemExtraInfo() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
-            actionsOnItemAtPosition(1,
-                actionOnChildWithId(R.id.editButton, click()),
-                actionOnChildWithId(R.id.extraInfoEdit, click(), typeText(" 2.0")),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.extraInfoEdit, click(), typeText(" 2.0"))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.editButton, click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
@@ -465,10 +469,12 @@ class InventoryFragmentTests {
 
     @Test fun changeItemAmountUsingKeyBoard() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
-            actionsOnItemAtPosition(1,
-                actionOnChildWithId(R.id.editButton, click()),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.amountEdit,
-                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("9"))),
+                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("9")))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.editButton, click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
@@ -480,9 +486,11 @@ class InventoryFragmentTests {
 
     @Test fun changeItemAddToShoppingList() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
-            actionsOnItemAtPosition(1,
-                actionOnChildWithId(R.id.editButton, click()),
-                actionOnChildWithId(R.id.addToShoppingListCheckBox, click()),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.addToShoppingListCheckBox, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.editButton, click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
@@ -494,8 +502,9 @@ class InventoryFragmentTests {
 
     @Test fun changeItemAddToShoppingListAmountUsingButtons() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
-            actionsOnItemAtPosition(1,
-                actionOnChildWithId(R.id.editButton, click()),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
                     actionOnChildWithId(R.id.increaseButton, click(), click()))),
             doStuff<RecyclerView> {
@@ -516,10 +525,12 @@ class InventoryFragmentTests {
 
     @Test fun changeItemAddToShoppingListAmountUsingKeyBoard() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
-            actionsOnItemAtPosition(1,
-                actionOnChildWithId(R.id.editButton, click()),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
-                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("12"))),
+                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("12")))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.editButton, click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
@@ -545,12 +556,15 @@ class InventoryFragmentTests {
 
     @Test fun addToShoppingListWorksWhenAmountIsDecreasedBelowTrigger() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
-            actionsOnItemAtPosition(3,
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(3,
                 actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
-                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("9"))),
-                actionOnChildWithId(R.id.addToShoppingListCheckBox, click()),
+                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("9")))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(3,
+                actionOnChildWithId(R.id.addToShoppingListCheckBox, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.amountEdit,
-                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("6"))),
+                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("6")))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.editButton, click())))
         onView(withId(R.id.shoppingListButton)).perform(click())
         val expectedItem = ShoppingListItem(color = grayItem11.color,
