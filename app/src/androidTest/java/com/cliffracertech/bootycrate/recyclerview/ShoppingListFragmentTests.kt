@@ -399,9 +399,8 @@ class ShoppingListFragmentTests {
 
     @Test fun changeItemColor() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
-                actionOnChildWithId(R.id.editButton, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+            actionsOnItemAtPosition(2,
+                actionOnChildWithId(R.id.editButton, click()),
                 actionOnChildWithId(R.id.checkBox, click())))
         onView(withId(R.id.colorSheetList)).perform(
             actionOnItemAtPosition<RecyclerView.ViewHolder>(6, click()))
@@ -415,11 +414,9 @@ class ShoppingListFragmentTests {
 
     @Test fun changeItemName() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
-                actionOnChildWithId(R.id.editButton, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
-                actionOnChildWithId(R.id.nameEdit, click(), typeText("er"))),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
+            actionsOnItemAtPosition(2,
+                actionOnChildWithId(R.id.editButton, click()),
+                actionOnChildWithId(R.id.nameEdit, click(), typeText("er")),
                 actionOnChildWithId(R.id.editButton, click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[2] as ShoppingListItem
@@ -431,11 +428,9 @@ class ShoppingListFragmentTests {
 
     @Test fun changeItemExtraInfo() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.editButton, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.extraInfoEdit, click(), typeText(" 2.0"))),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+            actionsOnItemAtPosition(1,
+                actionOnChildWithId(R.id.editButton, click()),
+                actionOnChildWithId(R.id.extraInfoEdit, click(), typeText(" 2.0")),
                 actionOnChildWithId(R.id.editButton, click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
@@ -466,11 +461,9 @@ class ShoppingListFragmentTests {
 
     @Test fun changeItemAmountUsingKeyBoard() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.editButton, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.valueEdit, click(), replaceText("9"))),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+            actionsOnItemAtPosition(1,
+                actionOnChildWithId(R.id.editButton, click()),
+                actionOnChildWithId(R.id.valueEdit, click(), replaceText("9")),
                 actionOnChildWithId(R.id.editButton, click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
@@ -529,20 +522,20 @@ class ShoppingListFragmentTests {
     @Test fun checkoutButtonEnabledAfterCheckingIndividualItems() {
         onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, actionOnChildWithId(R.id.checkBox, click())))
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickCheckBox()))
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, actionOnChildWithId(R.id.checkBox, click())))
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, clickCheckBox()))
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
     }
 
     @Test fun checkoutButtonDisabledAfterUncheckingIndividualItems() {
         checkoutButtonEnabledAfterCheckingIndividualItems()
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, actionOnChildWithId(R.id.checkBox, click())))
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickCheckBox()))
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, actionOnChildWithId(R.id.checkBox, click())))
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, clickCheckBox()))
         onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
     }
 

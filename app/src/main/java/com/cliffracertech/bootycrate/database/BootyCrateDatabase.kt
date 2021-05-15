@@ -198,13 +198,13 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         /* Unfortunately SQLite's limitation of not being able to use common table
          * expressions in triggers makes the following less readable than it should
          * be. The query below essentially makes a shopping list item with the same
-         * name, extraInfo, and color as an inventory item, while also filling in its
-         * linkedItemId field to the id of the inventory item it was created from.
-         * The new item's amount is the lesser of its current amount (if it already
-         * existed) or the minimum amount (i.e. the inventory item it is based on's
-         * addToShoppingListAmount minus its current amount). It also copies the
-         * expanded, selected, and checked state from the already existing item to
-         * prevent the overwriting of these values if it already existed. */
+         * name, extraInfo, and color as an inventory item, while also filling in
+         * its linkedItemId field to the id of the inventory item it was created
+         * from. The new item's amount is the greater of its current amount (if it
+         * already existed or the inventory item it is based on's addToShoppingListAmount
+         * minus its current amount). It also copies the expanded, selected, and
+         * checked state from the already existing item to prevent the overwriting
+         * of these values if it already existed. */
         private const val insertFromInventoryItemStr =
             """INSERT OR REPLACE INTO shopping_list_item (id, name, extraInfo, color, linkedItemId,
                                                           amount, isExpanded, isSelected, isChecked)
