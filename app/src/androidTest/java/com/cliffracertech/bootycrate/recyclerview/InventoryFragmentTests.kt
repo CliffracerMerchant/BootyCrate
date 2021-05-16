@@ -53,7 +53,7 @@ class InventoryFragmentTests {
     private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
     private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
     private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1)
-    private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9)
+    private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9, addToShoppingList = true)
 
     @Before fun setup() {
         runBlocking {
@@ -413,6 +413,7 @@ class InventoryFragmentTests {
             assertThat(item.color).isEqualTo(6)
             val vh = it.findViewHolderForAdapterPosition(2) as InventoryRecyclerView.ViewHolder
             assertThat(vh.view.ui.checkBox.colorIndex).isEqualTo(6)
+            assertThat(vh.view.detailsUi.addToShoppingListCheckBox.colorIndex).isEqualTo(6)
         })
     }
 
@@ -541,15 +542,19 @@ class InventoryFragmentTests {
     }
 
     @Test fun addToShoppingListWorksWhenTurnedOnWithConditionsAlreadyMet() {
-        changeItemAddToShoppingListAmountUsingKeyBoard()
         onView(withId(R.id.inventoryRecyclerView)).perform(
             actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.addToShoppingListCheckBox, click())))
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
+                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("12")))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.addToShoppingListCheckBox, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+                actionOnChildWithId(R.id.editButton, click())))
         onView(withId(R.id.shoppingListButton)).perform(click())
-        val expectedItem = ShoppingListItem(color = orangeItem1.color,
-                                            name = orangeItem1.name,
-                                            extraInfo = orangeItem1.extraInfo,
-                                            amount = 12 - orangeItem1.amount)
+        val expectedItem = ShoppingListItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
+                                            color = orangeItem1.color, amount = 12 - orangeItem1.amount)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }
@@ -557,34 +562,34 @@ class InventoryFragmentTests {
     @Test fun addToShoppingListWorksWhenAmountIsDecreasedBelowTrigger() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
             actionOnItemAtPosition<RecyclerView.ViewHolder>(3,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(3,
                 actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
                     actionOnChildWithId(R.id.valueEdit, click(), replaceText("9")))),
             actionOnItemAtPosition<RecyclerView.ViewHolder>(3,
-                actionOnChildWithId(R.id.addToShoppingListCheckBox, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
                 actionOnChildWithId(R.id.amountEdit,
                     actionOnChildWithId(R.id.valueEdit, click(), replaceText("6")))),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(3,
                 actionOnChildWithId(R.id.editButton, click())))
         onView(withId(R.id.shoppingListButton)).perform(click())
-        val expectedItem = ShoppingListItem(color = grayItem11.color,
-                                            name = grayItem11.name,
-                                            extraInfo = grayItem11.extraInfo,
-                                            amount = 1)
+        val expectedItem = ShoppingListItem(color = grayItem11.color, name = grayItem11.name,
+                                            amount = 3)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }
 
     @Test fun addToShoppingListWorksWhenTriggerIsRaisedAboveAmount() {
-        changeItemAddToShoppingListAmountUsingKeyBoard()
         onView(withId(R.id.inventoryRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.addToShoppingListCheckBox, click())))
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(3,
+                actionOnChildWithId(R.id.editButton, click())),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(3,
+                actionOnChildWithId(R.id.addToShoppingListTriggerEdit,
+                    actionOnChildWithId(R.id.valueEdit, click(), replaceText("11")))),
+            actionOnItemAtPosition<RecyclerView.ViewHolder>(3,
+                actionOnChildWithId(R.id.editButton, click())))
         onView(withId(R.id.shoppingListButton)).perform(click())
-        val expectedItem = ShoppingListItem(color = orangeItem1.color,
-                                            name = orangeItem1.name,
-                                            extraInfo = orangeItem1.extraInfo,
-                                            amount = 12 - orangeItem1.amount)
+        val expectedItem = ShoppingListItem(name = grayItem11.name, extraInfo = grayItem11.extraInfo,
+                                            color = grayItem11.color, amount = 11 - grayItem11.amount)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }
