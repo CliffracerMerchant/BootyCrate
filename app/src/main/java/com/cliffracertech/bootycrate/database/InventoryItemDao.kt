@@ -7,7 +7,6 @@ package com.cliffracertech.bootycrate.database
 import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.Transaction
 
 /** A Room DAO for BootyCrateDatabase's inventory_item table. */
 @Dao abstract class InventoryItemDao : ExpandableSelectableItemDao<InventoryItem>() {
@@ -54,15 +53,7 @@ import androidx.room.Transaction
               WHERE isSelected
               AND inTrash = 0
               AND linkedItemId IS NULL""")
-    protected abstract suspend fun _addFromSelectedShoppingListItems()
-
-    @Query("UPDATE shopping_list_item SET isSelected = 0")
-    protected abstract suspend fun clearShoppingListSelection()
-
-    @Transaction open suspend fun addFromSelectedShoppingListItems() {
-        _addFromSelectedShoppingListItems()
-        clearShoppingListSelection()
-    }
+    abstract suspend fun addFromSelectedShoppingListItems()
 
     @Query("""UPDATE inventory_item
               SET name = :name

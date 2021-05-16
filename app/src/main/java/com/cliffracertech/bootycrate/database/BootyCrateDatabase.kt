@@ -209,10 +209,11 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             """INSERT OR REPLACE INTO shopping_list_item (id, name, extraInfo, color, linkedItemId,
                                                           amount, isExpanded, isSelected, isChecked)
                SELECT new.linkedItemId, new.name, new.extraInfo, new.color, new.id,
-                      CASE WHEN (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) <
-                                (SELECT new.addToShoppingListTrigger - new.amount)
-                           THEN (SELECT new.addToShoppingListTrigger - new.amount)
-                           ELSE (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) END,
+                      CASE WHEN (EXISTS(SELECT 1 FROM shopping_list_item WHERE id == new.linkedItemId) AND
+                                 (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) >
+                                 (SELECT new.addToShoppingListTrigger - new.amount))
+                           THEN (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId)
+                           ELSE (SELECT new.addToShoppingListTrigger - new.amount) END,
                       (SELECT isExpanded FROM shopping_list_item WHERE id == new.linkedItemId),
                       (SELECT isSelected FROM shopping_list_item WHERE id == new.linkedItemId),
                       (SELECT isChecked FROM shopping_list_item WHERE id == new.linkedItemId)"""

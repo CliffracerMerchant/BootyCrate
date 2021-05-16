@@ -30,6 +30,10 @@ class NewInventoryItemDialogTests {
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
     private val viewModel = InventoryViewModel(context as Application)
 
+    private val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Extra Info 1",
+                                         color = 5, amount = 3, addToShoppingList = true,
+                                         addToShoppingListTrigger = 4)
+
     private fun amountIncreaseButton() = CoreMatchers.allOf(
         withId(R.id.increaseButton),
         isDescendantOfA(withId(R.id.amountEdit)))
@@ -37,7 +41,7 @@ class NewInventoryItemDialogTests {
         withId(R.id.increaseButton),
         isDescendantOfA(withId(R.id.addToShoppingListTriggerEdit)))
 
-    private fun addTestInventoryItems(leaveNewItemDialogOpen: Boolean, vararg items: InventoryItem) {
+    private fun addTestInventoryItems(leaveDialogOpen: Boolean, vararg items: InventoryItem) {
         val lastItem = items.last()
         for (item in items) {
             onView(inNewItemDialog( withId(R.id.nameEdit))).perform(click(), typeText(item.name))
@@ -54,7 +58,7 @@ class NewInventoryItemDialogTests {
                 onView(autoAddTriggerIncreaseButton).perform(click())
             if (item != lastItem)
                 onView(withText(R.string.add_another_item_button_description)).perform(click())
-            else if (!leaveNewItemDialogOpen)
+            else if (!leaveDialogOpen)
                 onView(withText(android.R.string.ok)).perform(click())
         }
     }
@@ -98,14 +102,8 @@ class NewInventoryItemDialogTests {
     @Test fun correctValuesAfterAddAnother() {
         viewModel.deleteAll()
         correctStartingValues()
-        val testItem = InventoryItem(
-            name = "Test Item 1",
-            extraInfo = "Test Extra Info 1",
-            color = 5, amount = 3,
-            addToShoppingList = true,
-            addToShoppingListTrigger = 4
-        )
-        addTestInventoryItems(leaveNewItemDialogOpen = true, testItem)
+
+        addTestInventoryItems(leaveDialogOpen = true, testItem)
         onView(withText(R.string.add_another_item_button_description)).perform(click())
 
         onView(inNewItemDialog(withId(R.id.nameEdit))).check(matches(withText("")))
@@ -170,14 +168,10 @@ class NewInventoryItemDialogTests {
     @Test fun addItem() {
         viewModel.deleteAll()
         appears()
-        val testItem = InventoryItem(
-            name = "Test Item 1",
-            extraInfo = "Test Item 1 Extra Info",
-            color = 5, amount = 3,
-            addToShoppingList = true,
-            addToShoppingListTrigger = 4
-        )
-        addTestInventoryItems(leaveNewItemDialogOpen = false, testItem)
+        val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Item 1 Extra Info",
+                                     color = 5, amount = 3, addToShoppingList = true,
+                                     addToShoppingListTrigger = 4)
+        addTestInventoryItems(leaveDialogOpen = false, testItem)
         onView(withId(R.id.inventoryRecyclerView))
             .check(onlyShownInventoryItemsAre(testItem))
     }
@@ -185,22 +179,11 @@ class NewInventoryItemDialogTests {
     @Test fun addSeveralItems() {
         viewModel.deleteAll()
         appears()
-        val testItem1 = InventoryItem(
-            name = "Test Item 1",
-            extraInfo = "Test Item 1 Extra Info",
-            color = 5, amount = 3,
-            addToShoppingList = true,
-            addToShoppingListTrigger = 4
-        )
-        val testItem2 = InventoryItem(
-            name = "Test Item 2",
-            extraInfo = "Test Item 2 Extra Info",
-            color = 7, amount = 8,
-            addToShoppingList = true,
-            addToShoppingListTrigger = 2
-        )
-        addTestInventoryItems(leaveNewItemDialogOpen = false, testItem1, testItem2)
+        val testItem2 = InventoryItem(name = "Test Item 2", extraInfo = "Test Item 2 Extra Info",
+                                      color = 7, amount = 8, addToShoppingList = true,
+                                      addToShoppingListTrigger = 2)
+        addTestInventoryItems(leaveDialogOpen = false, testItem, testItem2)
         onView(withId(R.id.inventoryRecyclerView)).check(
-            onlyShownInventoryItemsAre(testItem1, testItem2))
+            onlyShownInventoryItemsAre(testItem, testItem2))
     }
 }

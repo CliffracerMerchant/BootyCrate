@@ -79,15 +79,7 @@ import androidx.room.Transaction
               WHERE isSelected
               AND inTrash = 0
               AND linkedItemId IS NULL""")
-    protected abstract suspend fun _addFromSelectedInventoryItems()
-
-    @Query("UPDATE inventory_item SET isSelected = 0")
-    protected abstract suspend fun clearInventorySelection()
-
-    @Transaction open suspend fun addFromSelectedInventoryItems() {
-        _addFromSelectedInventoryItems()
-        clearInventorySelection()
-    }
+    abstract suspend fun addFromSelectedInventoryItems()
 
     @Query("""UPDATE shopping_list_item
               SET name = :name

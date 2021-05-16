@@ -38,6 +38,9 @@ class NewShoppingListItemDialogTests {
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
     private val db = BootyCrateDatabase.get(context as Application)
 
+    private val testItem = ShoppingListItem(color = 5, name = "Test Item 1", amount = 3,
+                                            extraInfo = "Test Item 1 Extra Info")
+
     @Before fun setup() {
         runBlocking {
             db.shoppingListItemDao().deleteAll()
@@ -47,7 +50,7 @@ class NewShoppingListItemDialogTests {
         onPopupView(withText(R.string.color_description)).perform(click())
     }
 
-    private fun addTestShoppingListItems(leaveNewItemDialogOpen: Boolean, vararg items: ShoppingListItem) {
+    private fun addTestShoppingListItems(leaveDialogOpen: Boolean, vararg items: ShoppingListItem) {
         val lastItem = items.last()
         for (item in items) {
             onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText(item.name))
@@ -59,7 +62,7 @@ class NewShoppingListItemDialogTests {
                 onView(inNewItemDialog(withId(R.id.increaseButton))).perform(click())
             if (item != lastItem)
                 onView(withText(R.string.add_another_item_button_description)).perform(click())
-            else if (!leaveNewItemDialogOpen)
+            else if (!leaveDialogOpen)
                 onView(withText(android.R.string.ok)).perform(click())
         }
     }
@@ -97,10 +100,7 @@ class NewShoppingListItemDialogTests {
 
     @Test fun correctValuesAfterAddAnother() {
         correctStartingValues()
-        val testItem = ShoppingListItem(name = "Test Item 1",
-                                        extraInfo = "Test Item 1 Extra Info",
-                                        color = 5, amount = 3)
-        addTestShoppingListItems(leaveNewItemDialogOpen = true, testItem)
+        addTestShoppingListItems(leaveDialogOpen = true, testItem)
         onView(withText(R.string.add_another_item_button_description)).perform(click())
 
         onView(inNewItemDialog(withId(R.id.nameEdit))).check(matches(withText("")))
@@ -160,24 +160,17 @@ class NewShoppingListItemDialogTests {
 
     @Test fun addItem() {
         appears()
-        val testItem = ShoppingListItem(name = "Test Item 1",
-                                        extraInfo = "Test Item 1 Extra Info",
-                                        color = 5, amount = 3)
-        addTestShoppingListItems(leaveNewItemDialogOpen = false, testItem)
+        addTestShoppingListItems(leaveDialogOpen = false, testItem)
         onView(withId(R.id.shoppingListRecyclerView))
             .check(onlyShownShoppingListItemsAre(testItem))
     }
 
     @Test fun addSeveralItems() {
         appears()
-        val testItem1 = ShoppingListItem(name = "Test Item 1",
-                                         extraInfo = "Test Item 1 Extra Info",
-                                         color = 5, amount = 3)
-        val testItem2 = ShoppingListItem(name = "Test Item 2",
-                                         extraInfo = "Test Item 2 Extra Info",
+        val testItem2 = ShoppingListItem(name = "Test Item 2", extraInfo = "Test Item 2 Extra Info",
                                          color = 7, amount = 8)
-        addTestShoppingListItems(leaveNewItemDialogOpen = false, testItem1, testItem2)
+        addTestShoppingListItems(leaveDialogOpen = false, testItem, testItem2)
         onView(withId(R.id.shoppingListRecyclerView)).check(
-            onlyShownShoppingListItemsAre(testItem1, testItem2))
+            onlyShownShoppingListItemsAre(testItem, testItem2))
     }
 }
