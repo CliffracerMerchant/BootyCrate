@@ -6,17 +6,16 @@ package com.cliffracertech.bootycrate
 
 import android.app.Application
 import android.content.Context
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.InventoryViewModel
+import com.cliffracertech.bootycrate.utils.actionsOnItemAtPosition
 import com.cliffracertech.bootycrate.utils.doStuff
 import com.cliffracertech.bootycrate.utils.onlyShownInventoryItemsAre
 import com.google.common.truth.Truth.assertThat
@@ -34,21 +33,19 @@ class NewInventoryItemDialogTests {
                                          color = 5, amount = 3, addToShoppingList = true,
                                          addToShoppingListTrigger = 4)
 
-    private fun amountIncreaseButton() = CoreMatchers.allOf(
-        withId(R.id.increaseButton),
-        isDescendantOfA(withId(R.id.amountEdit)))
-    private fun autoAddTriggerIncreaseButton() = CoreMatchers.allOf(
-        withId(R.id.increaseButton),
-        isDescendantOfA(withId(R.id.addToShoppingListTriggerEdit)))
+    private fun amountIncreaseButton() = CoreMatchers.allOf(withId(R.id.increaseButton),
+                                                            isDescendantOfA(withId(R.id.amountEdit)))
+    private fun autoAddTriggerIncreaseButton() = CoreMatchers.allOf(withId(R.id.increaseButton),
+                                                                    isDescendantOfA(withId(R.id.addToShoppingListTriggerEdit)))
 
     private fun addTestInventoryItems(leaveDialogOpen: Boolean, vararg items: InventoryItem) {
         val lastItem = items.last()
         for (item in items) {
-            onView(inNewItemDialog( withId(R.id.nameEdit))).perform(click(), typeText(item.name))
+            onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText(item.name))
             onView(inNewItemDialog(withId(R.id.extraInfoEdit))).perform(click(), typeText(item.extraInfo))
             onView(inNewItemDialog(withId(R.id.checkBox))).perform(click())
             onView(withId(R.id.colorSheetList)).perform(
-                actionOnItemAtPosition<RecyclerView.ViewHolder>(item.color, click()))
+                actionsOnItemAtPosition(item.color, click()))
             val amountIncreaseButton = inNewItemDialog(amountIncreaseButton())
             for (i in 1 until item.amount)
                 onView(amountIncreaseButton).perform(click())
@@ -65,7 +62,7 @@ class NewInventoryItemDialogTests {
 
     @Test fun appears() {
         onView(withId(R.id.inventoryButton)).perform(click())
-        onView(withId(R.id.add_button)).perform(click())
+        onView(withId(R.id.addButton)).perform(click())
         onView(withId(R.id.newItemViewContainer)).check(matches(isDisplayed()))
         onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
             .check(matches(isDisplayed()))
@@ -146,7 +143,7 @@ class NewInventoryItemDialogTests {
     @Test fun duplicateNameWarningAppears() {
         viewModel.deleteAll()
         addItem()
-        onView(withId(R.id.add_button)).perform(click())
+        onView(withId(R.id.addButton)).perform(click())
         onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("Test Item 1"))
         onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))

@@ -7,18 +7,17 @@ package com.cliffracertech.bootycrate
 import android.app.Application
 import android.content.Context
 import android.view.View
-import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.utils.actionsOnItemAtPosition
 import com.cliffracertech.bootycrate.utils.doStuff
 import com.cliffracertech.bootycrate.utils.onPopupView
 import com.cliffracertech.bootycrate.utils.onlyShownShoppingListItemsAre
@@ -57,7 +56,7 @@ class NewShoppingListItemDialogTests {
             onView(inNewItemDialog(withId(R.id.extraInfoEdit))).perform(click(), typeText(item.extraInfo))
             onView(inNewItemDialog(withId(R.id.checkBox))).perform(click())
             onView(withId(R.id.colorSheetList)).perform(
-                actionOnItemAtPosition<RecyclerView.ViewHolder>(item.color, click()))
+                actionsOnItemAtPosition(item.color, click()))
             for (i in 1 until item.amount)
                 onView(inNewItemDialog(withId(R.id.increaseButton))).perform(click())
             if (item != lastItem)
@@ -68,7 +67,7 @@ class NewShoppingListItemDialogTests {
     }
 
     @Test fun appears() {
-        onView(withId(R.id.add_button)).perform(click())
+        onView(withId(R.id.addButton)).perform(click())
         onView(withId(R.id.newItemViewContainer)).check(matches(isDisplayed()))
         onView(inNewItemDialog(instanceOf(ExpandableSelectableItemView::class.java))).check(matches(isDisplayed()))
         onView(inNewItemDialog(withId(R.id.addToShoppingListCheckBox))).check(doesNotExist())
@@ -140,7 +139,7 @@ class NewShoppingListItemDialogTests {
 
     @Test fun duplicateNameWarningAppears() {
         addItem()
-        onView(withId(R.id.add_button)).perform(click())
+        onView(withId(R.id.addButton)).perform(click())
         onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("Test Item 1"))
         onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))

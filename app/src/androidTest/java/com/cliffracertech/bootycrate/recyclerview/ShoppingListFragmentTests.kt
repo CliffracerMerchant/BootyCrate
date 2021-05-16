@@ -516,37 +516,59 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun checkoutButtonEnabledAfterCheckingIndividualItems() {
-        onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
+        onView(withId(R.id.checkoutButton)).check(matches(not(isEnabled())))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(0, clickCheckBox()))
-        onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
+        onView(withId(R.id.checkoutButton)).check(matches(isEnabled()))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(1, clickCheckBox()))
-        onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
+        onView(withId(R.id.checkoutButton)).check(matches(isEnabled()))
     }
 
     @Test fun checkoutButtonDisabledAfterUncheckingIndividualItems() {
         checkoutButtonEnabledAfterCheckingIndividualItems()
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(0, clickCheckBox()))
-        onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
+        onView(withId(R.id.checkoutButton)).check(matches(isEnabled()))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(1, clickCheckBox()))
-        onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
+        onView(withId(R.id.checkoutButton)).check(matches(not(isEnabled())))
     }
 
     @Test fun checkoutButtonEnabledAfterCheckingAllItems() {
-        onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
+        onView(withId(R.id.checkoutButton)).check(matches(not(isEnabled())))
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.check_all_description)).perform(click())
-        onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
+        onView(withId(R.id.checkoutButton)).check(matches(isEnabled()))
     }
 
     @Test fun checkoutButtonDisabledAfterUncheckingAllItems() {
         runBlocking { db.shoppingListItemDao().checkAll() }
-        onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
+        onView(withId(R.id.checkoutButton)).check(matches(isEnabled()))
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.uncheck_all_description)).perform(click())
-        onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
+        onView(withId(R.id.checkoutButton)).check(matches(not(isEnabled())))
+    }
+
+    @Test fun checkoutRemovesCheckedItems() {
+        addToInventory()
+        onView(withId(R.id.shoppingListButton)).perform(click())
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionsOnItemAtPosition(0, clickCheckBox()),
+            actionsOnItemAtPosition(1, clickCheckBox()))
+        onView(withId(R.id.checkoutButton)).perform(click(), click())
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(yellowItem2, grayItem11))
+    }
+
+    @Test fun checkoutUpdatesAmountOfLinkedItems() {
+        checkoutRemovesCheckedItems()
+        onView(withId(R.id.inventoryButton)).perform(click())
+        val expectedItem1 = InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
+                                          color = orangeItem1.color, amount = 1 + orangeItem1.amount)
+        val expectedItem2 = InventoryItem(name = grayItem11.name, color = grayItem11.color, amount = 1)
+        // grayItem11 was not checked and should not have its amount updated.
+        onView(withId(R.id.inventoryRecyclerView)).check(
+            onlyShownInventoryItemsAre(expectedItem1, expectedItem2))
     }
 }
