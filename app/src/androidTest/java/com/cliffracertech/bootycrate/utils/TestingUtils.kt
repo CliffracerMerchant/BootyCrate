@@ -5,20 +5,24 @@
 package com.cliffracertech.bootycrate.utils
 
 import android.view.View
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewAssertion
+import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
-import androidx.test.espresso.matcher.ViewMatchers.isEnabled
+import androidx.test.espresso.matcher.ViewMatchers.*
 import com.cliffracertech.bootycrate.ExpandableSelectableItemView
 import com.cliffracertech.bootycrate.InventoryItemView
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.google.common.truth.Truth.assertThat
+import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matcher
 
 /** A ViewAction that allows direct operation on a view.
@@ -34,6 +38,18 @@ fun <T>doStuff(method: (view: T) -> Unit): ViewAction {
     }
 }
 
+/** Perform the given actions on the recycler view item view at the given position. */
+fun actionsOnItemAtPosition(pos: Int, vararg actions: ViewAction) = object : ViewAction {
+    override fun getConstraints() = allOf(isAssignableFrom(RecyclerView::class.java), isDisplayed())
+    override fun getDescription() = "Perform ${actions.asList()} on the view of the item at pos $pos."
+    override fun perform(uiController: UiController, view: View) {
+        val vh = (view as RecyclerView).findViewHolderForAdapterPosition(pos)
+        assertThat(vh).isNotNull()
+        for (action in actions)
+            action.perform(uiController, vh!!.itemView)
+    }
+}
+
 fun actionOnChildWithId(viewId: Int, vararg actions: ViewAction) = object : ViewAction {
     override fun getConstraints() = null
     override fun getDescription() = "Perform an action on a child view with specified id."
@@ -42,6 +58,17 @@ fun actionOnChildWithId(viewId: Int, vararg actions: ViewAction) = object : View
         for (action in actions) action.perform(uiController, child)
     }
 }
+
+fun clickEditButton() = actionOnChildWithId(R.id.editButton, click())
+fun clickCheckBox() = actionOnChildWithId(R.id.checkBox, click())
+fun clickAddToShoppingListCheckBox() = actionOnChildWithId(R.id.addToShoppingListCheckBox, click())
+fun onAmount(vararg viewActions: ViewAction) = actionOnChildWithId(R.id.amountEdit, *viewActions)
+fun onAddToShoppingListTrigger(vararg viewActions: ViewAction) =
+    actionOnChildWithId(R.id.addToShoppingListTriggerEdit, *viewActions)
+fun onIncreaseButton(vararg viewActions: ViewAction) = actionOnChildWithId(R.id.increaseButton, *viewActions)
+fun onDecreaseButton(vararg viewActions: ViewAction) = actionOnChildWithId(R.id.decreaseButton, *viewActions)
+fun typeIntoValueEdit(text: String) = actionOnChildWithId(R.id.valueEdit, click(), typeText(text))
+fun replaceValueEditText(text: String) = actionOnChildWithId(R.id.valueEdit, click(), replaceText(text))
 
 fun onPopupView(viewMatcher: Matcher<View>) = onView(viewMatcher).inRoot(isPlatformPopup())
 

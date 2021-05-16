@@ -18,7 +18,6 @@ import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItemAtPosition
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers.*
 import androidx.test.espresso.matcher.ViewMatchers.*
@@ -117,16 +116,14 @@ class ShoppingListFragmentTests {
         }).check(onlyExpandedIndexIs(null, collapsedItemHeight))
 
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<ShoppingListRecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.editButton, click()))
+            actionsOnItemAtPosition(1, clickEditButton())
         ).check(onlyExpandedIndexIs(1, collapsedItemHeight))
     }
 
     @Test fun expandAnotherItem() {
         expandItem()
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<ShoppingListRecyclerView.ViewHolder>(3,
-                actionOnChildWithId(R.id.editButton, click()))
+            actionsOnItemAtPosition(3, clickEditButton())
         ).check(onlyExpandedIndexIs(3, collapsedItemHeight))
     }
 
@@ -175,20 +172,20 @@ class ShoppingListFragmentTests {
 
     @Test fun selectIndividualItems() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, longClick())
+            actionsOnItemAtPosition(1, longClick())
         ).check(onlySelectedIndicesAre(1))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(3, click())
+            actionsOnItemAtPosition(3, click())
         ).check(onlySelectedIndicesAre(1, 3))
     }
 
     @Test fun deselectIndividualItems() {
         selectIndividualItems()
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, click())
+            actionsOnItemAtPosition(1, click())
         ).check(onlySelectedIndicesAre(3))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(3, click())
+            actionsOnItemAtPosition(3, click())
         ).check(onlySelectedIndicesAre())
     }
 
@@ -225,48 +222,49 @@ class ShoppingListFragmentTests {
     @Test fun selectionSurvivesOrientationChangeWhileInInventory() = selectionSurvives(::changeOrientationWhileInInventory)
     @Test fun selectionSurvivesOrientationChangeWhileInPreferences() = selectionSurvives(::changeOrientationWhileInPreferences)
 
-    @Test fun searching() {
+    @Test fun search() {
         onView(withId(R.id.searchButton)).perform(click())
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("y"))
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(yellowItem2, grayItem11))
     }
 
-    @Test fun addingToExistingSearchQuery() {
-        searching()
+    @Test fun addToExistingSearchQuery() {
+        search()
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("e"))
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(yellowItem2))
     }
 
-    @Test fun searchingExtraInfo() {
+    @Test fun searchExtraInfo() {
         onView(withId(R.id.searchButton)).perform(click())
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("extra info"))
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(redItem0, orangeItem1))
     }
 
-    @Test fun clearingSearchQueryViaBackspace() {
-        addingToExistingSearchQuery()
+    @Test fun clearSearchQueryViaBackspace() {
+        addToExistingSearchQuery()
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(pressKey(KeyEvent.KEYCODE_DEL))
         Thread.sleep(30L) // Test works fine with a small sleep, or if stepping through while debugging
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(yellowItem2, grayItem11))
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(pressKey(KeyEvent.KEYCODE_DEL))
+        Thread.sleep(30L)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
     }
 
-    @Test fun clearingSearchQueryViaActionBarBackButton() {
-        searching()
+    @Test fun clearSearchQueryViaActionBarBackButton() {
+        search()
         onView(withId(R.id.backButton)).perform(click())
         onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("")))
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
     }
 
-    @Test fun clearingSearchQueryViaNavigationBackButton() {
-        searching()
+    @Test fun clearSearchQueryViaNavigationBackButton() {
+        search()
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(closeSoftKeyboard())
         pressBack()
         onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("")))
@@ -275,7 +273,7 @@ class ShoppingListFragmentTests {
     }
 
     private fun searchQuerySurvives(action: Runnable) {
-        searchingExtraInfo()
+        searchExtraInfo()
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(closeSoftKeyboard())
         action.run()
         onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("extra info")))
@@ -332,11 +330,11 @@ class ShoppingListFragmentTests {
 
     @Test fun deleteItemsViaSwiping() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, swipeLeft())
+            actionsOnItemAtPosition(1, swipeLeft())
         ).check(onlyShownShoppingListItemsAre(redItem0, yellowItem2, grayItem11))
 
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2, swipeRight())
+            actionsOnItemAtPosition(2, swipeRight())
         ).check(onlyShownShoppingListItemsAre(redItem0, yellowItem2))
     }
 
@@ -399,12 +397,9 @@ class ShoppingListFragmentTests {
 
     @Test fun changeItemColor() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
-                actionOnChildWithId(R.id.editButton, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
-                actionOnChildWithId(R.id.checkBox, click())))
+            actionsOnItemAtPosition(2, clickEditButton(), clickCheckBox()))
         onView(withId(R.id.colorSheetList)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(6, click()))
+            actionsOnItemAtPosition(6, click()))
         onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<RecyclerView> {
             val item = (it.adapter as ListAdapter<*, *>).currentList[2] as ShoppingListItem
             assertThat(item.color).isEqualTo(6)
@@ -415,12 +410,10 @@ class ShoppingListFragmentTests {
 
     @Test fun changeItemName() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
-                actionOnChildWithId(R.id.editButton, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
-                actionOnChildWithId(R.id.nameEdit, click(), typeText("er"))),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2,
-                actionOnChildWithId(R.id.editButton, click())),
+            actionsOnItemAtPosition(2,
+                clickEditButton(),
+                actionOnChildWithId(R.id.nameEdit, click(), typeText("er")),
+                clickEditButton()),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[2] as ShoppingListItem
                 assertThat(item.name).isEqualTo("Yellower")
@@ -431,12 +424,10 @@ class ShoppingListFragmentTests {
 
     @Test fun changeItemExtraInfo() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.editButton, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.extraInfoEdit, click(), typeText(" 2.0"))),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.editButton, click())),
+            actionsOnItemAtPosition(1,
+                clickEditButton(),
+                actionOnChildWithId(R.id.extraInfoEdit, click(), typeText(" 2.0")),
+                clickEditButton()),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
                 assertThat(item.extraInfo).isEqualTo("Extra info 2.0")
@@ -447,15 +438,15 @@ class ShoppingListFragmentTests {
 
     @Test fun changeItemAmountUsingButtons() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.increaseButton, click(), click())),
+            actionsOnItemAtPosition(1,
+                onIncreaseButton(click(), click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
                 assertThat(item.amount).isEqualTo(4)
                 val vh = it.findViewHolderForAdapterPosition(1) as ShoppingListRecyclerView.ViewHolder
                 assertThat(vh.view.ui.amountEdit.value).isEqualTo(4)
-            }, actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.decreaseButton, click())),
+            }, actionsOnItemAtPosition(1,
+                onDecreaseButton(click())),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
                 assertThat(item.amount).isEqualTo(3)
@@ -466,17 +457,15 @@ class ShoppingListFragmentTests {
 
     @Test fun changeItemAmountUsingKeyBoard() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.editButton, click())),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.valueEdit, click(), replaceText("9"))),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1,
-                actionOnChildWithId(R.id.editButton, click())),
+            actionsOnItemAtPosition(1,
+                clickEditButton(),
+                typeIntoValueEdit("9"),
+                clickEditButton()),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
-                assertThat(item.amount).isEqualTo(9)
+                assertThat(item.amount).isEqualTo(29)
                 val vh = it.findViewHolderForAdapterPosition(1) as ShoppingListRecyclerView.ViewHolder
-                assertThat(vh.view.ui.amountEdit.value).isEqualTo(9)
+                assertThat(vh.view.ui.amountEdit.value).isEqualTo(29)
             })
     }
 
@@ -498,16 +487,16 @@ class ShoppingListFragmentTests {
 
     @Test fun checkIndividualItems() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickCheckBox()),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2, clickCheckBox())
+            actionsOnItemAtPosition(0, clickCheckBox()),
+            actionsOnItemAtPosition(2, clickCheckBox())
         ).check(hasOnlyCheckedItemsAtIndices(0, 2))
     }
 
     @Test fun uncheckIndividualItems() {
         checkIndividualItems()
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickCheckBox()),
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(2, clickCheckBox())
+            actionsOnItemAtPosition(0, clickCheckBox()),
+            actionsOnItemAtPosition(2, clickCheckBox())
         ).check(hasOnlyCheckedItemsAtIndices())
     }
 
@@ -529,20 +518,20 @@ class ShoppingListFragmentTests {
     @Test fun checkoutButtonEnabledAfterCheckingIndividualItems() {
         onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickCheckBox()))
+            actionsOnItemAtPosition(0, clickCheckBox()))
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, clickCheckBox()))
+            actionsOnItemAtPosition(1, clickCheckBox()))
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
     }
 
     @Test fun checkoutButtonDisabledAfterUncheckingIndividualItems() {
         checkoutButtonEnabledAfterCheckingIndividualItems()
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(0, clickCheckBox()))
+            actionsOnItemAtPosition(0, clickCheckBox()))
         onView(withId(R.id.checkout_button)).check(matches(isEnabled()))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
-            actionOnItemAtPosition<RecyclerView.ViewHolder>(1, clickCheckBox()))
+            actionsOnItemAtPosition(1, clickCheckBox()))
         onView(withId(R.id.checkout_button)).check(matches(not(isEnabled())))
     }
 
