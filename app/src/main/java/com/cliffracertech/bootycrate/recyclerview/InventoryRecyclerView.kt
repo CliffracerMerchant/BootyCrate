@@ -68,9 +68,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.ExtraInfo) &&
                         ui.extraInfoEdit.text.toString() != item.extraInfo)
                             ui.extraInfoEdit.setText(item.extraInfo)
-                    if (changes.contains(InventoryItem.Field.Color) &&
-                        ui.checkBox.colorIndex != item.color)
+                    if (changes.contains(InventoryItem.Field.Color)) {
+                        if (ui.checkBox.colorIndex != item.color)
                             ui.checkBox.colorIndex = item.color
+                        if (detailsUi.addToShoppingListCheckBox.colorIndex != item.color)
+                            detailsUi.addToShoppingListCheckBox.colorIndex = item.color
+                    }
                     if (changes.contains(InventoryItem.Field.Amount) &&
                         ui.amountEdit.value != item.amount)
                             ui.amountEdit.value = item.amount
@@ -82,7 +85,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                             holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(InventoryItem.Field.AddToShoppingList) &&
                         detailsUi.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
-                            detailsUi.addToShoppingListCheckBox.isChecked = item.addToShoppingList
+                            detailsUi.addToShoppingListCheckBox.initIsChecked(item.addToShoppingList)
                     if (changes.contains(InventoryItem.Field.AddToShoppingListTrigger) &&
                         detailsUi.addToShoppingListTriggerEdit.value != item.addToShoppingListTrigger)
                             detailsUi.addToShoppingListTriggerEdit.value = item.addToShoppingListTrigger
@@ -105,7 +108,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<InventoryItem>.ViewHolder(view) {
 
         init {
-            view.detailsUi.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
+            view.detailsUi.addToShoppingListCheckBox.onCheckedChangedListener = { checked ->
                 viewModel.updateAddToShoppingList(item.id, checked)
             }
             view.detailsUi.addToShoppingListTriggerEdit.onValueChangedListener = { value ->

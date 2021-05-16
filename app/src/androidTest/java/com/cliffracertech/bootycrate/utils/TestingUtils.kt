@@ -95,6 +95,8 @@ abstract class onlyShownItemsAre<T: ExpandableSelectableItem>(vararg items: T) :
     }
 }
 
+/** Asserts that the matching view is an ExpandableSelectableRecyclerView subclass
+ * that only shows the provided shopping list items, in the order given. */
 class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
     onlyShownItemsAre<ShoppingListItem>(*items)
 {
@@ -105,6 +107,8 @@ class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
         amount = view.ui.amountEdit.value)
 }
 
+/** Asserts that the matching view is an ExpandableSelectableRecyclerView subclass
+ * that only shows the provided inventory items, in the order given. */
 class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
     onlyShownItemsAre<InventoryItem>(*items)
 {

@@ -460,7 +460,8 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig?) :
     }
 
     override fun update(item: InventoryItem) {
-        detailsUi.addToShoppingListCheckBox.isChecked = item.addToShoppingList
+        detailsUi.addToShoppingListCheckBox.initIsChecked(item.addToShoppingList)
+        detailsUi.addToShoppingListCheckBox.initColorIndex(item.color)
         detailsUi.addToShoppingListTriggerEdit.initValue(item.addToShoppingListTrigger)
         super.update(item)
     }
@@ -471,6 +472,7 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig?) :
         if (!animate) detailsUi.inventoryItemDetails.isVisible = expanded
         else {
             detailsUi.addToShoppingListCheckBox.showOrHideAfterFading(expanded)
+            detailsUi.addToShoppingListCheckBoxLabel.showOrHideAfterFading(expanded)
             detailsUi.addToShoppingListTriggerEdit.showOrHideAfterFading(expanded)
         }
     }

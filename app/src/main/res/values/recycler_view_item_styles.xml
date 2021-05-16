@@ -14,8 +14,8 @@
     <style name="BootyCrateItemColorEdit">
         <item name="android:paddingStart">11dp</item>
         <item name="android:paddingEnd">11dp</item>
-        <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">12dp</item>
+        <item name="android:paddingTop">11dp</item>
+        <item name="android:paddingBottom">11dp</item>
         <item name="colorsResId">@array/bootycrate_item_colors</item>
     </style>
 
@@ -57,8 +57,10 @@
         <item name="android:src">@drawable/animated_circle_to_checkbox_checked_background</item>
     </style>
 
-    <style name="InventoryItemAddToShoppingListCheckbox" parent="@style/SecondaryTextAppearance">
+    <style name="InventoryItemAddToShoppingListCheckboxLabel" parent="@style/SecondaryTextAppearance">
+        <item name="android:labelFor">@id/addToShoppingListCheckBox</item>
         <item name="android:text">@string/add_to_shopping_list_checkbox_text</item>
+        <item name="android:gravity">center_vertical</item>
     </style>
 
     <style name="InventoryItemAddToShoppingListTriggerEdit" parent="@style/BootyCrateItemAmountEdit">
