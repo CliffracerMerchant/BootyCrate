@@ -4,12 +4,14 @@
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory.
  */
-package com.cliffracertech.bootycrate.recyclerview
+package com.cliffracertech.bootycrate.fragment
 
 import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
+import androidx.activity.viewModels
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
@@ -29,9 +31,9 @@ import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ShoppingListItemView
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
-import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemAnimator
+import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.cliffracertech.bootycrate.utils.*
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
@@ -56,7 +58,14 @@ class ShoppingListFragmentTests {
     private val yellowItem2 = ShoppingListItem(name = "Yellow", color = 2, amount = 1)
     private val grayItem11 = ShoppingListItem(name = "Gray", color = 11, amount = 9)
 
-    @Before fun setup() {
+    @Before fun resetItems() {
+        activityRule.scenario.onActivity {
+            val shoppingListViewModel: ShoppingListViewModel by it.viewModels()
+            shoppingListViewModel.sortByChecked = false
+            shoppingListViewModel.sort = BootyCrateItem.Sort.Color
+            val prefs = PreferenceManager.getDefaultSharedPreferences(it)
+            prefs.edit().putBoolean(it.getString(R.string.pref_sort_by_checked_key), false).apply()
+        }
         runBlocking {
             db.inventoryItemDao().deleteAll()
             db.shoppingListItemDao().deleteAll()
@@ -76,18 +85,13 @@ class ShoppingListFragmentTests {
         onPopupView(withText(R.string.name_ascending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(grayItem11, orangeItem1, redItem0, yellowItem2))
-        onView(withId(R.id.changeSortButton)).perform(click())
-        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
-    @Test
-    fun sortByNameDescending() {
+    @Test fun sortByNameDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.name_descending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(yellowItem2, redItem0, orangeItem1, grayItem11))
-        onView(withId(R.id.changeSortButton)).perform(click())
-        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test fun sortByAmountAscending() {
@@ -95,8 +99,6 @@ class ShoppingListFragmentTests {
         onPopupView(withText(R.string.amount_ascending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11))
-        onView(withId(R.id.changeSortButton)).perform(click())
-        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     @Test fun sortByAmountDescending() {
@@ -104,8 +106,6 @@ class ShoppingListFragmentTests {
         onPopupView(withText(R.string.amount_descending_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(grayItem11, redItem0, orangeItem1, yellowItem2))
-        onView(withId(R.id.changeSortButton)).perform(click())
-        onPopupView(withText(R.string.color_description)).perform(click())
     }
 
     private var collapsedItemHeight = 0
@@ -570,5 +570,18 @@ class ShoppingListFragmentTests {
         // grayItem11 was not checked and should not have its amount updated.
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(expectedItem1, expectedItem2))
+    }
+
+    @Test fun sortByChecked() {
+        checkIndividualItems()
+        onView(withId(R.id.menuButton)).perform(click())
+        onPopupView(withText(R.string.settings_description)).perform(click())
+        onView(withText(R.string.pref_sort_by_checked_title)).perform(click())
+        pressBack()
+        onView(withId(R.id.shoppingListRecyclerView)).check(
+            onlyShownShoppingListItemsAre(orangeItem1, grayItem11, redItem0, yellowItem2))
+        onView(withId(R.id.shoppingListRecyclerView)).perform(
+            actionsOnItemAtPosition(2, clickCheckBox())
+        ).check(onlyShownShoppingListItemsAre(redItem0, orangeItem1, grayItem11, yellowItem2))
     }
 }

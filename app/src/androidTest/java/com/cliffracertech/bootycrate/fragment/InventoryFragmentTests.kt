@@ -2,12 +2,13 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.recyclerview
+package com.cliffracertech.bootycrate.fragment
 
 import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
+import androidx.activity.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -26,9 +27,9 @@ import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
-import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemAnimator
+import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
 import com.cliffracertech.bootycrate.utils.*
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
@@ -55,6 +56,10 @@ class InventoryFragmentTests {
     private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9, addToShoppingList = true)
 
     @Before fun setup() {
+        activityRule.scenario.onActivity {
+            val inventoryViewModel: InventoryViewModel by it.viewModels()
+            inventoryViewModel.sort = BootyCrateItem.Sort.Color
+        }
         runBlocking {
             db.shoppingListItemDao().deleteAll()
             db.inventoryItemDao().deleteAll()

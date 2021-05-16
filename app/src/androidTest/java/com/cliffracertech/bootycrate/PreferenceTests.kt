@@ -68,9 +68,5 @@ class PreferenceTests {
         expectedTheme = if (sysDarkThemeIsActive) darkTheme else lightTheme
         onView(withText(R.string.pref_theme_sys_default_title)).perform(click())
     }
-
-    @Test fun changingSortByChecked() {
-
-    }
 }
 
