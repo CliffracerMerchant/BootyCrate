@@ -12,15 +12,16 @@ import androidx.preference.PreferenceManager
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
-import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.common.truth.Truth.assertThat
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,6 +31,11 @@ import org.junit.runner.RunWith
 class PreferenceTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
+
+    @Before fun navigateToPreferences() {
+        onView(withId(R.id.menuButton)).perform(click())
+        onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
+    }
 
     @Test fun changingAppTheme() {
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
@@ -54,8 +60,6 @@ class PreferenceTests {
             activityRule.scenario.recreate()
         }
 
-        onView(withId(R.id.menuButton)).perform(click())
-        onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
         onView(withText(R.string.pref_light_dark_mode_title)).perform(click())
         expectedTheme = R.style.LightTheme
         onView(withText(R.string.pref_theme_light_theme_title)).perform(click())
@@ -67,6 +71,11 @@ class PreferenceTests {
         onView(withText(R.string.pref_light_dark_mode_title)).perform(click())
         expectedTheme = if (sysDarkThemeIsActive) darkTheme else lightTheme
         onView(withText(R.string.pref_theme_sys_default_title)).perform(click())
+    }
+
+    @Test fun showAboutAppDialog() {
+        onView(withText(R.string.pref_about_app_title)).perform(click())
+        onView(withText(R.string.about_app_body)).check(matches(isDisplayed()))
     }
 }
 

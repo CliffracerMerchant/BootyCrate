@@ -20,6 +20,7 @@ import com.cliffracertech.bootycrate.database.ExpandableSelectableItemViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
+import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 import java.util.*
 
@@ -114,9 +115,15 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
     private fun shareList(): Boolean {
         val context = this.context ?: return false
         val selectionIsEmpty = viewModel.selectedItems.value?.isEmpty() ?: true
-        val items = if (!selectionIsEmpty) viewModel.selectedItems.value ?: return false
-                    else                   viewModel.items.value ?: return false
-        if (items.isEmpty()) return false
+        val items = if (!selectionIsEmpty) viewModel.selectedItems.value ?: emptyList()
+                    else                   viewModel.items.value ?: emptyList()
+        if (items.isEmpty()) {
+            val anchor = recyclerView?.snackBarAnchor ?: view ?: return false
+            val message = context.getString(R.string.empty_recycler_view_message, collectionName)
+            Snackbar.make(context, anchor, message, Snackbar.LENGTH_LONG)
+                .setAnchorView(anchor).show()
+            return false
+        }
 
         val collectionName = collectionName.toLowerCase(Locale.getDefault())
         val stringResId = if (selectionIsEmpty) R.string.share_whole_list_title
