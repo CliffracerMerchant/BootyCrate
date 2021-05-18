@@ -18,13 +18,13 @@
         android:layout_height="match_parent"
         android:visibility="gone"
         tools:visibility="visible"
-        app:constraint_referenced_ids="addToShoppingListCheckBox, addToShoppingListCheckBoxLabel, addToShoppingListTriggerEdit" />
+        app:constraint_referenced_ids="addToShoppingListCheckBox, addToShoppingListLabel, addToShoppingListTriggerEdit" />
 
     <com.cliffracertech.bootycrate.view.TintableCheckbox
         android:id="@+id/addToShoppingListCheckBox"
         android:layout_width="44dp"
         android:layout_height="44dp"
-        app:layout_constraintEnd_toStartOf="@id/addToShoppingListCheckBoxLabel"
+        app:layout_constraintEnd_toStartOf="@id/addToShoppingListLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/spacer"
         android:layout_marginStart="6dp"
@@ -32,7 +32,7 @@
         style="@style/BootyCrateItemColorEdit" />
 
     <TextView
-        android:id="@+id/addToShoppingListCheckBoxLabel"
+        android:id="@+id/addToShoppingListLabel"
         android:layout_width="wrap_content"
         android:layout_height="44dp"
         app:layout_constraintEnd_toStartOf="@id/addToShoppingListTriggerEdit"
@@ -44,7 +44,7 @@
         android:id="@+id/addToShoppingListTriggerEdit"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toEndOf="@id/addToShoppingListCheckBoxLabel"
+        app:layout_constraintStart_toEndOf="@id/addToShoppingListLabel"
         app:layout_constraintTop_toTopOf="@id/addToShoppingListCheckBox"
         app:layout_constraintBottom_toBottomOf="@id/addToShoppingListCheckBox"
         style="@style/InventoryItemAddToShoppingListTriggerEdit" />
