@@ -38,10 +38,6 @@ import java.util.*
  *       also have isActivated set to true to change to a delete icon and
  *       call the property onDeleteButtonClickedListener instead.
  *     - menuButton, which opens the optionsMenu member.
- * If the activity or fragment using RecyclerViewActionBar wants to show
- * only the title, the property optionsMenuVisible can be set to false to
- * hide the search button, change sort button, and the options menu button
- * all at once.
  *
  * The contents of the changeSortMenu and the optionsMenu can be set in
  * XML with the attributes R.attr.changeSortMenuResId and R.attr.options-
@@ -139,7 +135,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     /**
      * Transition the action bar's visual state to match the one described by the parameters.
      *
-     * Using transitionTo rather than making UI changes manually is recom-
+     * Using transition rather than making UI changes manually is recom-
      * mended when making multiple changes at once. For example, if a frag-
      * ment ends it action mode as another fragment begins its own, the title
      * will be briefly visible in between. Using the transition function will

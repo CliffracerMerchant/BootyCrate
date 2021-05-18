@@ -419,11 +419,10 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
 class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig? = null) :
     ExpandableSelectableItemView<ShoppingListItem>(context, animatorConfig)
 {
+    init { ui.checkBox.onCheckedChangedListener = ::setStrikeThroughEnabled }
+
     override fun update(item: ShoppingListItem) {
         ui.checkBox.initIsChecked(item.isChecked)
-        ui.checkBox.onCheckedChangedListener = { checked ->
-            setStrikeThroughEnabled(checked)
-        }
         setStrikeThroughEnabled(enabled = item.isChecked, animate = false)
         super.update(item)
     }
@@ -432,7 +431,8 @@ class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig? = n
         ui.checkBox.setInColorEditMode(expanded, animate)
     }
 
-    fun setStrikeThroughEnabled(enabled: Boolean, animate: Boolean = true) {
+    fun setStrikeThroughEnabled(enabled: Boolean) = setStrikeThroughEnabled(enabled, true)
+    private fun setStrikeThroughEnabled(enabled: Boolean, animate: Boolean) {
         ui.nameEdit.setStrikeThroughEnabled(enabled, animate)
         ui.extraInfoEdit.setStrikeThroughEnabled(enabled, animate)
     }
