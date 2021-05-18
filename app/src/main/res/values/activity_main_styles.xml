@@ -56,8 +56,7 @@
         <item name="android:text">@string/checkout_description</item>
         <item name="android:textSize" tools:ignore="SpUsage">15dp</item>
         <item name="android:transformPivotX">100dp</item>
-        <item name="disabledBackgroundTint">#909090</item>
-        <item name="disabledIconAndTextTint">#757575</item>
+        <item name="disabledAlpha">?attr/checkoutButtonDisabledAlpha</item>
     </style>
 
     <style name="AddButton">

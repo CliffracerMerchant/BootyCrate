@@ -23,6 +23,8 @@
     <attr name="foregroundGradientColorMiddle" format="color" />
     <!-- The right color of the foreground gradient. -->
     <attr name="foregroundGradientColorRight" format="color" />
+    <!-- The alpha value used for the checkout button background when it is disabled. -->
+    <attr name="checkoutButtonDisabledAlpha" format="integer" />
 
     <declare-styleable name="RecyclerViewActionBar">
         <!-- The resource id of the menu to be used as the contents of the change sort menu. -->
@@ -113,10 +115,8 @@
     </declare-styleable>
 
     <declare-styleable name="DisableableGradientButton">
-        <!-- The tint that will be used for the disabled overlay background. -->
-        <attr name="disabledBackgroundTint" format="color" />
-        <!-- The tint that will be used for the disabled overlay icon and text. -->
-        <attr name="disabledIconAndTextTint" format="color" />
+        <!-- The alpha value that the background will use when disabled. -->
+        <attr name="disabledAlpha" format="integer" />
     </declare-styleable>
 
     <declare-styleable name="TintableCheckbox">

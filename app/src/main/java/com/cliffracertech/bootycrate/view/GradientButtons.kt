@@ -7,16 +7,11 @@ package com.cliffracertech.bootycrate.view
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import androidx.annotation.CallSuper
 import androidx.appcompat.widget.AppCompatButton
-import androidx.core.view.doOnNextLayout
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.valueAnimatorOfInt
@@ -68,69 +63,34 @@ open class GradientButton(context: Context, attrs: AttributeSet) : AppCompatButt
 /**
  * A GradientButton with disable/enable functionality.
  *
- * DisableableGradientButton automatically creates a disabled drawable for
- * itself based on the OutlinedGradientButton background and the XML attri-
- * butes disabledBackgroundTint and disabledIconAndTextTint. The disabled
- * drawable will look like the GradientButton background, but with these
- * alternative tint values and no gradient shaders. When the button is
- * enabled or disabled via the View property isEnabled, the button will
- * animate to or from its disabled state, using the value of the property
- * animatorConfig for the animation's duration and interpolator. Note that
- * the disabled background will not reflect any changes to the button's
- * text or icon that occur after initialization.
- *
- * If any additional changes are desired when the isEnabledState is
+ * DisableableGradientButton's override of View.setEnabled will set its
+ * background's alpha value to the value of the property disabledAlpha
+ * to indicate its disabled state. The value of disabledAlpha can be
+ * changed programmatically, or through the XML attribute of the same
+ * name. If any additional changes are desired when the isEnabledState is
  * changed, they can be defined in a subclass override of View.setEnabled.
  */
 open class DisableableGradientButton(context: Context, attrs: AttributeSet) :
     GradientButton(context, attrs)
 {
-    private var disabledOverlay: Drawable? = null
+    var disabledAlpha: Int
     var animatorConfig: AnimatorConfig? = null
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.DisableableGradientButton)
-        val disabledBackgroundTint = a.getColor(R.styleable.DisableableGradientButton_disabledBackgroundTint, 0)
-        val disabledIconAndTextTint = a.getColor(R.styleable.DisableableGradientButton_disabledIconAndTextTint, 0)
+        disabledAlpha = a.getInt(R.styleable.DisableableGradientButton_disabledAlpha, 0)
         a.recycle()
-
-        doOnNextLayout {
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-
-            val backupBackgroundGradient = backgroundGradient
-            val backupForegroundGradient = foregroundGradient
-            backgroundGradient = null
-            foregroundGradient = null
-            ((background as LayerDrawable).getDrawable(0) as GradientVectorDrawable).setTint(disabledBackgroundTint)
-            ((background as LayerDrawable).getDrawable(1) as GradientVectorDrawable).setTint(disabledIconAndTextTint)
-            setTextColor(disabledIconAndTextTint)
-
-            draw(canvas)
-            disabledOverlay = BitmapDrawable(context.resources, bitmap).apply {
-                alpha = if (isEnabled) 0 else 255
-                bounds = background.bounds
-            }
-            backgroundGradient = backupBackgroundGradient
-            foregroundGradient = backupForegroundGradient
-        }
     }
 
     @CallSuper override fun setEnabled(enabled: Boolean) {
         if (isEnabled == enabled) return
         super.setEnabled(enabled)
-        val disabledOverlay = this.disabledOverlay ?: return
-        val anim = valueAnimatorOfInt(setter = disabledOverlay::setAlpha,
-            fromValue = disabledOverlay.alpha,
-            toValue = if (enabled) 0 else 255,
-            config = animatorConfig)
+        val anim = valueAnimatorOfInt(setter = background::setAlpha,
+                                      fromValue = if (enabled) disabledAlpha else 255,
+                                      toValue = if (enabled) 255 else disabledAlpha,
+                                      config = animatorConfig)
         anim.addUpdateListener{ invalidate() }
         anim.start()
-    }
-
-    override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
-        if (canvas != null) disabledOverlay?.draw(canvas)
     }
 }
 
