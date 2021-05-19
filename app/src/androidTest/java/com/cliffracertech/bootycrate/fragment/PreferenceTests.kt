@@ -3,7 +3,7 @@
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
 
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.fragment
 
 import android.content.Context
 import android.content.res.Configuration
@@ -18,6 +18,7 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.common.truth.Truth.assertThat
