@@ -17,12 +17,12 @@ import org.robolectric.RobolectricTestRunner
 class TextFieldEditTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
-    private fun defaultValuesTFE(): TextFieldEdit {
+    private fun defaultValuesInstance(): TextFieldEdit {
         val attrs = Robolectric.buildAttributeSet().build()
         return TextFieldEdit(context, attrs)
     }
 
-    private fun nonDefaultValuesTFE(): TextFieldEdit {
+    private fun nonDefaultValuesInstance(): TextFieldEdit {
         val attrs = Robolectric.buildAttributeSet()
             .addAttribute(R.attr.isEditable, "true")
             .addAttribute(R.attr.canBeBlank, "false")
@@ -32,14 +32,14 @@ class TextFieldEditTests {
     }
 
     @Test fun TextFieldEdit_testDefaultValues() {
-        val tfe = defaultValuesTFE()
+        val tfe = defaultValuesInstance()
         assertThat(tfe.isEditable).isFalse()
         assertThat(tfe.canBeBlank).isTrue()
         assertThat(tfe.isFocusableInTouchMode).isFalse()
     }
 
     @Test fun TextFieldEdit_testNonDefaultValues() {
-        val tfe = nonDefaultValuesTFE()
+        val tfe = nonDefaultValuesInstance()
         assertThat(tfe.isEditable).isTrue()
         assertThat(tfe.canBeBlank).isFalse()
         assertThat(tfe.text.toString()).isEqualTo("test")
