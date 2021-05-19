@@ -115,7 +115,7 @@ class GradientStyledMainActivity : MainActivity() {
     }
 
     private fun ActionBarTitle.setShader(shader: Shader?) {
-        titleView.paint.shader = shader
+        fragmentTitleView.paint.shader = shader
         actionModeTitleView.paint.shader = shader
         searchQueryView.paint.shader = shader
         (searchQueryView.background as? GradientVectorDrawable)?.gradient = shader

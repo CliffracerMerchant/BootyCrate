@@ -12,8 +12,10 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.cliffracertech.bootycrate.*
+import com.cliffracertech.bootycrate.BootyCrateItemView
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
+import com.cliffracertech.bootycrate.database.BootyCrateViewModel
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -57,7 +59,7 @@ abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
     attrs: AttributeSet
 ) : RecyclerView(context, attrs) {
     protected abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
-    abstract val adapter: BootyCrateItemAdapter<out BootyCrateItemViewHolder>
+    abstract val adapter: Adapter<out ViewHolder>
     protected abstract val viewModel: BootyCrateViewModel<Entity>
     var snackBarAnchor: View? = null
 
@@ -90,19 +92,18 @@ abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
         viewModel.items.observe(owner) { items -> adapter.submitList(items) }
     }
 
-    open fun onNewItemInsertion(item: Entity, vh: BootyCrateItemViewHolder) =
+    open fun onNewItemInsertion(item: Entity, vh: ViewHolder) =
         smoothScrollToPosition(vh.adapterPosition)
 
     /**
      * A ListAdapter derived RecyclerView.Adapter for BootyCrateRecyclerView.
      *
-     * BootyCrateItemAdapter enforces the use of stable ids and calls
+     * BootyCrateRecyclerView.Adapter enforces the use of stable ids and calls
      * onNewItemInsertion for newly inserted items. It is abstract because it
      * does not implement onCreateViewHolder.
      */
     @Suppress("LeakingThis")
-    abstract inner class BootyCrateItemAdapter<VHType: BootyCrateItemViewHolder> :
-            ListAdapter<Entity, VHType>(diffUtilCallback) {
+    abstract inner class Adapter<VHType: ViewHolder> : ListAdapter<Entity, VHType>(diffUtilCallback) {
         init { setHasStableIds(true) }
 
         final override fun setHasStableIds(hasStableIds: Boolean) =
@@ -121,30 +122,26 @@ abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
     /**
      * A ViewHolder subclass that wraps an instance of BootyCrateItemView.
      *
-     * BootyCrateItemViewHolder provides a simplified way of obtaining the instance
-     * of the item that it represents through the property item, and connects
-     * changes to the fields made by the user to view model update calls.
+     * BootyCrateRecyclerView.ViewHolder provides a simplified way of obtaining
+     * the instance of the item that it represents through the property item, and
+     * connects changes to the fields made by the user to view model update calls.
      */
-    open inner class BootyCrateItemViewHolder(view: BootyCrateItemView<Entity>) :
-        RecyclerView.ViewHolder(view)
-    {
+    open inner class ViewHolder(view: BootyCrateItemView<Entity>) : RecyclerView.ViewHolder(view) {
         val item: Entity get() = adapter.currentList[adapterPosition]
 
-        init {
-            view.apply {
-                ui.checkBox.onColorChangedListener = { color ->
-                    viewModel.updateColor(item.id, BootyCrateItem.Colors.indexOf(color))
-                }
-                ui.nameEdit.onTextChangedListener = { newName ->
-                    if (adapterPosition != -1) viewModel.updateName(item.id, newName)
-                }
-                ui.extraInfoEdit.onTextChangedListener = { newExtraInfo ->
-                    if (adapterPosition != -1) viewModel.updateExtraInfo(item.id, newExtraInfo)
-                }
-                ui.amountEdit.onValueChangedListener = { value ->
-                    if (adapterPosition != -1) viewModel.updateAmount(item.id, value)
-                }
+        init { view.apply {
+            ui.checkBox.onColorChangedListener = { color ->
+                viewModel.updateColor(item.id, BootyCrateItem.Colors.indexOf(color))
             }
-        }
+            ui.nameEdit.onTextChangedListener = { newName ->
+                if (adapterPosition != -1) viewModel.updateName(item.id, newName)
+            }
+            ui.extraInfoEdit.onTextChangedListener = { newExtraInfo ->
+                if (adapterPosition != -1) viewModel.updateExtraInfo(item.id, newExtraInfo)
+            }
+            ui.amountEdit.onValueChangedListener = { value ->
+                if (adapterPosition != -1) viewModel.updateAmount(item.id, value)
+            }
+        }}
     }
 }

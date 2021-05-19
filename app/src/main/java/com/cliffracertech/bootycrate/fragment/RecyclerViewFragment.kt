@@ -16,9 +16,11 @@ import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
+import com.cliffracertech.bootycrate.database.ExpandableSelectableItemViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
+import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 import java.util.*
 
@@ -115,7 +117,13 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         val selectionIsEmpty = viewModel.selectedItems.value?.isEmpty() ?: true
         val items = if (!selectionIsEmpty) viewModel.selectedItems.value ?: emptyList()
                     else                   viewModel.items.value ?: emptyList()
-        if (items.isEmpty()) return false
+        if (items.isEmpty()) {
+            val anchor = recyclerView?.snackBarAnchor ?: view ?: return false
+            val message = context.getString(R.string.empty_recycler_view_message, collectionName)
+            Snackbar.make(context, anchor, message, Snackbar.LENGTH_LONG)
+                .setAnchorView(anchor).show()
+            return false
+        }
 
         val collectionName = collectionName.toLowerCase(Locale.getDefault())
         val stringResId = if (selectionIsEmpty) R.string.share_whole_list_title
@@ -124,9 +132,9 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 
         var message = ""
         for (i in 0 until items.size - 1)
-            message += items[i].toString() + "\n"
+            message += items[i].toUserFacingString() + "\n"
         if (items.isNotEmpty())
-            message += items.last().toString()
+            message += items.last().toUserFacingString()
 
         val intent = Intent(Intent.ACTION_SEND)
         intent.putExtra(Intent.EXTRA_TEXT, message)
@@ -181,8 +189,10 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
             activityUiTemp = activityUi
             return
         }
-        if (!isActive) actionBar = null
-        else {
+        if (!isActive) {
+            actionBar = null
+            activityUi.actionBar.onSearchQueryChangedListener = null
+        } else {
             recyclerView.snackBarAnchor = activityUi.bottomAppBar
             actionBar = activityUi.actionBar
             activityUi.actionBar.onSearchQueryChangedListener = { newText ->

@@ -2,17 +2,14 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.database
 
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.*
-import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicLong
-import javax.inject.Inject
 
 /**
  * An abstract AndroidViewModel that provides an asynchronous interface for DataAccessObject<Entity> functions.
@@ -71,11 +68,12 @@ abstract class BootyCrateViewModel<Entity: BootyCrateItem>(app: Application): An
         set(value) { field = value; newItemNameChanged.value = true }
     var newItemExtraInfo: String? = null
         set(value) { field = value; newItemNameChanged.value = true }
+    fun resetNewItemName() { newItemName = null; newItemExtraInfo = null }
+
     private val newItemNameChanged = MutableLiveData<Boolean>()
     val newItemNameIsAlreadyUsed = Transformations.switchMap(newItemNameChanged) {
         dao.itemWithNameAlreadyExists(newItemName ?: "", newItemExtraInfo ?: "")
     }
-    fun resetNewItemName() { newItemName = null; newItemExtraInfo = null }
 
     private var _newlyAddedItemId = AtomicLong()
     val newlyAddedItemId get() = _newlyAddedItemId.get()
@@ -134,19 +132,18 @@ abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableIte
 
     fun deleteSelected() { viewModelScope.launch { dao.deleteSelected() }}
 
-    fun selectAll() { viewModelScope.launch { dao.selectAll() }}
+    fun selectAll() { viewModelScope.launch {
+        dao.selectAllIds(items.value?.map { it.id } ?: emptyList())
+    }}
 
     fun clearSelection() { viewModelScope.launch { dao.clearSelection() }}
 }
 
 
 /** A ExpandableSelectableItemViewModel subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
-@HiltViewModel
-class ShoppingListViewModel @Inject constructor(app: Application) :
-    ExpandableSelectableItemViewModel<ShoppingListItem>(app)
-{
-     @Inject override lateinit var dao: ShoppingListItemDao
-    val checkedItemsSize: LiveData<Int> by lazy { dao.getCheckedItemsSize() }
+class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewModel<ShoppingListItem>(app) {
+    override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
+    val checkedItemsSize = dao.getCheckedItemsSize()
 
     var sortByChecked = false
         set(value) { field = value; notifySortOptionsChanged() }
@@ -178,11 +175,8 @@ class ShoppingListViewModel @Inject constructor(app: Application) :
 
 
 /** A ExpandableSelectableItemViewModel subclass that provides functions to asynchronously execute InventoryItemDao's functions. */
-@HiltViewModel
-class InventoryViewModel @Inject constructor(app: Application) :
-    ExpandableSelectableItemViewModel<InventoryItem>(app)
-{
-    @Inject override lateinit var dao: InventoryItemDao
+class InventoryViewModel(app: Application) : ExpandableSelectableItemViewModel<InventoryItem>(app) {
+    override val dao = BootyCrateDatabase.get(app).inventoryItemDao()
 
     fun addFromSelectedShoppingListItems() {
         viewModelScope.launch { dao.addFromSelectedShoppingListItems() }

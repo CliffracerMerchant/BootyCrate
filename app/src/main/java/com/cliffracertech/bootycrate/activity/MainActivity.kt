@@ -5,25 +5,18 @@
 package com.cliffracertech.bootycrate.activity
 
 import android.animation.Animator
-import android.animation.ValueAnimator
 import android.content.res.Configuration
-import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
-import android.view.View
 import android.view.animation.AnimationUtils
-import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.PreferencesFragment
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.applyConfig
-import com.cliffracertech.bootycrate.utils.doOnStart
-import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.cliffracertech.bootycrate.utils.*
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -71,7 +64,8 @@ open class MainActivity : MultiFragmentActivity() {
         if (newFragment !is MainActivityFragment) return
 
         val needToAnimateCheckoutButton = needToAnimate && ui.bottomAppBar.isVisible
-        showBottomAppBar(show = newFragment.showsBottomAppBar(), animate = needToAnimate)
+        ui.showBottomAppBar(show = newFragment.showsBottomAppBar(), animate = needToAnimate,
+                            animatorConfig = primaryFragmentTransitionAnimatorConfig)
         val showsCheckoutButton = newFragment.showsCheckoutButton()
         if (showsCheckoutButton != null)
             showCheckoutButton(show = showsCheckoutButton, animate = needToAnimateCheckoutButton)
@@ -79,54 +73,17 @@ open class MainActivity : MultiFragmentActivity() {
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
-    private fun showBottomAppBar(show: Boolean = true, animate: Boolean = true) {
-        if (ui.bottomAppBar.isVisible == show) return
-        val screenHeight = resources.displayMetrics.heightPixels.toFloat()
-
-        if (!animate) ui.bottomAppBar.isVisible = show
-        else {
-            val translationAmount = screenHeight - ui.cradleLayout.top - ui.bottomAppBar.top
-            val translationStart = if (show) translationAmount else 0f
-            val translationEnd = if (show) 0f else translationAmount
-            ui.bottomAppBar.translationY = translationStart
-            ui.bottomAppBar.isVisible = true
-            ui.bottomAppBar.animate().translationY(translationEnd)
-                .applyConfig(primaryFragmentTransitionAnimatorConfig)
-                .withEndAction { if (!show) ui.bottomAppBar.isVisible = false }.start()
-        }
-    }
-
     private var showingCheckoutButton: Boolean? = null
+    // The cradle animation is stored here and started in the cradle
+    // layout's layoutTransition's transition listener's transitionStart
+    // override so that the animation is synced with the layout transition.
     private var pendingCradleAnim: Animator? = null
     private fun showCheckoutButton(show: Boolean, animate: Boolean = true) {
         if (showingCheckoutButton == show) return
         showingCheckoutButton = show
-        ui.checkoutButton.isVisible = show
-
-        val cradleEndWidth = if (!show) ui.addButton.layoutParams.width else {
-            val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-            ui.cradleLayout.measure(wrapContent, wrapContent)
-            ui.cradleLayout.measuredWidth
-        }
-        if (!animate) ui.bottomAppBar.cradleWidth = cradleEndWidth
-        else {
-            // Settings the checkout button's clip bounds prevents the right corners of the check-
-            // out button from sticking out underneath the FAB during the show / hide animation.
-            val clipBounds = Rect(0, 0, 0, ui.checkoutButton.height)
-            ValueAnimator.ofInt(ui.bottomAppBar.cradleWidth, cradleEndWidth).apply {
-                applyConfig(primaryFragmentTransitionAnimatorConfig)
-                addUpdateListener {
-                    ui.bottomAppBar.cradleWidth = it.animatedValue as Int
-                    clipBounds.right = ui.bottomAppBar.cradleWidth - ui.addButton.measuredWidth / 2
-                    ui.checkoutButton.clipBounds = clipBounds
-                }
-                doOnEnd { ui.checkoutButton.clipBounds = null }
-                // The anim is stored here and started in the cradle layout's
-                // layoutTransition's transition listener's transitionStart override
-                // so that the animation is synced with the layout transition.
-                pendingCradleAnim = this
-            }
-        }
+        if (!animate) ui.showCheckoutButton(show)
+        else pendingCradleAnim =
+            ui.showCheckoutButtonAnimation(show, primaryFragmentTransitionAnimatorConfig)
     }
 
     private fun setThemeFromPreferences() {
@@ -184,7 +141,9 @@ open class MainActivity : MultiFragmentActivity() {
      * back button) presses. Fragments should always indicate their desired
      * bottom app bar and checkout button states through an override of the
      * appropriate function instead of changing their visibility manually to
-     * ensure that the appropriate hide/show animations are played.
+     * ensure that the appropriate hide/show animations are played. The
+     * function addSecondaryFragment allows implementing fragments to add a
+     * secondary fragment themselves.
      */
     interface MainActivityFragment {
         /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
@@ -197,5 +156,11 @@ open class MainActivity : MultiFragmentActivity() {
         /** Perform any additional actions on the @param activityUi that the fragment desires,
          * given its @param isActive state. */
         fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {}
+
+        fun addSecondaryFragment(fragment: Fragment) {
+            val mainActivityFragment = this as? Fragment ?:
+                throw IllegalStateException("Implementors of MainActivityFragment must inherit from androidx.fragment.app.Fragment")
+            (mainActivityFragment.activity as? MainActivity)?.addSecondaryFragment(fragment)
+        }
     }
 }

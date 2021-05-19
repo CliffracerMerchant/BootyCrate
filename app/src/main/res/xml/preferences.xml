@@ -31,10 +31,9 @@
 
         <SwitchPreferenceCompat
             android:layout="@layout/preference"
-            android:widgetLayout="@layout/switch_preference"
             android:title="@string/pref_sort_by_checked_title"
             android:summary="@string/pref_sort_by_checked_summary"
-            android:key="@string/pref_sort_by_checked_key"/>
+            android:key="@string/pref_sort_by_checked_key" />
 
     </PreferenceCategory>
 

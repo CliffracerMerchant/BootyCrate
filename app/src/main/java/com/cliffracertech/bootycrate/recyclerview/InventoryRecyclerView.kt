@@ -10,17 +10,15 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.InventoryItemView
 import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.inventoryViewModel
+import com.cliffracertech.bootycrate.database.inventoryViewModel
 import java.util.*
 
-/**
- * A RecyclerView to display the data provided by an InventoryViewModel
- */
+/** A RecyclerView to display the data provided by an InventoryViewModel. */
 class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<InventoryItem>(context, attrs)
 {
-    override val diffUtilCallback = InventoryItemDiffUtilCallback()
-    override val adapter = InventoryAdapter()
+    override val diffUtilCallback = DiffUtilCallback()
+    override val adapter = Adapter()
     override val viewModel = inventoryViewModel(context)
 
     init { itemAnimator.registerAdapterDataObserver(adapter) }
@@ -28,26 +26,27 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     /**
      * A RecyclerView.Adapter to display the contents of a list of inventory items.
      *
-     * InventoryAdapter is a subclass of ExpandableSelectableItemAdapter using
-     * InventoryItemViewHolder instances to represent inventory items. Its over-
-     * rides of onBindViewHolder make use of the InventoryItem.Field values passed
-     * by InventoryItemDiffUtilCallback to support partial binding. Note that
-     * InventoryAdapter assumes that any payloads passed to it are of the type
-     * EnumSet<InventoryItem.Field>. If a payload of another type is passed to it,
-     * an exception will be thrown.
+     * InventoryRecyclerView.Adapter is a subclass of ExpandableSelectableRecyclerView.Adapter
+     * using InventoryRecyclerView.ViewHolder instances to represent inventory
+     * items. Its overrides of onBindViewHolder make use of the InventoryItem.Field
+     * values passed by InventoryRecyclerView.DiffUtilCallback to support partial
+     * binding. Note that InventoryAdapter assumes that any payloads passed to it
+     * are of the type EnumSet<InventoryItem.Field>. If a payload of another type
+     * is passed to it, an exception will be thrown.
      */
-    inner class InventoryAdapter : ExpandableSelectableItemAdapter<InventoryItemViewHolder>() {
-
+    inner class Adapter :
+        ExpandableSelectableRecyclerView<InventoryItem>.Adapter<ViewHolder>()
+    {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            InventoryItemViewHolder(InventoryItemView(context, itemAnimator.animatorConfig))
+            ViewHolder(InventoryItemView(context, itemAnimator.animatorConfig))
 
-        override fun onBindViewHolder(holder: InventoryItemViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             holder.view.update(holder.item)
             super.onBindViewHolder(holder, position)
         }
 
         override fun onBindViewHolder(
-            holder: InventoryItemViewHolder,
+            holder: ViewHolder,
             position: Int,
             payloads: MutableList<Any>
         ) {
@@ -69,9 +68,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.ExtraInfo) &&
                         ui.extraInfoEdit.text.toString() != item.extraInfo)
                             ui.extraInfoEdit.setText(item.extraInfo)
-                    if (changes.contains(InventoryItem.Field.Color) &&
-                        ui.checkBox.colorIndex != item.color)
+                    if (changes.contains(InventoryItem.Field.Color)) {
+                        if (ui.checkBox.colorIndex != item.color)
                             ui.checkBox.colorIndex = item.color
+                        if (detailsUi.addToShoppingListCheckBox.colorIndex != item.color)
+                            detailsUi.addToShoppingListCheckBox.colorIndex = item.color
+                    }
                     if (changes.contains(InventoryItem.Field.Amount) &&
                         ui.amountEdit.value != item.amount)
                             ui.amountEdit.value = item.amount
@@ -83,7 +85,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                             holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(InventoryItem.Field.AddToShoppingList) &&
                         detailsUi.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
-                            detailsUi.addToShoppingListCheckBox.isChecked = item.addToShoppingList
+                            detailsUi.addToShoppingListCheckBox.initIsChecked(item.addToShoppingList)
                     if (changes.contains(InventoryItem.Field.AddToShoppingListTrigger) &&
                         detailsUi.addToShoppingListTriggerEdit.value != item.addToShoppingListTrigger)
                             detailsUi.addToShoppingListTriggerEdit.value = item.addToShoppingListTrigger
@@ -96,18 +98,17 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     }
 
     /**
-     * A ExpandableSelectableItemViewHolder that wraps an instance of InventoryItemView.
+     * A ExpandableSelectableRecyclerView.ViewHolder that wraps an instance of InventoryItemView.
      *
-     * InventoryItemViewHolder is a subclass of ExpandableSelectableItemViewHolder
+     * InventoryRecyclerView.ViewHolder is a subclass of ExpandableSelectableRecyclerView.ViewHolder
      * that holds an instance of InventoryItemView to display the data for an
-     * InventoryItem. It also connects changes in the InventoryItemView extra
-     * details section to view model update calls.
+     * InventoryItem.
      */
-    inner class InventoryItemViewHolder(val view: InventoryItemView) :
-        ExpandableSelectableItemViewHolder(view) {
+    inner class ViewHolder(val view: InventoryItemView) :
+        ExpandableSelectableRecyclerView<InventoryItem>.ViewHolder(view) {
 
         init {
-            view.detailsUi.addToShoppingListCheckBox.setOnCheckedChangeListener { _, checked ->
+            view.detailsUi.addToShoppingListCheckBox.onCheckedChangedListener = { checked ->
                 viewModel.updateAddToShoppingList(item.id, checked)
             }
             view.detailsUi.addToShoppingListTriggerEdit.onValueChangedListener = { value ->
@@ -120,12 +121,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     /**
      * Computes a diff between two inventory item lists.
      *
-     * InventoryItemDiffUtilCallback uses the ids of inventory items to determine
-     * if they are the same or not. If they are the same, the change payload will
-     * be an instance of EnumSet<InventoryItem.Field> that contains the Inventory-
-     * Item.Field values for all of the fields that were changed.
+     * InventoryRecyclerView.DiffUtilCallback uses the ids of inventory items to
+     * determine if they are the same or not. If they are the same, the change
+     * payload will be an instance of EnumSet<InventoryItem.Field> that contains
+     * the InventoryItem.Field values for all of the fields that were changed.
      */
-    class InventoryItemDiffUtilCallback : DiffUtil.ItemCallback<InventoryItem>() {
+    class DiffUtilCallback : DiffUtil.ItemCallback<InventoryItem>() {
         private val listChanges = mutableMapOf<Long, EnumSet<InventoryItem.Field>>()
         private val itemChanges = EnumSet.noneOf(InventoryItem.Field::class.java)
 

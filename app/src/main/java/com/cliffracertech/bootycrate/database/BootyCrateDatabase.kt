@@ -4,17 +4,11 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.database
 
-import android.content.Context
+import android.app.Application
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
 
 /**
  * A Room database to access the tables shopping_list_item and inventory_item.
@@ -51,17 +45,12 @@ abstract class BootyCrateDatabase : RoomDatabase() {
     abstract fun inventoryItemDao(): InventoryItemDao
     abstract fun shoppingListItemDao(): ShoppingListItemDao
 
-    @Module @InstallIn(SingletonComponent::class)
-    object BootyCrateDatabaseModule {
-        @Provides @Singleton
-        fun provideBootyCrateDatabase(@ApplicationContext context: Context) =
-            Room.databaseBuilder(context, BootyCrateDatabase::class.java, "booty-crate-db")
-                .addCallback(callback).build()
-        @Provides fun provideShoppingListItemDao(db: BootyCrateDatabase) = db.shoppingListItemDao()
-        @Provides fun provideInventoryItemDao(db: BootyCrateDatabase) = db.inventoryItemDao()
-    }
-
     companion object {
+        var instance: BootyCrateDatabase? = null
+        fun get(app: Application) = instance ?: Room.databaseBuilder(
+            app, BootyCrateDatabase::class.java, "booty-crate-db")
+            .addCallback(callback).build().apply { instance = this }
+
 //        fun backup(context: Context, backupUri: Uri) {
 //            val db = provideBootyCrateDatabase(context)
 //            val databasePath = db.openHelper.readableDatabase.path
@@ -209,21 +198,22 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         /* Unfortunately SQLite's limitation of not being able to use common table
          * expressions in triggers makes the following less readable than it should
          * be. The query below essentially makes a shopping list item with the same
-         * name, extraInfo, and color as an inventory item, while also filling in its
-         * linkedItemId field to the id of the inventory item it was created from.
-         * The new item's amount is the lesser of its current amount (if it already
-         * existed) or the minimum amount (i.e. the inventory item it is based on's
-         * addToShoppingListAmount minus its current amount). It also copies the
-         * expanded, selected, and checked state from the already existing item to
-         * prevent the overwriting of these values if it already existed. */
+         * name, extraInfo, and color as an inventory item, while also filling in
+         * its linkedItemId field to the id of the inventory item it was created
+         * from. The new item's amount is the greater of its current amount (if it
+         * already existed or the inventory item it is based on's addToShoppingListAmount
+         * minus its current amount). It also copies the expanded, selected, and
+         * checked state from the already existing item to prevent the overwriting
+         * of these values if it already existed. */
         private const val insertFromInventoryItemStr =
             """INSERT OR REPLACE INTO shopping_list_item (id, name, extraInfo, color, linkedItemId,
                                                           amount, isExpanded, isSelected, isChecked)
                SELECT new.linkedItemId, new.name, new.extraInfo, new.color, new.id,
-                      CASE WHEN (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) <
-                                (SELECT new.addToShoppingListTrigger - new.amount)
-                           THEN (SELECT new.addToShoppingListTrigger - new.amount)
-                           ELSE (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) END,
+                      CASE WHEN (EXISTS(SELECT 1 FROM shopping_list_item WHERE id == new.linkedItemId) AND
+                                 (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) >
+                                 (SELECT new.addToShoppingListTrigger - new.amount))
+                           THEN (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId)
+                           ELSE (SELECT new.addToShoppingListTrigger - new.amount) END,
                       (SELECT isExpanded FROM shopping_list_item WHERE id == new.linkedItemId),
                       (SELECT isSelected FROM shopping_list_item WHERE id == new.linkedItemId),
                       (SELECT isChecked FROM shopping_list_item WHERE id == new.linkedItemId)"""

@@ -11,6 +11,7 @@ import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.RecyclerViewActionBarBinding
@@ -28,20 +29,16 @@ import java.util.*
  * a recycler view. Through its binding property ui, the ui elements avail-
  * able are:
  *     - backButton, similar to the home as up indicator, hidden by default
- *     - actionBarTitle, an ActionBarTitle that is used as an activity or
+ *     - titleSwitcher, an ActionBarTitle that is used as an activity or
  *       fragment title, an action mode title, or a search query entry.
- *       The attribute android.R.attr.text is used as the default text for
- *       the title.
+ *       The value of the theme attribute R.attr.actionBarTitleStyle is
+ *       used as the style for the title switcher.
  *     - searchButton, a button that changes the actionBarTitle to its
  *       search query entry mode.
  *     - changeSortButton, a button that opens the changeSortMenu, but can
  *       also have isActivated set to true to change to a delete icon and
  *       call the property onDeleteButtonClickedListener instead.
  *     - menuButton, which opens the optionsMenu member.
- * If the activity or fragment using RecyclerViewActionBar wants to show
- * only the title, the property optionsMenuVisible can be set to false to
- * hide the search button, change sort button, and the options menu button
- * all at once.
  *
  * The contents of the changeSortMenu and the optionsMenu can be set in
  * XML with the attributes R.attr.changeSortMenuResId and R.attr.options-
@@ -107,9 +104,10 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.WRAP_CONTENT)
         val a = context.obtainStyledAttributes(attrs, R.styleable.RecyclerViewActionBar)
-        val changeSortMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_changeSortMenuResId, 0)
-        val optionsMenuResId = a.getResourceId(R.styleable.RecyclerViewActionBar_optionsMenuResId, 0)
+        val changeSortMenuResId = a.getResourceIdOrThrow(R.styleable.RecyclerViewActionBar_changeSortMenuResId)
+        val optionsMenuResId = a.getResourceIdOrThrow(R.styleable.RecyclerViewActionBar_optionsMenuResId)
         a.recycle()
+        println("changeSortMenuResId = $changeSortMenuResId, optionsMenuResId = $optionsMenuResId")
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
         optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
 
@@ -139,7 +137,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     /**
      * Transition the action bar's visual state to match the one described by the parameters.
      *
-     * Using transitionTo rather than making UI changes manually is recom-
+     * Using transition rather than making UI changes manually is recom-
      * mended when making multiple changes at once. For example, if a frag-
      * ment ends it action mode as another fragment begins its own, the title
      * will be briefly visible in between. Using the transition function will

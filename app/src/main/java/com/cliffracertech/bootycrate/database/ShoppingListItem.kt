@@ -7,7 +7,7 @@ package com.cliffracertech.bootycrate.database
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 
-/** A Room entity that represents an shopping list item in the user's shopping list. */
+/** A Room entity that represents a shopping list item in the user's shopping list. */
 @Entity(tableName = "shopping_list_item")
 class ShoppingListItem(
     id: Long = 0,
@@ -33,12 +33,10 @@ class ShoppingListItem(
                this.isChecked == other.isChecked
     }
 
-    override fun toDebugString() = super.toString() + "\nisChecked = $isChecked"
+    override fun toString() = super.toString() + "\nisChecked = $isChecked"
 
     /** The enum class Field identifies user facing fields that are potentially
-     *  editable by the user. Field values (in the form of an EnumSet<Field>)
-     *  are used as a payload in the adapter notifyItemChanged calls in order
-     *  to identify which fields were changed.*/
+     *  editable by the user. */
     enum class Field { Name, ExtraInfo, Color, Amount, LinkedTo,
                        IsExpanded, IsSelected, IsChecked }
 }

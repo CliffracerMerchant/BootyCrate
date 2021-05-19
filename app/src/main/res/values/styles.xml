@@ -20,6 +20,7 @@
         <item name="android:textColorHint">@color/color_text_dark_secondary</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="checkoutButtonDisabledAlpha">170</item>
 
         <item name="imageButtonStyle">@style/ImageButton</item>
         <item name="android:textViewStyle">@style/TextAppearance</item>
@@ -55,6 +56,7 @@
         <item name="colorSurface">@color/colorWindowBackgroundDark</item>
         <item name="colorOnPrimary">@color/colorWindowBackgroundLight</item>
         <item name="colorOnSurface">@color/colorWindowBackgroundLight</item>
+        <item name="checkoutButtonDisabledAlpha">110</item>
 
         <item name="colorPrimary">@color/darkThemeBgGradientLeft</item>
         <item name="colorAccent">@color/darkThemeBgGradientLeft</item>
@@ -146,7 +148,7 @@
     </style>
 
     <style name="AddNewItemDialogNameRequiredMessage" parent="@style/AddNewItemDialogMessage">
-        <item name="android:text">Item must have a name</item>
+        <item name="android:text">@string/new_item_no_name_error</item>
         <item name="android:drawableStart">@drawable/ic_baseline_error_24</item>
     </style>
 

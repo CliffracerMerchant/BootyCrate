@@ -150,12 +150,14 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         setSelectedState(item.isSelected, animate = false)
     }
 
-    val isInSelectedState get() = gradientOutline.alpha != 0
+    private var _isInSelectedState = false
+    val isInSelectedState get() = _isInSelectedState
     fun select() = setSelectedState(true)
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
+        _isInSelectedState = selected
         if (animate) valueAnimatorOfInt(setter = gradientOutline::setAlpha,
-                                        fromValue = if (selected) 0 else 255,
+                                        fromValue = gradientOutline.alpha,
                                         toValue = if (selected) 255 else 0,
                                         config = animatorConfig).start()
         else gradientOutline.alpha = if (selected) 255 else 0
@@ -414,9 +416,11 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
  * name and extra info edit at the same time.
  */
 @SuppressLint("ViewConstructor")
-class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig?) :
+class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig? = null) :
     ExpandableSelectableItemView<ShoppingListItem>(context, animatorConfig)
 {
+    init { ui.checkBox.onCheckedChangedListener = ::setStrikeThroughEnabled }
+
     override fun update(item: ShoppingListItem) {
         ui.checkBox.initIsChecked(item.isChecked)
         setStrikeThroughEnabled(enabled = item.isChecked, animate = false)
@@ -427,7 +431,8 @@ class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig?) :
         ui.checkBox.setInColorEditMode(expanded, animate)
     }
 
-    fun setStrikeThroughEnabled(enabled: Boolean, animate: Boolean = true) {
+    fun setStrikeThroughEnabled(enabled: Boolean) = setStrikeThroughEnabled(enabled, true)
+    private fun setStrikeThroughEnabled(enabled: Boolean, animate: Boolean) {
         ui.nameEdit.setStrikeThroughEnabled(enabled, animate)
         ui.extraInfoEdit.setStrikeThroughEnabled(enabled, animate)
     }
@@ -444,7 +449,7 @@ class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig?) :
  * setExpanded override that also shows or hides these extra fields.
  */
 @SuppressLint("ViewConstructor")
-class InventoryItemView(context: Context, animatorConfig: AnimatorConfig?) :
+class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null) :
     ExpandableSelectableItemView<InventoryItem>(context, animatorConfig, useDefaultLayout = false)
 {
     val detailsUi: InventoryItemDetailsBinding
@@ -460,7 +465,8 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig?) :
     }
 
     override fun update(item: InventoryItem) {
-        detailsUi.addToShoppingListCheckBox.isChecked = item.addToShoppingList
+        detailsUi.addToShoppingListCheckBox.initIsChecked(item.addToShoppingList)
+        detailsUi.addToShoppingListCheckBox.initColorIndex(item.color)
         detailsUi.addToShoppingListTriggerEdit.initValue(item.addToShoppingListTrigger)
         super.update(item)
     }
@@ -468,9 +474,11 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig?) :
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
         if (!expanded && detailsUi.addToShoppingListTriggerEdit.ui.valueEdit.isFocused)
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
-        if (!animate) detailsUi.inventoryItemDetails.isVisible = expanded
+        if (!animate)
+            detailsUi.inventoryItemDetails.isVisible = expanded
         else {
             detailsUi.addToShoppingListCheckBox.showOrHideAfterFading(expanded)
+            detailsUi.addToShoppingListLabel.showOrHideAfterFading(expanded)
             detailsUi.addToShoppingListTriggerEdit.showOrHideAfterFading(expanded)
         }
     }

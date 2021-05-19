@@ -11,7 +11,9 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
+import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.database.ShoppingListViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.ShoppingListFragmentBinding
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView

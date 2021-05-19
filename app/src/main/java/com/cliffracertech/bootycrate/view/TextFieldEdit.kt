@@ -156,11 +156,11 @@ open class StrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
  * through length. The animations will use the property animatorConfig for
  * their durations and interpolators.
  */
-
 class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
     StrikeThroughTextFieldEdit(context, attrs)
 {
     var animatorConfig: AnimatorConfig? = null
+    val hasStrikeThrough get() = strikeThroughLength ?: 0f > 0f
 
     /**
      * Information about the internal animations played when setEditable is called.

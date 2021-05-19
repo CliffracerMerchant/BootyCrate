@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ShoppingListItemView
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.shoppingListViewModel
+import com.cliffracertech.bootycrate.database.shoppingListViewModel
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import java.util.*
 import kotlin.collections.set
@@ -21,16 +21,16 @@ import kotlin.collections.set
  * A RecyclerView to display the data provided by a ShoppingListViewModel.
  *
  * ShoppingListRecyclerView is a ExpandableSelectableRecyclerView subclass
- * specialized for displaying the contents of a shopping list. ShoppingList-
- * RecyclerView adds a sortByChecked property, which mirrors the ShoppingList-
- * ViewModel property, for convenience. sortByChecked should not be changed
- * the property viewModel is initialized, or an exception will be thrown.
+ * specialized for displaying the contents of a shopping list. ShoppingListRecyclerView
+ * adds a sortByChecked property, which mirrors the ShoppingListViewModel
+ * property, for convenience. sortByChecked should not be changed the
+ * property viewModel is initialized, or an exception will be thrown.
  */
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs)
 {
-    override val diffUtilCallback = ShoppingListDiffUtilCallback()
-    override val adapter = ShoppingListAdapter()
+    override val diffUtilCallback = DiffUtilCallback()
+    override val adapter = Adapter()
     override val viewModel = shoppingListViewModel(context)
 
     var sortByChecked get() = viewModel.sortByChecked
@@ -44,29 +44,29 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     }
 
     /**
-     * A RecyclerView.Adapter to display the contents of a list of shopping list items.
+     * An adapter to display the contents of a list of shopping list items.
      *
-     * ShoppingListAdapter is a subclass of ExpandableSelectableItemAdapter using
-     * ShoppingListItemViewHolder instances to represent shopping list items. Its
-     * overrides of onBindViewHolder make use of the ShoppingListItem.Field values
-     * passed by ShoppingListItemDiffUtilCallback to support partial binding. Note
-     * that ShoppingListAdapter assumes that any payloads passed to it are of the
-     * type EnumSet<ShoppingListItem.Field>. If a payload of another type is
-     * passed to it, an exception will be thrown.
+     * ShoppingListRecyclerView.Adapter is a subclass of ExpandableSelectableRecyclerView.Adapter
+     * using ShoppingListRecyclerView.ViewHolder instances to represent shopping list
+     * items. Its overrides of onBindViewHolder make use of the ShoppingListItem.Field
+     * values passed by ShoppingListRecyclerView.DiffUtilCallback to support partial
+     * binding. Note that ShoppingListAdapter assumes that any payloads passed to it
+     * are of the type EnumSet<ShoppingListItem.Field>. If a payload of another type
+     * is passed to it, an exception will be thrown.
      */
     @Suppress("UNCHECKED_CAST")
-    inner class ShoppingListAdapter : ExpandableSelectableItemAdapter<ShoppingListItemViewHolder>() {
+    inner class Adapter : ExpandableSelectableRecyclerView<ShoppingListItem>.Adapter<ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            ShoppingListItemViewHolder(ShoppingListItemView(context, itemAnimator.animatorConfig))
+            ViewHolder(ShoppingListItemView(context, itemAnimator.animatorConfig))
 
-        override fun onBindViewHolder(holder: ShoppingListItemViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             holder.view.update(holder.item)
             super.onBindViewHolder(holder, position)
         }
 
         override fun onBindViewHolder(
-            holder: ShoppingListItemViewHolder,
+            holder: ViewHolder,
             position: Int,
             payloads: MutableList<Any>
         ) {
@@ -112,14 +112,13 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     /**
      * A ExpandableSelectableItemViewHolder that wraps an instance of ShoppingListItemView.
      *
-     * ShoppingListItemViewHolder is a subclass of ExpandableSelectableItemView-
-     * Holder that holds an instance of ShoppingListItemView to display the data
-     * for a ShoppingListItem. It also connects changes in the checkbox state to
-     * view model updateIsChecked calls.
+     * ShoppingListRecyclerView.ViewHolder is a subclass of ExpandableSelectableItemViewHolder
+     * that holds an instance of ShoppingListItemView to display the data for a
+     * ShoppingListItem.
      */
-    inner class ShoppingListItemViewHolder(val view: ShoppingListItemView) :
-            ExpandableSelectableItemViewHolder(view) {
-
+    inner class ViewHolder(val view: ShoppingListItemView) :
+        ExpandableSelectableRecyclerView<ShoppingListItem>.ViewHolder(view)
+    {
         init {
             view.ui.checkBox.onCheckedChangedListener = { checked ->
                 viewModel.updateIsChecked(item.id, checked)
@@ -131,12 +130,12 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     /**
      * Computes a diff between two shopping list item lists.
      *
-     * ShoppingListDiffUtilCallback uses the ids of shopping list items to deter-
-     * mine if they are the same or not. If they are the same, the change payload
-     * will be an instance of EnumSet<ShoppingListItem.Field> that contains the
+     * DiffUtilCallback uses the ids of shopping list items to determine if they
+     * are the same or not. If they are the same, the change payload will be an
+     * instance of EnumSet<ShoppingListItem.Field> that contains the
      * ShoppingListItem.Field values for all of the fields that were changed.
      */
-    class ShoppingListDiffUtilCallback : DiffUtil.ItemCallback<ShoppingListItem>() {
+    class DiffUtilCallback : DiffUtil.ItemCallback<ShoppingListItem>() {
         private val listChanges = mutableMapOf<Long, EnumSet<ShoppingListItem.Field>>()
         private val itemChanges = EnumSet.noneOf(ShoppingListItem.Field::class.java)
 

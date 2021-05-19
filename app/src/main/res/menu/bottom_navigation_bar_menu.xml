@@ -6,7 +6,7 @@
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <item android:id="@+id/shopping_list_button"
+    <item android:id="@+id/shoppingListButton"
           android:title="@string/shopping_list_navigation_item_name"
           android:icon="@drawable/shopping_cart_icon"
           android:orderInCategory="0" />
@@ -19,7 +19,7 @@
           android:title=""
           android:orderInCategory="2" />
 
-    <item android:id="@+id/inventory_button"
+    <item android:id="@+id/inventoryButton"
           android:title="@string/inventory_navigation_item_name"
           android:icon="@drawable/inventory_icon"
           android:orderInCategory="3" />

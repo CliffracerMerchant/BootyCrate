@@ -16,9 +16,7 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.utils.inputMethodManager
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
@@ -76,7 +74,7 @@ abstract class NewBootyCrateItemDialog<Entity: ExpandableSelectableItem>(
         newItemView.apply {
             setExpanded(true, animate = false)
             ui.amountEditSpacer.isVisible = false
-            ui.checkBox.setColorIndex(0, animate = false)
+            ui.checkBox.initColorIndex(0)
             setSelectedState(false, animate = false)
             ui.editButton.visibility = View.GONE
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
@@ -161,9 +159,15 @@ class NewInventoryItemDialog(context: Context) :
     private val newInventoryItemView = InventoryItemView(context, null)
 
     init {
-        newItemView = newInventoryItemView
-        newInventoryItemView.setExpanded(true, animate = false)
-        newInventoryItemView.detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
+        newItemView = newInventoryItemView.apply {
+            setExpanded(true, animate = false)
+            detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
+            detailsUi.addToShoppingListCheckBox.initColorIndex(0)
+            ui.checkBox.onColorChangedListener = {
+                detailsUi.addToShoppingListCheckBox.colorIndex =
+                    ui.checkBox.colorIndex
+            }
+        }
     }
 
     override fun resetNewItemView() {

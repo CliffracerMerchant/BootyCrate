@@ -5,7 +5,8 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_enabled="true"
-        android:color="@color/colorTextDarkEnabled" />
-    <item android:color="@color/colorTextDarkDisabled" />
+    <item android:state_enabled="false"
+          android:color="@color/colorTextDarkDisabled" />
+    <item android:color="@color/colorTextDarkEnabled" />
+
 </selector>

@@ -11,6 +11,8 @@ import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.database.InventoryItem
+import com.cliffracertech.bootycrate.database.InventoryViewModel
+import com.cliffracertech.bootycrate.database.ShoppingListViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryFragmentBinding
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
