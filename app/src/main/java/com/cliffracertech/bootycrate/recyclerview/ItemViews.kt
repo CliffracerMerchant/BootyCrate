@@ -22,7 +22,6 @@ import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.database.BootyCrateItem
-import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.databinding.BootyCrateItemBinding
@@ -57,7 +56,7 @@ open class BootyCrateItemView<Entity: BootyCrateItem>(
 ) : ConstraintLayout(context) {
 
     protected val inputMethodManager = inputMethodManager(context)
-    protected var itemIsLinked = false
+    protected var itemIsInBothLists = false
 
     lateinit var ui: BootyCrateItemBinding
 
@@ -77,7 +76,7 @@ open class BootyCrateItemView<Entity: BootyCrateItem>(
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
         ui.checkBox.initColorIndex(colorIndex)
         ui.amountEdit.initValue(item.amount)
-        itemIsLinked = item.linkedItemId != null
+        itemIsInBothLists = item.shoppingListAmount > 0 && item.inInventory
     }
 }
 
@@ -86,10 +85,10 @@ open class BootyCrateItemView<Entity: BootyCrateItem>(
 /**
  * A BootyCrateItemView subclass that provides an interface for a selection and expansion of the view.
  *
- * ExpandableSelectableItemView will display the information of an instance of
- * ExpandableSelectableItem, while also providing an interface for expansion
- * and selection. The update override will update the view to reflect the
- * selection and expansion state of the ExpandableSelectableItem passed to it.
+ * ExpandableSelectableItemView will display the information for a BootyCrateItem
+ * instance, while also providing an interface for expansion and selection. The
+ * update override will update the view to reflect the selection and expansion
+ * state of the BootyCrateItem passed to it.
  *
  * The interface for selection and deselection consists of the functions
  * isInSelectedState, select, deselect, and setSelectedState. With the default
@@ -111,7 +110,7 @@ open class BootyCrateItemView<Entity: BootyCrateItem>(
  * defined by the property animatorConfig.
  */
 @SuppressLint("ViewConstructor")
-open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
+open class ExpandableSelectableItemView<Entity: BootyCrateItem>(
     context: Context,
     animatorConfig: AnimatorConfig? = null,
     useDefaultLayout: Boolean = true,
@@ -192,7 +191,7 @@ open class ExpandableSelectableItemView<Entity: ExpandableSelectableItem>(
         val editableTextFieldHeight = resources.getDimension(R.dimen.editable_text_field_min_height)
         ui.spacer.layoutParams.height = (editableTextFieldHeight * if (expanding) 2 else 1).toInt()
 
-        if (itemIsLinked)
+        if (itemIsInBothLists)
             if (!animate) ui.linkIndicator.isVisible = expanding
             else ui.linkIndicator.showOrHideAfterFading(showing = expanding)
         if (animate) setupCheckBoxAnimation()
@@ -465,9 +464,9 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
     }
 
     override fun update(item: InventoryItem) {
-        detailsUi.addToShoppingListCheckBox.initIsChecked(item.addToShoppingList)
+        detailsUi.addToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
         detailsUi.addToShoppingListCheckBox.initColorIndex(item.color)
-        detailsUi.addToShoppingListTriggerEdit.initValue(item.addToShoppingListTrigger)
+        detailsUi.addToShoppingListTriggerEdit.initValue(item.autoAddToShoppingListAmount)
         super.update(item)
     }
 

@@ -10,48 +10,51 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.cliffracertech.bootycrate.R
 
-@Entity open class BootyCrateItem(
+@Entity(tableName = "item")
+abstract class BootyCrateItem(
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")                           var id: Long = 0,
-    @ColumnInfo(name = "name")                         var name: String = "",
-    @ColumnInfo(name = "extraInfo", defaultValue = "") var extraInfo: String = "",
-    @ColumnInfo(name = "color", defaultValue = "0")    var color: Int = 0,
-    @ColumnInfo(name = "amount", defaultValue = "1")   var amount: Int = 1,
-    @ColumnInfo(name = "linkedItemId")                 var linkedItemId: Long? = null,
-    @ColumnInfo(name = "inTrash", defaultValue = "0")  var inTrash: Boolean = false
+    @ColumnInfo(name="id")                            var id: Long = 0,
+    @ColumnInfo(name="name")                          var name: String = "",
+    @ColumnInfo(name="extraInfo", defaultValue="")    var extraInfo: String = "",
+    @ColumnInfo(name="isChecked", defaultValue="0")   var isChecked: Boolean = false,
+    @ColumnInfo(name="color", defaultValue="0")       var color: Int = 0,
+    @ColumnInfo(name="shoppingListAmount", defaultValue="0") var shoppingListAmount: Int = 0,
+    @ColumnInfo(name="inventoryAmount", defaultValue="0") var inventoryAmount: Int = 0,
+    @ColumnInfo(name="inInventory", defaultValue="0") var inInventory: Boolean = false,
+    @ColumnInfo(name="isExpanded", defaultValue="0")  var isExpanded: Boolean = false,
+    @ColumnInfo(name="isSelected", defaultValue="0")  var isSelected: Boolean = false,
+    @ColumnInfo(name="autoAddToShoppingList", defaultValue="0") var autoAddToShoppingList: Boolean = false,
+    @ColumnInfo(name="autoAddToShoppingListAmount", defaultValue="1") var autoAddToShoppingListAmount: Int = 1,
+    @ColumnInfo(name="inTrash", defaultValue="0")     var inTrash: Boolean = false
 ) {
+    abstract var amount: Int
 
     init { color.coerceIn(Colors.indices) }
 
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + name.hashCode()
-        result = 31 * result + extraInfo.hashCode()
-        result = 31 * result + color
-        result = 31 * result + amount
-        result = 31 * result + (linkedItemId?.hashCode() ?: 0)
-        result = 31 * result + inTrash.hashCode()
-        return result
-    }
 
-    override fun equals(other: Any?): Boolean {
-        if (other === this) return true
-        if (other == null || other !is BootyCrateItem) return false
-        return this.id == other.id &&
-               this.name == other.name &&
-               this.extraInfo == other.extraInfo &&
-               this.color == other.color &&
-               this.amount == other.amount &&
-               this.linkedItemId == other.linkedItemId
-    }
+//    override fun equals(other: Any?): Boolean {
+//        if (other === this) return true
+//        if (other == null || other !is BootyCrateItem) return false
+//        return this.id == other.id &&
+//               this.name == other.name &&
+//               this.extraInfo == other.extraInfo &&
+//               this.color == other.color
+//    }
 
     override fun toString() ="""
-        id = $id
-        name = $name
-        extraInfo = $extraInfo
-        color = $color
-        amount = $amount
-        linkedItemId = $linkedItemId"""
+id = $id
+name = $name
+extraInfo = $extraInfo
+isChecked = $isChecked
+color = $color
+shoppingListAmount = $shoppingListAmount
+inventoryAmount = $inventoryAmount
+inInventory = $inInventory
+autoAddToShoppingList = $autoAddToShoppingList
+autoAddToShoppingListAmount = $autoAddToShoppingListAmount
+isExpanded = $isExpanded
+isSelected = $isSelected
+inTrash = $inTrash"""
 
     // For a user-facing string representation of the object
     open fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
@@ -61,7 +64,6 @@ import com.cliffracertech.bootycrate.R
             fun fromString(string: String?): Sort =
                 if (string == null) Color
                 else try { valueOf(string) }
-                     // If string value doesn't match a Sort value
                      catch(e: IllegalArgumentException) { Color }
         }
     }
@@ -76,19 +78,59 @@ import com.cliffracertech.bootycrate.R
     }
 }
 
-/** An extension of BootyCrateItem that adds two fields, isExpanded and isSelected. */
-@Entity open class ExpandableSelectableItem(
+/** A Room entity that represents a shopping list item in the user's shopping list. */
+class ShoppingListItem(
     id: Long = 0,
+    isChecked: Boolean = false,
+    color: Int = 0,
     name: String = "",
     extraInfo: String = "",
-    color: Int = 0,
-    amount: Int = 1,
-    linkedItemId: Long? = null,
+    shoppingListAmount: Int = 0,
+    inventoryAmount: Int = 0,
+    inInventory: Boolean = false,
+    isExpanded: Boolean = false,
+    isSelected: Boolean = false,
+    autoAddToShoppingList: Boolean = false,
+    autoAddToShoppingListAmount: Int = 1,
     inTrash: Boolean = false,
-    @ColumnInfo(name="isExpanded", defaultValue = "0") var isExpanded: Boolean = false,
-    @ColumnInfo(name="isSelected", defaultValue = "0") var isSelected: Boolean = false
-) : BootyCrateItem(id, name, extraInfo, color, amount, linkedItemId, inTrash) {
+) : BootyCrateItem(id, name, extraInfo, isChecked, color, shoppingListAmount,
+                   inventoryAmount, inInventory, isExpanded, isSelected,
+                   autoAddToShoppingList, autoAddToShoppingListAmount, inTrash)
+{
+    override var amount get() = shoppingListAmount
+                        set(value) { shoppingListAmount = value }
 
-    override fun toString() = super.toString() +
-            "\nisExpanded = $isExpanded\nisSelected = $isSelected"
+    /** The enum class Field identifies user facing fields
+     * that are potentially editable by the user. */
+    enum class Field { Name, ExtraInfo, Color, Amount,
+                       IsExpanded, IsSelected, IsChecked }
+}
+
+/** A Room entity that represents an inventory item in the user's inventory. */
+class InventoryItem(
+    id: Long = 0,
+    isChecked: Boolean = false,
+    color: Int = 0,
+    name: String = "",
+    extraInfo: String = "",
+    shoppingListAmount: Int = 0,
+    inventoryAmount: Int = 0,
+    inInventory: Boolean = false,
+    isExpanded: Boolean = false,
+    isSelected: Boolean = false,
+    autoAddToShoppingList: Boolean = false,
+    autoAddToShoppingListAmount: Int = 1,
+    inTrash: Boolean = false,
+) : BootyCrateItem(id, name, extraInfo, isChecked, color, shoppingListAmount,
+                   inventoryAmount, inInventory, isExpanded, isSelected,
+                   autoAddToShoppingList, autoAddToShoppingListAmount, inTrash)
+{
+    override var amount get() = inventoryAmount
+                        set(value) { inventoryAmount = value }
+
+    /** The enum class Field identifies user facing fields that are potentially
+     * editable by the user. */
+    enum class Field { Name, ExtraInfo, Color, Amount, IsExpanded,
+                       IsSelected, AutoAddToShoppingList,
+                       AutoAddToShoppingListAmount }
 }

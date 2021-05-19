@@ -31,7 +31,8 @@ class InventoryItemViewTests {
     @Before fun resetInstance() {
         instance = InventoryItemView(context)
          testItem = InventoryItem(color = 5, name = "Test item", extraInfo = "Test extra info",
-                                  amount = 8, addToShoppingList = true, addToShoppingListTrigger = 3)
+                                  inventoryAmount = 8, autoAddToShoppingList = true,
+                                  autoAddToShoppingListAmount = 3)
     }
 
     private fun assertExpandedState(expanded: Boolean) {
@@ -87,9 +88,9 @@ class InventoryItemViewTests {
         assertThat(instance.ui.nameEdit.text.toString()).isEqualTo(testItem.name)
         assertThat(instance.ui.extraInfoEdit.text.toString()).isEqualTo(testItem.extraInfo)
         assertThat(instance.ui.amountEdit.value).isEqualTo(testItem.amount)
-        assertThat(instance.detailsUi.addToShoppingListCheckBox.isChecked).isEqualTo(testItem.addToShoppingList)
+        assertThat(instance.detailsUi.addToShoppingListCheckBox.isChecked).isEqualTo(testItem.autoAddToShoppingList)
         assertThat(instance.detailsUi.addToShoppingListCheckBox.colorIndex).isEqualTo(testItem.color)
-        assertThat(instance.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(testItem.addToShoppingListTrigger)
+        assertThat(instance.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(testItem.autoAddToShoppingListAmount)
     }
 
     @Test fun editButtonExpandsWhileCollapsed() {

@@ -50,10 +50,10 @@ class InventoryFragmentTests {
     private val db = BootyCrateDatabase.get(context as Application)
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
-    private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
-    private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
-    private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1)
-    private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9, addToShoppingList = true)
+    private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, inventoryAmount = 8)
+    private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, inventoryAmount = 2)
+    private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, inventoryAmount = 1)
+    private val grayItem11 = InventoryItem(name = "Gray", color = 11, inventoryAmount = 9, autoAddToShoppingList = true)
 
     @Before fun setup() {
         activityRule.scenario.onActivity {
@@ -486,7 +486,7 @@ class InventoryFragmentTests {
                 clickEditButton()),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
-                assertThat(item.addToShoppingList).isTrue()
+                assertThat(item.autoAddToShoppingList).isTrue()
                 val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
                 assertThat(vh.view.detailsUi.addToShoppingListCheckBox.isChecked).isTrue()
             })
@@ -499,14 +499,14 @@ class InventoryFragmentTests {
                 onAddToShoppingListTrigger(onIncreaseButton(click(), click()))),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
-                assertThat(item.addToShoppingListTrigger).isEqualTo(3)
+                assertThat(item.autoAddToShoppingListAmount).isEqualTo(3)
                 val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
                 assertThat(vh.view.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(3)
             }, actionsOnItemAtPosition(1,
                 onAddToShoppingListTrigger(onDecreaseButton(click()))),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
-                assertThat(item.addToShoppingListTrigger).isEqualTo(2)
+                assertThat(item.autoAddToShoppingListAmount).isEqualTo(2)
                 val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
                 assertThat(vh.view.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(2)
             })
@@ -521,7 +521,7 @@ class InventoryFragmentTests {
                 clickEditButton()),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
-                assertThat(item.addToShoppingListTrigger).isEqualTo(12)
+                assertThat(item.autoAddToShoppingListAmount).isEqualTo(12)
                 val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
                 assertThat(vh.view.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(12)
             })
@@ -552,8 +552,9 @@ class InventoryFragmentTests {
                     replaceValueEditText("6")),
                 clickEditButton()))
         onView(withId(R.id.shoppingListButton)).perform(click())
-        val expectedItem = ShoppingListItem(color = grayItem11.color, name = grayItem11.name,
-                                            amount = 3)
+        val expectedItem = ShoppingListItem(name = grayItem11.name,
+                                            color = grayItem11.color,
+                                            shoppingListAmount = 3)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }
@@ -566,8 +567,10 @@ class InventoryFragmentTests {
                     replaceValueEditText("11")),
                 clickEditButton()))
         onView(withId(R.id.shoppingListButton)).perform(click())
-        val expectedItem = ShoppingListItem(name = grayItem11.name, extraInfo = grayItem11.extraInfo,
-                                            color = grayItem11.color, amount = 11 - grayItem11.amount)
+        val expectedItem = ShoppingListItem(name = grayItem11.name,
+                                            extraInfo = grayItem11.extraInfo,
+                                            color = grayItem11.color,
+                                            shoppingListAmount = 11 - grayItem11.amount)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }

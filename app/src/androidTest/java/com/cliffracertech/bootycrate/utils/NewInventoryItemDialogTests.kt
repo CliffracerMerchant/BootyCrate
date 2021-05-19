@@ -28,9 +28,11 @@ class NewInventoryItemDialogTests {
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
     private val viewModel = InventoryViewModel(context as Application)
 
-    private val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Extra Info 1",
-                                         color = 5, amount = 3, addToShoppingList = true,
-                                         addToShoppingListTrigger = 4)
+    private val testItem = InventoryItem(name = "Test Item 1",
+                                         extraInfo = "Test Extra Info 1",
+                                         color = 5, inventoryAmount = 3,
+                                         autoAddToShoppingList = true,
+                                         autoAddToShoppingListAmount = 4)
 
     private fun amountIncreaseButton() = CoreMatchers.allOf(withId(R.id.increaseButton),
                                                             isDescendantOfA(withId(R.id.amountEdit)))
@@ -50,7 +52,7 @@ class NewInventoryItemDialogTests {
                 onView(amountIncreaseButton).perform(click())
             onView(inNewItemDialog(withId(R.id.addToShoppingListCheckBox))).perform(click())
             val autoAddTriggerIncreaseButton = inNewItemDialog(autoAddTriggerIncreaseButton())
-            for (i in 1 until item.addToShoppingListTrigger)
+            for (i in 1 until item.autoAddToShoppingListAmount)
                 onView(autoAddTriggerIncreaseButton).perform(click())
             if (item != lastItem)
                 onView(withText(R.string.add_another_item_button_description)).perform(click())
@@ -167,8 +169,8 @@ class NewInventoryItemDialogTests {
         viewModel.deleteAll()
         appears()
         val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Item 1 Extra Info",
-                                     color = 5, amount = 3, addToShoppingList = true,
-                                     addToShoppingListTrigger = 4)
+                                     color = 5, inventoryAmount = 3, autoAddToShoppingList = true,
+                                     autoAddToShoppingListAmount = 4)
         addTestInventoryItems(leaveDialogOpen = false, testItem)
         onView(withId(R.id.inventoryRecyclerView))
             .check(onlyShownInventoryItemsAre(testItem))
@@ -178,8 +180,8 @@ class NewInventoryItemDialogTests {
         viewModel.deleteAll()
         appears()
         val testItem2 = InventoryItem(name = "Test Item 2", extraInfo = "Test Item 2 Extra Info",
-                                      color = 7, amount = 8, addToShoppingList = true,
-                                      addToShoppingListTrigger = 2)
+                                      color = 7, inventoryAmount = 8, autoAddToShoppingList = true,
+                                      autoAddToShoppingListAmount = 2)
         addTestInventoryItems(leaveDialogOpen = false, testItem, testItem2)
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(testItem, testItem2))

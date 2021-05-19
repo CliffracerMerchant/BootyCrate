@@ -83,12 +83,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.IsSelected) &&
                         holder.view.isInSelectedState != item.isSelected)
                             holder.view.setSelectedState(item.isSelected)
-                    if (changes.contains(InventoryItem.Field.AddToShoppingList) &&
-                        detailsUi.addToShoppingListCheckBox.isChecked != item.addToShoppingList)
-                            detailsUi.addToShoppingListCheckBox.initIsChecked(item.addToShoppingList)
-                    if (changes.contains(InventoryItem.Field.AddToShoppingListTrigger) &&
-                        detailsUi.addToShoppingListTriggerEdit.value != item.addToShoppingListTrigger)
-                            detailsUi.addToShoppingListTriggerEdit.value = item.addToShoppingListTrigger
+                    if (changes.contains(InventoryItem.Field.AutoAddToShoppingList) &&
+                        detailsUi.addToShoppingListCheckBox.isChecked != item.autoAddToShoppingList)
+                            detailsUi.addToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
+                    if (changes.contains(InventoryItem.Field.AutoAddToShoppingListAmount) &&
+                        detailsUi.addToShoppingListTriggerEdit.value != item.autoAddToShoppingListAmount)
+                            detailsUi.addToShoppingListTriggerEdit.value = item.autoAddToShoppingListAmount
                 }
                 else unhandledChanges.add(payload)
             }
@@ -142,10 +142,10 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 if (newItem.amount != oldItem.amount)         add(InventoryItem.Field.Amount)
                 if (newItem.isExpanded != oldItem.isExpanded) add(InventoryItem.Field.IsExpanded)
                 if (newItem.isSelected != oldItem.isSelected) add(InventoryItem.Field.IsSelected)
-                if (newItem.addToShoppingList != oldItem.addToShoppingList)
-                    add(InventoryItem.Field.AddToShoppingList)
-                if (newItem.addToShoppingListTrigger != oldItem.addToShoppingListTrigger)
-                    add(InventoryItem.Field.AddToShoppingListTrigger)
+                if (newItem.autoAddToShoppingList != oldItem.autoAddToShoppingList)
+                    add(InventoryItem.Field.AutoAddToShoppingList)
+                if (newItem.autoAddToShoppingListAmount != oldItem.autoAddToShoppingListAmount)
+                    add(InventoryItem.Field.AutoAddToShoppingListAmount)
 
                 if (!isEmpty())
                     listChanges[newItem.id] = EnumSet.copyOf(this)
