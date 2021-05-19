@@ -74,7 +74,7 @@ abstract class NewBootyCrateItemDialog<Entity: ExpandableSelectableItem>(
         newItemView.apply {
             setExpanded(true, animate = false)
             ui.amountEditSpacer.isVisible = false
-            ui.checkBox.setColorIndex(0, animate = false)
+            ui.checkBox.initColorIndex(0)
             setSelectedState(false, animate = false)
             ui.editButton.visibility = View.GONE
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
@@ -159,9 +159,15 @@ class NewInventoryItemDialog(context: Context) :
     private val newInventoryItemView = InventoryItemView(context, null)
 
     init {
-        newItemView = newInventoryItemView
-        newInventoryItemView.setExpanded(true, animate = false)
-        newInventoryItemView.detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
+        newItemView = newInventoryItemView.apply {
+            setExpanded(true, animate = false)
+            detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
+            detailsUi.addToShoppingListCheckBox.initColorIndex(0)
+            ui.checkBox.onColorChangedListener = {
+                detailsUi.addToShoppingListCheckBox.colorIndex =
+                    ui.checkBox.colorIndex
+            }
+        }
     }
 
     override fun resetNewItemView() {

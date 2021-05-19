@@ -464,7 +464,7 @@ class InventoryFragmentTests {
             })
     }
 
-    @Test fun changeItemAmountUsingKeyBoard() {
+    @Test fun changeItemAmountUsingKeyboard() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),
@@ -512,7 +512,7 @@ class InventoryFragmentTests {
             })
     }
 
-    @Test fun changeItemAddToShoppingListAmountUsingKeyBoard() {
+    @Test fun changeItemAddToShoppingListAmountUsingKeyboard() {
         onView(withId(R.id.inventoryRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),

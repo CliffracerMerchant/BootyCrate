@@ -71,6 +71,7 @@ class ShoppingListFragmentTests {
             db.shoppingListItemDao().deleteAll()
             db.shoppingListItemDao().add(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
+        Thread.sleep(50L)
     }
 
     @Test fun sortByColor() {
@@ -455,7 +456,7 @@ class ShoppingListFragmentTests {
             })
     }
 
-    @Test fun changeItemAmountUsingKeyBoard() {
+    @Test fun changeItemAmountUsingKeyboard() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),

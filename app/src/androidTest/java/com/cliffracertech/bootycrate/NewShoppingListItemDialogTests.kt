@@ -77,10 +77,10 @@ class NewShoppingListItemDialogTests {
 
     @Test fun correctStartingValues() {
         appears()
-        testCorrectStartingValues()
+        assertCorrectStartingValues()
     }
 
-    private fun testCorrectStartingValues() {
+    private fun assertCorrectStartingValues() {
         onView(inNewItemDialog(withId(R.id.nameEdit))).check(matches(withText("")))
         onView(inNewItemDialog(withId(R.id.extraInfoEdit))).check(matches(withText("")))
         onView(inNewItemDialog(withId(R.id.valueEdit))).check(matches(withText("1")))

@@ -72,15 +72,14 @@ class NewInventoryItemDialogTests {
 
     @Test fun correctStartingValues() {
         appears()
-        testCorrectStartingValues()
+        assertCorrectStartingValues()
     }
 
-    private fun testCorrectStartingValues() {
+    private fun assertCorrectStartingValues() {
         onView(inNewItemDialog(withId(R.id.nameEdit))).check(matches(withText("")))
         onView(inNewItemDialog(withId(R.id.extraInfoEdit))).check(matches(withText("")))
         onView(inNewItemDialog(withId(R.id.linkIndicator))).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.editButton))).check(matches(not(isDisplayed())))
-        onView(inNewItemDialog(withId(R.id.addToShoppingListCheckBox))).check(matches(isNotChecked()))
         onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
             .perform(doStuff<InventoryItemView> {
                 assertThat(it.ui.checkBox.colorIndex).isEqualTo(0)
@@ -90,6 +89,8 @@ class NewInventoryItemDialogTests {
                 assertThat(it.ui.amountEdit.value).isEqualTo(1)
                 assertThat(it.ui.amountEdit.minValue).isEqualTo(0)
                 assertThat(it.ui.amountEdit.valueIsFocusable).isTrue()
+                assertThat(it.detailsUi.addToShoppingListCheckBox.isChecked).isFalse()
+                assertThat(it.detailsUi.addToShoppingListCheckBox.colorIndex).isEqualTo(0)
                 assertThat(it.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(1)
                 assertThat(it.detailsUi.addToShoppingListTriggerEdit.minValue).isEqualTo(1)
                 assertThat(it.detailsUi.addToShoppingListTriggerEdit.valueIsFocusable).isTrue()
@@ -107,7 +108,6 @@ class NewInventoryItemDialogTests {
         onView(inNewItemDialog(withId(R.id.extraInfoEdit))).check(matches(withText("")))
         onView(inNewItemDialog(withId(R.id.linkIndicator))).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.editButton))).check(matches(not(isDisplayed())))
-        onView(inNewItemDialog(withId(R.id.addToShoppingListCheckBox))).check(matches(isNotChecked()))
         onView(inNewItemDialog(CoreMatchers.instanceOf(InventoryItemView::class.java)))
             .perform(doStuff<InventoryItemView> {
                 // The color edit is intended to stay the same value after the add another button
@@ -118,6 +118,8 @@ class NewInventoryItemDialogTests {
                 assertThat(it.ui.extraInfoEdit.isEditable).isTrue()
                 assertThat(it.ui.amountEdit.value).isEqualTo(1)
                 assertThat(it.ui.amountEdit.valueIsFocusable).isTrue()
+                assertThat(it.detailsUi.addToShoppingListCheckBox.isChecked).isFalse()
+                assertThat(it.detailsUi.addToShoppingListCheckBox.colorIndex).isEqualTo(testItem.color)
                 assertThat(it.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(1)
                 assertThat(it.detailsUi.addToShoppingListTriggerEdit.valueIsFocusable).isTrue()
             })
