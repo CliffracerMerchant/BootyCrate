@@ -9,188 +9,169 @@ import android.content.Context
 import androidx.lifecycle.*
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicLong
 
 /**
- * An abstract AndroidViewModel that provides an asynchronous interface for DataAccessObject<Entity> functions.
+ * An AndroidViewModel that provides asynchronous functions for manipulating a BootyCrateDatabase.
  *
- * BootyCrateViewModel<Entity> is an abstract AndroidViewModel that provides
- * asynchronous functions for executing DataAccessObject<Entity> methods. The
- * public property items returns a LiveData<List<Entity>> object that
- * represents all of the items in the SQLite table. The public properties sort
- * and searchFilter allow the view model user to modify the sorting or
- * filtering used in retrieving the items.
+ * The public properties shoppingList and inventory return LiveData<List>
+ * objects that represents all of the shopping list and inventory items in
+ * the database. The public properties shoppingListSort, shoppingListSearchFilter,
+ * sortShoppingListByChecked, inventorySort, and inventorySearchFilter allow
+ * entities to modify the sorting or filtering used in retrieving the items.
  *
- * BootyCrateViewModel provides subclasses an API for adding new sort methods
- * through the functions notifySortOptionsChanged and itemsSwitchMapFunc.
- * Subclasses can add properties that affect sorting, and then utilize them in
- * their override of itemsSwitchMapFunc. itemsSwitchMapFunc should return the
- * appropriate dao function for the chosen sorting method. Any time a subclass
- * sorting method property is changed, notifySortOptionsChanged must be called
- * for the change to take effect.
- *
- * If the properties newItemName and newItemExtraInfo are updated with the
- * proposed name and extra info for a new item, the property
- * newItemNameIsAlreadyUsed can be observed to tell if the name and extra info
- * combination is already in use by another item.
- *
- * BootyCrateViewModel provides support for treating new items differently
- * through the public property newlyAddedItemId. This value will change to
- * match the id of the most recently added item. External entities can compare
- * this value to the id of items in order to determine the new item.
- * resetNewlyAddedItemId() should usually be called after this value is
- * utilized so that the most recently added item will not be treated as new
- * forever until a new item is added.
+ * If the properties newShoppingListItemName and newShoppingListItemExtraInfo
+ * or NewInventoryItemName and newInventoryItemExtraInfo are updated with the
+ * proposed name and extra info for a new shopping list or inventory item, the
+ * property newShoppingListItemNameIsAlreadyUsed or newInventoryItemNameIsAlreadyUsed
+ * can be observed to tell if the name and extra info combination is already in
+ * use by another shopping list or inventory item.
  */
-abstract class BootyCrateViewModel<Entity: BootyCrateItem>(app: Application): AndroidViewModel(app) {
-    protected abstract val dao: BootyCrateItemDao<Entity>
+abstract class BootyCrateViewModel(app: Application): AndroidViewModel(app) {
+    private val dao = BootyCrateDatabase.get(app).dao()
 
-    var sort: BootyCrateItem.Sort = BootyCrateItem.Sort.Color
-        set(value) { field = value; notifySortOptionsChanged() }
-    var searchFilter: String? = null
-        set(value) { field = value; notifySortOptionsChanged() }
+    fun add(item: BootyCrateItem) = viewModelScope.launch {dao.add(item) }
+    fun add(items: List<BootyCrateItem>) = viewModelScope.launch { dao.add(items) }
 
-    private val sortOptionsChanged = MutableLiveData<Boolean>()
-    protected fun notifySortOptionsChanged() { sortOptionsChanged.value = true }
-    protected open fun itemsSwitchMapFunc(): LiveData<List<Entity>> {
-        val filter = "%${searchFilter ?: ""}%"
-        return when (sort) {
-            BootyCrateItem.Sort.Color -> dao.getAllSortedByColor(filter)
-            BootyCrateItem.Sort.NameAsc -> dao.getAllSortedByNameAsc(filter)
-            BootyCrateItem.Sort.NameDesc -> dao.getAllSortedByNameDesc(filter)
-            BootyCrateItem.Sort.AmountAsc -> dao.getAllSortedByAmountAsc(filter)
-            BootyCrateItem.Sort.AmountDesc -> dao.getAllSortedByAmountDesc(filter)
-        }
-    }
-    val items = Transformations.switchMap(sortOptionsChanged) { itemsSwitchMapFunc() }
+    fun updateName(id: Long, name: String) =
+        viewModelScope.launch { dao.updateName(id, name) }
+    fun updateExtraInfo(id: Long, extraInfo: String) =
+        viewModelScope.launch { dao.updateExtraInfo(id, extraInfo) }
+    fun updateColor(id: Long, color: Int) =
+        viewModelScope.launch { dao.updateColor(id, color) }
 
-    var newItemName: String? = null
-        set(value) { field = value; newItemNameChanged.value = true }
-    var newItemExtraInfo: String? = null
-        set(value) { field = value; newItemNameChanged.value = true }
-    fun resetNewItemName() { newItemName = null; newItemExtraInfo = null }
+    private val shoppingListSortOptionsChanged = MutableLiveData<Boolean>()
+    var shoppingListSort: BootyCrateItem.Sort = BootyCrateItem.Sort.Color
+        set(value) { field = value; shoppingListSortOptionsChanged.value = true }
+    var shoppingListSearchFilter: String? = null
+        set(value) { field = value; shoppingListSortOptionsChanged.value = true }
+    var sortShoppingListByChecked = false
+        set(value) { field = value; shoppingListSortOptionsChanged.value = true }
 
-    private val newItemNameChanged = MutableLiveData<Boolean>()
-    val newItemNameIsAlreadyUsed = Transformations.switchMap(newItemNameChanged) {
-        dao.itemWithNameAlreadyExists(newItemName ?: "", newItemExtraInfo ?: "")
+    val shoppingList = Transformations.switchMap(shoppingListSortOptionsChanged) {
+        dao.getShoppingList(shoppingListSort, sortShoppingListByChecked, shoppingListSearchFilter)
     }
 
-    private var _newlyAddedItemId = AtomicLong()
-    val newlyAddedItemId get() = _newlyAddedItemId.get()
-    fun resetNewlyAddedItemId() = _newlyAddedItemId.set(0)
-
-    fun add(item: Entity) { viewModelScope.launch { _newlyAddedItemId.set(dao.add(item)) }}
-
-    fun add(items: List<Entity>) { viewModelScope.launch { dao.add(items) }}
-
-    fun deleteAll() { viewModelScope.launch { dao.deleteAll() }}
-
-    fun emptyTrash() { viewModelScope.launch { dao.emptyTrash() }}
-
-    fun delete(ids: LongArray) { viewModelScope.launch { dao.delete(ids) }}
-
-    fun undoDelete() { viewModelScope.launch { dao.undoDelete() }}
-
-    fun updateName(id: Long, name: String) = viewModelScope.launch {
-        dao.updateName(id, name)
+    var newShoppingListItemName: String? = null
+        set(value) { field = value; newShoppingListItemNameChanged.value = true }
+    var newShoppingListItemExtraInfo: String? = null
+        set(value) { field = value; newShoppingListItemNameChanged.value = true }
+    fun resetNewShoppingListItemName() {
+        newShoppingListItemName = null
+        newShoppingListItemExtraInfo = null
     }
-    fun updateExtraInfo(id: Long, extraInfo: String) = viewModelScope.launch {
-        dao.updateExtraInfo(id, extraInfo)
+    private val newShoppingListItemNameChanged = MutableLiveData<Boolean>()
+    val newItemNameIsAlreadyUsed = Transformations.switchMap(newShoppingListItemNameChanged) {
+        dao.shoppingListItemWithNameAlreadyExists(newShoppingListItemName ?: "",
+                                                  newShoppingListItemExtraInfo ?: "")
     }
-    fun updateColor(id: Long, color: Int) = viewModelScope.launch {
-        dao.updateColor(id, color)
+
+    fun deleteShoppingList() = viewModelScope.launch { dao.deleteAllShoppingListItems() }
+    fun emptyShoppingListTrash() = viewModelScope.launch { dao.emptyShoppingListTrash() }
+    fun deleteShoppingListItems(ids: LongArray) =
+        viewModelScope.launch { dao.deleteShoppingListItems(ids) }
+    fun undoDeleteShoppingListItems() = viewModelScope.launch { dao.undoDeleteShoppingListItems() }
+    fun updateShoppingListAmount(id: Long, amountOnList: Int) =
+        viewModelScope.launch { dao.updateShoppingListAmount(id, amountOnList) }
+
+    val selectedShoppingListItems: LiveData<List<ShoppingListItem>> =
+        dao.getSelectedShoppingListItems()
+
+    fun setExpandedShoppingListItem(id: Long?) =
+        viewModelScope.launch { dao.setExpandedShoppingListItem(id) }
+
+    fun updateSelectedInShoppingList(id: Long, isSelected: Boolean) =
+        viewModelScope.launch { dao.updateSelectedInShoppingList(id, isSelected) }
+
+    fun toggleSelectedInShoppingList(id: Long) =
+        viewModelScope.launch { dao.toggleSelectedInShoppingList(id) }
+
+    fun deleteSelectedShoppingListItems() =
+        viewModelScope.launch { dao.deleteSelectedShoppingListItems() }
+
+    fun selectAllShoppingListItems() = viewModelScope.launch {
+        dao.selectShoppingListItems(shoppingList.value?.map { it.id } ?: emptyList())
     }
-    fun updateAmount(id: Long, amountOnList: Int) = viewModelScope.launch {
-        dao.updateAmount(id, amountOnList)
+
+    fun clearShoppingListSelection() = viewModelScope.launch { dao.clearShoppingListSelection() }
+
+    val checkedShoppingListItemsSize = dao.getCheckedShoppingListItemsSize()
+
+    fun addToShoppingListFromSelectedInventoryItems() =
+        viewModelScope.launch { dao.addToShoppingListFromSelectedInventoryItems() }
+
+    fun updateChecked(id: Long, checked: Boolean) =
+        viewModelScope.launch { dao.updateChecked(id, checked) }
+
+    fun checkAll() = viewModelScope.launch { dao.checkAllShoppingListItems() }
+
+    fun uncheckAll() = viewModelScope.launch { dao.uncheckAllShoppingListItems() }
+
+    fun checkout() = viewModelScope.launch { dao.checkout() }
+
+
+
+    private val inventorySortOptionsChanged = MutableLiveData<Boolean>()
+    var inventorySort: BootyCrateItem.Sort = BootyCrateItem.Sort.Color
+        set(value) { field = value; inventorySortOptionsChanged.value = true }
+    var inventorySearchFilter: String? = null
+        set(value) { field = value; inventorySortOptionsChanged.value = true }
+
+    val inventory = Transformations.switchMap(inventorySortOptionsChanged) {
+        dao.getInventory(inventorySort, inventorySearchFilter)
     }
+
+    var newInventoryItemName: String? = null
+        set(value) { field = value; newInventoryItemNameChanged.value = true }
+    var newInventoryItemExtraInfo: String? = null
+        set(value) { field = value; newInventoryItemNameChanged.value = true }
+    fun resetNewInventoryItemName() {
+        newInventoryItemName = null
+        newInventoryItemExtraInfo = null
+    }
+    private val newInventoryItemNameChanged = MutableLiveData<Boolean>()
+    val newInventoryItemNameIsAlreadyUsed = Transformations.switchMap(newInventoryItemNameChanged) {
+        dao.inventoryItemWithNameAlreadyExists(newInventoryItemName ?: "",
+                                               newInventoryItemExtraInfo ?: "")
+    }
+
+    fun deleteInventory() = viewModelScope.launch { dao.deleteAllInventoryItems() }
+    fun emptyInventoryTrash() = viewModelScope.launch { dao.emptyInventoryTrash() }
+    fun deleteInventoryItems(ids: LongArray) = viewModelScope.launch { dao.deleteInventoryItems(ids) }
+    fun undoDeleteInventoryItems() = viewModelScope.launch { dao.undoDeleteInventoryItems() }
+    fun updateInventoryAmount(id: Long, amountOnList: Int) =
+        viewModelScope.launch { dao.updateInventoryAmount(id, amountOnList) }
+
+    val selectedInventoryItems: LiveData<List<InventoryItem>> =
+        dao.getSelectedInventoryItems()
+
+    fun setExpandedInventoryItem(id: Long?) =
+        viewModelScope.launch { dao.setExpandedInventoryItem(id) }
+
+    fun updateSelectedInInventory(id: Long, isSelected: Boolean) =
+        viewModelScope.launch { dao.updateSelectedInInventory(id, isSelected) }
+
+    fun toggleSelectedInInventory(id: Long) =
+        viewModelScope.launch { dao.toggleSelectedInInventory(id) }
+
+    fun deleteSelectedInventoryItems() =
+        viewModelScope.launch { dao.deleteSelectedShoppingListItems() }
+
+    fun selectAllInventoryItems() = viewModelScope.launch {
+        dao.selectInventoryItems(inventory.value?.map { it.id } ?: emptyList())
+    }
+
+    fun clearInventorySelection() = viewModelScope.launch { dao.clearInventorySelection() }
+
+    fun addToInventoryFromSelectedShoppingListItems() =
+        viewModelScope.launch { dao.addToInventoryFromSelectedShoppingListItems() }
+
+    fun updateAddToShoppingList(id: Long, autoAddToShoppingList: Boolean) =
+        viewModelScope.launch { dao.updateAutoAddToShoppingList(id, autoAddToShoppingList) }
+
+    fun updateAddToShoppingListTrigger(id: Long, autoAddToShoppingListAmount: Int) =
+        viewModelScope.launch { dao.updateAutoAddToShoppingListAmount(id, autoAddToShoppingListAmount) }
+
 }
 
-
-/** An extension of BootyCrateViewModel that provides access to ExpandableSelectableItemDao methods.
- *
- *  ExpandableSelectableItemViewModel overrides BootyCrateViewModel's dao
- *  property with an instance of ExpandableSelectableItemDao, and provides
- *  methods for accessing ExpandableSelectableItemDao's methods. */
-abstract class ExpandableSelectableItemViewModel<Entity: ExpandableSelectableItem>(
-    app: Application
-) : BootyCrateViewModel<Entity>(app) {
-
-    abstract override val dao : ExpandableSelectableItemDao<Entity>
-    // Selection size is initialized lazily to prevent it from being
-    // accessed before dao is overridden in descendant classes.
-    val selectedItems: LiveData<List<Entity>> by lazy { dao.getSelectedItems() }
-
-    fun resetExpandedItemAndSelection() {
-        viewModelScope.launch { dao.resetExpandedItemAndSelection() }
-    }
-    fun setExpandedId(id: Long?) { viewModelScope.launch { dao.setExpandedItem(id) } }
-
-    fun updateIsSelected(id: Long, isSelected: Boolean) {
-        viewModelScope.launch { dao.updateIsSelected(id, isSelected) }
-    }
-    fun toggleIsSelected(id: Long) { viewModelScope.launch { dao.toggleIsSelected(id) } }
-
-    fun deleteSelected() { viewModelScope.launch { dao.deleteSelected() }}
-
-    fun selectAll() { viewModelScope.launch {
-        dao.selectAllIds(items.value?.map { it.id } ?: emptyList())
-    }}
-
-    fun clearSelection() { viewModelScope.launch { dao.clearSelection() }}
-}
-
-
-/** A ExpandableSelectableItemViewModel subclass that provides functions to asynchronously execute ShoppingListItemDao's functions. */
-class ShoppingListViewModel(app: Application) : ExpandableSelectableItemViewModel<ShoppingListItem>(app) {
-    override val dao = BootyCrateDatabase.get(app).shoppingListItemDao()
-    val checkedItemsSize = dao.getCheckedItemsSize()
-
-    var sortByChecked = false
-        set(value) { field = value; notifySortOptionsChanged() }
-
-    override fun itemsSwitchMapFunc(): LiveData<List<ShoppingListItem>> {
-        val filter = "%${searchFilter ?: ""}%"
-        return if (sortByChecked) when (sort) {
-            BootyCrateItem.Sort.Color -> dao.getAllSortedByColorAndChecked(filter)
-            BootyCrateItem.Sort.NameAsc -> dao.getAllSortedByNameAscAndChecked(filter)
-            BootyCrateItem.Sort.NameDesc -> dao.getAllSortedByNameDescAndChecked(filter)
-            BootyCrateItem.Sort.AmountAsc -> dao.getAllSortedByAmountAscAndChecked(filter)
-            BootyCrateItem.Sort.AmountDesc -> dao.getAllSortedByAmountDescAndChecked(filter)
-        }
-        else super.itemsSwitchMapFunc()
-    }
-
-    fun addFromSelectedInventoryItems() {
-        viewModelScope.launch { dao.addFromSelectedInventoryItems() }
-    }
-    fun updateIsChecked(id: Long, isChecked: Boolean) {
-        viewModelScope.launch { dao.updateIsChecked(id, isChecked) }
-    }
-    fun checkAll() { viewModelScope.launch { dao.checkAll() } }
-
-    fun uncheckAll() { viewModelScope.launch { dao.uncheckAll() } }
-
-    fun checkout() { viewModelScope.launch { dao.checkout() } }
-}
-
-
-/** A ExpandableSelectableItemViewModel subclass that provides functions to asynchronously execute InventoryItemDao's functions. */
-class InventoryViewModel(app: Application) : ExpandableSelectableItemViewModel<InventoryItem>(app) {
-    override val dao = BootyCrateDatabase.get(app).inventoryItemDao()
-
-    fun addFromSelectedShoppingListItems() {
-        viewModelScope.launch { dao.addFromSelectedShoppingListItems() }
-    }
-    fun updateAddToShoppingList(id: Long, addToShoppingList: Boolean) {
-        viewModelScope.launch { dao.updateAddToShoppingList(id, addToShoppingList) }
-    }
-    fun updateAddToShoppingListTrigger(id: Long, addToShoppingListTrigger: Int) {
-        viewModelScope.launch { dao.updateAddToShoppingListTrigger(id, addToShoppingListTrigger) }
-    }
-}
-
-fun inventoryViewModel(context: Context) =
-    ViewModelProvider(context.asFragmentActivity()).get(InventoryViewModel::class.java)
-
-fun shoppingListViewModel(context: Context) =
-    ViewModelProvider(context.asFragmentActivity()).get(ShoppingListViewModel::class.java)
+fun bootyCrateViewModel(context: Context) =
+    ViewModelProvider(context.asFragmentActivity()).get(BootyCrateViewModel::class.java)

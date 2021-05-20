@@ -77,10 +77,10 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.Amount) &&
                         ui.amountEdit.value != item.amount)
                             ui.amountEdit.value = item.amount
-                    if (changes.contains(InventoryItem.Field.IsExpanded) &&
+                    if (changes.contains(InventoryItem.Field.Expanded) &&
                         holder.view.isExpanded != item.isExpanded)
                             holder.view.setExpanded(item.isExpanded)
-                    if (changes.contains(InventoryItem.Field.IsSelected) &&
+                    if (changes.contains(InventoryItem.Field.Selected) &&
                         holder.view.isInSelectedState != item.isSelected)
                             holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(InventoryItem.Field.AutoAddToShoppingList) &&
@@ -136,12 +136,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         override fun areContentsTheSame(oldItem: InventoryItem, newItem: InventoryItem) =
             itemChanges.apply {
                 clear()
-                if (newItem.name != oldItem.name)             add(InventoryItem.Field.Name)
-                if (newItem.extraInfo != oldItem.extraInfo)   add(InventoryItem.Field.ExtraInfo)
-                if (newItem.color != oldItem.color)           add(InventoryItem.Field.Color)
-                if (newItem.amount != oldItem.amount)         add(InventoryItem.Field.Amount)
-                if (newItem.isExpanded != oldItem.isExpanded) add(InventoryItem.Field.IsExpanded)
-                if (newItem.isSelected != oldItem.isSelected) add(InventoryItem.Field.IsSelected)
+                if (newItem.name != oldItem.name)           add(InventoryItem.Field.Name)
+                if (newItem.extraInfo != oldItem.extraInfo) add(InventoryItem.Field.ExtraInfo)
+                if (newItem.color != oldItem.color)         add(InventoryItem.Field.Color)
+                if (newItem.amount != oldItem.amount)       add(InventoryItem.Field.Amount)
+                if (newItem.expanded != oldItem.expanded)   add(InventoryItem.Field.Expanded)
+                if (newItem.selected != oldItem.selected)   add(InventoryItem.Field.Selected)
                 if (newItem.autoAddToShoppingList != oldItem.autoAddToShoppingList)
                     add(InventoryItem.Field.AutoAddToShoppingList)
                 if (newItem.autoAddToShoppingListAmount != oldItem.autoAddToShoppingListAmount)

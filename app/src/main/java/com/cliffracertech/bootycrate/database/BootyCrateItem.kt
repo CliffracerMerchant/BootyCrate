@@ -13,24 +13,42 @@ import com.cliffracertech.bootycrate.R
 @Entity(tableName = "item")
 abstract class BootyCrateItem(
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name="id")                            var id: Long = 0,
-    @ColumnInfo(name="name")                          var name: String = "",
-    @ColumnInfo(name="extraInfo", defaultValue="")    var extraInfo: String = "",
-    @ColumnInfo(name="isChecked", defaultValue="0")   var isChecked: Boolean = false,
-    @ColumnInfo(name="color", defaultValue="0")       var color: Int = 0,
-    @ColumnInfo(name="shoppingListAmount", defaultValue="0") var shoppingListAmount: Int = 0,
-    @ColumnInfo(name="inventoryAmount", defaultValue="0") var inventoryAmount: Int = 0,
-    @ColumnInfo(name="inInventory", defaultValue="0") var inInventory: Boolean = false,
-    @ColumnInfo(name="isExpanded", defaultValue="0")  var isExpanded: Boolean = false,
-    @ColumnInfo(name="isSelected", defaultValue="0")  var isSelected: Boolean = false,
-    @ColumnInfo(name="autoAddToShoppingList", defaultValue="0") var autoAddToShoppingList: Boolean = false,
-    @ColumnInfo(name="autoAddToShoppingListAmount", defaultValue="1") var autoAddToShoppingListAmount: Int = 1,
-    @ColumnInfo(name="inTrash", defaultValue="0")     var inTrash: Boolean = false
+    @ColumnInfo(name="id")                         var id: Long = 0,
+    @ColumnInfo(name="name")                       var name: String = "",
+    @ColumnInfo(name="extraInfo", defaultValue="") var extraInfo: String = "",
+    @ColumnInfo(name="color", defaultValue="0")    var color: Int = 0,
+
+    // ShoppingListItem fields
+    @ColumnInfo(name="checked", defaultValue="0")
+    var checked: Boolean = false,
+    @ColumnInfo(name="shoppingListAmount", defaultValue="0")
+    var shoppingListAmount: Int = 0,
+    @ColumnInfo(name="expandedInShoppingList", defaultValue="0")
+    var expandedInShoppingList: Boolean = false,
+    @ColumnInfo(name="selectedInShoppingList", defaultValue="0")
+    var selectedInShoppingList: Boolean = false,
+    @ColumnInfo(name="inShoppingListTrash", defaultValue="0")
+    var inShoppingListTrash: Boolean = false,
+
+    // InventoryItem fields
+    @ColumnInfo(name="inventoryAmount", defaultValue="0")
+    var inventoryAmount: Int = 0,
+    @ColumnInfo(name="expandedInInventory", defaultValue="0")
+    var expandedInInventory: Boolean = false,
+    @ColumnInfo(name="selectedInInventory", defaultValue="0")
+    var selectedInInventory: Boolean = false,
+    @ColumnInfo(name="autoAddToShoppingList", defaultValue="0")
+    var autoAddToShoppingList: Boolean = false,
+    @ColumnInfo(name="autoAddToShoppingListAmount", defaultValue="1")
+    var autoAddToShoppingListAmount: Int = 1,
+    @ColumnInfo(name="inInventoryTrash", defaultValue="0")
+    var inInventoryTrash: Boolean = false
 ) {
     abstract var amount: Int
+    abstract var expanded: Boolean
+    abstract var selected: Boolean
 
     init { color.coerceIn(Colors.indices) }
-
 
 //    override fun equals(other: Any?): Boolean {
 //        if (other === this) return true
@@ -45,16 +63,18 @@ abstract class BootyCrateItem(
 id = $id
 name = $name
 extraInfo = $extraInfo
-isChecked = $isChecked
 color = $color
+checked = $checked
 shoppingListAmount = $shoppingListAmount
+expandedInShoppingList = $expandedInShoppingList
+selectedInShoppingList = $selectedInShoppingList
+inShoppingListTrash = $inShoppingListTrash
 inventoryAmount = $inventoryAmount
-inInventory = $inInventory
+expandedInInventory = $expandedInInventory
+selectedInInventory = $selectedInInventory
 autoAddToShoppingList = $autoAddToShoppingList
 autoAddToShoppingListAmount = $autoAddToShoppingListAmount
-isExpanded = $isExpanded
-isSelected = $isSelected
-inTrash = $inTrash"""
+inInventoryTrash = $inInventoryTrash"""
 
     // For a user-facing string representation of the object
     open fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
@@ -78,59 +98,69 @@ inTrash = $inTrash"""
     }
 }
 
-/** A Room entity that represents a shopping list item in the user's shopping list. */
+/** A BootyCrateItem subclass with a constructor that only
+ * requires the fields relevant to items on the shopping list. */
 class ShoppingListItem(
     id: Long = 0,
-    isChecked: Boolean = false,
-    color: Int = 0,
     name: String = "",
     extraInfo: String = "",
-    shoppingListAmount: Int = 0,
-    inventoryAmount: Int = 0,
-    inInventory: Boolean = false,
-    isExpanded: Boolean = false,
-    isSelected: Boolean = false,
-    autoAddToShoppingList: Boolean = false,
-    autoAddToShoppingListAmount: Int = 1,
-    inTrash: Boolean = false,
-) : BootyCrateItem(id, name, extraInfo, isChecked, color, shoppingListAmount,
-                   inventoryAmount, inInventory, isExpanded, isSelected,
-                   autoAddToShoppingList, autoAddToShoppingListAmount, inTrash)
+    color: Int = 0,
+    checked: Boolean = false,
+    amount: Int = 1,
+    expanded: Boolean = false,
+    selected: Boolean = false,
+    inventoryAmount: Int = -1
+) : BootyCrateItem(id, name, extraInfo, color,
+                   checked = checked,
+                   shoppingListAmount = amount,
+                   expandedInShoppingList = expanded,
+                   selectedInShoppingList = selected,
+                   inventoryAmount = inventoryAmount)
 {
     override var amount get() = shoppingListAmount
                         set(value) { shoppingListAmount = value }
+    override var expanded get() = expandedInShoppingList
+                          set(value) { expandedInShoppingList = value }
+    override var selected get() = selectedInShoppingList
+                          set(value) { selectedInShoppingList = value }
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
     enum class Field { Name, ExtraInfo, Color, Amount,
-                       IsExpanded, IsSelected, IsChecked }
+                       Expanded, Selected, IsChecked }
 }
 
-/** A Room entity that represents an inventory item in the user's inventory. */
+/** A BootyCrateItem subclass with a constructor that only
+ * requires the fields relevant to items in the inventory */
 class InventoryItem(
     id: Long = 0,
-    isChecked: Boolean = false,
-    color: Int = 0,
     name: String = "",
     extraInfo: String = "",
-    shoppingListAmount: Int = 0,
-    inventoryAmount: Int = 0,
-    inInventory: Boolean = false,
-    isExpanded: Boolean = false,
-    isSelected: Boolean = false,
+    color: Int = 0,
+    amount: Int = 0,
+    expanded: Boolean = false,
+    selected: Boolean = false,
     autoAddToShoppingList: Boolean = false,
     autoAddToShoppingListAmount: Int = 1,
-    inTrash: Boolean = false,
-) : BootyCrateItem(id, name, extraInfo, isChecked, color, shoppingListAmount,
-                   inventoryAmount, inInventory, isExpanded, isSelected,
-                   autoAddToShoppingList, autoAddToShoppingListAmount, inTrash)
+    shoppingListAmount: Int = -1,
+) : BootyCrateItem(id, name, extraInfo, color,
+                   inventoryAmount = amount,
+                   expandedInInventory = expanded,
+                   selectedInInventory = selected,
+                   autoAddToShoppingList = autoAddToShoppingList,
+                   autoAddToShoppingListAmount = autoAddToShoppingListAmount,
+                   shoppingListAmount = shoppingListAmount)
 {
     override var amount get() = inventoryAmount
                         set(value) { inventoryAmount = value }
+    override var expanded get() = expandedInInventory
+                          set(value) { expandedInInventory = value }
+    override var selected get() = selectedInInventory
+                          set(value) { selectedInInventory = value }
 
-    /** The enum class Field identifies user facing fields that are potentially
-     * editable by the user. */
-    enum class Field { Name, ExtraInfo, Color, Amount, IsExpanded,
-                       IsSelected, AutoAddToShoppingList,
+    /** The enum class Field identifies user facing fields
+     * that are potentially editable by the user. */
+    enum class Field { Name, ExtraInfo, Color, Amount,
+                       Expanded, Selected, AutoAddToShoppingList,
                        AutoAddToShoppingListAmount }
 }

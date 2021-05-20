@@ -38,12 +38,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * ping list and inventory items in the database, and then add them to the
  * current database.
  */
-@Database(entities = [ShoppingListItem::class, InventoryItem::class],
-          version = 1, exportSchema = false)
+@Database(entities = [BootyCrateItem::class], version = 1)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
-    abstract fun inventoryItemDao(): InventoryItemDao
-    abstract fun shoppingListItemDao(): ShoppingListItemDao
+    abstract fun dao(): BootyCrateItemDao
 
     companion object {
         var instance: BootyCrateDatabase? = null
