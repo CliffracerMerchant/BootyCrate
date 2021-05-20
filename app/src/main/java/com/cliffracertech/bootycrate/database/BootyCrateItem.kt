@@ -19,8 +19,8 @@ abstract class BootyCrateItem(
     @ColumnInfo(name="color", defaultValue="0")    var color: Int = 0,
 
     // ShoppingListItem fields
-    @ColumnInfo(name="checked", defaultValue="0")
-    var checked: Boolean = false,
+    @ColumnInfo(name="isChecked", defaultValue="0")
+    var isChecked: Boolean = false,
     @ColumnInfo(name="shoppingListAmount", defaultValue="0")
     var shoppingListAmount: Int = 0,
     @ColumnInfo(name="expandedInShoppingList", defaultValue="0")
@@ -45,8 +45,8 @@ abstract class BootyCrateItem(
     var inInventoryTrash: Boolean = false
 ) {
     abstract var amount: Int
-    abstract var expanded: Boolean
-    abstract var selected: Boolean
+    abstract var isExpanded: Boolean
+    abstract var isSelected: Boolean
 
     init { color.coerceIn(Colors.indices) }
 
@@ -64,7 +64,7 @@ id = $id
 name = $name
 extraInfo = $extraInfo
 color = $color
-checked = $checked
+checked = $isChecked
 shoppingListAmount = $shoppingListAmount
 expandedInShoppingList = $expandedInShoppingList
 selectedInShoppingList = $selectedInShoppingList
@@ -78,15 +78,6 @@ inInventoryTrash = $inInventoryTrash"""
 
     // For a user-facing string representation of the object
     open fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
-
-    enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
-        companion object {
-            fun fromString(string: String?): Sort =
-                if (string == null) Color
-                else try { valueOf(string) }
-                     catch(e: IllegalArgumentException) { Color }
-        }
-    }
 
     companion object {
         val Colors: List<Int> get() = _Colors
@@ -105,24 +96,24 @@ class ShoppingListItem(
     name: String = "",
     extraInfo: String = "",
     color: Int = 0,
-    checked: Boolean = false,
+    isChecked: Boolean = false,
     amount: Int = 1,
-    expanded: Boolean = false,
-    selected: Boolean = false,
+    isExpanded: Boolean = false,
+    isSelected: Boolean = false,
     inventoryAmount: Int = -1
 ) : BootyCrateItem(id, name, extraInfo, color,
-                   checked = checked,
+                   isChecked = isChecked,
                    shoppingListAmount = amount,
-                   expandedInShoppingList = expanded,
-                   selectedInShoppingList = selected,
+                   expandedInShoppingList = isExpanded,
+                   selectedInShoppingList = isSelected,
                    inventoryAmount = inventoryAmount)
 {
     override var amount get() = shoppingListAmount
                         set(value) { shoppingListAmount = value }
-    override var expanded get() = expandedInShoppingList
-                          set(value) { expandedInShoppingList = value }
-    override var selected get() = selectedInShoppingList
-                          set(value) { selectedInShoppingList = value }
+    override var isExpanded get() = expandedInShoppingList
+                            set(value) { expandedInShoppingList = value }
+    override var isSelected get() = selectedInShoppingList
+                            set(value) { selectedInShoppingList = value }
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
@@ -138,25 +129,25 @@ class InventoryItem(
     extraInfo: String = "",
     color: Int = 0,
     amount: Int = 0,
-    expanded: Boolean = false,
-    selected: Boolean = false,
+    isExpanded: Boolean = false,
+    isSelected: Boolean = false,
     autoAddToShoppingList: Boolean = false,
     autoAddToShoppingListAmount: Int = 1,
     shoppingListAmount: Int = -1,
 ) : BootyCrateItem(id, name, extraInfo, color,
                    inventoryAmount = amount,
-                   expandedInInventory = expanded,
-                   selectedInInventory = selected,
+                   expandedInInventory = isExpanded,
+                   selectedInInventory = isSelected,
                    autoAddToShoppingList = autoAddToShoppingList,
                    autoAddToShoppingListAmount = autoAddToShoppingListAmount,
                    shoppingListAmount = shoppingListAmount)
 {
     override var amount get() = inventoryAmount
                         set(value) { inventoryAmount = value }
-    override var expanded get() = expandedInInventory
-                          set(value) { expandedInInventory = value }
-    override var selected get() = selectedInInventory
-                          set(value) { selectedInInventory = value }
+    override var isExpanded get() = expandedInInventory
+                            set(value) { expandedInInventory = value }
+    override var isSelected get() = selectedInInventory
+                            set(value) { selectedInInventory = value }
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */

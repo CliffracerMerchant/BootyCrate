@@ -37,23 +37,23 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
 
 
     fun getShoppingList(
-        sort: BootyCrateItem.Sort,
+        sort: BootyCrateItemSort,
         sortByChecked: Boolean,
         searchFilter: String?
     ) = run {
         val filter = "%${searchFilter ?: ""}%"
         if (!sortByChecked) when (sort) {
-            BootyCrateItem.Sort.Color -> getShoppingListSortedByColor(filter)
-            BootyCrateItem.Sort.NameAsc -> getShoppingListSortedByNameAsc(filter)
-            BootyCrateItem.Sort.NameDesc -> getShoppingListSortedByNameDesc(filter)
-            BootyCrateItem.Sort.AmountAsc -> getShoppingListSortedByAmountAsc(filter)
-            BootyCrateItem.Sort.AmountDesc -> getShoppingListSortedByAmountDesc(filter)
+            BootyCrateItemSort.Color -> getShoppingListSortedByColor(filter)
+            BootyCrateItemSort.NameAsc -> getShoppingListSortedByNameAsc(filter)
+            BootyCrateItemSort.NameDesc -> getShoppingListSortedByNameDesc(filter)
+            BootyCrateItemSort.AmountAsc -> getShoppingListSortedByAmountAsc(filter)
+            BootyCrateItemSort.AmountDesc -> getShoppingListSortedByAmountDesc(filter)
         } else when (sort) {
-            BootyCrateItem.Sort.Color -> getShoppingListSortedByColorAndChecked(filter)
-            BootyCrateItem.Sort.NameAsc -> getShoppingListSortedByNameAscAndChecked(filter)
-            BootyCrateItem.Sort.NameDesc -> getShoppingListSortedByNameDescAndChecked(filter)
-            BootyCrateItem.Sort.AmountAsc -> getShoppingListSortedByAmountAscAndChecked(filter)
-            BootyCrateItem.Sort.AmountDesc -> getShoppingListSortedByAmountDescAndChecked(filter)
+            BootyCrateItemSort.Color -> getShoppingListSortedByColorAndChecked(filter)
+            BootyCrateItemSort.NameAsc -> getShoppingListSortedByNameAscAndChecked(filter)
+            BootyCrateItemSort.NameDesc -> getShoppingListSortedByNameDescAndChecked(filter)
+            BootyCrateItemSort.AmountAsc -> getShoppingListSortedByAmountAscAndChecked(filter)
+            BootyCrateItemSort.AmountDesc -> getShoppingListSortedByAmountDescAndChecked(filter)
         }
     }
 
@@ -166,7 +166,7 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     abstract suspend fun deleteShoppingListItems(ids: LongArray)
 
     @Query("""UPDATE item SET shoppingListAmount = -1,
-                              checked = 0,
+                              isChecked = 0,
                               expandedInShoppingList = 0,
                               selectedInShoppingList = 0
               WHERE shoppingListAmount != -1""")
@@ -178,37 +178,37 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     @Query("UPDATE item SET shoppingListAmount = -1 WHERE inShoppingListTrash")
     abstract suspend fun emptyShoppingListTrash()
 
-    @Query("UPDATE item SET checked = :checked WHERE id = :id")
-    abstract suspend fun updateChecked(id: Long, checked: Boolean)
+    @Query("UPDATE item SET isChecked = :isChecked WHERE id = :id")
+    abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
 
-    @Query("UPDATE item SET checked = 1 WHERE $onShoppingList")
+    @Query("UPDATE item SET isChecked = 1 WHERE $onShoppingList")
     abstract suspend fun checkAllShoppingListItems()
 
-    @Query("UPDATE item SET checked = 0 WHERE $onShoppingList")
+    @Query("UPDATE item SET isChecked = 0 WHERE $onShoppingList")
     abstract suspend fun uncheckAllShoppingListItems()
 
-    @Query("SELECT COUNT(*) FROM item WHERE checked AND $onShoppingList")
+    @Query("SELECT COUNT(*) FROM item WHERE isChecked AND $onShoppingList")
     abstract fun getCheckedShoppingListItemsSize() : LiveData<Int>
 
     @Query("""UPDATE item
               SET inventoryAmount = inventoryAmount + shoppingListAmount,
-                  checked = 0,
+                  isChecked = 0,
                   shoppingListAmount = -1,
                   expandedInShoppingList = 0,
                   selectedInShoppingList = 0
-              WHERE $onShoppingList AND checked""")
+              WHERE $onShoppingList AND isChecked""")
     abstract suspend fun checkout()
 
 
 
-    fun getInventory(sort: BootyCrateItem.Sort, searchFilter: String?) = run {
+    fun getInventory(sort: BootyCrateItemSort, searchFilter: String?) = run {
         val filter = "%${searchFilter ?: ""}%"
         when (sort) {
-            BootyCrateItem.Sort.Color -> getInventorySortedByColor(filter)
-            BootyCrateItem.Sort.NameAsc -> getInventorySortedByNameAsc(filter)
-            BootyCrateItem.Sort.NameDesc -> getInventorySortedByNameDesc(filter)
-            BootyCrateItem.Sort.AmountAsc -> getInventorySortedByAmountAsc(filter)
-            BootyCrateItem.Sort.AmountDesc -> getInventorySortedByAmountDesc(filter)
+            BootyCrateItemSort.Color -> getInventorySortedByColor(filter)
+            BootyCrateItemSort.NameAsc -> getInventorySortedByNameAsc(filter)
+            BootyCrateItemSort.NameDesc -> getInventorySortedByNameDesc(filter)
+            BootyCrateItemSort.AmountAsc -> getInventorySortedByAmountAsc(filter)
+            BootyCrateItemSort.AmountDesc -> getInventorySortedByAmountDesc(filter)
         }
     }
 
