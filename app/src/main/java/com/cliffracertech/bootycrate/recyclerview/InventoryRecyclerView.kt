@@ -71,24 +71,24 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(InventoryItem.Field.Color)) {
                         if (ui.checkBox.colorIndex != item.color)
                             ui.checkBox.colorIndex = item.color
-                        if (detailsUi.addToShoppingListCheckBox.colorIndex != item.color)
-                            detailsUi.addToShoppingListCheckBox.colorIndex = item.color
+                        if (detailsUi.autoAddToShoppingListCheckBox.colorIndex != item.color)
+                            detailsUi.autoAddToShoppingListCheckBox.colorIndex = item.color
                     }
                     if (changes.contains(InventoryItem.Field.Amount) &&
                         ui.amountEdit.value != item.amount)
                             ui.amountEdit.value = item.amount
-                    if (changes.contains(InventoryItem.Field.Expanded) &&
+                    if (changes.contains(InventoryItem.Field.IsExpanded) &&
                         holder.view.isExpanded != item.isExpanded)
                             holder.view.setExpanded(item.isExpanded)
-                    if (changes.contains(InventoryItem.Field.Selected) &&
+                    if (changes.contains(InventoryItem.Field.IsSelected) &&
                         holder.view.isInSelectedState != item.isSelected)
                             holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(InventoryItem.Field.AutoAddToShoppingList) &&
-                        detailsUi.addToShoppingListCheckBox.isChecked != item.autoAddToShoppingList)
-                            detailsUi.addToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
+                        detailsUi.autoAddToShoppingListCheckBox.isChecked != item.autoAddToShoppingList)
+                            detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
                     if (changes.contains(InventoryItem.Field.AutoAddToShoppingListAmount) &&
-                        detailsUi.addToShoppingListTriggerEdit.value != item.autoAddToShoppingListAmount)
-                            detailsUi.addToShoppingListTriggerEdit.value = item.autoAddToShoppingListAmount
+                        detailsUi.autoAddToShoppingListAmountEdit.value != item.autoAddToShoppingListAmount)
+                            detailsUi.autoAddToShoppingListAmountEdit.value = item.autoAddToShoppingListAmount
                 }
                 else unhandledChanges.add(payload)
             }
@@ -108,12 +108,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         ExpandableSelectableRecyclerView<InventoryItem>.ViewHolder(view) {
 
         init {
-            view.detailsUi.addToShoppingListCheckBox.onCheckedChangedListener = { checked ->
-                viewModel.updateAddToShoppingList(item.id, checked)
+            view.detailsUi.autoAddToShoppingListCheckBox.onCheckedChangedListener = { checked ->
+                viewModel.updateAutoAddToShoppingList(item.id, checked)
             }
-            view.detailsUi.addToShoppingListTriggerEdit.onValueChangedListener = { value ->
+            view.detailsUi.autoAddToShoppingListAmountEdit.onValueChangedListener = { value ->
                 if (adapterPosition != -1)
-                    viewModel.updateAddToShoppingListTrigger(item.id, value)
+                    viewModel.updateAutoAddToShoppingListAmount(item.id, value)
             }
         }
     }
@@ -136,12 +136,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         override fun areContentsTheSame(oldItem: InventoryItem, newItem: InventoryItem) =
             itemChanges.apply {
                 clear()
-                if (newItem.name != oldItem.name)           add(InventoryItem.Field.Name)
-                if (newItem.extraInfo != oldItem.extraInfo) add(InventoryItem.Field.ExtraInfo)
-                if (newItem.color != oldItem.color)         add(InventoryItem.Field.Color)
-                if (newItem.amount != oldItem.amount)       add(InventoryItem.Field.Amount)
-                if (newItem.expanded != oldItem.expanded)   add(InventoryItem.Field.Expanded)
-                if (newItem.selected != oldItem.selected)   add(InventoryItem.Field.Selected)
+                if (newItem.name != oldItem.name)             add(InventoryItem.Field.Name)
+                if (newItem.extraInfo != oldItem.extraInfo)   add(InventoryItem.Field.ExtraInfo)
+                if (newItem.color != oldItem.color)           add(InventoryItem.Field.Color)
+                if (newItem.amount != oldItem.amount)         add(InventoryItem.Field.Amount)
+                if (newItem.isExpanded != oldItem.isExpanded) add(InventoryItem.Field.IsExpanded)
+                if (newItem.isSelected != oldItem.isSelected) add(InventoryItem.Field.IsSelected)
                 if (newItem.autoAddToShoppingList != oldItem.autoAddToShoppingList)
                     add(InventoryItem.Field.AutoAddToShoppingList)
                 if (newItem.autoAddToShoppingListAmount != oldItem.autoAddToShoppingListAmount)

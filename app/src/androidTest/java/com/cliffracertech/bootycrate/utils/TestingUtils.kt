@@ -17,7 +17,7 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import com.cliffracertech.bootycrate.ExpandableSelectableItemView
 import com.cliffracertech.bootycrate.InventoryItemView
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
+import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
@@ -61,10 +61,10 @@ fun actionOnChildWithId(viewId: Int, vararg actions: ViewAction) = object : View
 
 fun clickEditButton() = actionOnChildWithId(R.id.editButton, click())
 fun clickCheckBox() = actionOnChildWithId(R.id.checkBox, click())
-fun clickAddToShoppingListCheckBox() = actionOnChildWithId(R.id.addToShoppingListCheckBox, click())
+fun clickAddToShoppingListCheckBox() = actionOnChildWithId(R.id.autoAddToShoppingListCheckBox, click())
 fun onAmount(vararg viewActions: ViewAction) = actionOnChildWithId(R.id.amountEdit, *viewActions)
 fun onAddToShoppingListTrigger(vararg viewActions: ViewAction) =
-    actionOnChildWithId(R.id.addToShoppingListTriggerEdit, *viewActions)
+    actionOnChildWithId(R.id.autoAddToShoppingListAmountEdit, *viewActions)
 fun onIncreaseButton(vararg viewActions: ViewAction) = actionOnChildWithId(R.id.increaseButton, *viewActions)
 fun onDecreaseButton(vararg viewActions: ViewAction) = actionOnChildWithId(R.id.decreaseButton, *viewActions)
 fun typeIntoValueEdit(text: String) = actionOnChildWithId(R.id.valueEdit, click(), typeText(text))
@@ -102,7 +102,7 @@ fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
 
 /** Asserts that the view is an ExpandableSelectableRecyclerView that
     contains only the specified items of type T, in the order given. */
-abstract class onlyShownItemsAre<T: ExpandableSelectableItem>(vararg items: T) : ViewAssertion {
+abstract class onlyShownItemsAre<T: BootyCrateItem>(vararg items: T) : ViewAssertion {
     private val items = items.asList()
 
     abstract fun itemFromView(view: ExpandableSelectableItemView<*>) : T
@@ -144,6 +144,6 @@ class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
         extraInfo = view.ui.extraInfoEdit.text.toString(),
         color = view.ui.checkBox.colorIndex,
         amount = view.ui.amountEdit.value,
-        addToShoppingList = (view as InventoryItemView).detailsUi.addToShoppingListCheckBox.isChecked,
-        addToShoppingListTrigger = view.detailsUi.addToShoppingListTriggerEdit.value)
+        autoAddToShoppingList = (view as InventoryItemView).detailsUi.autoAddToShoppingListCheckBox.isChecked,
+        autoAddToShoppingListAmount = view.detailsUi.autoAddToShoppingListAmountEdit.value)
 }

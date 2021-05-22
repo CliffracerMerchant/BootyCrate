@@ -20,8 +20,11 @@ enum class BootyCrateItemSort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
     }
 }
 
-fun bootyCrateViewModel(context: Context) =
-    ViewModelProvider(context.asFragmentActivity()).get(BootyCrateViewModel::class.java)
+fun shoppingListViewModel(context: Context) =
+    ViewModelProvider(context.asFragmentActivity()).get(ShoppingListViewModel::class.java)
+
+fun inventoryViewModel(context: Context) =
+    ViewModelProvider(context.asFragmentActivity()).get(InventoryViewModel::class.java)
 
 /**
  * An abstract AndroidViewModel that provides an interface for asynchronously manipulating a BootyCrateDatabase.
@@ -32,8 +35,8 @@ fun bootyCrateViewModel(context: Context) =
  * sort describes a value of the enum class BootyCrateItemSort, while searchFilter
  * describes a string whose value the name and/or extra info of items will be
  * matched to. Additional sorting options can be add in subclasses if
- * notifySortOptionsChanged is called when they are changed. Subclasses
- * implementation of the function itemsSwitchMapFunc should return the
+ * notifySortOptionsChanged is called when they are changed. Subclass
+ * implementations of the function itemsSwitchMapFunc should return the
  * LiveData<List<T>> given the current values of sort, searchFilter, and any
  * additional sort options the subclass adds.
  *
@@ -45,8 +48,10 @@ fun bootyCrateViewModel(context: Context) =
 abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): AndroidViewModel(app) {
     protected val dao = BootyCrateDatabase.get(app).dao()
 
-    fun add(item: T) = viewModelScope.launch { dao.add(item) }
-    fun add(items: List<T>) = viewModelScope.launch { dao.add(items) }
+    fun add(item: T) = viewModelScope.launch { dao.add(item.toDbBootyCrateItem()) }
+    fun add(items: List<T>) = viewModelScope.launch {
+        dao.add(items.map { it.toDbBootyCrateItem() })
+    }
 
     fun updateName(id: Long, name: String) =
         viewModelScope.launch { dao.updateName(id, name) }
@@ -164,6 +169,9 @@ class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingList
     fun checkout() = viewModelScope.launch { dao.checkout() }
 }
 
+/** An implementation of BootyCrateViewModel<InventoryItem> that adds functions
+ * to query or manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
+ * fields of items in the database. */
 class InventoryViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(app) {
 
     override fun itemsSwitchMapFunc() = dao.getInventory(sort, searchFilter)

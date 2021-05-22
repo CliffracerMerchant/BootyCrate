@@ -10,8 +10,10 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.cliffracertech.bootycrate.R
 
-@Entity(tableName = "item")
-abstract class BootyCrateItem(
+/** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item
+ * table, and therefore contains properties for each of these fields. */
+@Entity(tableName = "bootycrate_item")
+class DatabaseBootyCrateItem(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name="id")                         var id: Long = 0,
     @ColumnInfo(name="name")                       var name: String = "",
@@ -21,8 +23,8 @@ abstract class BootyCrateItem(
     // ShoppingListItem fields
     @ColumnInfo(name="isChecked", defaultValue="0")
     var isChecked: Boolean = false,
-    @ColumnInfo(name="shoppingListAmount", defaultValue="0")
-    var shoppingListAmount: Int = 0,
+    @ColumnInfo(name="shoppingListAmount", defaultValue="-1")
+    var shoppingListAmount: Int = -1,
     @ColumnInfo(name="expandedInShoppingList", defaultValue="0")
     var expandedInShoppingList: Boolean = false,
     @ColumnInfo(name="selectedInShoppingList", defaultValue="0")
@@ -31,8 +33,8 @@ abstract class BootyCrateItem(
     var inShoppingListTrash: Boolean = false,
 
     // InventoryItem fields
-    @ColumnInfo(name="inventoryAmount", defaultValue="0")
-    var inventoryAmount: Int = 0,
+    @ColumnInfo(name="inventoryAmount", defaultValue="-1")
+    var inventoryAmount: Int = -1,
     @ColumnInfo(name="expandedInInventory", defaultValue="0")
     var expandedInInventory: Boolean = false,
     @ColumnInfo(name="selectedInInventory", defaultValue="0")
@@ -44,11 +46,7 @@ abstract class BootyCrateItem(
     @ColumnInfo(name="inInventoryTrash", defaultValue="0")
     var inInventoryTrash: Boolean = false
 ) {
-    abstract var amount: Int
-    abstract var isExpanded: Boolean
-    abstract var isSelected: Boolean
-
-    init { color.coerceIn(Colors.indices) }
+    init { color.coerceIn(BootyCrateItem.Colors.indices) }
 
 //    override fun equals(other: Any?): Boolean {
 //        if (other === this) return true
@@ -58,6 +56,11 @@ abstract class BootyCrateItem(
 //               this.extraInfo == other.extraInfo &&
 //               this.color == other.color
 //    }
+
+    // An interface for objects to provide a way to convert themselves into a DataBaseBootyCrateItem
+    interface Convertible {
+        fun toDbBootyCrateItem(): DatabaseBootyCrateItem
+    }
 
     override fun toString() ="""
 id = $id
@@ -75,9 +78,26 @@ selectedInInventory = $selectedInInventory
 autoAddToShoppingList = $autoAddToShoppingList
 autoAddToShoppingListAmount = $autoAddToShoppingListAmount
 inInventoryTrash = $inInventoryTrash"""
+}
+
+/** An abstract class that mirrors DatabaseBootyCrateItem, but only contains
+ * the fields necessary for a visual representation of the object. Subclasses
+ * should also add any additionally required fields and provide an implementation
+ * of toDbBootyCrateItem that will return a DatabaseBootyCrateItem representation
+ * of the object. */
+abstract class BootyCrateItem(
+    var id: Long = 0,
+    var name: String = "",
+    var extraInfo: String = "",
+    var color: Int = 0,
+    var amount: Int = 1,
+    var isExpanded: Boolean = false,
+    var isSelected: Boolean = false,
+    var linked: Boolean = false,
+) : DatabaseBootyCrateItem.Convertible {
 
     // For a user-facing string representation of the object
-    open fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
+    fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
     companion object {
         val Colors: List<Int> get() = _Colors
@@ -89,40 +109,37 @@ inInventoryTrash = $inInventoryTrash"""
     }
 }
 
-/** A BootyCrateItem subclass with a constructor that only
- * requires the fields relevant to items on the shopping list. */
+/** A BootyCrateItem subclass that provides an implementation of toDbBootyCrateItem
+ * and adds the isChecked field to mirror the DatabaseBootyCrateItem property. */
 class ShoppingListItem(
     id: Long = 0,
     name: String = "",
     extraInfo: String = "",
     color: Int = 0,
-    isChecked: Boolean = false,
     amount: Int = 1,
     isExpanded: Boolean = false,
     isSelected: Boolean = false,
-    inventoryAmount: Int = -1
-) : BootyCrateItem(id, name, extraInfo, color,
-                   isChecked = isChecked,
-                   shoppingListAmount = amount,
-                   expandedInShoppingList = isExpanded,
-                   selectedInShoppingList = isSelected,
-                   inventoryAmount = inventoryAmount)
-{
-    override var amount get() = shoppingListAmount
-                        set(value) { shoppingListAmount = value }
-    override var isExpanded get() = expandedInShoppingList
-                            set(value) { expandedInShoppingList = value }
-    override var isSelected get() = selectedInShoppingList
-                            set(value) { selectedInShoppingList = value }
+    linked: Boolean = false,
+    var isChecked: Boolean = false
+): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, linked) {
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
     enum class Field { Name, ExtraInfo, Color, Amount,
-                       Expanded, Selected, IsChecked }
+                       IsExpanded, IsSelected, IsChecked }
+
+    override fun toDbBootyCrateItem() = DatabaseBootyCrateItem(
+        id, name, extraInfo, color,
+        isChecked = isChecked,
+        shoppingListAmount = amount,
+        expandedInShoppingList = isExpanded,
+        selectedInShoppingList = isSelected
+    )
 }
 
-/** A BootyCrateItem subclass with a constructor that only
- * requires the fields relevant to items in the inventory */
+/** A BootyCrateItem subclass that provides an implementation of toDbBootyCrateItem
+ * and adds the autoAddToShoppingList and autoAddToShoppingListAmount fields to
+ * mirror the DatabaseBootyCrateItem fields. */
 class InventoryItem(
     id: Long = 0,
     name: String = "",
@@ -131,27 +148,23 @@ class InventoryItem(
     amount: Int = 0,
     isExpanded: Boolean = false,
     isSelected: Boolean = false,
-    autoAddToShoppingList: Boolean = false,
-    autoAddToShoppingListAmount: Int = 1,
-    shoppingListAmount: Int = -1,
-) : BootyCrateItem(id, name, extraInfo, color,
-                   inventoryAmount = amount,
-                   expandedInInventory = isExpanded,
-                   selectedInInventory = isSelected,
-                   autoAddToShoppingList = autoAddToShoppingList,
-                   autoAddToShoppingListAmount = autoAddToShoppingListAmount,
-                   shoppingListAmount = shoppingListAmount)
-{
-    override var amount get() = inventoryAmount
-                        set(value) { inventoryAmount = value }
-    override var isExpanded get() = expandedInInventory
-                            set(value) { expandedInInventory = value }
-    override var isSelected get() = selectedInInventory
-                            set(value) { selectedInInventory = value }
+    linked: Boolean = false,
+    var autoAddToShoppingList: Boolean = false,
+    var autoAddToShoppingListAmount: Int = 1
+): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, linked) {
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
     enum class Field { Name, ExtraInfo, Color, Amount,
-                       Expanded, Selected, AutoAddToShoppingList,
+                       IsExpanded, IsSelected,
+                       AutoAddToShoppingList,
                        AutoAddToShoppingListAmount }
+
+    override fun toDbBootyCrateItem() = DatabaseBootyCrateItem(
+        id, name, extraInfo, color,
+        inventoryAmount = amount,
+        expandedInInventory = isExpanded,
+        selectedInInventory = isSelected,
+        autoAddToShoppingList = autoAddToShoppingList,
+        autoAddToShoppingListAmount = autoAddToShoppingListAmount)
 }

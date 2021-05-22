@@ -1,0 +1,131 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "6fb1e5ccd51a77576298b45cfc2e1d97",
+    "entities": [
+      {
+        "tableName": "bootycrate_item",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0, `isChecked` INTEGER NOT NULL DEFAULT 0, `shoppingListAmount` INTEGER NOT NULL DEFAULT -1, `expandedInShoppingList` INTEGER NOT NULL DEFAULT 0, `selectedInShoppingList` INTEGER NOT NULL DEFAULT 0, `inShoppingListTrash` INTEGER NOT NULL DEFAULT 0, `inventoryAmount` INTEGER NOT NULL DEFAULT -1, `expandedInInventory` INTEGER NOT NULL DEFAULT 0, `selectedInInventory` INTEGER NOT NULL DEFAULT 0, `autoAddToShoppingList` INTEGER NOT NULL DEFAULT 0, `autoAddToShoppingListAmount` INTEGER NOT NULL DEFAULT 1, `inInventoryTrash` INTEGER NOT NULL DEFAULT 0)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "extraInfo",
+            "columnName": "extraInfo",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "isChecked",
+            "columnName": "isChecked",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "shoppingListAmount",
+            "columnName": "shoppingListAmount",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "-1"
+          },
+          {
+            "fieldPath": "expandedInShoppingList",
+            "columnName": "expandedInShoppingList",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "selectedInShoppingList",
+            "columnName": "selectedInShoppingList",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "inShoppingListTrash",
+            "columnName": "inShoppingListTrash",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "inventoryAmount",
+            "columnName": "inventoryAmount",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "-1"
+          },
+          {
+            "fieldPath": "expandedInInventory",
+            "columnName": "expandedInInventory",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "selectedInInventory",
+            "columnName": "selectedInInventory",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "autoAddToShoppingList",
+            "columnName": "autoAddToShoppingList",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "autoAddToShoppingListAmount",
+            "columnName": "autoAddToShoppingListAmount",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "inInventoryTrash",
+            "columnName": "inInventoryTrash",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "columnNames": [
+            "id"
+          ],
+          "autoGenerate": true
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6fb1e5ccd51a77576298b45cfc2e1d97')"
+    ]
+  }
+}

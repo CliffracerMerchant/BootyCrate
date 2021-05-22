@@ -56,7 +56,7 @@ open class BootyCrateItemView<Entity: BootyCrateItem>(
 ) : ConstraintLayout(context) {
 
     protected val inputMethodManager = inputMethodManager(context)
-    protected var itemIsInBothLists = false
+    protected var isLinkedToAnotherItem = false
 
     lateinit var ui: BootyCrateItemBinding
 
@@ -76,7 +76,7 @@ open class BootyCrateItemView<Entity: BootyCrateItem>(
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
         ui.checkBox.initColorIndex(colorIndex)
         ui.amountEdit.initValue(item.amount)
-        itemIsInBothLists = item.shoppingListAmount > 0 && item.inInventory
+        isLinkedToAnotherItem = item.linked
     }
 }
 
@@ -191,7 +191,7 @@ open class ExpandableSelectableItemView<Entity: BootyCrateItem>(
         val editableTextFieldHeight = resources.getDimension(R.dimen.editable_text_field_min_height)
         ui.spacer.layoutParams.height = (editableTextFieldHeight * if (expanding) 2 else 1).toInt()
 
-        if (itemIsInBothLists)
+        if (isLinkedToAnotherItem)
             if (!animate) ui.linkIndicator.isVisible = expanding
             else ui.linkIndicator.showOrHideAfterFading(showing = expanding)
         if (animate) setupCheckBoxAnimation()
@@ -464,21 +464,21 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
     }
 
     override fun update(item: InventoryItem) {
-        detailsUi.addToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
-        detailsUi.addToShoppingListCheckBox.initColorIndex(item.color)
-        detailsUi.addToShoppingListTriggerEdit.initValue(item.autoAddToShoppingListAmount)
+        detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
+        detailsUi.autoAddToShoppingListCheckBox.initColorIndex(item.color)
+        detailsUi.autoAddToShoppingListAmountEdit.initValue(item.autoAddToShoppingListAmount)
         super.update(item)
     }
 
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
-        if (!expanded && detailsUi.addToShoppingListTriggerEdit.ui.valueEdit.isFocused)
+        if (!expanded && detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.isFocused)
             inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
         if (!animate)
             detailsUi.inventoryItemDetails.isVisible = expanded
         else {
-            detailsUi.addToShoppingListCheckBox.showOrHideAfterFading(expanded)
-            detailsUi.addToShoppingListLabel.showOrHideAfterFading(expanded)
-            detailsUi.addToShoppingListTriggerEdit.showOrHideAfterFading(expanded)
+            detailsUi.autoAddToShoppingListCheckBox.showOrHideAfterFading(expanded)
+            detailsUi.autoAddToShoppingListLabel.showOrHideAfterFading(expanded)
+            detailsUi.autoAddToShoppingListAmountEdit.showOrHideAfterFading(expanded)
         }
     }
 }

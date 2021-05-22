@@ -21,17 +21,17 @@ import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 
 /**
- * A RecyclerView for displaying the contents of a BootyCrateViewModel<Entity>.
+ * A RecyclerView for displaying the contents of a BootyCrateViewModel.
  *
  * BootyCrateRecyclerView is an abstract RecyclerView subclass that tailors the
  * RecyclerView interface toward displaying the contents of a BootyCrateViewModel
  * and updating itself asynchronously using its custom ListAdapter derived
  * adapter type. To achieve this, its abstract properties diffUtilCallback,
  * adapter, and viewModel must be overridden in subclasses. diffUtilCallback
- * must be overridden with an appropriate DiffUtil.ItemCallback<Entity> for the
+ * must be overridden with an appropriate DiffUtil.ItemCallback<T> for the
  * adapter. adapter must be overridden with a BootyCrateItemAdapter subclass
  * that implements onCreateViewHolder. viewModel must be overridden with a
- * concrete BootyCrateViewModel<Entity> subclass.
+ * concrete BootyCrateViewModel<T> subclass.
  *
  * After the viewModel property is overridden and initialized in subclasses,
  * the function observeViewModel must be called with a LifecycleOwner that
@@ -41,11 +41,6 @@ import com.google.android.material.snackbar.Snackbar
  * which mirror these properties from the view model, can be changed to change
  * the sorting or text filter of the displayed items.
  *
- * To utilize BootyCrateViewModel's support for treating new items differently,
- * BootyCrateRecyclerView has an open function onNewItemInsertion.
- * onNewItemInsertion smooth scrolls to the new item by default, but can be
- * overridden in subclasses for additional functionality.
- *
  * BootyCrateRecyclerView utilizes a ItemTouchHelper with a SwipeToDeleteCallback
  * to allow the user to call deleteItem on the swiped item. When items are
  * deleted, a snack bar will appear informing the user of the amount of items
@@ -54,13 +49,13 @@ import com.google.android.material.snackbar.Snackbar
  * this needs to be customized, or to the RecyclerView itself otherwise.
  */
 @Suppress("LeakingThis")
-abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
+abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
     context: Context,
     attrs: AttributeSet
 ) : RecyclerView(context, attrs) {
-    protected abstract val diffUtilCallback: DiffUtil.ItemCallback<Entity>
+    protected abstract val diffUtilCallback: DiffUtil.ItemCallback<T>
     abstract val adapter: Adapter<out ViewHolder>
-    protected abstract val viewModel: BootyCrateViewModel<Entity>
+    protected abstract val viewModel: BootyCrateViewModel<T>
     var snackBarAnchor: View? = null
 
     var sort get() = viewModel.sort
@@ -83,7 +78,7 @@ abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
             .setAction(R.string.delete_snackbar_undo_text) { viewModel.undoDelete() }
             .setActionTextColor(context.theme.resolveIntAttribute(R.attr.colorAccent))
             .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(a: Snackbar?, b: Int) = viewModel.emptyTrash()
+                override fun onDismissed(a: Snackbar?, b: Int) { viewModel.emptyTrash() }
             }).show()
     }
 
@@ -92,31 +87,16 @@ abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
         viewModel.items.observe(owner) { items -> adapter.submitList(items) }
     }
 
-    open fun onNewItemInsertion(item: Entity, vh: ViewHolder) =
-        smoothScrollToPosition(vh.adapterPosition)
-
-    /**
-     * A ListAdapter derived RecyclerView.Adapter for BootyCrateRecyclerView.
-     *
-     * BootyCrateRecyclerView.Adapter enforces the use of stable ids and calls
-     * onNewItemInsertion for newly inserted items. It is abstract because it
-     * does not implement onCreateViewHolder.
-     */
+    /** A ListAdapter derived RecyclerView.Adapter for BootyCrateRecyclerView
+     * that enforces the use of stable ids. */
     @Suppress("LeakingThis")
-    abstract inner class Adapter<VHType: ViewHolder> : ListAdapter<Entity, VHType>(diffUtilCallback) {
+    abstract inner class Adapter<VHType: ViewHolder> : ListAdapter<T, VHType>(diffUtilCallback) {
         init { setHasStableIds(true) }
 
         final override fun setHasStableIds(hasStableIds: Boolean) =
             super.setHasStableIds(true)
 
         override fun getItemId(position: Int) = currentList[position].id
-
-        override fun onBindViewHolder(holder: VHType, position: Int) {
-            if (getItemId(holder.adapterPosition) == viewModel.newlyAddedItemId) {
-                onNewItemInsertion(currentList[holder.adapterPosition], holder)
-                viewModel.resetNewlyAddedItemId()
-            }
-        }
     }
 
     /**
@@ -126,8 +106,8 @@ abstract class BootyCrateRecyclerView<Entity: BootyCrateItem>(
      * the instance of the item that it represents through the property item, and
      * connects changes to the fields made by the user to view model update calls.
      */
-    open inner class ViewHolder(view: BootyCrateItemView<Entity>) : RecyclerView.ViewHolder(view) {
-        val item: Entity get() = adapter.currentList[adapterPosition]
+    open inner class ViewHolder(view: BootyCrateItemView<T>) : RecyclerView.ViewHolder(view) {
+        val item: T get() = adapter.currentList[adapterPosition]
 
         init { view.apply {
             ui.checkBox.onColorChangedListener = { color ->

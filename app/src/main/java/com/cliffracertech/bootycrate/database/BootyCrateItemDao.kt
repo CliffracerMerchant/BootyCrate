@@ -10,11 +10,19 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 
-private const val shoppingListItemFields = "(id, name, extraInfo, color, checked, shoppingListAmount, " +
-                                           "expandedInShoppingList, selectedInShoppingList, inventoryAmount)"
-private const val inventoryItemFields = "id, name, extraInfo, color, inventoryAmount, " +
-                                        "expandedInInventory, selectedInInventory, autoAddToShoppingList, " +
-                                        "autoAddToShoppingListAmount, shoppingListAmount"
+private const val shoppingListItemFields = "id, name, extraInfo, color, " +
+                                           "shoppingListAmount as amount, " +
+                                           "expandedInShoppingList as isExpanded, " +
+                                           "selectedInShoppingList as isSelected, " +
+                                           "(SELECT inventoryAmount != -1) as linked, " +
+                                           "isChecked"
+private const val inventoryItemFields = "id, name, extraInfo, color, " +
+                                        "inventoryAmount as amount, " +
+                                        "expandedInInventory as isExpanded, " +
+                                        "selectedInInventory as isSelected, " +
+                                        "(SELECT shoppingListAmount != -1) as linked, " +
+                                        "autoAddToShoppingList, autoAddToShoppingListAmount"
+
 private const val likeSearchFilter = "(name LIKE :filter OR extraInfo LIKE :filter)"
 private const val onShoppingList = "shoppingListAmount != -1 AND NOT inShoppingListTrash"
 private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
@@ -22,16 +30,18 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
 /** A Room DAO that provides methods to manipulate a database of BootyCrateItems. */
 @Dao abstract class BootyCrateItemDao {
 
-    @Insert abstract suspend fun add(item: BootyCrateItem): Long
-    @Insert abstract suspend fun add(items: List<BootyCrateItem>)
+    @Insert abstract suspend fun add(item: DatabaseBootyCrateItem): Long
+    @Insert abstract suspend fun add(items: List<DatabaseBootyCrateItem>)
+    suspend fun add(item: DatabaseBootyCrateItem.Convertible) = add(item.toDbBootyCrateItem())
+    suspend fun addConvertibles(items: List<DatabaseBootyCrateItem.Convertible>) = add(items.map { it.toDbBootyCrateItem() })
 
-    @Query("UPDATE item SET name = :name WHERE id = :id")
+    @Query("UPDATE bootycrate_item SET name = :name WHERE id = :id")
     abstract suspend fun updateName(id: Long, name: String)
 
-    @Query("UPDATE item SET extraInfo = :extraInfo WHERE id = :id")
+    @Query("UPDATE bootycrate_item SET extraInfo = :extraInfo WHERE id = :id")
     abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
 
-    @Query("""UPDATE item SET color = :color WHERE id = :id""")
+    @Query("""UPDATE bootycrate_item SET color = :color WHERE id = :id""")
     abstract suspend fun updateColor(id: Long, color: Int)
 
 
@@ -57,67 +67,67 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
         }
     }
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY color")
     abstract fun getShoppingListSortedByColor(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY name COLLATE NOCASE ASC")
     abstract fun getShoppingListSortedByNameAsc(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY name COLLATE NOCASE DESC")
     abstract fun getShoppingListSortedByNameDesc(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY shoppingListAmount ASC")
     abstract fun getShoppingListSortedByAmountAsc(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY shoppingListAmount DESC")
     abstract fun getShoppingListSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY isChecked, color")
     abstract fun getShoppingListSortedByColorAndChecked(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY isChecked, name COLLATE NOCASE ASC")
     abstract fun getShoppingListSortedByNameAscAndChecked(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY isChecked, name COLLATE NOCASE DESC")
     abstract fun getShoppingListSortedByNameDescAndChecked(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY isChecked, shoppingListAmount ASC")
     abstract fun getShoppingListSortedByAmountAscAndChecked(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY isChecked, shoppingListAmount DESC")
     abstract fun getShoppingListSortedByAmountDescAndChecked(filter: String): LiveData<List<ShoppingListItem>>
 
-    @Query("SELECT EXISTS(SELECT id FROM item WHERE $onShoppingList " +
-                         "AND name = :name AND extraInfo = :extraInfo")
+    @Query("SELECT EXISTS(SELECT id FROM bootycrate_item WHERE $onShoppingList " +
+                         "AND name = :name AND extraInfo = :extraInfo)")
     abstract fun shoppingListItemWithNameAlreadyExists(name: String, extraInfo: String): LiveData<Boolean>
 
-    @Query("UPDATE item SET shoppingListAmount = :amount WHERE id = :id")
+    @Query("UPDATE bootycrate_item SET shoppingListAmount = :amount WHERE id = :id")
     abstract suspend fun updateShoppingListAmount(id: Long, amount: Int)
 
-    @Query("UPDATE item SET expandedInShoppingList = 1 WHERE id = :id")
+    @Query("UPDATE bootycrate_item SET expandedInShoppingList = 1 WHERE id = :id")
     protected abstract suspend fun expandShoppingListItem(id: Long)
 
-    @Query("UPDATE item SET expandedInShoppingList = 0")
+    @Query("UPDATE bootycrate_item SET expandedInShoppingList = 0")
     abstract suspend fun clearExpandedShoppingListItem()
 
     @Transaction open suspend fun setExpandedShoppingListItem(id: Long?) {
@@ -125,26 +135,29 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
         if (id != null) expandShoppingListItem(id)
     }
 
-    @Query("SELECT $shoppingListItemFields FROM item " +
+    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE selectedInShoppingList AND $onShoppingList")
     abstract fun getSelectedShoppingListItems(): LiveData<List<ShoppingListItem>>
 
-    @Query("UPDATE item SET selectedInShoppingList = :selected WHERE id = :id")
+    @Query("UPDATE bootycrate_item SET selectedInShoppingList = :selected WHERE id = :id")
     abstract suspend fun updateSelectedInShoppingList(id: Long, selected: Boolean)
 
-    @Query("""UPDATE item SET selectedInShoppingList =
+    @Query("""UPDATE bootycrate_item SET selectedInShoppingList =
                 CASE WHEN selectedInShoppingList THEN 0 ELSE 1 END
               WHERE id = :id""")
     abstract suspend fun toggleSelectedInShoppingList(id: Long)
 
-    @Query("UPDATE item set selectedInShoppingList = 1 " +
+    @Query("UPDATE bootycrate_item set selectedInShoppingList = 1 " +
            "WHERE $onShoppingList AND id in (:ids)")
     abstract suspend fun selectShoppingListItems(ids: List<Long>)
 
-    @Query("UPDATE item SET selectedInShoppingList = 0")
+    @Query("UPDATE bootycrate_item set selectedInShoppingList = 1 WHERE $onShoppingList")
+    abstract suspend fun selectAllShoppingListItems()
+
+    @Query("UPDATE bootycrate_item SET selectedInShoppingList = 0")
     abstract suspend fun clearShoppingListSelection()
 
-    @Query("""UPDATE item 
+    @Query("""UPDATE bootycrate_item 
               SET shoppingListAmount = 1,
                   inShoppingListTrash = 0
               WHERE selectedInInventory 
@@ -152,45 +165,45 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
               AND $inInventory""")
     abstract suspend fun addToShoppingListFromSelectedInventoryItems()
 
-    @Query("""UPDATE item
+    @Query("""UPDATE bootycrate_item
               SET inShoppingListTrash = 1,
                   expandedInShoppingList = 0,
                   selectedInShoppingList = 0
               WHERE selectedInShoppingList AND $onShoppingList""")
     abstract suspend fun deleteSelectedShoppingListItems()
 
-    @Query("""UPDATE item SET inShoppingListTrash = 1,
-                              expandedInShoppingList = 0,
-                              selectedInShoppingList = 0
+    @Query("""UPDATE bootycrate_item SET inShoppingListTrash = 1,
+                                         expandedInShoppingList = 0,
+                                         selectedInShoppingList = 0
               WHERE id IN (:ids) AND $onShoppingList""")
     abstract suspend fun deleteShoppingListItems(ids: LongArray)
 
-    @Query("""UPDATE item SET shoppingListAmount = -1,
-                              isChecked = 0,
-                              expandedInShoppingList = 0,
-                              selectedInShoppingList = 0
+    @Query("""UPDATE bootycrate_item SET shoppingListAmount = -1,
+                                         isChecked = 0,
+                                         expandedInShoppingList = 0,
+                                         selectedInShoppingList = 0
               WHERE shoppingListAmount != -1""")
     abstract suspend fun deleteAllShoppingListItems()
 
-    @Query("UPDATE item SET inShoppingListTrash = 0")
+    @Query("UPDATE bootycrate_item SET inShoppingListTrash = 0")
     abstract suspend fun undoDeleteShoppingListItems()
 
-    @Query("UPDATE item SET shoppingListAmount = -1 WHERE inShoppingListTrash")
+    @Query("UPDATE bootycrate_item SET shoppingListAmount = -1 WHERE inShoppingListTrash")
     abstract suspend fun emptyShoppingListTrash()
 
-    @Query("UPDATE item SET isChecked = :isChecked WHERE id = :id")
+    @Query("UPDATE bootycrate_item SET isChecked = :isChecked WHERE id = :id")
     abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
 
-    @Query("UPDATE item SET isChecked = 1 WHERE $onShoppingList")
+    @Query("UPDATE bootycrate_item SET isChecked = 1 WHERE $onShoppingList")
     abstract suspend fun checkAllShoppingListItems()
 
-    @Query("UPDATE item SET isChecked = 0 WHERE $onShoppingList")
+    @Query("UPDATE bootycrate_item SET isChecked = 0 WHERE $onShoppingList")
     abstract suspend fun uncheckAllShoppingListItems()
 
-    @Query("SELECT COUNT(*) FROM item WHERE isChecked AND $onShoppingList")
+    @Query("SELECT COUNT(*) FROM bootycrate_item WHERE isChecked AND $onShoppingList")
     abstract fun getCheckedShoppingListItemsSize() : LiveData<Int>
 
-    @Query("""UPDATE item
+    @Query("""UPDATE bootycrate_item
               SET inventoryAmount = inventoryAmount + shoppingListAmount,
                   isChecked = 0,
                   shoppingListAmount = -1,
@@ -212,42 +225,42 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
         }
     }
 
-    @Query("SELECT $inventoryItemFields FROM item " +
+    @Query("SELECT $inventoryItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $inInventory " +
            "ORDER BY color")
     abstract fun getInventorySortedByColor(filter: String): LiveData<List<InventoryItem>>
 
-    @Query("SELECT $inventoryItemFields FROM item " +
+    @Query("SELECT $inventoryItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $inInventory " +
            "ORDER BY name COLLATE NOCASE ASC")
     abstract fun getInventorySortedByNameAsc(filter: String): LiveData<List<InventoryItem>>
 
-    @Query("SELECT $inventoryItemFields FROM item " +
+    @Query("SELECT $inventoryItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $inInventory " +
            "ORDER BY name COLLATE NOCASE DESC")
     abstract fun getInventorySortedByNameDesc(filter: String): LiveData<List<InventoryItem>>
 
-    @Query("SELECT $inventoryItemFields FROM item " +
+    @Query("SELECT $inventoryItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $inInventory " +
            "ORDER BY inventoryAmount ASC")
     abstract fun getInventorySortedByAmountAsc(filter: String): LiveData<List<InventoryItem>>
 
-    @Query("SELECT $inventoryItemFields FROM item " +
+    @Query("SELECT $inventoryItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $inInventory " +
            "ORDER BY inventoryAmount DESC")
     abstract fun getInventorySortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
 
-    @Query("SELECT EXISTS(SELECT id FROM item WHERE $inInventory " +
-                         "AND name = :name AND extraInfo = :extraInfo")
+    @Query("SELECT EXISTS(SELECT id FROM bootycrate_item WHERE $inInventory " +
+                         "AND name = :name AND extraInfo = :extraInfo)")
     abstract fun inventoryItemWithNameAlreadyExists(name: String, extraInfo: String): LiveData<Boolean>
 
-    @Query("UPDATE item SET inventoryAmount = :amount WHERE id = :id")
+    @Query("UPDATE bootycrate_item SET inventoryAmount = :amount WHERE id = :id")
     abstract suspend fun updateInventoryAmount(id: Long, amount: Int)
 
-    @Query("UPDATE item SET expandedInInventory = 1 WHERE id = :id")
+    @Query("UPDATE bootycrate_item SET expandedInInventory = 1 WHERE id = :id")
     abstract suspend fun expandInventoryItem(id: Long)
 
-    @Query("UPDATE item SET expandedInInventory = 0")
+    @Query("UPDATE bootycrate_item SET expandedInInventory = 0")
     abstract suspend fun clearExpandedInventoryItem()
 
     @Transaction open suspend fun setExpandedInventoryItem(id: Long?) {
@@ -255,26 +268,29 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
         if (id != null) expandInventoryItem(id)
     }
 
-    @Query("SELECT $inventoryItemFields FROM item " +
+    @Query("SELECT $inventoryItemFields FROM bootycrate_item " +
            "WHERE selectedInInventory AND $inInventory")
     abstract fun getSelectedInventoryItems(): LiveData<List<InventoryItem>>
 
-    @Query("UPDATE item SET selectedInInventory = :selected WHERE id = :id")
+    @Query("UPDATE bootycrate_item SET selectedInInventory = :selected WHERE id = :id")
     abstract suspend fun updateSelectedInInventory(id: Long, selected: Boolean)
 
-    @Query("""UPDATE item SET selectedInInventory =
+    @Query("""UPDATE bootycrate_item SET selectedInInventory =
                 CASE WHEN selectedInInventory THEN 0 ELSE 1 END
               WHERE id = :id""")
     abstract suspend fun toggleSelectedInInventory(id: Long)
 
-    @Query("UPDATE item set selectedInInventory = 1 " +
+    @Query("UPDATE bootycrate_item set selectedInInventory = 1 " +
            "WHERE $inInventory AND id in (:ids)")
     abstract suspend fun selectInventoryItems(ids: List<Long>)
 
-    @Query("UPDATE item SET selectedInInventory = 0")
+    @Query("UPDATE bootycrate_item set selectedInInventory = 1 WHERE $inInventory")
+    abstract suspend fun selectAllInventoryItems()
+
+    @Query("UPDATE bootycrate_item SET selectedInInventory = 0")
     abstract suspend fun clearInventorySelection()
 
-    @Query("""UPDATE item 
+    @Query("""UPDATE bootycrate_item 
               SET inventoryAmount = 0,
                   inInventoryTrash = 0
               WHERE selectedInShoppingList 
@@ -282,38 +298,38 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
               AND $onShoppingList""")
     abstract suspend fun addToInventoryFromSelectedShoppingListItems()
 
-    @Query("""UPDATE item
+    @Query("""UPDATE bootycrate_item
               SET inInventoryTrash = 1,
                   expandedInInventory = 0,
                   selectedInInventory = 0
               WHERE selectedInInventory AND $inInventory""")
     abstract suspend fun deleteSelectedInventoryItems()
 
-    @Query("""UPDATE item SET inInventoryTrash = 1,
-                              expandedInInventory = 0,
-                              selectedInInventory = 0,
-                              autoAddToShoppingList = 0,
-                              autoAddToShoppingListAmount = 0
+    @Query("""UPDATE bootycrate_item SET inInventoryTrash = 1,
+                                         expandedInInventory = 0,
+                                         selectedInInventory = 0,
+                                         autoAddToShoppingList = 0,
+                                         autoAddToShoppingListAmount = 0
               WHERE id IN (:ids) AND $inInventory""")
     abstract suspend fun deleteInventoryItems(ids: LongArray)
 
-    @Query("""UPDATE item SET inventoryAmount = -1,
-                              expandedInInventory = 0,
-                              selectedInInventory = 0
+    @Query("""UPDATE bootycrate_item SET inventoryAmount = -1,
+                                         expandedInInventory = 0,
+                                         selectedInInventory = 0
               WHERE inventoryAmount != -1""")
     abstract suspend fun deleteAllInventoryItems()
 
-    @Query("UPDATE item SET inInventoryTrash = 0")
+    @Query("UPDATE bootycrate_item SET inInventoryTrash = 0")
     abstract suspend fun undoDeleteInventoryItems()
 
-    @Query("UPDATE item SET inventoryAmount = -1 WHERE inInventoryTrash")
+    @Query("UPDATE bootycrate_item SET inventoryAmount = -1 WHERE inInventoryTrash")
     abstract suspend fun emptyInventoryTrash()
 
-    @Query("""UPDATE item SET autoAddToShoppingList = :autoAddToShoppingList
+    @Query("""UPDATE bootycrate_item SET autoAddToShoppingList = :autoAddToShoppingList
               WHERE id = :id AND $inInventory""")
     abstract suspend fun updateAutoAddToShoppingList(id: Long, autoAddToShoppingList: Boolean)
 
-    @Query("""UPDATE item SET autoAddToShoppingListAmount = :autoAddToShoppingListAmount
+    @Query("""UPDATE bootycrate_item SET autoAddToShoppingListAmount = :autoAddToShoppingListAmount
               WHERE id = :id AND $inInventory""")
     abstract suspend fun updateAutoAddToShoppingListAmount(id: Long, autoAddToShoppingListAmount: Int)
 }

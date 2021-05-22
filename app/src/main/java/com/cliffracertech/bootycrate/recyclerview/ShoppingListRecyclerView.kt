@@ -92,15 +92,15 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     if (changes.contains(ShoppingListItem.Field.Amount) &&
                         ui.amountEdit.value != item.amount)
                             ui.amountEdit.value = item.amount
-                    if (changes.contains(ShoppingListItem.Field.Expanded) &&
-                        holder.view.isExpanded != item.expanded)
-                            holder.view.setExpanded(item.expanded)
-                    if (changes.contains(ShoppingListItem.Field.Selected) &&
-                        holder.view.isInSelectedState != item.selected)
-                            holder.view.setSelectedState(item.selected)
+                    if (changes.contains(ShoppingListItem.Field.IsExpanded) &&
+                        holder.view.isExpanded != item.isExpanded)
+                            holder.view.setExpanded(item.isExpanded)
+                    if (changes.contains(ShoppingListItem.Field.IsSelected) &&
+                        holder.view.isInSelectedState != item.isSelected)
+                            holder.view.setSelectedState(item.isSelected)
                     if (changes.contains(ShoppingListItem.Field.IsChecked) &&
-                        ui.checkBox.isChecked != item.checked)
-                            ui.checkBox.isChecked = item.checked
+                        ui.checkBox.isChecked != item.isChecked)
+                            ui.checkBox.isChecked = item.isChecked
                 }
                 else unhandledChanges.add(payload)
             }
@@ -145,13 +145,13 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         override fun areContentsTheSame(oldItem: ShoppingListItem, newItem: ShoppingListItem) =
             itemChanges.apply {
                 clear()
-                if (newItem.name != oldItem.name)           add(ShoppingListItem.Field.Name)
-                if (newItem.extraInfo != oldItem.extraInfo) add(ShoppingListItem.Field.ExtraInfo)
-                if (newItem.color != oldItem.color)         add(ShoppingListItem.Field.Color)
-                if (newItem.amount != oldItem.amount)       add(ShoppingListItem.Field.Amount)
-                if (newItem.expanded != oldItem.expanded)   add(ShoppingListItem.Field.Expanded)
-                if (newItem.selected != oldItem.selected)   add(ShoppingListItem.Field.Selected)
-                if (newItem.checked != oldItem.checked)     add(ShoppingListItem.Field.IsChecked)
+                if (newItem.name != oldItem.name)             add(ShoppingListItem.Field.Name)
+                if (newItem.extraInfo != oldItem.extraInfo)   add(ShoppingListItem.Field.ExtraInfo)
+                if (newItem.color != oldItem.color)           add(ShoppingListItem.Field.Color)
+                if (newItem.amount != oldItem.amount)         add(ShoppingListItem.Field.Amount)
+                if (newItem.isExpanded != oldItem.isExpanded) add(ShoppingListItem.Field.IsExpanded)
+                if (newItem.isSelected != oldItem.isSelected) add(ShoppingListItem.Field.IsSelected)
+                if (newItem.isChecked != oldItem.isChecked)   add(ShoppingListItem.Field.IsChecked)
 
                 if (!isEmpty())
                     listChanges[newItem.id] = EnumSet.copyOf(this)

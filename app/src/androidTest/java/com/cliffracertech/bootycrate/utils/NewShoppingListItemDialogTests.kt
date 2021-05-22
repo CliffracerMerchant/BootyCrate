@@ -40,8 +40,8 @@ class NewShoppingListItemDialogTests {
 
     @Before fun setup() {
         runBlocking {
-            db.shoppingListItemDao().deleteAll()
-            db.inventoryItemDao().deleteAll()
+            db.dao().deleteAllShoppingListItems()
+            db.dao().deleteAllInventoryItems()
         }
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
@@ -68,7 +68,7 @@ class NewShoppingListItemDialogTests {
         onView(withId(R.id.addButton)).perform(click())
         onView(withId(R.id.newItemViewContainer)).check(matches(isDisplayed()))
         onView(inNewItemDialog(instanceOf(ExpandableSelectableItemView::class.java))).check(matches(isDisplayed()))
-        onView(inNewItemDialog(withId(R.id.addToShoppingListCheckBox))).check(doesNotExist())
+        onView(inNewItemDialog(withId(R.id.autoAddToShoppingListCheckBox))).check(doesNotExist())
         onView(withText(R.string.new_item_duplicate_name_warning)).check(matches(not(isDisplayed())))
         onView(withText(R.string.new_item_no_name_error)).check(matches(not(isDisplayed())))
     }

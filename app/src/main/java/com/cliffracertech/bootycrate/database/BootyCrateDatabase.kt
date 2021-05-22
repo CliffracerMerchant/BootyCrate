@@ -11,34 +11,14 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
- * A Room database to access the tables shopping_list_item and inventory_item.
+ * The BootyCrate application database.
  *
- * BootyCrateDatabase is an implementation of RoomDatabase that provides
- * instances of a ShoppingListItemDao and an InventoryItemDao in order to
- * query the contents of the shopping_list_item and inventory_item tables.
- *
- * BootyCrateDatabase functions as a singleton, with the current instance
- * obtained using the static function get. get also takes an optional boolean
- * parameter overwriteExistingDb that, when true, will overwrite the current
- * instance with a new one. This might be necessary when, for example, the
- * database file is overwritten with another one, and the database needs to be
- * reopened.
- *
- * The function backup will export a copy of the current database file to the
- * location pointed to by the parameter backupUri.
- *
- * The function replaceWithBackup will overwrite the existing database with
- * the one pointed to by the parameter backupUri. Note that when the existing
- * database is replaced, activities that have obtained instances of the con-
- * tained DAOs will need to retrieve new DAOs, or crashes are likely to occur
- * when the old DAOs are used.
- *
- * The function mergeWithBackup will attempt to open the database pointed to
- * by the parameter backupUri as a temporary second database, read the shop-
- * ping list and inventory items in the database, and then add them to the
- * current database.
+ * BootyCrateDatabase is an implementation of RoomDatabase that provides an
+ * instance of a BootyCrateItemDao in order to query and alter the contents
+ * of the bootycrate_item table. BootyCrateDatabase functions as a singleton,
+ * with the current instance obtained using the static function get.
  */
-@Database(entities = [BootyCrateItem::class], version = 1)
+@Database(entities = [DatabaseBootyCrateItem::class], version = 1)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun dao(): BootyCrateItemDao
@@ -97,123 +77,56 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         private val callback = object: Callback() {
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
-                db.execSQL("UPDATE shopping_list_item SET isSelected = 0, isExpanded = 0")
-                db.execSQL("UPDATE inventory_item SET isSelected = 0, isExpanded = 0")
-                db.execSQL("PRAGMA recursive_triggers = false")
+                db.execSQL("UPDATE bootycrate_item " +
+                               "SET selectedInShoppingList = 0, expandedInShoppingList = 0, " +
+                               "selectedInInventory = 0, expandedInInventory = 0")
             }
 
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
-                // Auto link / unlink triggers
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_link_inventory_item`
-                              AFTER INSERT ON shopping_list_item
-                                    WHEN new.linkedItemId NOT NULL
-                              BEGIN UPDATE inventory_item
-                                    SET linkedItemId = new.id
-                                    WHERE id = new.linkedItemId; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_link_shopping_list_item` 
-                              AFTER INSERT ON inventory_item
-                                    WHEN new.linkedItemId NOT NULL
-                              BEGIN UPDATE shopping_list_item 
-                                    SET linkedItemId = new.id
-                                    WHERE id = new.linkedItemId; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_unlink_inventory_item`
-                              AFTER DELETE ON shopping_list_item
-                                    WHEN old.linkedItemId NOT NULL
-                              BEGIN UPDATE inventory_item
-                                    SET linkedItemId = NULL
-                                    WHERE id = old.linkedItemId; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_unlink_shopping_list_item`
-                              AFTER DELETE ON inventory_item
-                                    WHEN old.linkedItemId NOT NULL
-                              BEGIN UPDATE shopping_list_item
-                                    SET linkedItemId = NULL
-                                    WHERE id = old.linkedItemId; END""")
+                // The auto_delete_items trigger will remove an item from the database when
+                // its shoppingListAmount and inventoryAmount fields both are equal to -1
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_delete_items`
+                              AFTER UPDATE OF inventoryAmount, shoppingListAmount
+                                    ON bootycrate_item
+                                    WHEN new.shoppingListAmount == -1
+                                    AND new.inventoryAmount == -1
+                              BEGIN DELETE FROM bootycrate_item WHERE id = new.id; END""")
 
-                // Auto update linked item field
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_inventory_item_name`
-                              AFTER UPDATE OF name ON shopping_list_item
-                                    WHEN old.linkedItemId == new.linkedItemId
-                                    AND new.linkedItemId NOT NULL
-                              BEGIN UPDATE inventory_item
-                                    SET name = new.name
-                                    WHERE id = new.linkedItemId; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_shopping_list_item_name`
-                              AFTER UPDATE OF name ON inventory_item
-                                    WHEN old.linkedItemId == new.linkedItemId
-                                    AND new.linkedItemId NOT NULL
-                              BEGIN UPDATE shopping_list_item
-                                    SET name = new.name
-                                    WHERE id = new.linkedItemId; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_inventory_item_extra_info`
-                              AFTER UPDATE OF extraInfo ON shopping_list_item
-                                    WHEN old.linkedItemId == new.linkedItemId
-                                    AND new.linkedItemId NOT NULL
-                              BEGIN UPDATE inventory_item
-                                    SET extraInfo = new.extraInfo
-                                    WHERE id = new.linkedItemId; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_shopping_list_extra_info`
-                              AFTER UPDATE OF extraInfo ON inventory_item
-                                    WHEN old.linkedItemId = new.linkedItemId
-                                    AND new.linkedItemId NOT NULL
-                              BEGIN UPDATE shopping_list_item
-                                    SET extraInfo = new.extraInfo
-                                    WHERE id = new.linkedItemId; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_inventory_item_color`
-                              AFTER UPDATE OF color ON shopping_list_item
-                                    WHEN old.linkedItemId == new.linkedItemId
-                                    AND new.linkedItemId NOT NULL
-                              BEGIN UPDATE inventory_item
-                                    SET color = new.color
-                                    WHERE id = new.linkedItemId; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_update_linked_shopping_list_item_color`
-                              AFTER UPDATE OF color ON inventory_item
-                                    WHEN old.linkedItemId == new.linkedItemId
-                                    AND new.linkedItemId NOT NULL
-                              BEGIN UPDATE shopping_list_item
-                                    SET color = new.color
-                                    WHERE id = new.linkedItemId; END""")
-
-                // Auto add to shopping list triggers
+                // These triggers will execute the auto add to shopping list feature of
+                // inventory items if an item's amount falls below its autoAddToShoppingListAmount
+                // and its autoAddToShoppingList field is true
                 db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_amount_update`
-                              AFTER UPDATE OF amount ON inventory_item
-                                    WHEN new.addToShoppingList == 1
-                                    AND new.amount < new.addToShoppingListTrigger
-                              BEGIN $insertFromInventoryItemStr; END""")
+                              AFTER UPDATE OF inventoryAmount ON bootycrate_item
+                                    WHEN new.autoAddToShoppingList == 1
+                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                              BEGIN $updateShoppingListAmount; END""")
                 db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_update`
-                              AFTER UPDATE OF addToShoppingList ON inventory_item
-                                    WHEN new.addToShoppingList == 1
-                                    AND new.amount < new.addToShoppingListTrigger
-                              BEGIN $insertFromInventoryItemStr; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_trigger_update`
-                              AFTER UPDATE OF addToShoppingListTrigger ON inventory_item
-                                    WHEN new.addToShoppingList == 1
-                                    AND new.amount < new.addToShoppingListTrigger
-                              BEGIN $insertFromInventoryItemStr; END""")
+                              AFTER UPDATE OF autoAddToShoppingList ON bootycrate_item
+                                    WHEN new.autoAddToShoppingList == 1
+                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                              BEGIN $updateShoppingListAmount; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_amount_update`
+                              AFTER UPDATE OF autoAddToShoppingListAmount ON bootycrate_item
+                                    WHEN new.autoAddToShoppingList == 1
+                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                              BEGIN $updateShoppingListAmount; END""")
             }
-        }
 
-        /* Unfortunately SQLite's limitation of not being able to use common table
-         * expressions in triggers makes the following less readable than it should
-         * be. The query below essentially makes a shopping list item with the same
-         * name, extraInfo, and color as an inventory item, while also filling in
-         * its linkedItemId field to the id of the inventory item it was created
-         * from. The new item's amount is the greater of its current amount (if it
-         * already existed or the inventory item it is based on's addToShoppingListAmount
-         * minus its current amount). It also copies the expanded, selected, and
-         * checked state from the already existing item to prevent the overwriting
-         * of these values if it already existed. */
-        private const val insertFromInventoryItemStr =
-            """INSERT OR REPLACE INTO shopping_list_item (id, name, extraInfo, color, linkedItemId,
-                                                          amount, isExpanded, isSelected, isChecked)
-               SELECT new.linkedItemId, new.name, new.extraInfo, new.color, new.id,
-                      CASE WHEN (EXISTS(SELECT 1 FROM shopping_list_item WHERE id == new.linkedItemId) AND
-                                 (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId) >
-                                 (SELECT new.addToShoppingListTrigger - new.amount))
-                           THEN (SELECT amount FROM shopping_list_item WHERE id == new.linkedItemId)
-                           ELSE (SELECT new.addToShoppingListTrigger - new.amount) END,
-                      (SELECT isExpanded FROM shopping_list_item WHERE id == new.linkedItemId),
-                      (SELECT isSelected FROM shopping_list_item WHERE id == new.linkedItemId),
-                      (SELECT isChecked FROM shopping_list_item WHERE id == new.linkedItemId)"""
+            /* Unfortunately SQLite's limitation of not being able to use common table
+             * expressions in triggers makes the following less readable than it should
+             * be. The query below updates the shopping list amount of the BootyCrateItem
+             * to be the greater of its current amount (if it is already on the shopping
+             * list) or the inventory item it is based on's addToShoppingListAmount
+             * minus its current amount). */
+            private val updateShoppingListAmount =
+                """UPDATE bootycrate_item
+                     SET shoppingListAmount =
+                       CASE WHEN shoppingListAmount >
+                                 (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
+                          THEN shoppingListAmount
+                          ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
+                       END"""
+        }
     }
 }

@@ -28,16 +28,15 @@ class NewInventoryItemDialogTests {
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
     private val viewModel = InventoryViewModel(context as Application)
 
-    private val testItem = InventoryItem(name = "Test Item 1",
-                                         extraInfo = "Test Extra Info 1",
-                                         color = 5, inventoryAmount = 3,
-                                         autoAddToShoppingList = true,
+    private val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Extra Info 1",
+                                         color = 5, amount = 3, autoAddToShoppingList = true,
                                          autoAddToShoppingListAmount = 4)
 
     private fun amountIncreaseButton() = CoreMatchers.allOf(withId(R.id.increaseButton),
                                                             isDescendantOfA(withId(R.id.amountEdit)))
-    private fun autoAddTriggerIncreaseButton() = CoreMatchers.allOf(withId(R.id.increaseButton),
-                                                                    isDescendantOfA(withId(R.id.addToShoppingListTriggerEdit)))
+    private fun autoAddTriggerIncreaseButton() =
+        CoreMatchers.allOf(withId(R.id.increaseButton),
+                           isDescendantOfA(withId(R.id.autoAddToShoppingListAmountEdit)))
 
     private fun addTestInventoryItems(leaveDialogOpen: Boolean, vararg items: InventoryItem) {
         val lastItem = items.last()
@@ -50,7 +49,7 @@ class NewInventoryItemDialogTests {
             val amountIncreaseButton = inNewItemDialog(amountIncreaseButton())
             for (i in 1 until item.amount)
                 onView(amountIncreaseButton).perform(click())
-            onView(inNewItemDialog(withId(R.id.addToShoppingListCheckBox))).perform(click())
+            onView(inNewItemDialog(withId(R.id.autoAddToShoppingListCheckBox))).perform(click())
             val autoAddTriggerIncreaseButton = inNewItemDialog(autoAddTriggerIncreaseButton())
             for (i in 1 until item.autoAddToShoppingListAmount)
                 onView(autoAddTriggerIncreaseButton).perform(click())
@@ -90,11 +89,11 @@ class NewInventoryItemDialogTests {
                 assertThat(it.ui.amountEdit.value).isEqualTo(1)
                 assertThat(it.ui.amountEdit.minValue).isEqualTo(0)
                 assertThat(it.ui.amountEdit.valueIsFocusable).isTrue()
-                assertThat(it.detailsUi.addToShoppingListCheckBox.isChecked).isFalse()
-                assertThat(it.detailsUi.addToShoppingListCheckBox.colorIndex).isEqualTo(0)
-                assertThat(it.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(1)
-                assertThat(it.detailsUi.addToShoppingListTriggerEdit.minValue).isEqualTo(1)
-                assertThat(it.detailsUi.addToShoppingListTriggerEdit.valueIsFocusable).isTrue()
+                assertThat(it.detailsUi.autoAddToShoppingListCheckBox.isChecked).isFalse()
+                assertThat(it.detailsUi.autoAddToShoppingListCheckBox.colorIndex).isEqualTo(0)
+                assertThat(it.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(1)
+                assertThat(it.detailsUi.autoAddToShoppingListAmountEdit.minValue).isEqualTo(1)
+                assertThat(it.detailsUi.autoAddToShoppingListAmountEdit.valueIsFocusable).isTrue()
             })
     }
 
@@ -119,10 +118,10 @@ class NewInventoryItemDialogTests {
                 assertThat(it.ui.extraInfoEdit.isEditable).isTrue()
                 assertThat(it.ui.amountEdit.value).isEqualTo(1)
                 assertThat(it.ui.amountEdit.valueIsFocusable).isTrue()
-                assertThat(it.detailsUi.addToShoppingListCheckBox.isChecked).isFalse()
-                assertThat(it.detailsUi.addToShoppingListCheckBox.colorIndex).isEqualTo(testItem.color)
-                assertThat(it.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(1)
-                assertThat(it.detailsUi.addToShoppingListTriggerEdit.valueIsFocusable).isTrue()
+                assertThat(it.detailsUi.autoAddToShoppingListCheckBox.isChecked).isFalse()
+                assertThat(it.detailsUi.autoAddToShoppingListCheckBox.colorIndex).isEqualTo(testItem.color)
+                assertThat(it.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(1)
+                assertThat(it.detailsUi.autoAddToShoppingListAmountEdit.valueIsFocusable).isTrue()
             })
     }
 
@@ -169,7 +168,7 @@ class NewInventoryItemDialogTests {
         viewModel.deleteAll()
         appears()
         val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Item 1 Extra Info",
-                                     color = 5, inventoryAmount = 3, autoAddToShoppingList = true,
+                                     color = 5, amount = 3, autoAddToShoppingList = true,
                                      autoAddToShoppingListAmount = 4)
         addTestInventoryItems(leaveDialogOpen = false, testItem)
         onView(withId(R.id.inventoryRecyclerView))
@@ -180,7 +179,7 @@ class NewInventoryItemDialogTests {
         viewModel.deleteAll()
         appears()
         val testItem2 = InventoryItem(name = "Test Item 2", extraInfo = "Test Item 2 Extra Info",
-                                      color = 7, inventoryAmount = 8, autoAddToShoppingList = true,
+                                      color = 7, amount = 8, autoAddToShoppingList = true,
                                       autoAddToShoppingListAmount = 2)
         addTestInventoryItems(leaveDialogOpen = false, testItem, testItem2)
         onView(withId(R.id.inventoryRecyclerView)).check(

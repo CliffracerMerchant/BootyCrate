@@ -31,8 +31,7 @@ class InventoryItemViewTests {
     @Before fun resetInstance() {
         instance = InventoryItemView(context)
          testItem = InventoryItem(color = 5, name = "Test item", extraInfo = "Test extra info",
-                                  inventoryAmount = 8, autoAddToShoppingList = true,
-                                  autoAddToShoppingListAmount = 3)
+                                  amount = 8, autoAddToShoppingList = true, autoAddToShoppingListAmount = 3)
     }
 
     private fun assertExpandedState(expanded: Boolean) {
@@ -41,9 +40,9 @@ class InventoryItemViewTests {
         assertThat(instance.ui.extraInfoEdit.isEditable).isEqualTo(expanded)
         assertThat(instance.ui.amountEdit.valueIsFocusable).isEqualTo(expanded)
         assertThat(instance.ui.editButton.isActivated).isEqualTo(expanded)
-        assertThat(instance.detailsUi.addToShoppingListCheckBox.isVisible).isEqualTo(expanded)
-        assertThat(instance.detailsUi.addToShoppingListLabel.isVisible).isEqualTo(expanded)
-        assertThat(instance.detailsUi.addToShoppingListTriggerEdit.isVisible).isEqualTo(expanded)
+        assertThat(instance.detailsUi.autoAddToShoppingListCheckBox.isVisible).isEqualTo(expanded)
+        assertThat(instance.detailsUi.autoAddToShoppingListLabel.isVisible).isEqualTo(expanded)
+        assertThat(instance.detailsUi.autoAddToShoppingListAmountEdit.isVisible).isEqualTo(expanded)
     }
 
     private fun assertSelectedState(selected: Boolean) {
@@ -88,9 +87,9 @@ class InventoryItemViewTests {
         assertThat(instance.ui.nameEdit.text.toString()).isEqualTo(testItem.name)
         assertThat(instance.ui.extraInfoEdit.text.toString()).isEqualTo(testItem.extraInfo)
         assertThat(instance.ui.amountEdit.value).isEqualTo(testItem.amount)
-        assertThat(instance.detailsUi.addToShoppingListCheckBox.isChecked).isEqualTo(testItem.autoAddToShoppingList)
-        assertThat(instance.detailsUi.addToShoppingListCheckBox.colorIndex).isEqualTo(testItem.color)
-        assertThat(instance.detailsUi.addToShoppingListTriggerEdit.value).isEqualTo(testItem.autoAddToShoppingListAmount)
+        assertThat(instance.detailsUi.autoAddToShoppingListCheckBox.isChecked).isEqualTo(testItem.autoAddToShoppingList)
+        assertThat(instance.detailsUi.autoAddToShoppingListCheckBox.colorIndex).isEqualTo(testItem.color)
+        assertThat(instance.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(testItem.autoAddToShoppingListAmount)
     }
 
     @Test fun editButtonExpandsWhileCollapsed() {
