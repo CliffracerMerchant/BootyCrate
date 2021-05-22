@@ -16,7 +16,7 @@ enum class BootyCrateItemSort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
         fun fromString(string: String?) =
             if (string == null) Color
             else try { valueOf(string) }
-            catch(e: IllegalArgumentException) { Color }
+                 catch(e: IllegalArgumentException) { Color }
     }
 }
 
@@ -77,7 +77,7 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
     abstract fun itemsSwitchMapFunc(): LiveData<List<T>>
 
 
-    private val newItemNameChanged = MutableLiveData<Boolean>()
+    protected val newItemNameChanged = MutableLiveData<Boolean>()
 
     var newItemName: String? = null
         set(value) { field = value; newItemNameChanged.value = true }
@@ -121,8 +121,9 @@ class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingList
 
     override fun itemsSwitchMapFunc() = dao.getShoppingList(sort, sortByChecked, searchFilter)
 
-    override val newItemNameIsAlreadyUsed =
+    override val newItemNameIsAlreadyUsed = Transformations.switchMap(newItemNameChanged) {
         dao.shoppingListItemWithNameAlreadyExists(newItemName ?: "", newItemExtraInfo ?: "")
+    }
 
     override fun deleteAll() = viewModelScope.launch { dao.deleteAllShoppingListItems() }
 
@@ -176,8 +177,9 @@ class InventoryViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(
 
     override fun itemsSwitchMapFunc() = dao.getInventory(sort, searchFilter)
 
-    override val newItemNameIsAlreadyUsed =
-        dao.shoppingListItemWithNameAlreadyExists(newItemName ?: "", newItemExtraInfo ?: "")
+    override val newItemNameIsAlreadyUsed = Transformations.switchMap(newItemNameChanged) {
+        dao.inventoryItemWithNameAlreadyExists(newItemName ?: "", newItemExtraInfo ?: "")
+    }
 
     override fun deleteAll() = viewModelScope.launch { dao.deleteAllInventoryItems() }
 

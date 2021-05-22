@@ -50,7 +50,7 @@ import com.cliffracertech.bootycrate.utils.valueAnimatorOfInt
  */
 @Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
-open class BootyCrateItemView<Entity: BootyCrateItem>(
+open class BootyCrateItemView<T: BootyCrateItem>(
     context: Context,
     useDefaultLayout: Boolean = true,
 ) : ConstraintLayout(context) {
@@ -70,7 +70,7 @@ open class BootyCrateItemView<Entity: BootyCrateItem>(
         setPadding(0, verticalPadding, 0, verticalPadding)
     }
 
-    @CallSuper open fun update(item: Entity) {
+    @CallSuper open fun update(item: T) {
         ui.nameEdit.setText(item.name)
         ui.extraInfoEdit.setText(item.extraInfo)
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
@@ -85,10 +85,10 @@ open class BootyCrateItemView<Entity: BootyCrateItem>(
 /**
  * A BootyCrateItemView subclass that provides an interface for a selection and expansion of the view.
  *
- * ExpandableSelectableItemView will display the information for a BootyCrateItem
- * instance, while also providing an interface for expansion and selection. The
- * update override will update the view to reflect the selection and expansion
- * state of the BootyCrateItem passed to it.
+ * ExpandableSelectableItemView extends BootyCrateItemView by providing an
+ * interface for expansion and selection, and with an update override that
+ * will update the view to reflect the selection and expansion state of the
+ * BootyCrateItem passed to it.
  *
  * The interface for selection and deselection consists of the functions
  * isInSelectedState, select, deselect, and setSelectedState. With the default
@@ -97,24 +97,30 @@ open class BootyCrateItemView<Entity: BootyCrateItem>(
  * setSelectedState is called with the parameter animate set to false, the
  * change in selection state will be animated with a fade in or out animation.
  * Note that setSelected and isSelected are part of the Android framework's
- * View's API, and has nothing to do with the selection API added by ExpandableSelectableItemView.
+ * View's API, and have nothing to do with the selection API added by
+ * ExpandableSelectableItemView.
  *
  * The interface for item expansion consists of expand, collapse, setExpanded,
  * and toggleExpanded. If subclasses need to alter the visibility of additional
  * views during expansion or collapse, they can override the function
  * onExpandedChanged with their additional changes. Like setSelectedState,
  * setExpanded will animate the changes inside the view unless it is called
- * with the parameter animate equal to false. In order to allow for easier
- * synchronization with concurrent animations outside the view, all of
- * ExpandableSelectableItemView's internal animations use the AnimatorConfig
- * defined by the property animatorConfig.
+ * with the parameter animate equal to false.
+ *
+ * In order to allow for easier synchronization with concurrent animations
+ * outside the view, all of ExpandableSelectableItemView's internal animations
+ * use the AnimatorConfig defined by the property animatorConfig. If delaying
+ * the animations is also required to synchronize them with other animations,
+ * the property startAnimationsImmediately can be set to false. In this case
+ * the animations will be prepared and stored, and can be played by calling
+ * runPendingAnimations.
  */
 @SuppressLint("ViewConstructor")
-open class ExpandableSelectableItemView<Entity: BootyCrateItem>(
+open class ExpandableSelectableItemView<T: BootyCrateItem>(
     context: Context,
     animatorConfig: AnimatorConfig? = null,
     useDefaultLayout: Boolean = true,
-) : BootyCrateItemView<Entity>(context, useDefaultLayout),
+) : BootyCrateItemView<T>(context, useDefaultLayout),
     ExpandableItemAnimator.ExpandableRecyclerViewItem
 {
     val isExpanded get() = _isExpanded
@@ -143,7 +149,7 @@ open class ExpandableSelectableItemView<Entity: BootyCrateItem>(
         }
     }
 
-    override fun update(item: Entity) {
+    override fun update(item: T) {
         super.update(item)
         setExpanded(item.isExpanded, animate = false)
         setSelectedState(item.isSelected, animate = false)

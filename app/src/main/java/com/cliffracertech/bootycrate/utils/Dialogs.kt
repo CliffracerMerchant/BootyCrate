@@ -43,7 +43,7 @@ fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
  * member before onCreateDialog, or an exception will be thrown.
  *
  * The abstract function createItemFromView must be overridden in subclasses
- * with an implementation that returns an Entity instance that reflects the
+ * with an implementation that returns an T instance that reflects the
  * information entered in the newItemView member. The open function resetNewItemView
  * should be overridden in subclasses if additional work is needed to prepare the
  * newItemView member if the user clicks the addAnotherButton.

@@ -383,7 +383,7 @@ class ShoppingListFragmentTests {
         Intents.release()
     }
 
-    @Test fun addToInventory() {
+    @Test fun addItemsToInventory() {
         selectIndividualItems()
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.add_to_inventory_description)).perform(click())
@@ -392,8 +392,8 @@ class ShoppingListFragmentTests {
         onPopupView(withText(R.string.color_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(onlyShownInventoryItemsAre(
             InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                          amount = 1, color = orangeItem1.color),
-            InventoryItem(name = grayItem11.name, amount = 1, color = grayItem11.color)))
+                          amount = 0, color = orangeItem1.color),
+            InventoryItem(name = grayItem11.name, amount = 0, color = grayItem11.color)))
     }
 
     @Test fun changeItemColor() {
@@ -552,7 +552,7 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun checkoutRemovesCheckedItems() {
-        addToInventory()
+        addItemsToInventory()
         onView(withId(R.id.shoppingListButton)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(0, clickCheckBox()),

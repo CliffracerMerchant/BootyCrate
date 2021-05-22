@@ -110,7 +110,7 @@ abstract class BootyCrateItem(
 }
 
 /** A BootyCrateItem subclass that provides an implementation of toDbBootyCrateItem
- * and adds the isChecked field to mirror the DatabaseBootyCrateItem property. */
+ * and adds the isChecked field to mirror the DatabaseBootyCrateItem field. */
 class ShoppingListItem(
     id: Long = 0,
     name: String = "",

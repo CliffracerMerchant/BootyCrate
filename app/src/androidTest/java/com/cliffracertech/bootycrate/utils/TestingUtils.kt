@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.utils
 
 import android.view.View
+import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
@@ -102,10 +103,16 @@ fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
 
 /** Asserts that the view is an ExpandableSelectableRecyclerView that
     contains only the specified items of type T, in the order given. */
-abstract class onlyShownItemsAre<T: BootyCrateItem>(vararg items: T) : ViewAssertion {
+open class onlyShownItemsAre<T: BootyCrateItem>(vararg items: T) : ViewAssertion {
     private val items = items.asList()
 
-    abstract fun itemFromView(view: ExpandableSelectableItemView<*>) : T
+    @CallSuper
+    open fun assertItemFromViewMatchesOriginalItem(view: ExpandableSelectableItemView<T>, item: T) {
+        assertThat(view.ui.nameEdit.text.toString()).isEqualTo(item.name)
+        assertThat(view.ui.extraInfoEdit.text.toString()).isEqualTo(item.extraInfo)
+        assertThat(view.ui.checkBox.colorIndex).isEqualTo(item.color)
+        assertThat(view.ui.amountEdit.value).isEqualTo(item.amount)
+    }
 
     override fun check(view: View?, noViewFoundException: NoMatchingViewException?) {
         if (view == null) throw noViewFoundException!!
@@ -115,9 +122,9 @@ abstract class onlyShownItemsAre<T: BootyCrateItem>(vararg items: T) : ViewAsser
         for (i in 0 until it.adapter.itemCount) {
             val vh = it.findViewHolderForAdapterPosition(i)
             assertThat(vh).isNotNull()
-            val itemView = vh!!.itemView as? ExpandableSelectableItemView<*>
+            val itemView = vh!!.itemView as? ExpandableSelectableItemView<T>
             assertThat(itemView).isNotNull()
-            assertThat(itemFromView(itemView!!)).isEqualTo(items[i])
+            assertThat(assertItemFromViewMatchesOriginalItem(itemView!!, items[i]))
         }
     }
 }
@@ -127,11 +134,13 @@ abstract class onlyShownItemsAre<T: BootyCrateItem>(vararg items: T) : ViewAsser
 class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
     onlyShownItemsAre<ShoppingListItem>(*items)
 {
-    override fun itemFromView(view: ExpandableSelectableItemView<*>) = ShoppingListItem(
-        name = view.ui.nameEdit.text.toString(),
-        extraInfo = view.ui.extraInfoEdit.text.toString(),
-        color = view.ui.checkBox.colorIndex,
-        amount = view.ui.amountEdit.value)
+    override fun assertItemFromViewMatchesOriginalItem(
+        view: ExpandableSelectableItemView<ShoppingListItem>,
+        item: ShoppingListItem
+    ) {
+        super.assertItemFromViewMatchesOriginalItem(view, item)
+        assertThat(view.ui.checkBox.isChecked).isEqualTo(item.isChecked)
+    }
 }
 
 /** Asserts that the matching view is an ExpandableSelectableRecyclerView subclass
@@ -139,11 +148,13 @@ class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
 class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
     onlyShownItemsAre<InventoryItem>(*items)
 {
-    override fun itemFromView(view: ExpandableSelectableItemView<*>) = InventoryItem(
-        name = view.ui.nameEdit.text.toString(),
-        extraInfo = view.ui.extraInfoEdit.text.toString(),
-        color = view.ui.checkBox.colorIndex,
-        amount = view.ui.amountEdit.value,
-        autoAddToShoppingList = (view as InventoryItemView).detailsUi.autoAddToShoppingListCheckBox.isChecked,
-        autoAddToShoppingListAmount = view.detailsUi.autoAddToShoppingListAmountEdit.value)
+    override fun assertItemFromViewMatchesOriginalItem(
+        view: ExpandableSelectableItemView<InventoryItem>,
+        item: InventoryItem
+    ) {
+        super.assertItemFromViewMatchesOriginalItem(view, item)
+        val view = view as InventoryItemView
+        assertThat(view.detailsUi.autoAddToShoppingListCheckBox.isChecked).isEqualTo(item.autoAddToShoppingList)
+        assertThat(view.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(item.autoAddToShoppingListAmount)
+    }
 }
