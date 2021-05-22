@@ -58,7 +58,7 @@
     </style>
 
     <style name="InventoryItemAddToShoppingListCheckboxLabel" parent="@style/SecondaryTextAppearance">
-        <item name="android:labelFor">@id/addToShoppingListCheckBox</item>
+        <item name="android:labelFor">@id/autoAddToShoppingListCheckBox</item>
         <item name="android:text">@string/add_to_shopping_list_checkbox_text</item>
         <item name="android:gravity">center_vertical</item>
     </style>

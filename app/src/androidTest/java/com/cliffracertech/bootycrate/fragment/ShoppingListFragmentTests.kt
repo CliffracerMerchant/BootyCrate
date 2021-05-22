@@ -50,7 +50,7 @@ import org.junit.runner.RunWith
 class ShoppingListFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
-    private val db = BootyCrateDatabase.get(context as Application)
+    private val dao = BootyCrateDatabase.get(context as Application).dao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
     private val redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
@@ -62,14 +62,14 @@ class ShoppingListFragmentTests {
         activityRule.scenario.onActivity {
             val shoppingListViewModel: ShoppingListViewModel by it.viewModels()
             shoppingListViewModel.sortByChecked = false
-            shoppingListViewModel.sort = BootyCrateItem.Sort.Color
+            shoppingListViewModel.sort = BootyCrateItemSort.Color
             val prefs = PreferenceManager.getDefaultSharedPreferences(it)
             prefs.edit().putBoolean(it.getString(R.string.pref_sort_by_checked_key), false).apply()
         }
         runBlocking {
-            db.inventoryItemDao().deleteAll()
-            db.shoppingListItemDao().deleteAll()
-            db.shoppingListItemDao().add(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
+            dao.deleteAllInventoryItems()
+            dao.deleteAllShoppingListItems()
+            dao.addConvertibles(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
         Thread.sleep(50L)
     }
@@ -198,14 +198,14 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun deselectAllWithActionBarBackButton() {
-        runBlocking { db.shoppingListItemDao().selectAll() }
+        runBlocking { dao.selectAllShoppingListItems() }
         onView(withId(R.id.backButton)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView))
             .check(onlySelectedIndicesAre())
     }
 
     @Test fun deselectAllWithNavigationBackButton() {
-        runBlocking { db.shoppingListItemDao().selectAll() }
+        runBlocking { dao.selectAllShoppingListItems() }
         pressBack()
         onView(withId(R.id.shoppingListRecyclerView))
             .check(onlySelectedIndicesAre())
@@ -297,7 +297,7 @@ class ShoppingListFragmentTests {
                                                    not(withText(R.string.no_search_results_message)))
 
     @Test fun emptyMessageAppears() {
-        runBlocking { db.shoppingListItemDao().deleteAll() }
+        runBlocking { dao.deleteAllShoppingListItems() }
         Thread.sleep(30L)
         onView(emptyRecyclerViewMessage()).check(matches(isDisplayed()))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
@@ -306,7 +306,7 @@ class ShoppingListFragmentTests {
 
     @Test fun emptyMessageDisappears() {
         emptyMessageAppears()
-        runBlocking{ db.shoppingListItemDao().add(ShoppingListItem(name = "new item")) }
+        runBlocking { dao.add(ShoppingListItem(name = "new item")) }
         Thread.sleep(30L)
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
@@ -383,7 +383,7 @@ class ShoppingListFragmentTests {
         Intents.release()
     }
 
-    @Test fun addToInventory() {
+    @Test fun addItemsToInventory() {
         selectIndividualItems()
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.add_to_inventory_description)).perform(click())
@@ -392,8 +392,8 @@ class ShoppingListFragmentTests {
         onPopupView(withText(R.string.color_description)).perform(click())
         onView(withId(R.id.inventoryRecyclerView)).check(onlyShownInventoryItemsAre(
             InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                          amount = 1, color = orangeItem1.color),
-            InventoryItem(name = grayItem11.name, amount = 1, color = grayItem11.color)))
+                          amount = 0, color = orangeItem1.color),
+            InventoryItem(name = grayItem11.name, amount = 0, color = grayItem11.color)))
     }
 
     @Test fun changeItemColor() {
@@ -544,7 +544,7 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun checkoutButtonDisabledAfterUncheckingAllItems() {
-        runBlocking { db.shoppingListItemDao().checkAll() }
+        runBlocking { dao.checkAllShoppingListItems() }
         onView(withId(R.id.checkoutButton)).check(matches(isEnabled()))
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.uncheck_all_description)).perform(click())
@@ -552,7 +552,7 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun checkoutRemovesCheckedItems() {
-        addToInventory()
+        addItemsToInventory()
         onView(withId(R.id.shoppingListButton)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(0, clickCheckBox()),

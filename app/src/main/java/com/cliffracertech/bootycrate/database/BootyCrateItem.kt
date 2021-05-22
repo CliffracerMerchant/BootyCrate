@@ -10,61 +10,94 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.cliffracertech.bootycrate.R
 
-@Entity open class BootyCrateItem(
+/** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item
+ * table, and therefore contains properties for each of these fields. */
+@Entity(tableName = "bootycrate_item")
+class DatabaseBootyCrateItem(
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "id")                           var id: Long = 0,
-    @ColumnInfo(name = "name")                         var name: String = "",
-    @ColumnInfo(name = "extraInfo", defaultValue = "") var extraInfo: String = "",
-    @ColumnInfo(name = "color", defaultValue = "0")    var color: Int = 0,
-    @ColumnInfo(name = "amount", defaultValue = "1")   var amount: Int = 1,
-    @ColumnInfo(name = "linkedItemId")                 var linkedItemId: Long? = null,
-    @ColumnInfo(name = "inTrash", defaultValue = "0")  var inTrash: Boolean = false
+    @ColumnInfo(name="id")                         var id: Long = 0,
+    @ColumnInfo(name="name")                       var name: String = "",
+    @ColumnInfo(name="extraInfo", defaultValue="") var extraInfo: String = "",
+    @ColumnInfo(name="color", defaultValue="0")    var color: Int = 0,
+
+    // ShoppingListItem fields
+    @ColumnInfo(name="isChecked", defaultValue="0")
+    var isChecked: Boolean = false,
+    @ColumnInfo(name="shoppingListAmount", defaultValue="-1")
+    var shoppingListAmount: Int = -1,
+    @ColumnInfo(name="expandedInShoppingList", defaultValue="0")
+    var expandedInShoppingList: Boolean = false,
+    @ColumnInfo(name="selectedInShoppingList", defaultValue="0")
+    var selectedInShoppingList: Boolean = false,
+    @ColumnInfo(name="inShoppingListTrash", defaultValue="0")
+    var inShoppingListTrash: Boolean = false,
+
+    // InventoryItem fields
+    @ColumnInfo(name="inventoryAmount", defaultValue="-1")
+    var inventoryAmount: Int = -1,
+    @ColumnInfo(name="expandedInInventory", defaultValue="0")
+    var expandedInInventory: Boolean = false,
+    @ColumnInfo(name="selectedInInventory", defaultValue="0")
+    var selectedInInventory: Boolean = false,
+    @ColumnInfo(name="autoAddToShoppingList", defaultValue="0")
+    var autoAddToShoppingList: Boolean = false,
+    @ColumnInfo(name="autoAddToShoppingListAmount", defaultValue="1")
+    var autoAddToShoppingListAmount: Int = 1,
+    @ColumnInfo(name="inInventoryTrash", defaultValue="0")
+    var inInventoryTrash: Boolean = false
 ) {
+    init { color.coerceIn(BootyCrateItem.Colors.indices) }
 
-    init { color.coerceIn(Colors.indices) }
+//    override fun equals(other: Any?): Boolean {
+//        if (other === this) return true
+//        if (other == null || other !is BootyCrateItem) return false
+//        return this.id == other.id &&
+//               this.name == other.name &&
+//               this.extraInfo == other.extraInfo &&
+//               this.color == other.color
+//    }
 
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + name.hashCode()
-        result = 31 * result + extraInfo.hashCode()
-        result = 31 * result + color
-        result = 31 * result + amount
-        result = 31 * result + (linkedItemId?.hashCode() ?: 0)
-        result = 31 * result + inTrash.hashCode()
-        return result
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (other === this) return true
-        if (other == null || other !is BootyCrateItem) return false
-        return this.id == other.id &&
-               this.name == other.name &&
-               this.extraInfo == other.extraInfo &&
-               this.color == other.color &&
-               this.amount == other.amount &&
-               this.linkedItemId == other.linkedItemId
+    // An interface for objects to provide a way to convert themselves into a DataBaseBootyCrateItem
+    interface Convertible {
+        fun toDbBootyCrateItem(): DatabaseBootyCrateItem
     }
 
     override fun toString() ="""
-        id = $id
-        name = $name
-        extraInfo = $extraInfo
-        color = $color
-        amount = $amount
-        linkedItemId = $linkedItemId"""
+id = $id
+name = $name
+extraInfo = $extraInfo
+color = $color
+checked = $isChecked
+shoppingListAmount = $shoppingListAmount
+expandedInShoppingList = $expandedInShoppingList
+selectedInShoppingList = $selectedInShoppingList
+inShoppingListTrash = $inShoppingListTrash
+inventoryAmount = $inventoryAmount
+expandedInInventory = $expandedInInventory
+selectedInInventory = $selectedInInventory
+autoAddToShoppingList = $autoAddToShoppingList
+autoAddToShoppingListAmount = $autoAddToShoppingListAmount
+inInventoryTrash = $inInventoryTrash"""
+}
+
+/** An abstract class that mirrors DatabaseBootyCrateItem, but only contains
+ * the fields necessary for a visual representation of the object. Subclasses
+ * should also add any additionally required fields and provide an implementation
+ * of toDbBootyCrateItem that will return a DatabaseBootyCrateItem representation
+ * of the object. */
+abstract class BootyCrateItem(
+    var id: Long = 0,
+    var name: String = "",
+    var extraInfo: String = "",
+    var color: Int = 0,
+    var amount: Int = 1,
+    var isExpanded: Boolean = false,
+    var isSelected: Boolean = false,
+    var linked: Boolean = false,
+) : DatabaseBootyCrateItem.Convertible {
 
     // For a user-facing string representation of the object
-    open fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
-
-    enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
-        companion object {
-            fun fromString(string: String?): Sort =
-                if (string == null) Color
-                else try { valueOf(string) }
-                     // If string value doesn't match a Sort value
-                     catch(e: IllegalArgumentException) { Color }
-        }
-    }
+    fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
     companion object {
         val Colors: List<Int> get() = _Colors
@@ -76,19 +109,62 @@ import com.cliffracertech.bootycrate.R
     }
 }
 
-/** An extension of BootyCrateItem that adds two fields, isExpanded and isSelected. */
-@Entity open class ExpandableSelectableItem(
+/** A BootyCrateItem subclass that provides an implementation of toDbBootyCrateItem
+ * and adds the isChecked field to mirror the DatabaseBootyCrateItem field. */
+class ShoppingListItem(
     id: Long = 0,
     name: String = "",
     extraInfo: String = "",
     color: Int = 0,
     amount: Int = 1,
-    linkedItemId: Long? = null,
-    inTrash: Boolean = false,
-    @ColumnInfo(name="isExpanded", defaultValue = "0") var isExpanded: Boolean = false,
-    @ColumnInfo(name="isSelected", defaultValue = "0") var isSelected: Boolean = false
-) : BootyCrateItem(id, name, extraInfo, color, amount, linkedItemId, inTrash) {
+    isExpanded: Boolean = false,
+    isSelected: Boolean = false,
+    linked: Boolean = false,
+    var isChecked: Boolean = false
+): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, linked) {
 
-    override fun toString() = super.toString() +
-            "\nisExpanded = $isExpanded\nisSelected = $isSelected"
+    /** The enum class Field identifies user facing fields
+     * that are potentially editable by the user. */
+    enum class Field { Name, ExtraInfo, Color, Amount,
+                       IsExpanded, IsSelected, IsChecked }
+
+    override fun toDbBootyCrateItem() = DatabaseBootyCrateItem(
+        id, name, extraInfo, color,
+        isChecked = isChecked,
+        shoppingListAmount = amount,
+        expandedInShoppingList = isExpanded,
+        selectedInShoppingList = isSelected
+    )
+}
+
+/** A BootyCrateItem subclass that provides an implementation of toDbBootyCrateItem
+ * and adds the autoAddToShoppingList and autoAddToShoppingListAmount fields to
+ * mirror the DatabaseBootyCrateItem fields. */
+class InventoryItem(
+    id: Long = 0,
+    name: String = "",
+    extraInfo: String = "",
+    color: Int = 0,
+    amount: Int = 0,
+    isExpanded: Boolean = false,
+    isSelected: Boolean = false,
+    linked: Boolean = false,
+    var autoAddToShoppingList: Boolean = false,
+    var autoAddToShoppingListAmount: Int = 1
+): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, linked) {
+
+    /** The enum class Field identifies user facing fields
+     * that are potentially editable by the user. */
+    enum class Field { Name, ExtraInfo, Color, Amount,
+                       IsExpanded, IsSelected,
+                       AutoAddToShoppingList,
+                       AutoAddToShoppingListAmount }
+
+    override fun toDbBootyCrateItem() = DatabaseBootyCrateItem(
+        id, name, extraInfo, color,
+        inventoryAmount = amount,
+        expandedInInventory = isExpanded,
+        selectedInInventory = isSelected,
+        autoAddToShoppingList = autoAddToShoppingList,
+        autoAddToShoppingListAmount = autoAddToShoppingListAmount)
 }

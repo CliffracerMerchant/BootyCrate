@@ -20,7 +20,7 @@
         <item name="android:textColorHint">@color/color_text_dark_secondary</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="checkoutButtonDisabledAlpha">170</item>
+        <item name="checkoutButtonDisabledAlpha">145</item>
 
         <item name="imageButtonStyle">@style/ImageButton</item>
         <item name="android:textViewStyle">@style/TextAppearance</item>

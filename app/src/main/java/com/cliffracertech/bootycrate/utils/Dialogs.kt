@@ -43,7 +43,7 @@ fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
  * member before onCreateDialog, or an exception will be thrown.
  *
  * The abstract function createItemFromView must be overridden in subclasses
- * with an implementation that returns an Entity instance that reflects the
+ * with an implementation that returns an T instance that reflects the
  * information entered in the newItemView member. The open function resetNewItemView
  * should be overridden in subclasses if additional work is needed to prepare the
  * newItemView member if the user clicks the addAnotherButton.
@@ -54,17 +54,17 @@ fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
  * message and will prevent the user from proceeding if they try to add an item
  * with no name.
  */
-abstract class NewBootyCrateItemDialog<Entity: ExpandableSelectableItem>(
+abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     context: Context,
     useDefaultLayout: Boolean = true
 ) : DialogFragment() {
-    abstract val viewModel: BootyCrateViewModel<Entity>
+    abstract val viewModel: BootyCrateViewModel<T>
     private val inputMethodManager = inputMethodManager(context)
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
     protected val ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
-    protected lateinit var newItemView: ExpandableSelectableItemView<Entity>
+    protected lateinit var newItemView: ExpandableSelectableItemView<T>
 
     init { if (useDefaultLayout) newItemView = ExpandableSelectableItemView(context) }
 
@@ -134,7 +134,7 @@ abstract class NewBootyCrateItemDialog<Entity: ExpandableSelectableItem>(
             true
         }
 
-    abstract fun createItemFromView(): Entity
+    abstract fun createItemFromView(): T
 }
 
 /** Open a dialog to create a new shopping list item. */
@@ -161,10 +161,10 @@ class NewInventoryItemDialog(context: Context) :
     init {
         newItemView = newInventoryItemView.apply {
             setExpanded(true, animate = false)
-            detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
-            detailsUi.addToShoppingListCheckBox.initColorIndex(0)
+            detailsUi.autoAddToShoppingListAmountEdit.apply { value = minValue }
+            detailsUi.autoAddToShoppingListCheckBox.initColorIndex(0)
             ui.checkBox.onColorChangedListener = {
-                detailsUi.addToShoppingListCheckBox.colorIndex =
+                detailsUi.autoAddToShoppingListCheckBox.colorIndex =
                     ui.checkBox.colorIndex
             }
         }
@@ -172,8 +172,8 @@ class NewInventoryItemDialog(context: Context) :
 
     override fun resetNewItemView() {
         super.resetNewItemView()
-        newInventoryItemView.detailsUi.addToShoppingListCheckBox.isChecked = false
-        newInventoryItemView.detailsUi.addToShoppingListTriggerEdit.apply { value = minValue }
+        newInventoryItemView.detailsUi.autoAddToShoppingListCheckBox.isChecked = false
+        newInventoryItemView.detailsUi.autoAddToShoppingListAmountEdit.apply { value = minValue }
     }
 
     override fun createItemFromView() = InventoryItem(
@@ -181,6 +181,6 @@ class NewInventoryItemDialog(context: Context) :
         extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
         color = newItemView.ui.checkBox.colorIndex,
         amount = newItemView.ui.amountEdit.value,
-        addToShoppingList = newInventoryItemView.detailsUi.addToShoppingListCheckBox.isChecked,
-        addToShoppingListTrigger = newInventoryItemView.detailsUi.addToShoppingListTriggerEdit.value)
+        autoAddToShoppingList = newInventoryItemView.detailsUi.autoAddToShoppingListCheckBox.isChecked,
+        autoAddToShoppingListAmount = newInventoryItemView.detailsUi.autoAddToShoppingListAmountEdit.value)
 }

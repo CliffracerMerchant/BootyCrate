@@ -10,8 +10,7 @@ import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.cliffracertech.bootycrate.ExpandableSelectableItemView
-import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
-import com.cliffracertech.bootycrate.database.ExpandableSelectableItemViewModel
+import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 
 /**
@@ -27,11 +26,10 @@ import com.cliffracertech.bootycrate.utils.AnimatorConfig
  * that in turn enforces the use of ExpandableSelectableRecyclerView.ViewHolder.
  */
 @Suppress("LeakingThis")
-abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem>(
+abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     context: Context,
     attrs: AttributeSet
-) : BootyCrateRecyclerView<Entity>(context, attrs) {
-    abstract override val viewModel: ExpandableSelectableItemViewModel<Entity>
+) : BootyCrateRecyclerView<T>(context, attrs) {
     protected val itemAnimator = ExpandableItemAnimator(this, AnimatorConfig.translation(context))
 
     val selection = Selection()
@@ -44,8 +42,8 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
     }
 
     fun setExpandedItem(pos: Int?) {
-        viewModel.setExpandedId(if (pos == null) null
-                                else adapter.currentList[pos].id)
+        viewModel.setExpandedItem(if (pos == null) null
+                                  else adapter.currentList[pos].id)
         itemAnimator.notifyExpandedItemChanged(pos)
     }
 
@@ -77,18 +75,15 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
         fun clear() = viewModel.clearSelection()
     }
 
-    /**
-     * An abstract (due to not implementing onCreateViewHolder) subclass of
+    /** An abstract (due to not implementing onCreateViewHolder) subclass of
      * BootyCrateRecyclerView.Adapter that enforces the use of
-     * ExpandableSelectableRecyclerView.ViewHolder.
-     */
+     * ExpandableSelectableRecyclerView.ViewHolder. */
     abstract inner class Adapter<VHType: ViewHolder> :
-        BootyCrateRecyclerView<Entity>.Adapter<VHType>()
+        BootyCrateRecyclerView<T>.Adapter<VHType>()
     {
         override fun onBindViewHolder(holder: VHType, position: Int) {
             if (holder.item.isExpanded)
                 itemAnimator.notifyExpandedItemChanged(position)
-            super.onBindViewHolder(holder, position)
         }
     }
 
@@ -98,8 +93,8 @@ abstract class ExpandableSelectableRecyclerView<Entity: ExpandableSelectableItem
      * ExpandableSelectableRecyclerView.ViewHolder updates the onClickListeners of
      * the wrapped item view to enable the selection and expansion of the items.
      */
-    open inner class ViewHolder(view: ExpandableSelectableItemView<Entity>) :
-        BootyCrateRecyclerView<Entity>.ViewHolder(view)
+    open inner class ViewHolder(view: ExpandableSelectableItemView<T>) :
+        BootyCrateRecyclerView<T>.ViewHolder(view)
     {
         init {
             val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }

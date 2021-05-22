@@ -14,9 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.activity.MainActivity
-import com.cliffracertech.bootycrate.database.BootyCrateItem
-import com.cliffracertech.bootycrate.database.ExpandableSelectableItem
-import com.cliffracertech.bootycrate.database.ExpandableSelectableItemViewModel
+import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
@@ -47,11 +45,11 @@ import java.util.*
  * form work when the action action mode starts or finishes.
  */
 @Suppress("LeakingThis")
-abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
+abstract class RecyclerViewFragment<T: BootyCrateItem> :
     Fragment(), MainActivity.MainActivityFragment
 {
-    protected abstract val viewModel: ExpandableSelectableItemViewModel<Entity>
-    protected abstract val recyclerView: ExpandableSelectableRecyclerView<Entity>?
+    protected abstract val viewModel: BootyCrateViewModel<T>
+    protected abstract val recyclerView: ExpandableSelectableRecyclerView<T>?
     protected open val collectionName = ""
     protected open val actionModeCallback = SelectionActionModeCallback()
     private lateinit var sortModePrefKey: String
@@ -67,9 +65,9 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         sortModePrefKey = getString(R.string.pref_sort, collectionName)
-        val sortStr = prefs.getString(sortModePrefKey, BootyCrateItem.Sort.Color.toString())
+        val sortStr = prefs.getString(sortModePrefKey, BootyCrateItemSort.Color.toString())
         recyclerView?.apply {
-            sort = BootyCrateItem.Sort.fromString(sortStr)
+            sort = BootyCrateItemSort.fromString(sortStr)
             selection.itemsLiveData.observe(viewLifecycleOwner, ::onSelectionChanged)
             observeViewModel(viewLifecycleOwner)
         }
@@ -102,11 +100,11 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         R.id.delete_selected_menu_item -> deleteSelectedItems()
         R.id.share_menu_item -> shareList()
         R.id.select_all_menu_item -> {  recyclerView?.selection?.addAll(); true }
-        R.id.color_option -> { saveSortingOption(BootyCrateItem.Sort.Color, item) }
-        R.id.name_ascending_option -> { saveSortingOption(BootyCrateItem.Sort.NameAsc, item) }
-        R.id.name_descending_option -> { saveSortingOption(BootyCrateItem.Sort.NameDesc, item) }
-        R.id.amount_ascending_option -> { saveSortingOption(BootyCrateItem.Sort.AmountAsc, item) }
-        R.id.amount_descending_option -> { saveSortingOption(BootyCrateItem.Sort.AmountDesc, item) }
+        R.id.color_option -> { saveSortingOption(BootyCrateItemSort.Color, item) }
+        R.id.name_ascending_option -> { saveSortingOption(BootyCrateItemSort.NameAsc, item) }
+        R.id.name_descending_option -> { saveSortingOption(BootyCrateItemSort.NameDesc, item) }
+        R.id.amount_ascending_option -> { saveSortingOption(BootyCrateItemSort.AmountAsc, item) }
+        R.id.amount_descending_option -> { saveSortingOption(BootyCrateItemSort.AmountDesc, item) }
         else -> false
     }
 
@@ -154,7 +152,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
     /** Set the recyclerView's sort to @param sort, check the @param
      * sortMenuItem, and save the sort to sharedPreferences.
      * @return whether the option was successfully saved to preferences. */
-    private fun saveSortingOption(sort: BootyCrateItem.Sort, sortMenuItem: MenuItem) : Boolean {
+    private fun saveSortingOption(sort: BootyCrateItemSort, sortMenuItem: MenuItem) : Boolean {
         recyclerView?.sort = sort
         sortMenuItem.isChecked = true
         val context = this.context ?: return false
@@ -163,7 +161,7 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
         return true
     }
 
-    private fun onSelectionChanged(newList: List<Entity>) {
+    private fun onSelectionChanged(newList: List<T>) {
         if (newList.isNotEmpty()) {
             if (!actionModeIsStarted)
                 actionBar?.startActionMode(actionModeCallback)
@@ -208,11 +206,11 @@ abstract class RecyclerViewFragment<Entity: ExpandableSelectableItem> :
                 activeSearchQuery = activeSearchQuery)
 
             activityUi.actionBar.changeSortMenu.findItem(when (recyclerView.sort) {
-                BootyCrateItem.Sort.Color -> R.id.color_option
-                BootyCrateItem.Sort.NameAsc -> R.id.name_ascending_option
-                BootyCrateItem.Sort.NameDesc -> R.id.name_descending_option
-                BootyCrateItem.Sort.AmountAsc -> R.id.amount_ascending_option
-                BootyCrateItem.Sort.AmountDesc -> R.id.amount_descending_option
+                BootyCrateItemSort.Color -> R.id.color_option
+                BootyCrateItemSort.NameAsc -> R.id.name_ascending_option
+                BootyCrateItemSort.NameDesc -> R.id.name_descending_option
+                BootyCrateItemSort.AmountAsc -> R.id.amount_ascending_option
+                BootyCrateItemSort.AmountDesc -> R.id.amount_descending_option
             })?.isChecked = true
         }
     }
