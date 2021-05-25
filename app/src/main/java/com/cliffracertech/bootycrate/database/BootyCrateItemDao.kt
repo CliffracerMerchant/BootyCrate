@@ -119,7 +119,7 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
 
     @Query("SELECT EXISTS(SELECT id FROM bootycrate_item WHERE $onShoppingList " +
                          "AND name = :name AND extraInfo = :extraInfo)")
-    abstract fun shoppingListItemWithNameAlreadyExists(name: String, extraInfo: String): LiveData<Boolean>
+    abstract suspend fun itemWithNameAlreadyExistsInShoppingList(name: String, extraInfo: String): Boolean
 
     @Query("UPDATE bootycrate_item SET shoppingListAmount = :amount WHERE id = :id")
     abstract suspend fun updateShoppingListAmount(id: Long, amount: Int)
@@ -252,7 +252,7 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
 
     @Query("SELECT EXISTS(SELECT id FROM bootycrate_item WHERE $inInventory " +
                          "AND name = :name AND extraInfo = :extraInfo)")
-    abstract fun inventoryItemWithNameAlreadyExists(name: String, extraInfo: String): LiveData<Boolean>
+    abstract suspend fun itemWithNameAlreadyExistsInInventory(name: String, extraInfo: String): Boolean
 
     @Query("UPDATE bootycrate_item SET inventoryAmount = :amount WHERE id = :id")
     abstract suspend fun updateInventoryAmount(id: Long, amount: Int)

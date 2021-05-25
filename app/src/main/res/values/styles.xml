@@ -142,16 +142,6 @@
         <item name="android:visibility">gone</item>
     </style>
 
-    <style name="AddNewItemDialogDuplicateNameMessage" parent="@style/AddNewItemDialogMessage">
-        <item name="android:text">@string/new_item_duplicate_name_warning</item>
-        <item name="android:drawableStart">@drawable/ic_round_warning_24</item>
-    </style>
-
-    <style name="AddNewItemDialogNameRequiredMessage" parent="@style/AddNewItemDialogMessage">
-        <item name="android:text">@string/new_item_no_name_error</item>
-        <item name="android:drawableStart">@drawable/ic_baseline_error_24</item>
-    </style>
-
     <style name="UpdateListReminderEnableCheckBox" parent="@style/NormalTextAppearance">
         <item name="android:text">@string/update_list_reminder_description</item>
     </style>
