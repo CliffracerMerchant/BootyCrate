@@ -71,6 +71,17 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
     fun updateColor(id: Long, color: Int) =
         viewModelScope.launch { dao.updateColor(id, color) }
 
+    /* For those wondering why item fetching uses LiveData all the way from the DAO
+    to the view model level and does not use Flows at all: An attempt was made to
+    make the DAO return Flow<List<T>> for its item fetching queries instead of
+    LiveData<List<T>>, choose from among these Flows in a combineTransform of
+    the sorting option StateFlows, and then only expose the final result as a
+    LiveData<List<T>> for the UI layer. Unfortunately this was resulting in some
+    truly bizarre bugs, such as selecting some items causing other items to
+    randomly disappear, and then reappear again once the other items were
+    deselected. Since there's probably no end user benefit for this particular
+    LiveData to Flow migration, the item fetching is going to stay with LiveData
+    for the time being. */
     protected val sortOptionsChanged = MutableLiveData<Boolean>()
     protected fun notifySortOptionsChanged() { sortOptionsChanged.value = true }
 
