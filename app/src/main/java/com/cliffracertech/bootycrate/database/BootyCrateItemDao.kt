@@ -46,27 +46,6 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
 
 
 
-    fun getShoppingList(
-        sort: BootyCrateItemSort,
-        sortByChecked: Boolean,
-        searchFilter: String?
-    ) = run {
-        val filter = "%${searchFilter ?: ""}%"
-        if (!sortByChecked) when (sort) {
-            BootyCrateItemSort.Color -> getShoppingListSortedByColor(filter)
-            BootyCrateItemSort.NameAsc -> getShoppingListSortedByNameAsc(filter)
-            BootyCrateItemSort.NameDesc -> getShoppingListSortedByNameDesc(filter)
-            BootyCrateItemSort.AmountAsc -> getShoppingListSortedByAmountAsc(filter)
-            BootyCrateItemSort.AmountDesc -> getShoppingListSortedByAmountDesc(filter)
-        } else when (sort) {
-            BootyCrateItemSort.Color -> getShoppingListSortedByColorAndChecked(filter)
-            BootyCrateItemSort.NameAsc -> getShoppingListSortedByNameAscAndChecked(filter)
-            BootyCrateItemSort.NameDesc -> getShoppingListSortedByNameDescAndChecked(filter)
-            BootyCrateItemSort.AmountAsc -> getShoppingListSortedByAmountAscAndChecked(filter)
-            BootyCrateItemSort.AmountDesc -> getShoppingListSortedByAmountDescAndChecked(filter)
-        }
-    }
-
     @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +
            "ORDER BY color")
@@ -211,19 +190,6 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
                   selectedInShoppingList = 0
               WHERE $onShoppingList AND isChecked""")
     abstract suspend fun checkout()
-
-
-
-    fun getInventory(sort: BootyCrateItemSort, searchFilter: String?) = run {
-        val filter = "%${searchFilter ?: ""}%"
-        when (sort) {
-            BootyCrateItemSort.Color -> getInventorySortedByColor(filter)
-            BootyCrateItemSort.NameAsc -> getInventorySortedByNameAsc(filter)
-            BootyCrateItemSort.NameDesc -> getInventorySortedByNameDesc(filter)
-            BootyCrateItemSort.AmountAsc -> getInventorySortedByAmountAsc(filter)
-            BootyCrateItemSort.AmountDesc -> getInventorySortedByAmountDesc(filter)
-        }
-    }
 
     @Query("SELECT $inventoryItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $inInventory " +

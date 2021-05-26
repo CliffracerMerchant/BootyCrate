@@ -9,7 +9,9 @@ import android.content.Context
 import androidx.lifecycle.*
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 enum class BootyCrateItemSort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
@@ -42,7 +44,7 @@ fun inventoryViewModel(context: Context) =
  * additional sort options the subclass adds.
  *
  * If the properties newItemName and newItemExtraInfo are updated with the
- * proposed name and extra info for a new item, the live data property
+ * proposed name and extra info for a new item, the LiveData property
  * newItemNameIsAlreadyUsed can be observed to tell if the name and extra info
  * combination is already in use by another item on the same list, is in use by
  * an item in a neighboring collection, or if it is not in use by either, as
@@ -70,7 +72,6 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
         viewModelScope.launch { dao.updateColor(id, color) }
 
     protected val sortOptionsChanged = MutableLiveData<Boolean>()
-
     protected fun notifySortOptionsChanged() { sortOptionsChanged.value = true }
 
     var sort: BootyCrateItemSort = BootyCrateItemSort.Color
@@ -127,14 +128,29 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
  *
  * ShoppingListViewModel adds a new sortByChecked option, which will sort
  * ShoppingListItems by their checked state in addition to the sorting method
- * described by the sort property. It also adds functions to query or
- * manipulate the checked state of items, and the checkout function.
+ * described by the sort property. It also adds functions to manipulate the
+ * checked state of items, and the checkout function.
  */
 class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingListItem>(app) {
     var sortByChecked = false
         set(value) { field = value; notifySortOptionsChanged() }
 
-    override fun itemsSwitchMapFunc() = dao.getShoppingList(sort, sortByChecked, searchFilter)
+    override fun itemsSwitchMapFunc() = run {
+        val filter = "%$searchFilter%"
+        if (!sortByChecked) when (sort) {
+            BootyCrateItemSort.Color -> dao.getShoppingListSortedByColor(filter)
+            BootyCrateItemSort.NameAsc -> dao.getShoppingListSortedByNameAsc(filter)
+            BootyCrateItemSort.NameDesc -> dao.getShoppingListSortedByNameDesc(filter)
+            BootyCrateItemSort.AmountAsc -> dao.getShoppingListSortedByAmountAsc(filter)
+            BootyCrateItemSort.AmountDesc -> dao.getShoppingListSortedByAmountDesc(filter)
+        } else when (sort) {
+            BootyCrateItemSort.Color -> dao.getShoppingListSortedByColorAndChecked(filter)
+            BootyCrateItemSort.NameAsc -> dao.getShoppingListSortedByNameAscAndChecked(filter)
+            BootyCrateItemSort.NameDesc -> dao.getShoppingListSortedByNameDescAndChecked(filter)
+            BootyCrateItemSort.AmountAsc -> dao.getShoppingListSortedByAmountAscAndChecked(filter)
+            BootyCrateItemSort.AmountDesc -> dao.getShoppingListSortedByAmountDescAndChecked(filter)
+        }
+    }
 
     override val newItemNameIsAlreadyUsed = combine(
         itemWithNameAlreadyExistsInShoppingList,
@@ -143,7 +159,7 @@ class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingList
         when { (existsInShoppingList) -> NameIsAlreadyUsed.TrueForCurrentList
                (existsInInventory) ->    NameIsAlreadyUsed.TrueForSiblingList
                else ->                   NameIsAlreadyUsed.False }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, NameIsAlreadyUsed.False).asLiveData()
+    }.asLiveData()
 
     override fun deleteAll() = viewModelScope.launch { dao.deleteAllShoppingListItems() }
 
@@ -193,21 +209,29 @@ class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingList
 
 
 /** An implementation of BootyCrateViewModel<InventoryItem> that adds functions
- * to query or manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
+ * to  manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
  * fields of items in the database. */
 class InventoryViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(app) {
 
-    override fun itemsSwitchMapFunc() = dao.getInventory(sort, searchFilter)
+    override fun itemsSwitchMapFunc() = run {
+        val filter = "%$searchFilter%"
+        when (sort) {
+            BootyCrateItemSort.Color -> dao.getInventorySortedByColor(filter)
+            BootyCrateItemSort.NameAsc -> dao.getInventorySortedByNameAsc(filter)
+            BootyCrateItemSort.NameDesc -> dao.getInventorySortedByNameDesc(filter)
+            BootyCrateItemSort.AmountAsc -> dao.getInventorySortedByAmountAsc(filter)
+            BootyCrateItemSort.AmountDesc -> dao.getInventorySortedByAmountDesc(filter)
+        }
+    }
 
-    override val newItemNameIsAlreadyUsed =
-        combine(
-            itemWithNameAlreadyExistsInInventory,
-            itemWithNameAlreadyExistsInShoppingList
-        ) { existsInInventory, existsInShoppingList ->
-            when { (existsInInventory) ->    NameIsAlreadyUsed.TrueForCurrentList
-                   (existsInShoppingList) -> NameIsAlreadyUsed.TrueForSiblingList
-                   else ->                   NameIsAlreadyUsed.False }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NameIsAlreadyUsed.False).asLiveData()
+    override val newItemNameIsAlreadyUsed = combine(
+        itemWithNameAlreadyExistsInInventory,
+        itemWithNameAlreadyExistsInShoppingList
+    ) { existsInInventory, existsInShoppingList ->
+        when { (existsInInventory) ->    NameIsAlreadyUsed.TrueForCurrentList
+               (existsInShoppingList) -> NameIsAlreadyUsed.TrueForSiblingList
+               else ->                   NameIsAlreadyUsed.False }
+    }.asLiveData()
 
     override fun deleteAll() = viewModelScope.launch { dao.deleteAllInventoryItems() }
 

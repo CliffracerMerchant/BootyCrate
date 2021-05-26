@@ -375,11 +375,9 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         if (!showing) {
             val parent = parent as ViewGroup
             parent.overlay.add(this)
-            animator.doOnEnd {
-                parent.overlay.remove(this)
-                isVisible = false
-                parent.addView(this)
-            }
+            animator.doOnEnd { parent.overlay.remove(this)
+                               isVisible = false
+                               parent.addView(this) }
         }
         pendingAnimations.add(animator)
         return animator

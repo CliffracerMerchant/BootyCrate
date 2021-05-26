@@ -48,15 +48,6 @@ class DatabaseBootyCrateItem(
 ) {
     init { color.coerceIn(BootyCrateItem.Colors.indices) }
 
-//    override fun equals(other: Any?): Boolean {
-//        if (other === this) return true
-//        if (other == null || other !is BootyCrateItem) return false
-//        return this.id == other.id &&
-//               this.name == other.name &&
-//               this.extraInfo == other.extraInfo &&
-//               this.color == other.color
-//    }
-
     // An interface for objects to provide a way to convert themselves into a DataBaseBootyCrateItem
     interface Convertible {
         fun toDbBootyCrateItem(): DatabaseBootyCrateItem
