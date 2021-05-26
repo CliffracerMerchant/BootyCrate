@@ -70,7 +70,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
-    protected var ui: NewItemDialogBinding? = null
+    protected var ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
     protected lateinit var newItemView: ExpandableSelectableItemView<T>
 
     abstract val itemWithNameAlreadyExistsInCollectionWarningMessage: String
@@ -81,8 +81,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         viewModel.newItemName = ""
         viewModel.newItemExtraInfo = ""
-        ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
-        ui?.newItemViewContainer?.addView(newItemView)
+        ui.newItemViewContainer.addView(newItemView)
         newItemView.apply {
             setExpanded(true, animate = false)
             ui.amountEditSpacer.isVisible = false
@@ -108,7 +107,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             .setNeutralButton(android.R.string.cancel) { _, _ -> }
             .setNegativeButton(R.string.add_another_item_button_description) { _, _ -> }
             .setPositiveButton(android.R.string.ok) { _, _ -> }
-            .setView(ui?.root)
+            .setView(ui.root)
             .create().apply {
                 setOnShowListener {
                     okButton.setOnClickListener { if (addItem()) dismiss() }
@@ -122,15 +121,12 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             }
     }
 
-    // Hypothetically onCreateView should not need to be called because onCreateDialog
-    // is overridden. Unfortunately we need to observe the viewModel's newItemNameIsAlreadyUsed
-    // live data using the viewLifecycleOwner, which can only be done in onViewCreated,
-    // which will not be called unless onCreateView returns a non-null View.
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ) = ui?.root
+    // Hypothetically onCreateView should not need to be called because onCreateDialog is
+    // overridden. Unfortunately we need to observe the viewModel's newItemNameIsAlreadyUsed
+    // live data using the viewLifecycleOwner, which can only be done in or after
+    // onViewCreated, which will not be called unless onCreateView returns a non-null View.
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
+                              savedInstanceState: Bundle?) = ui.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -144,11 +140,6 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                     WarningMessage.None
             })
         }
-    }
-
-    override fun onDestroyView() {
-        ui = null
-        super.onDestroyView()
     }
 
     open fun resetNewItemView(): Unit = with(newItemView) {
@@ -185,7 +176,6 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     protected val shownWarningMessage get() = _shownWarningMessage
     protected fun showWarningMessage(warning: WarningMessage) {
         if (_shownWarningMessage == warning) return
-        val ui = this.ui ?: return
         _shownWarningMessage = warning
 
         if (warning == WarningMessage.None)
@@ -221,11 +211,9 @@ class NewShoppingListItemDialog(context: Context) :
     override val viewModel: ShoppingListViewModel by activityViewModels()
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
-        context.getString(R.string.new_item_duplicate_name_warning,
-            context.getString(R.string.shopping_list_item_collection_name_with_preposition))
+        context.getString(R.string.new_shopping_list_item_duplicate_name_warning)
     override val itemWithNameAlreadyExistsInOtherCollectionWarningMessage =
-        context.getString(R.string.new_item_will_not_be_linked_warning,
-            context.getString(R.string.inventory_item_collection_name_with_preposition),
+        context.getString(R.string.new_shopping_list_item_will_not_be_linked_warning,
             context.getString(R.string.add_to_shopping_list_description))
 
     init { newItemView.ui.checkBox.setInColorEditMode(true, animate = false) }
@@ -247,11 +235,9 @@ class NewInventoryItemDialog(context: Context) :
     private val newInventoryItemView = InventoryItemView(context, null)
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
-        context.getString(R.string.new_item_duplicate_name_warning,
-            context.getString(R.string.inventory_item_collection_name_with_preposition))
+        context.getString(R.string.new_inventory_item_duplicate_name_warning)
     override val itemWithNameAlreadyExistsInOtherCollectionWarningMessage =
-        context.getString(R.string.new_item_will_not_be_linked_warning,
-            context.getString(R.string.shopping_list_item_collection_name_with_preposition),
+        context.getString(R.string.new_inventory_item_will_not_be_linked_warning,
             context.getString(R.string.add_to_inventory_description))
 
     init {
