@@ -45,17 +45,17 @@
     <string name="link_status_description">Linked status</string>
     <string name="collapse_button_description">Collapse extra item options</string>
 
-    <string name="inventory_item_collection_name">inventory</string>
-    <string name="add_to_inventory_description">Add to inventory</string>
-    <string name="add_to_shopping_list_checkbox_description">Add to shopping list</string>
-    <string name="add_to_shopping_list_checkbox_text">Add to shopping list under:</string>
-    <string name="add_to_shopping_list_trigger_edit_description">Add to shopping list amount threshold</string>
-
     <string name="shopping_list_item_collection_name">shopping list</string>
     <string name="add_to_shopping_list_description">Add to shopping list</string>
     <string name="shopping_list_badge_text">+%1$d</string>
     <string name="checkout_description">Checkout</string>
     <string name="checkout_confirm_description">Confirm?</string>
+
+    <string name="inventory_item_collection_name">inventory</string>
+    <string name="add_to_inventory_description">Add to inventory</string>
+    <string name="add_to_shopping_list_checkbox_description">Add to shopping list</string>
+    <string name="add_to_shopping_list_checkbox_text">Add to shopping list under:</string>
+    <string name="add_to_shopping_list_trigger_edit_description">Add to shopping list amount threshold</string>
 
     <string name="share_description">Share</string>
     <string name="share_whole_list_title">Share %1$s</string>
@@ -72,7 +72,14 @@
         Copyright 2020 Nicholas Hochstetler. \nBootyCrate is an open-source shopping list and
         inventory management app, licensed under the terms of the Apache License, version 2.0.
         View the source code at: https://github.com/NicholasHochstetler/BootyCrate</string>
-    <string name="new_item_duplicate_name_warning">Name is already in use</string>
+    <string name="new_shopping_list_item_duplicate_name_warning">Another item on the shopping list with the same name already exists.</string>
+    <string name="new_inventory_item_duplicate_name_warning">Another item in the inventory with the same name already exists.</string>
+    <string name="new_shopping_list_item_will_not_be_linked_warning">An item with the same name already
+        exists in the inventory, but will not be linked to this item if it is added. If you want a linked
+        item instead, select the item in the inventory and use \'%1$s\' from the options menu.</string>
+    <string name="new_inventory_item_will_not_be_linked_warning">An item with the same name already
+        exists on the shopping list, but will not be linked to this item if it is added. If you want a linked
+        item instead, select the item on the shopping list and use \'%1$s\' from the options menu.</string>
     <string name="new_item_no_name_error">Item must have a name</string>
     <string name="select_all_description">Select all</string>
     <string name="check_all_description">Check all</string>

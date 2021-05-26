@@ -9,6 +9,9 @@ import android.content.Context
 import androidx.lifecycle.*
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 enum class BootyCrateItemSort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
@@ -41,9 +44,15 @@ fun inventoryViewModel(context: Context) =
  * additional sort options the subclass adds.
  *
  * If the properties newItemName and newItemExtraInfo are updated with the
- * proposed name and extra info for a new item, the property newItemNameIsAlreadyUsed
- * can be observed to tell if the name and extra info combination is already in
- * use by another item.
+ * proposed name and extra info for a new item, the LiveData property
+ * newItemNameIsAlreadyUsed can be observed to tell if the name and extra info
+ * combination is already in use by another item on the same list, is in use by
+ * an item in a neighboring collection, or if it is not in use by either, as
+ * indicated by the values of the enum class NameIsAlreadyUsed. Subclasses will
+ * need to implement newItemNameIsAlreadyUsed as a LiveData member whose value
+ * will be equal to the correct NameIsAlreadyUsed value given the current
+ * values of the StateFlow properties itemWithNameAlreadyExistsInShoppingList
+ * and itemWithNameAlreadyExistsInInventory.
  */
 abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): AndroidViewModel(app) {
     protected val dao = BootyCrateDatabase.get(app).dao()
@@ -62,8 +71,18 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
     fun updateColor(id: Long, color: Int) =
         viewModelScope.launch { dao.updateColor(id, color) }
 
+    /* For those wondering why item fetching uses LiveData all the way from the DAO
+    to the view model level and does not use Flows at all: An attempt was made to
+    make the DAO return Flow<List<T>> for its item fetching queries instead of
+    LiveData<List<T>>, choose from among these Flows in a combineTransform of
+    the sorting option StateFlows, and then only expose the final result as a
+    LiveData<List<T>> for the UI layer. Unfortunately this was resulting in some
+    truly bizarre bugs, such as selecting some items causing other items to
+    randomly disappear, and then reappear again once the other items were
+    deselected. Since there's probably no end user benefit for this particular
+    LiveData to Flow migration, the item fetching is going to stay with LiveData
+    for the time being. */
     protected val sortOptionsChanged = MutableLiveData<Boolean>()
-
     protected fun notifySortOptionsChanged() { sortOptionsChanged.value = true }
 
     var sort: BootyCrateItemSort = BootyCrateItemSort.Color
@@ -76,21 +95,27 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
 
     abstract fun itemsSwitchMapFunc(): LiveData<List<T>>
 
+    enum class NameIsAlreadyUsed { TrueForCurrentList, TrueForSiblingList, False }
 
-    protected val newItemNameChanged = MutableLiveData<Boolean>()
+    var newItemName = ""
+        set(value) { field = value; onNewItemNameUpdated() }
+    var newItemExtraInfo = ""
+        set(value) { field = value; onNewItemNameUpdated() }
 
-    var newItemName: String? = null
-        set(value) { field = value; newItemNameChanged.value = true }
+    private val _itemWithNameAlreadyExistsInShoppingList = MutableStateFlow(false)
+    private val _itemWithNameAlreadyExistsInInventory = MutableStateFlow(false)
+    protected val itemWithNameAlreadyExistsInShoppingList get() = _itemWithNameAlreadyExistsInShoppingList.asStateFlow()
+    protected val itemWithNameAlreadyExistsInInventory get() = _itemWithNameAlreadyExistsInInventory.asStateFlow()
 
-    var newItemExtraInfo: String? = null
-        set(value) { field = value; newItemNameChanged.value = true }
-
-    fun resetNewItemName() {
-        newItemName = null
-        newItemExtraInfo = null
+    private fun onNewItemNameUpdated() {
+        viewModelScope.launch {
+            _itemWithNameAlreadyExistsInShoppingList.value =
+                dao.itemWithNameAlreadyExistsInShoppingList(newItemName, newItemExtraInfo)
+            _itemWithNameAlreadyExistsInInventory.value =
+                dao.itemWithNameAlreadyExistsInInventory(newItemName, newItemExtraInfo)
+        }
     }
-    abstract val newItemNameIsAlreadyUsed: LiveData<Boolean>
-
+    abstract val newItemNameIsAlreadyUsed: LiveData<NameIsAlreadyUsed>
 
     abstract fun deleteAll(): Job
     abstract fun emptyTrash(): Job
@@ -107,23 +132,45 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
     abstract fun clearSelection(): Job
 }
 
+
+
 /**
  * An implementation of BootyCrateViewModel<ShoppingListItem>.
  *
  * ShoppingListViewModel adds a new sortByChecked option, which will sort
  * ShoppingListItems by their checked state in addition to the sorting method
- * described by the sort property. It also adds functions to query or
- * manipulate the checked state of items, and the checkout function.
+ * described by the sort property. It also adds functions to manipulate the
+ * checked state of items, and the checkout function.
  */
 class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingListItem>(app) {
     var sortByChecked = false
         set(value) { field = value; notifySortOptionsChanged() }
 
-    override fun itemsSwitchMapFunc() = dao.getShoppingList(sort, sortByChecked, searchFilter)
-
-    override val newItemNameIsAlreadyUsed = Transformations.switchMap(newItemNameChanged) {
-        dao.shoppingListItemWithNameAlreadyExists(newItemName ?: "", newItemExtraInfo ?: "")
+    override fun itemsSwitchMapFunc() = run {
+        val filter = "%$searchFilter%"
+        if (!sortByChecked) when (sort) {
+            BootyCrateItemSort.Color -> dao.getShoppingListSortedByColor(filter)
+            BootyCrateItemSort.NameAsc -> dao.getShoppingListSortedByNameAsc(filter)
+            BootyCrateItemSort.NameDesc -> dao.getShoppingListSortedByNameDesc(filter)
+            BootyCrateItemSort.AmountAsc -> dao.getShoppingListSortedByAmountAsc(filter)
+            BootyCrateItemSort.AmountDesc -> dao.getShoppingListSortedByAmountDesc(filter)
+        } else when (sort) {
+            BootyCrateItemSort.Color -> dao.getShoppingListSortedByColorAndChecked(filter)
+            BootyCrateItemSort.NameAsc -> dao.getShoppingListSortedByNameAscAndChecked(filter)
+            BootyCrateItemSort.NameDesc -> dao.getShoppingListSortedByNameDescAndChecked(filter)
+            BootyCrateItemSort.AmountAsc -> dao.getShoppingListSortedByAmountAscAndChecked(filter)
+            BootyCrateItemSort.AmountDesc -> dao.getShoppingListSortedByAmountDescAndChecked(filter)
+        }
     }
+
+    override val newItemNameIsAlreadyUsed = combine(
+        itemWithNameAlreadyExistsInShoppingList,
+        itemWithNameAlreadyExistsInInventory
+    ) { existsInShoppingList, existsInInventory ->
+        when { (existsInShoppingList) -> NameIsAlreadyUsed.TrueForCurrentList
+               (existsInInventory) ->    NameIsAlreadyUsed.TrueForSiblingList
+               else ->                   NameIsAlreadyUsed.False }
+    }.asLiveData()
 
     override fun deleteAll() = viewModelScope.launch { dao.deleteAllShoppingListItems() }
 
@@ -170,16 +217,32 @@ class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingList
     fun checkout() = viewModelScope.launch { dao.checkout() }
 }
 
+
+
 /** An implementation of BootyCrateViewModel<InventoryItem> that adds functions
- * to query or manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
+ * to  manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
  * fields of items in the database. */
 class InventoryViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(app) {
 
-    override fun itemsSwitchMapFunc() = dao.getInventory(sort, searchFilter)
-
-    override val newItemNameIsAlreadyUsed = Transformations.switchMap(newItemNameChanged) {
-        dao.inventoryItemWithNameAlreadyExists(newItemName ?: "", newItemExtraInfo ?: "")
+    override fun itemsSwitchMapFunc() = run {
+        val filter = "%$searchFilter%"
+        when (sort) {
+            BootyCrateItemSort.Color -> dao.getInventorySortedByColor(filter)
+            BootyCrateItemSort.NameAsc -> dao.getInventorySortedByNameAsc(filter)
+            BootyCrateItemSort.NameDesc -> dao.getInventorySortedByNameDesc(filter)
+            BootyCrateItemSort.AmountAsc -> dao.getInventorySortedByAmountAsc(filter)
+            BootyCrateItemSort.AmountDesc -> dao.getInventorySortedByAmountDesc(filter)
+        }
     }
+
+    override val newItemNameIsAlreadyUsed = combine(
+        itemWithNameAlreadyExistsInInventory,
+        itemWithNameAlreadyExistsInShoppingList
+    ) { existsInInventory, existsInShoppingList ->
+        when { (existsInInventory) ->    NameIsAlreadyUsed.TrueForCurrentList
+               (existsInShoppingList) -> NameIsAlreadyUsed.TrueForSiblingList
+               else ->                   NameIsAlreadyUsed.False }
+    }.asLiveData()
 
     override fun deleteAll() = viewModelScope.launch { dao.deleteAllInventoryItems() }
 

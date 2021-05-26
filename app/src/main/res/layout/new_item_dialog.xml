@@ -10,7 +10,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="10dp"  >
+    android:layout_margin="10dp" >
 
     <FrameLayout
         android:id="@+id/newItemViewContainer"
@@ -19,10 +19,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="6dp"/>
+        android:layout_marginTop="6dp"
+        android:layout_marginHorizontal="6dp"
+        tools:layout_height="110dp" />
 
     <TextView
-        android:id="@+id/duplicateNameWarning"
+        android:id="@+id/warningMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
@@ -30,16 +32,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/newItemViewContainer"
         tools:visibility="visible"
-        style="@style/AddNewItemDialogDuplicateNameMessage" />
-
-    <TextView
-        android:id="@+id/noNameError"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/newItemViewContainer"
-        style="@style/AddNewItemDialogNameRequiredMessage" />
+        tools:text="@string/new_item_duplicate_name_warning"
+        tools:drawableStart="@drawable/ic_round_warning_24"
+        style="@style/AddNewItemDialogMessage" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
