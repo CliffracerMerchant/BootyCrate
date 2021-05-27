@@ -55,13 +55,13 @@ recyclerview contains all of the classes used in the inheritance chain of the re
 the two main fragments:
 <pre>
 BootyCrateRecyclerView -> ExpandableSelectableRecyclerView -> ShoppingListRecyclerView
-														   -> InventoryRecyclerView
+                                                           -> InventoryRecyclerView
 </pre>
 and other associated classes (e.g. item views and item animators). The recycler views' item views'
 inheritance chain is:
 <pre>
 BootyCrateItemView -> ExpandableSelectableItemView -> ShoppingListItemView
-												   -> InventoryItemView
+                                                   -> InventoryItemView
 </pre>
 
 ### database
