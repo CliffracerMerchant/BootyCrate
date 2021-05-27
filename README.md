@@ -33,7 +33,9 @@ The project is separated into the following packages:
 ### activity
 activity contains all of the classes in the inheritance chain of the single activity used in the app.
 These classes are:
+<pre>
 MultiFragmentActivity -> MainActivity -> GradientStyledMainActivity
+</pre>
 
 GradientStyledMainActivity's UI consists of an instance of RecyclerViewActionBar (a custom toolbar
 implementation), an instance of BottomAppBar (another custom toolbar implementation), a
@@ -43,18 +45,24 @@ button, and an add button. This activity ui is shared between all fragments.
 ### fragment
 fragment contains all of the fragments used in the app. The two main content fragments' inheritance
 chain is:
+<pre>
 RecyclerViewFragment -> ShoppingListFragment
-					 -> InventoryFragment
+                     -> InventoryFragment
+</pre>
 
 ### recyclerview
 recyclerview contains all of the classes used in the inheritance chain of the recycler views used in
 the two main fragments:
+<pre>
 BootyCrateRecyclerView -> ExpandableSelectableRecyclerView -> ShoppingListRecyclerView
 														   -> InventoryRecyclerView
+</pre>
 and other associated classes (e.g. item views and item animators). The recycler views' item views'
 inheritance chain is:
+<pre>
 BootyCrateItemView -> ExpandableSelectableItemView -> ShoppingListItemView
 												   -> InventoryItemView
+</pre>
 
 ### database
 database contains the applications database, Room data access object, and view models.
