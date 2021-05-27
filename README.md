@@ -1,5 +1,13 @@
 # BootyCrate
-
+<p align="left">
+    <img src="images/rings.png" alt="cleanrings"/>
+</p>
+<p align="center">
+    <img src="images/rings.png" alt="cleanrings"/>
+</p>
+<p align="right">
+    <img src="images/rings.png" alt="cleanrings"/>
+</p>
 BootyCrate is an open source shopping list and simple inventory management app built using Kotlin.
 Tech-stack components include:
 - Android Architecture Components (Room, ViewModel, LiveData)
@@ -65,7 +73,7 @@ BootyCrateItemView -> ExpandableSelectableItemView -> ShoppingListItemView
 </pre>
 
 ### database
-database contains the applications database, Room data access object, and view models.
+database contains the application's database, Room data access object, and view models.
 
 ### utils
 miscellaneous utility classes, objects, and functions.
