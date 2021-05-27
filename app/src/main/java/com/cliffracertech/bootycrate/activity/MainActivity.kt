@@ -115,7 +115,7 @@ open class MainActivity : MultiFragmentActivity() {
 
     private fun initAnimatorConfigs() {
         val transitionAnimConfig = AnimatorConfig(
-            resources.getInteger(R.integer.fragmentTransitionLongDuration).toLong(),
+            resources.getInteger(R.integer.primaryFragmentTransitionDuration).toLong(),
             AnimationUtils.loadInterpolator(this, R.anim.default_interpolator))
         primaryFragmentTransitionAnimatorConfig = transitionAnimConfig
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter

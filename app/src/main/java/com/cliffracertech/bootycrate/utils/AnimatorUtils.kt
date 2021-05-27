@@ -19,7 +19,7 @@ import com.cliffracertech.bootycrate.R
 data class AnimatorConfig(var duration: Long, var interpolator: TimeInterpolator) {
     companion object {
         fun translation(context: Context) = AnimatorConfig(
-            context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
+            context.resources.getInteger(R.integer.defaultAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }
 }

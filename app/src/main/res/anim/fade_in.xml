@@ -7,4 +7,4 @@
 <alpha xmlns:android="http://schemas.android.com/apk/res/android"
     android:interpolator="@anim/default_interpolator"
     android:fromAlpha="0.0" android:toAlpha="1.0"
-    android:duration="@integer/animationDefaultDuration" />
+    android:duration="@integer/defaultAnimationDuration" />

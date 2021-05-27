@@ -27,7 +27,7 @@
                 android:valueFrom="M 14 14 L 14 14 L 14 14 L 14 14 L 14 14 M 5.6 3.2 C 4.28 3.2 3.2 4.28 3.2 5.6 C 3.2 11.2 3.2 16.8 3.2 22.4 C 3.2 23.72 4.28 24.8 5.6 24.8 C 11.2 24.8 16.8 24.8 22.4 24.8 C 23.72 24.8 24.8 23.72 24.8 22.4 C 24.8 16.8 24.8 11.2 24.8 5.6 C 24.8 4.28 23.72 3.2 22.4 3.2 C 16.8 3.2 11.2 3.2 5.6 3.2"
                 android:valueTo="M 21 7 L 21 21 L 7 21 L 7 7 L 21 7 M 5.6 3.2 C 4.28 3.2 3.2 4.28 3.2 5.6 C 3.2 11.2 3.2 16.8 3.2 22.4 C 3.2 23.72 4.28 24.8 5.6 24.8 C 11.2 24.8 16.8 24.8 22.4 24.8 C 23.72 24.8 24.8 23.72 24.8 22.4 C 24.8 16.8 24.8 11.2 24.8 5.6 C 24.8 4.28 23.72 3.2 22.4 3.2 C 16.8 3.2 11.2 3.2 5.6 3.2"
                 android:valueType="pathType"
-                android:duration="@integer/animationDefaultDuration"
+                android:duration="@integer/checkboxAnimationDuration"
                 android:interpolator="@android:anim/decelerate_interpolator" />
         </aapt:attr>
     </target>
