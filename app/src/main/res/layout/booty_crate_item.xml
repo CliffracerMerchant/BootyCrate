@@ -13,10 +13,10 @@
     tools:background="@drawable/recycler_view_item_background"
     tools:paddingVertical="4dp" >
 
-<!-- spacer makes it easier to define the desired constraints for
-     the name edit, extra info edit, and the checkbox. Because it
-     should always be at the bottom of this layout, it also provides
-     an easy attachment point for views that extend this view. -->
+<!-- spacer makes it easier to define the desired constraints for the
+     name edit, extra info edit, and the checkbox. Because it should
+     always extend to the bottom of this layout, it also provides an
+     easy attachment point for views that extend this view. -->
     <Space
         android:id="@+id/spacer"
         android:layout_width="0dp"

@@ -12,40 +12,35 @@
     android:layout_height="wrap_content"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout" >
 
-    <androidx.constraintlayout.widget.Group
-        android:id="@+id/inventoryItemDetails"
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:id="@+id/inventory_item_details_layout"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
+        android:orientation="horizontal"
         android:visibility="gone"
-        tools:visibility="visible"
-        app:constraint_referenced_ids="autoAddToShoppingListCheckBox, autoAddToShoppingListLabel, autoAddToShoppingListAmountEdit" />
-
-    <com.cliffracertech.bootycrate.view.TintableCheckbox
-        android:id="@+id/autoAddToShoppingListCheckBox"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        app:layout_constraintEnd_toStartOf="@id/autoAddToShoppingListLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/spacer"
-        android:layout_marginStart="6dp"
-        tools:tint="@color/bootyCrateItemColor0"
-        style="@style/BootyCrateItemColorEdit" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:visibility="visible">
 
-    <TextView
-        android:id="@+id/autoAddToShoppingListLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="44dp"
-        app:layout_constraintEnd_toStartOf="@id/autoAddToShoppingListAmountEdit"
-        app:layout_constraintStart_toEndOf="@id/autoAddToShoppingListCheckBox"
-        app:layout_constraintTop_toBottomOf="@id/spacer"
-        style="@style/InventoryItemAddToShoppingListCheckboxLabel" />
+        <com.cliffracertech.bootycrate.view.TintableCheckbox
+            android:id="@+id/autoAddToShoppingListCheckBox"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            tools:tint="@color/bootyCrateItemColor0"
+            style="@style/BootyCrateItemColorEdit" />
 
-    <com.cliffracertech.bootycrate.view.IntegerEdit
-        android:id="@+id/autoAddToShoppingListAmountEdit"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toEndOf="@id/autoAddToShoppingListLabel"
-        app:layout_constraintTop_toTopOf="@id/autoAddToShoppingListCheckBox"
-        app:layout_constraintBottom_toBottomOf="@id/autoAddToShoppingListCheckBox"
-        style="@style/InventoryItemAddToShoppingListTriggerEdit" />
+        <TextView
+            android:id="@+id/autoAddToShoppingListLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            style="@style/InventoryItemAddToShoppingListCheckboxLabel" />
+
+        <com.cliffracertech.bootycrate.view.IntegerEdit
+            android:id="@+id/autoAddToShoppingListAmountEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/InventoryItemAddToShoppingListTriggerEdit" />
+
+    </LinearLayout>
 </merge>
