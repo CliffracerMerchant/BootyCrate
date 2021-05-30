@@ -20,6 +20,8 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
+import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
+import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.utils.inputMethodManager
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.dialog.MaterialAlertDialogBuilder

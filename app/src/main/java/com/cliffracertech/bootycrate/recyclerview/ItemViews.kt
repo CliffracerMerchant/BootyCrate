@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.recyclerview
 
 import android.animation.Animator
 import android.annotation.SuppressLint
@@ -22,13 +22,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.databinding.BootyCrateItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemDetailsBinding
-import com.cliffracertech.bootycrate.recyclerview.ExpandableItemAnimator
 import com.cliffracertech.bootycrate.utils.*
 
 /**
