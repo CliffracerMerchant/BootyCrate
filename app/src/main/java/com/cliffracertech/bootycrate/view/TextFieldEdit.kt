@@ -25,7 +25,7 @@ import com.cliffracertech.bootycrate.utils.*
  * sent itself as a normal single line TextView. When isEditable is true,
  * TextFieldEdit will request focus when it is tapped and display a soft
  * input. If the user presses the done action on the soft input or if the
- * focus is changed, the changes to the text can be acted upon through the
+ * focus is changed, the changes to the text can be reacted to through the
  * property onTextChangedListener. If the proposed change would leave the
  * field empty and the property canBeBlank is false, the value will
  * instead be reverted to its previous value. Note that if the canBeBlank
@@ -153,8 +153,8 @@ open class StrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
  * AnimatedStrikeThroughTextFieldEdit has overloads of the functions setEditable
  * and setStrikeThroughEnabled that also take a boolean animate parameter,
  * which when true will animate changes in the editable state or the strike
- * through length. The animations will use the property animatorConfig for
- * their durations and interpolators.
+ * through length. The animations will use the value of the property animatorConfig
+ * for their durations and interpolators.
  */
 class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
     StrikeThroughTextFieldEdit(context, attrs)
@@ -179,7 +179,7 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
     ) {
         fun adjustTranslationStartEnd(startAdjustment: Float, endAdjustment: Float) =
             translateAnimator.setFloatValues(startTranslationY + startAdjustment,
-                endTranslationY + endAdjustment)
+                                             endTranslationY + endAdjustment)
     }
 
     /** Set the editable state of the TextFieldEdit, and return the AnimInfo
@@ -217,7 +217,6 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate,
                                                  if (editable) 0 else 255,
                                                  newUnderlineAlpha, animatorConfig)
-
         if (startAnimationsImmediately) {
             translateAnimator.start()
             underlineAnimator.start()
@@ -241,7 +240,7 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         }.start()
     }
 
-    // So that the property can be used in one of the AnimatorUtils valueAnimator functions.
+    // So that the properties can be used in the AnimatorUtils valueAnimator functions.
     private fun setUnderlineAlphaPrivate(value: Int) { underlineAlpha = value; invalidate() }
     private fun setStrikeThroughLength(value: Float) { strikeThroughLength = value; invalidate() }
 }

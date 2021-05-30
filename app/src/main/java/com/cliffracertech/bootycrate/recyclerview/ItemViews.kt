@@ -229,7 +229,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         // translation animation's values will have to be adjusted by its top change.
         if (ui.extraInfoEdit.text.isNullOrBlank()) {
             val newTop = if (expanding) paddingTop
-            else paddingTop - nameEditAnimInfo.heightChange / 2
+                         else paddingTop - nameEditAnimInfo.heightChange / 2
             val topChange = newTop - ui.nameEdit.top
 
             val transYStartAdjust = if (expanding) -topChange.toFloat() else 0f
