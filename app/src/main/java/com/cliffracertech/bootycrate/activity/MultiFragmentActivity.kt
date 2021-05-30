@@ -12,6 +12,7 @@ import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnStart
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.cliffracertech.bootycrate.R
@@ -73,8 +74,9 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
 
     val visibleFragment get() =
         if (showingPrimaryFragment) selectedPrimaryFragment
-        else supportFragmentManager.run { findFragmentByTag(getBackStackEntryAt(backStackEntryCount - 1).name) }
-            ?: supportFragmentManager.fragments.last()
+        else supportFragmentManager.run {
+            findFragmentByTag(getBackStackEntryAt(backStackEntryCount - 1).name)
+        } ?: supportFragmentManager.fragments.last()
 
     val showingPrimaryFragment get() = supportFragmentManager.backStackEntryCount == 0
     val selectedPrimaryFragment get() = navBarMenuItemFragmentMap.getValue(navigationBar.selectedItemId)
@@ -118,9 +120,11 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             anim.setTarget(this)
             ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
                 .setFloatValues(0f, width / 2f * if (leftToRight) -1f else 1f)
+            anim.doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
             anim.doOnEnd { if (this === exitingFragmentView) {
                 visibility = View.GONE
                 exitingFragmentView = null
+                setLayerType(View.LAYER_TYPE_NONE, null)
             }}
             anim.start()
         }
@@ -133,6 +137,8 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             anim.setTarget(this)
             ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
                 .setFloatValues(width / 2f * if (leftToRight) 1f else -1f, 0f)
+            anim.doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
+            anim.doOnEnd { setLayerType(View.LAYER_TYPE_NONE, null) }
             anim.start()
         }
         return true

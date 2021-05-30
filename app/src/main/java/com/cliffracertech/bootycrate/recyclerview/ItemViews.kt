@@ -160,10 +160,10 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
         _isInSelectedState = selected
-        if (animate) valueAnimatorOfInt(setter = gradientOutline::setAlpha,
-                                        fromValue = gradientOutline.alpha,
-                                        toValue = if (selected) 255 else 0,
-                                        config = animatorConfig).start()
+        if (animate) intValueAnimator(gradientOutline::setAlpha,
+                                      gradientOutline.alpha,
+                                      if (selected) 255 else 0,
+                                      animatorConfig).start()
         else gradientOutline.alpha = if (selected) 255 else 0
     }
 
@@ -214,9 +214,9 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         val checkBoxNewTop = paddingTop + (ui.spacer.layoutParams.height - ui.checkBox.height) / 2
         val checkBoxTopChange = checkBoxNewTop - ui.checkBox.top.toFloat()
         ui.checkBox.translationY = -checkBoxTopChange
-        pendingAnimations.add(valueAnimatorOfFloat(setter = ui.checkBox::setTranslationY,
-                                                   fromValue = -checkBoxTopChange,
-                                                   toValue = 0f, config = animatorConfig))
+        pendingAnimations.add(floatValueAnimator(ui.checkBox::setTranslationY,
+                                                 -checkBoxTopChange, 0f,
+                                                 animatorConfig))
     }
 
     /** Update the editable state of nameEdit, animating if param animate == true,
@@ -306,29 +306,28 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         val amountEndChange = ui.amountEditSpacer.layoutParams.width * if (expanding) 1 else -1
         val amountLeftChange = amountEndChange - amountEditAnimInfo.widthChange
         ui.amountEdit.translationX = -amountLeftChange.toFloat()
-        val amountEditTranslateAnim = valueAnimatorOfFloat(
-            setter = ui.amountEdit::setTranslationX,
-            fromValue = ui.amountEdit.translationX,
-            toValue = 0f, config = animatorConfig)
+        val amountEditTranslateAnim = floatValueAnimator(ui.amountEdit::setTranslationX,
+                                                         ui.amountEdit.translationX, 0f,
+                                                         animatorConfig)
         pendingAnimations.add(amountEditTranslateAnim)
 
         // Because their ends are constrained to amountEdit's start, nameEdit
         // and, if it wasn't hidden, extraInfoEdit will need to have their end
         // values animated as well.
         nameLockedWidth = ui.nameEdit.width
-        pendingAnimations.add(valueAnimatorOfInt(
+        pendingAnimations.add(intValueAnimator(
             setter = ui.nameEdit::setRight,
-            fromValue = ui.nameEdit.right,
-            toValue = ui.nameEdit.right + amountLeftChange,
+            from = ui.nameEdit.right,
+            to = ui.nameEdit.right + amountLeftChange,
             config = animatorConfig
         ).apply { doOnStart { nameLockedWidth = null } })
 
         if (ui.extraInfoEdit.text.isNullOrBlank()) return
         extraInfoLockedWidth = ui.extraInfoEdit.width
-        pendingAnimations.add(valueAnimatorOfInt(
+        pendingAnimations.add(intValueAnimator(
             setter = ui.extraInfoEdit::setRight,
-            fromValue = ui.extraInfoEdit.right,
-            toValue = ui.extraInfoEdit.right + amountLeftChange,
+            from = ui.extraInfoEdit.right,
+            to = ui.extraInfoEdit.right + amountLeftChange,
             config = animatorConfig
         ).apply { doOnStart { extraInfoLockedWidth = null } })
     }
@@ -342,10 +341,9 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             ui.editButton.isActivated = expanding
         else {
             ui.editButton.translationY = -heightChange.toFloat()
-            val editButtonAnim = valueAnimatorOfFloat(
-                setter = ui.editButton::setTranslationY,
-                fromValue = -heightChange.toFloat(), 0f,
-                config = animatorConfig)
+            val editButtonAnim = floatValueAnimator(ui.editButton::setTranslationY,
+                                                    -heightChange.toFloat(), 0f,
+                                                    animatorConfig)
             editButtonAnim.doOnStart { ui.editButton.isActivated = expanding }
             pendingAnimations.add(editButtonAnim)
         }
@@ -367,10 +365,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     protected fun View.showOrHideViaOverlay(showing: Boolean): Animator {
         alpha = if (showing) 0f else 1f
         isVisible = true
-        val animator = valueAnimatorOfFloat(setter = ::setAlpha,
-                                            fromValue = alpha,
-                                            toValue = if (showing) 1f else 0f,
-                                            config = animatorConfig)
+        val animator = floatValueAnimator(::setAlpha, alpha, if (showing) 1f else 0f, animatorConfig)
         if (!showing) {
             val parent = parent as ViewGroup
             parent.overlay.add(this)

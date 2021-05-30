@@ -213,15 +213,10 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         val heightChange = measuredHeight - oldHeight
         val start = -baselineChange.toFloat()
 
-        val translateAnimator = valueAnimatorOfFloat(
-            setter = ::setTranslationY,
-            fromValue = start, toValue = 0f,
-            config = animatorConfig)
-        val underlineAnimator = valueAnimatorOfInt(
-            setter = ::setUnderlineAlphaPrivate,
-            fromValue = if (editable) 0 else 255,
-            toValue = newUnderlineAlpha,
-            config = animatorConfig)
+        val translateAnimator = floatValueAnimator(::setTranslationY, start, 0f, animatorConfig)
+        val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate,
+                                                 if (editable) 0 else 255,
+                                                 newUnderlineAlpha, animatorConfig)
 
         if (startAnimationsImmediately) {
             translateAnimator.start()
@@ -240,13 +235,13 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         val fullLength = paint.measureText(text, 0, text?.length ?: 0)
         val endColor = if (strikeThroughEnabled) currentHintTextColor
                        else                      normalTextColor
-        valueAnimatorOfArgb(::setTextColor, currentTextColor, endColor, animatorConfig).start()
-        valueAnimatorOfFloat(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
+        argbValueAnimator(::setTextColor, currentTextColor, endColor, animatorConfig).start()
+        floatValueAnimator(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
             if (!strikeThroughEnabled) doOnEnd { strikeThroughLength = null }
         }.start()
     }
 
-    // So that the property can be used in a ObjectAnimator or one of the AnimatorUtils valueAnimator functions.
+    // So that the property can be used in one of the AnimatorUtils valueAnimator functions.
     private fun setUnderlineAlphaPrivate(value: Int) { underlineAlpha = value; invalidate() }
     private fun setStrikeThroughLength(value: Float) { strikeThroughLength = value; invalidate() }
 }

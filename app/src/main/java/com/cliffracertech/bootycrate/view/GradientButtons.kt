@@ -14,7 +14,7 @@ import androidx.annotation.CallSuper
 import androidx.appcompat.widget.AppCompatButton
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.valueAnimatorOfInt
+import com.cliffracertech.bootycrate.utils.intValueAnimator
 
 /**
  * A button with a vector background and icon that are both tintable with gradients.
@@ -85,17 +85,17 @@ open class DisableableGradientButton(context: Context, attrs: AttributeSet) :
     @CallSuper override fun setEnabled(enabled: Boolean) {
         if (isEnabled == enabled) return
         super.setEnabled(enabled)
-        val anim = valueAnimatorOfInt(setter = background::setAlpha,
-                                      fromValue = if (enabled) disabledAlpha else 255,
-                                      toValue = if (enabled) 255 else disabledAlpha,
-                                      config = animatorConfig)
+        val anim = intValueAnimator(background::setAlpha,
+                                    if (enabled) disabledAlpha else 255,
+                                    if (enabled) 255 else disabledAlpha,
+                                    animatorConfig)
         anim.addUpdateListener{ invalidate() }
         anim.start()
     }
 }
 
 /**
- * An button with a custom shape and a double tap to use functionality.
+ * A button with a custom shape and a double tap to use functionality.
  *
  * CheckoutButton is a DisableableGradientButton with extra functionality
  * that is intended to be used as the button to execute the shopping list
