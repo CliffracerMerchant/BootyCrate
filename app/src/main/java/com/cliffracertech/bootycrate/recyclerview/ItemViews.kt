@@ -249,15 +249,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
      * param animate == true and the extraInfoEdit is not blank. */
     private fun updateExtraInfoState(expanding: Boolean, animate: Boolean, nameHeightChange: Int) {
         val extraInfoIsBlank = ui.extraInfoEdit.text.isNullOrBlank()
-        // If the extra info is blank and the view is being expanded, we can
-        // avoid needing to animate its change in editable state by changing
-        // the state before it fades in. If it is fading out, we should still
-        // animate it because the user will be able to see it during the fade
-        // out animation.
-        val editableStateNeedsAnimated = animate && (!expanding || !extraInfoIsBlank)
-        val animInfo = ui.extraInfoEdit.setEditable(editable = expanding,
-                                                    animate = editableStateNeedsAnimated,
-                                                    startAnimationsImmediately = false)
+        val animInfo = ui.extraInfoEdit.setEditable(expanding, animate, startAnimationsImmediately = false)
         if (!animate) {
             // Since we have already set the editable state, if no animation
             // is needed we can just set the visibility and exit early.
@@ -265,15 +257,13 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             return
         }
 
-        if (editableStateNeedsAnimated) {
-            pendingAnimations.add(animInfo!!.translateAnimator)
-            pendingAnimations.add(animInfo.underlineAnimator)
-            if (!extraInfoIsBlank) {
-                // We have to adjust the extraInfoEdit starting translation by the
-                // height change of the nameEdit to get the correct translation amount.
-                ui.extraInfoEdit.translationY -= nameHeightChange
-                animInfo.adjustTranslationStartEnd(-nameHeightChange.toFloat(), 0f)
-            }
+        pendingAnimations.add(animInfo!!.translateAnimator)
+        pendingAnimations.add(animInfo.underlineAnimator)
+        if (!extraInfoIsBlank) {
+            // We have to adjust the extraInfoEdit starting translation by the
+            // height change of the nameEdit to get the correct translation amount.
+            ui.extraInfoEdit.translationY -= nameHeightChange
+            animInfo.adjustTranslationStartEnd(-nameHeightChange.toFloat(), 0f)
         }
 
         if (extraInfoIsBlank) {
