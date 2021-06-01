@@ -7,6 +7,7 @@ package com.cliffracertech.bootycrate
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.cliffracertech.bootycrate.view.TextFieldEdit
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith

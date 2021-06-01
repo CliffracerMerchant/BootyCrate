@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.view
 
 import android.animation.ValueAnimator
 import android.content.Context
@@ -11,10 +11,12 @@ import android.graphics.Rect
 import android.text.InputType
 import android.text.TextUtils
 import android.util.AttributeSet
+import android.util.Log
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
 import androidx.core.widget.doAfterTextChanged
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.*
 
 /**
@@ -166,14 +168,13 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
      * Information about the internal animations played when setEditable is called.
      *
      * The internal translate animation will only take into account the view's change
-     * in height to smoothly translate the text to its new location. If the view is
-     * also moved on screen, then the animation's start and end values will need to
-     * be adjusted by this amount using the function adjustTranslationStartEnd.
+     * in baseline to smoothly translate the text to its new location. If the view's
+     * top is also moved, then the animation's start and end values will need to be
+     * adjusted by this amount using the function adjustTranslationStartEnd.
      */
     data class AnimInfo(
         val translateAnimator: ValueAnimator,
         val underlineAnimator: ValueAnimator,
-        val heightChange: Int,
         private val startTranslationY: Float,
         private val endTranslationY: Float
     ) {
@@ -194,25 +195,25 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
             super.setEditable(editable)
             return null
         }
-
         if (editable) lastValue = text.toString()
         isFocusableInTouchMode = editable
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         if (!editable && isFocused) clearFocus()
 
-        val oldHeight = height
         val oldBaseline = baseline
+        val oldHeight = height
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
         val newUnderlineAlpha = if (editable) 255 else 0
 
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
-        val baselineChange = baseline - oldBaseline
-        val heightChange = measuredHeight - oldHeight
-        val start = -baselineChange.toFloat()
 
+        val baselineChange = baseline - oldBaseline
+        //val heightChange = measuredHeight - oldHeight
+        val start = -baselineChange.toFloat()// - heightChange.toFloat()
+        Log.d("itemviews", "baselineChange = $baseline - $oldBaseline")
         val translateAnimator = floatValueAnimator(::setTranslationY, start, 0f, animatorConfig)
         val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate,
                                                  if (editable) 0 else 255,
@@ -221,7 +222,7 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
             translateAnimator.start()
             underlineAnimator.start()
         } else translationY = start
-        return AnimInfo(translateAnimator, underlineAnimator, heightChange, start, 0f)
+        return AnimInfo(translateAnimator, underlineAnimator, start, 0f)
     }
 
     fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean, animate: Boolean = true) {

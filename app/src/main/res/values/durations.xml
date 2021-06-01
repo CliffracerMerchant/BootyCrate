@@ -7,8 +7,8 @@
 <resources>
     <integer name="primaryFragmentTransitionDuration">300</integer>
     <integer name="secondaryFragmentTransitionDuration">150</integer>
-    <integer name="defaultAnimationDuration">300</integer>
-    <integer name="shoppingListItemAnimationDuration">250</integer>
+    <integer name="defaultAnimationDuration">900</integer>
+    <integer name="shoppingListItemAnimationDuration">750</integer>
     <integer name="checkoutButtonConfirmationTimeout">2000</integer>
     <integer name="checkboxAnimationDuration">150</integer>
 </resources>

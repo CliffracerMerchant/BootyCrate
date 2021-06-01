@@ -20,7 +20,6 @@
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/spacer"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/editButton"
         app:layout_constraintWidth_default="wrap"
         app:layout_constraintHorizontal_bias="0.0"
@@ -39,6 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
+            android:layout_marginStart="-6dp"
             style="@style/InventoryItemAddToShoppingListCheckboxLabel" />
 
         <com.cliffracertech.bootycrate.view.IntegerEdit

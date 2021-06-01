@@ -9,17 +9,14 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.ViewPropertyAnimator
+import android.util.Log
+import android.view.*
 import android.view.inputmethod.InputMethodManager
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
-import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
@@ -222,27 +219,26 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     /** Update the editable state of nameEdit, animating if param animate == true,
      * and return the height change of the nameEdit, or 0 if no animation occurred. */
     private fun updateNameEditState(expanding: Boolean, animate: Boolean): Int {
+        val nameEditOldHeight = ui.nameEdit.height
         val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animate, false) ?: return 0
-        pendingAnimations.add(nameEditAnimInfo.translateAnimator)
-        pendingAnimations.add(nameEditAnimInfo.underlineAnimator)
-        // If the extra info edit is going to appear or disappear, then nameEdit's
-        // translation animation's values will have to be adjusted by its top change.
-        if (ui.extraInfoEdit.text.isNullOrBlank()) {
-            val newTop = if (expanding) paddingTop
-                         else paddingTop - nameEditAnimInfo.heightChange / 2
-            val topChange = newTop - ui.nameEdit.top
-
-            val transYStartAdjust = if (expanding) -topChange.toFloat() else 0f
-            val transYEndAdjust = if (expanding) 0f else topChange.toFloat()
-            ui.nameEdit.translationY += transYStartAdjust
-            nameEditAnimInfo.adjustTranslationStartEnd(transYStartAdjust, transYEndAdjust)
-            // If the ending translationY value is not zero, it needs to be set to zero
-            // on the new layout after the animation has ended to avoid flickering.
-            if (!expanding) nameEditAnimInfo.translateAnimator.doOnEnd {
-                doOnNextLayout { ui.nameEdit.translationY = 0f }
-            }
+        val nameEditConstrainedHeight =
+            if (expanding) resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
+            else if (ui.extraInfoEdit.text.isNullOrBlank()) ui.checkBox.height
+                 else                                       ui.checkBox.height / 2
+        val nameEditNewHeight = if (!expanding) nameEditConstrainedHeight
+                                else maxOf(ui.nameEdit.measuredHeight, nameEditConstrainedHeight)
+        val nameEditHeightChange = nameEditNewHeight - nameEditOldHeight
+        Log.d("itemviews", "nameHeightChange = $nameEditHeightChange = ${if (expanding) "maxOf(" else "minOf("}measuredHeight(${ui.nameEdit.measuredHeight}), constrainedHeight($nameEditConstrainedHeight)) - oldHeight($nameEditOldHeight)}")
+        ui.nameEdit.gravity = Gravity.CENTER_VERTICAL
+        ui.nameEdit.requestLayout()
+        if (nameEditHeightChange != 0) {
+            // nameEdit's translation animation's values will have to be adjusted by its height change.
+            ui.nameEdit.translationY -= nameEditHeightChange.toFloat()
+            nameEditAnimInfo.adjustTranslationStartEnd(-nameEditHeightChange.toFloat(), 0f)
+            pendingAnimations.add(nameEditAnimInfo.translateAnimator)
         }
-        return nameEditAnimInfo.heightChange
+        pendingAnimations.add(nameEditAnimInfo.underlineAnimator)
+        return nameEditHeightChange
     }
 
     /** Update the editable state of extraInfoEdit, animating if
@@ -262,19 +258,21 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         if (!extraInfoIsBlank) {
             // We have to adjust the extraInfoEdit starting translation by the
             // height change of the nameEdit to get the correct translation amount.
-            ui.extraInfoEdit.translationY -= nameHeightChange
-            animInfo.adjustTranslationStartEnd(-nameHeightChange.toFloat(), 0f)
-        }
-
-        if (extraInfoIsBlank) {
+            val adjust = -nameHeightChange.toFloat() - if (!expanding) resources.dpToPixels(2f) else 0f
+            ui.extraInfoEdit.translationY += adjust
+            animInfo.adjustTranslationStartEnd(adjust, 0f)
+        } else {
             val anim = ui.extraInfoEdit.showOrHideViaOverlay(showing = expanding)
             // Because nameEdit is constrained to extraInfoEdit, adding extra-
             // InfoEdit to the overlay during showOrHideViaOverlay will alter
             // nameEdit's position. To avoid this we'll add nameEdit to the over-
             // lay as well for the duration of the animation.
-            if (!expanding) {
+            if (expanding)
+                (ui.nameEdit.layoutParams as LayoutParams).bottomToTop = ui.extraInfoEdit.id
+            else {
                 overlay.add(ui.nameEdit)
                 anim.doOnEnd { overlay.remove(ui.nameEdit)
+                               (ui.nameEdit.layoutParams as LayoutParams).bottomToTop = -1
                                addView(ui.nameEdit) }
             }
         }

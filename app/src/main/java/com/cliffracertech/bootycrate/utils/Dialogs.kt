@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.utils
 
 import android.app.Dialog
 import android.content.Context
@@ -18,12 +18,11 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
-import com.cliffracertech.bootycrate.utils.inputMethodManager
-import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /** Open a dialog to display an about app screen. */
@@ -186,7 +185,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             val context = this.context ?: return
 
             val iconResId = if (warning == WarningMessage.ItemHasNoName)
-                                R.drawable.ic_baseline_error_24
+                R.drawable.ic_baseline_error_24
                             else R.drawable.ic_round_warning_24
             val icon = ContextCompat.getDrawable(context, iconResId)
 
@@ -215,7 +214,8 @@ class NewShoppingListItemDialog(context: Context) :
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_shopping_list_item_duplicate_name_warning)
     override val itemWithNameAlreadyExistsInOtherCollectionWarningMessage =
-        context.getString(R.string.new_shopping_list_item_will_not_be_linked_warning,
+        context.getString(
+            R.string.new_shopping_list_item_will_not_be_linked_warning,
             context.getString(R.string.add_to_shopping_list_description))
 
     init { newItemView.ui.checkBox.setInColorEditMode(true, animate = false) }
@@ -239,7 +239,8 @@ class NewInventoryItemDialog(context: Context) :
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_inventory_item_duplicate_name_warning)
     override val itemWithNameAlreadyExistsInOtherCollectionWarningMessage =
-        context.getString(R.string.new_inventory_item_will_not_be_linked_warning,
+        context.getString(
+            R.string.new_inventory_item_will_not_be_linked_warning,
             context.getString(R.string.add_to_inventory_description))
 
     init {
