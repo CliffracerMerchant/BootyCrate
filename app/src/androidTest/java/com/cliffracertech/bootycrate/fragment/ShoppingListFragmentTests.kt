@@ -29,7 +29,7 @@ import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.ShoppingListItemView
+import com.cliffracertech.bootycrate.recyclerview.ShoppingListItemView
 import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemAnimator

@@ -5,12 +5,6 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <style name="RecyclerViewItemStyle">
-        <item name="android:background">@drawable/recycler_view_item_background</item>
-        <item name="android:paddingTop">4dp</item>
-        <item name="android:paddingBottom">4dp</item>
-    </style>
-
     <style name="BootyCrateItemColorEdit">
         <item name="android:paddingStart">11dp</item>
         <item name="android:paddingEnd">11dp</item>

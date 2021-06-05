@@ -28,7 +28,7 @@
                 android:valueFrom="1"
                 android:valueTo="0"
                 android:valueType="floatType"
-                android:duration="@integer/animationDefaultDuration"
+                android:duration="@integer/checkboxAnimationDuration"
                 android:interpolator="@anim/default_interpolator" />
         </aapt:attr>
     </target>

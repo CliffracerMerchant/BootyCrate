@@ -123,7 +123,7 @@ open class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayou
 class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(context, attrs) {
     var animatorConfig: AnimatorConfig? = null
 
-    // So that the property can be used in a ObjectAnimator or one of the AnimatorUtils valueAnimator functions.
+    // So that the property can be used in one of the AnimatorUtils valueAnimator functions.
     private fun setUnderlineAlphaPrivate(value: Int) { underlineAlpha = value; invalidate() }
 
     /** Information about the internal animations played and
@@ -164,9 +164,9 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
         val underlineStartAlpha = if (focusable) 0 else 255
 
         val anims = listOf(
-            valueAnimatorOfFloat(ui.valueEdit::setTranslationX, -widthChange / 2f, 0f, animatorConfig),
-            valueAnimatorOfFloat(ui.increaseButton::setTranslationX, -widthChange.toFloat(), 0f, animatorConfig),
-            valueAnimatorOfInt(::setUnderlineAlphaPrivate, underlineStartAlpha, underlineEndAlpha, animatorConfig))
+            floatValueAnimator(ui.valueEdit::setTranslationX, -widthChange / 2f, 0f, animatorConfig),
+            floatValueAnimator(ui.increaseButton::setTranslationX, -widthChange.toFloat(), 0f, animatorConfig),
+            intValueAnimator(::setUnderlineAlphaPrivate, underlineStartAlpha, underlineEndAlpha, animatorConfig))
         if (startAnimationsImmediately)
             for (anim in anims) anim.start()
         else {

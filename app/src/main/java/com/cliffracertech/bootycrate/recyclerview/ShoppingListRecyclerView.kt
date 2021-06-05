@@ -10,7 +10,6 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.ShoppingListItemView
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.database.shoppingListViewModel
 import com.cliffracertech.bootycrate.utils.AnimatorConfig

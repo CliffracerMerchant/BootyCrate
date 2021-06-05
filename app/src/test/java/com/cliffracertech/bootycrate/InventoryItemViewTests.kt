@@ -11,6 +11,7 @@ import android.os.Looper
 import androidx.core.view.isVisible
 import androidx.test.core.app.ApplicationProvider
 import com.cliffracertech.bootycrate.database.InventoryItem
+import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test

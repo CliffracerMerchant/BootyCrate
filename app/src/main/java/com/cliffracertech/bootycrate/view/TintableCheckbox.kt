@@ -11,9 +11,9 @@ import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.utils.argbValueAnimator
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import com.cliffracertech.bootycrate.utils.getIntArray
-import com.cliffracertech.bootycrate.utils.valueAnimatorOfArgb
 import dev.sasikanth.colorsheet.ColorSheet
 
 /**
@@ -84,21 +84,24 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
         }
     }
 
+    /** Set the color index without calling the onColorChangedListener. */
     fun initColorIndex(colorIndex: Int) {
         _colorIndex = colorIndex.coerceIn(colors.indices)
         (drawable as LayerDrawable).getDrawable(0).setTint(color)
     }
 
+    /** Set the color of the checkbox to the color defined by colors[colorIndex],
+     * and call onColorChangedListener with the new color. */
     fun setColorIndex(colorIndex: Int, animate: Boolean = false) {
         val oldColor = color
         _colorIndex = colorIndex.coerceIn(colors.indices)
         val checkboxBg = (drawable as LayerDrawable).getDrawable(0)
         if (!animate) checkboxBg.setTint(color)
-        else valueAnimatorOfArgb(checkboxBg::setTint, oldColor, color).start()
+        else argbValueAnimator(checkboxBg::setTint, oldColor, color).start()
         onColorChangedListener?.invoke(color)
     }
 
-    /** Set the check state without calling the onCheckedChangeListener. */
+    /** Set the check state without calling the onCheckedChangedListener. */
     fun initIsChecked(isChecked: Boolean) {
         _isChecked = isChecked
         val newState = android.R.attr.state_checked * if (isChecked) 1 else -1

@@ -12,11 +12,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
-import com.cliffracertech.bootycrate.utils.adjustPosInRangeAfterMove
-import com.cliffracertech.bootycrate.utils.setHeight
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.applyConfig
-import com.cliffracertech.bootycrate.utils.valueAnimatorOfInt
+import com.cliffracertech.bootycrate.utils.*
 
 /**
  * A RecyclerView.ItemAnimator that animates the expanding and collapsing of items.
@@ -105,10 +101,7 @@ class ExpandableItemAnimator(
     private fun setupHeightChangeAnimation(holder: RecyclerView.ViewHolder,
                                            view: View, start: Int, change: Int) {
         view.setHeight(start)
-        valueAnimatorOfInt(
-            setter = view::setHeight, config = animatorConfig,
-            fromValue = start, toValue = start + change
-        ).apply {
+        intValueAnimator(view::setHeight, start, start + change, animatorConfig).apply {
             doOnStart { dispatchChangeStarting(holder, true) }
             doOnEnd {
                 dispatchChangeFinished(holder, true)

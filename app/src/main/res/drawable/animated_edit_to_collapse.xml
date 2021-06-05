@@ -26,7 +26,7 @@
                 android:valueFrom="M 13 8 L 5 16 L 5 19 L 8 19 L 16 11 L 13 8 M 14 7 L 17 10 L 19 8 L 16 5 Z"
                 android:valueTo="M 12 8 L 6 14 L 6.705 14.705 L 7.41 15.41 L 12 10.83 L 12 8 M 12 10.83 L 16.59 15.42 L 18 14 L 12 8 Z"
                 android:valueType="pathType"
-                android:duration="@integer/animationDefaultDuration"
+                android:duration="@integer/defaultAnimationDuration"
                 android:interpolator="@anim/default_interpolator" />
         </aapt:attr>
     </target>

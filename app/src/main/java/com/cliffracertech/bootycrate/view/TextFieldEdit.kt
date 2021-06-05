@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.view
 
 import android.animation.ValueAnimator
 import android.content.Context
@@ -15,6 +15,7 @@ import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
 import androidx.core.widget.doAfterTextChanged
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.*
 
 /**
@@ -25,7 +26,7 @@ import com.cliffracertech.bootycrate.utils.*
  * sent itself as a normal single line TextView. When isEditable is true,
  * TextFieldEdit will request focus when it is tapped and display a soft
  * input. If the user presses the done action on the soft input or if the
- * focus is changed, the changes to the text can be acted upon through the
+ * focus is changed, the changes to the text can be reacted to through the
  * property onTextChangedListener. If the proposed change would leave the
  * field empty and the property canBeBlank is false, the value will
  * instead be reverted to its previous value. Note that if the canBeBlank
@@ -153,8 +154,8 @@ open class StrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
  * AnimatedStrikeThroughTextFieldEdit has overloads of the functions setEditable
  * and setStrikeThroughEnabled that also take a boolean animate parameter,
  * which when true will animate changes in the editable state or the strike
- * through length. The animations will use the property animatorConfig for
- * their durations and interpolators.
+ * through length. The animations will use the value of the property animatorConfig
+ * for their durations and interpolators.
  */
 class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
     StrikeThroughTextFieldEdit(context, attrs)
@@ -166,20 +167,19 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
      * Information about the internal animations played when setEditable is called.
      *
      * The internal translate animation will only take into account the view's change
-     * in height to smoothly translate the text to its new location. If the view is
-     * also moved on screen, then the animation's start and end values will need to
-     * be adjusted by this amount using the function adjustTranslationStartEnd.
+     * in baseline to smoothly translate the text to its new location. If the view's
+     * top is also moved, then the animation's start and end values will need to be
+     * adjusted by this amount using the function adjustTranslationStartEnd.
      */
     data class AnimInfo(
         val translateAnimator: ValueAnimator,
         val underlineAnimator: ValueAnimator,
-        val heightChange: Int,
         private val startTranslationY: Float,
         private val endTranslationY: Float
     ) {
         fun adjustTranslationStartEnd(startAdjustment: Float, endAdjustment: Float) =
             translateAnimator.setFloatValues(startTranslationY + startAdjustment,
-                endTranslationY + endAdjustment)
+                                             endTranslationY + endAdjustment)
     }
 
     /** Set the editable state of the TextFieldEdit, and return the AnimInfo
@@ -194,14 +194,12 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
             super.setEditable(editable)
             return null
         }
-
         if (editable) lastValue = text.toString()
         isFocusableInTouchMode = editable
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         if (!editable && isFocused) clearFocus()
 
-        val oldHeight = height
         val oldBaseline = baseline
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
@@ -210,24 +208,16 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
         val baselineChange = baseline - oldBaseline
-        val heightChange = measuredHeight - oldHeight
         val start = -baselineChange.toFloat()
-
-        val translateAnimator = valueAnimatorOfFloat(
-            setter = ::setTranslationY,
-            fromValue = start, toValue = 0f,
-            config = animatorConfig)
-        val underlineAnimator = valueAnimatorOfInt(
-            setter = ::setUnderlineAlphaPrivate,
-            fromValue = if (editable) 0 else 255,
-            toValue = newUnderlineAlpha,
-            config = animatorConfig)
-
+        val translateAnimator = floatValueAnimator(::setTranslationY, start, 0f, animatorConfig)
+        val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate,
+                                                 if (editable) 0 else 255,
+                                                 newUnderlineAlpha, animatorConfig)
         if (startAnimationsImmediately) {
             translateAnimator.start()
             underlineAnimator.start()
         } else translationY = start
-        return AnimInfo(translateAnimator, underlineAnimator, heightChange, start, 0f)
+        return AnimInfo(translateAnimator, underlineAnimator, start, 0f)
     }
 
     fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean, animate: Boolean = true) {
@@ -240,13 +230,13 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         val fullLength = paint.measureText(text, 0, text?.length ?: 0)
         val endColor = if (strikeThroughEnabled) currentHintTextColor
                        else                      normalTextColor
-        valueAnimatorOfArgb(::setTextColor, currentTextColor, endColor, animatorConfig).start()
-        valueAnimatorOfFloat(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
+        argbValueAnimator(::setTextColor, currentTextColor, endColor, animatorConfig).start()
+        floatValueAnimator(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
             if (!strikeThroughEnabled) doOnEnd { strikeThroughLength = null }
         }.start()
     }
 
-    // So that the property can be used in a ObjectAnimator or one of the AnimatorUtils valueAnimator functions.
+    // So that the properties can be used in the AnimatorUtils valueAnimator functions.
     private fun setUnderlineAlphaPrivate(value: Int) { underlineAlpha = value; invalidate() }
     private fun setStrikeThroughLength(value: Float) { strikeThroughLength = value; invalidate() }
 }

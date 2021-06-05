@@ -16,6 +16,7 @@ import com.cliffracertech.bootycrate.database.ShoppingListViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryFragmentBinding
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
+import com.cliffracertech.bootycrate.utils.NewInventoryItemDialog
 import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
 
 /**

@@ -19,7 +19,7 @@ import com.cliffracertech.bootycrate.R
 data class AnimatorConfig(var duration: Long, var interpolator: TimeInterpolator) {
     companion object {
         fun translation(context: Context) = AnimatorConfig(
-            context.resources.getInteger(R.integer.animationDefaultDuration).toLong(),
+            context.resources.getInteger(R.integer.defaultAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }
 }
@@ -49,34 +49,36 @@ fun LayoutTransition.applyConfig(config: AnimatorConfig?) = apply {
     setDuration(config.duration)
 }
 
-// The following value animator returning functions can be used similarly to object animators,
-// but hopefully are more performant due to not using reflection to get the property setter.
-/** Return a valueAnimator for an Int property with the update listener already set. */
-fun valueAnimatorOfInt(
+// The following ValueAnimator returning functions can be used similarly to object animators,
+// but hopefully are more performant due to not using reflection to get the property setter
+// (the performance difference is likely negligible but using these instead is also low effort),
+// and allows setting the duration and interpolator at the same time through the config parameter.
+/** Return a ValueAnimator for an Int property with the update listener already set. */
+fun intValueAnimator(
     setter: (Int) -> Unit,
-    fromValue: Int, toValue: Int,
+    from: Int, to: Int,
     config: AnimatorConfig? = null,
-): ValueAnimator = ValueAnimator.ofInt(fromValue, toValue).apply {
+): ValueAnimator = ValueAnimator.ofInt(from, to).apply {
     addUpdateListener { setter(it.animatedValue as Int) }
     if (config != null) applyConfig(config)
 }
 
-/** Return a valueAnimator for a Float property with the update listener already set. */
-fun valueAnimatorOfFloat(
+/** Return a ValueAnimator for a Float property with the update listener already set. */
+fun floatValueAnimator(
     setter: (Float) -> Unit,
-    fromValue: Float, toValue: Float,
+    from: Float, to: Float,
     config: AnimatorConfig? = null,
-): ValueAnimator = ValueAnimator.ofFloat(fromValue, toValue).apply {
+): ValueAnimator = ValueAnimator.ofFloat(from, to).apply {
     addUpdateListener { setter(it.animatedValue as Float) }
     if (config != null) applyConfig(config)
 }
 
-/** Return a valueAnimator for an ARGB property with the update listener already set. */
-fun valueAnimatorOfArgb(
+/** Return a ValueAnimator for an ARGB property with the update listener already set. */
+fun argbValueAnimator(
     setter: (Int) -> Unit,
-    fromValue: Int, toValue: Int,
+    from: Int, to: Int,
     config: AnimatorConfig? = null,
-): ValueAnimator = ValueAnimator.ofArgb(fromValue, toValue).apply {
+): ValueAnimator = ValueAnimator.ofArgb(from, to).apply {
     addUpdateListener { setter(it.animatedValue as Int) }
     if (config != null) applyConfig(config)
 }

@@ -58,16 +58,21 @@ fun Context.asFragmentActivity() =
 
 fun View.setHeight(height: Int) { bottom = top + height }
 
+/** Return the provided dp amount in terms of pixels. */
 fun Resources.dpToPixels(dp: Float) =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, displayMetrics)
 
+/** Return the provided sp amount in terms of pixels. */
 fun Resources.spToPixels(sp: Float) =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, displayMetrics)
 
+/** Return the provided dp amount in terms of pixels. */
 fun Context.dpToPixels(dp: Float) = resources.dpToPixels(dp)
+/** Return the provided sp amount in terms of pixels. */
 fun Context.spToPixels(sp: Float) = resources.spToPixels(sp)
 
 private val typedValue = TypedValue()
+/** Resolve the current theme's value for the provided int attribute. */
 fun Resources.Theme.resolveIntAttribute(attr: Int): Int {
     resolveAttribute(attr, typedValue, true)
     return typedValue.data
