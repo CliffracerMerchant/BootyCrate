@@ -13,63 +13,66 @@
     tools:background="@drawable/recycler_view_item_background"
     tools:paddingVertical="4dp" >
 
-<!-- spacer makes it easier to define the desired constraints for the
-     name edit, extra info edit, and the checkbox. Because it should
-     always extend to the bottom of this layout, it also provides an
-     easy attachment point for views that extend this view. -->
-    <Space
-        android:id="@+id/spacer"
+    <LinearLayout
+        android:id="@+id/checkBoxNameAndAmountLayout"
         android:layout_width="0dp"
-        android:layout_height="44dp"
-        tools:layout_height="88dp"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.cliffracertech.bootycrate.view.TintableCheckbox
-        android:id="@+id/checkBox"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        app:layout_constraintEnd_toStartOf="@id/nameEdit"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/spacer"
-        app:layout_constraintBottom_toBottomOf="@id/spacer"
-        tools:tint="@color/bootyCrateItemColor0"
-        style="@style/BootyCrateItemColorEdit" />
-
-    <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
-        android:id="@+id/nameEdit"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintStart_toEndOf="@id/checkBox"
-        app:layout_constraintEnd_toStartOf="@id/amountEdit"
-        app:layout_constraintTop_toTopOf="@id/spacer"
-        app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
-        tools:text="Item Name"
-        tools:layout_height="@dimen/editable_text_field_min_height"
-        tools:layout_width="256dp"
-        style="@style/BootyCrateItemNameEdit" />
-
-    <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
-        android:id="@+id/extraInfoEdit"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintEnd_toEndOf="@id/nameEdit"
-        app:layout_constraintStart_toStartOf="@id/nameEdit"
-        app:layout_constraintTop_toBottomOf="@id/nameEdit"
-        app:layout_constraintBottom_toBottomOf="@id/spacer"
-        tools:text="Extra info"
-        tools:layout_height="@dimen/editable_text_field_min_height"
-        style="@style/BootyCrateItemExtraInfoEdit" />
-
-    <com.cliffracertech.bootycrate.view.AnimatedIntegerEdit
-        android:id="@+id/amountEdit"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toEndOf="@id/nameEdit"
-        app:layout_constraintEnd_toStartOf="@id/amountEditSpacer"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:layout_height="@dimen/editable_text_field_min_height"
-        tools:layout_width="109dp"
-        style="@style/BootyCrateItemAmountEdit" />
+        app:layout_constraintEnd_toStartOf="@id/amountEditSpacer"
+        android:clipChildren="false" >
+
+        <com.cliffracertech.bootycrate.view.TintableCheckbox
+            android:id="@+id/checkBox"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            app:layout_constraintEnd_toStartOf="@id/nameEdit"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/extraInfoEdit"
+            android:layout_gravity="center_vertical"
+            tools:tint="@color/bootyCrateItemColor0"
+            style="@style/BootyCrateItemColorEdit" />
+
+        <LinearLayout
+            android:id="@+id/nameAndExtraInfoLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.0"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical" >
+
+            <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
+                android:id="@+id/nameEdit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Item Name"
+                tools:minHeight="@dimen/editable_text_field_min_height"
+                style="@style/BootyCrateItemNameEdit" />
+
+            <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
+                android:id="@+id/extraInfoEdit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="Extra info"
+                tools:minHeight="@dimen/editable_text_field_min_height"
+                style="@style/BootyCrateItemExtraInfoEdit" />
+
+        </LinearLayout>
+
+        <com.cliffracertech.bootycrate.view.AnimatedIntegerEdit
+            android:id="@+id/amountEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toEndOf="@id/nameEdit"
+            app:layout_constraintEnd_toStartOf="@id/amountEditSpacer"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_height="@dimen/editable_text_field_min_height"
+            android:layout_gravity="top"
+            style="@style/BootyCrateItemAmountEdit" />
+
+    </LinearLayout>
 
 <!-- The amountEditSpacer, because it is the same width as the editButton, allows
      the amount edit look as though it is constrained to the start of the edit
@@ -96,9 +99,9 @@
         android:id="@+id/linkIndicator"
         android:layout_width="44dp"
         android:layout_height="44dp"
-        app:layout_constraintStart_toStartOf="@id/amountEdit"
-        app:layout_constraintEnd_toEndOf="@id/amountEdit"
-        app:layout_constraintTop_toBottomOf="@id/amountEdit"
+        app:layout_constraintEnd_toStartOf="@id/editButton"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="44dp"
         android:visibility="gone"
         android:contentDescription="@string/link_status_description"
         style="@style/ShoppingListItemLinkIndicator" />

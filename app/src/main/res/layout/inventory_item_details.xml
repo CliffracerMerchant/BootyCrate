@@ -19,7 +19,7 @@
         android:orientation="horizontal"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/spacer"
+        app:layout_constraintTop_toBottomOf="@id/checkBoxNameAndAmountLayout"
         app:layout_constraintEnd_toStartOf="@id/editButton"
         app:layout_constraintWidth_default="wrap"
         app:layout_constraintHorizontal_bias="0.0"

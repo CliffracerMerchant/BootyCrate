@@ -11,7 +11,6 @@ import android.graphics.Rect
 import android.text.InputType
 import android.text.TextUtils
 import android.util.AttributeSet
-import android.util.Log
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
@@ -202,18 +201,14 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         if (!editable && isFocused) clearFocus()
 
         val oldBaseline = baseline
-        val oldHeight = height
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
         val newUnderlineAlpha = if (editable) 255 else 0
 
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
-
         val baselineChange = baseline - oldBaseline
-        //val heightChange = measuredHeight - oldHeight
-        val start = -baselineChange.toFloat()// - heightChange.toFloat()
-        Log.d("itemviews", "baselineChange = $baseline - $oldBaseline")
+        val start = -baselineChange.toFloat()
         val translateAnimator = floatValueAnimator(::setTranslationY, start, 0f, animatorConfig)
         val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate,
                                                  if (editable) 0 else 255,
