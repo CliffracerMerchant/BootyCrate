@@ -21,7 +21,7 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import ca.antonious.materialdaypicker.MaterialDayPicker
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
+import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.databinding.UpdateListReminderSettingsFragmentBinding
 import com.cliffracertech.bootycrate.utils.alarmManager
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
@@ -184,7 +184,7 @@ object UpdateListReminder {
     class SendNotificationReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val notificationManager = notificationManager(context) ?: return
-            val notificationIntent = Intent(context, GradientStyledMainActivity::class.java).apply {
+            val notificationIntent = Intent(context, MainActivity::class.java).apply {
                 action = Intent.ACTION_MAIN
                 addCategory(Intent.CATEGORY_LAUNCHER)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

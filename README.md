@@ -39,16 +39,17 @@ Tech-stack components include:
 The project is separated into the following packages:
 
 ### activity
-activity contains all of the classes in the inheritance chain of the single activity used in the app.
+activity contains all of the classes in the inheritance chain of the single activity used in the
+app, as well as extension functions of the MainActivityBinding ui class. 
 These classes are:
 <pre>
-MultiFragmentActivity -> MainActivity -> GradientStyledMainActivity
+MultiFragmentActivity -> MainActivity
 </pre>
 
-GradientStyledMainActivity's UI consists of an instance of RecyclerViewActionBar (a custom toolbar
+MainActivity's UI consists of an instance of RecyclerViewActionBar (a custom toolbar
 implementation), an instance of BottomAppBar (another custom toolbar implementation), a
-BottomNavigationViewEx (acts as a BottomNavigationView but with better sub-view access), a checkout
-button, and an add button. This activity ui is shared between all fragments.
+BottomNavigationViewEx (acts as a BottomNavigationView but with better sub-view access),
+a checkout button, and an add button. This activity ui is shared between all fragments.
 
 ### fragment
 fragment contains all of the fragments used in the app. The two main content fragments' inheritance

@@ -13,7 +13,7 @@
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
     android:clipChildren="false"
-    tools:context=".activity.GradientStyledMainActivity" >
+    tools:context=".activity.MainActivity" >
 
     <com.cliffracertech.bootycrate.view.RecyclerViewActionBar
         android:id="@+id/actionBar"
