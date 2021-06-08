@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -66,7 +66,7 @@ fun MainActivityBinding.showCheckoutButton(show: Boolean) {
 /** Provide an animation to show or hide the checkout button, according
  * to the parameter show, using the values of the parameter animatorConfig
  * as the animation's duration and interpolator if not null. */
-fun MainActivityBinding.showCheckoutButtonAnimation(
+fun MainActivityBinding. showCheckoutButtonAnimation(
     showing: Boolean,
     animatorConfig: AnimatorConfig? = null
 ): Animator {

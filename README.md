@@ -1,12 +1,12 @@
 # BootyCrate
 <p align="left">
-    <img src="images/rings.png" alt="cleanrings"/>
+    <img src="images/" alt=""/>
 </p>
 <p align="center">
-    <img src="images/rings.png" alt="cleanrings"/>
+    <img src="images/" alt=""/>
 </p>
 <p align="right">
-    <img src="images/rings.png" alt="cleanrings"/>
+    <img src="images/" alt=""/>
 </p>
 BootyCrate is an open source shopping list and simple inventory management app built using Kotlin.
 Tech-stack components include:

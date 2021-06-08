@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -122,9 +122,9 @@ open class onlyShownItemsAre<T: BootyCrateItem>(vararg items: T) : ViewAssertion
         for (i in 0 until it.adapter.itemCount) {
             val vh = it.findViewHolderForAdapterPosition(i)
             assertThat(vh).isNotNull()
-            val itemView = vh!!.itemView as? ExpandableSelectableItemView<T>
+            val itemView = vh!!.itemView as ExpandableSelectableItemView<T>
             assertThat(itemView).isNotNull()
-            assertThat(assertItemFromViewMatchesOriginalItem(itemView!!, items[i]))
+            assertThat(assertItemFromViewMatchesOriginalItem(itemView, items[i]))
         }
     }
 }
