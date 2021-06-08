@@ -4,9 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.activity
 
-import android.animation.AnimatorInflater
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
@@ -17,6 +15,7 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.applyConfig
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 /**
@@ -114,29 +113,41 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         val oldFragment = navBarMenuItemFragmentMap.getValue(oldFragmentMenuItem.itemId)
         oldFragment.view?.apply {
             exitingFragmentView = this
-            val animResId = if (leftToRight) R.animator.slide_out_left
-                            else             R.animator.slide_out_right
-            val anim = AnimatorInflater.loadAnimator(context, animResId)
-            anim.setTarget(this)
-            ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
-                .setFloatValues(0f, width / 2f * if (leftToRight) -1f else 1f)
+
+            val startAlpha = alpha
+            val alphaChange = -alpha
+
+            val endTranslation = width / 2f * if (leftToRight) -1f else 1f
+            val anim = ValueAnimator.ofFloat(translationX, endTranslation)
+                .applyConfig(primaryFragmentTransitionAnimatorConfig)
+            anim.addUpdateListener {
+                translationX = it.animatedValue as Float
+                alpha = startAlpha + alphaChange * it.animatedFraction
+            }
             anim.doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
             anim.doOnEnd { if (this === exitingFragmentView) {
                 visibility = View.GONE
                 exitingFragmentView = null
+                translationX = 0f
                 setLayerType(View.LAYER_TYPE_NONE, null)
             }}
             anim.start()
         }
         newFragment.view?.apply {
-            alpha = 0f
+            if (!isVisible) alpha = 0f
             isVisible = true
-            val animResId = if (leftToRight) R.animator.slide_in_right
-                            else             R.animator.slide_in_left
-            val anim = AnimatorInflater.loadAnimator(context, animResId)
-            anim.setTarget(this)
-            ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
-                .setFloatValues(width / 2f * if (leftToRight) 1f else -1f, 0f)
+
+            val startAlpha = alpha
+            val alphaChange = 1f - alpha
+
+            val translationStart = if (translationY != 0f) translationY
+                                   else width / 2f * if (leftToRight) 1f else -1f
+            val anim = ValueAnimator.ofFloat(translationStart, 0f)
+                .applyConfig(primaryFragmentTransitionAnimatorConfig)
+            anim.addUpdateListener {
+                translationX = it.animatedValue as Float
+                alpha = startAlpha + alphaChange * it.animatedFraction
+            }
             anim.doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
             anim.doOnEnd { setLayerType(View.LAYER_TYPE_NONE, null) }
             anim.start()
@@ -209,12 +220,8 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
-            // Even though inactive fragments' visibilities are later set to View.GONE,
-            // we'll set them to View.INVISIBLE for the first time to ensure that they
-            // are fully inflated and that there is no delay when they are switched to
-            // for the first time.
             if (menuItemId != navigationBar.selectedItemId || !wasShowingPrimaryFragment)
-                fragment.view?.visibility = View.INVISIBLE
+                fragment.view?.visibility = View.GONE
         }
         navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
         onNewFragmentSelected(visibleFragment!!)
