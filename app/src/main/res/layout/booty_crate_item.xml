@@ -12,66 +12,58 @@
     tools:background="@drawable/recycler_view_item_background"
     tools:paddingVertical="4dp" >
 
-    <LinearLayout
-        android:id="@+id/checkBoxNameAndAmountLayout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
+    <com.cliffracertech.bootycrate.view.TintableCheckbox
+        android:id="@+id/checkBox"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        app:layout_constraintEnd_toStartOf="@id/nameEdit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/checkBoxExtraInfoBottomBarrier"
+        tools:tint="@color/bootyCrateItemColor0"
+        style="@style/BootyCrateItemColorEdit" />
+
+    <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
+        android:id="@+id/nameEdit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@id/amountEdit"
+        app:layout_constraintStart_toEndOf="@id/checkBox"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/extraInfoEdit"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Item Name"
+        tools:minHeight="@dimen/editable_text_field_min_height"
+        style="@style/BootyCrateItemNameEdit" />
+
+    <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
+        android:id="@+id/extraInfoEdit"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="@id/nameEdit"
+        app:layout_constraintStart_toStartOf="@id/nameEdit"
+        app:layout_constraintTop_toBottomOf="@id/nameEdit"
+        app:layout_constraintBottom_toBottomOf="@id/checkBoxExtraInfoBottomBarrier"
+        tools:text="Extra info"
+        tools:minHeight="@dimen/editable_text_field_min_height"
+        style="@style/BootyCrateItemExtraInfoEdit" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/checkBoxExtraInfoBottomBarrier"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:constraint_referenced_ids="checkBox, extraInfoEdit"
+        app:barrierDirection="bottom" />
+
+    <com.cliffracertech.bootycrate.view.AnimatedIntegerEdit
+        android:id="@+id/amountEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@id/nameEdit"
         app:layout_constraintEnd_toStartOf="@id/amountEditSpacer"
-        android:clipChildren="false" >
-
-        <com.cliffracertech.bootycrate.view.TintableCheckbox
-            android:id="@+id/checkBox"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            app:layout_constraintEnd_toStartOf="@id/nameEdit"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/extraInfoEdit"
-            android:layout_gravity="center_vertical"
-            tools:tint="@color/bootyCrateItemColor0"
-            style="@style/BootyCrateItemColorEdit" />
-
-        <LinearLayout
-            android:id="@+id/nameAndExtraInfoLayout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1.0"
-            android:layout_gravity="center_vertical"
-            android:orientation="vertical" >
-
-            <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
-                android:id="@+id/nameEdit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:text="Item Name"
-                tools:minHeight="@dimen/editable_text_field_min_height"
-                style="@style/BootyCrateItemNameEdit" />
-
-            <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
-                android:id="@+id/extraInfoEdit"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:text="Extra info"
-                tools:minHeight="@dimen/editable_text_field_min_height"
-                style="@style/BootyCrateItemExtraInfoEdit" />
-
-        </LinearLayout>
-
-        <com.cliffracertech.bootycrate.view.AnimatedIntegerEdit
-            android:id="@+id/amountEdit"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toEndOf="@id/nameEdit"
-            app:layout_constraintEnd_toStartOf="@id/amountEditSpacer"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:layout_height="@dimen/editable_text_field_min_height"
-            android:layout_gravity="top"
-            style="@style/BootyCrateItemAmountEdit" />
-
-    </LinearLayout>
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_height="@dimen/editable_text_field_min_height"
+        style="@style/BootyCrateItemAmountEdit" />
 
 <!-- The amountEditSpacer, because it is the same width as the editButton, allows
      the amount edit look as though it is constrained to the start of the edit

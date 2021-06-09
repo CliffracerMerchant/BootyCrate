@@ -30,6 +30,7 @@ import com.cliffracertech.bootycrate.databinding.BootyCrateItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemDetailsBinding
 import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
 
 /**
  * A layout to display the data for a BootyCrateItem.
@@ -197,57 +198,51 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         if (isLinkedToAnotherItem)
             if (!animate) ui.linkIndicator.isVisible = expanding
             else ui.linkIndicator.showOrHideViaOverlay(showing = expanding)
-        val nameEditHeightChange = updateNameEditState(expanding, animate)
-        val extraInfoEditNewHeight = updateExtraInfoState(expanding, animate, nameEditHeightChange)
+        val nameAnimInfoAndNewHeight = updateNameEditState(expanding, animate)
+        val extraInfoAnimInfoAndNewHeight =
+            updateExtraInfoState(expanding, animate, nameAnimInfoAndNewHeight?.newHeight ?: 0)
         updateAmountEditState(expanding, animate)
-        if (animate) {
-            // animate name and extra info top change, if any
-            val nameAndExtraInfoNewHeight = ui.nameEdit.height + nameEditHeightChange + extraInfoEditNewHeight
-            val nameAndExtraInfoWillBeSmallerThanCheckbox = (nameAndExtraInfoNewHeight) < ui.checkBox.height
-            val nameNewTop = if (!nameAndExtraInfoWillBeSmallerThanCheckbox) 0
-                             else (ui.checkBox.height - nameAndExtraInfoNewHeight) / 2
-            val nameTopChange = nameNewTop - ui.nameAndExtraInfoLayout.top
-            if (nameTopChange != 0) {
-                ui.nameAndExtraInfoLayout.translationY -= nameTopChange.toFloat()
-                pendingAnimations.add(floatValueAnimator(ui.nameAndExtraInfoLayout::setTranslationY,
-                                                         -nameTopChange.toFloat(), 0f, animatorConfig))
-            }
-            // animate checkbox top change, if any
-            val checkBoxNewTop = if (nameAndExtraInfoWillBeSmallerThanCheckbox) 0
-                                 else (nameAndExtraInfoNewHeight - ui.checkBox.height) / 2
-            val checkBoxTopChange = checkBoxNewTop - ui.checkBox.top.toFloat()
-            ui.checkBox.translationY = -checkBoxTopChange
-            pendingAnimations.add(floatValueAnimator(setter = ui.checkBox::setTranslationY,
-                                                     from = -checkBoxTopChange, to = 0f,
-                                                     config = animatorConfig))
-        }
+        if (animate) adjustNameExtraInfoAndCheckbox(expanding, nameAnimInfoAndNewHeight!!,
+                                                    extraInfoAnimInfoAndNewHeight!!)
         onExpandedChanged(expanding, animate)
         updateEditButtonState(expanding, animate)
         if (animate && startAnimationsImmediately)
             runPendingAnimations()
     }
 
+
+    private data class TextFieldAnimInfoAndNewHeight(
+        val animInfo: AnimatedStrikeThroughTextFieldEdit.AnimInfo,
+        val newHeight: Int)
+
     /** Update the editable state of nameEdit, animating if param animate == true,
-     * and return the height change of the nameEdit, or 0 if no animation occurred. */
-    private fun updateNameEditState(expanding: Boolean, animate: Boolean): Int {
-        val nameEditAnimInfo = ui.nameEdit.setEditable(expanding, animate, false) ?: return 0
-        pendingAnimations.add(nameEditAnimInfo.translateAnimator)
-        pendingAnimations.add(nameEditAnimInfo.underlineAnimator)
-        val nameEditNewHeight = maxOf(ui.nameEdit.measuredHeight, if (!expanding) 0 else
+     * and return the TextFieldEdit.AnimInfo for the animation and the new height
+     * of the nameEdit, or null if no animation occurred. */
+    private fun updateNameEditState(
+        expanding: Boolean,
+        animate: Boolean
+    ): TextFieldAnimInfoAndNewHeight? {
+        val animInfo = ui.nameEdit.setEditable(expanding, animate, false) ?: return null
+        pendingAnimations.add(animInfo.translateAnimator)
+        pendingAnimations.add(animInfo.underlineAnimator)
+        val newHeight = maxOf(ui.nameEdit.measuredHeight, if (!expanding) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height))
-        return nameEditNewHeight - ui.nameEdit.height
+        return TextFieldAnimInfoAndNewHeight(animInfo, newHeight)
     }
 
     /** Update the editable state of extraInfoEdit, animating if param animate == true and
-     * the extraInfoEdit is not blank, and returning the new height of the extraInfoEdit. */
-    private fun updateExtraInfoState(expanding: Boolean, animate: Boolean, nameHeightChange: Int): Int {
+     * the extraInfoEdit is not blank, and returning the TextFieldEdit.AnimInfo for the
+     * animation and the new height of the extraInfoEdit, or null if no animation occurred. */
+    private fun updateExtraInfoState(
+        expanding: Boolean,
+        animate: Boolean,
+        nameNewHeight: Int
+    ): TextFieldAnimInfoAndNewHeight? {
         val extraInfoIsBlank = ui.extraInfoEdit.text.isNullOrBlank()
         val animInfo = ui.extraInfoEdit.setEditable(expanding, animate, false)
         if (!animate) {
-            // Since we have already set the editable state, if no animation
-            // is needed we can just set the visibility and exit early.
             ui.extraInfoEdit.isVisible = expanding || !extraInfoIsBlank
-            return 0
+            return null
         }
         pendingAnimations.add(animInfo!!.translateAnimator)
         pendingAnimations.add(animInfo.underlineAnimator)
@@ -257,13 +252,14 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         else {
             // We have to adjust the extraInfoEdit starting translation by the
             // height change of the nameEdit to get the correct translation amount.
-            val adjust = -nameHeightChange.toFloat()
+            val adjust = ui.nameEdit.height - nameNewHeight.toFloat()
             ui.extraInfoEdit.translationY += adjust
             animInfo.adjustTranslationStartEnd(adjust, 0f)
         }
-        return if (extraInfoIsBlank && !expanding) 0 else
+        val newHeight = if (extraInfoIsBlank && !expanding) 0 else
             maxOf(ui.extraInfoEdit.measuredHeight, if (!expanding) 0 else
                   resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height))
+        return TextFieldAnimInfoAndNewHeight(animInfo, newHeight)
     }
 
     /** Update the editable state of amountEdit, animating if param animate == true. */
@@ -275,9 +271,9 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         ) ?: return
         pendingAnimations.addAll(amountEditAnimInfo.animators)
 
-        // IntegerEdit's internal animation will only take into account its
-        // width change. We have to make another translate animation to take
-        // into account the amountEdit's left/start change.
+        // IntegerEdit's internal translation animation will only take into account
+        // its width change. We have to adjust the start values to take into account
+        // the amountEdit's left/start change as well.
         ui.amountEditSpacer.isVisible = !expanding
         val amountEndChange = ui.amountEditSpacer.layoutParams.width * if (expanding) 1 else -1
         val amountLeftChange = amountEndChange - amountEditAnimInfo.widthChange
@@ -302,6 +298,49 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
                         extraInfoLockedWidth = null }
         }
         pendingAnimations.add(anim)
+    }
+
+    /** Adjust the name and extra info edit translation animations to take into
+     * account the change in their top values, and animate the checkbox's top change. */
+    private fun adjustNameExtraInfoAndCheckbox(
+        expanding: Boolean,
+        nameAnimInfoAndNewHeight: TextFieldAnimInfoAndNewHeight,
+        extraInfoAnimInfoAndNewHeight: TextFieldAnimInfoAndNewHeight
+    ) {
+        // adjust name and extra info translation amounts
+        val nameAndExtraInfoNewHeight = nameAnimInfoAndNewHeight.newHeight +
+                                        extraInfoAnimInfoAndNewHeight.newHeight
+        val nameAndExtraInfoWillBeSmallerThanCheckbox = (nameAndExtraInfoNewHeight) < ui.checkBox.height
+
+        val extraInfoIsDisappearing = ui.extraInfoEdit.text.isNullOrBlank() && !expanding
+        val nameNewTop = paddingTop + if (!nameAndExtraInfoWillBeSmallerThanCheckbox) 0
+        else (ui.checkBox.height - nameAndExtraInfoNewHeight) / 2
+        val nameTopChange = nameNewTop - ui.nameEdit.top
+        if (nameTopChange != 0) {
+            val adjust = nameTopChange * -1f
+            if (!extraInfoIsDisappearing) {
+                ui.nameEdit.translationY += adjust
+                ui.extraInfoEdit.translationY += adjust
+                nameAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(adjust, 0f)
+                extraInfoAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(adjust, 0f)
+            } else {
+                nameAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(0f, -adjust)
+                extraInfoAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(0f, -adjust)
+                nameAnimInfoAndNewHeight.animInfo.translateAnimator
+                    .doOnEnd { ui.nameEdit.translationY = 0f }
+                extraInfoAnimInfoAndNewHeight.animInfo.translateAnimator
+                    .doOnEnd { ui.extraInfoEdit.translationY = 0f }
+            }
+        }
+
+        // animate checkbox top change, if any
+        val checkBoxNewTop = paddingTop + if (nameAndExtraInfoWillBeSmallerThanCheckbox) 0
+        else (nameAndExtraInfoNewHeight - ui.checkBox.height) / 2
+        val checkBoxTopChange = checkBoxNewTop - ui.checkBox.top.toFloat()
+        ui.checkBox.translationY = -checkBoxTopChange
+        pendingAnimations.add(floatValueAnimator(setter = ui.checkBox::setTranslationY,
+                                                 from = -checkBoxTopChange, to = 0f,
+                                                 config = animatorConfig))
     }
 
     private fun updateEditButtonState(expanding: Boolean, animate: Boolean) {
