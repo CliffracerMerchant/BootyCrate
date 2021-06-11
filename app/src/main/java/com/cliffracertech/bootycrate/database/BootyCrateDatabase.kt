@@ -121,12 +121,13 @@ abstract class BootyCrateDatabase : RoomDatabase() {
              * minus its current amount). */
             private val updateShoppingListAmount =
                 """UPDATE bootycrate_item
-                     SET shoppingListAmount =
+                     SET inShoppingListTrash = 0, shoppingListAmount =
                        CASE WHEN shoppingListAmount >
                                  (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
-                          THEN shoppingListAmount
-                          ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
-                       END"""
+                            THEN shoppingListAmount
+                            ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
+                       END
+                     WHERE id = new.id"""
         }
     }
 }

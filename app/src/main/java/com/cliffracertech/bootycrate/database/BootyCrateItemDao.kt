@@ -164,7 +164,9 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
               WHERE shoppingListAmount != -1""")
     abstract suspend fun deleteAllShoppingListItems()
 
-    @Query("UPDATE bootycrate_item SET inShoppingListTrash = 0")
+    @Query("UPDATE bootycrate_item " +
+           "SET shoppingListAmount = -1, inShoppingListTrash = 0 " +
+           "WHERE inShoppingListTrash")
     abstract suspend fun undoDeleteShoppingListItems()
 
     @Query("UPDATE bootycrate_item SET shoppingListAmount = -1 WHERE inShoppingListTrash")
@@ -288,7 +290,9 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     @Query("UPDATE bootycrate_item SET inInventoryTrash = 0")
     abstract suspend fun undoDeleteInventoryItems()
 
-    @Query("UPDATE bootycrate_item SET inventoryAmount = -1 WHERE inInventoryTrash")
+    @Query("UPDATE bootycrate_item " +
+           "SET inventoryAmount = -1, inInventoryTrash = 0 " +
+           "WHERE inInventoryTrash")
     abstract suspend fun emptyInventoryTrash()
 
     @Query("""UPDATE bootycrate_item SET autoAddToShoppingList = :autoAddToShoppingList
