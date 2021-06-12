@@ -41,6 +41,9 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     }
 
     fun setExpandedItem(pos: Int?) {
+        // This check makes sure that another expand collapse
+        // animation isn't already playing to prevent visual bugs.
+        if (itemAnimator.collapsingItemPos != null) return
         viewModel.setExpandedItem(if (pos == null) null
                                   else adapter.currentList[pos].id)
         itemAnimator.notifyExpandedItemChanged(pos)

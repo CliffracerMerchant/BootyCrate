@@ -2,7 +2,6 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-
 package com.cliffracertech.bootycrate.recyclerview
 
 import android.animation.Animator
@@ -22,21 +21,21 @@ import com.cliffracertech.bootycrate.utils.*
  * collapsing items. It assumes that only one item can be expanded at a
  * time, and that a previously expanded item will be collapsed when a new
  * one is expanded. In order to play these animations correctly, it is
- * necessary to call the function notifyExpandedItemChanged with the adap-
- * ter position of the newly expanded item whenever it is changed, or null
- * if the expanded item is being collapsed. The currently expanded item
- * can be queried via the property expandedItemPos. The recycler view that
- * uses ExpandableItemAnimator must use item views that implement the
- * ExpandableRecyclerViewItem interface.
+ * necessary to necessary to call the function notifyExpandedItemChanged
+ * with the adapter position of the newly expanded item whenever it is
+ * changed, or null if the expanded item is being collapsed. The currently
+ * expanded item can be queried via the property expandedItemPos. The
+ * recycler view that uses ExpandableItemAnimator must use item views that
+ * implement the ExpandableRecyclerViewItem interface.
  *
- * ExpandableItemAnimator can also create an observer that, when regis-
- * tered as an adapter data observer for the adapter using the Expandable-
- * ItemAnimator instance as its item animator, will automatically update
- * the expanded item position so that this doesn't need to be done manu-
- * ally by calling notifyExpandedItemChanged. ExpandableItemAnimator will
- * attempt to register itself automatically, but if the parent recycler
- * view does not have an adapter when ExpandableItemAnimator is construc-
- * ted, this will have to be done manually.
+ * ExpandableItemAnimator can also create an observer that, when registered
+ * as an adapter data observer for the adapter using the ExpandableItemAnimator
+ * instance as its item animator, will automatically update the expanded
+ * item position so that this doesn't need to be done manually by calling
+ * notifyExpandedItemChanged. ExpandableItemAnimator will attempt to
+ * register itself automatically, but if the parent recycler view does not
+ * have an adapter when ExpandableItemAnimator is constructed, this will
+ * have to be done manually.
  */
 class ExpandableItemAnimator(
     private val recyclerView: RecyclerView,
@@ -44,9 +43,10 @@ class ExpandableItemAnimator(
     adapter: RecyclerView.Adapter<*>? = null
 ) : DefaultItemAnimator() {
 
-    val expandedItemPos get() = _expandedItemPos
     private var _expandedItemPos: Int? = null
-    private var collapsingItemPos: Int? = null
+    private var _collapsingItemPos: Int? = null
+    val expandedItemPos get() = _expandedItemPos
+    val collapsingItemPos get() = _collapsingItemPos
 
     private val pendingAnimators = mutableListOf<Animator>()
     private val pendingViewPropAnimators = mutableListOf<ViewPropertyAnimator>()
@@ -65,7 +65,7 @@ class ExpandableItemAnimator(
     }
 
     fun notifyExpandedItemChanged(newlyExpandedItemPos: Int?) {
-        collapsingItemPos = expandedItemPos
+        _collapsingItemPos = expandedItemPos
         _expandedItemPos = newlyExpandedItemPos
     }
 
@@ -105,8 +105,8 @@ class ExpandableItemAnimator(
             doOnStart { dispatchChangeStarting(holder, true) }
             doOnEnd {
                 dispatchChangeFinished(holder, true)
-                if (holder.adapterPosition == collapsingItemPos)
-                    collapsingItemPos = null
+                if (holder.adapterPosition == _collapsingItemPos)
+                    _collapsingItemPos = null
             }
             pendingAnimators.add(this)
         }
@@ -117,7 +117,7 @@ class ExpandableItemAnimator(
         if (topChange != 0)
             translationAmount = topChange
         else {
-            val collapsingPos = collapsingItemPos
+            val collapsingPos = _collapsingItemPos
             val expandingPos = expandedItemPos
             if (collapsingPos != null && expandingPos != null) {
                 val viewIsOnBottom = if (collapsingPos == pos) collapsingPos > expandingPos
