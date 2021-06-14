@@ -88,7 +88,7 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
     var sort: BootyCrateItemSort = BootyCrateItemSort.Color
         set(value) { field = value; notifySortOptionsChanged() }
 
-    var searchFilter: String? = null
+    var searchFilter: String = ""
         set(value) { field = value; notifySortOptionsChanged() }
 
     val items = Transformations.switchMap(sortOptionsChanged) { itemsSwitchMapFunc() }

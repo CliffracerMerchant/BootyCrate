@@ -221,7 +221,10 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
             if (menuItemId != navigationBar.selectedItemId || !wasShowingPrimaryFragment)
-                fragment.view?.visibility = View.GONE
+                // Even though the inactive fragments views' visibilities are later
+                // set to View.GONE, setting them to INVISIBLE this first time ensures
+                // that the transition animation plays correctly the first time.
+                fragment.view?.visibility = View.INVISIBLE
         }
         navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
         onNewFragmentSelected(visibleFragment!!)

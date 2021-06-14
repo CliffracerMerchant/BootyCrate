@@ -59,8 +59,8 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
 
     var sort get() = viewModel.sort
              set(value) { viewModel.sort = value }
-    var searchFilter: String? get() = viewModel.searchFilter
-                              set(value) { viewModel.searchFilter = value }
+    var searchFilter: String get() = viewModel.searchFilter
+                             set(value) { viewModel.searchFilter = value }
 
     init {
         val swipeCallback = SwipeToDeleteCallback(context) { pos ->
