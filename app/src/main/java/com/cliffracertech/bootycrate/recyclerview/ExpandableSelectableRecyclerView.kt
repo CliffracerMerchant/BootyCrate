@@ -37,16 +37,30 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
         addItemDecoration(ItemSpacingDecoration(context))
         setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
+        itemAnimator.expandCollapseAnimationFinishedListener = { _, _ ->
+            if (pendingExpandedItem != -1) {
+                setExpandedItem(pendingExpandedItem)
+                pendingExpandedItem = -1
+            }
+        }
         setItemAnimator(itemAnimator)
     }
 
+    private var pendingExpandedItem: Int? = -1
     fun setExpandedItem(pos: Int?) {
-        // This check makes sure that another expand collapse
-        // animation isn't already playing to prevent visual bugs.
-        if (itemAnimator.collapsingItemPos != null) return
-        viewModel.setExpandedItem(if (pos == null) null
-                                  else adapter.currentList[pos].id)
-        itemAnimator.notifyExpandedItemChanged(pos)
+        // This check makes sure that another expand collapse animation isn't
+        // already playing to prevent visual bugs. Unfortunately this can also
+        // make the UI feel unresponsive if the user if expanding and collapsing
+        // items quickly. To compromise, if the user tries to expand or collapse
+        // another item while an animation is ongoing, the new expand collapse
+        // is queued and occurs after the ongoing one is finished.
+        if (itemAnimator.expandCollapseAnimationInProgress)
+            pendingExpandedItem = pos
+        else {
+            viewModel.setExpandedItem(if (pos == null) null
+                                      else adapter.currentList[pos].id)
+            itemAnimator.notifyExpandedItemChanged(pos)
+        }
     }
 
     /**

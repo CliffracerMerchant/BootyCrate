@@ -28,6 +28,12 @@ import com.cliffracertech.bootycrate.utils.*
  * recycler view that uses ExpandableItemAnimator must use item views that
  * implement the ExpandableRecyclerViewItem interface.
  *
+ * The property expandCollapseAnimationFinishedListener can be set to
+ * listen for when expand collapse animations are finished. The boolean
+ * parameter represents whether or not the view is expanding (false implies
+ * that the view is collapsing instead), and the int parameter represents
+ * the adapter position of the item.
+ *
  * ExpandableItemAnimator can also create an observer that, when registered
  * as an adapter data observer for the adapter using the ExpandableItemAnimator
  * instance as its item animator, will automatically update the expanded
@@ -44,13 +50,16 @@ class ExpandableItemAnimator(
 ) : DefaultItemAnimator() {
 
     private var _expandedItemPos: Int? = null
-    private var _collapsingItemPos: Int? = null
+    private var collapsingItemPos: Int? = null
     val expandedItemPos get() = _expandedItemPos
-    val collapsingItemPos get() = _collapsingItemPos
+    private var _expandCollapseAnimationInProgress = false
+    val expandCollapseAnimationInProgress get() = _expandCollapseAnimationInProgress
 
     private val pendingAnimators = mutableListOf<Animator>()
     private val pendingViewPropAnimators = mutableListOf<ViewPropertyAnimator>()
     private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
+
+    var expandCollapseAnimationFinishedListener: ((Boolean, Int)-> Unit)? = null
 
     var animatorConfig = animatorConfig
         set(value) { field = value
@@ -65,7 +74,7 @@ class ExpandableItemAnimator(
     }
 
     fun notifyExpandedItemChanged(newlyExpandedItemPos: Int?) {
-        _collapsingItemPos = expandedItemPos
+        collapsingItemPos = expandedItemPos
         _expandedItemPos = newlyExpandedItemPos
     }
 
@@ -102,11 +111,15 @@ class ExpandableItemAnimator(
                                            view: View, start: Int, change: Int) {
         view.setHeight(start)
         intValueAnimator(view::setHeight, start, start + change, animatorConfig).apply {
-            doOnStart { dispatchChangeStarting(holder, true) }
+            doOnStart { dispatchChangeStarting(holder, true)
+                        _expandCollapseAnimationInProgress = true }
             doOnEnd {
                 dispatchChangeFinished(holder, true)
-                if (holder.adapterPosition == _collapsingItemPos)
-                    _collapsingItemPos = null
+                _expandCollapseAnimationInProgress = false
+                if (holder.adapterPosition == collapsingItemPos)
+                    collapsingItemPos = null
+                expandCollapseAnimationFinishedListener?.invoke(
+                    change > 0, holder.adapterPosition)
             }
             pendingAnimators.add(this)
         }
@@ -117,7 +130,7 @@ class ExpandableItemAnimator(
         if (topChange != 0)
             translationAmount = topChange
         else {
-            val collapsingPos = _collapsingItemPos
+            val collapsingPos = collapsingItemPos
             val expandingPos = expandedItemPos
             if (collapsingPos != null && expandingPos != null) {
                 val viewIsOnBottom = if (collapsingPos == pos) collapsingPos > expandingPos
@@ -137,10 +150,8 @@ class ExpandableItemAnimator(
             .alpha(0f).withLayer()
             .applyConfig(animatorConfig)
             .withStartAction { dispatchRemoveStarting(holder) }
-            .withEndAction {
-                dispatchRemoveFinished(holder)
-                recyclerView.layoutManager?.removeView(view)
-            })
+            .withEndAction { dispatchRemoveFinished(holder)
+                             recyclerView.layoutManager?.removeView(view) })
         return true
     }
 
