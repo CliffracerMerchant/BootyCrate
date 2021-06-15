@@ -30,12 +30,13 @@
 
         <receiver android:name="com.cliffracertech.bootycrate.fragment.UpdateListReminder$SendNotificationReceiver" />
 
-        <receiver android:name="com.cliffracertech.bootycrate.fragment.UpdateListReminder$DeviceRestartReceiver"
+        <receiver android:name="com.cliffracertech.bootycrate.fragment.UpdateListReminder$AlarmsNeedResetReceiver"
             android:enabled="true"
             android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 

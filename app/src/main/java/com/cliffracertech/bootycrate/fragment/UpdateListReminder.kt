@@ -181,11 +181,13 @@ object UpdateListReminder {
         }
     }
 
-    /** A BroadcastReceiver that receives intents with the action 'android.intent.action.BOOT_COMPLETED'
-     * in order to reschedule any reminder notifications that were lost when the device restarted. */
-    class DeviceRestartReceiver: BroadcastReceiver() {
+    /** A BroadcastReceiver that receives intents for when the device is restarted or when
+     * the app is updated. Both of these events necessitate a reset of all set alarms. */
+    class AlarmsNeedResetReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action != "android.intent.action.BOOT_COMPLETED") return
+            if (!(intent.action == "android.intent.action.BOOT_COMPLETED" ||
+                  intent.action == "android.intent.action.LOCKED_BOOT_COMPLETED" ||
+                  intent.action == "android.intent.action.MY_PACKAGE_REPLACED")) return
             val prefs = PreferenceManager.getDefaultSharedPreferences(context)
             val settings = Settings.fromSharedPreferences(prefs)
             scheduleNotifications(context, settings)
