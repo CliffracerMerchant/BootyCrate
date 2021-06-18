@@ -41,6 +41,7 @@ android {
     compileOptions {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
+        coreLibraryDesugaringEnabled true
     }
 
     testOptions { unitTests.includeAndroidResources = true }

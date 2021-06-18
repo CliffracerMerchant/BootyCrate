@@ -51,8 +51,9 @@ fun LayoutTransition.applyConfig(config: AnimatorConfig?) = apply {
 
 // The following ValueAnimator returning functions can be used similarly to object animators,
 // but hopefully are more performant due to not using reflection to get the property setter
-// (the performance difference is likely negligible but using these instead is also low effort),
-// and allows setting the duration and interpolator at the same time through the config parameter.
+// (the performance difference is likely negligible, but these are similar in ease of use as
+// ObjectAnimators, and allow for setting the duration and interpolator at the same time through
+// the config parameter.
 /** Return a ValueAnimator for an Int property with the update listener already set. */
 fun intValueAnimator(
     setter: (Int) -> Unit,

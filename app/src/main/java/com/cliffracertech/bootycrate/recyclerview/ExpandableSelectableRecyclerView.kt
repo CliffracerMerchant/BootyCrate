@@ -8,7 +8,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 
@@ -36,7 +35,6 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     init {
         addItemDecoration(ItemSpacingDecoration(context))
         setHasFixedSize(true)
-        layoutManager = LinearLayoutManager(context)
         itemAnimator.expandCollapseAnimationFinishedListener = { _, _ ->
             if (pendingExpandedItem != -1) {
                 setExpandedItem(pendingExpandedItem)

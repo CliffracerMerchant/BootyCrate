@@ -146,12 +146,11 @@ class ExpandableItemAnimator(
 
     override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
         val view = holder?.itemView ?: return false
-        pendingViewPropAnimators.add(view.animate()
-            .alpha(0f).withLayer()
-            .applyConfig(animatorConfig)
-            .withStartAction { dispatchRemoveStarting(holder) }
-            .withEndAction { dispatchRemoveFinished(holder)
-                             recyclerView.layoutManager?.removeView(view) })
+        view.animate().alpha(0f).withLayer()
+                      .applyConfig(animatorConfig)
+                      .withStartAction { dispatchRemoveStarting(holder) }
+                      .withEndAction { dispatchRemoveFinished(holder) }
+                      .start()
         return true
     }
 

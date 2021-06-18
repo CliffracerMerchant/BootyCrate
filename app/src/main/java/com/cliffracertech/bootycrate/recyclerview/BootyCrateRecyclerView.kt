@@ -8,10 +8,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.database.BootyCrateViewModel
@@ -63,11 +60,13 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
                              set(value) { viewModel.searchFilter = value }
 
     init {
-        val swipeCallback = SwipeToDeleteCallback(context) { pos ->
+        val cornerRadius = resources.getDimension(R.dimen.recycler_view_item_rounded_corner_radius)
+        val swipeCallback = SwipeToDeleteCallback(context, this, cornerRadius) { pos ->
             viewModel.delete(LongArray(1) { adapter.getItemId(pos) })
             showDeletedItemsSnackBar(1)
         }
         ItemTouchHelper(swipeCallback).attachToRecyclerView(this)
+        layoutManager = LinearLayoutManager(context)
     }
 
     fun showDeletedItemsSnackBar(numDeletedItems: Int) {
