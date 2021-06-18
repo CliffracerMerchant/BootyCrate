@@ -264,6 +264,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
 
     /** Update the editable state of amountEdit, animating if param animate == true. */
     private fun updateAmountEditState(expanding: Boolean, animate: Boolean) {
+        ui.amountEditSpacer.isVisible = !expanding
         val amountEditAnimInfo = ui.amountEdit.setValueIsFocusable(
             focusable = expanding,
             animate = animate,
@@ -274,7 +275,6 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         // IntegerEdit's internal translation animation will only take into account
         // its width change. We have to adjust the start values to take into account
         // the amountEdit's left/start change as well.
-        ui.amountEditSpacer.isVisible = !expanding
         val amountEndChange = ui.amountEditSpacer.layoutParams.width * if (expanding) 1 else -1
         val amountLeftChange = amountEndChange - amountEditAnimInfo.widthChange
         ui.amountEdit.translationX = -amountLeftChange.toFloat()

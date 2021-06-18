@@ -164,12 +164,12 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
               WHERE shoppingListAmount != -1""")
     abstract suspend fun deleteAllShoppingListItems()
 
+    @Query("UPDATE bootycrate_item SET inShoppingListTrash = 0")
+    abstract suspend fun undoDeleteShoppingListItems()
+
     @Query("UPDATE bootycrate_item " +
            "SET shoppingListAmount = -1, inShoppingListTrash = 0 " +
            "WHERE inShoppingListTrash")
-    abstract suspend fun undoDeleteShoppingListItems()
-
-    @Query("UPDATE bootycrate_item SET shoppingListAmount = -1 WHERE inShoppingListTrash")
     abstract suspend fun emptyShoppingListTrash()
 
     @Query("UPDATE bootycrate_item SET isChecked = :isChecked WHERE id = :id")
