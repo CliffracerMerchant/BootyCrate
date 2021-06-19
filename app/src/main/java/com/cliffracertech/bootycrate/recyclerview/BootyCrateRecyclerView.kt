@@ -69,14 +69,22 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
         layoutManager = LinearLayoutManager(context)
     }
 
-    fun showDeletedItemsSnackBar(numDeletedItems: Int) {
-        val text = context.getString(R.string.delete_snackbar_text, numDeletedItems)
+    private var deletedItemCount: Int = 0
+    fun showDeletedItemsSnackBar(newDeletedItemsCount: Int) {
+        deletedItemCount += newDeletedItemsCount
+        val text = context.getString(R.string.delete_snackbar_text, deletedItemCount)
         Snackbar.make(this, text, Snackbar.LENGTH_LONG)
             .setAnchorView(snackBarAnchor ?: this)
             .setAction(R.string.delete_snackbar_undo_text) { viewModel.undoDelete() }
             .setActionTextColor(context.theme.resolveIntAttribute(R.attr.colorAccent))
             .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(a: Snackbar?, b: Int) { viewModel.emptyTrash() }
+                override fun onDismissed(a: Snackbar?, b: Int) {
+                    if (b != DISMISS_EVENT_CONSECUTIVE) {
+                        deletedItemCount = 0
+                        if (b != DISMISS_EVENT_ACTION)
+                            viewModel.emptyTrash()
+                    }
+                }
             }).show()
     }
 
