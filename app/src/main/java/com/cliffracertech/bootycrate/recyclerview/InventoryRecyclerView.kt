@@ -66,7 +66,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                             ui.nameEdit.setText(item.name)
                     if (changes.contains(InventoryItem.Field.ExtraInfo) &&
                         ui.extraInfoEdit.text.toString() != item.extraInfo)
-                            ui.extraInfoEdit.setText(item.extraInfo)
+                            holder.view.setExtraInfoText(item.extraInfo)
                     if (changes.contains(InventoryItem.Field.Color)) {
                         if (ui.checkBox.colorIndex != item.color)
                             ui.checkBox.colorIndex = item.color

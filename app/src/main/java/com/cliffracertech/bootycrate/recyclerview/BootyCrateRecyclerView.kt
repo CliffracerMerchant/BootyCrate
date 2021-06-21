@@ -38,11 +38,11 @@ import com.google.android.material.snackbar.Snackbar
  * the sorting or text filter of the displayed items.
  *
  * BootyCrateRecyclerView utilizes a ItemTouchHelper with a SwipeToDeleteCallback
- * to allow the user to call deleteItem on the swiped item. When items are
- * deleted, a snack bar will appear informing the user of the amount of items
- * that were deleted, as well as providing an undo option. The snack bar will
- * be anchored to the view set as the public property snackBarAnchor, in case
- * this needs to be customized, or to the RecyclerView itself otherwise.
+ * to allow the user to delete swiped items. When items are deleted, a snack bar
+ * will appear informing the user of the amount of items that were deleted, as
+ * well as providing an undo option. The snack bar will be anchored to the view
+ * set as the public property snackBarAnchor, in case this needs to be
+ * customized, or to the RecyclerView itself otherwise.
  */
 @Suppress("LeakingThis")
 abstract class BootyCrateRecyclerView<T: BootyCrateItem>(

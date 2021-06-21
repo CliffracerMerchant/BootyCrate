@@ -77,6 +77,16 @@ open class BootyCrateItemView<T: BootyCrateItem>(
         ui.amountEdit.initValue(item.amount)
         isLinkedToAnotherItem = item.linked
     }
+
+    /** Update the text of the extra info edit, while also updating the extra info
+     * edit's visibility, if needed, to account for the new text. It is recommended
+     * to use this function rather than changing the extra info edit's text directly
+     * to ensure that its visibility is set correctly. */
+    fun setExtraInfoText(newText: String) {
+        ui.extraInfoEdit.setText(newText)
+        if (ui.extraInfoEdit.text.isNullOrBlank() == ui.extraInfoEdit.isVisible)
+            ui.extraInfoEdit.isVisible = !ui.extraInfoEdit.isVisible
+    }
 }
 
 

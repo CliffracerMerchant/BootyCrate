@@ -84,7 +84,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                             ui.nameEdit.setText(item.name)
                     if (changes.contains(ShoppingListItem.Field.ExtraInfo) &&
                         ui.extraInfoEdit.text.toString() != item.extraInfo)
-                            ui.extraInfoEdit.setText(item.extraInfo)
+                            holder.view.setExtraInfoText(item.extraInfo)
                     if (changes.contains(ShoppingListItem.Field.Color) &&
                         ui.checkBox.colorIndex != item.color)
                             ui.checkBox.colorIndex = item.color
