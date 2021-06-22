@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.recyclerview
 
 import android.animation.Animator
+import android.util.Log
 import android.view.View
 import android.view.ViewPropertyAnimator
 import androidx.core.animation.doOnEnd
@@ -52,11 +53,13 @@ class ExpandableItemAnimator(
     private var _expandedItemPos: Int? = null
     private var collapsingItemPos: Int? = null
     val expandedItemPos get() = _expandedItemPos
-    private var _expandCollapseAnimationInProgress = false
-    val expandCollapseAnimationInProgress get() = _expandCollapseAnimationInProgress
+    val expandCollapseAnimationInProgress get() = expandingViewHeightAnim != null &&
+                                                  collapsingViewHeightAnim != null
 
-    private val pendingAnimators = mutableListOf<Animator>()
-    private val pendingViewPropAnimators = mutableListOf<ViewPropertyAnimator>()
+    private var expandingViewHeightAnim: Animator? = null
+    private var expandingViewTopAnim: ViewPropertyAnimator? = null
+    private var collapsingViewHeightAnim: Animator? = null
+    private var collapsingViewTopAnim: ViewPropertyAnimator? = null
     private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
 
     var expandCollapseAnimationFinishedListener: ((Boolean, Int)-> Unit)? = null
@@ -74,6 +77,7 @@ class ExpandableItemAnimator(
     }
 
     fun notifyExpandedItemChanged(newlyExpandedItemPos: Int?) {
+        Log.d("animation2", "expanding and collapsing pos updated")
         collapsingItemPos = expandedItemPos
         _expandedItemPos = newlyExpandedItemPos
     }
@@ -88,10 +92,13 @@ class ExpandableItemAnimator(
         // equal to newHolder, and the heightChange must not be zero.
         if (oldHolder != newHolder)
             return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
-        val heightChange = postInfo.bottom - postInfo.top - preInfo.bottom + preInfo.top
-        if (heightChange == 0)
-            return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
 
+        val heightChange = postInfo.bottom - postInfo.top - preInfo.bottom + preInfo.top
+        if (heightChange == 0) return false
+        if (heightChange > 0f && expandingViewHeightAnim != null) return false
+        if (heightChange < 0f && collapsingViewHeightAnim != null) return false
+
+        Log.d("animation2", "heightChange = $heightChange")
         val view = newHolder.itemView
         if (view !is ExpandableRecyclerViewItem) throw IllegalStateException(
             "The item views used with ExpandableItemAnimator must " +
@@ -110,19 +117,20 @@ class ExpandableItemAnimator(
     private fun setupHeightChangeAnimation(holder: RecyclerView.ViewHolder,
                                            view: View, start: Int, change: Int) {
         view.setHeight(start)
-        intValueAnimator(view::setHeight, start, start + change, animatorConfig).apply {
-            doOnStart { dispatchChangeStarting(holder, true)
-                        _expandCollapseAnimationInProgress = true }
+        val anim = intValueAnimator(view::setHeight, start, start + change, animatorConfig).apply {
+            doOnStart { dispatchChangeStarting(holder, true) }
             doOnEnd {
                 dispatchChangeFinished(holder, true)
-                _expandCollapseAnimationInProgress = false
+                if (change > 0f) expandingViewHeightAnim = null
+                else             collapsingViewHeightAnim = null
                 if (holder.adapterPosition == collapsingItemPos)
                     collapsingItemPos = null
                 expandCollapseAnimationFinishedListener?.invoke(
                     change > 0, holder.adapterPosition)
             }
-            pendingAnimators.add(this)
         }
+        if (change > 0f) expandingViewHeightAnim = anim
+        else             collapsingViewHeightAnim = anim
     }
 
     private fun setupTopChangeAnimation(view: View, pos: Int, topChange: Int, heightChange: Int) {
@@ -140,7 +148,11 @@ class ExpandableItemAnimator(
         }
         if (translationAmount != 0) {
             view.translationY = -translationAmount.toFloat()
-            pendingViewPropAnimators.add(view.animate().translationY(0f).applyConfig(animatorConfig))
+            val anim = view.animate().translationY(0f).applyConfig(animatorConfig)
+                .withEndAction { if (heightChange > 0f) expandingViewTopAnim = null
+                                 else                   collapsingViewTopAnim = null }
+            if (heightChange > 0f) expandingViewTopAnim = anim
+            else                   collapsingViewTopAnim = anim
         }
     }
 
@@ -156,11 +168,12 @@ class ExpandableItemAnimator(
 
     override fun runPendingAnimations() {
         super.runPendingAnimations()
-        for (anim in pendingAnimators) anim.start()
-        for (anim in pendingViewPropAnimators) anim.start()
-        for (view in changingViews) view.runPendingAnimations()
-        pendingAnimators.clear()
-        pendingViewPropAnimators.clear()
+        expandingViewHeightAnim?.start()
+        expandingViewTopAnim?.start()
+        collapsingViewHeightAnim?.start()
+        collapsingViewTopAnim?.start()
+        for (view in changingViews)
+            view.runPendingAnimations()
         changingViews.clear()
     }
 

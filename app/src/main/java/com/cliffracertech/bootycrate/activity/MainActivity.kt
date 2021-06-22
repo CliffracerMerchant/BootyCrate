@@ -48,7 +48,7 @@ open class MainActivity : MultiFragmentActivity() {
         setupOnClickListeners()
         initAnimatorConfigs()
         window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
-        ui.initGradientStyle(this)
+        initGradientStyle()
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }

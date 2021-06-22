@@ -6,7 +6,6 @@ package com.cliffracertech.bootycrate.activity
 
 import android.animation.Animator
 import android.animation.ValueAnimator
-import android.app.Activity
 import android.content.res.ColorStateList
 import android.graphics.*
 import android.view.View
@@ -102,41 +101,38 @@ fun MainActivityBinding. showCheckoutButtonAnimation(
  * made from the colors backgroundGradientColorLeft, backgroundGradientColorMiddle,
  * and backgroundGradientColorRight.
  */
-fun MainActivityBinding.initGradientStyle(activity: Activity) {
-    val ui = this
-    activity.run {
-        val screenWidth = resources.displayMetrics.widthPixels
-        val actionBarHeight = theme.resolveIntAttribute(R.attr.actionBarSize).toFloat()
+fun MainActivity.initGradientStyle() {
+    val screenWidth = resources.displayMetrics.widthPixels
+    val actionBarHeight = theme.resolveIntAttribute(R.attr.actionBarSize).toFloat()
 
-        val fgColors = intArrayOf(theme.resolveIntAttribute(R.attr.foregroundGradientColorLeft),
-                                  theme.resolveIntAttribute(R.attr.foregroundGradientColorMiddle),
-                                  theme.resolveIntAttribute(R.attr.foregroundGradientColorRight))
-        val bgColors = intArrayOf(theme.resolveIntAttribute(R.attr.backgroundGradientColorLeft),
-                                  theme.resolveIntAttribute(R.attr.backgroundGradientColorMiddle),
-                                  theme.resolveIntAttribute(R.attr.backgroundGradientColorRight))
+    val fgColors = intArrayOf(theme.resolveIntAttribute(R.attr.foregroundGradientColorLeft),
+                              theme.resolveIntAttribute(R.attr.foregroundGradientColorMiddle),
+                              theme.resolveIntAttribute(R.attr.foregroundGradientColorRight))
+    val bgColors = intArrayOf(theme.resolveIntAttribute(R.attr.backgroundGradientColorLeft),
+                              theme.resolveIntAttribute(R.attr.backgroundGradientColorMiddle),
+                              theme.resolveIntAttribute(R.attr.backgroundGradientColorRight))
 
-        val fgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
-        val bgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
-        val paint = Paint()
-        paint.style = Paint.Style.FILL
+    val fgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+    val bgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+    val paint = Paint()
+    paint.style = Paint.Style.FILL
 
-        val fgGradientBuilder = GradientBuilder(x2 = screenWidth.toFloat(), colors = fgColors)
-        val fgGradientShader = fgGradientBuilder.buildLinearGradient()
-        paint.shader = fgGradientShader
-        val canvas = Canvas(fgGradientBitmap)
-        canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
+    val fgGradientBuilder = GradientBuilder(x2 = screenWidth.toFloat(), colors = fgColors)
+    val fgGradientShader = fgGradientBuilder.buildLinearGradient()
+    paint.shader = fgGradientShader
+    val canvas = Canvas(fgGradientBitmap)
+    canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
-        val bgGradientBuilder = fgGradientBuilder.copy(colors  = bgColors)
-        val bgGradientShader = bgGradientBuilder.buildLinearGradient()
-        paint.shader = bgGradientShader
-        canvas.setBitmap(bgGradientBitmap)
-        canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
+    val bgGradientBuilder = fgGradientBuilder.copy(colors  = bgColors)
+    val bgGradientShader = bgGradientBuilder.buildLinearGradient()
+    paint.shader = bgGradientShader
+    canvas.setBitmap(bgGradientBitmap)
+    canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
-        styleActionBarContents(screenWidth, fgGradientShader, fgGradientBitmap)
-        ui.bottomAppBar.backgroundGradient = bgGradientShader
-        ui.bottomAppBar.indicatorGradient = fgGradientShader
-        styleBottomAppBarContents(screenWidth, fgGradientBitmap, fgGradientBuilder, bgGradientBuilder)
-    }
+    ui.styleActionBarContents(screenWidth, fgGradientShader, fgGradientBitmap)
+    ui.bottomAppBar.backgroundGradient = bgGradientShader
+    ui.bottomAppBar.indicatorGradient = fgGradientShader
+    ui.styleBottomAppBarContents(screenWidth, fgGradientBitmap, fgGradientBuilder, bgGradientBuilder)
 }
 
 private fun MainActivityBinding.styleActionBarContents(screenWidth: Int,
