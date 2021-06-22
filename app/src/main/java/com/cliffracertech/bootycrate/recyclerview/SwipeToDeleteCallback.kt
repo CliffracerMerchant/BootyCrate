@@ -25,7 +25,9 @@ import com.cliffracertech.bootycrate.utils.intValueAnimator
  *
  * The recycler view that the callback's ItemTouchHelper is required during
  * construction so that it can create a helper ItemDecoration that will
- * fade the delete background out after an item is swiped.
+ * fade the delete background out after an item is swiped. A float value can
+ * optionally be passed in that will be used as the corner radius of the red
+ * delete background used.
  */
 class SwipeToDeleteCallback(
     context: Context,
@@ -58,16 +60,16 @@ class SwipeToDeleteCallback(
         // This function seems not to be called after the item is actually deleted,
         // even before its fade out delete animation is completed. To fade the delete
         // background out we need to pass the drawing work over to the companion item
-        // decoration after the item is deleted. The fade out animation seems not to
-        // work when the last item in the recycler view is swiped for some reason.
+        // decoration after the item is deleted. The fade out animation also seems not
+        // to work when the last item in the recycler view is swiped for some reason.
         super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
         if (dX == 0f || deleteBgPaint.alpha < 255 ||
             viewHolder.adapterPosition == -1) return
 
         deleteBgBounds.left = if (dX > 0) viewHolder.itemView.left.toFloat()
-                              else        viewHolder.itemView.right + dX - cornerRadius
+                              else        viewHolder.itemView.right + dX - 2 * cornerRadius
         deleteBgBounds.top = viewHolder.itemView.top.toFloat()
-        deleteBgBounds.right = if (dX > 0) viewHolder.itemView.left + dX + cornerRadius
+        deleteBgBounds.right = if (dX > 0) viewHolder.itemView.left + dX + 2 * cornerRadius
                                else        viewHolder.itemView.right.toFloat()
         deleteBgBounds.bottom = viewHolder.itemView.bottom.toFloat()
         c.drawRoundRect(deleteBgBounds, cornerRadius, cornerRadius, deleteBgPaint)
