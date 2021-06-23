@@ -55,6 +55,20 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
         if (itemAnimator.expandCollapseAnimationInProgress)
             pendingExpandedItem = pos
         else {
+            // ExpandableSelectableItemView will already clear the name edit and
+            // extra info edit's focus when it collapses, but if the name or extra
+            // info had been changed when this happens, it will result in a subsequent
+            // call to the item animator's animateChange that will interfere with
+            // the collapse animation and cause flickering. The focus needs to be
+            // cleared here before the expansion state is changed to prevent this.
+            val expandedPos = itemAnimator.expandedItemPos
+            val aViewIsCollapsing = expandedPos != null && (pos == null || pos != expandedPos)
+            if (aViewIsCollapsing) {
+                val vh = findViewHolderForAdapterPosition(expandedPos!!)
+                val view = vh?.itemView as? ExpandableSelectableItemView<*>
+                if (view != null) { view.ui.nameEdit.clearFocus()
+                                    view.ui.extraInfoEdit.clearFocus() }
+            }
             viewModel.setExpandedItem(if (pos == null) null
                                       else adapter.currentList[pos].id)
             itemAnimator.notifyExpandedItemChanged(pos)
