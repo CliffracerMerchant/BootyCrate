@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -67,7 +66,6 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     useDefaultLayout: Boolean = true
 ) : DialogFragment() {
     abstract val viewModel: BootyCrateViewModel<T>
-    private val inputMethodManager = inputMethodManager(context)
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
@@ -116,8 +114,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                     // to prevent it from closing the dialog when clicked
                     addAnotherButton.setOnClickListener { if (addItem()) resetNewItemView() }
                     newItemView.ui.nameEdit.requestFocus()
-                    inputMethodManager?.showSoftInput(newItemView.ui.nameEdit,
-                                                      InputMethodManager.SHOW_IMPLICIT)
+                    SoftKeyboard.showImplicitly(newItemView.ui.nameEdit)
                 }
             }
     }
@@ -150,7 +147,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
         // We'll leave the color edit set to whichever color it was on previously,
         // in case the user wants to add items with like colors consecutively.
         ui.nameEdit.requestFocus()
-        inputMethodManager?.showSoftInput(ui.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+        SoftKeyboard.showImplicitly(ui.nameEdit)
     }
 
     private fun addItem() =

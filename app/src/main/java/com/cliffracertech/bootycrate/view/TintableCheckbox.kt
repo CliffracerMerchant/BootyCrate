@@ -33,6 +33,10 @@ import dev.sasikanth.colorsheet.ColorSheet
  * can be set to invoke an action when the color is changed. The function
  * initColorIndex will set the color index without an animation and will not
  * call the onColorChangedListener.
+ *
+ * TintableCheckbox assumes it is instantiated inside an instance of FragmentActivity
+ * in order to show child DialogFragments. If this is not the case, a ClassCastException
+ * will be thrown when the TintableCheckbox is clicked while inColorEditMode is true.
  */
 class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageButton(context, attrs) {
     private var _inColorEditMode = false

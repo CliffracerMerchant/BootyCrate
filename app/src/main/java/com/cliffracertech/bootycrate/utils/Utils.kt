@@ -36,9 +36,6 @@ fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, move
                   else -> pos }
 }
 
-/** Return a InputMethodManager system service from the context. */
-fun inputMethodManager(context: Context) =
-    context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
 /** Return a NotificationManager system service from the context. */
 fun notificationManager(context: Context) =
     context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
@@ -56,7 +53,26 @@ fun Context.asFragmentActivity() =
         }
     }
 
+/** An object that, once initialized by calling init with an instance of Context,
+ * can be used to either hide, implicitly show, or explicitly show the soft input
+ * given a view instance using the functions hide, showImplicitly, and showExplicitly. */
+object SoftKeyboard {
+    private lateinit var imm: InputMethodManager
+    fun init(context: Context) {
+        imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+    }
+    fun hide(view: View) = imm.hideSoftInputFromWindow(view.windowToken, 0)
+    fun showImplicitly(view: View) = imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+    fun showExplicitly(view: View) = imm.showSoftInput(view, InputMethodManager.SHOW_FORCED)
+}
+
 fun View.setHeight(height: Int) { bottom = top + height }
+
+fun View.clearFocusAndHideSoftInput() {
+    if (!isFocused) return
+    clearFocus()
+    SoftKeyboard.hide(this)
+}
 
 /** Return the provided dp amount in terms of pixels. */
 fun Resources.dpToPixels(dp: Float) =

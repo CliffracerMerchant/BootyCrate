@@ -47,7 +47,6 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
 
     protected var underlineAlpha = 0
     protected var lastValue: String? = null
-    protected val inputMethodManager = inputMethodManager(context)
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
@@ -70,8 +69,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
 
     override fun onEditorAction(actionCode: Int) {
         if (actionCode == EditorInfo.IME_ACTION_DONE) {
-            clearFocus()
-            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
+            clearFocusAndHideSoftInput()
             setTextPrivate(text.toString())
         }
         super.onEditorAction(actionCode)

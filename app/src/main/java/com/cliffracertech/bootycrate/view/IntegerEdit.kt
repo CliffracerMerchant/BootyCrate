@@ -78,7 +78,7 @@ open class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayou
         ui.valueEdit.setOnEditorActionListener{ _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 clearFocus()
-                inputMethodManager(context)?.hideSoftInputFromWindow(windowToken, 0)
+                SoftKeyboard.hide(this)
                 value = value // To enforce min/max value
             }
             actionId == EditorInfo.IME_ACTION_DONE

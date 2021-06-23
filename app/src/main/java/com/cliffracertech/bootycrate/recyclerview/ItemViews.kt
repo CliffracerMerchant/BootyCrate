@@ -14,7 +14,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewPropertyAnimator
-import android.view.inputmethod.InputMethodManager
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
@@ -54,7 +53,6 @@ open class BootyCrateItemView<T: BootyCrateItem>(
     useDefaultLayout: Boolean = true,
 ) : ConstraintLayout(context) {
 
-    protected val inputMethodManager = inputMethodManager(context)
     protected var isLinkedToAnotherItem = false
 
     lateinit var ui: BootyCrateItemBinding
@@ -181,20 +179,14 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     fun toggleExpanded() = setExpanded(!isExpanded)
     open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
 
-    private fun View.clearFocusAndHideSoftInput(imm: InputMethodManager) {
-        // Clearing the focus before hiding the soft input prevents a flickering
-        // issue when the view is collapsed on some older API levels.
-        if (!isFocused) return
-        clearFocus()
-        imm.hideSoftInputFromWindow(windowToken, 0)
-    }
-
     override fun setExpanded(expanding: Boolean, animate: Boolean) {
         _isExpanded = expanding
-        if (!expanding) inputMethodManager?.let {
-            ui.nameEdit.clearFocusAndHideSoftInput(it)
-            ui.extraInfoEdit.clearFocusAndHideSoftInput(it)
-            ui.amountEdit.ui.valueEdit.clearFocusAndHideSoftInput(it)
+        if (!expanding) {
+            // Clearing the focus before hiding the soft input prevents a flickering
+            // issue when the view is collapsed on some older API levels.
+            ui.nameEdit.clearFocusAndHideSoftInput()
+            ui.extraInfoEdit.clearFocusAndHideSoftInput()
+            ui.amountEdit.ui.valueEdit.clearFocusAndHideSoftInput()
         }
 
      /* Both LayoutTransition and TransitionManager.beginDelayedTransition unfortunately
@@ -492,7 +484,7 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
 
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
         if (!expanded && detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.isFocused)
-            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
+            SoftKeyboard.hide(this)
         val view = detailsUi.inventoryItemDetailsLayout
         if (!animate)
             view.isVisible = expanded

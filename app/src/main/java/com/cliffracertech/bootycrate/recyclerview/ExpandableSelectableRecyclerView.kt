@@ -10,6 +10,7 @@ import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.clearFocusAndHideSoftInput
 
 /**
  * A BootyCrateRecyclerView subclass that enables multi-selection and expansion of items.
@@ -66,8 +67,8 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
             if (aViewIsCollapsing) {
                 val vh = findViewHolderForAdapterPosition(expandedPos!!)
                 val view = vh?.itemView as? ExpandableSelectableItemView<*>
-                if (view != null) { view.ui.nameEdit.clearFocus()
-                                    view.ui.extraInfoEdit.clearFocus() }
+                if (view != null) { view.ui.nameEdit.clearFocusAndHideSoftInput()
+                                    view.ui.extraInfoEdit.clearFocusAndHideSoftInput() }
             }
             viewModel.setExpandedItem(if (pos == null) null
                                       else adapter.currentList[pos].id)
