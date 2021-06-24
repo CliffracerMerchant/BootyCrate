@@ -69,7 +69,7 @@ open class BootyCrateItemView<T: BootyCrateItem>(
 
     @CallSuper open fun update(item: T) {
         ui.nameEdit.setText(item.name)
-        ui.extraInfoEdit.setText(item.extraInfo)
+        setExtraInfoText(item.extraInfo)
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
         ui.checkBox.initColorIndex(colorIndex)
         ui.amountEdit.initValue(item.amount)

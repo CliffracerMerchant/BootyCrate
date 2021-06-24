@@ -33,7 +33,8 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     @Insert abstract suspend fun add(item: DatabaseBootyCrateItem): Long
     @Insert abstract suspend fun add(items: List<DatabaseBootyCrateItem>)
     suspend fun add(item: DatabaseBootyCrateItem.Convertible) = add(item.toDbBootyCrateItem())
-    suspend fun addConvertibles(items: List<DatabaseBootyCrateItem.Convertible>) = add(items.map { it.toDbBootyCrateItem() })
+    suspend fun addConvertibles(items: List<DatabaseBootyCrateItem.Convertible>) =
+        add(items.map { it.toDbBootyCrateItem() })
 
     @Query("UPDATE bootycrate_item SET name = :name WHERE id = :id")
     abstract suspend fun updateName(id: Long, name: String)
@@ -185,7 +186,7 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     abstract fun getCheckedShoppingListItemsSize() : LiveData<Int>
 
     @Query("""UPDATE bootycrate_item
-              SET inventoryAmount = inventoryAmount + shoppingListAmount,
+              SET inventoryAmount = shoppingListAmount + CASE WHEN $inInventory THEN inventoryAmount ELSE 0 END,
                   isChecked = 0,
                   shoppingListAmount = -1,
                   expandedInShoppingList = 0,
