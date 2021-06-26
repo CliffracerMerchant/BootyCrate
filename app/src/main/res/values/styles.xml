@@ -96,9 +96,6 @@
     </style>
 
     <style name="LightAlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
-        <item name="shapeAppearanceOverlay">@style/DialogCorners</item>
-        <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
-        <item name="android:backgroundTint">@color/colorWindowBackgroundLight</item>
         <item name="android:windowTitleStyle">@style/TitleTextAppearance</item>
         <item name="android:textColor">@color/color_text_dark</item>
         <item name="textColorAlertDialogListItem">@color/color_text_dark</item>
@@ -106,15 +103,8 @@
     </style>
 
     <style name="DarkAlertDialog" parent="LightAlertDialog">
-        <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
-        <item name="android:backgroundTint">@color/colorWindowBackgroundDark</item>
         <item name="android:textColor">@color/color_text_light</item>
         <item name="textColorAlertDialogListItem">@color/color_text_light</item>
-    </style>
-
-    <style name="DialogCorners">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">6dp</item>
     </style>
 
     <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">

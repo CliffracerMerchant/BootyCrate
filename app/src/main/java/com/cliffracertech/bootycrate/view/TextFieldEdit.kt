@@ -23,16 +23,16 @@ import com.cliffracertech.bootycrate.utils.*
  *
  * TextFieldEdit is an AppCompatEditText optimized for toggleable editing
  * of a single line. When isEditable is false, the TextFieldEdit will pre-
- * sent itself as a normal single line TextView. When isEditable is true,
+ * sent itself as a single line TextView. When isEditable is true,
  * TextFieldEdit will request focus when it is tapped and display a soft
  * input. If the user presses the done action on the soft input or if the
  * focus is changed, the changes to the text can be reacted to through the
  * property onTextChangedListener. If the proposed change would leave the
- * field empty and the property canBeBlank is false, the value will
+ * field empty, and the property canBeBlank is false, the value will
  * instead be reverted to its previous value. Note that if the canBeBlank
  * property is changed to false when the field is already empty, it will
  * not be enforced until the value is changed to a non-blank value.
- *
+
  * When in editable mode, TextFieldEdit will underline itself to indicate
  * this to the user, and will set its minHeight to the value of the dimen-
  * sion R.dimen.text_field_edit_editable_min_height to ensure that its
@@ -61,10 +61,10 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
     }
 
     private fun setTextPrivate(newText: String) {
-        if (!canBeBlank && text.isNullOrBlank())
-            setText(lastValue ?: "")
-        else setText(newText)
-        onTextChangedListener?.invoke(text.toString())
+        if (canBeBlank || newText.isNotBlank()) {
+            setText(newText)
+            onTextChangedListener?.invoke(text.toString())
+        } else setText(lastValue ?: "")
     }
 
     override fun onEditorAction(actionCode: Int) {

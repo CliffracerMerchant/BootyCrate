@@ -186,7 +186,9 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     abstract fun getCheckedShoppingListItemsSize() : LiveData<Int>
 
     @Query("""UPDATE bootycrate_item
-              SET inventoryAmount = shoppingListAmount + CASE WHEN $inInventory THEN inventoryAmount ELSE 0 END,
+              SET inventoryAmount = CASE WHEN $inInventory
+                                    THEN inventoryAmount + shoppingListAmount
+                                    ELSE -1 END,
                   isChecked = 0,
                   shoppingListAmount = -1,
                   expandedInShoppingList = 0,
