@@ -18,7 +18,10 @@ import com.cliffracertech.bootycrate.R
 /** A data class that contains a TimeInterpolator and a duration for syncing animations. */
 data class AnimatorConfig(var duration: Long, var interpolator: TimeInterpolator) {
     companion object {
-        fun translation(context: Context) = AnimatorConfig(
+        /** Return an AnimatorConfig with an animation duration equal to the value
+         * of R.integer.defaultAnimationDuration and an interpolator equal to the
+         * value of R.anim.default_interpolator. */
+        fun appDefault(context: Context) = AnimatorConfig(
             context.resources.getInteger(R.integer.defaultAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }

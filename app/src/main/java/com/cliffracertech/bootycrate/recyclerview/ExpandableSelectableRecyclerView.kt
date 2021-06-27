@@ -29,7 +29,7 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     context: Context,
     attrs: AttributeSet
 ) : BootyCrateRecyclerView<T>(context, attrs) {
-    protected val itemAnimator = ExpandableItemAnimator(this, AnimatorConfig.translation(context))
+    protected val itemAnimator = ExpandableItemAnimator(this, AnimatorConfig.appDefault(context))
 
     val selection = Selection()
 

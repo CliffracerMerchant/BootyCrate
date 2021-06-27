@@ -130,7 +130,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
     private val gradientOutline: GradientDrawable
-    protected var isLinkedToAnotherItem = false
+    private var isLinkedToAnotherItem = false
 
     var animatorConfig: AnimatorConfig? = null
         set(value) { field = value
@@ -290,13 +290,13 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         val amountEndChange = ui.amountEditSpacer.layoutParams.width * if (expanding) 1 else -1
         val amountLeftChange = amountEndChange - amountEditAnimInfo.widthChange
         ui.amountEdit.translationX = -amountLeftChange.toFloat()
-        val amountEditTranslateAnim = floatValueAnimator(ui.amountEdit::setTranslationX,
-                                                         ui.amountEdit.translationX, 0f,
-                                                         animatorConfig)
-        pendingAnimations.add(amountEditTranslateAnim)
+        pendingAnimations.add(floatValueAnimator(ui.amountEdit::setTranslationX,
+                                                 ui.amountEdit.translationX, 0f,
+                                                 animatorConfig))
 
         // Because their ends are constrained to amountEdit's start, nameEdit and
         // extraInfoEdit will need to have their end values animated as well.
+        // See onLayout override for an explanation of name and extraInfo locked width.
         nameLockedWidth = ui.nameEdit.width
         extraInfoLockedWidth = ui.extraInfoEdit.width
         val anim = ValueAnimator.ofInt(
@@ -337,11 +337,8 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
                 extraInfoAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(adjust, 0f)
             } else {
                 nameAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(0f, -adjust)
-                extraInfoAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(0f, -adjust)
                 nameAnimInfoAndNewHeight.animInfo.translateAnimator
                     .doOnEnd { ui.nameEdit.translationY = 0f }
-                extraInfoAnimInfoAndNewHeight.animInfo.translateAnimator
-                    .doOnEnd { ui.extraInfoEdit.translationY = 0f }
             }
         }
 
