@@ -10,22 +10,22 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 
+private const val likeSearchFilter = "(name LIKE :filter OR extraInfo LIKE :filter)"
+private const val onShoppingList = "shoppingListAmount != -1 AND NOT inShoppingListTrash"
+private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
+
 private const val shoppingListItemFields = "id, name, extraInfo, color, " +
                                            "shoppingListAmount as amount, " +
                                            "expandedInShoppingList as isExpanded, " +
                                            "selectedInShoppingList as isSelected, " +
-                                           "(SELECT inventoryAmount != -1) as linked, " +
+                                           "(SELECT $inInventory) as isLinked, " +
                                            "isChecked"
 private const val inventoryItemFields = "id, name, extraInfo, color, " +
                                         "inventoryAmount as amount, " +
                                         "expandedInInventory as isExpanded, " +
                                         "selectedInInventory as isSelected, " +
-                                        "(SELECT shoppingListAmount != -1) as linked, " +
+                                        "(SELECT $onShoppingList) as isLinked, " +
                                         "autoAddToShoppingList, autoAddToShoppingListAmount"
-
-private const val likeSearchFilter = "(name LIKE :filter OR extraInfo LIKE :filter)"
-private const val onShoppingList = "shoppingListAmount != -1 AND NOT inShoppingListTrash"
-private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
 
 /** A Room DAO that provides methods to manipulate a database of BootyCrateItems. */
 @Dao abstract class BootyCrateItemDao {

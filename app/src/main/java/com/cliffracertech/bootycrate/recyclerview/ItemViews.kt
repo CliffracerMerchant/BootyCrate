@@ -53,8 +53,6 @@ open class BootyCrateItemView<T: BootyCrateItem>(
     useDefaultLayout: Boolean = true,
 ) : ConstraintLayout(context) {
 
-    protected var isLinkedToAnotherItem = false
-
     lateinit var ui: BootyCrateItemBinding
 
     init {
@@ -73,7 +71,6 @@ open class BootyCrateItemView<T: BootyCrateItem>(
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
         ui.checkBox.initColorIndex(colorIndex)
         ui.amountEdit.initValue(item.amount)
-        isLinkedToAnotherItem = item.linked
     }
 
     /** Update the text of the extra info edit, while also updating the extra info
@@ -133,6 +130,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     val isExpanded get() = _isExpanded
     private var _isExpanded = false
     private val gradientOutline: GradientDrawable
+    protected var isLinkedToAnotherItem = false
 
     var animatorConfig: AnimatorConfig? = null
         set(value) { field = value
@@ -161,6 +159,9 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         super.update(item)
         setExpanded(item.isExpanded, animate = false)
         setSelectedState(item.isSelected, animate = false)
+        isLinkedToAnotherItem = item.isLinked
+        if (isExpanded)
+            ui.linkIndicator.isVisible = isLinkedToAnotherItem
     }
 
     private var _isInSelectedState = false
@@ -212,6 +213,15 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             runPendingAnimations()
     }
 
+
+    fun updateIsLinked(isLinked: Boolean, animate: Boolean = true) {
+        isLinkedToAnotherItem = isLinked
+        if (!isExpanded) return
+        if (!animate) ui.linkIndicator.isVisible = isLinked
+        else ui.linkIndicator.animate().alpha(if (isLinked) 1f else 0f).withLayer()
+            .withStartAction { if (isLinked) ui.linkIndicator.isVisible = true }
+            .withEndAction { if (!isLinked) ui.linkIndicator.isVisible = false }.start()
+    }
 
     private data class TextFieldAnimInfoAndNewHeight(
         val animInfo: AnimatedStrikeThroughTextFieldEdit.AnimInfo,
