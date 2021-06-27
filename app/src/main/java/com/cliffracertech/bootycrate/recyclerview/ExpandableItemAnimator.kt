@@ -44,7 +44,6 @@ import com.cliffracertech.bootycrate.utils.*
  * have to be done manually.
  */
 class ExpandableItemAnimator(
-    private val recyclerView: RecyclerView,
     animatorConfig: AnimatorConfig,
     adapter: RecyclerView.Adapter<*>? = null
 ) : DefaultItemAnimator() {
@@ -111,10 +110,9 @@ class ExpandableItemAnimator(
                         _expandCollapseAnimationInProgress = true }
             doOnEnd {
                 dispatchChangeFinished(holder, true)
-                // While _expandCollapseAnimationInProgress might be set to false before
-                // the the second of a pair of expand collapse animations finishes, the
-                // expand and collapse animations should be synced closely enough for
-                // this to not matter.
+                // While _expandCollapseAnimationInProgress might be set to false before the
+                // second of a pair of expand collapse animations finishes, the expand and
+                // collapse animations should be synced closely enough for this to not matter.
                 _expandCollapseAnimationInProgress = false
                 if (holder.adapterPosition == collapsingItemPos)
                     collapsingItemPos = null
@@ -143,6 +141,10 @@ class ExpandableItemAnimator(
         }
     }
 
+    /** This override of animateRemove causes the item animator to not wait for
+     * removed views to be fully removed before starting change animations for
+     * other views that are moving as a result of the removal in order to make
+     * the recycler view feel less sluggish. */
     override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
         val view = holder?.itemView ?: return false
         view.animate().alpha(0f).withLayer()
@@ -155,9 +157,9 @@ class ExpandableItemAnimator(
 
     override fun runPendingAnimations() {
         super.runPendingAnimations()
-        for (anim in pendingAnimators) anim.start()
-        for (anim in pendingViewPropAnimators) anim.start()
-        for (view in changingViews) view.runPendingAnimations()
+        pendingAnimators.forEach { it.start() }
+        pendingViewPropAnimators.forEach { it.start() }
+        changingViews.forEach { it.runPendingAnimations() }
         pendingAnimators.clear()
         pendingViewPropAnimators.clear()
         changingViews.clear()

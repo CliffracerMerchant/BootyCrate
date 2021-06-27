@@ -164,6 +164,16 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             ui.linkIndicator.isVisible = isLinkedToAnotherItem
     }
 
+    /** Update the visibility of the isLinked indicator. */
+    fun updateIsLinked(isLinked: Boolean, animate: Boolean = true) {
+        isLinkedToAnotherItem = isLinked
+        if (!isExpanded) return
+        if (!animate) ui.linkIndicator.isVisible = isLinked
+        else ui.linkIndicator.animate().alpha(if (isLinked) 1f else 0f).withLayer()
+            .withStartAction { if (isLinked) ui.linkIndicator.isVisible = true }
+            .withEndAction { if (!isLinked) ui.linkIndicator.isVisible = false }.start()
+    }
+
     private var _isInSelectedState = false
     val isInSelectedState get() = _isInSelectedState
     fun select() = setSelectedState(true)
@@ -198,9 +208,11 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         alternative presents itself, the internal expand / collapse animations must be
         done manually. */
 
-        if (isLinkedToAnotherItem)
-            if (!animate) ui.linkIndicator.isVisible = expanding
-            else ui.linkIndicator.showOrHideViaOverlay(showing = expanding)
+        val linkedIndicatorShouldBeVisible = expanding && isLinkedToAnotherItem
+        if (ui.linkIndicator.isVisible != linkedIndicatorShouldBeVisible)
+            if (!animate) ui.linkIndicator.isVisible = linkedIndicatorShouldBeVisible
+            else ui.linkIndicator.showOrHideViaOverlay(showing = linkedIndicatorShouldBeVisible)
+
         val nameAnimInfoAndNewHeight = updateNameEditState(expanding, animate)
         val extraInfoAnimInfoAndNewHeight =
             updateExtraInfoState(expanding, animate, nameAnimInfoAndNewHeight?.newHeight ?: 0)
@@ -211,16 +223,6 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         updateEditButtonState(expanding, animate)
         if (animate && startAnimationsImmediately)
             runPendingAnimations()
-    }
-
-
-    fun updateIsLinked(isLinked: Boolean, animate: Boolean = true) {
-        isLinkedToAnotherItem = isLinked
-        if (!isExpanded) return
-        if (!animate) ui.linkIndicator.isVisible = isLinked
-        else ui.linkIndicator.animate().alpha(if (isLinked) 1f else 0f).withLayer()
-            .withStartAction { if (isLinked) ui.linkIndicator.isVisible = true }
-            .withEndAction { if (!isLinked) ui.linkIndicator.isVisible = false }.start()
     }
 
     private data class TextFieldAnimInfoAndNewHeight(

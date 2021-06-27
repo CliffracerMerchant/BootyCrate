@@ -7,7 +7,6 @@ package com.cliffracertech.bootycrate.recyclerview
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.inventoryViewModel
@@ -80,9 +79,8 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 if (changes.contains(InventoryItem.Field.IsSelected) &&
                     holder.view.isInSelectedState != item.isSelected)
                         holder.view.setSelectedState(item.isSelected)
-                if (changes.contains(InventoryItem.Field.IsLinked) &&
-                    ui.linkIndicator.isVisible != item.isLinked)
-                        holder.view.updateIsLinked(item.isLinked, animate = item.isExpanded)
+                if (changes.contains(InventoryItem.Field.IsLinked))
+                    holder.view.updateIsLinked(item.isLinked, animate = item.isExpanded)
                 if (changes.contains(InventoryItem.Field.AutoAddToShoppingList) &&
                     detailsUi.autoAddToShoppingListCheckBox.isChecked != item.autoAddToShoppingList)
                         detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)

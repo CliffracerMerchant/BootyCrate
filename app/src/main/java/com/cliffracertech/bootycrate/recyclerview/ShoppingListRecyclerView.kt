@@ -8,7 +8,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ShoppingListItem
@@ -96,9 +95,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 if (changes.contains(ShoppingListItem.Field.IsSelected) &&
                     holder.view.isInSelectedState != item.isSelected)
                         holder.view.setSelectedState(item.isSelected)
-                if (changes.contains(ShoppingListItem.Field.IsLinked) &&
-                    ui.linkIndicator.isVisible != item.isLinked)
-                        holder.view.updateIsLinked(item.isLinked, animate = false)
+                if (changes.contains(ShoppingListItem.Field.IsLinked))
+                    holder.view.updateIsLinked(item.isLinked, animate = item.isExpanded)
                 if (changes.contains(ShoppingListItem.Field.IsChecked) &&
                     ui.checkBox.isChecked != item.isChecked)
                         ui.checkBox.isChecked = item.isChecked

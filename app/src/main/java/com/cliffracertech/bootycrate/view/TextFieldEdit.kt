@@ -172,12 +172,14 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
     data class AnimInfo(
         val translateAnimator: ValueAnimator,
         val underlineAnimator: ValueAnimator,
-        private val startTranslationY: Float,
-        private val endTranslationY: Float
+        private var startTranslationY: Float,
+        private var endTranslationY: Float
     ) {
-        fun adjustTranslationStartEnd(startAdjustment: Float, endAdjustment: Float) =
-            translateAnimator.setFloatValues(startTranslationY + startAdjustment,
-                                             endTranslationY + endAdjustment)
+        fun adjustTranslationStartEnd(startAdjustment: Float, endAdjustment: Float) {
+            startTranslationY += startAdjustment
+            endTranslationY += endAdjustment
+            translateAnimator.setFloatValues(startTranslationY, endTranslationY)
+        }
     }
 
     /** Set the editable state of the TextFieldEdit, and return the AnimInfo
