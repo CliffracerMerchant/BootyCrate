@@ -5,7 +5,6 @@
 package com.cliffracertech.bootycrate.view
 
 import android.content.Context
-import android.graphics.drawable.AnimatedStateListDrawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageButton
@@ -82,10 +81,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     fun setInColorEditMode(inColorEditMode: Boolean, animate: Boolean = true) {
         _inColorEditMode = inColorEditMode
         refreshDrawableState()
-        if (!animate) (drawable as? LayerDrawable)?.apply {
-            (getDrawable(0) as? AnimatedStateListDrawable)?.jumpToCurrentState()
-            (getDrawable(1) as? AnimatedStateListDrawable)?.jumpToCurrentState()
-        }
+        if (!animate) drawable.jumpToCurrentState()
     }
 
     /** Set the color index without calling the onColorChangedListener. */
@@ -96,7 +92,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
 
     /** Set the color of the checkbox to the color defined by colors[colorIndex],
      * and call onColorChangedListener with the new color. */
-    fun setColorIndex(colorIndex: Int, animate: Boolean = false) {
+    fun setColorIndex(colorIndex: Int, animate: Boolean = true) {
         val oldColor = color
         _colorIndex = colorIndex.coerceIn(colors.indices)
         val checkboxBg = (drawable as LayerDrawable).getDrawable(0)
