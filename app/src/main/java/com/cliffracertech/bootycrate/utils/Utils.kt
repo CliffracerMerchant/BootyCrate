@@ -62,8 +62,7 @@ object SoftKeyboard {
         imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
     }
     fun hide(view: View) = imm.hideSoftInputFromWindow(view.windowToken, 0)
-    fun showImplicitly(view: View) = imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
-    fun showExplicitly(view: View) = imm.showSoftInput(view, InputMethodManager.SHOW_FORCED)
+    fun show(view: View) = imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
 }
 
 fun View.setHeight(height: Int) { bottom = top + height }

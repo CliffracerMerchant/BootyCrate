@@ -108,7 +108,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         if (showingSearchView) return
         displayedChild = searchViewPos
         searchQueryView.requestFocus()
-        if (showSoftInput) SoftKeyboard.showImplicitly(searchQueryView)
+        if (showSoftInput) SoftKeyboard.show(searchQueryView)
     }
 
     fun setTitle(title: CharSequence, switchTo: Boolean = false) {

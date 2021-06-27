@@ -116,8 +116,13 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                     // Override the add another button's default on click listener
                     // to prevent it from closing the dialog when clicked
                     addAnotherButton.setOnClickListener { if (addItem()) resetNewItemView() }
-                    newItemView.ui.nameEdit.requestFocus()
-                    SoftKeyboard.showImplicitly(newItemView.ui.nameEdit)
+                    // Showing the soft input seems not to work when done as
+                    // a fragment is appearing. Showing the soft input after
+                    // a small delay seems to be a workaround.
+                    newItemView.ui.nameEdit.handler.postDelayed({
+                        newItemView.ui.nameEdit.requestFocus()
+                        SoftKeyboard.show(newItemView.ui.nameEdit)
+                    }, 50L)
                 }
             }
     }
@@ -150,7 +155,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
         // We'll leave the color edit set to whichever color it was on previously,
         // in case the user wants to add items with like colors consecutively.
         ui.nameEdit.requestFocus()
-        SoftKeyboard.showImplicitly(ui.nameEdit)
+        SoftKeyboard.show(ui.nameEdit)
     }
 
     private fun addItem() =
@@ -175,7 +180,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
 
     private var _shownWarningMessage = WarningMessage.None
     protected val shownWarningMessage get() = _shownWarningMessage
-    protected fun showWarningMessage(warning: WarningMessage) {
+    private  fun showWarningMessage(warning: WarningMessage) {
         if (_shownWarningMessage == warning) return
         _shownWarningMessage = warning
 
