@@ -34,6 +34,8 @@ class AboutAppDialog : DialogFragment() {
 fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
     context, context.theme.resolveIntAttribute(R.attr.materialAlertDialogTheme))
         .setBackground(ContextCompat.getDrawable(context, R.drawable.alert_dialog_background))
+        .setBackgroundInsetStart(0)
+        .setBackgroundInsetEnd(0)
 
 /**
  * An abstract DialogFragment to create a new BootyCrateItem.
