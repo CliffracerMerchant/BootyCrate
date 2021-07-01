@@ -1,0 +1,45 @@
+Start with inventory empty, shopping list only contains
+    - Eggs, amount = 2, color = 5
+    - Butter, amount = 1, color = 5
+    - Milk, amount = 1, color = 5
+
+1. Create your shopping list
+    - Click add button
+    - Ttype "Flour" into new item dialog name edit
+    - Click color indicator in new item dialog, select color index 8
+    - Click add another button
+    - Type "Baking powder" into new item dialog name edit
+    - Click new item dialog OK button
+
+    - Click first item's edit button to expand it
+    - Type "Dozen" into first item's extra info edit
+    - Click third item's edit button to expand it
+    - Type "2% half gallon" into third item's extra info edit
+    - Click third item's edit button to collapse it
+
+2. Add frequently bought items to your inventory
+    - Select first item, then second, third, and fourth items
+    - Click menu button, select "Add to inventor" button
+    - Switch to inventory to show the inventory items that were added from the shopping list items
+
+3. Checkout when finished shopping to update your inventory amounts
+    - Switch back to shopping list
+    - Check all five items
+    - Click checkout button once
+    - After a one second pause to show the confirmatory text of the checkout button, click it again to actually checkout
+    - Switch to inventory to show the updated amounts of the inventory items after the checkout
+
+4. Have inventory items automatically added to your shopping list when they fall below a certain amount
+    - Click first item's edit button to expand it
+    - Click first item's auto add to shopping list checkbox to check it
+    - Click first item's auto add to shopping list increase button to increase it to 2
+    - Click third item's edit button to expand it
+    - Click third item's auto add to shopping list checkbox to check it
+    - Click fourth item's edit button to expand it
+    - Click fourth item's auto add to shopping list checkbox to check it
+    - Click fourth item's edit button to collapse it
+
+    - Click the first item's amount decrease button twice to decrease it to 0
+    - Click the third item's amount decrease button once to decrease it to 0
+    - Click the fourth item's amount decrease button once to decrease it to 0
+    - Switch to the shopping list to show the automatically added shopping list items
