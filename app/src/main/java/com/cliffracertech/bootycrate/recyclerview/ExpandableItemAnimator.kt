@@ -5,13 +5,18 @@
 package com.cliffracertech.bootycrate.recyclerview
 
 import android.animation.Animator
+import android.animation.ValueAnimator
+import android.util.Log
 import android.view.View
 import android.view.ViewPropertyAnimator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.adjustPosInRangeAfterMove
+import com.cliffracertech.bootycrate.utils.applyConfig
+import com.cliffracertech.bootycrate.utils.setHeight
 
 /**
  * A RecyclerView.ItemAnimator that animates the expanding and collapsing of items.
@@ -53,6 +58,7 @@ class ExpandableItemAnimator(
     val expandedItemPos get() = _expandedItemPos
     private var _expandCollapseAnimationInProgress = false
     val expandCollapseAnimationInProgress get() = _expandCollapseAnimationInProgress
+
     private val pendingAnimators = mutableListOf<Animator>()
     private val pendingViewPropAnimators = mutableListOf<ViewPropertyAnimator>()
     private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
@@ -83,12 +89,11 @@ class ExpandableItemAnimator(
     ): Boolean {
         // If a view is being expanded or collapsed, oldHolder must be
         // equal to newHolder, and the heightChange must not be zero.
-        if (oldHolder != newHolder)
-            return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
+        if (oldHolder != newHolder) return false
 
         val heightChange = postInfo.bottom - postInfo.top - preInfo.bottom + preInfo.top
-        if (heightChange == 0)
-            return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
+        if (heightChange == 0) return false
+
         val view = newHolder.itemView
         if (view !is ExpandableRecyclerViewItem) throw IllegalStateException(
             "The item views used with ExpandableItemAnimator must " +
@@ -105,7 +110,13 @@ class ExpandableItemAnimator(
     private fun setupHeightChangeAnimation(holder: RecyclerView.ViewHolder,
                                            view: View, start: Int, change: Int) {
         view.setHeight(start)
-        intValueAnimator(view::setHeight, start, start + change, animatorConfig).apply {
+        Log.d("animation", "height animation amount = $change")
+        //val view2 = view as ExpandableSelectableItemView<*>
+        //view2.lockedHeight = start
+        ValueAnimator.ofInt(start, start + change).apply {
+            applyConfig(animatorConfig)
+            addUpdateListener { //view2.lockedHeight = it.animatedValue as Int
+                                view.setHeight(it.animatedValue as Int) }
             doOnStart { dispatchChangeStarting(holder, true)
                         _expandCollapseAnimationInProgress = true }
             doOnEnd {
@@ -117,6 +128,7 @@ class ExpandableItemAnimator(
                 if (holder.adapterPosition == collapsingItemPos)
                     collapsingItemPos = null
                 expandCollapseAnimationFinishedListener?.invoke(change > 0, holder.adapterPosition)
+                //view2.lockedHeight = null
             }
             pendingAnimators.add(this)
         }
@@ -132,10 +144,12 @@ class ExpandableItemAnimator(
             if (collapsingPos != null && expandingPos != null) {
                 val viewIsOnBottom = if (collapsingPos == pos) collapsingPos > expandingPos
                                      else                      expandingPos > collapsingPos
+                Log.d("animation", "viewIsOnBottom = $viewIsOnBottom")
                 if (viewIsOnBottom) translationAmount = -heightChange
             }
         }
         if (translationAmount != 0) {
+            Log.d("animation", "top animation amount = $translationAmount")
             view.translationY = -translationAmount.toFloat()
             pendingViewPropAnimators.add(view.animate().translationY(0f).applyConfig(animatorConfig))
         }

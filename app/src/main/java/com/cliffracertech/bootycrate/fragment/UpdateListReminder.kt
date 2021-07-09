@@ -22,6 +22,7 @@ import androidx.preference.PreferenceManager
 import ca.antonious.materialdaypicker.MaterialDayPicker
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
+import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.UpdateListReminderSettingsFragmentBinding
 import com.cliffracertech.bootycrate.utils.alarmManager
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
@@ -90,7 +91,7 @@ object UpdateListReminder {
     }
 
     /** A fragment to display and alter UpdateListReminder.Settings parameters. */
-    class SettingsFragment : Fragment() {
+    class SettingsFragment : Fragment(), MainActivity.MainActivityFragment {
         private lateinit var ui: UpdateListReminderSettingsFragmentBinding
         private lateinit var currentSettings: Settings
         private lateinit var sharedPreferences: SharedPreferences
@@ -178,6 +179,11 @@ object UpdateListReminder {
             currentSettings.enabled = sharedPreferences.getBoolean(Settings.enabledKey, false)
             if (ui.reminderSwitch .isChecked != currentSettings.enabled)
                 ui.reminderSwitch.isChecked = currentSettings.enabled
+        }
+
+        override fun showsBottomAppBar() = false
+        override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
+            activityUi.actionBar.setBackButtonVisible(true)
         }
     }
 

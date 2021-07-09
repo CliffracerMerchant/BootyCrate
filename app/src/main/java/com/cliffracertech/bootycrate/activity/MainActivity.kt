@@ -164,7 +164,7 @@ open class MainActivity : MultiFragmentActivity() {
         fun onBackPressed() = false
         /** Perform any additional actions on the @param activityUi that the fragment desires,
          * given its @param isActive state. */
-        fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {}
+        fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) { }
 
         fun addSecondaryFragment(fragment: Fragment) {
             val mainActivityFragment = this as? Fragment ?:
