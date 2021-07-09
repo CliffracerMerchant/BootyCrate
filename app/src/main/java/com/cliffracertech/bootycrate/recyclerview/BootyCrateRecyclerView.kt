@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.*
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.database.BootyCrateViewModel
+import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -62,11 +63,15 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
     init {
         val cornerRadius = resources.getDimension(R.dimen.recycler_view_item_rounded_corner_radius)
         val swipeCallback = SwipeToDeleteCallback(context, this, cornerRadius) { pos ->
+            requestFocus()
+            SoftKeyboard.hide(this)
             viewModel.delete(LongArray(1) { adapter.getItemId(pos) })
             showDeletedItemsSnackBar(1)
         }
         ItemTouchHelper(swipeCallback).attachToRecyclerView(this)
         layoutManager = LinearLayoutManager(context)
+        isFocusable = true
+        isFocusableInTouchMode = true
     }
 
     private var deletedItemCount: Int = 0

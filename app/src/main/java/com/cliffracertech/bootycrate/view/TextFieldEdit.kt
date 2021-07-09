@@ -83,11 +83,11 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
     fun setEditable(editable: Boolean) {
         if (editable) lastValue = text.toString()
         isFocusableInTouchMode = editable
+        isFocusable = editable
         /* Setting the input type here will prevent misspelling underlines from
          * being displayed when the TextFieldEdit is not in an editable state. */
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-        if (!editable && isFocused) clearFocus()
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
         underlineAlpha = if (editable) 255 else 0
