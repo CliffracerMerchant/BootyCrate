@@ -10,81 +10,19 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewPropertyAnimator
-import androidx.annotation.CallSuper
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.databinding.BootyCrateItemBinding
-import com.cliffracertech.bootycrate.databinding.InventoryItemBinding
-import com.cliffracertech.bootycrate.databinding.InventoryItemDetailsBinding
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.applyConfig
+import com.cliffracertech.bootycrate.utils.floatValueAnimator
+import com.cliffracertech.bootycrate.utils.intValueAnimator
 import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
-
-/**
- * A layout to display the data for a BootyCrateItem.
- *
- * BootyCrateItemView displays the data for an instance of BootyCrateItem. The
- * displayed data can be updated for a new item with the function update.
- *
- * By default BootyCrateItemView inflates itself with the contents of
- * R.layout.booty_crate_item.xml and initializes its BootyCrateItemBinding
- * member ui. In case this layout needs to be overridden in a subclass, the
- * BootyCrateItemView can be constructed with the parameter useDefaultLayout
- * equal to false. If useDefaultLayout is false, it will be up to the subclass
- * to inflate the desired layout and initialize the member ui with an instance
- * of a BootyCrateItemBinding. If the ui member is not initialized then a
- * kotlin.UninitializedPropertyAccessException will be thrown.
- */
-@Suppress("LeakingThis")
-@SuppressLint("ViewConstructor")
-open class BootyCrateItemView<T: BootyCrateItem>(
-    context: Context,
-    useDefaultLayout: Boolean = true,
-) : ConstraintLayout(context) {
-
-    lateinit var ui: BootyCrateItemBinding
-
-    init {
-        layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                                 ViewGroup.LayoutParams.WRAP_CONTENT)
-        if (useDefaultLayout)
-            ui = BootyCrateItemBinding.inflate(LayoutInflater.from(context), this)
-
-        val verticalPadding = resources.getDimensionPixelSize(R.dimen.recycler_view_item_vertical_padding)
-        setPadding(0, verticalPadding, 0, verticalPadding)
-    }
-
-    @CallSuper open fun update(item: T) {
-        ui.nameEdit.setText(item.name)
-        setExtraInfoText(item.extraInfo)
-        val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
-        ui.checkBox.initColorIndex(colorIndex)
-        ui.amountEdit.initValue(item.amount)
-    }
-
-    /** Update the text of the extra info edit, while also updating the extra info
-     * edit's visibility, if needed, to account for the new text. It is recommended
-     * to use this function rather than changing the extra info edit's text directly
-     * to ensure that its visibility is set correctly. */
-    fun setExtraInfoText(newText: String) {
-        ui.extraInfoEdit.setText(newText)
-        if (ui.extraInfoEdit.text.isNullOrBlank() == ui.extraInfoEdit.isVisible)
-            ui.extraInfoEdit.isVisible = !ui.extraInfoEdit.isVisible
-    }
-}
-
-
 
 /**
  * A BootyCrateItemView subclass that provides an interface for a selection and expansion of the view.
@@ -180,10 +118,10 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     fun deselect() = setSelectedState(false)
     fun setSelectedState(selected: Boolean, animate: Boolean = true) {
         _isInSelectedState = selected
-        if (animate) intValueAnimator(gradientOutline::setAlpha,
-                                      gradientOutline.alpha,
-                                      if (selected) 255 else 0,
-                                      animatorConfig).start()
+        if (animate) intValueAnimator(setter = gradientOutline::setAlpha,
+                                      from = gradientOutline.alpha,
+                                      to = if (selected) 255 else 0,
+                                      config = animatorConfig).start()
         else gradientOutline.alpha = if (selected) 255 else 0
     }
 
@@ -191,22 +129,14 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
 
     override fun setExpanded(expanding: Boolean, animate: Boolean) {
+     /* Both LayoutTransition and TransitionManager.beginDelayedTransition
+        unfortunately don't seem to animate all the expand/collapse changes
+        correctly, and do not provide a way to delay the animations so that
+        they can be synchronized with the RecyclerView animations. MotionLayout
+        had horrific performance in this case on both emulated and real devices
+        when tested (around 4-5 fps). Unless another alternative presents itself,
+        the internal expand / collapse animations must be done manually. */
         _isExpanded = expanding
-        if (!expanding) {
-            // Clearing the focus before hiding the soft input prevents a flickering
-            // issue when the view is collapsed on some older API levels.
-            ui.nameEdit.clearFocusAndHideSoftInput()
-            ui.extraInfoEdit.clearFocusAndHideSoftInput()
-            ui.amountEdit.ui.valueEdit.clearFocusAndHideSoftInput()
-        }
-
-     /* Both LayoutTransition and TransitionManager.beginDelayedTransition unfortunately
-        don't seem to animate all the expand/collapse changes correctly, and do not
-        provide a way to delay the animations so that they can be synchronized with the
-        RecyclerView animations. MotionLayout had horrific performance in this case on
-        both emulated and real devices when tested (around 4-5 fps). Unless another
-        alternative presents itself, the internal expand / collapse animations must be
-        done manually. */
 
         val linkedIndicatorShouldBeVisible = expanding && isLinkedToAnotherItem
         if (ui.linkIndicator.isVisible != linkedIndicatorShouldBeVisible)
@@ -239,8 +169,9 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         val animInfo = ui.nameEdit.setEditable(expanding, animate, false) ?: return null
         pendingAnimations.add(animInfo.translateAnimator)
         pendingAnimations.add(animInfo.underlineAnimator)
-        val newHeight = maxOf(ui.nameEdit.measuredHeight, if (!expanding) 0 else
-            resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height))
+        val minHeight = if (!expanding) 0 else
+            resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
+        val newHeight = maxOf(ui.nameEdit.measuredHeight, minHeight)
         return TextFieldAnimInfoAndNewHeight(animInfo, newHeight)
     }
 
@@ -272,7 +203,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         }
         val newHeight = if (extraInfoIsBlank && !expanding) 0 else
             maxOf(ui.extraInfoEdit.measuredHeight, if (!expanding) 0 else
-                  resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height))
+                resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height))
         return TextFieldAnimInfoAndNewHeight(animInfo, newHeight)
     }
 
@@ -301,10 +232,8 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         // See onLayout override for an explanation of name and extraInfo locked width.
         nameLockedWidth = ui.nameEdit.width
         extraInfoLockedWidth = ui.extraInfoEdit.width
-        val anim = ValueAnimator.ofInt(
-            ui.nameEdit.right,
-            ui.nameEdit.right + amountLeftChange
-        ).apply {
+        val end = ui.amountEdit.left + amountLeftChange
+        val anim = ValueAnimator.ofInt(ui.amountEdit.left, end).apply {
             applyConfig(animatorConfig)
             addUpdateListener { ui.nameEdit.right = it.animatedValue as Int
                                 ui.extraInfoEdit.right = it.animatedValue as Int }
@@ -346,7 +275,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
 
         // animate checkbox top change, if any
         val checkBoxNewTop = paddingTop + if (nameAndExtraInfoWillBeSmallerThanCheckbox) 0
-        else (nameAndExtraInfoNewHeight - ui.checkBox.height) / 2
+                                          else (nameAndExtraInfoNewHeight - ui.checkBox.height) / 2
         val checkBoxTopChange = checkBoxNewTop - ui.checkBox.top.toFloat()
         ui.checkBox.translationY = -checkBoxTopChange
         pendingAnimations.add(floatValueAnimator(setter = ui.checkBox::setTranslationY,
@@ -363,11 +292,12 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             ui.editButton.isActivated = expanding
         else {
             ui.editButton.translationY = -heightChange.toFloat()
-            val editButtonAnim = floatValueAnimator(ui.editButton::setTranslationY,
-                                                    -heightChange.toFloat(), 0f,
-                                                    animatorConfig)
-            editButtonAnim.doOnStart { ui.editButton.isActivated = expanding }
-            pendingAnimations.add(editButtonAnim)
+            floatValueAnimator(ui.editButton::setTranslationY,
+                               -heightChange.toFloat(), 0f,
+                               animatorConfig).apply {
+                doOnStart { ui.editButton.isActivated = expanding }
+                pendingAnimations.add(this)
+            }
         }
     }
 
@@ -399,13 +329,12 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         return animator
     }
 
- /* For some reason (possibly because the text field edits internally call
-    setMinHeight, which in turn calls requestLayout), both nameEdit and extra-
-    InfoEdit have their width set to their new expanded width sometime after
-    setExpanded but before the end animations are started, causing a visual
-    flicker. The properties nameLockedWidth and extraInfoLockedWidth, when set
-    to a non-null value, prevent this resize from taking place, and in turn
-    prevent the flicker effect. */
+ /* For some reason both nameEdit and extraInfoEdit have their width set to
+    their new expanded width sometime after setExpanded but before the end
+    animations are started, causing a visual flicker. The properties
+    nameLockedWidth and extraInfoLockedWidth, when set to a non-null value,
+    prevent this resize from taking place, and in turn prevent the flicker
+    effect. */
     private var nameLockedWidth: Int? = null
     private var extraInfoLockedWidth: Int? = null
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -418,110 +347,5 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             if (ui.extraInfoEdit.width != it)
                 ui.extraInfoEdit.right = ui.extraInfoEdit.left + it
         }
-    }
-}
-
-
-
-/**
- * An ExpandableSelectableItemView to display the contents of a shopping list item.
- *
- * ShoppingListItemView is a ExpandableSelectableItemView subclass that
- * displays the data of a ShoppingListItem instance. It has an update override
- * that updates the check state of the checkbox, it overrides the setExpanded
- * function with an implementation that toggles the checkbox between its normal
- * checkbox mode and its color edit mode, and it has a convenience method
- * setStrikeThroughEnabled that will set the strike through state for both the
- * name and extra info edit at the same time.
- */
-@SuppressLint("ViewConstructor")
-class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig? = null) :
-    ExpandableSelectableItemView<ShoppingListItem>(context, animatorConfig)
-{
-    init { ui.checkBox.onCheckedChangedListener = ::setStrikeThroughEnabled }
-
-    override fun update(item: ShoppingListItem) {
-        ui.checkBox.initIsChecked(item.isChecked)
-        setStrikeThroughEnabled(enabled = item.isChecked, animate = false)
-        super.update(item)
-    }
-
-    override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
-        ui.checkBox.setInColorEditMode(expanded, animate)
-    }
-
-    fun setStrikeThroughEnabled(enabled: Boolean) = setStrikeThroughEnabled(enabled, true)
-    private fun setStrikeThroughEnabled(enabled: Boolean, animate: Boolean) {
-        ui.nameEdit.setStrikeThroughEnabled(enabled, animate)
-        ui.extraInfoEdit.setStrikeThroughEnabled(enabled, animate)
-    }
-}
-
-
-
-/**
- * An ExpandableSelectableItemView to display the contents of an inventory item.
- *
- * InventoryItemView is a ExpandableSelectableItemView subclass that displays
- * the data of an InventoryItem instance. It has an update override for the
- * extra fields that InventoryItem adds to its parent class, and has a
- * setExpanded override that also shows or hides these extra fields.
- */
-@SuppressLint("ViewConstructor")
-class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null) :
-    ExpandableSelectableItemView<InventoryItem>(context, animatorConfig, useDefaultLayout = false)
-{
-    val detailsUi: InventoryItemDetailsBinding
-    private var pendingDetailsAnimation: ViewPropertyAnimator? = null
-
-    init {
-        val tempUi = InventoryItemBinding.inflate(LayoutInflater.from(context), this)
-        ui = BootyCrateItemBinding.bind(tempUi.root)
-        detailsUi = InventoryItemDetailsBinding.bind(tempUi.root)
-        ui.editButton.setOnClickListener { toggleExpanded() }
-        ui.checkBox.setInColorEditMode(true, animate = false)
-        ui.amountEdit.minValue = 0
-        this.animatorConfig = animatorConfig
-    }
-
-    override fun update(item: InventoryItem) {
-        detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
-        detailsUi.autoAddToShoppingListCheckBox.initColorIndex(item.color)
-        detailsUi.autoAddToShoppingListAmountEdit.initValue(item.autoAddToShoppingListAmount)
-        super.update(item)
-    }
-
-    override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
-        if (!expanded && detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.isFocused)
-            SoftKeyboard.hide(this)
-        val view = detailsUi.inventoryItemDetailsLayout
-        if (!animate)
-            view.isVisible = expanded
-        else {
-            val translationAmount = ui.checkBox.height * (if (expanded) 1f else -1f)
-
-            if (expanded)
-                view.translationY = -translationAmount
-            else overlay.add(view)
-            view.alpha = if (expanded) 0f else 1f
-            view.isVisible = true
-
-            val anim = view.animate().applyConfig(animatorConfig)
-                .withLayer().alpha(if (expanded) 1f else 0f)
-                .translationY(if (expanded) 0f else translationAmount)
-            if (!expanded) anim.withEndAction {
-                view.translationY = 0f
-                view.isVisible = false
-                overlay.remove(view)
-                addView(view)
-            }
-            pendingDetailsAnimation = anim
-        }
-    }
-
-    override fun runPendingAnimations() {
-        super.runPendingAnimations()
-        pendingDetailsAnimation?.start()
-        pendingDetailsAnimation = null
     }
 }

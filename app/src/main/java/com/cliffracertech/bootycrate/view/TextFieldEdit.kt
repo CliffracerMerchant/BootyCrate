@@ -69,7 +69,8 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
 
     override fun onEditorAction(actionCode: Int) {
         if (actionCode == EditorInfo.IME_ACTION_DONE) {
-            clearFocusAndHideSoftInput()
+            clearFocus()
+            SoftKeyboard.hide(this)
             setTextPrivate(text.toString())
         }
         super.onEditorAction(actionCode)

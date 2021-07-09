@@ -67,12 +67,6 @@ object SoftKeyboard {
 
 fun View.setHeight(height: Int) { bottom = top + height }
 
-fun View.clearFocusAndHideSoftInput() {
-    if (!isFocused) return
-    clearFocus()
-    SoftKeyboard.hide(this)
-}
-
 /** Return the provided dp amount in terms of pixels. */
 fun Resources.dpToPixels(dp: Float) =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, displayMetrics)
