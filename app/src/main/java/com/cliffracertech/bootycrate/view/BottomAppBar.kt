@@ -239,6 +239,7 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         canvas?.withClip(indicatorXPos, 0, indicatorXPos + indicatorWidth, bottom) {
-            drawPath(topEdgePath, indicatorPaint) }
+            drawPath(topEdgePath, indicatorPaint)
+        }
     }
 }

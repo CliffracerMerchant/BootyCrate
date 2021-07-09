@@ -7,9 +7,11 @@ package com.cliffracertech.bootycrate.activity
 import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.res.ColorStateList
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Shader
 import android.view.View
-import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
@@ -72,32 +74,24 @@ fun MainActivityBinding. showCheckoutButtonAnimation(
     checkoutButton.isVisible = showing
     val cradleEndWidth = cradleWidth(showing)
 
-    // Setting the checkout button's clip bounds prevents the right corners of the
-    // checkout button from sticking out underneath the add button during the animation.
-    val clipBounds = Rect(0, 0, 0, checkoutButton.height)
     return ValueAnimator.ofInt(bottomAppBar.cradleWidth, cradleEndWidth).apply {
         applyConfig(animatorConfig)
-        addUpdateListener {
-            bottomAppBar.cradleWidth = it.animatedValue as Int
-            clipBounds.right = bottomAppBar.cradleWidth - addButton.measuredWidth / 2
-            checkoutButton.clipBounds = clipBounds
-        }
-        doOnEnd { checkoutButton.clipBounds = null }
+        addUpdateListener { bottomAppBar.cradleWidth = it.animatedValue as Int }
     }
 }
 
 /**
  * Style the contents of the actionBar and bottomAppBar members to match their background gradients.
  *
- * Unfortunately many of the desired aspects of MainActivity's style (e.g. the
- * menu item icons being tinted to match the gradient background of the top and
+ * Unfortunately many of the desired aspects of the app's style (e.g. the menu
+ * item icons being tinted to match the gradient background of the top and
  * bottom action bar) are impossible to accomplish in XML. initGradientStyle
  * performs additional operations to initialize the desired style. Its
  * foreground gradient (used to tint the text and icon drawables in the action
  * bar and bottom app bar) is made by creating a linear gradient using the
  * values of the XML attributes foregroundGradientColorLeft, foregroundGradientColorMiddle,
  * and foregroundGradientColorRight. The background gradient (smaller subsets
- * of which are used as the background used for the checkout and add buttons is
+ * of which are used as the backgrounds for the checkout and add buttons) is
  * made from the colors backgroundGradientColorLeft, backgroundGradientColorMiddle,
  * and backgroundGradientColorRight.
  */

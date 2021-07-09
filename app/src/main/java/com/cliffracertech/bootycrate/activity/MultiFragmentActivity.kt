@@ -118,20 +118,20 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             val alphaChange = -alpha
 
             val endTranslation = width / 2f * if (leftToRight) -1f else 1f
-            val anim = ValueAnimator.ofFloat(translationX, endTranslation)
-                .applyConfig(primaryFragmentTransitionAnimatorConfig)
-            anim.addUpdateListener {
-                translationX = it.animatedValue as Float
-                alpha = startAlpha + alphaChange * it.animatedFraction
-            }
-            anim.doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
-            anim.doOnEnd { if (this === exitingFragmentView) {
-                visibility = View.GONE
-                exitingFragmentView = null
-                translationX = 0f
-                setLayerType(View.LAYER_TYPE_NONE, null)
-            }}
-            anim.start()
+            ValueAnimator.ofFloat(translationX, endTranslation).apply {
+                applyConfig(primaryFragmentTransitionAnimatorConfig)
+                addUpdateListener {
+                    translationX = it.animatedValue as Float
+                    alpha = startAlpha + alphaChange * it.animatedFraction
+                }
+                doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
+                doOnEnd { if (this === exitingFragmentView) {
+                    visibility = View.GONE
+                    exitingFragmentView = null
+                    translationX = 0f
+                    setLayerType(View.LAYER_TYPE_NONE, null)
+                }}
+            }.start()
         }
         newFragment.view?.apply {
             if (!isVisible) alpha = 0f
@@ -142,15 +142,15 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
 
             val translationStart = if (translationY != 0f) translationY
                                    else width / 2f * if (leftToRight) 1f else -1f
-            val anim = ValueAnimator.ofFloat(translationStart, 0f)
-                .applyConfig(primaryFragmentTransitionAnimatorConfig)
-            anim.addUpdateListener {
-                translationX = it.animatedValue as Float
-                alpha = startAlpha + alphaChange * it.animatedFraction
-            }
-            anim.doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
-            anim.doOnEnd { setLayerType(View.LAYER_TYPE_NONE, null) }
-            anim.start()
+            ValueAnimator.ofFloat(translationStart, 0f).apply {
+                applyConfig(primaryFragmentTransitionAnimatorConfig)
+                addUpdateListener {
+                    translationX = it.animatedValue as Float
+                    alpha = startAlpha + alphaChange * it.animatedFraction
+                }
+                doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
+                doOnEnd { setLayerType(View.LAYER_TYPE_NONE, null) }
+            }.start()
         }
         return true
     }
