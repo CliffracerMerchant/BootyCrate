@@ -110,6 +110,9 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     viewModel.updateAutoAddToShoppingListAmount(item.id, value)
             }
         }
+
+        override fun hasFocusedChild() = super.hasFocusedChild() ||
+            view.detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.isFocused
     }
 
     /**

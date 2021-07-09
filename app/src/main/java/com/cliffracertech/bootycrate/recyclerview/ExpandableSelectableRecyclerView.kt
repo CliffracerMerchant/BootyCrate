@@ -10,7 +10,7 @@ import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.clearFocusAndHideSoftInput
+import com.cliffracertech.bootycrate.utils.SoftKeyboard
 
 /**
  * A BootyCrateRecyclerView subclass that enables multi-selection and expansion of items.
@@ -56,19 +56,13 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
         if (itemAnimator.expandCollapseAnimationInProgress)
             pendingExpandedItem = pos
         else {
-            // ExpandableSelectableItemView will already clear the name edit and
-            // extra info edit's focus when it collapses, but if the name or extra
-            // info had been changed when this happens, it will result in a subsequent
-            // call to the item animator's animateChange that will interfere with
-            // the collapse animation and cause flickering. The focus needs to be
-            // cleared here before the expansion state is changed to prevent this.
-            val expandedPos = itemAnimator.expandedItemPos
-            val aViewIsCollapsing = expandedPos != null && (pos == null || pos != expandedPos)
-            if (aViewIsCollapsing) {
-                val vh = findViewHolderForAdapterPosition(expandedPos!!)
-                val view = vh?.itemView as? ExpandableSelectableItemView<*>
-                if (view != null) { view.ui.nameEdit.clearFocusAndHideSoftInput()
-                                    view.ui.extraInfoEdit.clearFocusAndHideSoftInput() }
+            val currentExpandedPos = itemAnimator.expandedItemPos
+            if (currentExpandedPos != null) {
+                val vh = findViewHolderForAdapterPosition(currentExpandedPos)
+                if ((vh as ExpandableSelectableRecyclerView<*>.ViewHolder).hasFocusedChild()) {
+                    requestFocus()
+                    SoftKeyboard.hide(this)
+                }
             }
             viewModel.setExpandedItem(if (pos == null) null
                                       else adapter.currentList[pos].id)
@@ -107,20 +101,22 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     /** An abstract (due to not implementing onCreateViewHolder) subclass of
      * BootyCrateRecyclerView.Adapter that enforces the use of
      * ExpandableSelectableRecyclerView.ViewHolder. */
-    abstract inner class Adapter<VHType: ViewHolder> :
-        BootyCrateRecyclerView<T>.Adapter<VHType>()
-    {
+    abstract inner class Adapter<VHType: ViewHolder> : BootyCrateRecyclerView<T>.Adapter<VHType>() {
         override fun onBindViewHolder(holder: VHType, position: Int) {
             if (holder.item.isExpanded)
-                itemAnimator.notifyExpandedItemChanged(position)
-        }
+                itemAnimator.notifyExpandedItemChanged(position) }
     }
 
     /**
      * A ViewHolder subclass that wraps an instance of ExpandableSelectableItemView.
      *
      * ExpandableSelectableRecyclerView.ViewHolder updates the onClickListeners of
-     * the wrapped item view to enable the selection and expansion of the items.
+     * the wrapped item view to enable the selection and expansion of the items, and
+     * adds the open function hasFocusedChild. ExpandableSelectableRecyclerView uses
+     * the return value of hasFocusedChild to decide whether or not to attempt to
+     * hide the soft keyboard when an item is collapsed. If a subclass adds new
+     * focusable children, it should override hasFocusedChild to check if these
+     * children are focused.
      */
     open inner class ViewHolder(view: ExpandableSelectableItemView<T>) :
         BootyCrateRecyclerView<T>.ViewHolder(view)
@@ -144,6 +140,10 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
                     setExpandedItem(if (!view.isExpanded) adapterPosition else null)
                 }
             }
+        }
+
+        open fun hasFocusedChild() = (itemView as ExpandableSelectableItemView<*>).ui.run {
+            nameEdit.isFocused || extraInfoEdit.isFocused || amountEdit.ui.valueEdit.isFocused
         }
     }
 }

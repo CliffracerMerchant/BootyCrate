@@ -110,13 +110,9 @@ class ExpandableItemAnimator(
     private fun setupHeightChangeAnimation(holder: RecyclerView.ViewHolder,
                                            view: View, start: Int, change: Int) {
         view.setHeight(start)
-        Log.d("animation", "height animation amount = $change")
-        //val view2 = view as ExpandableSelectableItemView<*>
-        //view2.lockedHeight = start
         ValueAnimator.ofInt(start, start + change).apply {
             applyConfig(animatorConfig)
-            addUpdateListener { //view2.lockedHeight = it.animatedValue as Int
-                                view.setHeight(it.animatedValue as Int) }
+            addUpdateListener { view.setHeight(it.animatedValue as Int) }
             doOnStart { dispatchChangeStarting(holder, true)
                         _expandCollapseAnimationInProgress = true }
             doOnEnd {
@@ -128,7 +124,6 @@ class ExpandableItemAnimator(
                 if (holder.adapterPosition == collapsingItemPos)
                     collapsingItemPos = null
                 expandCollapseAnimationFinishedListener?.invoke(change > 0, holder.adapterPosition)
-                //view2.lockedHeight = null
             }
             pendingAnimators.add(this)
         }
