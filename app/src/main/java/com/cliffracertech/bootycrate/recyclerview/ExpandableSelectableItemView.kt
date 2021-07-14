@@ -10,17 +10,14 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
-import android.view.View
-import android.view.ViewGroup
+import android.view.ViewPropertyAnimator
 import androidx.core.animation.doOnEnd
-import androidx.core.animation.doOnStart
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
-import com.cliffracertech.bootycrate.utils.floatValueAnimator
 import com.cliffracertech.bootycrate.utils.intValueAnimator
 import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
 
@@ -57,7 +54,7 @@ import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
  * the animations will be prepared and stored, and can be played by calling
  * runPendingAnimations.
  */
-@SuppressLint("ViewConstructor")
+@SuppressLint("ViewConstructor", "Recycle")
 open class ExpandableSelectableItemView<T: BootyCrateItem>(
     context: Context,
     animatorConfig: AnimatorConfig? = null,
@@ -78,9 +75,12 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     var startAnimationsImmediately = true
 
     private val pendingAnimations = mutableListOf<Animator>()
+    private val pendingViewPropAnimations = mutableListOf<ViewPropertyAnimator>()
 
     override fun runPendingAnimations() { pendingAnimations.forEach { it.start() }
-                                          pendingAnimations.clear() }
+                                          pendingAnimations.clear()
+                                          pendingViewPropAnimations.forEach { it.start() }
+                                          pendingViewPropAnimations.clear() }
 
     init {
         val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
@@ -105,11 +105,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     /** Update the visibility of the isLinked indicator. */
     fun updateIsLinked(isLinked: Boolean, animate: Boolean = true) {
         isLinkedToAnotherItem = isLinked
-        if (!isExpanded) return
-        if (!animate) ui.linkIndicator.isVisible = isLinked
-        else ui.linkIndicator.animate().alpha(if (isLinked) 1f else 0f).withLayer()
-            .withStartAction { if (isLinked) ui.linkIndicator.isVisible = true }
-            .withEndAction { if (!isLinked) ui.linkIndicator.isVisible = false }.start()
+        if (isExpanded) updateIsLinkedIndicatorState(isLinked, animate, translate = false)
     }
 
     private var _isInSelectedState = false
@@ -138,17 +134,14 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         the internal expand / collapse animations must be done manually. */
         _isExpanded = expanding
 
-        val linkedIndicatorShouldBeVisible = expanding && isLinkedToAnotherItem
-        if (ui.linkIndicator.isVisible != linkedIndicatorShouldBeVisible)
-            if (!animate) ui.linkIndicator.isVisible = linkedIndicatorShouldBeVisible
-            else ui.linkIndicator.showOrHideViaOverlay(showing = linkedIndicatorShouldBeVisible)
-
         val nameAnimInfoAndNewHeight = updateNameEditState(expanding, animate)
-        val extraInfoAnimInfoAndNewHeight =
-            updateExtraInfoState(expanding, animate, nameAnimInfoAndNewHeight?.newHeight ?: 0)
+        val newNameHeight = nameAnimInfoAndNewHeight?.newHeight ?: 0
+        val extraInfoAnimInfoAndNewHeight = updateExtraInfoState(expanding, animate, newNameHeight)
         updateAmountEditState(expanding, animate)
         if (animate) adjustNameExtraInfoAndCheckbox(expanding, nameAnimInfoAndNewHeight!!,
                                                     extraInfoAnimInfoAndNewHeight!!)
+        linkedIndicatorShouldBeVisible = expanding && isLinkedToAnotherItem
+        updateIsLinkedIndicatorState(linkedIndicatorShouldBeVisible, animate, translate = true)
         onExpandedChanged(expanding, animate)
         updateEditButtonState(expanding, animate)
         if (animate && startAnimationsImmediately)
@@ -192,15 +185,23 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         pendingAnimations.add(animInfo!!.translateAnimator)
         pendingAnimations.add(animInfo.underlineAnimator)
 
-        if (extraInfoIsBlank)
-            ui.extraInfoEdit.showOrHideViaOverlay(showing = expanding)
-        else {
-            // We have to adjust the extraInfoEdit starting translation by the
-            // height change of the nameEdit to get the correct translation amount.
-            val adjust = ui.nameEdit.height - nameNewHeight.toFloat()
-            ui.extraInfoEdit.translationY += adjust
-            animInfo.adjustTranslationStartEnd(adjust, 0f)
+        if (extraInfoIsBlank) {
+            ui.extraInfoEdit.isVisible = true
+            val anim = ui.extraInfoEdit.animate().applyConfig(animatorConfig)
+                                            .alpha(if (expanding) 1f else 0f)
+            if (!expanding) anim.withEndAction {
+                if (ui.extraInfoEdit.alpha == 0f)
+                    ui.extraInfoEdit.isVisible = false
+            }
+            pendingViewPropAnimations.add(anim)
         }
+
+        // We have to adjust the extraInfoEdit starting translation by the
+        // height change of the nameEdit to get the correct translation amount.
+        val adjust = ui.nameEdit.height - nameNewHeight.toFloat()
+        ui.extraInfoEdit.translationY += adjust
+        animInfo.adjustTranslationStartEnd(adjust, 0f)
+
         val newHeight = if (extraInfoIsBlank && !expanding) 0 else
             maxOf(ui.extraInfoEdit.measuredHeight, if (!expanding) 0 else
                 resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height))
@@ -220,27 +221,27 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         // IntegerEdit's internal translation animation will only take into account
         // its width change. We have to adjust the start values to take into account
         // the amountEdit's left/start change as well.
-        val amountEndChange = ui.amountEditSpacer.layoutParams.width * if (expanding) 1 else -1
-        val amountLeftChange = amountEndChange - amountEditAnimInfo.widthChange
-        ui.amountEdit.translationX = -amountLeftChange.toFloat()
-        pendingAnimations.add(floatValueAnimator(ui.amountEdit::setTranslationX,
-                                                 ui.amountEdit.translationX, 0f,
-                                                 animatorConfig))
+        val amountNewRight = if (expanding) ui.editButton.right
+                             else           ui.editButton.left
+        val amountNewLeft = amountNewRight - amountEditAnimInfo.newWidth
+        val amountLeftChange = amountNewLeft - ui.amountEdit.left
+        ui.amountEdit.translationX -= amountLeftChange
+        val anim = ui.amountEdit.animate().translationX(0f).applyConfig(animatorConfig)
+        pendingViewPropAnimations.add(anim)
 
         // Because their ends are constrained to amountEdit's start, nameEdit and
         // extraInfoEdit will need to have their end values animated as well.
-        // See onLayout override for an explanation of name and extraInfo locked width.
-        nameLockedWidth = ui.nameEdit.width
-        extraInfoLockedWidth = ui.extraInfoEdit.width
-        val end = ui.amountEdit.left + amountLeftChange
-        val anim = ValueAnimator.ofInt(ui.amountEdit.left, end).apply {
+        val start = ui.nameEdit.right
+        val end = start - ui.amountEdit.translationX.toInt()
+        textFieldLockedRight = start
+        ValueAnimator.ofInt(start, end).apply {
             applyConfig(animatorConfig)
-            addUpdateListener { ui.nameEdit.right = it.animatedValue as Int
+            doOnEnd { if (textFieldLockedRight == end) textFieldLockedRight = null }
+            addUpdateListener { textFieldLockedRight = it.animatedValue as Int
+                                ui.nameEdit.right = it.animatedValue as Int
                                 ui.extraInfoEdit.right = it.animatedValue as Int }
-            doOnStart { nameLockedWidth = null
-                        extraInfoLockedWidth = null }
+            pendingAnimations.add(this)
         }
-        pendingAnimations.add(anim)
     }
 
     /** Adjust the name and extra info edit translation animations to take into
@@ -257,7 +258,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
 
         val extraInfoIsDisappearing = ui.extraInfoEdit.text.isNullOrBlank() && !expanding
         val nameNewTop = paddingTop + if (!nameAndExtraInfoWillBeSmallerThanCheckbox) 0
-        else (ui.checkBox.height - nameAndExtraInfoNewHeight) / 2
+                                      else (ui.checkBox.height - nameAndExtraInfoNewHeight) / 2
         val nameTopChange = nameNewTop - ui.nameEdit.top
         if (nameTopChange != 0) {
             val adjust = nameTopChange * -1f
@@ -277,75 +278,60 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         val checkBoxNewTop = paddingTop + if (nameAndExtraInfoWillBeSmallerThanCheckbox) 0
                                           else (nameAndExtraInfoNewHeight - ui.checkBox.height) / 2
         val checkBoxTopChange = checkBoxNewTop - ui.checkBox.top.toFloat()
-        ui.checkBox.translationY = -checkBoxTopChange
-        pendingAnimations.add(floatValueAnimator(setter = ui.checkBox::setTranslationY,
-                                                 from = -checkBoxTopChange, to = 0f,
-                                                 config = animatorConfig))
+        ui.checkBox.translationY -= checkBoxTopChange
+        val anim = ui.checkBox.animate().translationY(0f).applyConfig(animatorConfig)
+        pendingViewPropAnimations.add(anim)
+    }
+
+    private var linkedIndicatorShouldBeVisible: Boolean = false
+    /** Update the visibility of the isLinked indicator, using an alpha
+     * animation if param animate == true, and additionally animating
+     * the translationY if param translate == true. */
+    private fun updateIsLinkedIndicatorState(showing: Boolean, animate: Boolean, translate: Boolean) {
+        linkedIndicatorShouldBeVisible = showing && isLinkedToAnotherItem
+        val endAlpha = if (linkedIndicatorShouldBeVisible) 1f else 0f
+        val transYEnd = ui.linkIndicator.layoutParams.height /
+                if (linkedIndicatorShouldBeVisible) 1f else 2f
+        if (!animate) {
+            ui.linkIndicator.isVisible = linkedIndicatorShouldBeVisible
+            ui.linkIndicator.alpha = endAlpha
+            if (translate) ui.linkIndicator.translationY = transYEnd
+            return
+        }
+        ui.linkIndicator.isVisible = true
+        val anim = ui.linkIndicator.animate().alpha(endAlpha)
+            .withLayer().applyConfig(animatorConfig)
+            .withEndAction { ui.linkIndicator.isVisible = !linkedIndicatorShouldBeVisible ||
+                                                          ui.linkIndicator.alpha != 0f }
+        if (translate) anim.translationY(transYEnd)
+        pendingViewPropAnimations.add(anim)
     }
 
     private fun updateEditButtonState(expanding: Boolean, animate: Boolean) {
-        val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        measure(wrapContentSpec, wrapContentSpec)
-        val heightChange = measuredHeight - height
         // editButton uses a state list animator with state_activated as the trigger.
         if (!animate)
             ui.editButton.isActivated = expanding
         else {
-            ui.editButton.translationY = -heightChange.toFloat()
-            floatValueAnimator(ui.editButton::setTranslationY,
-                               -heightChange.toFloat(), 0f,
-                               animatorConfig).apply {
-                doOnStart { ui.editButton.isActivated = expanding }
-                pendingAnimations.add(this)
-            }
+            val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+            measure(wrapContentSpec, wrapContentSpec)
+            val heightChange = measuredHeight - height
+            ui.editButton.translationY -= heightChange
+            pendingViewPropAnimations.add(ui.editButton.animate()
+                .translationY(0f).applyConfig(animatorConfig)
+                .withStartAction { ui.editButton.isActivated = expanding })
         }
     }
 
-    /**
-     * Show or hide the child view with a fade in or out animation, and return the animator.
-     *
-     * showOrHideViaOverlay differs from a simple fade in/out animation
-     * in that it temporarily removes fading out views from their parent so
-     * that change appearing/disappearing animations in the parent view can
-     * play concurrently with the fade out animation.
-     *
-     * Because removing the view from its parent can affect sibling views,
-     * the fade in/out animator is returned to aid in synchronizing the
-     * animation with countermeasures the parent might employ to hide the
-     * effects of temporarily removing the child.
-     */
-    private fun View.showOrHideViaOverlay(showing: Boolean): Animator {
-        alpha = if (showing) 0f else 1f
-        isVisible = true
-        val animator = floatValueAnimator(::setAlpha, alpha, if (showing) 1f else 0f, animatorConfig)
-        if (!showing) {
-            val parent = parent as ViewGroup
-            parent.overlay.add(this)
-            animator.doOnEnd { parent.overlay.remove(this)
-                               isVisible = false
-                               parent.addView(this) }
-        }
-        pendingAnimations.add(animator)
-        return animator
-    }
-
- /* For some reason both nameEdit and extraInfoEdit have their width set to
-    their new expanded width sometime after setExpanded but before the end
-    animations are started, causing a visual flicker. The properties
-    nameLockedWidth and extraInfoLockedWidth, when set to a non-null value,
-    prevent this resize from taking place, and in turn prevent the flicker
-    effect. */
-    private var nameLockedWidth: Int? = null
-    private var extraInfoLockedWidth: Int? = null
+ /** For some reason both nameEdit and extraInfoEdit have their width set
+    to their new expanded width sometime after setExpanded but before the
+    end animations are started, causing a visual flicker. The property
+    textFieldLockedRight, when set to a non-null value, prevents this
+    resize from taking place, and in turn prevents the flicker. */
+    private var textFieldLockedRight: Int? = null
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)
-        nameLockedWidth?.let {
-            if (ui.nameEdit.width != it)
-                ui.nameEdit.right = ui.nameEdit.left + it
-        }
-        extraInfoLockedWidth?.let {
-            if (ui.extraInfoEdit.width != it)
-                ui.extraInfoEdit.right = ui.extraInfoEdit.left + it
-        }
+        val textFieldLockedRight = textFieldLockedRight ?: return
+        ui.nameEdit.let { it.layout(it.left, it.top, textFieldLockedRight, it.bottom) }
+        ui.extraInfoEdit.let { it.layout(it.left, it.top, textFieldLockedRight, it.bottom) }
     }
 }

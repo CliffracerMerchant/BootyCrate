@@ -204,37 +204,32 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         val oldBaseline = baseline
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
-        val newUnderlineAlpha = if (editable) 255 else 0
-
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
         val baselineChange = baseline - oldBaseline
-        val start = -baselineChange.toFloat()
-        val translateAnimator = floatValueAnimator(::setTranslationY, start, 0f, animatorConfig)
-        val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate,
-                                                 if (editable) 0 else 255,
+        val newUnderlineAlpha = if (editable) 255 else 0
+
+        translationY -= baselineChange
+        val translateAnimator = floatValueAnimator(::setTranslationY, translationY, 0f, animatorConfig)
+        val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate, underlineAlpha,
                                                  newUnderlineAlpha, animatorConfig)
-        if (startAnimationsImmediately) {
-            translateAnimator.start()
-            underlineAnimator.start()
-        } else translationY = start
-        return AnimInfo(translateAnimator, underlineAnimator, start, 0f)
+        if (startAnimationsImmediately) { translateAnimator.start()
+                                          underlineAnimator.start() }
+        return AnimInfo(translateAnimator, underlineAnimator, translationY, 0f)
     }
 
     fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean, animate: Boolean = true) {
-        if (!animate) {
-            super.setStrikeThroughEnabled(strikeThroughEnabled)
-            return
+        if (!animate) super.setStrikeThroughEnabled(strikeThroughEnabled)
+        else {
+            strikeThroughIsRtl = !strikeThroughEnabled
+            val fullLength = paint.measureText(text, 0, text?.length ?: 0)
+            val endColor = if (strikeThroughEnabled) currentHintTextColor
+            else normalTextColor
+            argbValueAnimator(::setTextColor, currentTextColor, endColor, animatorConfig).start()
+            floatValueAnimator(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
+                if (!strikeThroughEnabled) doOnEnd { strikeThroughLength = null }
+            }.start()
         }
-
-        strikeThroughIsRtl = !strikeThroughEnabled
-        val fullLength = paint.measureText(text, 0, text?.length ?: 0)
-        val endColor = if (strikeThroughEnabled) currentHintTextColor
-                       else                      normalTextColor
-        argbValueAnimator(::setTextColor, currentTextColor, endColor, animatorConfig).start()
-        floatValueAnimator(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
-            if (!strikeThroughEnabled) doOnEnd { strikeThroughLength = null }
-        }.start()
     }
 
     // So that the properties can be used in the AnimatorUtils valueAnimator functions.

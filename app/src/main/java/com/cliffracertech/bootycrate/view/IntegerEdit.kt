@@ -128,7 +128,7 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
 
     /** Information about the internal animations played and
      * any width change when setValueIsFocusable is called. */
-    data class AnimInfo(val animators: List<Animator>, val widthChange: Int)
+    data class AnimInfo(val animators: List<Animator>, val newWidth: Int)
 
     /** Set whether the value is focusable, and return an AnimInfo object if an animation was played.
      *
@@ -146,11 +146,9 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
         if (!animate) { valueIsFocusable = focusable; return null }
 
         ui.valueEdit.isFocusableInTouchMode = focusable
-        if (!focusable && ui.valueEdit.isFocused)
-            ui.valueEdit.clearFocus()
         val underlineEndAlpha = if (focusable) 255 else 0
 
-        val oldWidth = ui.valueEdit.width
+        val oldValueWidth = ui.valueEdit.width
         ui.valueEdit.minWidth = if (!focusable) 0 else
             resources.getDimensionPixelSize(R.dimen.integer_edit_editable_value_min_width)
 
@@ -159,21 +157,17 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
          * Width (layout transitions apparently do not handle this). */
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         ui.valueEdit.measure(wrapContentSpec, wrapContentSpec)
-        val newWidth = ui.valueEdit.measuredWidth
-        val widthChange = newWidth - oldWidth
-        val underlineStartAlpha = if (focusable) 0 else 255
+        val newValueWidth = ui.valueEdit.measuredWidth
+        val widthChange = newValueWidth - oldValueWidth
 
+        ui.valueEdit.translationX -= widthChange / 2f
+        ui.increaseButton.translationX -= widthChange
         val anims = listOf(
-            floatValueAnimator(ui.valueEdit::setTranslationX, -widthChange / 2f, 0f, animatorConfig),
-            floatValueAnimator(ui.increaseButton::setTranslationX, -widthChange.toFloat(), 0f, animatorConfig),
-            intValueAnimator(::setUnderlineAlphaPrivate, underlineStartAlpha, underlineEndAlpha, animatorConfig))
+            floatValueAnimator(ui.valueEdit::setTranslationX, ui.valueEdit.translationX, 0f, animatorConfig),
+            floatValueAnimator(ui.increaseButton::setTranslationX, ui.increaseButton.translationX, 0f, animatorConfig),
+            intValueAnimator(::setUnderlineAlphaPrivate, underlineAlpha, underlineEndAlpha, animatorConfig))
         if (startAnimationsImmediately)
-            for (anim in anims) anim.start()
-        else {
-            // Set the view translationX properties to their starting value to prevent flickering
-            ui.valueEdit.translationX = -widthChange / 2f
-            ui.increaseButton.translationX = -widthChange.toFloat()
-        }
-        return AnimInfo(anims, widthChange)
+            anims.forEach { it.start() }
+        return AnimInfo(anims, widthChange + width)
     }
 }

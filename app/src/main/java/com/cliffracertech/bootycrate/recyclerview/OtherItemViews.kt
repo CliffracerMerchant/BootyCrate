@@ -72,8 +72,10 @@ open class BootyCrateItemView<T: BootyCrateItem>(
      * to ensure that its visibility is set correctly. */
     fun setExtraInfoText(newText: String) {
         ui.extraInfoEdit.setText(newText)
-        if (ui.extraInfoEdit.text.isNullOrBlank() == ui.extraInfoEdit.isVisible)
+        if (ui.extraInfoEdit.text.isNullOrBlank() == ui.extraInfoEdit.isVisible) {
             ui.extraInfoEdit.isVisible = !ui.extraInfoEdit.isVisible
+            ui.extraInfoEdit.alpha = if (ui.extraInfoEdit.isVisible) 1f else 0f
+        }
     }
 }
 
@@ -155,9 +157,7 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
             view.isVisible = expanded
         else {
             val translationAmount = ui.checkBox.height * (if (expanded) 1f else -1f)
-
-            if (!expanded) overlay.add(view)
-            else view.translationY = -translationAmount
+            view.translationY = -translationAmount
             view.alpha = if (expanded) 0f else 1f
             view.isVisible = true
 
@@ -167,8 +167,6 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
             if (!expanded) anim.withEndAction {
                 view.translationY = 0f
                 view.isVisible = false
-                overlay.remove(view)
-                addView(view)
             }
             pendingDetailsAnimation = anim
         }
