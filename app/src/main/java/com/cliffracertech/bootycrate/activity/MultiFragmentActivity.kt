@@ -4,13 +4,10 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.activity
 
-import android.animation.ValueAnimator
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.animation.doOnEnd
-import androidx.core.animation.doOnStart
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.cliffracertech.bootycrate.R
@@ -113,44 +110,22 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         val oldFragment = navBarMenuItemFragmentMap.getValue(oldFragmentMenuItem.itemId)
         oldFragment.view?.apply {
             exitingFragmentView = this
-
-            val startAlpha = alpha
-            val alphaChange = -alpha
-
             val endTranslation = width / 2f * if (leftToRight) -1f else 1f
-            ValueAnimator.ofFloat(translationX, endTranslation).apply {
-                applyConfig(primaryFragmentTransitionAnimatorConfig)
-                addUpdateListener {
-                    translationX = it.animatedValue as Float
-                    alpha = startAlpha + alphaChange * it.animatedFraction
-                }
-                doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
-                doOnEnd { if (this === exitingFragmentView) {
+            animate().alpha(0f).translationX(endTranslation).withLayer()
+                .applyConfig(primaryFragmentTransitionAnimatorConfig)
+                .withEndAction { if (this === exitingFragmentView) {
                     visibility = View.GONE
                     exitingFragmentView = null
-                    translationX = 0f
-                    setLayerType(View.LAYER_TYPE_NONE, null)
-                }}
-            }.start()
+                }}.start()
         }
         newFragment.view?.apply {
-            if (!isVisible) alpha = 0f
-            isVisible = true
-
-            val startAlpha = alpha
-            val alphaChange = 1f - alpha
-
-            val translationStart = if (translationY != 0f) translationY
-                                   else width / 2f * if (leftToRight) 1f else -1f
-            ValueAnimator.ofFloat(translationStart, 0f).apply {
-                applyConfig(primaryFragmentTransitionAnimatorConfig)
-                addUpdateListener {
-                    translationX = it.animatedValue as Float
-                    alpha = startAlpha + alphaChange * it.animatedFraction
-                }
-                doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
-                doOnEnd { setLayerType(View.LAYER_TYPE_NONE, null) }
-            }.start()
+            if (!isVisible) {
+                translationX =  width / 2f * if (leftToRight) 1f else -1f
+                alpha = 0f
+                isVisible = true
+            }
+            animate().alpha(1f).translationX(0f).withLayer()
+                .applyConfig(primaryFragmentTransitionAnimatorConfig).start()
         }
         return true
     }
