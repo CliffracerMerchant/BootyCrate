@@ -149,26 +149,35 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
         super.update(item)
     }
 
+    private var showingDetails = false
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
         if (!expanded && detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.isFocused)
             SoftKeyboard.hide(this)
-        val view = detailsUi.inventoryItemDetailsLayout
-        if (!animate)
-            view.isVisible = expanded
-        else {
-            val translationAmount = ui.checkBox.height * (if (expanded) 1f else -1f)
-            view.translationY = -translationAmount
-            view.alpha = if (expanded) 0f else 1f
-            view.isVisible = true
 
-            val anim = view.animate().applyConfig(animatorConfig)
-                .withLayer().alpha(if (expanded) 1f else 0f)
-                .translationY(if (expanded) 0f else translationAmount)
-            if (!expanded) anim.withEndAction {
-                view.translationY = 0f
-                view.isVisible = false
+        val endTranslation = if (expanded) 0f else
+            detailsUi.autoAddToShoppingListCheckBox.layoutParams.height * -1f
+
+        detailsUi.inventoryItemDetailsLayout.apply {
+            showingDetails = expanded
+            if (!animate) {
+                isVisible = expanded
+                alpha = if (expanded) 0f else 1f
+                translationY = endTranslation
+            } else {
+                isVisible = true
+                if (!expanded) this@InventoryItemView.overlay.add(this)
+                val anim = animate().applyConfig(animatorConfig).withLayer()
+                                    .alpha(if (expanded) 1f else 0f)
+                                    .translationY(endTranslation)
+                if (!expanded) anim.withEndAction {
+                    if (!showingDetails && alpha == 0f) {
+                        isVisible = false
+                        this@InventoryItemView.overlay.remove(this)
+                        this@InventoryItemView.addView(this)
+                    }
+                }
+                pendingDetailsAnimation = anim
             }
-            pendingDetailsAnimation = anim
         }
     }
 
@@ -176,5 +185,17 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
         super.runPendingAnimations()
         pendingDetailsAnimation?.start()
         pendingDetailsAnimation = null
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        if (heightMeasureSpec != MeasureSpec.UNSPECIFIED || !showingDetails)
+            layoutParams.height = LayoutParams.WRAP_CONTENT
+        // The details layout might be in the overlay
+        else if (detailsUi.inventoryItemDetailsLayout.parent !== this) {
+            val detailsHeight = detailsUi.inventoryItemDetailsLayout.measuredHeight
+            setMeasuredDimension(measuredWidth, measuredHeight + detailsHeight)
+            layoutParams.height = measuredHeight
+        }
     }
 }
