@@ -9,5 +9,5 @@
     <integer name="defaultAnimationDuration">325</integer>
     <integer name="shoppingListItemAnimationDuration">250</integer>
     <integer name="checkoutButtonConfirmationTimeout">2000</integer>
-    <integer name="checkboxAnimationDuration">150</integer>
+    <integer name="checkboxAnimationDuration">200</integer>
 </resources>
