@@ -15,27 +15,6 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.FragmentActivity
 
-/**
- * For a given position in a range, return the position after
- * a move operation on one or more items is performed.
- * @param pos The before move position whose position after the move is desired.
- * @param moveStartPos The start position of the to-be-moved range before the move.
- * @param moveEndPos The start position of the to-be-moved range after the move.
- * @param moveCount The number of items being moved.
- * @return The new position of the pos parameter after the move.
- */
-fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, moveCount: Int): Int {
-    val oldRange = moveStartPos until moveStartPos + moveCount
-    val newRange = moveEndPos until moveEndPos + moveCount
-    return when { pos in oldRange ->
-                      pos + moveEndPos - moveStartPos
-                  pos < oldRange.first && pos >= newRange.first ->
-                      pos + moveCount
-                  pos > oldRange.last && pos <= newRange.first ->
-                      pos - moveCount
-                  else -> pos }
-}
-
 /** Return a NotificationManager system service from the context. */
 fun notificationManager(context: Context) =
     context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager

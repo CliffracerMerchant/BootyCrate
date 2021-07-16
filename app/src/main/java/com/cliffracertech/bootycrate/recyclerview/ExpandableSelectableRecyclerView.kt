@@ -30,7 +30,7 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     attrs: AttributeSet
 ) : BootyCrateRecyclerView<T>(context, attrs) {
     protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
-
+    private var expandedItemPos: Int? = null
     val selection = Selection()
 
     init {
@@ -40,17 +40,18 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     }
 
     fun setExpandedItem(pos: Int?) {
-        val currentExpandedPos = itemAnimator.expandedItemPos
-        if (currentExpandedPos != null) {
-            val vh = findViewHolderForAdapterPosition(currentExpandedPos)
-            if ((vh as ExpandableSelectableRecyclerView<*>.ViewHolder).hasFocusedChild()) {
+        val oldExpandedPos = expandedItemPos
+        if (oldExpandedPos != null) {
+            val vh = findViewHolderForAdapterPosition(oldExpandedPos)
+                    as? ExpandableSelectableRecyclerView<*>.ViewHolder
+            if (vh?.hasFocusedChild() == true) {
                 requestFocus()
                 SoftKeyboard.hide(this)
             }
         }
+        expandedItemPos = pos
         viewModel.setExpandedItem(if (pos == null) null
                                   else adapter.currentList[pos].id)
-        itemAnimator.notifyExpandedItemChanged(pos)
     }
 
     /**
@@ -86,8 +87,14 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
      * ExpandableSelectableRecyclerView.ViewHolder. */
     abstract inner class Adapter<VHType: ViewHolder> : BootyCrateRecyclerView<T>.Adapter<VHType>() {
         override fun onBindViewHolder(holder: VHType, position: Int) {
-            if (holder.item.isExpanded)
-                itemAnimator.notifyExpandedItemChanged(position) }
+            if (holder.item.isExpanded) expandedItemPos = position
+        }
+
+        override fun onViewDetachedFromWindow(holder: VHType) {
+            super.onViewDetachedFromWindow(holder)
+            if (holder.hasFocusedChild())
+                SoftKeyboard.hide(this@ExpandableSelectableRecyclerView)
+        }
     }
 
     /**

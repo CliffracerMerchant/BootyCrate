@@ -20,8 +20,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     override val adapter = Adapter()
     override val viewModel = inventoryViewModel(context)
 
-    init { itemAnimator.registerAdapterDataObserver(adapter) }
-
     /**
      * A RecyclerView.Adapter to display the contents of a list of inventory items.
      *

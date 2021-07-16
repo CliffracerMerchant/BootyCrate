@@ -39,7 +39,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         itemAnimator.animatorConfig = AnimatorConfig(
             context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
-        itemAnimator.registerAdapterDataObserver(adapter)
     }
 
     /**

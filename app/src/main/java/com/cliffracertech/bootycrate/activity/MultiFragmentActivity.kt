@@ -99,12 +99,11 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
      * menuItem, and @return whether or not the switch was successful. */
     private fun switchToNewPrimaryFragment(menuItem: MenuItem): Boolean {
         if (menuItem.itemId == navigationBar.selectedItemId || !showingPrimaryFragment) return false
-        if (!navBarMenuItemFragmentMap.containsKey(menuItem.itemId)) return false
-        val newFragment = navBarMenuItemFragmentMap[menuItem.itemId]
+        val newFragment = navBarMenuItemFragmentMap[menuItem.itemId] ?: return false
 
         val oldFragmentMenuItem = navigationBar.menu.findItem(navigationBar.selectedItemId)
         menuItem.isChecked = true
-        onNewFragmentSelected(newFragment!!)
+        onNewFragmentSelected(newFragment)
 
         val leftToRight = oldFragmentMenuItem.order < menuItem.order
         val oldFragment = navBarMenuItemFragmentMap.getValue(oldFragmentMenuItem.itemId)

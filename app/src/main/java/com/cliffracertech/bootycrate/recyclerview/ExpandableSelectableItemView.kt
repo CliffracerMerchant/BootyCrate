@@ -180,6 +180,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         val animInfo = ui.extraInfoEdit.setEditable(expanding, animate, false)
         if (!animate) {
             ui.extraInfoEdit.isVisible = expanding || !extraInfoIsBlank
+            ui.extraInfoEdit.alpha = if (expanding || !extraInfoIsBlank) 1f else 0f
             return null
         }
         pendingAnimations.add(animInfo!!.translateAnimator)
