@@ -92,8 +92,10 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
 
         override fun onViewDetachedFromWindow(holder: VHType) {
             super.onViewDetachedFromWindow(holder)
-            if (holder.hasFocusedChild())
+            if (holder.hasFocusedChild()) {
+                requestFocus()
                 SoftKeyboard.hide(this@ExpandableSelectableRecyclerView)
+            }
         }
     }
 

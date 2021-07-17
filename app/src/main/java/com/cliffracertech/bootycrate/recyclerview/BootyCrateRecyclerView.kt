@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.recyclerview
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
@@ -63,6 +64,8 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
     init {
         val cornerRadius = resources.getDimension(R.dimen.recycler_view_item_rounded_corner_radius)
         val swipeCallback = SwipeToDeleteCallback(context, this, cornerRadius) { pos ->
+            // The soft keyboard is hidden when the user swipes to delete an
+            // item so that the soft keyboard doesn't hide the snack bar.
             requestFocus()
             SoftKeyboard.hide(this)
             viewModel.delete(LongArray(1) { adapter.getItemId(pos) })
@@ -75,6 +78,7 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
     }
 
     private var deletedItemCount: Int = 0
+    @SuppressLint("ShowToast")
     fun showDeletedItemsSnackBar(newDeletedItemsCount: Int) {
         deletedItemCount += newDeletedItemsCount
         val text = context.getString(R.string.delete_snackbar_text, deletedItemCount)
