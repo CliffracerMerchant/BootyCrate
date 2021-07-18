@@ -134,12 +134,10 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         the internal expand / collapse animations must be done manually. */
         _isExpanded = expanding
 
-        val nameAnimInfoAndNewHeight = updateNameEditState(expanding, animate)
-        val newNameHeight = nameAnimInfoAndNewHeight?.newHeight ?: 0
-        val extraInfoAnimInfoAndNewHeight = updateExtraInfoState(expanding, animate, newNameHeight)
+        val nameAnimInfo = updateNameEditState(expanding, animate)
+        val extraInfoAnimInfo = updateExtraInfoState(expanding, animate)
         updateAmountEditState(expanding, animate)
-        if (animate) adjustNameExtraInfoAndCheckbox(expanding, nameAnimInfoAndNewHeight!!,
-                                                    extraInfoAnimInfoAndNewHeight!!)
+        adjustNameExtraInfoAndCheckbox(expanding, nameAnimInfo, extraInfoAnimInfo)
         linkedIndicatorShouldBeVisible = expanding && isLinkedToAnotherItem
         updateIsLinkedIndicatorState(linkedIndicatorShouldBeVisible, animate, translate = true)
         onExpandedChanged(expanding, animate)
@@ -148,34 +146,35 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             runPendingAnimations()
     }
 
-    private data class TextFieldAnimInfoAndNewHeight(
-        val animInfo: AnimatedStrikeThroughTextFieldEdit.AnimInfo,
-        val newHeight: Int)
-
+    /** The cached new value for the height of the nameEdit; only to
+     * be used in the body of setExpanded or one of its sub-functions. */
+    private var nameNewHeight = 0
     /** Update the editable state of nameEdit, animating if param animate == true,
      * and return the TextFieldEdit.AnimInfo for the animation and the new height
      * of the nameEdit, or null if no animation occurred. */
     private fun updateNameEditState(
         expanding: Boolean,
         animate: Boolean
-    ): TextFieldAnimInfoAndNewHeight? {
+    ): AnimatedStrikeThroughTextFieldEdit.AnimInfo? {
         val animInfo = ui.nameEdit.setEditable(expanding, animate, false) ?: return null
         pendingAnimations.add(animInfo.translateAnimator)
         pendingAnimations.add(animInfo.underlineAnimator)
         val minHeight = if (!expanding) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
-        val newHeight = maxOf(ui.nameEdit.measuredHeight, minHeight)
-        return TextFieldAnimInfoAndNewHeight(animInfo, newHeight)
+        nameNewHeight = maxOf(ui.nameEdit.measuredHeight, minHeight)
+        return animInfo
     }
 
+    /** The cached new value for the height of the extraInfoEdit; only to
+     * be used in the body of setExpanded or one of its sub-functions. */
+    private var extraInfoNewHeight = 0
     /** Update the editable state of extraInfoEdit, animating if param animate == true and
      * the extraInfoEdit is not blank, and returning the TextFieldEdit.AnimInfo for the
      * animation and the new height of the extraInfoEdit, or null if no animation occurred. */
     private fun updateExtraInfoState(
         expanding: Boolean,
-        animate: Boolean,
-        nameNewHeight: Int
-    ): TextFieldAnimInfoAndNewHeight? {
+        animate: Boolean
+    ): AnimatedStrikeThroughTextFieldEdit.AnimInfo? {
         val extraInfoIsBlank = ui.extraInfoEdit.text.isNullOrBlank()
         val animInfo = ui.extraInfoEdit.setEditable(expanding, animate, false)
         if (!animate) {
@@ -203,10 +202,10 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         ui.extraInfoEdit.translationY += adjust
         animInfo.adjustTranslationStartEnd(adjust, 0f)
 
-        val newHeight = if (extraInfoIsBlank && !expanding) 0 else
-            maxOf(ui.extraInfoEdit.measuredHeight, if (!expanding) 0 else
-                resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height))
-        return TextFieldAnimInfoAndNewHeight(animInfo, newHeight)
+        val minHeight = if (!expanding) 0 else
+            resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
+        extraInfoNewHeight = maxOf(ui.extraInfoEdit.measuredHeight, minHeight)
+        return animInfo
     }
 
     /** Update the editable state of amountEdit, animating if param animate == true. */
@@ -249,35 +248,56 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
      * account the change in their top values, and animate the checkbox's top change. */
     private fun adjustNameExtraInfoAndCheckbox(
         expanding: Boolean,
-        nameAnimInfoAndNewHeight: TextFieldAnimInfoAndNewHeight,
-        extraInfoAnimInfoAndNewHeight: TextFieldAnimInfoAndNewHeight
+        nameAnimInfo: AnimatedStrikeThroughTextFieldEdit.AnimInfo?,
+        extraInfoAnimInfo: AnimatedStrikeThroughTextFieldEdit.AnimInfo?
     ) {
-        // adjust name and extra info translation amounts
-        val nameAndExtraInfoNewHeight = nameAnimInfoAndNewHeight.newHeight +
-                                        extraInfoAnimInfoAndNewHeight.newHeight
-        val nameAndExtraInfoWillBeSmallerThanCheckbox = (nameAndExtraInfoNewHeight) < ui.checkBox.height
-
+        if (nameAnimInfo == null || extraInfoAnimInfo == null) return
+        // Adjust name and extra info translation amounts by the change in the top value of the nameEdit.
+        // The values that end in Before represent the given value (e.g. the new top value
+        // of the name edit) before the extra info disappears, if it is going to. The values
+        // ending in After represent the same value after the extra info disappears.
+        val textFieldsNewHeightBefore = nameNewHeight + extraInfoNewHeight
         val extraInfoIsDisappearing = ui.extraInfoEdit.text.isNullOrBlank() && !expanding
-        val nameNewTop = paddingTop + if (!nameAndExtraInfoWillBeSmallerThanCheckbox) 0
-                                      else (ui.checkBox.height - nameAndExtraInfoNewHeight) / 2
-        val nameTopChange = nameNewTop - ui.nameEdit.top
-        if (nameTopChange != 0) {
-            val adjust = nameTopChange * -1f
-            if (!extraInfoIsDisappearing) {
-                ui.nameEdit.translationY += adjust
-                ui.extraInfoEdit.translationY += adjust
-                nameAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(adjust, 0f)
-                extraInfoAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(adjust, 0f)
-            } else {
-                nameAnimInfoAndNewHeight.animInfo.adjustTranslationStartEnd(0f, -adjust)
-                nameAnimInfoAndNewHeight.animInfo.translateAnimator
-                    .doOnEnd { ui.nameEdit.translationY = 0f }
-            }
+        val textFieldsNewHeightAfter = nameNewHeight + if (extraInfoIsDisappearing) 0
+                                                       else extraInfoNewHeight
+
+        val textFieldsWillBeShorterThanCheckboxBefore = textFieldsNewHeightBefore < ui.checkBox.height
+        val textFieldsWillBeShorterThanCheckboxAfter = textFieldsNewHeightAfter < ui.checkBox.height
+
+        val nameNewTopAfter = paddingTop + if (!textFieldsWillBeShorterThanCheckboxAfter) 0
+                                           else (ui.checkBox.height - textFieldsNewHeightAfter) / 2
+
+        val nameTopChange = nameNewTopAfter - ui.nameEdit.top.toFloat()
+        ui.nameEdit.translationY -= nameTopChange
+        ui.extraInfoEdit.translationY -= nameTopChange
+        nameAnimInfo.adjustTranslationStartEnd(-nameTopChange, 0f)
+        extraInfoAnimInfo.adjustTranslationStartEnd(-nameTopChange, 0f)
+
+        if (extraInfoIsDisappearing) {
+            // If the extra info is disappearing, the translation amounts additionally
+            // need to be modified by the difference in the name edit's top value before
+            // and after the extraInfoEdit disappears.
+            val nameNewTopBefore = paddingTop + if (!textFieldsWillBeShorterThanCheckboxBefore) 0
+                                                else (ui.checkBox.height - textFieldsNewHeightBefore) / 2
+            val startEndAdjust = nameNewTopAfter.toFloat() - nameNewTopBefore
+
+            ui.nameEdit.translationY += startEndAdjust
+            ui.extraInfoEdit.translationY += startEndAdjust
+            // Except for with larger than normal text sizes, the top change is different
+            // by 1f when collapsing compared to when the view is expanding. This adjustment
+            // of 1f for the end value prevents the text fields from jumping by 1 pixel when
+            // the animation finishes. Obviously this arbitrary adjustment isn't ideal, but
+            // as the difference is usually too small to notice anyways at normal animation
+            // speeds, it will have to do for now.
+            nameAnimInfo.adjustTranslationStartEnd(startEndAdjust, startEndAdjust + 1f)
+            extraInfoAnimInfo.adjustTranslationStartEnd(startEndAdjust, startEndAdjust + 1f)
+            nameAnimInfo.translateAnimator.doOnEnd { ui.nameEdit.translationY = 0f }
+            extraInfoAnimInfo.translateAnimator.doOnEnd { ui.nameEdit.translationY = 0f }
         }
 
-        // animate checkbox top change, if any
-        val checkBoxNewTop = paddingTop + if (nameAndExtraInfoWillBeSmallerThanCheckbox) 0
-                                          else (nameAndExtraInfoNewHeight - ui.checkBox.height) / 2
+        // Animate checkbox top change, if any
+        val checkBoxNewTop = paddingTop + if (textFieldsWillBeShorterThanCheckboxBefore) 0
+                                          else (textFieldsNewHeightBefore - ui.checkBox.height) / 2
         val checkBoxTopChange = checkBoxNewTop - ui.checkBox.top.toFloat()
         ui.checkBox.translationY -= checkBoxTopChange
         val anim = ui.checkBox.animate().translationY(0f).applyConfig(animatorConfig)

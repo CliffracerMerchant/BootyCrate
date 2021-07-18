@@ -21,7 +21,6 @@ import com.cliffracertech.bootycrate.databinding.BootyCrateItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemDetailsBinding
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import com.cliffracertech.bootycrate.utils.applyConfig
 
 /**
@@ -151,9 +150,6 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
 
     private var showingDetails = false
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
-        if (!expanded && detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.isFocused)
-            SoftKeyboard.hide(this)
-
         val endTranslation = if (expanded) 0f else
             detailsUi.autoAddToShoppingListCheckBox.layoutParams.height * -1f
 
@@ -189,9 +185,11 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        // The details layout might be in the overlay when this measure occurs.
+        // If this occurs when the extra details layout is fading in, we still
+        // want its height to count towards the height of the entire item view.
         if (heightMeasureSpec != MeasureSpec.UNSPECIFIED || !showingDetails)
             layoutParams.height = LayoutParams.WRAP_CONTENT
-        // The details layout might be in the overlay
         else if (detailsUi.inventoryItemDetailsLayout.parent !== this) {
             val detailsHeight = detailsUi.inventoryItemDetailsLayout.measuredHeight
             setMeasuredDimension(measuredWidth, measuredHeight + detailsHeight)
