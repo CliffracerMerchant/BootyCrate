@@ -157,7 +157,7 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
             showingDetails = expanded
             if (!animate) {
                 isVisible = expanded
-                alpha = if (expanded) 0f else 1f
+                alpha = if (expanded) 1f else 0f
                 translationY = endTranslation
             } else {
                 isVisible = true

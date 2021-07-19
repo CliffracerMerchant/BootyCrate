@@ -250,7 +250,6 @@ class NewInventoryItemDialog(context: Context) :
 
     init {
         newItemView = newInventoryItemView.apply {
-            setExpanded(true, animate = false)
             detailsUi.autoAddToShoppingListAmountEdit.apply { value = minValue }
             detailsUi.autoAddToShoppingListCheckBox.initColorIndex(0)
             ui.checkBox.onColorChangedListener = {
