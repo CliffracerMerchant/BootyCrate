@@ -168,6 +168,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     /** The cached new value for the height of the extraInfoEdit; only to
      * be used in the body of setExpanded or one of its sub-functions. */
     private var extraInfoNewHeight = 0
+    private var hidingExtraInfo = false
     /** Update the editable state of extraInfoEdit, animating if param animate == true and
      * the extraInfoEdit is not blank, and returning the TextFieldEdit.AnimInfo for the
      * animation and the new height of the extraInfoEdit, or null if no animation occurred. */
@@ -186,12 +187,15 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         pendingAnimations.add(animInfo.underlineAnimator)
 
         if (extraInfoIsBlank) {
+            hidingExtraInfo = !expanding
             ui.extraInfoEdit.isVisible = true
             val anim = ui.extraInfoEdit.animate().applyConfig(animatorConfig)
                                             .alpha(if (expanding) 1f else 0f)
             if (!expanding) anim.withEndAction {
-                if (ui.extraInfoEdit.alpha == 0f)
+                if (ui.extraInfoEdit.alpha == 0f && hidingExtraInfo) {
                     ui.extraInfoEdit.isVisible = false
+                    hidingExtraInfo = false
+                }
             }
             pendingViewPropAnimations.add(anim)
         }
@@ -304,7 +308,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         pendingViewPropAnimations.add(anim)
     }
 
-    private var linkedIndicatorShouldBeVisible: Boolean = false
+    private var linkedIndicatorShouldBeVisible = false
     /** Update the visibility of the isLinked indicator, using an alpha
      * animation if param animate == true, and additionally animating
      * the translationY if param translate == true. */
@@ -319,10 +323,12 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             if (translate) ui.linkIndicator.translationY = transYEnd
             return
         }
+        if (!translate && showing)
+            ui.linkIndicator.translationY = transYEnd
         ui.linkIndicator.isVisible = true
         val anim = ui.linkIndicator.animate().alpha(endAlpha)
             .withLayer().applyConfig(animatorConfig)
-            .withEndAction { ui.linkIndicator.isVisible = !linkedIndicatorShouldBeVisible ||
+            .withEndAction { ui.linkIndicator.isVisible = linkedIndicatorShouldBeVisible ||
                                                           ui.linkIndicator.alpha != 0f }
         if (translate) anim.translationY(transYEnd)
         pendingViewPropAnimations.add(anim)
@@ -340,6 +346,19 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             pendingViewPropAnimations.add(ui.editButton.animate()
                 .translationY(0f).applyConfig(animatorConfig)
                 .withStartAction { ui.editButton.isActivated = expanding })
+        }
+    }
+
+    // This onMeasure override makes the view not count the extra info edit towards
+    // its measured height if the extra info edit is in the process of being hidden.
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (heightMeasureSpec != MeasureSpec.UNSPECIFIED || !hidingExtraInfo) {
+            layoutParams.height = LayoutParams.WRAP_CONTENT
+            return super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        } else {
+            val height = paddingTop + paddingBottom + maxOf(ui.checkBox.height, nameNewHeight)
+            setMeasuredDimension(measuredWidth, height)
+            layoutParams.height = height
         }
     }
 

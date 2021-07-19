@@ -188,9 +188,10 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
         // The details layout might be in the overlay when this measure occurs.
         // If this occurs when the extra details layout is fading in, we still
         // want its height to count towards the height of the entire item view.
-        if (heightMeasureSpec != MeasureSpec.UNSPECIFIED || !showingDetails)
+        if (heightMeasureSpec != MeasureSpec.UNSPECIFIED || !showingDetails) {
             layoutParams.height = LayoutParams.WRAP_CONTENT
-        else if (detailsUi.inventoryItemDetailsLayout.parent !== this) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        } else if (detailsUi.inventoryItemDetailsLayout.parent !== this) {
             val detailsHeight = detailsUi.inventoryItemDetailsLayout.measuredHeight
             setMeasuredDimension(measuredWidth, measuredHeight + detailsHeight)
             layoutParams.height = measuredHeight
