@@ -283,16 +283,15 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             // and after the extraInfoEdit disappears.
             val nameNewTopBefore = paddingTop + if (!textFieldsWillBeShorterThanCheckboxBefore) 0
                                                 else (ui.checkBox.height - textFieldsNewHeightBefore) / 2
-            val startEndAdjust = nameNewTopAfter.toFloat() - nameNewTopBefore
+            val startEndAdjust = nameNewTopAfter - nameNewTopBefore.toFloat()
 
             ui.nameEdit.translationY += startEndAdjust
             ui.extraInfoEdit.translationY += startEndAdjust
-            // Except for with larger than normal text sizes, the top change is different
-            // by 1f when collapsing compared to when the view is expanding. This adjustment
-            // of 1f for the end value prevents the text fields from jumping by 1 pixel when
-            // the animation finishes. Obviously this arbitrary adjustment isn't ideal, but
-            // as the difference is usually too small to notice anyways at normal animation
-            // speeds, it will have to do for now.
+            // For some reason the top change is sometimes different by 1f when the view
+            // is collapsing compared to when it is expanding. This adjustment of 1f for
+            // the end value corrects for this. Obviously this arbitrary adjustment isn't
+            // ideal, but in the interest of not wasting time on such a small bug, it
+            // will have to do for now.
             nameAnimInfo.adjustTranslationStartEnd(startEndAdjust, startEndAdjust + 1f)
             extraInfoAnimInfo.adjustTranslationStartEnd(startEndAdjust, startEndAdjust + 1f)
             nameAnimInfo.translateAnimator.doOnEnd { ui.nameEdit.translationY = 0f }
@@ -300,11 +299,17 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         }
 
         // Animate checkbox top change, if any
-        val checkBoxNewTop = paddingTop + if (textFieldsWillBeShorterThanCheckboxBefore) 0
-                                          else (textFieldsNewHeightBefore - ui.checkBox.height) / 2
-        val checkBoxTopChange = checkBoxNewTop - ui.checkBox.top.toFloat()
-        ui.checkBox.translationY -= checkBoxTopChange
-        val anim = ui.checkBox.animate().translationY(0f).applyConfig(animatorConfig)
+        val checkBoxNewTopAfter = paddingTop + if (textFieldsWillBeShorterThanCheckboxAfter) 0
+                                               else (textFieldsNewHeightAfter - ui.checkBox.height) / 2
+        val startAdjust = checkBoxNewTopAfter - ui.checkBox.top.toFloat()
+        val startEndAdjust = if (!extraInfoIsDisappearing) 0f else {
+            val checkBoxNewTopBefore = paddingTop + if (textFieldsWillBeShorterThanCheckboxBefore) 0
+                                                    else (textFieldsNewHeightBefore - ui.checkBox.height) / 2
+            checkBoxNewTopAfter - checkBoxNewTopBefore.toFloat()
+        }
+        ui.checkBox.translationY -= startAdjust - startEndAdjust
+        val anim = ui.checkBox.animate().translationY(startEndAdjust).applyConfig(animatorConfig)
+                                        .withEndAction { ui.checkBox.translationY = 0f }
         pendingViewPropAnimations.add(anim)
     }
 
