@@ -84,6 +84,20 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
         changingViews.clear()
     }
 
+    /** This override of animateRemove causes the item animator to not wait for
+     * removed views to be fully removed before starting change animations for
+     * other views that are moving as a result of the removal in order to make
+     * the recycler view feel less sluggish. */
+    override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
+        val view = holder?.itemView ?: return false
+        view.animate().alpha(0f).withLayer()
+            .applyConfig(animatorConfig)
+            .withStartAction { dispatchRemoveStarting(holder) }
+            .withEndAction { dispatchRemoveFinished(holder) }
+            .start()
+        return true
+    }
+
     /**
      * An interface for views that are used to represent expandable recycler view
      * items to describe what should change internally when expanded or collapsed.
