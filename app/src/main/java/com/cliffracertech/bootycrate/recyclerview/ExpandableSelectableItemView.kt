@@ -367,11 +367,13 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         }
     }
 
- /** For some reason both nameEdit and extraInfoEdit have their width set
-    to their new expanded width sometime after setExpanded but before the
-    end animations are started, causing a visual flicker. The property
-    textFieldLockedRight, when set to a non-null value, prevents this
-    resize from taking place, and in turn prevents the flicker. */
+    /**
+     * For some reason both nameEdit and extraInfoEdit have their width set
+     * to their new expanded width sometime after setExpanded but before the
+     * end animations are started, causing a visual flicker. The property
+     * textFieldLockedRight, when set to a non-null value, prevents this
+     * resize from taking place, and in turn prevents the flicker.
+     */
     private var textFieldLockedRight: Int? = null
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)

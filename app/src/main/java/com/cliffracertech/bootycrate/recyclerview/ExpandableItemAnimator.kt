@@ -48,27 +48,27 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
         // If a view is being expanded or collapsed, oldHolder must be
         // equal to newHolder, and the heightChange must not be zero.
         if (oldHolder != newHolder) return false
-        val heightChange = postInfo.bottom - postInfo.top - preInfo.bottom + preInfo.top
-        if (heightChange == 0) return false
-
         val view = newHolder.itemView
         if (view !is ExpandableRecyclerViewItem) throw IllegalStateException(
             "The item views used with ExpandableItemAnimator must " +
             "implement ExpandableItemAnimator.ExpandableRecyclerViewItem.")
 
         val startHeight = preInfo.bottom - preInfo.top
+        val endHeight = postInfo.bottom - postInfo.top
+        if (endHeight == startHeight) return false
+
         view.setHeight(startHeight)
-        val endHeight = startHeight + heightChange
         intValueAnimator(view::setHeight, startHeight, endHeight, animatorConfig).apply {
             doOnStart { dispatchChangeStarting(newHolder, true) }
             doOnEnd { dispatchChangeFinished(newHolder, true) }
             pendingAnimators.add(this)
         }
 
-        val topChange = postInfo.top - preInfo.top
-        if (topChange != 0) {
-            view.translationY = -topChange.toFloat()
-            pendingViewPropAnimators.add(view.animate().translationY(0f).applyConfig(animatorConfig))
+        val topChange = postInfo.top - preInfo.top + view.translationY
+        if (topChange != 0f) {
+            view.translationY -= topChange
+            pendingViewPropAnimators.add(view.animate().translationY(0f)
+                                            .applyConfig(animatorConfig))
         }
         changingViews.add(view)
         return true
