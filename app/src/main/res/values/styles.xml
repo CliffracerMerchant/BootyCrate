@@ -99,6 +99,7 @@
         <item name="android:windowTitleStyle">@style/TitleTextAppearance</item>
         <item name="android:textColor">@color/color_text_dark</item>
         <item name="textColorAlertDialogListItem">@color/color_text_dark</item>
+        <item name="android:colorBackground">@color/colorRecyclerViewItemLight</item>
         <item name="dialogCornerRadius">@dimen/dialog_rounded_corner_radius</item>
     </style>
 
