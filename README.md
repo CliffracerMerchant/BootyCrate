@@ -8,8 +8,8 @@
 <p align="right">
     <img src="images/" alt=""/>
 </p>
-BootyCrate is an open source shopping list and simple inventory management app built using Kotlin.
-Tech-stack components include:
+BootyCrate is an open source shopping list and simple inventory management app built using Kotlin,
+with a min API level of 21. Tech-stack components include:
 - Android Architecture Components (Room, ViewModel, LiveData)
 - MVVM paradigm (though without a repository layer at the moment)
 - Kotlin coroutines, including Flows.
@@ -40,7 +40,7 @@ The project is separated into the following packages:
 
 ### activity
 activity contains all of the classes in the inheritance chain of the single activity used in the
-app, as well as extension functions of the MainActivityBinding ui class. 
+app, as well as extension functions of the MainActivityBinding UI class. 
 These classes are:
 <pre>
 MultiFragmentActivity -> MainActivity
@@ -48,8 +48,9 @@ MultiFragmentActivity -> MainActivity
 
 MainActivity's UI consists of an instance of RecyclerViewActionBar (a custom toolbar
 implementation), an instance of BottomAppBar (another custom toolbar implementation), a
-BottomNavigationViewEx (acts as a BottomNavigationView but with better sub-view access),
-a checkout button, and an add button. This activity ui is shared between all fragments.
+BottomNavigationViewEx (acts as a BottomNavigationView but with better sub-view access
+for styling purposes), a checkout button, and an add button. This activity UI is shared
+between all fragments.
 
 ### fragment
 fragment contains all of the fragments used in the app. The two main content fragments' inheritance
@@ -80,7 +81,7 @@ database contains the application's database, Room data access object, and view 
 miscellaneous utility classes, objects, and functions.
 
 ### view
-view contains all other custom views that don't fit into another package. The main activity's ui
+view contains all other custom views that don't fit into another package. The main activity's UI
 elements, such as the RecyclerViewActionBar and BottomAppBar, are located here.
 
 # License
