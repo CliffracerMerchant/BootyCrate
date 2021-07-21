@@ -115,9 +115,9 @@ private const val inventoryItemFields = "id, name, extraInfo, color, " +
         if (id != null) expandShoppingListItem(id)
     }
 
-    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
+    @Query("SELECT COUNT(*) FROM bootycrate_item " +
            "WHERE selectedInShoppingList AND $onShoppingList")
-    abstract fun getSelectedShoppingListItems(): LiveData<List<ShoppingListItem>>
+    abstract fun getSelectedShoppingListItemCount(): LiveData<Int>
 
     @Query("UPDATE bootycrate_item SET selectedInShoppingList = :selected WHERE id = :id")
     abstract suspend fun updateSelectedInShoppingList(id: Long, selected: Boolean)
@@ -239,9 +239,9 @@ private const val inventoryItemFields = "id, name, extraInfo, color, " +
         if (id != null) expandInventoryItem(id)
     }
 
-    @Query("SELECT $inventoryItemFields FROM bootycrate_item " +
+    @Query("SELECT COUNT(*) FROM bootycrate_item " +
            "WHERE selectedInInventory AND $inInventory")
-    abstract fun getSelectedInventoryItems(): LiveData<List<InventoryItem>>
+    abstract fun getSelectedInventoryItemCount(): LiveData<Int>
 
     @Query("UPDATE bootycrate_item SET selectedInInventory = :selected WHERE id = :id")
     abstract suspend fun updateSelectedInInventory(id: Long, selected: Boolean)

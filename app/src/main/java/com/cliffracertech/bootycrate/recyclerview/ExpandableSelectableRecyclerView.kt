@@ -69,9 +69,8 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
      * selection entirely.
      */
     inner class Selection {
-        val itemsLiveData get() = viewModel.selectedItems
-        val items get() = itemsLiveData.value
-        val size get() = items?.size ?: 0
+        val sizeLiveData get() = viewModel.selectedItemCount
+        val size get() = sizeLiveData.value ?: 0
         val isEmpty get() = size == 0
         val isNotEmpty get() = size != 0
 

@@ -124,7 +124,7 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
     abstract fun updateAmount(id: Long, amount: Int): Job
 
     abstract fun setExpandedItem(id: Long?): Job
-    abstract val selectedItems: LiveData<List<T>>
+    abstract val selectedItemCount: LiveData<Int>
     abstract fun updateIsSelected(id: Long, isSelected: Boolean): Job
     abstract fun toggleIsSelected(id: Long): Job
     abstract fun deleteSelected(): Job
@@ -186,7 +186,7 @@ class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingList
     override fun setExpandedItem(id: Long?) =
         viewModelScope.launch { dao.setExpandedShoppingListItem(id) }
 
-    override val selectedItems = dao.getSelectedShoppingListItems()
+    override val selectedItemCount = dao.getSelectedShoppingListItemCount()
 
     override fun updateIsSelected(id: Long, isSelected: Boolean) =
         viewModelScope.launch { dao.updateSelectedInShoppingList(id, isSelected) }
@@ -258,7 +258,7 @@ class InventoryViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(
     override fun setExpandedItem(id: Long?) =
         viewModelScope.launch { dao.setExpandedInventoryItem(id) }
 
-    override val selectedItems = dao.getSelectedInventoryItems()
+    override val selectedItemCount = dao.getSelectedInventoryItemCount()
 
     override fun updateIsSelected(id: Long, isSelected: Boolean) =
         viewModelScope.launch { dao.updateSelectedInInventory(id, isSelected) }
@@ -266,8 +266,7 @@ class InventoryViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(
     override fun toggleIsSelected(id: Long) =
         viewModelScope.launch { dao.toggleSelectedInInventory(id) }
 
-    override fun deleteSelected() =
-        viewModelScope.launch { dao.deleteSelectedInventoryItems() }
+    override fun deleteSelected() = viewModelScope.launch { dao.deleteSelectedInventoryItems() }
 
     override fun selectAll() = viewModelScope.launch {
         dao.selectInventoryItems(items.value?.map { it.id } ?: emptyList())

@@ -68,7 +68,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
         val sortStr = prefs.getString(sortModePrefKey, BootyCrateItemSort.Color.toString())
         recyclerView?.apply {
             sort = BootyCrateItemSort.fromString(sortStr)
-            selection.itemsLiveData.observe(viewLifecycleOwner, ::onSelectionChanged)
+            selection.sizeLiveData.observe(viewLifecycleOwner, ::onSelectionSizeChanged)
             observeViewModel(viewLifecycleOwner)
         }
 
@@ -112,9 +112,9 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
      * @return whether the dialog was successfully started. */
     private fun shareList(): Boolean {
         val context = this.context ?: return false
-        val selectionIsEmpty = viewModel.selectedItems.value?.isEmpty() ?: true
-        val items = if (!selectionIsEmpty) viewModel.selectedItems.value ?: emptyList()
-                    else                   viewModel.items.value ?: emptyList()
+        val selectionIsEmpty = (viewModel.selectedItemCount.value ?: 0) > 0
+        val items = if (selectionIsEmpty) viewModel.items.value ?: emptyList()
+                    else viewModel.items.value?.filter { it.isSelected } ?: emptyList()
         if (items.isEmpty()) {
             val anchor = recyclerView?.snackBarAnchor ?: view ?: return false
             val message = context.getString(R.string.empty_recycler_view_message, collectionName)
@@ -125,14 +125,13 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
         val collectionName = collectionName.toLowerCase(Locale.getDefault())
         val stringResId = if (selectionIsEmpty) R.string.share_whole_list_title
-                          else R.string.share_selected_items_title
+                          else                  R.string.share_selected_items_title
         val messageTitle = context.getString(stringResId, collectionName)
 
         var message = ""
         for (i in 0 until items.size - 1)
             message += items[i].toUserFacingString() + "\n"
-        if (items.isNotEmpty())
-            message += items.last().toUserFacingString()
+        message += items.last().toUserFacingString()
 
         val intent = Intent(Intent.ACTION_SEND)
         intent.putExtra(Intent.EXTRA_TEXT, message)
@@ -143,7 +142,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
     private fun deleteSelectedItems(): Boolean {
         val recyclerView = this.recyclerView ?: return false
-        val size = viewModel.selectedItems.value?.size ?: 0
+        val size = viewModel.selectedItemCount.value ?: 0
         viewModel.deleteSelected()
         recyclerView.showDeletedItemsSnackBar(size)
         return true
@@ -161,11 +160,11 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
         return true
     }
 
-    private fun onSelectionChanged(newList: List<T>) {
-        if (newList.isNotEmpty()) {
+    private fun onSelectionSizeChanged(newSize: Int) {
+        if (newSize > 0) {
             if (!actionModeIsStarted)
                 actionBar?.startActionMode(actionModeCallback)
-            else actionBar?.actionMode?.title = actionModeTitle(newList.size)
+            else actionBar?.actionMode?.title = actionModeTitle(newSize)
         } else actionBar?.actionMode?.finish()
     }
 
@@ -199,7 +198,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
             val actionModeCallback = if (recyclerView.selection.isEmpty) null
                                      else this.actionModeCallback
-            val activeSearchQuery = if (viewModel.searchFilter.isNullOrBlank()) null
+            val activeSearchQuery = if (viewModel.searchFilter.isBlank()) null
                                     else viewModel.searchFilter
             activityUi.actionBar.transition(
                 activeActionModeCallback = actionModeCallback,
