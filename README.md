@@ -1,19 +1,22 @@
+![API](https://badgen.net/badge/API/21+/green)
 # BootyCrate
-<p align="left">
-    <img src="images/" alt=""/>
-</p>
-<p align="center">
-    <img src="images/" alt=""/>
-</p>
-<p align="right">
-    <img src="images/" alt=""/>
-</p>
-BootyCrate is an open source shopping list and simple inventory management app built using Kotlin,
-with a min API level of 21. Tech-stack components include:
+
+BootyCrate is an open source shopping list and simple inventory management app built using Kotlin.
+Tech-stack components include:
 - Android Architecture Components (Room, ViewModel, LiveData)
 - MVVM paradigm (though without a repository layer at the moment)
 - Kotlin coroutines, including Flows.
 - Espresso for end to end testing
+    
+https://user-images.githubusercontent.com/42116365/126717892-3f2fc4e9-57f3-4a98-88ec-41a2004d8ab6.mp4
+
+https://user-images.githubusercontent.com/42116365/126721538-458e622f-f7ec-48c8-9e5a-44054488ae08.mp4
+
+https://user-images.githubusercontent.com/42116365/126721698-248a9de0-feba-46ab-b9ab-e5325ebf366f.mp4
+
+https://user-images.githubusercontent.com/42116365/126721708-7271a5fb-6efa-4f9e-a58a-04570bcf0632.mp4
+
+
 
 ## Features:
 - An inventory to which the user can add items that are frequently bought.
@@ -22,6 +25,9 @@ with a min API level of 21. Tech-stack components include:
   items that fell below their trigger amount, or were added manually by the user.
 - Shopping list item checking and checkout functionality. Checking out will remove
   all checked items from the shopping list, and for items that are linked to an
+
+
+
   inventory item will automatically update the inventory amount.
 - Text exporting of either entire lists or selected items.
 - Color labels to organize items
@@ -39,8 +45,8 @@ with a min API level of 21. Tech-stack components include:
 The project is separated into the following packages:
 
 ### activity
-activity contains all of the classes in the inheritance chain of the single activity used in the
-app, as well as extension functions of the MainActivityBinding UI class. 
+activity contains all of the classes in the inheritance chain of the single activity
+used in the app, as well as extension functions of the MainActivityBinding UI class. 
 These classes are:
 <pre>
 MultiFragmentActivity -> MainActivity
@@ -84,5 +90,5 @@ miscellaneous utility classes, objects, and functions.
 view contains all other custom views that don't fit into another package. The main activity's UI
 elements, such as the RecyclerViewActionBar and BottomAppBar, are located here.
 
-# License
+## License
 BootyCrate is licensed under the terms of the Apache License, 2.0.
