@@ -143,7 +143,7 @@ open class MainActivity : MultiFragmentActivity() {
      * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
      *
      * MainActivityFragment can be implemented by a Fragment subclass to
-     * inform the MainActivity how its ui should be displayed when the frag-
+     * inform the MainActivity how its UI should be displayed when the frag-
      * ment is in the foreground, and to provide a callback for back button
      * (either the hardware/software bottom back button or the action bar's
      * back button) presses. Fragments should always indicate their desired

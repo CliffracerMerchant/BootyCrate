@@ -23,7 +23,7 @@ import com.kennyc.view.MultiStateView
 import java.util.*
 
 /**
- * An fragment to display a ExpandableSelectableRecyclerView to the user.
+ * A fragment to display an ExpandableSelectableRecyclerView to the user.
  *
  * RecyclerViewFragment is an abstract fragment whose main purpose is to
  * display an instance of a ExpandableSelectableRecyclerView to the user. It
@@ -36,13 +36,13 @@ import java.util.*
  * calling super.onViewCreated, or an exception will occur.
  *
  * The value of the open property collectionName should be overridden in
- * subclasses with a value that describes what the collection of
- * ExpandableSelectableItems should be called in user facing strings.
+ * subclasses with a value that describes what the collection of items
+ * should be called in user facing strings.
  *
  * The value of the open property actionModeCallback will be used as the
  * callback when an action mode is started. Subclasses can override it with a
- * with a descendant of SelectionActionModeCallback if they wish to per-
- * form work when the action action mode starts or finishes.
+ * with a descendant of SelectionActionModeCallback if they wish to perform
+ * work when the action action mode starts or finishes.
  */
 @Suppress("LeakingThis")
 abstract class RecyclerViewFragment<T: BootyCrateItem> :
