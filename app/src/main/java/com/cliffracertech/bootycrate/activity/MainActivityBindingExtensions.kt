@@ -106,26 +106,22 @@ fun MainActivity.initGradientStyle() {
                               theme.resolveIntAttribute(R.attr.backgroundGradientColorMiddle),
                               theme.resolveIntAttribute(R.attr.backgroundGradientColorRight))
 
-    val fgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
-    val bgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
-    val paint = Paint()
-    paint.style = Paint.Style.FILL
-
     val fgGradientBuilder = GradientBuilder(x2 = screenWidth.toFloat(), colors = fgColors)
     val fgGradientShader = fgGradientBuilder.buildLinearGradient()
-    paint.shader = fgGradientShader
-    val canvas = Canvas(fgGradientBitmap)
-    canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
+    ui.bottomAppBar.indicatorGradient = fgGradientShader
 
     val bgGradientBuilder = fgGradientBuilder.copy(colors  = bgColors)
     val bgGradientShader = bgGradientBuilder.buildLinearGradient()
-    paint.shader = bgGradientShader
-    canvas.setBitmap(bgGradientBitmap)
+    ui.bottomAppBar.backgroundGradient = bgGradientShader
+
+    val paint = Paint()
+    paint.style = Paint.Style.FILL
+    paint.shader = fgGradientShader
+    val fgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(fgGradientBitmap)
     canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
     ui.styleActionBarContents(screenWidth, fgGradientShader, fgGradientBitmap)
-    ui.bottomAppBar.backgroundGradient = bgGradientShader
-    ui.bottomAppBar.indicatorGradient = fgGradientShader
     ui.styleBottomAppBarContents(screenWidth, fgGradientBitmap, fgGradientBuilder, bgGradientBuilder)
 }
 
