@@ -112,10 +112,10 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
      * @return whether the dialog was successfully started. */
     private fun shareList(): Boolean {
         val context = this.context ?: return false
-        val selectionIsEmpty = (viewModel.selectedItemCount.value ?: 0) > 0
-        val items = if (selectionIsEmpty) viewModel.items.value ?: emptyList()
-                    else viewModel.items.value?.filter { it.isSelected } ?: emptyList()
-        if (items.isEmpty()) {
+        val selectionIsEmpty = (viewModel.selectedItemCount.value ?: 0) == 0
+        val items = if (selectionIsEmpty) viewModel.items.value
+                    else viewModel.items.value?.filter { it.isSelected }
+        if (items?.isEmpty() != false) {
             val anchor = recyclerView?.snackBarAnchor ?: view ?: return false
             val message = context.getString(R.string.empty_recycler_view_message, collectionName)
             Snackbar.make(context, anchor, message, Snackbar.LENGTH_LONG)
