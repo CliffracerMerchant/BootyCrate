@@ -12,7 +12,8 @@ import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
 import androidx.test.espresso.ViewAction
 import androidx.test.espresso.ViewAssertion
-import androidx.test.espresso.action.ViewActions.*
+import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.*
 import com.cliffracertech.bootycrate.R
@@ -68,21 +69,21 @@ fun onAddToShoppingListTrigger(vararg viewActions: ViewAction) =
     actionOnChildWithId(R.id.autoAddToShoppingListAmountEdit, *viewActions)
 fun onIncreaseButton(vararg viewActions: ViewAction) = actionOnChildWithId(R.id.increaseButton, *viewActions)
 fun onDecreaseButton(vararg viewActions: ViewAction) = actionOnChildWithId(R.id.decreaseButton, *viewActions)
-fun typeIntoValueEdit(text: String) = actionOnChildWithId(R.id.valueEdit, click(), typeText(text))
 fun replaceValueEditText(text: String) = actionOnChildWithId(R.id.valueEdit, click(), replaceText(text))
 
 fun onPopupView(viewMatcher: Matcher<View>) = onView(viewMatcher).inRoot(isPlatformPopup())
 
-/** Assert that the view is an ExpandableSelectableRecyclerView with only one expanded item at
- * index expandedIndex. The height of collapsed items must also be provided. */
-fun onlyExpandedIndexIs(expandedIndex: Int?, collapsedHeight: Int) = ViewAssertion { view, e ->
+/** Assert that the view is an ExpandableSelectableRecyclerView with only one expanded item at index expandedIndex. */
+fun onlyExpandedIndexIs(expandedIndex: Int?) = ViewAssertion { view, e ->
     if (view == null) throw e!!
     assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
     val it = view as ExpandableSelectableRecyclerView<*>
+    val expandedViewHeight = if (expandedIndex == null) Integer.MAX_VALUE else
+        it.findViewHolderForAdapterPosition(expandedIndex)?.itemView?.height ?: throw e
     for (i in 0 until it.adapter.itemCount) {
         val vh = it.findViewHolderForAdapterPosition(i)
-        if (i != expandedIndex) assertThat(vh!!.itemView.height).isEqualTo(collapsedHeight)
-        else                    assertThat(vh!!.itemView.height).isGreaterThan(collapsedHeight)
+        if (i != expandedIndex) assertThat(vh?.itemView?.height).isLessThan(expandedViewHeight)
+        else                    assertThat(vh?.itemView?.height).isEqualTo(expandedViewHeight)
     }
 }
 

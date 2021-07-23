@@ -28,7 +28,6 @@ import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.*
-import com.cliffracertech.bootycrate.recyclerview.ExpandableItemAnimator
 import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
 import com.cliffracertech.bootycrate.utils.*
 import com.google.common.truth.Truth.assertThat
@@ -113,30 +112,27 @@ class InventoryFragmentTests {
         onPopupView(withText(R.string.color_description)).perform(click())
     }
 
-    private var collapsedItemHeight = 0
     @Test fun expandItem() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(doStuff<RecyclerView> {
-            (it.itemAnimator as ExpandableItemAnimator).notifyExpandedItemChanged(null)
-            collapsedItemHeight = it.findViewHolderForAdapterPosition(0)!!.itemView.height
-        }).check(onlyExpandedIndexIs(null, collapsedItemHeight))
+        runBlocking { dao.clearExpandedInventoryItem() }
+        onView(withId(R.id.inventoryRecyclerView)).check(onlyExpandedIndexIs(null))
 
         onView(withId(R.id.inventoryRecyclerView)).perform(
             actionsOnItemAtPosition(1, clickEditButton())
-        ).check(onlyExpandedIndexIs(1, collapsedItemHeight))
+        ).check(onlyExpandedIndexIs(1))
     }
 
     @Test fun expandAnotherItem() {
         expandItem()
         onView(withId(R.id.inventoryRecyclerView)).perform(
             actionsOnItemAtPosition(3, clickEditButton())
-        ).check(onlyExpandedIndexIs(3, collapsedItemHeight))
+        ).check(onlyExpandedIndexIs(3))
     }
 
     private fun expandedItemSurvives(action: Runnable) {
         expandItem()
         action.run()
         onView(withId(R.id.inventoryRecyclerView))
-            .check(onlyExpandedIndexIs(1, collapsedItemHeight))
+            .check(onlyExpandedIndexIs(1))
     }
 
     private fun switchToShoppingListAndBack() {
@@ -303,7 +299,8 @@ class InventoryFragmentTests {
                                                     withText(R.string.no_search_results_message))
     private fun emptyRecyclerViewMessage() = allOf(withId(R.id.emptyRecyclerViewMessage),
                                                    withParent(withId(R.id.inventoryFragmentView)),
-                                                   not(withText(R.string.no_search_results_message)))
+                                                   withText(context.getString(R.string.empty_recycler_view_message,
+                                                       context.getString(R.string.inventory_item_collection_name))))
 
     @Test fun emptyMessageAppears() {
         runBlocking { dao.deleteAllInventoryItems() }
@@ -468,7 +465,7 @@ class InventoryFragmentTests {
         onView(withId(R.id.inventoryRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),
-                actionOnChildWithId(R.id.amountEdit, typeIntoValueEdit("9")),
+                actionOnChildWithId(R.id.amountEdit, replaceValueEditText("29")),
                 clickEditButton()),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
