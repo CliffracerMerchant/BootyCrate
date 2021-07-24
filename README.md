@@ -25,9 +25,6 @@ https://user-images.githubusercontent.com/42116365/126721708-7271a5fb-6efa-4f9e-
   items that fell below their trigger amount, or were added manually by the user.
 - Shopping list item checking and checkout functionality. Checking out will remove
   all checked items from the shopping list, and for items that are linked to an
-
-
-
   inventory item will automatically update the inventory amount.
 - Text exporting of either entire lists or selected items.
 - Color labels to organize items
