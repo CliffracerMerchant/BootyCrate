@@ -45,6 +45,8 @@ private const val inventoryItemFields = "id, name, extraInfo, color, " +
     @Query("""UPDATE bootycrate_item SET color = :color WHERE id = :id""")
     abstract suspend fun updateColor(id: Long, color: Int)
 
+    @Query("SELECT * FROM bootycrate_item")
+    abstract fun getAllNow(): List<DatabaseBootyCrateItem>
 
 
     @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +

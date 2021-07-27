@@ -45,12 +45,14 @@
             android:layout="@layout/preference"
             android:key="@string/pref_update_list_reminder_enabled_key"
             android:title="@string/pref_update_list_reminder_title" />
-<!--        <Preference-->
-<!--            android:key="@string/pref_export_database"-->
-<!--            android:title="@string/export_database_description" />-->
-<!--        <Preference-->
-<!--            android:key="@string/pref_import_database"-->
-<!--            android:title="@string/import_database_description" />-->
+        <Preference
+            android:layout="@layout/preference"
+            android:key="@string/pref_export_database_key"
+            android:title="@string/pref_export_database_title" />
+        <Preference
+            android:layout="@layout/preference"
+            android:key="@string/pref_import_database_key"
+            android:title="@string/pref_import_database_title" />
     </PreferenceCategory>
 
     <PreferenceCategory

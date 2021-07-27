@@ -6,6 +6,7 @@ package com.cliffracertech.bootycrate.fragment
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.activityViewModels
 import androidx.preference.ListPreference
 import androidx.preference.Preference
@@ -13,9 +14,11 @@ import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
+import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.ShoppingListViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.utils.AboutAppDialog
+import com.cliffracertech.bootycrate.utils.importDatabaseFromUri
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
 /** A fragment to display the BootyCrate app settings. */
@@ -41,6 +44,10 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
                 viewModel.sortByChecked = sortByChecked
             } getString(R.string.pref_update_list_reminder_enabled_key) ->
                 addSecondaryFragment(UpdateListReminder.SettingsFragment())
+            getString(R.string.pref_export_database_key) ->
+                getExportPath.launch(getString(R.string.exported_database_default_name))
+            getString(R.string.pref_import_database_key) ->
+                getImportPath.launch(arrayOf("*/*"))
             getString(R.string.pref_about_app_key) ->
                 AboutAppDialog().show(childFragmentManager, null)
             getString(R.string.pref_open_source_libraries_used_key) -> {
@@ -60,12 +67,13 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
             menuButtonVisible = false)
     }
 
-//    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
-//        val context = this.context ?: return@registerForActivityResult
-//        if (uri != null) BootyCrateDatabase.backup(context, uri)
-//    }
-//
-//    private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-//        if (uri != null) Dialog.importDatabaseFromUri(uri, activity)
-//    }
+    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
+        val context = this.context ?: return@registerForActivityResult
+        if (uri != null) BootyCrateDatabase.backup(context, uri)
+    }
+
+    private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val activity = this.activity ?: return@registerForActivityResult
+        if (uri != null) importDatabaseFromUri(uri, activity)
+    }
 }

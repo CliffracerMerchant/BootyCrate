@@ -6,6 +6,7 @@ package com.cliffracertech.bootycrate.utils
 
 import android.app.Dialog
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +17,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
+import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
@@ -36,6 +39,32 @@ fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
         .setBackground(ContextCompat.getDrawable(context, R.drawable.alert_dialog_background))
         .setBackgroundInsetStart(0)
         .setBackgroundInsetEnd(0)
+
+/** Open a dialog to ask the user to the type of database import they want (merge
+ *  existing or overwrite, and recreate the given activity if the import requires it. */
+fun importDatabaseFromUri(uri: Uri, activity: FragmentActivity)  {
+    themedAlertDialogBuilder(activity).
+        setMessage(R.string.import_database_question_message).
+        setNeutralButton(android.R.string.cancel) { _, _ -> }.
+        setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
+            BootyCrateDatabase.mergeWithBackup(activity, uri)
+        }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
+        themedAlertDialogBuilder(activity).
+            setMessage(R.string.import_database_overwrite_confirmation_message).
+            setNegativeButton(android.R.string.cancel) { _, _ -> }.
+            setPositiveButton(android.R.string.ok) { _, _ ->
+                BootyCrateDatabase.replaceWithBackup(activity, uri)
+                // The pref pref_viewmodels_need_cleared needs to be set to true so that
+                // when the MainActivity is recreated, it will clear its ViewModelStore
+                // and use the DAOs of the new database instead of the old one.
+                val prefs = PreferenceManager.getDefaultSharedPreferences(activity)
+                val editor = prefs.edit()
+                editor.putBoolean(activity.getString(R.string.pref_view_models_need_cleared), true)
+                editor.apply()
+                activity.recreate()
+            }.show()
+        }.show()
+}
 
 /**
  * An abstract DialogFragment to create a new BootyCrateItem.
