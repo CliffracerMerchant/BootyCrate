@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -23,16 +23,16 @@ import com.cliffracertech.bootycrate.utils.*
  *
  * TextFieldEdit is an AppCompatEditText optimized for toggleable editing
  * of a single line. When isEditable is false, the TextFieldEdit will pre-
- * sent itself as a normal single line TextView. When isEditable is true,
+ * sent itself as a single line TextView. When isEditable is true,
  * TextFieldEdit will request focus when it is tapped and display a soft
  * input. If the user presses the done action on the soft input or if the
  * focus is changed, the changes to the text can be reacted to through the
  * property onTextChangedListener. If the proposed change would leave the
- * field empty and the property canBeBlank is false, the value will
+ * field empty, and the property canBeBlank is false, the value will
  * instead be reverted to its previous value. Note that if the canBeBlank
  * property is changed to false when the field is already empty, it will
  * not be enforced until the value is changed to a non-blank value.
- *
+
  * When in editable mode, TextFieldEdit will underline itself to indicate
  * this to the user, and will set its minHeight to the value of the dimen-
  * sion R.dimen.text_field_edit_editable_min_height to ensure that its
@@ -47,7 +47,6 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
 
     protected var underlineAlpha = 0
     protected var lastValue: String? = null
-    protected val inputMethodManager = inputMethodManager(context)
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
@@ -62,16 +61,16 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
     }
 
     private fun setTextPrivate(newText: String) {
-        if (!canBeBlank && text.isNullOrBlank())
-            setText(lastValue ?: "")
-        else setText(newText)
-        onTextChangedListener?.invoke(text.toString())
+        if (canBeBlank || newText.isNotBlank()) {
+            setText(newText)
+            onTextChangedListener?.invoke(text.toString())
+        } else setText(lastValue ?: "")
     }
 
     override fun onEditorAction(actionCode: Int) {
         if (actionCode == EditorInfo.IME_ACTION_DONE) {
             clearFocus()
-            inputMethodManager?.hideSoftInputFromWindow(windowToken, 0)
+            SoftKeyboard.hide(this)
             setTextPrivate(text.toString())
         }
         super.onEditorAction(actionCode)
@@ -85,11 +84,11 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
     fun setEditable(editable: Boolean) {
         if (editable) lastValue = text.toString()
         isFocusableInTouchMode = editable
+        isFocusable = editable
         /* Setting the input type here will prevent misspelling underlines from
          * being displayed when the TextFieldEdit is not in an editable state. */
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-        if (!editable && isFocused) clearFocus()
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
         underlineAlpha = if (editable) 255 else 0
@@ -174,12 +173,14 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
     data class AnimInfo(
         val translateAnimator: ValueAnimator,
         val underlineAnimator: ValueAnimator,
-        private val startTranslationY: Float,
-        private val endTranslationY: Float
+        private var startTranslationY: Float,
+        private var endTranslationY: Float
     ) {
-        fun adjustTranslationStartEnd(startAdjustment: Float, endAdjustment: Float) =
-            translateAnimator.setFloatValues(startTranslationY + startAdjustment,
-                                             endTranslationY + endAdjustment)
+        fun adjustTranslationStartEnd(startAdjustment: Float, endAdjustment: Float) {
+            startTranslationY += startAdjustment
+            endTranslationY += endAdjustment
+            translateAnimator.setFloatValues(startTranslationY, endTranslationY)
+        }
     }
 
     /** Set the editable state of the TextFieldEdit, and return the AnimInfo
@@ -203,37 +204,32 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         val oldBaseline = baseline
         minHeight = if (!editable) 0 else
             resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
-        val newUnderlineAlpha = if (editable) 255 else 0
-
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
         val baselineChange = baseline - oldBaseline
-        val start = -baselineChange.toFloat()
-        val translateAnimator = floatValueAnimator(::setTranslationY, start, 0f, animatorConfig)
-        val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate,
-                                                 if (editable) 0 else 255,
+        val newUnderlineAlpha = if (editable) 255 else 0
+
+        translationY -= baselineChange
+        val translateAnimator = floatValueAnimator(::setTranslationY, translationY, 0f, animatorConfig)
+        val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate, underlineAlpha,
                                                  newUnderlineAlpha, animatorConfig)
-        if (startAnimationsImmediately) {
-            translateAnimator.start()
-            underlineAnimator.start()
-        } else translationY = start
-        return AnimInfo(translateAnimator, underlineAnimator, start, 0f)
+        if (startAnimationsImmediately) { translateAnimator.start()
+                                          underlineAnimator.start() }
+        return AnimInfo(translateAnimator, underlineAnimator, translationY, 0f)
     }
 
     fun setStrikeThroughEnabled(strikeThroughEnabled: Boolean, animate: Boolean = true) {
-        if (!animate) {
-            super.setStrikeThroughEnabled(strikeThroughEnabled)
-            return
+        if (!animate) super.setStrikeThroughEnabled(strikeThroughEnabled)
+        else {
+            strikeThroughIsRtl = !strikeThroughEnabled
+            val fullLength = paint.measureText(text, 0, text?.length ?: 0)
+            val endColor = if (strikeThroughEnabled) currentHintTextColor
+            else normalTextColor
+            argbValueAnimator(::setTextColor, currentTextColor, endColor, animatorConfig).start()
+            floatValueAnimator(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
+                if (!strikeThroughEnabled) doOnEnd { strikeThroughLength = null }
+            }.start()
         }
-
-        strikeThroughIsRtl = !strikeThroughEnabled
-        val fullLength = paint.measureText(text, 0, text?.length ?: 0)
-        val endColor = if (strikeThroughEnabled) currentHintTextColor
-                       else                      normalTextColor
-        argbValueAnimator(::setTextColor, currentTextColor, endColor, animatorConfig).start()
-        floatValueAnimator(::setStrikeThroughLength, 0f, fullLength, animatorConfig).apply {
-            if (!strikeThroughEnabled) doOnEnd { strikeThroughLength = null }
-        }.start()
     }
 
     // So that the properties can be used in the AnimatorUtils valueAnimator functions.

@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2020 Nicholas Hochstetler
-  ~  You may not use this file except in compliance with the Apache License
-  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
-  ~  or in the file LICENSE in the project's root directory. -->
+<!-- Copyright 2021 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
 
 <merge
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -19,11 +18,11 @@
         android:orientation="horizontal"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/checkBoxNameAndAmountLayout"
+        app:layout_constraintTop_toBottomOf="@id/extraInfoEdit"
         app:layout_constraintEnd_toStartOf="@id/editButton"
         app:layout_constraintWidth_default="wrap"
         app:layout_constraintHorizontal_bias="0.0"
-        tools:visibility="visible">
+        tools:visibility="visible" >
 
         <com.cliffracertech.bootycrate.view.TintableCheckbox
             android:id="@+id/autoAddToShoppingListCheckBox"

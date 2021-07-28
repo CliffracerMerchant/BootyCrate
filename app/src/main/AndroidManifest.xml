@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2020 Nicholas Hochstetler
-  ~  You may not use this file except in compliance with the Apache License
-  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
-  ~  or in the file LICENSE in the project's root directory. -->
+<!-- Copyright 2021 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.cliffracertech.bootycrate">
@@ -18,7 +18,7 @@
         android:theme="@style/LightTheme" >
 
         <activity
-            android:name="com.cliffracertech.bootycrate.activity.GradientStyledMainActivity"
+            android:name="com.cliffracertech.bootycrate.activity.MainActivity"
             android:label="@string/app_name"
             android:windowSoftInputMode="adjustPan"
             android:launchMode="standard">
@@ -30,12 +30,13 @@
 
         <receiver android:name="com.cliffracertech.bootycrate.fragment.UpdateListReminder$SendNotificationReceiver" />
 
-        <receiver android:name="com.cliffracertech.bootycrate.fragment.UpdateListReminder$DeviceRestartReceiver"
+        <receiver android:name="com.cliffracertech.bootycrate.fragment.UpdateListReminder$AlarmsNeedResetReceiver"
             android:enabled="true"
             android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 

@@ -1,9 +1,7 @@
-/*
- * Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
- * or in the file LICENSE in the project's root directory.
- */
+ * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.fragment
 
 import android.app.Application
@@ -29,10 +27,9 @@ import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.recyclerview.ShoppingListItemView
-import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
+import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.*
-import com.cliffracertech.bootycrate.recyclerview.ExpandableItemAnimator
+import com.cliffracertech.bootycrate.recyclerview.ShoppingListItemView
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.cliffracertech.bootycrate.utils.*
 import com.google.common.truth.Truth.assertThat
@@ -49,14 +46,14 @@ import org.junit.runner.RunWith
 @LargeTest
 class ShoppingListFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
+    @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
     private val dao = BootyCrateDatabase.get(context as Application).dao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
-    private val redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
-    private val orangeItem1 = ShoppingListItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
-    private val yellowItem2 = ShoppingListItem(name = "Yellow", color = 2, amount = 1)
-    private val grayItem11 = ShoppingListItem(name = "Gray", color = 11, amount = 9)
+    private var redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
+    private var orangeItem1 = ShoppingListItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
+    private var yellowItem2 = ShoppingListItem(name = "Yellow", color = 2, amount = 1)
+    private var grayItem11 = ShoppingListItem(name = "Gray", color = 11, amount = 9)
 
     @Before fun resetItems() {
         activityRule.scenario.onActivity {
@@ -109,30 +106,26 @@ class ShoppingListFragmentTests {
             onlyShownShoppingListItemsAre(grayItem11, redItem0, orangeItem1, yellowItem2))
     }
 
-    private var collapsedItemHeight = 0
     @Test fun expandItem() {
-        onView(withId(R.id.shoppingListRecyclerView)).perform(doStuff<RecyclerView> {
-            (it.itemAnimator as ExpandableItemAnimator).notifyExpandedItemChanged(null)
-            collapsedItemHeight = it.findViewHolderForAdapterPosition(0)!!.itemView.height
-        }).check(onlyExpandedIndexIs(null, collapsedItemHeight))
-
+        runBlocking { dao.clearExpandedShoppingListItem() }
+        onView(withId(R.id.shoppingListRecyclerView)).check(onlyExpandedIndexIs(null))
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(1, clickEditButton())
-        ).check(onlyExpandedIndexIs(1, collapsedItemHeight))
+        ).check(onlyExpandedIndexIs(1))
     }
 
     @Test fun expandAnotherItem() {
         expandItem()
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(3, clickEditButton())
-        ).check(onlyExpandedIndexIs(3, collapsedItemHeight))
+        ).check(onlyExpandedIndexIs(3))
     }
 
     private fun expandedItemSurvives(action: Runnable) {
         expandItem()
         action.run()
         onView(withId(R.id.shoppingListRecyclerView))
-            .check(onlyExpandedIndexIs(1, collapsedItemHeight))
+            .check(onlyExpandedIndexIs(1))
     }
 
     private fun switchToInventoryAndBack() {
@@ -294,7 +287,8 @@ class ShoppingListFragmentTests {
                                                     withText(R.string.no_search_results_message))
     private fun emptyRecyclerViewMessage() = allOf(withId(R.id.emptyRecyclerViewMessage),
                                                    withParent(withId(R.id.shoppingListFragmentView)),
-                                                   not(withText(R.string.no_search_results_message)))
+                                                   withText(context.getString(R.string.empty_recycler_view_message,
+                                                       context.getString(R.string.shopping_list_item_collection_name))))
 
     @Test fun emptyMessageAppears() {
         runBlocking { dao.deleteAllShoppingListItems() }
@@ -460,7 +454,7 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),
-                typeIntoValueEdit("9"),
+                replaceValueEditText("29"),
                 clickEditButton()),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as ShoppingListItem
@@ -566,8 +560,8 @@ class ShoppingListFragmentTests {
         checkoutRemovesCheckedItems()
         onView(withId(R.id.inventoryButton)).perform(click())
         val expectedItem1 = InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                                          color = orangeItem1.color, amount = 1 + orangeItem1.amount)
-        val expectedItem2 = InventoryItem(name = grayItem11.name, color = grayItem11.color, amount = 1)
+                                          color = orangeItem1.color, amount = orangeItem1.amount)
+        val expectedItem2 = InventoryItem(name = grayItem11.name, color = grayItem11.color, amount = 0)
         // grayItem11 was not checked and should not have its amount updated.
         onView(withId(R.id.inventoryRecyclerView)).check(
             onlyShownInventoryItemsAre(expectedItem1, expectedItem2))
@@ -575,12 +569,15 @@ class ShoppingListFragmentTests {
 
     @Test fun sortByChecked() {
         checkIndividualItems()
+        redItem0.isChecked = true
+        yellowItem2.isChecked = true
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.settings_description)).perform(click())
         onView(withText(R.string.pref_sort_by_checked_title)).perform(click())
         pressBack()
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(orangeItem1, grayItem11, redItem0, yellowItem2))
+        redItem0.isChecked = false
         onView(withId(R.id.shoppingListRecyclerView)).perform(
             actionsOnItemAtPosition(2, clickCheckBox())
         ).check(onlyShownShoppingListItemsAre(redItem0, orangeItem1, grayItem11, yellowItem2))

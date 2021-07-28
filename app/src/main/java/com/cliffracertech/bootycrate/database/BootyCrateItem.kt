@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -10,8 +10,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.cliffracertech.bootycrate.R
 
-/** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item
- * table, and therefore contains properties for each of these fields. */
+/** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item. */
 @Entity(tableName = "bootycrate_item")
 class DatabaseBootyCrateItem(
     @PrimaryKey(autoGenerate = true)
@@ -84,7 +83,7 @@ abstract class BootyCrateItem(
     var amount: Int = 1,
     var isExpanded: Boolean = false,
     var isSelected: Boolean = false,
-    var linked: Boolean = false,
+    var isLinked: Boolean = false,
 ) : DatabaseBootyCrateItem.Convertible {
 
     // For a user-facing string representation of the object
@@ -110,22 +109,21 @@ class ShoppingListItem(
     amount: Int = 1,
     isExpanded: Boolean = false,
     isSelected: Boolean = false,
-    linked: Boolean = false,
+    isLinked: Boolean = false,
     var isChecked: Boolean = false
-): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, linked) {
+): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
     enum class Field { Name, ExtraInfo, Color, Amount,
-                       IsExpanded, IsSelected, IsChecked }
+                       IsExpanded, IsSelected, IsLinked, IsChecked }
 
     override fun toDbBootyCrateItem() = DatabaseBootyCrateItem(
         id, name, extraInfo, color,
         isChecked = isChecked,
         shoppingListAmount = amount,
         expandedInShoppingList = isExpanded,
-        selectedInShoppingList = isSelected
-    )
+        selectedInShoppingList = isSelected)
 }
 
 /** A BootyCrateItem subclass that provides an implementation of toDbBootyCrateItem
@@ -139,15 +137,15 @@ class InventoryItem(
     amount: Int = 0,
     isExpanded: Boolean = false,
     isSelected: Boolean = false,
-    linked: Boolean = false,
+    isLinked: Boolean = false,
     var autoAddToShoppingList: Boolean = false,
     var autoAddToShoppingListAmount: Int = 1
-): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, linked) {
+): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
     enum class Field { Name, ExtraInfo, Color, Amount,
-                       IsExpanded, IsSelected,
+                       IsExpanded, IsSelected, IsLinked,
                        AutoAddToShoppingList,
                        AutoAddToShoppingListAmount }
 

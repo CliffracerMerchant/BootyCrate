@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -18,7 +18,10 @@ import com.cliffracertech.bootycrate.R
 /** A data class that contains a TimeInterpolator and a duration for syncing animations. */
 data class AnimatorConfig(var duration: Long, var interpolator: TimeInterpolator) {
     companion object {
-        fun translation(context: Context) = AnimatorConfig(
+        /** Return an AnimatorConfig with an animation duration equal to the value
+         * of R.integer.defaultAnimationDuration and an interpolator equal to the
+         * value of R.anim.default_interpolator. */
+        fun appDefault(context: Context) = AnimatorConfig(
             context.resources.getInteger(R.integer.defaultAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }
@@ -51,8 +54,9 @@ fun LayoutTransition.applyConfig(config: AnimatorConfig?) = apply {
 
 // The following ValueAnimator returning functions can be used similarly to object animators,
 // but hopefully are more performant due to not using reflection to get the property setter
-// (the performance difference is likely negligible but using these instead is also low effort),
-// and allows setting the duration and interpolator at the same time through the config parameter.
+// (the performance difference is likely negligible, but these are similar in ease of use as
+// ObjectAnimators, and allow for setting the duration and interpolator at the same time through
+// the config parameter.
 /** Return a ValueAnimator for an Int property with the update listener already set. */
 fun intValueAnimator(
     setter: (Int) -> Unit,

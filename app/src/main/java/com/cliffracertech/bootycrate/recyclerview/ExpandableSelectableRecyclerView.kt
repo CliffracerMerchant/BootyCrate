@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -8,9 +8,9 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.SoftKeyboard
 
 /**
  * A BootyCrateRecyclerView subclass that enables multi-selection and expansion of items.
@@ -29,21 +29,29 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     context: Context,
     attrs: AttributeSet
 ) : BootyCrateRecyclerView<T>(context, attrs) {
-    protected val itemAnimator = ExpandableItemAnimator(this, AnimatorConfig.translation(context))
-
+    protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
+    private var expandedItemPos: Int? = null
     val selection = Selection()
 
     init {
         addItemDecoration(ItemSpacingDecoration(context))
         setHasFixedSize(true)
-        layoutManager = LinearLayoutManager(context)
         setItemAnimator(itemAnimator)
     }
 
     fun setExpandedItem(pos: Int?) {
+        val oldExpandedPos = expandedItemPos
+        if (oldExpandedPos != null) {
+            val vh = findViewHolderForAdapterPosition(oldExpandedPos)
+                    as? ExpandableSelectableRecyclerView<*>.ViewHolder
+            if (vh?.hasFocusedChild() == true) {
+                requestFocus()
+                SoftKeyboard.hide(this)
+            }
+        }
+        expandedItemPos = pos
         viewModel.setExpandedItem(if (pos == null) null
                                   else adapter.currentList[pos].id)
-        itemAnimator.notifyExpandedItemChanged(pos)
     }
 
     /**
@@ -61,9 +69,8 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
      * selection entirely.
      */
     inner class Selection {
-        val itemsLiveData get() = viewModel.selectedItems
-        val items get() = itemsLiveData.value
-        val size get() = items?.size ?: 0
+        val sizeLiveData get() = viewModel.selectedItemCount
+        val size get() = sizeLiveData.value ?: 0
         val isEmpty get() = size == 0
         val isNotEmpty get() = size != 0
 
@@ -77,12 +84,17 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     /** An abstract (due to not implementing onCreateViewHolder) subclass of
      * BootyCrateRecyclerView.Adapter that enforces the use of
      * ExpandableSelectableRecyclerView.ViewHolder. */
-    abstract inner class Adapter<VHType: ViewHolder> :
-        BootyCrateRecyclerView<T>.Adapter<VHType>()
-    {
+    abstract inner class Adapter<VHType: ViewHolder> : BootyCrateRecyclerView<T>.Adapter<VHType>() {
         override fun onBindViewHolder(holder: VHType, position: Int) {
-            if (holder.item.isExpanded)
-                itemAnimator.notifyExpandedItemChanged(position)
+            if (holder.item.isExpanded) expandedItemPos = position
+        }
+
+        override fun onViewDetachedFromWindow(holder: VHType) {
+            super.onViewDetachedFromWindow(holder)
+            if (holder.hasFocusedChild()) {
+                requestFocus()
+                SoftKeyboard.hide(this@ExpandableSelectableRecyclerView)
+            }
         }
     }
 
@@ -90,7 +102,12 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
      * A ViewHolder subclass that wraps an instance of ExpandableSelectableItemView.
      *
      * ExpandableSelectableRecyclerView.ViewHolder updates the onClickListeners of
-     * the wrapped item view to enable the selection and expansion of the items.
+     * the wrapped item view to enable the selection and expansion of the items, and
+     * adds the open function hasFocusedChild. ExpandableSelectableRecyclerView uses
+     * the return value of hasFocusedChild to decide whether or not to attempt to
+     * hide the soft keyboard when an item is collapsed. If a subclass adds new
+     * focusable children, it should override hasFocusedChild to check if these
+     * children are focused.
      */
     open inner class ViewHolder(view: ExpandableSelectableItemView<T>) :
         BootyCrateRecyclerView<T>.ViewHolder(view)
@@ -114,6 +131,10 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
                     setExpandedItem(if (!view.isExpanded) adapterPosition else null)
                 }
             }
+        }
+
+        open fun hasFocusedChild() = (itemView as ExpandableSelectableItemView<*>).ui.run {
+            nameEdit.isFocused || extraInfoEdit.isFocused || amountEdit.ui.valueEdit.isFocused
         }
     }
 }

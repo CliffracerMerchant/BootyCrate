@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -239,6 +239,7 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         canvas?.withClip(indicatorXPos, 0, indicatorXPos + indicatorWidth, bottom) {
-            drawPath(topEdgePath, indicatorPaint) }
+            drawPath(topEdgePath, indicatorPaint)
+        }
     }
 }

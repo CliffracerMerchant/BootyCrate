@@ -1,11 +1,10 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.view
 
 import android.content.Context
-import android.graphics.drawable.AnimatedStateListDrawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatImageButton
@@ -33,6 +32,10 @@ import dev.sasikanth.colorsheet.ColorSheet
  * can be set to invoke an action when the color is changed. The function
  * initColorIndex will set the color index without an animation and will not
  * call the onColorChangedListener.
+ *
+ * TintableCheckbox assumes it is instantiated inside an instance of FragmentActivity
+ * in order to show child DialogFragments. If this is not the case, a ClassCastException
+ * will be thrown when the TintableCheckbox is clicked while inColorEditMode is true.
  */
 class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageButton(context, attrs) {
     private var _inColorEditMode = false
@@ -78,10 +81,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     fun setInColorEditMode(inColorEditMode: Boolean, animate: Boolean = true) {
         _inColorEditMode = inColorEditMode
         refreshDrawableState()
-        if (!animate) (drawable as? LayerDrawable)?.apply {
-            (getDrawable(0) as? AnimatedStateListDrawable)?.jumpToCurrentState()
-            (getDrawable(1) as? AnimatedStateListDrawable)?.jumpToCurrentState()
-        }
+        if (!animate) drawable.jumpToCurrentState()
     }
 
     /** Set the color index without calling the onColorChangedListener. */
@@ -92,7 +92,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
 
     /** Set the color of the checkbox to the color defined by colors[colorIndex],
      * and call onColorChangedListener with the new color. */
-    fun setColorIndex(colorIndex: Int, animate: Boolean = false) {
+    fun setColorIndex(colorIndex: Int, animate: Boolean = true) {
         val oldColor = color
         _colorIndex = colorIndex.coerceIn(colors.indices)
         val checkboxBg = (drawable as LayerDrawable).getDrawable(0)

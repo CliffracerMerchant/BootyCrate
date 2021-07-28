@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -10,15 +10,14 @@ import android.graphics.Paint
 import android.text.InputType
 import android.util.AttributeSet
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.ViewFlipper
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.doAfterTextChanged
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import com.cliffracertech.bootycrate.utils.dpToPixels
-import com.cliffracertech.bootycrate.utils.inputMethodManager
 
 /**
  * A preconfigured ViewFlipper that allows animated switching between a
@@ -38,7 +37,6 @@ import com.cliffracertech.bootycrate.utils.inputMethodManager
  */
 class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(context, attrs) {
 
-    private val imm = inputMethodManager(context)
     private val fragmentTitlePos = 0
     private val actionModeTitlePos = 1
     private val searchViewPos = 2
@@ -102,16 +100,15 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
 
     fun showTitle() { if (showingFragmentTitle) return
                       displayedChild = fragmentTitlePos
-                      imm?.hideSoftInputFromWindow(windowToken, 0) }
+                      SoftKeyboard.hide(this) }
     fun showActionModeTitle() { if (showingActionModeTitle) return
                                 displayedChild = actionModeTitlePos
-                                imm?.hideSoftInputFromWindow(windowToken, 0) }
+                                SoftKeyboard.hide(this) }
     fun showSearchQuery(showSoftInput: Boolean = true) {
         if (showingSearchView) return
         displayedChild = searchViewPos
         searchQueryView.requestFocus()
-        if (showSoftInput)
-            imm?.showSoftInput(searchQueryView, InputMethodManager.SHOW_IMPLICIT)
+        if (showSoftInput) SoftKeyboard.show(searchQueryView)
     }
 
     fun setTitle(title: CharSequence, switchTo: Boolean = false) {

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2020 Nicholas Hochstetler
+<!-- Copyright 2021 Nicholas Hochstetler
    ~ You may not use this file except in compliance with the Apache License
    ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
    ~ or in the file LICENSE in the project's root directory. -->
@@ -7,5 +6,11 @@
 <resources>
     <dimen name="editable_text_field_min_height">44dp</dimen>
     <dimen name="integer_edit_editable_value_min_width">40dp</dimen>
+    <dimen name="dialog_rounded_corner_radius">12dp</dimen>
+
     <dimen name="recycler_view_item_vertical_padding">4dp</dimen>
+    <dimen name="recycler_view_item_rounded_corner_radius">15dp</dimen>
+    <dimen name="recycler_view_item_selection_border_thickness">3dp</dimen>
+    <!-- inner rounded corner radius should be equal to rounded corner radius minus the selection border thickness -->
+    <dimen name="recycler_view_item_inner_rounded_corner_radius">12dp</dimen>
 </resources>

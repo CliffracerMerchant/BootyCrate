@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -23,7 +23,7 @@ import com.kennyc.view.MultiStateView
 import java.util.*
 
 /**
- * An fragment to display a ExpandableSelectableRecyclerView to the user.
+ * A fragment to display an ExpandableSelectableRecyclerView to the user.
  *
  * RecyclerViewFragment is an abstract fragment whose main purpose is to
  * display an instance of a ExpandableSelectableRecyclerView to the user. It
@@ -36,13 +36,13 @@ import java.util.*
  * calling super.onViewCreated, or an exception will occur.
  *
  * The value of the open property collectionName should be overridden in
- * subclasses with a value that describes what the collection of
- * ExpandableSelectableItems should be called in user facing strings.
+ * subclasses with a value that describes what the collection of items
+ * should be called in user facing strings.
  *
  * The value of the open property actionModeCallback will be used as the
  * callback when an action mode is started. Subclasses can override it with a
- * with a descendant of SelectionActionModeCallback if they wish to per-
- * form work when the action action mode starts or finishes.
+ * with a descendant of SelectionActionModeCallback if they wish to perform
+ * work when the action action mode starts or finishes.
  */
 @Suppress("LeakingThis")
 abstract class RecyclerViewFragment<T: BootyCrateItem> :
@@ -68,7 +68,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
         val sortStr = prefs.getString(sortModePrefKey, BootyCrateItemSort.Color.toString())
         recyclerView?.apply {
             sort = BootyCrateItemSort.fromString(sortStr)
-            selection.itemsLiveData.observe(viewLifecycleOwner, ::onSelectionChanged)
+            selection.sizeLiveData.observe(viewLifecycleOwner, ::onSelectionSizeChanged)
             observeViewModel(viewLifecycleOwner)
         }
 
@@ -112,10 +112,10 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
      * @return whether the dialog was successfully started. */
     private fun shareList(): Boolean {
         val context = this.context ?: return false
-        val selectionIsEmpty = viewModel.selectedItems.value?.isEmpty() ?: true
-        val items = if (!selectionIsEmpty) viewModel.selectedItems.value ?: emptyList()
-                    else                   viewModel.items.value ?: emptyList()
-        if (items.isEmpty()) {
+        val selectionIsEmpty = (viewModel.selectedItemCount.value ?: 0) == 0
+        val items = if (selectionIsEmpty) viewModel.items.value
+                    else viewModel.items.value?.filter { it.isSelected }
+        if (items?.isEmpty() != false) {
             val anchor = recyclerView?.snackBarAnchor ?: view ?: return false
             val message = context.getString(R.string.empty_recycler_view_message, collectionName)
             Snackbar.make(context, anchor, message, Snackbar.LENGTH_LONG)
@@ -125,14 +125,13 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
         val collectionName = collectionName.toLowerCase(Locale.getDefault())
         val stringResId = if (selectionIsEmpty) R.string.share_whole_list_title
-                          else R.string.share_selected_items_title
+                          else                  R.string.share_selected_items_title
         val messageTitle = context.getString(stringResId, collectionName)
 
         var message = ""
         for (i in 0 until items.size - 1)
             message += items[i].toUserFacingString() + "\n"
-        if (items.isNotEmpty())
-            message += items.last().toUserFacingString()
+        message += items.last().toUserFacingString()
 
         val intent = Intent(Intent.ACTION_SEND)
         intent.putExtra(Intent.EXTRA_TEXT, message)
@@ -143,7 +142,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
     private fun deleteSelectedItems(): Boolean {
         val recyclerView = this.recyclerView ?: return false
-        val size = viewModel.selectedItems.value?.size ?: 0
+        val size = viewModel.selectedItemCount.value ?: 0
         viewModel.deleteSelected()
         recyclerView.showDeletedItemsSnackBar(size)
         return true
@@ -161,11 +160,11 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
         return true
     }
 
-    private fun onSelectionChanged(newList: List<T>) {
-        if (newList.isNotEmpty()) {
+    private fun onSelectionSizeChanged(newSize: Int) {
+        if (newSize > 0) {
             if (!actionModeIsStarted)
                 actionBar?.startActionMode(actionModeCallback)
-            else actionBar?.actionMode?.title = actionModeTitle(newList.size)
+            else actionBar?.actionMode?.title = actionModeTitle(newSize)
         } else actionBar?.actionMode?.finish()
     }
 
@@ -199,7 +198,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
             val actionModeCallback = if (recyclerView.selection.isEmpty) null
                                      else this.actionModeCallback
-            val activeSearchQuery = if (viewModel.searchFilter.isNullOrBlank()) null
+            val activeSearchQuery = if (viewModel.searchFilter.isBlank()) null
                                     else viewModel.searchFilter
             activityUi.actionBar.transition(
                 activeActionModeCallback = actionModeCallback,

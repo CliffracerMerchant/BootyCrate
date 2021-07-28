@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -19,7 +19,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
+import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
@@ -31,7 +31,7 @@ import org.junit.runner.RunWith
 @LargeTest
 class PreferenceTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
+    @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Before fun navigateToPreferences() {
         onView(withId(R.id.menuButton)).perform(click())

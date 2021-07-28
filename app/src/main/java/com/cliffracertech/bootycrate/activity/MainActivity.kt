@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -10,25 +10,29 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.animation.AnimationUtils
+import android.view.animation.PathInterpolator
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.PreferencesFragment
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.doOnStart
+import com.cliffracertech.bootycrate.utils.layoutTransition
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
  *
- * MainActivity is a MultiFragmentActivity subclass with a custom UI inclu-
- * ding a RecyclerViewActionBar, a BottomAppBar, and a checkout button and
- * an add button in the cradle of the BottomAppBar. In order for fragments
- * to inform MainActivity which of these UI elements should be displayed
- * when they are active, the fragment should implement MainActivity.Frag-
- * mentInterface. While it is not necessary for fragments to implement
- * FragmentInterface, fragments that do not will not be able to affect the
- * visibility of the MainActivity UI when they are displayed.
+ * MainActivity is a MultiFragmentActivity subclass with a custom UI including
+ * a RecyclerViewActionBar, a BottomAppBar, and a checkout button and an add
+ * button in the cradle of the BottomAppBar. In order for fragments to inform
+ * MainActivity which of these UI elements should be displayed when they are
+ * active, the fragment should implement MainActivity.FragmentInterface. While
+ * it is not necessary for fragments to implement FragmentInterface, fragments
+ * that do not will not be able to affect the visibility of the MainActivity
+ * UI when they are displayed.
  */
 @Suppress("LeakingThis")
 open class MainActivity : MultiFragmentActivity() {
@@ -43,6 +47,8 @@ open class MainActivity : MultiFragmentActivity() {
         super.onCreate(savedInstanceState)
         setupOnClickListeners()
         initAnimatorConfigs()
+        window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
+        initGradientStyle()
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
@@ -64,11 +70,11 @@ open class MainActivity : MultiFragmentActivity() {
         if (newFragment !is MainActivityFragment) return
 
         val needToAnimateCheckoutButton = needToAnimate && ui.bottomAppBar.isVisible
-        ui.showBottomAppBar(show = newFragment.showsBottomAppBar(), animate = needToAnimate,
-                            animatorConfig = primaryFragmentTransitionAnimatorConfig)
+        ui.showBottomAppBar(newFragment.showsBottomAppBar(), needToAnimate,
+                            primaryFragmentTransitionAnimatorConfig)
         val showsCheckoutButton = newFragment.showsCheckoutButton()
         if (showsCheckoutButton != null)
-            showCheckoutButton(show = showsCheckoutButton, animate = needToAnimateCheckoutButton)
+            showCheckoutButton(showsCheckoutButton, needToAnimateCheckoutButton)
         ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
@@ -88,7 +94,11 @@ open class MainActivity : MultiFragmentActivity() {
 
     private fun setThemeFromPreferences() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        val prefKey = getString(R.string.pref_light_dark_mode_key)
+        var prefKey = getString(R.string.pref_view_models_need_cleared)
+        val viewModelsNeedCleared = prefs.getBoolean(prefKey, false)
+        if (viewModelsNeedCleared) viewModelStore.clear()
+
+        prefKey = getString(R.string.pref_light_dark_mode_key)
         val themeDefault = getString(R.string.pref_theme_sys_default_title)
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
@@ -123,6 +133,8 @@ open class MainActivity : MultiFragmentActivity() {
         ui.actionBar.animatorConfig = transitionAnimConfig
         ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
         ui.bottomAppBar.indicatorAnimatorConfig = transitionAnimConfig
+            // This interpolator shows the indicator going around the bottom app bar cradle slightly better.
+            .copy(interpolator = PathInterpolator(.4f,.6f,.6f,.4f))
         ui.checkoutButton.animatorConfig = transitionAnimConfig
         ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig)
         ui.cradleLayout.layoutTransition.doOnStart {
@@ -135,7 +147,7 @@ open class MainActivity : MultiFragmentActivity() {
      * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
      *
      * MainActivityFragment can be implemented by a Fragment subclass to
-     * inform the MainActivity how its ui should be displayed when the frag-
+     * inform the MainActivity how its UI should be displayed when the frag-
      * ment is in the foreground, and to provide a callback for back button
      * (either the hardware/software bottom back button or the action bar's
      * back button) presses. Fragments should always indicate their desired
@@ -143,7 +155,8 @@ open class MainActivity : MultiFragmentActivity() {
      * appropriate function instead of changing their visibility manually to
      * ensure that the appropriate hide/show animations are played. The
      * function addSecondaryFragment allows implementing fragments to add a
-     * secondary fragment themselves.
+     * secondary fragment (see MultiFragmentActivity documentation for an
+     * explanation of primary/secondary fragments) themselves.
      */
     interface MainActivityFragment {
         /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
@@ -155,12 +168,14 @@ open class MainActivity : MultiFragmentActivity() {
         fun onBackPressed() = false
         /** Perform any additional actions on the @param activityUi that the fragment desires,
          * given its @param isActive state. */
-        fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {}
+        fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) { }
 
         fun addSecondaryFragment(fragment: Fragment) {
             val mainActivityFragment = this as? Fragment ?:
                 throw IllegalStateException("Implementors of MainActivityFragment must inherit from androidx.fragment.app.Fragment")
-            (mainActivityFragment.activity as? MainActivity)?.addSecondaryFragment(fragment)
+            val mainActivity = mainActivityFragment.activity as? MainActivity ?:
+                throw IllegalStateException("Implementors of MainActivityFragment must be hosted inside a MainActivity instance.")
+            mainActivity.addSecondaryFragment(fragment)
         }
     }
 }

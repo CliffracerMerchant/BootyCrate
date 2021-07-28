@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2020 Nicholas Hochstetler
-  ~  You may not use this file except in compliance with the Apache License
-  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
-  ~  or in the file LICENSE in the project's root directory. -->
+<!-- Copyright 2021 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
 
 <resources>
     <style name="LightTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -97,25 +96,17 @@
     </style>
 
     <style name="LightAlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
-        <item name="shapeAppearanceOverlay">@style/DialogCorners</item>
-        <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
-        <item name="android:backgroundTint">@color/colorWindowBackgroundLight</item>
         <item name="android:windowTitleStyle">@style/TitleTextAppearance</item>
         <item name="android:textColor">@color/color_text_dark</item>
         <item name="textColorAlertDialogListItem">@color/color_text_dark</item>
-
+        <item name="android:colorBackground">@color/colorRecyclerViewItemLight</item>
+        <item name="dialogCornerRadius">@dimen/dialog_rounded_corner_radius</item>
     </style>
 
     <style name="DarkAlertDialog" parent="LightAlertDialog">
-        <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
-        <item name="android:backgroundTint">@color/colorWindowBackgroundDark</item>
         <item name="android:textColor">@color/color_text_light</item>
+        <item name="android:colorBackground">@color/colorRecyclerViewItemDark</item>
         <item name="textColorAlertDialogListItem">@color/color_text_light</item>
-    </style>
-
-    <style name="DialogCorners">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">6dp</item>
     </style>
 
     <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">

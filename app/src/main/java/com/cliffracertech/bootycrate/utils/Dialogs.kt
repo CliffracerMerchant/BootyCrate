@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -6,18 +6,20 @@ package com.cliffracertech.bootycrate.utils
 
 import android.app.Dialog
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
+import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
@@ -34,6 +36,35 @@ class AboutAppDialog : DialogFragment() {
 /** Return a MaterialAlertDialogBuilder with the context theme's materialAlertDialogTheme style applied. */
 fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
     context, context.theme.resolveIntAttribute(R.attr.materialAlertDialogTheme))
+        .setBackground(ContextCompat.getDrawable(context, R.drawable.alert_dialog_background))
+        .setBackgroundInsetStart(0)
+        .setBackgroundInsetEnd(0)
+
+/** Open a dialog to ask the user to the type of database import they want (merge
+ *  existing or overwrite, and recreate the given activity if the import requires it. */
+fun importDatabaseFromUri(uri: Uri, activity: FragmentActivity)  {
+    themedAlertDialogBuilder(activity).
+        setMessage(R.string.import_database_question_message).
+        setNeutralButton(android.R.string.cancel) { _, _ -> }.
+        setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
+            BootyCrateDatabase.mergeWithBackup(activity, uri)
+        }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
+        themedAlertDialogBuilder(activity).
+            setMessage(R.string.import_database_overwrite_confirmation_message).
+            setNegativeButton(android.R.string.cancel) { _, _ -> }.
+            setPositiveButton(android.R.string.ok) { _, _ ->
+                BootyCrateDatabase.replaceWithBackup(activity, uri)
+                // The pref pref_viewmodels_need_cleared needs to be set to true so that
+                // when the MainActivity is recreated, it will clear its ViewModelStore
+                // and use the DAOs of the new database instead of the old one.
+                val prefs = PreferenceManager.getDefaultSharedPreferences(activity)
+                val editor = prefs.edit()
+                editor.putBoolean(activity.getString(R.string.pref_view_models_need_cleared), true)
+                editor.apply()
+                activity.recreate()
+            }.show()
+        }.show()
+}
 
 /**
  * An abstract DialogFragment to create a new BootyCrateItem.
@@ -67,7 +98,6 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     useDefaultLayout: Boolean = true
 ) : DialogFragment() {
     abstract val viewModel: BootyCrateViewModel<T>
-    private val inputMethodManager = inputMethodManager(context)
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
@@ -115,9 +145,13 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                     // Override the add another button's default on click listener
                     // to prevent it from closing the dialog when clicked
                     addAnotherButton.setOnClickListener { if (addItem()) resetNewItemView() }
-                    newItemView.ui.nameEdit.requestFocus()
-                    inputMethodManager?.showSoftInput(newItemView.ui.nameEdit,
-                                                      InputMethodManager.SHOW_IMPLICIT)
+                    // Showing the soft input seems not to work when done as
+                    // a fragment is appearing. Showing the soft input after
+                    // a small delay seems to be a workaround.
+                    newItemView.ui.nameEdit.handler.postDelayed({
+                        newItemView.ui.nameEdit.requestFocus()
+                        SoftKeyboard.show(newItemView.ui.nameEdit)
+                    }, 50L)
                 }
             }
     }
@@ -150,7 +184,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
         // We'll leave the color edit set to whichever color it was on previously,
         // in case the user wants to add items with like colors consecutively.
         ui.nameEdit.requestFocus()
-        inputMethodManager?.showSoftInput(ui.nameEdit, InputMethodManager.SHOW_IMPLICIT)
+        SoftKeyboard.show(ui.nameEdit)
     }
 
     private fun addItem() =
@@ -175,7 +209,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
 
     private var _shownWarningMessage = WarningMessage.None
     protected val shownWarningMessage get() = _shownWarningMessage
-    protected fun showWarningMessage(warning: WarningMessage) {
+    private  fun showWarningMessage(warning: WarningMessage) {
         if (_shownWarningMessage == warning) return
         _shownWarningMessage = warning
 
@@ -245,7 +279,6 @@ class NewInventoryItemDialog(context: Context) :
 
     init {
         newItemView = newInventoryItemView.apply {
-            setExpanded(true, animate = false)
             detailsUi.autoAddToShoppingListAmountEdit.apply { value = minValue }
             detailsUi.autoAddToShoppingListCheckBox.initColorIndex(0)
             ui.checkBox.onColorChangedListener = {

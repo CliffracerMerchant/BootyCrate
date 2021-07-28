@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -26,8 +26,10 @@ android {
         debug {
             minifyEnabled false
             shrinkResources false
+            debuggable true
         }
         release {
+            debuggable false
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
@@ -39,6 +41,7 @@ android {
     compileOptions {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
+        coreLibraryDesugaringEnabled true
     }
 
     testOptions { unitTests.includeAndroidResources = true }
@@ -56,7 +59,7 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.3.1"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1"
     implementation 'androidx.preference:preference-ktx:1.1.1'
-    implementation "androidx.activity:activity-ktx:1.3.0-alpha08"
+    implementation "androidx.activity:activity-ktx:1.3.0-beta01"
     implementation "androidx.fragment:fragment-ktx:1.3.4"
     implementation 'androidx.core:core-ktx:1.5.0'
 
@@ -71,6 +74,7 @@ dependencies {
     implementation 'com.github.Kennyc1012:MultiStateView:2.2.0'
     implementation 'com.github.ittianyu:BottomNavigationViewEx:2.0.4'
     implementation 'ca.antonious:materialdaypicker:0.7.4'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'androidx.test:core-ktx:1.3.0'

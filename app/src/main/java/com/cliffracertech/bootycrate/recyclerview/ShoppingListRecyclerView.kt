@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -39,7 +39,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         itemAnimator.animatorConfig = AnimatorConfig(
             context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
-        itemAnimator.registerAdapterDataObserver(adapter)
     }
 
     /**
@@ -49,11 +48,10 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
      * using ShoppingListRecyclerView.ViewHolder instances to represent shopping list
      * items. Its overrides of onBindViewHolder make use of the ShoppingListItem.Field
      * values passed by ShoppingListRecyclerView.DiffUtilCallback to support partial
-     * binding. Note that ShoppingListAdapter assumes that any payloads passed to it
-     * are of the type EnumSet<ShoppingListItem.Field>. If a payload of another type
-     * is passed to it, an exception will be thrown.
+     * binding. Note that ShoppingListAdapter assumes that any change payloads passed
+     * to it are of the type EnumSet<ShoppingListItem.Field>. If a payload of another
+     * type is passed to it, an exception will be thrown.
      */
-    @Suppress("UNCHECKED_CAST")
     inner class Adapter : ExpandableSelectableRecyclerView<ShoppingListItem>.Adapter<ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
@@ -71,40 +69,37 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         ) {
             if (payloads.size == 0)
                 return onBindViewHolder(holder, position)
-            val unhandledChanges = mutableListOf<Any>()
 
             for (payload in payloads) {
-                if (payload is EnumSet<*>) {
-                    val item = getItem(position)
-                    val changes = payload as EnumSet<ShoppingListItem.Field>
-                    val ui = holder.view.ui
+                val item = getItem(position)
+                @Suppress("UNCHECKED_CAST")
+                val changes = payload as EnumSet<ShoppingListItem.Field>
+                val ui = holder.view.ui
 
-                    if (changes.contains(ShoppingListItem.Field.Name) &&
-                        ui.nameEdit.text.toString() != item.name)
-                            ui.nameEdit.setText(item.name)
-                    if (changes.contains(ShoppingListItem.Field.ExtraInfo) &&
-                        ui.extraInfoEdit.text.toString() != item.extraInfo)
-                            ui.extraInfoEdit.setText(item.extraInfo)
-                    if (changes.contains(ShoppingListItem.Field.Color) &&
-                        ui.checkBox.colorIndex != item.color)
-                            ui.checkBox.colorIndex = item.color
-                    if (changes.contains(ShoppingListItem.Field.Amount) &&
-                        ui.amountEdit.value != item.amount)
-                            ui.amountEdit.value = item.amount
-                    if (changes.contains(ShoppingListItem.Field.IsExpanded) &&
-                        holder.view.isExpanded != item.isExpanded)
-                            holder.view.setExpanded(item.isExpanded)
-                    if (changes.contains(ShoppingListItem.Field.IsSelected) &&
-                        holder.view.isInSelectedState != item.isSelected)
-                            holder.view.setSelectedState(item.isSelected)
-                    if (changes.contains(ShoppingListItem.Field.IsChecked) &&
-                        ui.checkBox.isChecked != item.isChecked)
-                            ui.checkBox.isChecked = item.isChecked
-                }
-                else unhandledChanges.add(payload)
+                if (changes.contains(ShoppingListItem.Field.Name) &&
+                    ui.nameEdit.text.toString() != item.name)
+                        ui.nameEdit.setText(item.name)
+                if (changes.contains(ShoppingListItem.Field.ExtraInfo) &&
+                    ui.extraInfoEdit.text.toString() != item.extraInfo)
+                        holder.view.setExtraInfoText(item.extraInfo)
+                if (changes.contains(ShoppingListItem.Field.Color) &&
+                    ui.checkBox.colorIndex != item.color)
+                        ui.checkBox.colorIndex = item.color
+                if (changes.contains(ShoppingListItem.Field.Amount) &&
+                    ui.amountEdit.value != item.amount)
+                        ui.amountEdit.value = item.amount
+                if (changes.contains(ShoppingListItem.Field.IsExpanded) &&
+                    holder.view.isExpanded != item.isExpanded)
+                        holder.view.setExpanded(item.isExpanded)
+                if (changes.contains(ShoppingListItem.Field.IsSelected) &&
+                    holder.view.isInSelectedState != item.isSelected)
+                        holder.view.setSelectedState(item.isSelected)
+                if (changes.contains(ShoppingListItem.Field.IsLinked))
+                    holder.view.updateIsLinked(item.isLinked, animate = item.isExpanded)
+                if (changes.contains(ShoppingListItem.Field.IsChecked) &&
+                    ui.checkBox.isChecked != item.isChecked)
+                        ui.checkBox.isChecked = item.isChecked
             }
-            if (unhandledChanges.isNotEmpty())
-                super.onBindViewHolder(holder, position, unhandledChanges)
         }
     }
 
@@ -150,6 +145,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 if (newItem.amount != oldItem.amount)         add(ShoppingListItem.Field.Amount)
                 if (newItem.isExpanded != oldItem.isExpanded) add(ShoppingListItem.Field.IsExpanded)
                 if (newItem.isSelected != oldItem.isSelected) add(ShoppingListItem.Field.IsSelected)
+                if (newItem.isLinked != oldItem.isLinked)     add(ShoppingListItem.Field.IsLinked)
                 if (newItem.isChecked != oldItem.isChecked)   add(ShoppingListItem.Field.IsChecked)
 
                 if (!isEmpty())

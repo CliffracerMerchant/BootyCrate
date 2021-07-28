@@ -1,22 +1,18 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.activity
 
-import android.animation.AnimatorInflater
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.animation.doOnEnd
-import androidx.core.animation.doOnStart
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.applyConfig
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 /**
@@ -103,43 +99,32 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
      * menuItem, and @return whether or not the switch was successful. */
     private fun switchToNewPrimaryFragment(menuItem: MenuItem): Boolean {
         if (menuItem.itemId == navigationBar.selectedItemId || !showingPrimaryFragment) return false
-        if (!navBarMenuItemFragmentMap.containsKey(menuItem.itemId)) return false
-        val newFragment = navBarMenuItemFragmentMap[menuItem.itemId]
+        val newFragment = navBarMenuItemFragmentMap[menuItem.itemId] ?: return false
 
         val oldFragmentMenuItem = navigationBar.menu.findItem(navigationBar.selectedItemId)
         menuItem.isChecked = true
-        onNewFragmentSelected(newFragment!!)
+        onNewFragmentSelected(newFragment)
 
         val leftToRight = oldFragmentMenuItem.order < menuItem.order
         val oldFragment = navBarMenuItemFragmentMap.getValue(oldFragmentMenuItem.itemId)
         oldFragment.view?.apply {
             exitingFragmentView = this
-            val animResId = if (leftToRight) R.animator.slide_out_left
-                            else             R.animator.slide_out_right
-            val anim = AnimatorInflater.loadAnimator(context, animResId)
-            anim.setTarget(this)
-            ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
-                .setFloatValues(0f, width / 2f * if (leftToRight) -1f else 1f)
-            anim.doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
-            anim.doOnEnd { if (this === exitingFragmentView) {
-                visibility = View.GONE
-                exitingFragmentView = null
-                setLayerType(View.LAYER_TYPE_NONE, null)
-            }}
-            anim.start()
+            val endTranslation = width / 2f * if (leftToRight) -1f else 1f
+            animate().alpha(0f).translationX(endTranslation).withLayer()
+                .applyConfig(primaryFragmentTransitionAnimatorConfig)
+                .withEndAction { if (this === exitingFragmentView) {
+                    visibility = View.GONE
+                    exitingFragmentView = null
+                }}.start()
         }
         newFragment.view?.apply {
-            alpha = 0f
-            isVisible = true
-            val animResId = if (leftToRight) R.animator.slide_in_right
-                            else             R.animator.slide_in_left
-            val anim = AnimatorInflater.loadAnimator(context, animResId)
-            anim.setTarget(this)
-            ((anim as AnimatorSet).childAnimations[0] as ObjectAnimator)
-                .setFloatValues(width / 2f * if (leftToRight) 1f else -1f, 0f)
-            anim.doOnStart { setLayerType(View.LAYER_TYPE_HARDWARE, null) }
-            anim.doOnEnd { setLayerType(View.LAYER_TYPE_NONE, null) }
-            anim.start()
+            if (!isVisible) {
+                translationX =  width / 2f * if (leftToRight) 1f else -1f
+                alpha = 0f
+                isVisible = true
+            }
+            animate().alpha(1f).translationX(0f).withLayer()
+                .applyConfig(primaryFragmentTransitionAnimatorConfig).start()
         }
         return true
     }
@@ -209,11 +194,10 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
-            // Even though inactive fragments' visibilities are later set to View.GONE,
-            // we'll set them to View.INVISIBLE for the first time to ensure that they
-            // are fully inflated and that there is no delay when they are switched to
-            // for the first time.
             if (menuItemId != navigationBar.selectedItemId || !wasShowingPrimaryFragment)
+                // Even though the inactive fragments views' visibilities are later
+                // set to View.GONE, setting them to INVISIBLE this first time ensures
+                // that the transition animation plays correctly the first time.
                 fragment.view?.visibility = View.INVISIBLE
         }
         navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)

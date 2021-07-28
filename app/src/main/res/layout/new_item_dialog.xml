@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2020 Nicholas Hochstetler
+<!-- Copyright 2021 Nicholas Hochstetler
    ~ You may not use this file except in compliance with the Apache License
    ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
    ~ or in the file LICENSE in the project's root directory. -->
@@ -32,8 +31,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/newItemViewContainer"
         tools:visibility="visible"
-        tools:text="@string/new_item_duplicate_name_warning"
-        tools:drawableStart="@drawable/ic_round_warning_24"
+        tools:text="@string/new_item_no_name_error"
+        tools:drawableStart="@drawable/ic_baseline_error_24"
         style="@style/AddNewItemDialogMessage" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -20,8 +20,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     override val adapter = Adapter()
     override val viewModel = inventoryViewModel(context)
 
-    init { itemAnimator.registerAdapterDataObserver(adapter) }
-
     /**
      * A RecyclerView.Adapter to display the contents of a list of inventory items.
      *
@@ -29,13 +27,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      * using InventoryRecyclerView.ViewHolder instances to represent inventory
      * items. Its overrides of onBindViewHolder make use of the InventoryItem.Field
      * values passed by InventoryRecyclerView.DiffUtilCallback to support partial
-     * binding. Note that InventoryAdapter assumes that any payloads passed to it
-     * are of the type EnumSet<InventoryItem.Field>. If a payload of another type
-     * is passed to it, an exception will be thrown.
+     * binding. Note that InventoryAdapter assumes that any change payloads passed
+     * to it are of the type EnumSet<InventoryItem.Field>. If a payload of another
+     * type is passed to it, an exception will be thrown.
      */
-    inner class Adapter :
-        ExpandableSelectableRecyclerView<InventoryItem>.Adapter<ViewHolder>()
-    {
+    inner class Adapter : ExpandableSelectableRecyclerView<InventoryItem>.Adapter<ViewHolder>() {
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             ViewHolder(InventoryItemView(context, itemAnimator.animatorConfig))
 
@@ -51,48 +48,44 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         ) {
             if (payloads.size == 0)
                 return onBindViewHolder(holder, position)
-            val unhandledChanges = mutableListOf<Any>()
 
             for (payload in payloads) {
-                if (payload is EnumSet<*>) {
-                    val item = getItem(position)
-                    @Suppress("UNCHECKED_CAST")
-                    val changes = payload as EnumSet<InventoryItem.Field>
-                    val ui = holder.view.ui
-                    val detailsUi = holder.view.detailsUi
+                val item = getItem(position)
+                @Suppress("UNCHECKED_CAST")
+                val changes = payload as EnumSet<InventoryItem.Field>
+                val ui = holder.view.ui
+                val detailsUi = holder.view.detailsUi
 
-                    if (changes.contains(InventoryItem.Field.Name) &&
-                        ui.nameEdit.text.toString() != item.name)
-                            ui.nameEdit.setText(item.name)
-                    if (changes.contains(InventoryItem.Field.ExtraInfo) &&
-                        ui.extraInfoEdit.text.toString() != item.extraInfo)
-                            ui.extraInfoEdit.setText(item.extraInfo)
-                    if (changes.contains(InventoryItem.Field.Color)) {
-                        if (ui.checkBox.colorIndex != item.color)
-                            ui.checkBox.colorIndex = item.color
-                        if (detailsUi.autoAddToShoppingListCheckBox.colorIndex != item.color)
-                            detailsUi.autoAddToShoppingListCheckBox.colorIndex = item.color
-                    }
-                    if (changes.contains(InventoryItem.Field.Amount) &&
-                        ui.amountEdit.value != item.amount)
-                            ui.amountEdit.value = item.amount
-                    if (changes.contains(InventoryItem.Field.IsExpanded) &&
-                        holder.view.isExpanded != item.isExpanded)
-                            holder.view.setExpanded(item.isExpanded)
-                    if (changes.contains(InventoryItem.Field.IsSelected) &&
-                        holder.view.isInSelectedState != item.isSelected)
-                            holder.view.setSelectedState(item.isSelected)
-                    if (changes.contains(InventoryItem.Field.AutoAddToShoppingList) &&
-                        detailsUi.autoAddToShoppingListCheckBox.isChecked != item.autoAddToShoppingList)
-                            detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
-                    if (changes.contains(InventoryItem.Field.AutoAddToShoppingListAmount) &&
-                        detailsUi.autoAddToShoppingListAmountEdit.value != item.autoAddToShoppingListAmount)
-                            detailsUi.autoAddToShoppingListAmountEdit.value = item.autoAddToShoppingListAmount
+                if (changes.contains(InventoryItem.Field.Name) &&
+                    ui.nameEdit.text.toString() != item.name)
+                        ui.nameEdit.setText(item.name)
+                if (changes.contains(InventoryItem.Field.ExtraInfo) &&
+                    ui.extraInfoEdit.text.toString() != item.extraInfo)
+                        holder.view.setExtraInfoText(item.extraInfo)
+                if (changes.contains(InventoryItem.Field.Color)) {
+                    if (ui.checkBox.colorIndex != item.color)
+                        ui.checkBox.colorIndex = item.color
+                    if (detailsUi.autoAddToShoppingListCheckBox.colorIndex != item.color)
+                        detailsUi.autoAddToShoppingListCheckBox.colorIndex = item.color
                 }
-                else unhandledChanges.add(payload)
+                if (changes.contains(InventoryItem.Field.Amount) &&
+                    ui.amountEdit.value != item.amount)
+                        ui.amountEdit.value = item.amount
+                if (changes.contains(InventoryItem.Field.IsExpanded) &&
+                    holder.view.isExpanded != item.isExpanded)
+                        holder.view.setExpanded(item.isExpanded)
+                if (changes.contains(InventoryItem.Field.IsSelected) &&
+                    holder.view.isInSelectedState != item.isSelected)
+                        holder.view.setSelectedState(item.isSelected)
+                if (changes.contains(InventoryItem.Field.IsLinked))
+                    holder.view.updateIsLinked(item.isLinked, animate = item.isExpanded)
+                if (changes.contains(InventoryItem.Field.AutoAddToShoppingList) &&
+                    detailsUi.autoAddToShoppingListCheckBox.isChecked != item.autoAddToShoppingList)
+                        detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
+                if (changes.contains(InventoryItem.Field.AutoAddToShoppingListAmount) &&
+                    detailsUi.autoAddToShoppingListAmountEdit.value != item.autoAddToShoppingListAmount)
+                        detailsUi.autoAddToShoppingListAmountEdit.value = item.autoAddToShoppingListAmount
             }
-            if (unhandledChanges.isNotEmpty())
-                super.onBindViewHolder(holder, position, unhandledChanges)
         }
     }
 
@@ -115,6 +108,9 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     viewModel.updateAutoAddToShoppingListAmount(item.id, value)
             }
         }
+
+        override fun hasFocusedChild() = super.hasFocusedChild() ||
+            view.detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.isFocused
     }
 
     /**
@@ -141,6 +137,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                 if (newItem.amount != oldItem.amount)         add(InventoryItem.Field.Amount)
                 if (newItem.isExpanded != oldItem.isExpanded) add(InventoryItem.Field.IsExpanded)
                 if (newItem.isSelected != oldItem.isSelected) add(InventoryItem.Field.IsSelected)
+                if (newItem.isLinked != oldItem.isLinked)     add(InventoryItem.Field.IsLinked)
                 if (newItem.autoAddToShoppingList != oldItem.autoAddToShoppingList)
                     add(InventoryItem.Field.AutoAddToShoppingList)
                 if (newItem.autoAddToShoppingListAmount != oldItem.autoAddToShoppingListAmount)

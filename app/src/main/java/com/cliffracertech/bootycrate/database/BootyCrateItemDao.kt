@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -10,22 +10,22 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 
+private const val likeSearchFilter = "(name LIKE :filter OR extraInfo LIKE :filter)"
+private const val onShoppingList = "shoppingListAmount != -1 AND NOT inShoppingListTrash"
+private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
+
 private const val shoppingListItemFields = "id, name, extraInfo, color, " +
                                            "shoppingListAmount as amount, " +
                                            "expandedInShoppingList as isExpanded, " +
                                            "selectedInShoppingList as isSelected, " +
-                                           "(SELECT inventoryAmount != -1) as linked, " +
+                                           "(SELECT $inInventory) as isLinked, " +
                                            "isChecked"
 private const val inventoryItemFields = "id, name, extraInfo, color, " +
                                         "inventoryAmount as amount, " +
                                         "expandedInInventory as isExpanded, " +
                                         "selectedInInventory as isSelected, " +
-                                        "(SELECT shoppingListAmount != -1) as linked, " +
+                                        "(SELECT $onShoppingList) as isLinked, " +
                                         "autoAddToShoppingList, autoAddToShoppingListAmount"
-
-private const val likeSearchFilter = "(name LIKE :filter OR extraInfo LIKE :filter)"
-private const val onShoppingList = "shoppingListAmount != -1 AND NOT inShoppingListTrash"
-private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
 
 /** A Room DAO that provides methods to manipulate a database of BootyCrateItems. */
 @Dao abstract class BootyCrateItemDao {
@@ -33,7 +33,8 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     @Insert abstract suspend fun add(item: DatabaseBootyCrateItem): Long
     @Insert abstract suspend fun add(items: List<DatabaseBootyCrateItem>)
     suspend fun add(item: DatabaseBootyCrateItem.Convertible) = add(item.toDbBootyCrateItem())
-    suspend fun addConvertibles(items: List<DatabaseBootyCrateItem.Convertible>) = add(items.map { it.toDbBootyCrateItem() })
+    suspend fun addConvertibles(items: List<DatabaseBootyCrateItem.Convertible>) =
+        add(items.map { it.toDbBootyCrateItem() })
 
     @Query("UPDATE bootycrate_item SET name = :name WHERE id = :id")
     abstract suspend fun updateName(id: Long, name: String)
@@ -44,6 +45,8 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     @Query("""UPDATE bootycrate_item SET color = :color WHERE id = :id""")
     abstract suspend fun updateColor(id: Long, color: Int)
 
+    @Query("SELECT * FROM bootycrate_item")
+    abstract fun getAllNow(): List<DatabaseBootyCrateItem>
 
 
     @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
@@ -114,9 +117,9 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
         if (id != null) expandShoppingListItem(id)
     }
 
-    @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
+    @Query("SELECT COUNT(*) FROM bootycrate_item " +
            "WHERE selectedInShoppingList AND $onShoppingList")
-    abstract fun getSelectedShoppingListItems(): LiveData<List<ShoppingListItem>>
+    abstract fun getSelectedShoppingListItemCount(): LiveData<Int>
 
     @Query("UPDATE bootycrate_item SET selectedInShoppingList = :selected WHERE id = :id")
     abstract suspend fun updateSelectedInShoppingList(id: Long, selected: Boolean)
@@ -167,7 +170,9 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     @Query("UPDATE bootycrate_item SET inShoppingListTrash = 0")
     abstract suspend fun undoDeleteShoppingListItems()
 
-    @Query("UPDATE bootycrate_item SET shoppingListAmount = -1 WHERE inShoppingListTrash")
+    @Query("UPDATE bootycrate_item " +
+           "SET shoppingListAmount = -1, inShoppingListTrash = 0 " +
+           "WHERE inShoppingListTrash")
     abstract suspend fun emptyShoppingListTrash()
 
     @Query("UPDATE bootycrate_item SET isChecked = :isChecked WHERE id = :id")
@@ -183,7 +188,9 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     abstract fun getCheckedShoppingListItemsSize() : LiveData<Int>
 
     @Query("""UPDATE bootycrate_item
-              SET inventoryAmount = inventoryAmount + shoppingListAmount,
+              SET inventoryAmount = CASE WHEN $inInventory
+                                    THEN inventoryAmount + shoppingListAmount
+                                    ELSE -1 END,
                   isChecked = 0,
                   shoppingListAmount = -1,
                   expandedInShoppingList = 0,
@@ -234,9 +241,9 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
         if (id != null) expandInventoryItem(id)
     }
 
-    @Query("SELECT $inventoryItemFields FROM bootycrate_item " +
+    @Query("SELECT COUNT(*) FROM bootycrate_item " +
            "WHERE selectedInInventory AND $inInventory")
-    abstract fun getSelectedInventoryItems(): LiveData<List<InventoryItem>>
+    abstract fun getSelectedInventoryItemCount(): LiveData<Int>
 
     @Query("UPDATE bootycrate_item SET selectedInInventory = :selected WHERE id = :id")
     abstract suspend fun updateSelectedInInventory(id: Long, selected: Boolean)
@@ -288,7 +295,9 @@ private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
     @Query("UPDATE bootycrate_item SET inInventoryTrash = 0")
     abstract suspend fun undoDeleteInventoryItems()
 
-    @Query("UPDATE bootycrate_item SET inventoryAmount = -1 WHERE inInventoryTrash")
+    @Query("UPDATE bootycrate_item " +
+           "SET inventoryAmount = -1, inInventoryTrash = 0 " +
+           "WHERE inInventoryTrash")
     abstract suspend fun emptyInventoryTrash()
 
     @Query("""UPDATE bootycrate_item SET autoAddToShoppingList = :autoAddToShoppingList

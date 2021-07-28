@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -26,7 +26,7 @@ import java.util.*
  * RecyclerViewActionBar acts as an entirely custom (i.e. it eschews the
  * Android setSupportActionBar API in favor of its own) action bar with an
  * interface tailored towards activities or fragments that primarily show
- * a recycler view. Through its binding property ui, the ui elements avail-
+ * a recycler view. Through its binding property ui, the UI elements avail-
  * able are:
  *     - backButton, similar to the home as up indicator, hidden by default
  *     - titleSwitcher, an ActionBarTitle that is used as an activity or
@@ -58,15 +58,15 @@ import java.util.*
  * property actionMode.
  *
  * The text entered in the search query view, or null if the search query
- * view is not shown, can be queried or set through the property active-
- * SearchQuery. Changes in the search query entry can be listened to
- * through by setting the property onSearchQueryChangedListener.
+ * view is not shown, can be queried or set through the property activeSearchQuery.
+ * Changes in the search query entry can be listened to through by setting
+ * the property onSearchQueryChangedListener.
  *
  * If multiple changes to the action bar UI are desired at once (e.g. when
  * transitioning between displayed fragments), the function transition
  * should be called with parameters that describe the desired state of the
- * UI. This will ensure that any given combination of UI states is anima-
- * ted between smoothly.
+ * UI. This will ensure that any given combination of UI states is animated
+ * between smoothly.
  */
 @Suppress("LeakingThis")
 open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
@@ -107,12 +107,14 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         val changeSortMenuResId = a.getResourceIdOrThrow(R.styleable.RecyclerViewActionBar_changeSortMenuResId)
         val optionsMenuResId = a.getResourceIdOrThrow(R.styleable.RecyclerViewActionBar_optionsMenuResId)
         a.recycle()
-        println("changeSortMenuResId = $changeSortMenuResId, optionsMenuResId = $optionsMenuResId")
+
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
         optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
 
         layoutTransition = layoutTransition(config = null)
         ui.searchButton.setOnClickListener {
+            // The search button morphs into a close button when a search is active.
+            // This on-click listener will therefore function as a search toggle.
             setSearchQueryPrivate(if (activeSearchQuery == null) "" else null)
         }
         ui.changeSortButton.setOnClickListener {
@@ -137,11 +139,11 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     /**
      * Transition the action bar's visual state to match the one described by the parameters.
      *
-     * Using transition rather than making UI changes manually is recom-
-     * mended when making multiple changes at once. For example, if a frag-
-     * ment ends it action mode as another fragment begins its own, the title
-     * will be briefly visible in between. Using the transition function will
-     * ensure that any combination of UI states is animated between smoothly.
+     * Using transition rather than making UI changes manually is recommended
+     * when making multiple changes at once. For example, if a fragment ends
+     * it action mode as another fragment begins its own, the title will be
+     * briefly visible in between. Using the transition function will ensure
+     * that any combination of UI states is animated between smoothly.
      */
     fun transition(
         backButtonVisible: Boolean = false,
@@ -185,9 +187,10 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     }
 
     private fun setSearchQueryPrivate(
-            query: CharSequence?,
-            showSoftInput: Boolean = true,
-            hideBackButtonWhenDone: Boolean = true) {
+        query: CharSequence?,
+        showSoftInput: Boolean = true,
+        hideBackButtonWhenDone: Boolean = true
+    ) {
         val searchWasActive = activeSearchQuery != null
         if (hideBackButtonWhenDone || query != null)
             setBackButtonVisible(query != null)

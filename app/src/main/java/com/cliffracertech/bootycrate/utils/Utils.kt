@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -15,30 +15,6 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.FragmentActivity
 
-/**
- * For a given position in a range, return the position after
- * a move operation on one or more items is performed.
- * @param pos The before move position whose position after the move is desired.
- * @param moveStartPos The start position of the to-be-moved range before the move.
- * @param moveEndPos The start position of the to-be-moved range after the move.
- * @param moveCount The number of items being moved.
- * @return The new position of the pos parameter after the move.
- */
-fun adjustPosInRangeAfterMove(pos: Int, moveStartPos: Int, moveEndPos: Int, moveCount: Int): Int {
-    val oldRange = moveStartPos until moveStartPos + moveCount
-    val newRange = moveEndPos until moveEndPos + moveCount
-    return when { pos in oldRange ->
-                      pos + moveEndPos - moveStartPos
-                  pos < oldRange.first && pos >= newRange.first ->
-                      pos + moveCount
-                  pos > oldRange.last && pos <= newRange.first ->
-                      pos - moveCount
-                  else -> pos }
-}
-
-/** Return a InputMethodManager system service from the context. */
-fun inputMethodManager(context: Context) =
-    context.getSystemService(Activity.INPUT_METHOD_SERVICE) as? InputMethodManager
 /** Return a NotificationManager system service from the context. */
 fun notificationManager(context: Context) =
     context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
@@ -55,6 +31,18 @@ fun Context.asFragmentActivity() =
             throw ClassCastException("The provided context must be an instance of FragmentActivity")
         }
     }
+
+/** An object that, once initialized by calling init with an instance of Context,
+ * can be used to either hide, implicitly show, or explicitly show the soft input
+ * given a view instance using the functions hide, showImplicitly, and showExplicitly. */
+object SoftKeyboard {
+    private lateinit var imm: InputMethodManager
+    fun init(context: Context) {
+        imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+    }
+    fun hide(view: View) = imm.hideSoftInputFromWindow(view.windowToken, 0)
+    fun show(view: View) = imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+}
 
 fun View.setHeight(height: Int) { bottom = top + height }
 

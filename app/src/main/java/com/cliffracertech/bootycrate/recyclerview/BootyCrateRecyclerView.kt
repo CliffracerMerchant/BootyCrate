@@ -1,20 +1,19 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.recyclerview
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import androidx.lifecycle.LifecycleOwner
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.*
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.database.BootyCrateViewModel
+import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -41,11 +40,11 @@ import com.google.android.material.snackbar.Snackbar
  * the sorting or text filter of the displayed items.
  *
  * BootyCrateRecyclerView utilizes a ItemTouchHelper with a SwipeToDeleteCallback
- * to allow the user to call deleteItem on the swiped item. When items are
- * deleted, a snack bar will appear informing the user of the amount of items
- * that were deleted, as well as providing an undo option. The snack bar will
- * be anchored to the view set as the public property snackBarAnchor, in case
- * this needs to be customized, or to the RecyclerView itself otherwise.
+ * to allow the user to delete swiped items. When items are deleted, a snack bar
+ * will appear informing the user of the amount of items that were deleted, as
+ * well as providing an undo option. The snack bar will be anchored to the view
+ * set as the public property snackBarAnchor, in case this needs to be
+ * customized, or to the RecyclerView itself otherwise.
  */
 @Suppress("LeakingThis")
 abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
@@ -59,25 +58,42 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
 
     var sort get() = viewModel.sort
              set(value) { viewModel.sort = value }
-    var searchFilter: String? get() = viewModel.searchFilter
-                              set(value) { viewModel.searchFilter = value }
+    var searchFilter: String get() = viewModel.searchFilter
+                             set(value) { viewModel.searchFilter = value }
 
     init {
-        val swipeCallback = SwipeToDeleteCallback(context) { pos ->
+        val cornerRadius = resources.getDimension(R.dimen.recycler_view_item_rounded_corner_radius)
+        val swipeCallback = SwipeToDeleteCallback(context, this, cornerRadius) { pos ->
+            // The soft keyboard is hidden when the user swipes to delete an
+            // item so that the soft keyboard doesn't hide the snack bar.
+            requestFocus()
+            SoftKeyboard.hide(this)
             viewModel.delete(LongArray(1) { adapter.getItemId(pos) })
             showDeletedItemsSnackBar(1)
         }
         ItemTouchHelper(swipeCallback).attachToRecyclerView(this)
+        layoutManager = LinearLayoutManager(context)
+        isFocusable = true
+        isFocusableInTouchMode = true
     }
 
-    fun showDeletedItemsSnackBar(numDeletedItems: Int) {
-        val text = context.getString(R.string.delete_snackbar_text, numDeletedItems)
+    private var deletedItemCount: Int = 0
+    @SuppressLint("ShowToast")
+    fun showDeletedItemsSnackBar(newDeletedItemsCount: Int) {
+        deletedItemCount += newDeletedItemsCount
+        val text = context.getString(R.string.delete_snackbar_text, deletedItemCount)
         Snackbar.make(this, text, Snackbar.LENGTH_LONG)
             .setAnchorView(snackBarAnchor ?: this)
             .setAction(R.string.delete_snackbar_undo_text) { viewModel.undoDelete() }
             .setActionTextColor(context.theme.resolveIntAttribute(R.attr.colorAccent))
             .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(a: Snackbar?, b: Int) { viewModel.emptyTrash() }
+                override fun onDismissed(a: Snackbar?, b: Int) {
+                    if (b != DISMISS_EVENT_CONSECUTIVE) {
+                        deletedItemCount = 0
+                        if (b != DISMISS_EVENT_ACTION)
+                            viewModel.emptyTrash()
+                    }
+                }
             }).show()
     }
 

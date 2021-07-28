@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright 2020 Nicholas Hochstetler
-  ~  You may not use this file except in compliance with the Apache License
-  ~  Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
-  ~  or in the file LICENSE in the project's root directory. -->
+<!-- Copyright 2021 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
 
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -13,7 +12,7 @@
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground"
     android:clipChildren="false"
-    tools:context=".activity.GradientStyledMainActivity" >
+    tools:context=".activity.MainActivity" >
 
     <com.cliffracertech.bootycrate.view.RecyclerViewActionBar
         android:id="@+id/actionBar"

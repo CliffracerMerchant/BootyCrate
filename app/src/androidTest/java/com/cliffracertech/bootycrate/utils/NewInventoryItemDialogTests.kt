@@ -1,4 +1,4 @@
-/* Copyright 2020 Nicholas Hochstetler
+/* Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
@@ -14,12 +14,12 @@ import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.GradientStyledMainActivity
+import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers
@@ -32,7 +32,7 @@ import org.junit.Test
 
 class NewInventoryItemDialogTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
-    @get:Rule var activityRule = ActivityScenarioRule(GradientStyledMainActivity::class.java)
+    @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
     private val dao = BootyCrateDatabase.get(context as Application).dao()
 
     private val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Extra Info 1",
