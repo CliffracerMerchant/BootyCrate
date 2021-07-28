@@ -87,6 +87,12 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 db.execSQL("UPDATE bootycrate_item " +
                            "SET selectedInShoppingList = 0, expandedInShoppingList = 0, " +
                            "selectedInInventory = 0, expandedInInventory = 0")
+                db.execSQL("UPDATE bootycrate_item " +
+                           "SET shoppingListAmount = -1, inShoppingListTrash = 0 " +
+                           "WHERE inShoppingListTrash")
+                db.execSQL("UPDATE bootycrate_item " +
+                        "SET inventoryAmount = -1, inInventoryTrash = 0 " +
+                        "WHERE inInventoryTrash")
             }
 
             override fun onCreate(db: SupportSQLiteDatabase) {

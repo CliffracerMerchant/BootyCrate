@@ -8,6 +8,7 @@ import android.animation.Animator
 import android.view.ViewPropertyAnimator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
@@ -84,18 +85,27 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
         changingViews.clear()
     }
 
-    /** This override of animateRemove causes the item animator to not wait for
-     * removed views to be fully removed before starting change animations for
-     * other views that are moving as a result of the removal in order to make
-     * the recycler view feel less sluggish. */
+    /** For some reason the default item removal animation plays but does not actually
+     * remove the view when this item animator is used. This animateRemove override
+     * essentially duplicates the default one, fading a view out before it is removed. */
     override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
         val view = holder?.itemView ?: return false
         view.animate().alpha(0f).withLayer()
             .applyConfig(animatorConfig)
             .withStartAction { dispatchRemoveStarting(holder) }
-            .withEndAction { dispatchRemoveFinished(holder) }
+            .withEndAction { dispatchRemoveFinished(holder)
+                             if (view.alpha == 0f) view.isVisible = false }
             .start()
         return true
+    }
+
+    /** This animateAdd override is needed in conjunction with the animateRemove
+     * override to ensure that views that are re-added after being removed (e.g.
+     * when the user undoes a delete operation) are actually visible. */
+    override fun animateAdd(holder: RecyclerView.ViewHolder?): Boolean {
+        if (holder?.itemView?.isVisible == false)
+            holder.itemView.isVisible = true
+        return super.animateAdd(holder)
     }
 
     /**
