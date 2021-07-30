@@ -33,6 +33,11 @@ class AboutAppDialog : DialogFragment() {
         themedAlertDialogBuilder(requireContext()).setView(R.layout.about_app_dialog).create()
 }
 
+class PrivacyPolicyDialog : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?) =
+        themedAlertDialogBuilder(requireContext()).setView(R.layout.privacy_policy_dialog).create()
+}
+
 /** Return a MaterialAlertDialogBuilder with the context theme's materialAlertDialogTheme style applied. */
 fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
     context, context.theme.resolveIntAttribute(R.attr.materialAlertDialogTheme))
