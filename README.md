@@ -87,5 +87,11 @@ miscellaneous utility classes, objects, and functions.
 view contains all other custom views that don't fit into another package. The main activity's UI
 elements, such as the RecyclerViewActionBar and BottomAppBar, are located here.
 
+## Privacy Policy
+BootyCrate only stores user preferences and entered shopping list / inventory item information
+on the user's device, or in external files if the user chooses to export this information.
+This information is never uploaded to other computers / servers unless the user does this
+themselves with their exported information.
+
 ## License
 BootyCrate is licensed under the terms of the Apache License, 2.0.
