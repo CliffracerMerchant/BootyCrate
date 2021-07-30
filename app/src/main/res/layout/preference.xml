@@ -10,7 +10,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="10dp"
-    android:layout_marginBottom="10dp"
+    android:layout_marginBottom="0dp"
     android:layout_marginEnd="20dp"
     android:layout_marginStart="30dp"
     android:baselineAligned="false">
