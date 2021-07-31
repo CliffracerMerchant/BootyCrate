@@ -48,6 +48,9 @@ private const val inventoryItemFields = "id, name, extraInfo, color, " +
     @Query("SELECT * FROM bootycrate_item")
     abstract fun getAllNow(): List<DatabaseBootyCrateItem>
 
+    @Query("DELETE FROM bootycrate_item")
+    abstract fun deleteAll()
+
 
     @Query("SELECT $shoppingListItemFields FROM bootycrate_item " +
            "WHERE $likeSearchFilter AND $onShoppingList " +

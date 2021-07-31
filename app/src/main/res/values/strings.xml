@@ -96,5 +96,7 @@
     <string name="pref_privacy_policy_key">privacy_policy</string>
     <string name="pref_privacy_policy_title">Privacy Policy</string>
     <string name="privacy_policy_text">BootyCrate does not ask for, collect, or share any personal information. BootyCrate only stores user preferences and entered shopping list and inventory item data on the user\'s device, or in external files if the user chooses to export this data. This data is never uploaded to other computers or servers unless the user does this themselves with their exported data files.</string>
+    <string name="invalid_imported_db_error_message">The imported database was invalid or empty. Reverting to previous database instead.</string>
+    <string name="error">Error</string>
 
 </resources>

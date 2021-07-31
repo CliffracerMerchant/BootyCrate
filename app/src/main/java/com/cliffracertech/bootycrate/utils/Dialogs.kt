@@ -52,21 +52,13 @@ fun importDatabaseFromUri(uri: Uri, activity: FragmentActivity)  {
         setMessage(R.string.import_database_question_message).
         setNeutralButton(android.R.string.cancel) { _, _ -> }.
         setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
-            BootyCrateDatabase.mergeWithBackup(activity, uri)
+            BootyCrateDatabase.importBackup(activity, uri, overwriteExistingDb = false)
         }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
         themedAlertDialogBuilder(activity).
             setMessage(R.string.import_database_overwrite_confirmation_message).
             setNegativeButton(android.R.string.cancel) { _, _ -> }.
             setPositiveButton(android.R.string.ok) { _, _ ->
-                BootyCrateDatabase.replaceWithBackup(activity, uri)
-                // The pref pref_viewmodels_need_cleared needs to be set to true so that
-                // when the MainActivity is recreated, it will clear its ViewModelStore
-                // and use the DAOs of the new database instead of the old one.
-                val prefs = PreferenceManager.getDefaultSharedPreferences(activity)
-                val editor = prefs.edit()
-                editor.putBoolean(activity.getString(R.string.pref_view_models_need_cleared), true)
-                editor.apply()
-                activity.recreate()
+                BootyCrateDatabase.importBackup(activity, uri, overwriteExistingDb = true)
             }.show()
         }.show()
 }
@@ -147,8 +139,6 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             .create().apply {
                 setOnShowListener {
                     okButton.setOnClickListener { if (addItem()) dismiss() }
-                    // Override the add another button's default on click listener
-                    // to prevent it from closing the dialog when clicked
                     addAnotherButton.setOnClickListener { if (addItem()) resetNewItemView() }
                     // Showing the soft input seems not to work when done as
                     // a fragment is appearing. Showing the soft input after
