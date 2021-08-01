@@ -10,6 +10,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.utils.themedAlertDialogBuilder
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
@@ -48,37 +50,32 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             writer?.close()
         }
 
-        fun replaceWithBackup(context: Context, backupUri: Uri) {
+        fun importBackup(context: Context, backupUri: Uri, overwriteExistingDb: Boolean) {
             val importReader = context.contentResolver.openInputStream(backupUri) ?: return
-            val currentDb = get(context)
-            val dbFile = File(currentDb.openHelper.readableDatabase.path)
-            currentDb.close()
-            dbFile.delete()
-            dbFile.writeBytes(importReader.readBytes())
-            // To make a new instance instead of retaining the old one
-            get(context, overwriteExistingDb = true)
-            return
-        }
-
-        fun mergeWithBackup(context: Context, backupUri: Uri) {
-            val importReader = context.contentResolver.openInputStream(backupUri) ?: return
-            val currentDb = get(context)
-
             // Room can only open databases in the app's database directory,
             // making it necessary to copy the imported database here first.
             val tempDbName = "tempDb"
             val tempDbFile = context.getDatabasePath(tempDbName)
             tempDbFile.writeBytes(importReader.readBytes())
 
-            val importedDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName).
-                    allowMainThreadQueries().createFromFile(tempDbFile).build()
-            val items = importedDb.dao().getAllNow()
-            for (item in items) { item.id = 0 }
-            importedDb.close()
+            val tempDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName).
+                                        allowMainThreadQueries().createFromFile(tempDbFile).build()
+            val items = try { tempDb.dao().getAllNow() }
+                        catch(e: IllegalStateException) { emptyList() }
+            tempDb.close()
             tempDbFile.delete()
 
-            // Add the imported items to the current database
-            GlobalScope.launch { currentDb.dao().add(items) }
+            if (items.isEmpty()) themedAlertDialogBuilder(context)
+                .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
+                .setMessage(R.string.invalid_imported_db_error_message)
+                .setTitle(R.string.error).show()
+            else GlobalScope.launch {
+                val currentDb = get(context)
+                if (overwriteExistingDb)
+                    currentDb.dao().deleteAll()
+                else items.forEach { it.id = 0 }
+                currentDb.dao().add(items)
+            }
         }
 
         private val callback = object: Callback() {
@@ -91,8 +88,8 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                            "SET shoppingListAmount = -1, inShoppingListTrash = 0 " +
                            "WHERE inShoppingListTrash")
                 db.execSQL("UPDATE bootycrate_item " +
-                        "SET inventoryAmount = -1, inInventoryTrash = 0 " +
-                        "WHERE inInventoryTrash")
+                           "SET inventoryAmount = -1, inInventoryTrash = 0 " +
+                           "WHERE inInventoryTrash")
             }
 
             override fun onCreate(db: SupportSQLiteDatabase) {

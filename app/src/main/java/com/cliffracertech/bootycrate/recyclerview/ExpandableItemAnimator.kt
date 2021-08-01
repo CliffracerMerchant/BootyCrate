@@ -8,7 +8,6 @@ import android.animation.Animator
 import android.view.ViewPropertyAnimator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
-import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
@@ -48,15 +47,17 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
     ): Boolean {
         // If a view is being expanded or collapsed, oldHolder must be
         // equal to newHolder, and the heightChange must not be zero.
-        if (oldHolder != newHolder) return false
+        if (oldHolder != newHolder)
+            return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
+        val startHeight = preInfo.bottom - preInfo.top
+        val endHeight = postInfo.bottom - postInfo.top
+        if (endHeight == startHeight)
+            return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
+
         val view = newHolder.itemView
         if (view !is ExpandableRecyclerViewItem) throw IllegalStateException(
             "The item views used with ExpandableItemAnimator must " +
             "implement ExpandableItemAnimator.ExpandableRecyclerViewItem.")
-
-        val startHeight = preInfo.bottom - preInfo.top
-        val endHeight = postInfo.bottom - postInfo.top
-        if (endHeight == startHeight) return false
 
         view.setHeight(startHeight)
         intValueAnimator(view::setHeight, startHeight, endHeight, animatorConfig).apply {
@@ -83,29 +84,6 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
         pendingAnimators.clear()
         pendingViewPropAnimators.clear()
         changingViews.clear()
-    }
-
-    /** For some reason the default item removal animation plays but does not actually
-     * remove the view when this item animator is used. This animateRemove override
-     * essentially duplicates the default one, fading a view out before it is removed. */
-    override fun animateRemove(holder: RecyclerView.ViewHolder?): Boolean {
-        val view = holder?.itemView ?: return false
-        view.animate().alpha(0f).withLayer()
-            .applyConfig(animatorConfig)
-            .withStartAction { dispatchRemoveStarting(holder) }
-            .withEndAction { dispatchRemoveFinished(holder)
-                             if (view.alpha == 0f) view.isVisible = false }
-            .start()
-        return true
-    }
-
-    /** This animateAdd override is needed in conjunction with the animateRemove
-     * override to ensure that views that are re-added after being removed (e.g.
-     * when the user undoes a delete operation) are actually visible. */
-    override fun animateAdd(holder: RecyclerView.ViewHolder?): Boolean {
-        if (holder?.itemView?.isVisible == false)
-            holder.itemView.isVisible = true
-        return super.animateAdd(holder)
     }
 
     /**

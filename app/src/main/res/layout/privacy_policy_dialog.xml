@@ -11,17 +11,19 @@
     android:padding="20dp" >
 
     <TextView
-        android:id="@+id/aboutAppDialogTitle"
+        android:id="@+id/privacyPolicyTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
         android:textSize="24sp"
-        style="@style/ActionBarTitle"/>
+        android:text="@string/pref_privacy_policy_title"
+        style="@style/TitleTextAppearance" />
 
     <TextView
         android:id="@+id/aboutAppDialogBody"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        style="@style/AboutAppBody"/>
+        android:text="@string/privacy_policy_text"
+        style="@style/NormalTextAppearance" />
 
 </LinearLayout>

@@ -142,6 +142,7 @@ class ShoppingListFragmentTests {
     private fun changeOrientationAndBack() {
         uiDevice.setOrientationLeft()
         uiDevice.setOrientationNatural()
+        Thread.sleep(500L)
     }
 
     private fun changeOrientationWhileInInventory() {

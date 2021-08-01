@@ -66,6 +66,10 @@
             android:title="@string/pref_about_app_title" />
         <Preference
             android:layout="@layout/preference"
+            android:key="@string/pref_privacy_policy_key"
+            android:title="@string/pref_privacy_policy_title" />
+        <Preference
+            android:layout="@layout/preference"
             android:key="@string/pref_open_source_libraries_used_key"
             android:title="@string/pref_open_source_libraries_used_title" />
 

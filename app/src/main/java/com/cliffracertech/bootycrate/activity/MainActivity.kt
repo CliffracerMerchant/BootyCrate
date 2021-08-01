@@ -94,11 +94,7 @@ open class MainActivity : MultiFragmentActivity() {
 
     private fun setThemeFromPreferences() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        var prefKey = getString(R.string.pref_view_models_need_cleared)
-        val viewModelsNeedCleared = prefs.getBoolean(prefKey, false)
-        if (viewModelsNeedCleared) viewModelStore.clear()
-
-        prefKey = getString(R.string.pref_light_dark_mode_key)
+        val prefKey = getString(R.string.pref_light_dark_mode_key)
         val themeDefault = getString(R.string.pref_theme_sys_default_title)
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)

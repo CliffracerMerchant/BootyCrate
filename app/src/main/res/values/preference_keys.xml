@@ -5,7 +5,6 @@
 
 <resources>
     <string name="pref_sort">%1$s_sort</string>
-    <string name="pref_view_models_need_cleared">viewModelsNeedCleared</string>
 
     <string name="pref_category_theme_title">App theme</string>
     <string name="pref_light_dark_mode_title">Light / Dark mode</string>
@@ -14,7 +13,7 @@
     <string name="pref_theme_sys_default_title">Use system default</string>
     <string name="pref_theme_light_theme_title">Light</string>
     <string name="pref_theme_dark_theme_title">Dark</string>
-    <!--    <string name="pref_theme_gradient_title">Top and bottom bar gradient</string>-->
+<!--    <string name="pref_theme_gradient_title">Top and bottom bar gradient</string>-->
 <!--    <string name="pref_theme_gradient_screen">theme_gradient_screen</string>-->
 <!--    <string name="pref_theme_gradient_value">theme_gradient_value</string>-->
 

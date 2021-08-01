@@ -18,6 +18,7 @@ import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.ShoppingListViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.utils.AboutAppDialog
+import com.cliffracertech.bootycrate.utils.PrivacyPolicyDialog
 import com.cliffracertech.bootycrate.utils.importDatabaseFromUri
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
@@ -50,6 +51,8 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
                 getImportPath.launch(arrayOf("*/*"))
             getString(R.string.pref_about_app_key) ->
                 AboutAppDialog().show(childFragmentManager, null)
+            getString(R.string.pref_privacy_policy_key) ->
+                PrivacyPolicyDialog().show(childFragmentManager, null)
             getString(R.string.pref_open_source_libraries_used_key) -> {
                 val context = this.context ?: return false
                 startActivity(Intent(context, OssLicensesMenuActivity::class.java))
