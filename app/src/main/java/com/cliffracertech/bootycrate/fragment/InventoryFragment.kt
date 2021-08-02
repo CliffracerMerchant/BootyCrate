@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.ViewGroup
+import androidx.annotation.Keep
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.database.InventoryItem
@@ -28,7 +29,7 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
  * properties with values suitable for display of an InventoryRecyclerView,
  * and using its own action mode callback.
  */
-class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
+@Keep class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
     override val viewModel: InventoryViewModel by activityViewModels()
     private val shoppingListViewModel: ShoppingListViewModel by activityViewModels()
     override var recyclerView: InventoryRecyclerView? = null

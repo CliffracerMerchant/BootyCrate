@@ -7,6 +7,7 @@ package com.cliffracertech.bootycrate.fragment
 import android.os.Bundle
 import android.view.*
 import android.widget.TextView
+import androidx.annotation.Keep
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
@@ -39,7 +40,7 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
  * the user does not press the button again within two seconds, it will revert
  * to its normal state.
  */
-class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
+@Keep class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
     override val viewModel: ShoppingListViewModel by activityViewModels()
     private val inventoryViewModel: InventoryViewModel by activityViewModels()
     override var recyclerView: ShoppingListRecyclerView? = null
