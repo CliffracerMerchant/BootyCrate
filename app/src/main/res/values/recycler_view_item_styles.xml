@@ -5,10 +5,7 @@
 
 <resources>
     <style name="BootyCrateItemColorEdit">
-        <item name="android:paddingStart">11dp</item>
-        <item name="android:paddingEnd">11dp</item>
-        <item name="android:paddingTop">11dp</item>
-        <item name="android:paddingBottom">11dp</item>
+        <item name="android:padding">12dp</item>
         <item name="colorsResId">@array/bootycrate_item_colors</item>
     </style>
 
@@ -35,14 +32,11 @@
 
     <style name="BootyCrateItemEditButton">
         <item name="android:src">@drawable/edit_and_collapse_button</item>
-        <item name="android:paddingStart">8dp</item>
-        <item name="android:paddingEnd">8dp</item>
-        <item name="android:paddingTop">9dp</item>
-        <item name="android:paddingBottom">11dp</item>
+        <item name="android:padding">12dp</item>
     </style>
 
     <style name="ShoppingListItemLinkIndicator" parent="@style/SecondaryTextAppearance">
-        <item name="android:padding">10dp</item>
+        <item name="android:padding">12dp</item>
         <item name="android:src">@drawable/ic_baseline_link_24</item>
     </style>
 

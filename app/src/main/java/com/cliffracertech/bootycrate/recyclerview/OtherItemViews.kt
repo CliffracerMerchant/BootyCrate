@@ -52,9 +52,6 @@ open class BootyCrateItemView<T: BootyCrateItem>(
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
         if (useDefaultLayout)
             ui = BootyCrateItemBinding.inflate(LayoutInflater.from(context), this)
-
-        val verticalPadding = resources.getDimensionPixelSize(R.dimen.recycler_view_item_vertical_padding)
-        setPadding(0, verticalPadding, 0, verticalPadding)
     }
 
     @CallSuper open fun update(item: T) {
