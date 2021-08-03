@@ -5,47 +5,42 @@
 
 <merge
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_height="wrap_content"
+    android:layout_height="48dp"
     android:layout_width="wrap_content"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
+    tools:parentTag="LinearLayout">
 
     <ImageButton
         android:id="@+id/decreaseButton"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_gravity="center_vertical"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/valueEdit"
         android:contentDescription="@string/decrease_button_description"
         style="@style/IntegerEditDecreaseButton" />
 
+    <!-- The valueEdit's start and end margins are set to its width when displaying
+         a single digit divided by -2. This will allow the decrease and increase
+         buttons' hit rects to overlap it for when the value edit isn't touch
+         focusable. The value edit's minimum width when it is focusable should be
+         set to around 61dp so that it will still meet the 48dp min touch target
+         size even with the increase and decrease buttons taking off 13dp total
+         from its sides. -->
     <EditText
         android:id="@+id/valueEdit"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/decreaseButton"
-        app:layout_constraintEnd_toStartOf="@id/increaseButton"
         android:importantForAutofill="no"
         tools:ignore="LabelFor"
         tools:text="0"
         tools:textSize="22sp"
+        android:layout_marginStart="-6.5dp"
+        android:layout_marginEnd="-6.5dp"
+        android:elevation="-1dp"
         style="@style/IntegerEditValue" />
 
     <ImageButton
         android:id="@+id/increaseButton"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:layout_gravity="center_vertical"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/valueEdit"
-        app:layout_constraintEnd_toEndOf="parent"
         android:contentDescription="@string/increase_button_description"
         style="@style/IntegerEditIncreaseButton" />
 </merge>

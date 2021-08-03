@@ -12,7 +12,7 @@ import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import androidx.constraintlayout.widget.ConstraintLayout
+import android.widget.LinearLayout
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.IntegerEditBinding
 import com.cliffracertech.bootycrate.utils.*
@@ -32,7 +32,7 @@ import com.cliffracertech.bootycrate.utils.*
  * will, if necessary, expand the width of the value to R.dimen.integer_edit_editable_value_min_width
  * to make it a larger touch target.
  */
-open class IntegerEdit(context: Context, attrs: AttributeSet?) : ConstraintLayout(context, attrs) {
+open class IntegerEdit(context: Context, attrs: AttributeSet?) : LinearLayout(context, attrs) {
 
     // value = value is not pointless due to value's custom getter and setter
     var minValue = 0
