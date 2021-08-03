@@ -52,9 +52,9 @@
 
     <string name="inventory_item_collection_name">inventory</string>
     <string name="add_to_inventory_description">Add to inventory</string>
-    <string name="add_to_shopping_list_checkbox_description">Add to shopping list</string>
-    <string name="add_to_shopping_list_checkbox_text">Add to shopping list under</string>
-    <string name="add_to_shopping_list_trigger_edit_description">Add to shopping list amount threshold</string>
+    <string name="auto_add_to_list_checkbox_description">Add to shopping list</string>
+    <string name="auto_add_to_list_checkbox_text">Add to list under</string>
+    <string name="auto_add_to_list_trigger_edit_description">Auto-add to shopping list amount threshold</string>
 
     <string name="share_description">Share</string>
     <string name="share_whole_list_title">Share %1$s</string>

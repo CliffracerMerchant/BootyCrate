@@ -37,14 +37,13 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
-            android:layout_marginStart="-6dp"
-            style="@style/InventoryItemAddToShoppingListCheckboxLabel" />
+            style="@style/InventoryItemAutoAddToShoppingListCheckboxLabel" />
 
         <com.cliffracertech.bootycrate.view.IntegerEdit
             android:id="@+id/autoAddToShoppingListAmountEdit"
             android:layout_width="wrap_content"
             android:layout_height="48dp"
-            style="@style/InventoryItemAddToShoppingListTriggerEdit" />
+            style="@style/InventoryItemAutoAddToShoppingListTriggerEdit" />
 
     </LinearLayout>
 </merge>
