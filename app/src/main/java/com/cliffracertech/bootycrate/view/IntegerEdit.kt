@@ -157,7 +157,7 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
          * Width (layout transitions apparently do not handle this). */
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         ui.valueEdit.measure(wrapContentSpec, wrapContentSpec)
-        val newValueWidth = ui.valueEdit.measuredWidth
+        val newValueWidth = maxOf(ui.valueEdit.measuredWidth, ui.valueEdit.minWidth)
         val widthChange = newValueWidth - oldValueWidth
 
         ui.valueEdit.translationX -= widthChange / 2f

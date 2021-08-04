@@ -19,11 +19,11 @@
 
     <!-- The valueEdit's start and end margins are set to its width when displaying
          a single digit divided by -2. This will allow the decrease and increase
-         buttons' hit rects to overlap it for when the value edit isn't touch
-         focusable. The value edit's minimum width when it is focusable should be
-         set to around 61dp so that it will still meet the 48dp min touch target
-         size even with the increase and decrease buttons taking off 13dp total
-         from its sides. -->
+         buttons' hit rects to overlap it to save horizontal space since the value
+         edit isn't touch focusable anyways. The value edit's minimum width when
+         it is focusable should be set to 58dp so that it will still meet the 48dp
+         min touch target size even with the increase and decrease buttons
+         covering up 10dp total from its sides. -->
     <EditText
         android:id="@+id/valueEdit"
         android:layout_width="wrap_content"
@@ -32,8 +32,8 @@
         tools:ignore="LabelFor"
         tools:text="0"
         tools:textSize="22sp"
-        android:layout_marginStart="-6.5dp"
-        android:layout_marginEnd="-6.5dp"
+        android:layout_marginStart="-5dp"
+        android:layout_marginEnd="-5dp"
         android:elevation="-1dp"
         style="@style/IntegerEditValue" />
 
