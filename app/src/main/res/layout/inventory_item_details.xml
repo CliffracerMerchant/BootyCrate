@@ -21,13 +21,14 @@
         app:layout_constraintTop_toBottomOf="@id/extraInfoEdit"
         app:layout_constraintEnd_toStartOf="@id/editButton"
         app:layout_constraintWidth_default="wrap"
+        android:layout_marginEnd="-4dp"
         app:layout_constraintHorizontal_bias="0.0"
         tools:visibility="visible" >
 
         <com.cliffracertech.bootycrate.view.TintableCheckbox
             android:id="@+id/autoAddToShoppingListCheckBox"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             tools:tint="@color/bootyCrateItemColor0"
             style="@style/BootyCrateItemColorEdit" />
 
@@ -38,13 +39,14 @@
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
             android:layout_marginStart="-6dp"
-            style="@style/InventoryItemAddToShoppingListCheckboxLabel" />
+            android:layout_marginEnd="-8dp"
+            style="@style/InventoryItemAutoAddToShoppingListCheckboxLabel" />
 
         <com.cliffracertech.bootycrate.view.IntegerEdit
             android:id="@+id/autoAddToShoppingListAmountEdit"
             android:layout_width="wrap_content"
-            android:layout_height="44dp"
-            style="@style/InventoryItemAddToShoppingListTriggerEdit" />
+            android:layout_height="48dp"
+            style="@style/InventoryItemAutoAddToShoppingListTriggerEdit" />
 
     </LinearLayout>
 </merge>
