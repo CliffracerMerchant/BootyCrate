@@ -21,6 +21,5 @@
         <item name="android:imeOptions">actionDone|flagNoExtractUi</item>
         <item name="android:gravity">center</item>
         <item name="android:inputType">number</item>
-        <item name="android:contentDescription">@string/item_amount_description</item>
     </style>
 </resources>
