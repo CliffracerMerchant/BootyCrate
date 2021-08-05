@@ -68,7 +68,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         actionModeTitleView.id = R.id.actionBarTitle_actionModeTitle
         searchQueryView.apply {
             id = R.id.actionBarTitle_searchQuery
-            hint = context.getString(R.string.search_query_description)
+            contentDescription = context.getString(R.string.search_query_description)
             maxLines = 1
             imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
             inputType = InputType.TYPE_CLASS_TEXT

@@ -22,10 +22,9 @@
     <string name="add_button_background_path_data">M 28,0 A 28,28 0 1 1 28,56 A 28,28 0 1 1 28,0</string>
     <string name="add_button_plus_path_data">M 28,19 L 28,37 M 19,28 L 37,28</string>
 
-    <string name="add_item_button_name">Add new item</string>
+    <string name="add_button_description">Add new item</string>
     <string name="add_another_item_button_description">Add another</string>
-    <string name="delete_item_button_name">Delete item(s)</string>
-    <string name="delete_selected_items_description">Delete selected items</string>
+    <string name="delete_button_description">Delete selected items</string>
     <string name="delete_all_description">Delete all</string>
     <string name="delete_all_items_confirmation_message">
         This will delete all items in the %1$s. Are you sure?</string>
