@@ -23,7 +23,10 @@ import dev.sasikanth.colorsheet.ColorSheet
  * editing mode (where the checkbox will morph into a tinted circle, and a
  * click will open a color picker dialog). The mode is changed via the property
  * inColorEditMode, or the function setInColorEditMode (which also allows
- * skipping the animation when the parameter animate == false).
+ * skipping the animation when the parameter animate == false). When not in
+ * color edit mode, the checkbox's contentDescription attribute will be equal
+ * to the value set through XML, but when in color edit mode will change to
+ * the value of the string resource R.string.edit_color_description instead.
  *
  * The current color is accessed through the property color. The color index
  * can be queried or changed through the property colorIndex. The colors that
@@ -57,10 +60,15 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     var colorIndex get() = _colorIndex
                    set(value) = setColorIndex(value)
 
+    private var originalContentDescription: String? = null
+
     init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.TintableCheckbox)
+        var a = context.obtainStyledAttributes(attrs, R.styleable.TintableCheckbox)
         val colorsResId = a.getResourceId(R.styleable.TintableCheckbox_colorsResId, 0)
         colors = context.getIntArray(colorsResId)
+
+        a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.contentDescription))
+        originalContentDescription = a.getString(0)
         a.recycle()
 
         setImageDrawable(ContextCompat.getDrawable(context, R.drawable.tintable_checkbox))
@@ -81,6 +89,8 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     fun setInColorEditMode(inColorEditMode: Boolean, animate: Boolean = true) {
         _inColorEditMode = inColorEditMode
         refreshDrawableState()
+        contentDescription = if (!inColorEditMode) originalContentDescription
+                             else context.getString(R.string.edit_color_description)
         if (!animate) drawable.jumpToCurrentState()
     }
 
