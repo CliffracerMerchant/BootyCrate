@@ -29,12 +29,16 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 /** Open a dialog to display an about app screen. */
 class AboutAppDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?) =
-        themedAlertDialogBuilder(requireContext()).setView(R.layout.about_app_dialog).create()
+        themedAlertDialogBuilder(requireContext())
+            .setView(R.layout.about_app_dialog)
+            .setPositiveButton(android.R.string.ok, null).create()
 }
 
 class PrivacyPolicyDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?) =
-        themedAlertDialogBuilder(requireContext()).setView(R.layout.privacy_policy_dialog).create()
+        themedAlertDialogBuilder(requireContext())
+            .setView(R.layout.privacy_policy_dialog)
+            .setPositiveButton(android.R.string.ok, null).create()
 }
 
 /** Return a MaterialAlertDialogBuilder with the context theme's materialAlertDialogTheme style applied. */
