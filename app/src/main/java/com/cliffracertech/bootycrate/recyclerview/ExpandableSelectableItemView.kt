@@ -11,6 +11,7 @@ import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.view.ViewPropertyAnimator
+import androidx.annotation.CallSuper
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -102,6 +103,14 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
             ui.linkIndicator.isVisible = isLinkedToAnotherItem
     }
 
+    override fun updateContentDescriptions(itemName: String) {
+        super.updateContentDescriptions(itemName)
+        val editDescResId = if (isExpanded) R.string.collapse_item_description
+                            else            R.string.edit_item_description
+        ui.editButton.contentDescription = context.getString(editDescResId, itemName)
+        ui.linkIndicator.contentDescription = context.getString(R.string.item_is_linked_description)
+    }
+
     /** Update the visibility of the isLinked indicator. */
     fun updateIsLinked(isLinked: Boolean, animate: Boolean = true) {
         isLinkedToAnotherItem = isLinked
@@ -122,7 +131,12 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     }
 
     fun toggleExpanded() = setExpanded(!isExpanded)
-    open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) { }
+    @CallSuper open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) {
+        val itemName = ui.nameEdit.text.toString()
+        val descResId = if (expanded) R.string.collapse_item_description
+                        else          R.string.edit_item_description
+        ui.editButton.contentDescription = context.getString(descResId, itemName)
+    }
 
     override fun setExpanded(expanding: Boolean, animate: Boolean) {
      /* Both LayoutTransition and TransitionManager.beginDelayedTransition

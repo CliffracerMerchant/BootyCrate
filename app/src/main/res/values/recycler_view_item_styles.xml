@@ -6,7 +6,6 @@
 <resources>
     <style name="BootyCrateItemColorEdit">
         <item name="android:padding">13dp</item>
-        <item name="android:contentDescription">@string/checkbox_description</item>
         <item name="colorsResId">@array/bootycrate_item_colors</item>
     </style>
 

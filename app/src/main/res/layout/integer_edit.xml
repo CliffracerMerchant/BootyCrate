@@ -35,7 +35,6 @@
         android:layout_marginStart="-5dp"
         android:layout_marginEnd="-5dp"
         android:elevation="-1dp"
-        android:contentDescription="@string/integer_edit_value_description"
         style="@style/IntegerEditValue" />
 
     <ImageButton
