@@ -30,7 +30,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             tools:tint="@color/bootyCrateItemColor0"
-            style="@style/BootyCrateItemColorEdit" />
+            style="@style/InventoryItemAutoAddToShoppingListCheckbox" />
 
         <TextView
             android:id="@+id/autoAddToShoppingListLabel"

@@ -124,7 +124,7 @@
     </style>
 
     <style name="AddNewItemTitle" parent="@style/TitleTextAppearance">
-        <item name="android:text">@string/add_item_button_name</item>
+        <item name="android:text">@string/add_button_description</item>
     </style>
 
     <style name="AddNewItemDialogMessage" parent="@style/SecondaryTextAppearance">

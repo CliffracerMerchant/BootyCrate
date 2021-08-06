@@ -58,7 +58,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 
                 if (changes.contains(InventoryItem.Field.Name) &&
                     ui.nameEdit.text.toString() != item.name)
-                        ui.nameEdit.setText(item.name)
+                        holder.view.setNameText(item.name)
                 if (changes.contains(InventoryItem.Field.ExtraInfo) &&
                     ui.extraInfoEdit.text.toString() != item.extraInfo)
                         holder.view.setExtraInfoText(item.extraInfo)

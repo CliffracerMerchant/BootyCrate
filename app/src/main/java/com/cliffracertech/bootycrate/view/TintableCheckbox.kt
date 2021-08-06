@@ -23,7 +23,10 @@ import dev.sasikanth.colorsheet.ColorSheet
  * editing mode (where the checkbox will morph into a tinted circle, and a
  * click will open a color picker dialog). The mode is changed via the property
  * inColorEditMode, or the function setInColorEditMode (which also allows
- * skipping the animation when the parameter animate == false).
+ * skipping the animation when the parameter animate == false). When in or not
+ * in color edit mode the checkbox's contentDescription attribute will be equal
+ * to the value of the property editColorDescription or checkBoxContentDescription,
+ * respectively.
  *
  * The current color is accessed through the property color. The color index
  * can be queried or changed through the property colorIndex. The colors that
@@ -57,6 +60,13 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     var colorIndex get() = _colorIndex
                    set(value) = setColorIndex(value)
 
+    var checkBoxContentDescription: String? = null
+        set(value) { field = value
+                     if (!inColorEditMode) contentDescription = value }
+    var editColorDescription: String? = null
+        set(value) { field = value
+                     if (inColorEditMode) contentDescription = value }
+
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TintableCheckbox)
         val colorsResId = a.getResourceId(R.styleable.TintableCheckbox_colorsResId, 0)
@@ -81,6 +91,8 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     fun setInColorEditMode(inColorEditMode: Boolean, animate: Boolean = true) {
         _inColorEditMode = inColorEditMode
         refreshDrawableState()
+        contentDescription = if (inColorEditMode) editColorDescription
+                             else                 checkBoxContentDescription
         if (!animate) drawable.jumpToCurrentState()
     }
 

@@ -14,7 +14,7 @@
         android:id="@+id/decreaseButton"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:contentDescription="@string/decrease_button_description"
+        android:contentDescription="@string/integer_edit_decrease_button_description"
         style="@style/IntegerEditDecreaseButton" />
 
     <!-- The valueEdit's start and end margins are set to its width when displaying
@@ -41,6 +41,6 @@
         android:id="@+id/increaseButton"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:contentDescription="@string/increase_button_description"
+        android:contentDescription="@string/integer_edit_increase_button_description"
         style="@style/IntegerEditIncreaseButton" />
 </merge>

@@ -9,20 +9,22 @@
     <string name="shopping_list_navigation_item_name">Shopping List</string>
     <string name="settings_description">Settings</string>
     <string name="search_description">Search</string>
+    <string name="back_description">Back</string>
+    <string name="search_query_description">Search query</string>
     <string name="change_sorting_description">Change sorting</string>
     <string name="name_ascending_description">Name ascending</string>
     <string name="name_descending_description">Name descending</string>
     <string name="amount_ascending_description">Amount ascending</string>
     <string name="amount_descending_description">Amount descending</string>
+    <string name="menu_button_description">Open options menu</string>
 
     <string name="checkout_button_background_path_data">M108,0 h-90 A 20.5 20.5 0 0 0 0,18 A 28 28 0 0 0 28,46 h90 A 32,32 0 0 1 108,0 Z</string>
     <string name="add_button_background_path_data">M 28,0 A 28,28 0 1 1 28,56 A 28,28 0 1 1 28,0</string>
     <string name="add_button_plus_path_data">M 28,19 L 28,37 M 19,28 L 37,28</string>
 
-    <string name="add_item_button_name">Add new item</string>
+    <string name="add_button_description">Add new item</string>
     <string name="add_another_item_button_description">Add another</string>
-    <string name="delete_item_button_name">Delete item(s)</string>
-    <string name="delete_selected_items_description">Delete selected items</string>
+    <string name="delete_button_description">Delete selected items</string>
     <string name="delete_all_description">Delete all</string>
     <string name="delete_all_items_confirmation_message">
         This will delete all items in the %1$s. Are you sure?</string>
@@ -34,15 +36,26 @@
 
     <string name="item_collection_name">items</string>
     <string name="item_name_description">Item name</string>
-    <string name="item_default_name">New item</string>
     <string name="item_extra_info_description">Item extra info</string>
     <string name="color_description">Color</string>
-    <string name="edit_color_description">Edit item color</string>
-    <string name="item_amount_description">Amount</string>
-    <string name="decrease_button_description">Decrease amount</string>
-    <string name="increase_button_description">Increase amount</string>
+    <string name="edit_color_description">Edit color</string>
+    <string name="integer_edit_decrease_button_description">Decrease amount</string>
+    <string name="integer_edit_increase_button_description">Increase amount</string>
     <string name="link_status_description">Linked status</string>
     <string name="collapse_button_description">Collapse extra item options</string>
+
+    <string name="item_checkbox_description">%1$s checkbox</string>
+    <string name="item_color_description">%1$s color</string>
+    <string name="edit_item_color_description">Edit %1$s color</string>
+    <string name="item_amount_decrease_description">Decrease %1$s amount</string>
+    <string name="item_amount_increase_description">Increase %1$s amount</string>
+    <string name="item_is_linked_description">%1$s is linked</string>
+    <string name="edit_item_description">Edit %1$s</string>
+    <string name="collapse_item_description">Collapse %1$s</string>
+    <string name="item_auto_add_to_shopping_list_checkbox_description">Auto-add %1$s to shopping list</string>
+    <string name="item_auto_add_to_shopping_list_amount_decrease_description">Decrease %1$s auto-add to shopping list amount</string>
+    <string name="item_auto_add_to_shopping_list_amount_increase_description">Increase %1$s auto-add to shopping list amount</string>
+    <string name="item_auto_add_to_shopping_list_amount_description">%1$s auto-add to shopping list amount</string>
 
     <string name="shopping_list_item_collection_name">shopping list</string>
     <string name="add_to_shopping_list_description">Add to shopping list</string>
@@ -52,7 +65,7 @@
 
     <string name="inventory_item_collection_name">inventory</string>
     <string name="add_to_inventory_description">Add to inventory</string>
-    <string name="auto_add_to_list_checkbox_description">Add to shopping list</string>
+    <string name="auto_add_to_list_checkbox_description">Auto add to shopping list</string>
     <string name="auto_add_to_list_checkbox_text">Add to shopping list under</string>
     <string name="auto_add_to_list_trigger_edit_description">Auto-add to shopping list amount threshold</string>
 

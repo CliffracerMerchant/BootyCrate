@@ -146,6 +146,7 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
         if (!animate) { valueIsFocusable = focusable; return null }
 
         ui.valueEdit.isFocusableInTouchMode = focusable
+        ui.valueEdit.isClickable = focusable
         val underlineEndAlpha = if (focusable) 255 else 0
 
         val oldValueWidth = ui.valueEdit.width

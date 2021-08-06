@@ -85,6 +85,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
         if (editable) lastValue = text.toString()
         isFocusableInTouchMode = editable
         isFocusable = editable
+        isClickable = editable
         /* Setting the input type here will prevent misspelling underlines from
          * being displayed when the TextFieldEdit is not in an editable state. */
         inputType = if (editable) InputType.TYPE_CLASS_TEXT

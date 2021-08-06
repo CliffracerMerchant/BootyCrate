@@ -44,6 +44,10 @@
         <item name="android:src">@drawable/animated_circle_to_checkbox_checked_background</item>
     </style>
 
+    <style name="InventoryItemAutoAddToShoppingListCheckbox" parent="@style/BootyCrateItemColorEdit">
+        <item name="android:contentDescription">@string/auto_add_to_list_checkbox_description</item>
+    </style>
+
     <style name="InventoryItemAutoAddToShoppingListCheckboxLabel" parent="@style/SecondaryTextAppearance">
         <item name="android:labelFor">@id/autoAddToShoppingListCheckBox</item>
         <item name="android:text">@string/auto_add_to_list_checkbox_text</item>

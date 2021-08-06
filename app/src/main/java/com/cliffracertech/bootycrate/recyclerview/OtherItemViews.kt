@@ -27,7 +27,11 @@ import com.cliffracertech.bootycrate.utils.applyConfig
  * A layout to display the data for a BootyCrateItem.
  *
  * BootyCrateItemView displays the data for an instance of BootyCrateItem. The
- * displayed data can be updated for a new item with the function update.
+ * displayed data can be updated for a new item with the open function update.
+ * The function updateContentDescriptions likewise updates the contentDescription
+ * fields for child views so that they are unique for each item. Both update
+ * and updateContentDescriptions are open functions and should be overridden
+ * in subclasses that add new fields to the displayed items.
  *
  * By default BootyCrateItemView inflates itself with the contents of
  * R.layout.booty_crate_item.xml and initializes its BootyCrateItemBinding
@@ -63,6 +67,21 @@ open class BootyCrateItemView<T: BootyCrateItem>(
         val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
         ui.checkBox.initColorIndex(colorIndex)
         ui.amountEdit.initValue(item.amount)
+        updateContentDescriptions(item.name)
+    }
+
+    @CallSuper open fun updateContentDescriptions(itemName: String) {
+        ui.checkBox.checkBoxContentDescription = context.getString(R.string.item_checkbox_description, itemName)
+        ui.checkBox.editColorDescription = context.getString(R.string.edit_item_color_description, itemName)
+        ui.amountEdit.ui.decreaseButton.contentDescription = context.getString(R.string.item_amount_decrease_description, itemName)
+        ui.amountEdit.ui.increaseButton.contentDescription = context.getString(R.string.item_amount_increase_description, itemName)
+    }
+
+    /** Update the text of name edit, while also updating the contentDescriptions
+     * of child views to take into account the new name. */
+    fun setNameText(newName: String) {
+        ui.nameEdit.setText(newName)
+        updateContentDescriptions(newName)
     }
 
     /** Update the text of the extra info edit, while also updating the extra info
@@ -104,6 +123,7 @@ class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig? = n
     }
 
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
+        super.onExpandedChanged(expanded, animate)
         ui.checkBox.setInColorEditMode(expanded, animate)
     }
 
@@ -142,14 +162,25 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
     }
 
     override fun update(item: InventoryItem) {
+        super.update(item)
         detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
         detailsUi.autoAddToShoppingListCheckBox.initColorIndex(item.color)
         detailsUi.autoAddToShoppingListAmountEdit.initValue(item.autoAddToShoppingListAmount)
-        super.update(item)
+    }
+
+    override fun updateContentDescriptions(itemName: String) {
+        super.updateContentDescriptions(itemName)
+        detailsUi.autoAddToShoppingListCheckBox.checkBoxContentDescription =
+            context.getString(R.string.item_auto_add_to_shopping_list_checkbox_description)
+        detailsUi.autoAddToShoppingListAmountEdit.ui.decreaseButton.contentDescription =
+            context.getString(R.string.item_auto_add_to_shopping_list_amount_decrease_description)
+        detailsUi.autoAddToShoppingListAmountEdit.ui.increaseButton.contentDescription =
+            context.getString(R.string.item_auto_add_to_shopping_list_amount_increase_description)
     }
 
     private var showingDetails = false
     override fun onExpandedChanged(expanded: Boolean, animate: Boolean) {
+        super.onExpandedChanged(expanded, animate)
         val endTranslation = if (expanded) 0f else
             detailsUi.autoAddToShoppingListCheckBox.layoutParams.height * -1f
 

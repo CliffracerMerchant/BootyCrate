@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.view
 
 import android.content.Context
+import android.graphics.drawable.StateListDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -118,7 +119,7 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
             setSearchQueryPrivate(if (activeSearchQuery == null) "" else null)
         }
         ui.changeSortButton.setOnClickListener {
-            if (!ui.changeSortButton.isActivated)
+            if (changeSortButtonIsVisible)
                 changeSortPopupMenu.show()
             else onDeleteButtonClickedListener?.invoke()
         }
@@ -175,10 +176,10 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         if (activeActionModeCallback == null) {
             actionMode?.apply {
                 finish(updateActionBarUi = false)
-                ui.changeSortButton.isActivated = false
+                setChangeSortButtonIsVisible(true)
                 if (activeSearchQuery == null) {
                     ui.titleSwitcher.showTitle()
-                    ui.changeSortButton.isActivated = false
+                    setChangeSortButtonIsVisible(true)
                 }
             }
             setSearchQueryPrivate(activeSearchQuery, showSoftInput = false,
@@ -206,6 +207,22 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
             ui.searchButton.isActivated = false
         }
     }
+
+    val changeSortButtonIsVisible get() = !ui.changeSortButton.isActivated
+    val deleteButtonIsVisible get() = ui.changeSortButton.isActivated
+    private fun setChangeSortButtonIsVisible(visible: Boolean, animate: Boolean = true) {
+        ui.changeSortButton.isActivated = !visible
+        if (!animate) {
+            val drawable = ui.changeSortButton.drawable as? StateListDrawable
+            drawable?.jumpToCurrentState()
+        }
+        ui.changeSortButton.contentDescription = context.getString(
+            if (visible) R.string.change_sorting_description
+            else         R.string.delete_button_description)
+    }
+    private fun setDeleteButtonIsVisible(visible: Boolean, animate: Boolean = true) =
+        setChangeSortButtonIsVisible(!visible, animate)
+
 
     /**
      * An reimplementation of ActionMode that uses an instance of RecyclerViewActionBar.
@@ -253,8 +270,8 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                 ui.searchButton.isVisible = false
             if (ui.searchButton.isActivated)
                 ui.searchButton.isActivated = false
-            if (!ui.changeSortButton.isActivated)
-                ui.changeSortButton.isActivated = true
+            if (!deleteButtonIsVisible)
+                setDeleteButtonIsVisible(true)
             callback.onStart(this, this@RecyclerViewActionBar)
         }
 
@@ -264,9 +281,10 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                 if (!ui.searchButton.isVisible) {
                     ui.searchButton.alpha = 0f
                     ui.searchButton.isVisible = true
-                    ui.searchButton.animate().alpha(1f).withLayer().applyConfig(animatorConfig).start()
+                    ui.searchButton.animate().alpha(1f).withLayer()
+                                .applyConfig(animatorConfig).start()
                 }
-                ui.changeSortButton.isActivated = false
+                setChangeSortButtonIsVisible(true)
                 if (ui.titleSwitcher.searchQuery.isNotEmpty()) {
                     ui.titleSwitcher.showSearchQuery()
                     ui.searchButton.isActivated = true
