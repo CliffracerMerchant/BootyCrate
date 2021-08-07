@@ -12,12 +12,12 @@
 
     <item android:enabled="false"
           android:title=""
-          android:contentDescription="@null"
+          android:importantForAccessibility="no"
           android:orderInCategory="1" />
 
     <item android:enabled="false"
           android:title=""
-          android:contentDescription="@null"
+          android:importantForAccessibility="no"
           android:orderInCategory="2" />
 
     <item android:id="@+id/inventoryButton"
