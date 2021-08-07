@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
+import android.view.View
 import android.view.animation.AnimationUtils
 import android.view.animation.PathInterpolator
 import androidx.core.content.ContextCompat
@@ -49,6 +50,10 @@ open class MainActivity : MultiFragmentActivity() {
         initAnimatorConfigs()
         window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
         initGradientStyle()
+        // Setting android:importantForAccessibility in the bottom_navigation_menu.xml
+        // for the disabled menu items seems not to work, so it must be done here instead
+        (ui.bottomNavigationBar.getIconAt(1).parent as View).importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        (ui.bottomNavigationBar.getIconAt(2).parent as View).importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }

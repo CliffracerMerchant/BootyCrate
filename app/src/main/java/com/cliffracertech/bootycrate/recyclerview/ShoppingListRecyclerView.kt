@@ -76,9 +76,8 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                 val changes = payload as EnumSet<ShoppingListItem.Field>
                 val ui = holder.view.ui
 
-                if (changes.contains(ShoppingListItem.Field.Name) &&
-                    ui.nameEdit.text.toString() != item.name)
-                        holder.view.setNameText(item.name)
+                if (changes.contains(ShoppingListItem.Field.Name))
+                    holder.view.setNameText(item.name)
                 if (changes.contains(ShoppingListItem.Field.ExtraInfo) &&
                     ui.extraInfoEdit.text.toString() != item.extraInfo)
                         holder.view.setExtraInfoText(item.extraInfo)

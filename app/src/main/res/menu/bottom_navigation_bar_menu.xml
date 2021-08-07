@@ -11,12 +11,12 @@
           android:orderInCategory="0" />
 
     <item android:enabled="false"
-          android:title=""
+          android:title="@null"
           android:importantForAccessibility="no"
           android:orderInCategory="1" />
 
     <item android:enabled="false"
-          android:title=""
+          android:title="@null"
           android:importantForAccessibility="no"
           android:orderInCategory="2" />
 
