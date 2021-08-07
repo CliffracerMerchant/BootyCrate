@@ -7,8 +7,12 @@ package com.cliffracertech.bootycrate.view
 import android.content.Context
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
+import android.view.View
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.argbValueAnimator
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
@@ -23,10 +27,7 @@ import dev.sasikanth.colorsheet.ColorSheet
  * editing mode (where the checkbox will morph into a tinted circle, and a
  * click will open a color picker dialog). The mode is changed via the property
  * inColorEditMode, or the function setInColorEditMode (which also allows
- * skipping the animation when the parameter animate == false). When in or not
- * in color edit mode the checkbox's contentDescription attribute will be equal
- * to the value of the property editColorDescription or checkBoxContentDescription,
- * respectively.
+ * skipping the animation when the parameter animate == false).
  *
  * The current color is accessed through the property color. The color index
  * can be queried or changed through the property colorIndex. The colors that
@@ -35,6 +36,13 @@ import dev.sasikanth.colorsheet.ColorSheet
  * can be set to invoke an action when the color is changed. The function
  * initColorIndex will set the color index without an animation and will not
  * call the onColorChangedListener.
+ *
+ * When in or not in color edit mode the check box's contentDescription
+ * attribute will be equal to the value of the properties editColorContentDescription
+ * or checkBoxContentDescription, respectively. If the property colorNameFunc
+ * is set to a reference to a function that returns the string name for a
+ * given color index, TintableCheckbox will include the color state in its
+ * accessibility description.
  *
  * TintableCheckbox assumes it is instantiated inside an instance of FragmentActivity
  * in order to show child DialogFragments. If this is not the case, a ClassCastException
@@ -46,10 +54,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
                         set(value) = setInColorEditMode(value)
     private var _isChecked = false
     var isChecked get() = _isChecked
-        set(checked) { _isChecked = checked
-                       val newState = android.R.attr.state_checked * if (checked) 1 else -1
-                       setImageState(intArrayOf(newState), true)
-                       onCheckedChangedListener?.invoke(checked) }
+                  set(checked) = setIsCheckedPrivate(checked)
 
     var onCheckedChangedListener: ((Boolean) -> Unit)? = null
     var onColorChangedListener: ((Int) -> Unit)? = null
@@ -60,12 +65,9 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     var colorIndex get() = _colorIndex
                    set(value) = setColorIndex(value)
 
+    var colorNameFunc: ((Int, Context) -> String)? = null
     var checkBoxContentDescription: String? = null
-        set(value) { field = value
-                     if (!inColorEditMode) contentDescription = value }
-    var editColorDescription: String? = null
-        set(value) { field = value
-                     if (inColorEditMode) contentDescription = value }
+    var editColorContentDescription: String? = null
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TintableCheckbox)
@@ -86,13 +88,25 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
             }
             else isChecked = !isChecked
         }
+
+        ViewCompat.setAccessibilityDelegate(this, object: AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                val colorState = colorNameFunc?.invoke(colorIndex, context) ?: ""
+                val checkedState = if (inColorEditMode) "" else context.getString(
+                    if (isChecked) R.string.checkbox_checked_description
+                    else           R.string.checkbox_unchecked_description)
+                info.stateDescription = "$colorState, $checkedState"
+                info.contentDescription = if (inColorEditMode) editColorContentDescription
+                                          else                 checkBoxContentDescription
+                info.className = ""
+            }
+        })
     }
 
     fun setInColorEditMode(inColorEditMode: Boolean, animate: Boolean = true) {
         _inColorEditMode = inColorEditMode
         refreshDrawableState()
-        contentDescription = if (inColorEditMode) editColorDescription
-                             else                 checkBoxContentDescription
         if (!animate) drawable.jumpToCurrentState()
     }
 
@@ -118,6 +132,13 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
         _isChecked = isChecked
         val newState = android.R.attr.state_checked * if (isChecked) 1 else -1
         setImageState(intArrayOf(newState), true)
+    }
+
+    private fun setIsCheckedPrivate(isChecked: Boolean) {
+        _isChecked = isChecked
+        val newState = android.R.attr.state_checked * if (isChecked) 1 else -1
+        setImageState(intArrayOf(newState), true)
+        onCheckedChangedListener?.invoke(isChecked)
     }
 
     override fun onCreateDrawableState(extraSpace: Int): IntArray =

@@ -71,8 +71,11 @@ open class BootyCrateItemView<T: BootyCrateItem>(
     }
 
     @CallSuper open fun updateContentDescriptions(itemName: String) {
-        ui.checkBox.checkBoxContentDescription = context.getString(R.string.item_checkbox_description, itemName)
-        ui.checkBox.editColorDescription = context.getString(R.string.edit_item_color_description, itemName)
+        ui.checkBox.colorNameFunc = BootyCrateItem.Companion::getColorString
+        ui.checkBox.checkBoxContentDescription =
+            context.getString(R.string.item_checkbox_description, itemName)
+        ui.checkBox.editColorContentDescription =
+            context.getString(R.string.edit_item_color_description, itemName)
         ui.amountEdit.ui.decreaseButton.contentDescription = context.getString(R.string.item_amount_decrease_description, itemName)
         ui.amountEdit.ui.increaseButton.contentDescription = context.getString(R.string.item_amount_increase_description, itemName)
         ui.amountEditLabel.text = context.getString(R.string.item_amount_description, itemName)

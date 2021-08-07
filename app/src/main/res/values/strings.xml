@@ -44,21 +44,7 @@
     <string name="integer_edit_increase_button_description">Increase amount</string>
     <string name="integer_edit_value_description">Amount</string>
     <string name="link_status_description">Linked status</string>
-    <string name="collapse_button_description">Collapse extra item options</string>
-
-    <string name="item_extra_info_description">%1$s extra info</string>
-    <string name="item_checkbox_description">%1$s checkbox, %1$s</string>
-    <string name="edit_item_color_description">Edit %1$s color</string>
-    <string name="item_amount_decrease_description">Decrease %1$s amount</string>
-    <string name="item_amount_increase_description">Increase %1$s amount</string>
-    <string name="item_amount_description">%1$s amount</string>
-    <string name="item_is_linked_description">%1$s is linked</string>
-    <string name="edit_item_description">Edit %1$s</string>
-    <string name="collapse_item_description">Collapse %1$s</string>
-    <string name="item_auto_add_to_shopping_list_checkbox_description">Auto-add %1$s to shopping list</string>
-    <string name="item_auto_add_to_shopping_list_amount_decrease_description">Decrease %1$s auto-add to shopping list amount</string>
-    <string name="item_auto_add_to_shopping_list_amount_increase_description">Increase %1$s auto-add to shopping list amount</string>
-    <string name="item_auto_add_to_shopping_list_amount_description">%1$s auto-add to shopping list amount</string>
+    <string name="collapse_button_description">Collapse item extra details</string>
 
     <string name="shopping_list_item_collection_name">shopping list</string>
     <string name="add_to_shopping_list_description">Add to shopping list</string>
@@ -68,9 +54,25 @@
 
     <string name="inventory_item_collection_name">inventory</string>
     <string name="add_to_inventory_description">Add to inventory</string>
-    <string name="auto_add_to_list_checkbox_description">Auto add to shopping list</string>
-    <string name="auto_add_to_list_checkbox_text">Add to shopping list under</string>
-    <string name="auto_add_to_list_trigger_edit_description">Auto-add to shopping list amount threshold</string>
+    <string name="auto_add_to_shopping_list_checkbox_description">Auto add to shopping list</string>
+    <string name="auto_add_to_shopping_list_checkbox_text">Add to shopping list under</string>
+    <string name="auto_add_to_shopping_list_trigger_edit_description">Auto-add to shopping list amount threshold</string>
+
+    <string name="item_extra_info_description">%1$s extra info</string>
+    <string name="item_checkbox_description">%1$s checkbox</string>
+    <string name="checkbox_unchecked_description">unchecked</string>
+    <string name="checkbox_checked_description">checked</string>
+    <string name="edit_item_color_description">Edit %1$s color,  button</string>
+    <string name="item_amount_decrease_description">Decrease %1$s amount</string>
+    <string name="item_amount_increase_description">Increase %1$s amount</string>
+    <string name="item_amount_description">%1$s amount</string>
+    <string name="item_is_linked_description">%1$s is linked</string>
+    <string name="edit_item_description">Edit %1$s</string>
+    <string name="collapse_item_description">Collapse %1$s</string>
+    <string name="item_auto_add_to_shopping_list_checkbox_description">Auto-add %1$s to shopping list checkbox</string>
+    <string name="item_auto_add_to_shopping_list_amount_decrease_description">Decrease %1$s auto-add to shopping list amount</string>
+    <string name="item_auto_add_to_shopping_list_amount_increase_description">Increase %1$s auto-add to shopping list amount</string>
+    <string name="item_auto_add_to_shopping_list_amount_description">%1$s auto-add to shopping list amount</string>
 
     <string name="share_description">Share</string>
     <string name="share_whole_list_title">Share %1$s</string>
@@ -114,5 +116,18 @@
     <string name="privacy_policy_text">BootyCrate does not ask for, collect, or share any personal information. BootyCrate only stores user preferences and entered shopping list and inventory item data on the user\'s device, or in external files if the user chooses to export this data. This data is never uploaded to other computers or servers unless the user does this themselves with their exported data files.</string>
     <string name="invalid_imported_db_error_message">The imported database was invalid or empty. Reverting to previous database instead.</string>
     <string name="error">Error</string>
+
+    <string name="item_color_0_description">red</string>
+    <string name="item_color_1_description">orange</string>
+    <string name="item_color_2_description">yellow</string>
+    <string name="item_color_3_description">lime green</string>
+    <string name="item_color_4_description">green</string>
+    <string name="item_color_5_description">teal</string>
+    <string name="item_color_6_description">cyan</string>
+    <string name="item_color_7_description">blue</string>
+    <string name="item_color_8_description">purple</string>
+    <string name="item_color_9_description">magenta</string>
+    <string name="item_color_10_description">pink</string>
+    <string name="item_color_11_description">gray</string>
 
 </resources>
