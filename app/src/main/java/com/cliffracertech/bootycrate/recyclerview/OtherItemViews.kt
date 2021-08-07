@@ -176,11 +176,13 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
     override fun updateContentDescriptions(itemName: String) {
         super.updateContentDescriptions(itemName)
         detailsUi.autoAddToShoppingListCheckBox.checkBoxContentDescription =
-            context.getString(R.string.item_auto_add_to_shopping_list_checkbox_description)
+            context.getString(R.string.item_auto_add_to_shopping_list_checkbox_description, itemName)
         detailsUi.autoAddToShoppingListAmountEdit.ui.decreaseButton.contentDescription =
-            context.getString(R.string.item_auto_add_to_shopping_list_amount_decrease_description)
+            context.getString(R.string.item_auto_add_to_shopping_list_amount_decrease_description, itemName)
         detailsUi.autoAddToShoppingListAmountEdit.ui.increaseButton.contentDescription =
-            context.getString(R.string.item_auto_add_to_shopping_list_amount_increase_description)
+            context.getString(R.string.item_auto_add_to_shopping_list_amount_increase_description, itemName)
+        detailsUi.autoAddToShoppingListAmountEditLabel.text =
+            context.getString(R.string.item_auto_add_to_shopping_list_amount_description, itemName)
     }
 
     private var showingDetails = false
