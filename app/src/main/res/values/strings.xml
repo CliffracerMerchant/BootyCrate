@@ -36,20 +36,22 @@
     <string name="action_mode_title">%1$d item(s) selected</string>
 
     <string name="item_collection_name">items</string>
-    <string name="item_name_description">Item name</string>
-    <string name="item_extra_info_description">Item extra info</string>
+    <string name="name_description">Item name</string>
+    <string name="extra_info_description">Item extra info</string>
     <string name="color_description">Color</string>
     <string name="edit_color_description">Edit color</string>
     <string name="integer_edit_decrease_button_description">Decrease amount</string>
     <string name="integer_edit_increase_button_description">Increase amount</string>
+    <string name="integer_edit_value_description">Amount</string>
     <string name="link_status_description">Linked status</string>
     <string name="collapse_button_description">Collapse extra item options</string>
 
-    <string name="item_checkbox_description">%1$s checkbox</string>
-    <string name="item_color_description">%1$s color</string>
+    <string name="item_extra_info_description">%1$s extra info</string>
+    <string name="item_checkbox_description">%1$s checkbox, %1$s</string>
     <string name="edit_item_color_description">Edit %1$s color</string>
     <string name="item_amount_decrease_description">Decrease %1$s amount</string>
     <string name="item_amount_increase_description">Increase %1$s amount</string>
+    <string name="item_amount_description">%1$s amount</string>
     <string name="item_is_linked_description">%1$s is linked</string>
     <string name="edit_item_description">Edit %1$s</string>
     <string name="collapse_item_description">Collapse %1$s</string>

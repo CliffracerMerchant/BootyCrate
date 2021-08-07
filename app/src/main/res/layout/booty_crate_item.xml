@@ -98,4 +98,16 @@
         android:contentDescription="@string/link_status_description"
         style="@style/ShoppingListItemLinkIndicator" />
 
+    <!-- amountEditLabel is intended as a label for the amount edit.
+         -3 for height and width is a workaround to make the view
+         actually zero sized (since 0dp will make it auto-sized instead). -->
+    <TextView
+        android:id="@+id/amountEditLabel"
+        android:layout_width="-3dp"
+        android:layout_height="-3dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:text="@string/item_amount_description"
+        android:labelFor="@id/valueEdit" />
+
 </merge>

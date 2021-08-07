@@ -75,6 +75,8 @@ open class BootyCrateItemView<T: BootyCrateItem>(
         ui.checkBox.editColorDescription = context.getString(R.string.edit_item_color_description, itemName)
         ui.amountEdit.ui.decreaseButton.contentDescription = context.getString(R.string.item_amount_decrease_description, itemName)
         ui.amountEdit.ui.increaseButton.contentDescription = context.getString(R.string.item_amount_increase_description, itemName)
+        ui.amountEditLabel.text = context.getString(R.string.item_amount_description, itemName)
+        ui.extraInfoEdit.hint = context.getString(R.string.item_extra_info_description, itemName)
     }
 
     /** Update the text of name edit, while also updating the contentDescriptions

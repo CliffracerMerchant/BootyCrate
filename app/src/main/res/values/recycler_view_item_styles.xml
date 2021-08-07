@@ -10,7 +10,7 @@
     </style>
 
     <style name="BootyCrateItemNameEdit" parent="@style/NormalTextAppearance">
-        <item name="android:hint">@string/item_name_description</item>
+        <item name="android:hint">@string/name_description</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
         <item name="canBeBlank">false</item>
@@ -18,7 +18,7 @@
     </style>
 
     <style name="BootyCrateItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
-        <item name="android:hint">@string/item_extra_info_description</item>
+        <item name="android:hint">@string/extra_info_description</item>
         <item name="android:textColor">@color/color_text_light_secondary</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
