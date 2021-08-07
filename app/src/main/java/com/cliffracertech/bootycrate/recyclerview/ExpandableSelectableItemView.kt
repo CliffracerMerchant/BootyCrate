@@ -108,7 +108,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         val editDescResId = if (isExpanded) R.string.collapse_item_description
                             else            R.string.edit_item_description
         ui.editButton.contentDescription = context.getString(editDescResId, itemName)
-        ui.linkIndicator.contentDescription = context.getString(R.string.item_is_linked_description)
+        ui.linkIndicator.contentDescription = context.getString(R.string.item_is_linked_description, itemName)
     }
 
     /** Update the visibility of the isLinked indicator. */
