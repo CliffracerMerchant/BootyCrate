@@ -87,7 +87,7 @@
         android:contentDescription="@string/edit_button_description"
         style="@style/BootyCrateItemEditButton" />
 
-    <ImageButton
+    <ImageView
         android:id="@+id/linkIndicator"
         android:layout_width="48dp"
         android:layout_height="48dp"
