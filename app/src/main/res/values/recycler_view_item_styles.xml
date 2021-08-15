@@ -7,6 +7,7 @@
     <style name="BootyCrateItemColorEdit">
         <item name="android:padding">13dp</item>
         <item name="colorsResId">@array/bootycrate_item_colors</item>
+        <item name="colorDescriptionsResId">@array/bootycrate_item_color_descriptions</item>
     </style>
 
     <style name="BootyCrateItemNameEdit" parent="@style/NormalTextAppearance">

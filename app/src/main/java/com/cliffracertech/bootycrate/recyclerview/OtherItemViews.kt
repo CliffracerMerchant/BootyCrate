@@ -39,7 +39,7 @@ import com.cliffracertech.bootycrate.utils.applyConfig
  * BootyCrateItemView can be constructed with the parameter useDefaultLayout
  * equal to false. If useDefaultLayout is false, it will be up to the subclass
  * to inflate the desired layout and initialize the member ui with an instance
- * of a BootyCrateItemBinding. If the ui member is not initialized then a
+ * of a BootyCrateItemBinding. If the ui member is not initialized, a
  * kotlin.UninitializedPropertyAccessException will be thrown.
  */
 @Suppress("LeakingThis")
@@ -71,7 +71,6 @@ open class BootyCrateItemView<T: BootyCrateItem>(
     }
 
     @CallSuper open fun updateContentDescriptions(itemName: String) {
-        ui.checkBox.colorNameFunc = BootyCrateItem.Companion::getColorString
         ui.checkBox.checkBoxContentDescription =
             context.getString(R.string.item_checkbox_description, itemName)
         ui.checkBox.editColorContentDescription =

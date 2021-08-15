@@ -10,7 +10,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.cliffracertech.bootycrate.R
 
-/** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item. */
+/** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item table. */
 @Entity(tableName = "bootycrate_item")
 class DatabaseBootyCrateItem(
     @PrimaryKey(autoGenerate = true)
@@ -90,29 +90,15 @@ abstract class BootyCrateItem(
     fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
     companion object {
-        val Colors: List<Int> get() = _Colors
-        private lateinit var _Colors: List<Int>
+        val Colors: List<Int> get() = _Colors.asList()
+        val ColorDescriptions: List<String> get() = _ColorDescriptions.asList()
+        private lateinit var _Colors: IntArray
+        private lateinit var _ColorDescriptions: Array<String>
 
         fun initColors(context: Context) {
-            _Colors = context.resources.getIntArray(R.array.bootycrate_item_colors).asList()
+            _Colors = context.resources.getIntArray(R.array.bootycrate_item_colors)
+            _ColorDescriptions = context.resources.getStringArray(R.array.bootycrate_item_color_descriptions)
         }
-
-        fun getColorString(index: Int, context: Context) =
-            if (index !in _Colors.indices) ""
-            else context.getString(when (index) {
-                0 -> R.string.item_color_0_description
-                1 -> R.string.item_color_1_description
-                2 -> R.string.item_color_2_description
-                3 -> R.string.item_color_3_description
-                4 -> R.string.item_color_4_description
-                5 -> R.string.item_color_5_description
-                6 -> R.string.item_color_6_description
-                7 -> R.string.item_color_7_description
-                8 -> R.string.item_color_8_description
-                9 -> R.string.item_color_9_description
-                10 -> R.string.item_color_10_description
-                else -> R.string.item_color_11_description
-            })
     }
 }
 

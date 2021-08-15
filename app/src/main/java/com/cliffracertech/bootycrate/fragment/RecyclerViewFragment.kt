@@ -123,7 +123,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             return false
         }
 
-        val collectionName = collectionName.toLowerCase(Locale.getDefault())
+        val collectionName = collectionName.lowercase(Locale.getDefault())
         val stringResId = if (selectionIsEmpty) R.string.share_whole_list_title
                           else                  R.string.share_selected_items_title
         val messageTitle = context.getString(stringResId, collectionName)

@@ -10,13 +10,13 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.fragment.app.FragmentActivity
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.utils.argbValueAnimator
-import com.cliffracertech.bootycrate.utils.asFragmentActivity
-import com.cliffracertech.bootycrate.utils.getIntArray
+import com.cliffracertech.bootycrate.utils.*
 import dev.sasikanth.colorsheet.ColorSheet
 
 /**
@@ -39,40 +39,46 @@ import dev.sasikanth.colorsheet.ColorSheet
  *
  * When in or not in color edit mode the check box's contentDescription
  * attribute will be equal to the value of the properties editColorContentDescription
- * or checkBoxContentDescription, respectively. If the property colorNameFunc
- * is set to a reference to a function that returns the string name for a
- * given color index, TintableCheckbox will include the color state in its
- * accessibility description.
+ * or checkBoxContentDescription, respectively. The XML attribute colorDescriptionsResId
+ * must be set to reference a string array of at least equal length to the
+ * colors array. The description of the current color will then be included
+ * in TintableCheckbox accessibility description.
  *
  * TintableCheckbox assumes it is instantiated inside an instance of FragmentActivity
- * in order to show child DialogFragments. If this is not the case, a ClassCastException
- * will be thrown when the TintableCheckbox is clicked while inColorEditMode is true.
+ * in order to show child DialogFragments. If this is not the case, the color picker
+ * will not be shown when the TintableCheckbox is clicked while inColorEditMode is true.
  */
 class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageButton(context, attrs) {
+
+    private var _isChecked = false
+    var isChecked get() = _isChecked
+        set(checked) = setIsCheckedPrivate(checked)
+
+    val colors: IntArray
+    val colorDescriptions: Array<String>
+    val color get() = colors[_colorIndex]
+    private var _colorIndex = 0
+    var colorIndex get() = _colorIndex
+        set(value) = setColorIndex(value)
+
     private var _inColorEditMode = false
     var inColorEditMode get() = _inColorEditMode
                         set(value) = setInColorEditMode(value)
-    private var _isChecked = false
-    var isChecked get() = _isChecked
-                  set(checked) = setIsCheckedPrivate(checked)
 
     var onCheckedChangedListener: ((Boolean) -> Unit)? = null
     var onColorChangedListener: ((Int) -> Unit)? = null
 
-    val colors: IntArray
-    val color get() = colors[_colorIndex]
-    private var _colorIndex = 0
-    var colorIndex get() = _colorIndex
-                   set(value) = setColorIndex(value)
-
-    var colorNameFunc: ((Int, Context) -> String)? = null
     var checkBoxContentDescription: String? = null
     var editColorContentDescription: String? = null
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TintableCheckbox)
-        val colorsResId = a.getResourceId(R.styleable.TintableCheckbox_colorsResId, 0)
-        colors = context.getIntArray(colorsResId)
+        val colorsResId = a.getResourceIdOrThrow(R.styleable.TintableCheckbox_colorsResId)
+        val colorDescriptionsResId = a.getResourceIdOrThrow(R.styleable.TintableCheckbox_colorDescriptionsResId)
+        colors = getColors(context, colorsResId)
+        colorDescriptions = getColorDescriptions(context, colorDescriptionsResId)
+        if (colorDescriptions.size < colors.size) throw IllegalStateException(
+            "The color descriptions array must be at least the same size as the colors array.")
         a.recycle()
 
         setImageDrawable(ContextCompat.getDrawable(context, R.drawable.tintable_checkbox))
@@ -80,11 +86,11 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
         checkMarkDrawable.setTint(ContextCompat.getColor(context, android.R.color.black))
         setOnClickListener {
             if (inColorEditMode) {
-                val activity = context.asFragmentActivity()
+                val activity = context as? FragmentActivity ?: return@setOnClickListener
                 ColorSheet().colorPicker(colors, color) { color: Int ->
                     val colorIndex = colors.indexOf(color)
                     setColorIndex(if (colorIndex != -1) colorIndex else 0)
-                }.show(activity.supportFragmentManager)
+                }.show(activity.supportFragmentManager, "TintableCheckboxColorPicker")
             }
             else isChecked = !isChecked
         }
@@ -92,7 +98,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
         ViewCompat.setAccessibilityDelegate(this, object: AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfoCompat) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
-                val colorState = colorNameFunc?.invoke(colorIndex, context) ?: ""
+                val colorState = colorDescriptions[colorIndex]
                 val checkedState = if (inColorEditMode) "" else context.getString(
                     if (isChecked) R.string.checkbox_checked_description
                     else           R.string.checkbox_unchecked_description)
@@ -147,4 +153,26 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
         else super.onCreateDrawableState(extraSpace + 1).apply {
             mergeDrawableStates(this, intArrayOf(R.attr.state_edit_color))
         }
+
+    private companion object {
+        val colorsCache = mutableMapOf<Int, IntArray>()
+        val colorDescriptionsCache = mutableMapOf<Int, Array<String>>()
+
+        /** Return the IntArray representing color values pointed to by the
+         * parameter arrayResId. In order to prevent multiple copies of the
+         * same array, getColors will automatically share references of the
+         * same array between TintableCheckboxes that use the same colors */
+        fun getColors(context: Context, arrayResId: Int) =
+            colorsCache.getOrPut(arrayResId) { context.getIntArray(arrayResId) }
+
+        /** Return the StringArray representing color descriptions pointed
+         * to by the parameter arrayResId. In order to prevent multiple
+         * copies of the same array, getColorDescriptions will automatically
+         * share references of the same array between TintableCheckboxes
+         * that use the same colors */
+        fun getColorDescriptions(context: Context, arrayResId: Int) =
+            colorDescriptionsCache.getOrPut(arrayResId) {
+                context.resources.getStringArray(arrayResId)
+            }
+    }
 }

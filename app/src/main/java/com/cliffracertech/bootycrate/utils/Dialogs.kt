@@ -50,7 +50,7 @@ fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
 
 /** Open a dialog to ask the user to the type of database import they want (merge
  *  existing or overwrite, and recreate the given activity if the import requires it. */
-fun importDatabaseFromUri(uri: Uri, activity: FragmentActivity)  {
+fun importDatabaseFromUriDialog(uri: Uri, activity: FragmentActivity) {
     themedAlertDialogBuilder(activity).
         setMessage(R.string.import_database_question_message).
         setNeutralButton(android.R.string.cancel) { _, _ -> }.
@@ -132,8 +132,6 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             }
         }
         return themedAlertDialogBuilder(requireContext())
-            .setBackgroundInsetStart(0)
-            .setBackgroundInsetEnd(0)
             .setTitle(R.string.add_button_description)
             .setNeutralButton(android.R.string.cancel) { _, _ -> }
             .setNegativeButton(R.string.add_another_item_button_description) { _, _ -> }
