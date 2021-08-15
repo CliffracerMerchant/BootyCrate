@@ -12,7 +12,8 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.themedAlertDialogBuilder
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -69,7 +70,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
                 .setMessage(R.string.invalid_imported_db_error_message)
                 .setTitle(R.string.error).show()
-            else GlobalScope.launch {
+            else CoroutineScope(Dispatchers.IO).launch {
                 val currentDb = get(context)
                 if (overwriteExistingDb)
                     currentDb.dao().deleteAll()
