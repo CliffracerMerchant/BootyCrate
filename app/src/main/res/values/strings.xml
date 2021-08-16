@@ -25,6 +25,7 @@
 
     <string name="add_button_description">Add new item</string>
     <string name="add_another_item_button_description">Add another</string>
+    <string name="new_item_description">New item</string>
     <string name="delete_button_description">Delete selected items</string>
     <string name="delete_all_description">Delete all</string>
     <string name="delete_all_items_confirmation_message">

@@ -77,7 +77,7 @@ fun importDatabaseFromUriDialog(uri: Uri, activity: FragmentActivity) {
  * member before onCreateDialog, or an exception will be thrown.
  *
  * The abstract function createItemFromView must be overridden in subclasses
- * with an implementation that returns an T instance that reflects the
+ * with an implementation that returns a T instance that reflects the
  * information entered in the newItemView member. The open function resetNewItemView
  * should be overridden in subclasses if additional work is needed to prepare the
  * newItemView member if the user clicks the addAnotherButton.
@@ -122,6 +122,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
                 viewModel.newItemExtraInfo = text.toString()
             }
+            updateContentDescriptions(getString(R.string.new_item_description))
         }
         newItemView.ui.nameEdit.doOnTextChanged { text, _, _, _ ->
             viewModel.newItemName = text.toString()
@@ -215,7 +216,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             val context = this.context ?: return
 
             val iconResId = if (warning == WarningMessage.ItemHasNoName)
-                R.drawable.ic_baseline_error_24
+                                R.drawable.ic_baseline_error_24
                             else R.drawable.ic_round_warning_24
             val icon = ContextCompat.getDrawable(context, iconResId)
 
