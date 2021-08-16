@@ -117,6 +117,8 @@
     <string name="invalid_imported_db_error_message">The imported database was invalid or empty. Reverting to previous database instead.</string>
     <string name="error">Error</string>
 
+    <string name="color_picker_close_description">Close color picker</string>
+    <string name="color_picker_option_description">%1$s option</string>
     <string name="item_color_0_description">red</string>
     <string name="item_color_1_description">orange</string>
     <string name="item_color_2_description">yellow</string>

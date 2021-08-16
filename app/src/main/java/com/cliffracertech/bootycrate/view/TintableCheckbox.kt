@@ -5,9 +5,12 @@
 package com.cliffracertech.bootycrate.view
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.View
+import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.getResourceIdOrThrow
@@ -15,6 +18,7 @@ import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.*
 import dev.sasikanth.colorsheet.ColorSheet
@@ -83,14 +87,18 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
 
         setImageDrawable(ContextCompat.getDrawable(context, R.drawable.tintable_checkbox))
         val checkMarkDrawable = (drawable as LayerDrawable).getDrawable(1)
-        checkMarkDrawable.setTint(ContextCompat.getColor(context, android.R.color.black))
+        checkMarkDrawable.setTint(Color.BLACK)
         setOnClickListener {
             if (inColorEditMode) {
                 val activity = context as? FragmentActivity ?: return@setOnClickListener
-                ColorSheet().colorPicker(colors, color) { color: Int ->
-                    val colorIndex = colors.indexOf(color)
-                    setColorIndex(if (colorIndex != -1) colorIndex else 0)
-                }.show(activity.supportFragmentManager, "TintableCheckboxColorPicker")
+                val colorPicker = ColorSheet().cornerRadius(0f)
+                    .colorPicker(colors, color) { color: Int ->
+                        val colorIndex = colors.indexOf(color)
+                        setColorIndex(if (colorIndex != -1) colorIndex else 0)
+                    }
+                val transaction = activity.supportFragmentManager.beginTransaction()
+                    .runOnCommit { updateColorPickerContentDescriptions(colorPicker) }
+                colorPicker.show(transaction, "TintableCheckboxColorPicker")
             }
             else isChecked = !isChecked
         }
@@ -152,6 +160,25 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
             super.onCreateDrawableState(extraSpace)
         else super.onCreateDrawableState(extraSpace + 1).apply {
             mergeDrawableStates(this, intArrayOf(R.attr.state_edit_color))
+        }
+
+    private fun updateColorPickerContentDescriptions(colorPicker: ColorSheet) =
+        (colorPicker.view as? LinearLayout)?.apply {
+            findViewById<ImageView>(R.id.colorSheetClose)?.contentDescription =
+                context.getString(R.string.color_picker_close_description)
+
+            val recyclerView = findViewById<RecyclerView>(R.id.colorSheetList)
+            recyclerView.addOnChildAttachStateChangeListener(object: RecyclerView.OnChildAttachStateChangeListener {
+                override fun onChildViewAttachedToWindow(view: View) {
+                    val circle = view.findViewById<ImageView>(R.id.colorSelectedCircle)
+                    val tint = circle.imageTintList?.defaultColor ?: 1
+                    val index = colors.indexOf(tint)
+                    val colorName = colorDescriptions[index]
+                    circle.contentDescription =
+                        context.getString(R.string.color_picker_option_description, colorName)
+                }
+                override fun onChildViewDetachedFromWindow(view: View) { }
+            })
         }
 
     private companion object {
