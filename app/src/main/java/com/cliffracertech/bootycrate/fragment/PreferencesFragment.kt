@@ -19,7 +19,7 @@ import com.cliffracertech.bootycrate.database.ShoppingListViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.utils.AboutAppDialog
 import com.cliffracertech.bootycrate.utils.PrivacyPolicyDialog
-import com.cliffracertech.bootycrate.utils.importDatabaseFromUri
+import com.cliffracertech.bootycrate.utils.importDatabaseFromUriDialog
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
 /** A fragment to display the BootyCrate app settings. */
@@ -77,6 +77,6 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
 
     private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val activity = this.activity ?: return@registerForActivityResult
-        if (uri != null) importDatabaseFromUri(uri, activity)
+        if (uri != null) importDatabaseFromUriDialog(uri, activity)
     }
 }

@@ -39,7 +39,7 @@ import com.cliffracertech.bootycrate.utils.applyConfig
  * BootyCrateItemView can be constructed with the parameter useDefaultLayout
  * equal to false. If useDefaultLayout is false, it will be up to the subclass
  * to inflate the desired layout and initialize the member ui with an instance
- * of a BootyCrateItemBinding. If the ui member is not initialized then a
+ * of a BootyCrateItemBinding. If the ui member is not initialized, a
  * kotlin.UninitializedPropertyAccessException will be thrown.
  */
 @Suppress("LeakingThis")
@@ -71,10 +71,14 @@ open class BootyCrateItemView<T: BootyCrateItem>(
     }
 
     @CallSuper open fun updateContentDescriptions(itemName: String) {
-        ui.checkBox.checkBoxContentDescription = context.getString(R.string.item_checkbox_description, itemName)
-        ui.checkBox.editColorDescription = context.getString(R.string.edit_item_color_description, itemName)
+        ui.checkBox.checkBoxContentDescription =
+            context.getString(R.string.item_checkbox_description, itemName)
+        ui.checkBox.editColorContentDescription =
+            context.getString(R.string.edit_item_color_description, itemName)
         ui.amountEdit.ui.decreaseButton.contentDescription = context.getString(R.string.item_amount_decrease_description, itemName)
         ui.amountEdit.ui.increaseButton.contentDescription = context.getString(R.string.item_amount_increase_description, itemName)
+        ui.amountEditLabel.text = context.getString(R.string.item_amount_description, itemName)
+        ui.extraInfoEdit.hint = context.getString(R.string.item_extra_info_description, itemName)
     }
 
     /** Update the text of name edit, while also updating the contentDescriptions
@@ -171,11 +175,13 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
     override fun updateContentDescriptions(itemName: String) {
         super.updateContentDescriptions(itemName)
         detailsUi.autoAddToShoppingListCheckBox.checkBoxContentDescription =
-            context.getString(R.string.item_auto_add_to_shopping_list_checkbox_description)
+            context.getString(R.string.item_auto_add_to_shopping_list_checkbox_description, itemName)
         detailsUi.autoAddToShoppingListAmountEdit.ui.decreaseButton.contentDescription =
-            context.getString(R.string.item_auto_add_to_shopping_list_amount_decrease_description)
+            context.getString(R.string.item_auto_add_to_shopping_list_amount_decrease_description, itemName)
         detailsUi.autoAddToShoppingListAmountEdit.ui.increaseButton.contentDescription =
-            context.getString(R.string.item_auto_add_to_shopping_list_amount_increase_description)
+            context.getString(R.string.item_auto_add_to_shopping_list_amount_increase_description, itemName)
+        detailsUi.autoAddToShoppingListAmountEditLabel.text =
+            context.getString(R.string.item_auto_add_to_shopping_list_amount_description, itemName)
     }
 
     private var showingDetails = false

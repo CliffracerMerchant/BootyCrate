@@ -119,8 +119,12 @@
     </declare-styleable>
 
     <declare-styleable name="TintableCheckbox">
+        <!-- Whether or not the TintableCheckbox is in its edit color state. -->
         <attr name="state_edit_color" format="boolean" />
+        <!-- The resource ID pointing to the integer array to use as the color options. -->
         <attr name="colorsResId" format="reference" />
+        <!-- The resource ID pointing to the string array to use as descriptions for the color options. -->
+        <attr name="colorDescriptionsResId" format="reference" />
     </declare-styleable>
 
 </resources>

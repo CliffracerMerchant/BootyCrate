@@ -7,10 +7,11 @@
     <style name="BootyCrateItemColorEdit">
         <item name="android:padding">13dp</item>
         <item name="colorsResId">@array/bootycrate_item_colors</item>
+        <item name="colorDescriptionsResId">@array/bootycrate_item_color_descriptions</item>
     </style>
 
     <style name="BootyCrateItemNameEdit" parent="@style/NormalTextAppearance">
-        <item name="android:hint">@string/item_name_description</item>
+        <item name="android:hint">@string/name_description</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
         <item name="canBeBlank">false</item>
@@ -18,7 +19,7 @@
     </style>
 
     <style name="BootyCrateItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
-        <item name="android:hint">@string/item_extra_info_description</item>
+        <item name="android:hint">@string/extra_info_description</item>
         <item name="android:textColor">@color/color_text_light_secondary</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
@@ -44,13 +45,9 @@
         <item name="android:src">@drawable/animated_circle_to_checkbox_checked_background</item>
     </style>
 
-    <style name="InventoryItemAutoAddToShoppingListCheckbox" parent="@style/BootyCrateItemColorEdit">
-        <item name="android:contentDescription">@string/auto_add_to_list_checkbox_description</item>
-    </style>
-
     <style name="InventoryItemAutoAddToShoppingListCheckboxLabel" parent="@style/SecondaryTextAppearance">
-        <item name="android:labelFor">@id/autoAddToShoppingListCheckBox</item>
-        <item name="android:text">@string/auto_add_to_list_checkbox_text</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:text">@string/auto_add_to_shopping_list_checkbox_text</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:textSize">14sp</item>
     </style>

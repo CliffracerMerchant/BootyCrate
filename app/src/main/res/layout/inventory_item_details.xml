@@ -30,7 +30,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             tools:tint="@color/bootyCrateItemColor0"
-            style="@style/InventoryItemAutoAddToShoppingListCheckbox" />
+            style="@style/BootyCrateItemColorEdit" />
 
         <TextView
             android:id="@+id/autoAddToShoppingListLabel"
@@ -47,6 +47,13 @@
             android:layout_width="wrap_content"
             android:layout_height="48dp"
             style="@style/InventoryItemAutoAddToShoppingListTriggerEdit" />
+
+        <TextView
+            android:id="@+id/autoAddToShoppingListAmountEditLabel"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:text="@string/item_auto_add_to_shopping_list_amount_description"
+            android:labelFor="@id/valueEdit" />
 
     </LinearLayout>
 </merge>

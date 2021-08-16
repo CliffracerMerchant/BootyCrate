@@ -10,7 +10,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.cliffracertech.bootycrate.R
 
-/** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item. */
+/** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item table. */
 @Entity(tableName = "bootycrate_item")
 class DatabaseBootyCrateItem(
     @PrimaryKey(autoGenerate = true)
@@ -90,11 +90,14 @@ abstract class BootyCrateItem(
     fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
     companion object {
-        val Colors: List<Int> get() = _Colors
-        private lateinit var _Colors: List<Int>
+        val Colors: List<Int> get() = _Colors.asList()
+        val ColorDescriptions: List<String> get() = _ColorDescriptions.asList()
+        private lateinit var _Colors: IntArray
+        private lateinit var _ColorDescriptions: Array<String>
 
         fun initColors(context: Context) {
-            _Colors = context.resources.getIntArray(R.array.bootycrate_item_colors).asList()
+            _Colors = context.resources.getIntArray(R.array.bootycrate_item_colors)
+            _ColorDescriptions = context.resources.getStringArray(R.array.bootycrate_item_color_descriptions)
         }
     }
 }
