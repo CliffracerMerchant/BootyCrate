@@ -13,4 +13,6 @@
     <dimen name="recycler_view_item_selection_border_thickness">3dp</dimen>
     <!-- inner rounded corner radius should be equal to rounded corner radius minus the selection border thickness -->
     <dimen name="recycler_view_item_inner_rounded_corner_radius">15dp</dimen>
+
+    <dimen name="day_button_size">48dp</dimen>
 </resources>

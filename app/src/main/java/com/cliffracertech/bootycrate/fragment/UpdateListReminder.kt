@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.fragment
 
+import android.annotation.SuppressLint
 import android.app.*
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -15,6 +16,7 @@ import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -26,14 +28,17 @@ import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.UpdateListReminderSettingsFragmentBinding
 import com.cliffracertech.bootycrate.utils.alarmManager
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
+import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.notificationManager
 import com.google.android.material.timepicker.MaterialTimePicker
 import java.time.*
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.time.temporal.TemporalAdjusters.next
 import java.time.temporal.TemporalAdjusters.nextOrSame
 import java.util.*
 
+@SuppressLint("UnspecifiedImmutableFlag")
 /** An object containing functions and classes relating the the update list reminder. */
 object UpdateListReminder {
 
@@ -55,7 +60,7 @@ object UpdateListReminder {
             const val repeatKey = "UpdateListReminder_repeat"
             const val repeatDaysKey = "UpdateListReminder_repeatDays"
 
-            /** Return a UpdateListReminder.Settings object with values obtained from the applications shared preferences. */
+            /** Return a UpdateListReminder.Settings object with values obtained from the application's shared preferences. */
             fun fromSharedPreferences(prefs: SharedPreferences) = Settings(
                 enabled = prefs.getBoolean(enabledKey, false),
                 time = LocalTime.of(prefs.getInt(hourKey, 0),
@@ -67,23 +72,22 @@ object UpdateListReminder {
 
     /** Schedule reminder notification(s) given the parameters provided in settings. */
     fun scheduleNotifications(context: Context, settings: Settings) {
-        val intent = Intent(context, SendNotificationReceiver::class.java)
         val alarmManager = alarmManager(context) ?: return
-        if (!settings.enabled || (settings.repeat && settings.repeatDays.isEmpty()))
-            return
+        val intent = Intent(context, SendNotificationReceiver::class.java)
 
         val now = ZonedDateTime.now()
-        val days = if (settings.repeat) settings.repeatDays.map { it.toJavaDayOfWeek() }
-                   else                 listOf(now.dayOfWeek)
+        val alarmDays = when { !settings.enabled -> emptyList<String>()
+                               !settings.repeat -> listOf(now.dayOfWeek)
+                               else -> settings.repeatDays.map { it.toJavaDayOfWeek() } }
         for (day in DayOfWeek.values()) {
             val pendingIntent = PendingIntent.getBroadcast(context, day.ordinal, intent, 0)
             alarmManager.cancel(pendingIntent)
-            if (!days.contains(day)) continue
+            if (!alarmDays.contains(day)) continue
 
             val targetDate = LocalDate.now().with(nextOrSame(day))
-            val targetDateTime = ZonedDateTime.of(targetDate, settings.time, now.zone).run {
-                if (this.isAfter(now)) this
-                else with(next(day))
+            val targetDateTime = ZonedDateTime.of(targetDate, settings.time, now.zone).let {
+                if (it.isAfter(now)) it
+                else it.with(next(day))
             }
             val targetInstant = targetDateTime.toInstant().toEpochMilli()
             alarmManager.setExact(AlarmManager.RTC, targetInstant, pendingIntent)
@@ -108,49 +112,71 @@ object UpdateListReminder {
 
             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
             currentSettings = Settings.fromSharedPreferences(sharedPreferences)
-            ui.reminderRepeatCheckBox.buttonTintList =
-                ContextCompat.getColorStateList(requireContext(), R.color.disableable_accent_tint)
             ui.reminderSwitch.isChecked = currentSettings.enabled
             ui.reminderRepeatCheckBox.isChecked = currentSettings.repeat
             enableReminderSettings(currentSettings.enabled)
             ui.reminderRepeatDayPicker.setSelectedDays(currentSettings.repeatDays)
             ui.reminderTimeView.text = dateDisplayFormatter().format(currentSettings.time)
 
-            ui.reminderSwitch.setOnCheckedChangeListener { _, checked ->
-                ui.reminderTimeView.isEnabled = ui.reminderSwitch.isChecked
+            ui.reminderRepeatCheckBox.buttonTintList =
+                ContextCompat.getColorStateList(requireContext(), R.color.disableable_accent_tint)
+            setupOnClickListeners()
+            updateDayPickerContentDescriptions()
+        }
+
+        private fun setupOnClickListeners() { ui.apply {
+            reminderSwitch.setOnCheckedChangeListener { _, checked ->
+                reminderTimeView.isEnabled = reminderSwitch.isChecked
                 enableReminderSettings(checked)
                 sharedPreferences.edit().putBoolean(Settings.enabledKey, checked).apply()
                 currentSettings.enabled = checked
                 context?.let { scheduleNotifications(it, currentSettings) }
             }
-            ui.reminderTimeView.setOnClickListener {
-                val context = this.context ?: return@setOnClickListener
+            reminderTimeView.setOnClickListener {
+                val context = this@SettingsFragment.context ?:
+                    return@setOnClickListener
                 MaterialTimePicker.Builder()
                     .setHour(currentSettings.time.hour)
                     .setMinute(currentSettings.time.minute)
                     .build().apply {
                         addOnPositiveButtonClickListener {
                             currentSettings.time = LocalTime.of(hour, minute)
-                            ui.reminderTimeView.text = dateDisplayFormatter().format(currentSettings.time)
+                            reminderTimeView.text = dateDisplayFormatter().format(currentSettings.time)
                             sharedPreferences.edit()
                                 .putInt(Settings.hourKey, hour)
                                 .putInt(Settings.minuteKey, minute).apply()
                             scheduleNotifications(context, currentSettings)
                         }
-                    }.show(context.asFragmentActivity().supportFragmentManager, "")
+                    }.show(context.asFragmentActivity().supportFragmentManager, null)
             }
-            ui.reminderRepeatCheckBox.setOnCheckedChangeListener { _, checked ->
-                enableRepeatDays(checked && ui.reminderSwitch.isChecked)
+
+            reminderRepeatCheckBox.setOnCheckedChangeListener { _, checked ->
+                enableRepeatDays(checked && reminderSwitch.isChecked)
                 currentSettings.repeat = checked
                 context?.let { scheduleNotifications(it, currentSettings) }
                 sharedPreferences.edit().putBoolean(Settings.repeatKey, checked).apply()
             }
-            ui.reminderRepeatDayPicker.setDaySelectionChangedListener { selectedDays ->
+            reminderRepeatDayPicker.setDaySelectionChangedListener { selectedDays ->
                 currentSettings.repeatDays = selectedDays
                 sharedPreferences.edit().putString(Settings.repeatDaysKey, selectedDays.serialize()).apply()
                 context?.let { scheduleNotifications(it, currentSettings) }
             }
-        }
+        }}
+
+        private fun updateDayPickerContentDescriptions() =
+            (ui.reminderRepeatDayPicker.getChildAt(0) as? LinearLayout)?.apply {
+                val padding = resources.dpToPixels(4f).toInt()
+                val firstDayOfWeek = MaterialDayPicker.Weekday.getFirstDayOfWeekFor(Locale.getDefault())
+                val weekDays = MaterialDayPicker.Weekday.getOrderedDaysOfWeek(firstDayOfWeek)
+                val weekDayStrings = weekDays.map { it.toJavaDayOfWeek().getDisplayName(
+                                                        TextStyle.FULL, Locale.getDefault()) }
+                for (i in 0 until childCount) {
+                    if (i % 2 == 1) continue
+                    val child = getChildAt(i)
+                    child.setPadding(padding, padding, padding, padding)
+                    child.contentDescription = weekDayStrings[(i / 2)]
+                }
+            }
 
         private fun enableReminderSettings(enabled: Boolean = true) {
             ui.reminderTimeView.isEnabled = ui.reminderSwitch.isChecked
@@ -183,7 +209,11 @@ object UpdateListReminder {
 
         override fun showsBottomAppBar() = false
         override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-            activityUi.actionBar.setBackButtonVisible(true)
+            if (isActive) activityUi.actionBar.transition(
+                backButtonVisible = true,
+                searchButtonVisible = false,
+                changeSortButtonVisible = false,
+                menuButtonVisible = false)
         }
     }
 
