@@ -12,6 +12,9 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
+import com.cliffracertech.bootycrate.activity.addButton
+import com.cliffracertech.bootycrate.activity.checkoutButton
+import com.cliffracertech.bootycrate.activity.shoppingListBadge
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.database.ShoppingListViewModel

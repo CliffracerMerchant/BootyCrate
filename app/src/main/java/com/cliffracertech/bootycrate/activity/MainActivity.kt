@@ -6,7 +6,9 @@ package com.cliffracertech.bootycrate.activity
 
 import android.animation.Animator
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -16,12 +18,16 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
+import androidx.core.view.doOnNextLayout
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.databinding.BottomNavigationDrawerBinding
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.PreferencesFragment
+import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.doOnStart
 import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -56,6 +62,16 @@ open class MainActivity : MultiFragmentActivity() {
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         (ui.bottomNavigationBar.getIconAt(2).parent as View)
             .importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+
+
+        ui.root.doOnNextLayout {
+            val rect = Rect()
+            ui.bottomNavigationDrawer.getGlobalVisibleRect(rect)
+            Log.d("bounds", "ui.bottomNavigationDrawer.bounds = $rect")
+            val behavior = BottomSheetBehavior.from(ui.bottomNavigationDrawer)
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+            behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }

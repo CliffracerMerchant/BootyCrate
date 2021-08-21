@@ -67,13 +67,12 @@ fun MainActivityBinding.showCheckoutButton(show: Boolean) {
 /** Provide an animation to show or hide the checkout button, according
  * to the parameter show, using the values of the parameter animatorConfig
  * as the animation's duration and interpolator if not null. */
-fun MainActivityBinding. showCheckoutButtonAnimation(
+fun MainActivityBinding.showCheckoutButtonAnimation(
     showing: Boolean,
     animatorConfig: AnimatorConfig? = null
 ): Animator {
     checkoutButton.isVisible = showing
     val cradleEndWidth = cradleWidth(showing)
-
     return ValueAnimator.ofInt(bottomAppBar.cradleWidth, cradleEndWidth).apply {
         applyConfig(animatorConfig)
         addUpdateListener { bottomAppBar.cradleWidth = it.animatedValue as Int }
@@ -179,3 +178,10 @@ private fun ActionBarTitle.setShader(shader: Shader?) {
     searchQueryView.paint.shader = shader
     (searchQueryView.background as? GradientVectorDrawable)?.gradient = shader
 }
+
+val MainActivityBinding.bottomAppBar get() = bottomNavigationDrawer.ui.bottomAppBar
+val MainActivityBinding.bottomNavigationBar get() = bottomNavigationDrawer.ui.bottomNavigationBar
+val MainActivityBinding.cradleLayout get() = bottomNavigationDrawer.ui.cradleLayout
+val MainActivityBinding.checkoutButton get() = bottomNavigationDrawer.ui.checkoutButton
+val MainActivityBinding.addButton get() = bottomNavigationDrawer.ui.addButton
+val MainActivityBinding.shoppingListBadge get() = bottomNavigationDrawer.ui.shoppingListBadge

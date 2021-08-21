@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2021 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="com.google.android.material.appbar.AppBarLayout" >
+
+    <com.cliffracertech.bootycrate.view.BottomAppBarWithIndicator
+        android:id="@+id/bottomAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        style="@style/BottomAppBar" >
+
+        <LinearLayout
+            android:id="@+id/cradleLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:elevation="10dp"
+            android:layout_marginTop="-10dp" >
+
+            <com.cliffracertech.bootycrate.view.CheckoutButton
+                android:id="@+id/checkoutButton"
+                android:layout_width="120dp"
+                android:layout_height="46dp"
+                android:layout_gravity="bottom"
+                tools:ignore="RtlHardcoded"
+                android:layout_marginRight="-14dp"
+                style="@style/CheckoutButton" />
+
+            <com.cliffracertech.bootycrate.view.GradientButton
+                android:id="@+id/addButton"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:contentDescription="@string/add_button_description"
+                android:elevation="1dp"
+                style="@style/AddButton" />
+        </LinearLayout>
+
+        <com.cliffracertech.bootycrate.view.ManualViewSwitcher
+            android:id="@+id/navBarAppTitleSwitcher"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize">
+
+        <!-- BottomNavigationViewEx is used instead of the default Android Bottom-
+             NavigationView because it makes it easier to access the views used to
+             represent menu items (which is needed for some of the gradient styling). -->
+            <com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx
+                android:id="@+id/bottomNavigationBar"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:background="@drawable/background_gradient"
+                style="@style/BottomNavigationView">
+
+                <TextView
+                    android:id="@+id/shoppingListBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginTop="2dp"
+                    style="@style/ShoppingListBadge" />
+
+            </com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:transformPivotY="0dp"
+                tools:ignore="UseCompoundDrawables">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="22sp"
+                    android:layout_marginStart="12dp"
+                    android:textColor="?android:attr/textColorPrimary"
+                    style="@style/ActionBarTitle" />
+
+                <ImageView
+                    android:id="@+id/settingsButton"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:padding="12dp"
+                    android:contentDescription="@string/settings_description"
+                    app:srcCompat="@drawable/ic_baseline_settings_24" />
+            </LinearLayout>
+
+        </com.cliffracertech.bootycrate.view.ManualViewSwitcher>
+
+    </com.cliffracertech.bootycrate.view.BottomAppBarWithIndicator>
+
+    <TextView
+        android:id="@+id/bottomNavigationDrawerContent"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:textSize="26sp"
+        android:padding="20dp"
+        android:textColor="@android:color/black"
+        android:text="This is the bottom navigation drawer content"
+        android:background="@drawable/background_gradient"/>
+
+</merge>
