@@ -29,6 +29,8 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
     private val pendingAnimators = mutableListOf<Animator>()
     private val pendingViewPropAnimators = mutableListOf<ViewPropertyAnimator>()
     private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
+    private var _changeAnimationInProgress = false
+    val changeAnimationInProgress get() = _changeAnimationInProgress
 
     var animatorConfig = animatorConfig
         set(value) { field = value
@@ -61,8 +63,10 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
 
         view.setHeight(startHeight)
         intValueAnimator(view::setHeight, startHeight, endHeight, animatorConfig).apply {
-            doOnStart { dispatchChangeStarting(newHolder, true) }
-            doOnEnd { dispatchChangeFinished(newHolder, true) }
+            doOnStart { dispatchChangeStarting(newHolder, true)
+                        _changeAnimationInProgress = true }
+            doOnEnd { dispatchChangeFinished(newHolder, true)
+                      _changeAnimationInProgress = false }
             pendingAnimators.add(this)
         }
 

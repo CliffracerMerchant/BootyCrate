@@ -33,8 +33,8 @@ fun Context.asFragmentActivity() =
     }
 
 /** An object that, once initialized by calling init with an instance of Context,
- * can be used to either hide, implicitly show, or explicitly show the soft input
- * given a view instance using the functions hide, showImplicitly, and showExplicitly. */
+ * can be used to either hide or show the soft input given a view instance using
+ * the functions hide and show. */
 object SoftKeyboard {
     private lateinit var imm: InputMethodManager
     fun init(context: Context) {

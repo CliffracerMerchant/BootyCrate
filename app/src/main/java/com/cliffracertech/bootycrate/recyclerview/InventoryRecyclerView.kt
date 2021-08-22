@@ -36,11 +36,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             ViewHolder(InventoryItemView(context, itemAnimator.animatorConfig))
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.view.update(holder.item)
-            super.onBindViewHolder(holder, position)
-        }
-
         override fun onBindViewHolder(
             holder: ViewHolder,
             position: Int,
@@ -95,8 +90,10 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
      * that holds an instance of InventoryItemView to display the data for an
      * InventoryItem.
      */
-    inner class ViewHolder(val view: InventoryItemView) :
+    inner class ViewHolder(view: InventoryItemView) :
         ExpandableSelectableRecyclerView<InventoryItem>.ViewHolder(view) {
+
+        override val view get() = itemView as InventoryItemView
 
         init {
             view.detailsUi.autoAddToShoppingListCheckBox.onCheckedChangedListener = { checked ->
@@ -108,8 +105,11 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
             }
         }
 
-        override fun hasFocusedChild() = super.hasFocusedChild() ||
-            view.detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.isFocused
+        override fun clearFocusedChild() = super.clearFocusedChild() ||
+            view.detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.run {
+                if (isFocused) { clearFocus(); true }
+                else false
+            }
     }
 
     /**

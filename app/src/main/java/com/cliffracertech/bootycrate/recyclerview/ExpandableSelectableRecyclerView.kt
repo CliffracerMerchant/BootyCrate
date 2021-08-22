@@ -30,28 +30,12 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     attrs: AttributeSet
 ) : BootyCrateRecyclerView<T>(context, attrs) {
     protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
-    private var expandedItemPos: Int? = null
     val selection = Selection()
 
     init {
         addItemDecoration(ItemSpacingDecoration(context))
         setHasFixedSize(true)
         setItemAnimator(itemAnimator)
-    }
-
-    fun setExpandedItem(pos: Int?) {
-        val oldExpandedPos = expandedItemPos
-        if (oldExpandedPos != null) {
-            val vh = findViewHolderForAdapterPosition(oldExpandedPos)
-                    as? ExpandableSelectableRecyclerView<*>.ViewHolder
-            if (vh?.hasFocusedChild() == true) {
-                requestFocus()
-                SoftKeyboard.hide(this)
-            }
-        }
-        expandedItemPos = pos
-        viewModel.setExpandedItem(if (pos == null) null
-                                  else adapter.currentList[pos].id)
     }
 
     /**
@@ -85,16 +69,14 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
      * BootyCrateRecyclerView.Adapter that enforces the use of
      * ExpandableSelectableRecyclerView.ViewHolder. */
     abstract inner class Adapter<VHType: ViewHolder> : BootyCrateRecyclerView<T>.Adapter<VHType>() {
-        override fun onBindViewHolder(holder: VHType, position: Int) {
-            if (holder.item.isExpanded) expandedItemPos = position
-        }
+
+        override fun onBindViewHolder(holder: VHType, position: Int) =
+            holder.view.update(holder.item)
 
         override fun onViewDetachedFromWindow(holder: VHType) {
             super.onViewDetachedFromWindow(holder)
-            if (holder.hasFocusedChild()) {
-                requestFocus()
-                SoftKeyboard.hide(this@ExpandableSelectableRecyclerView)
-            }
+            if (holder.clearFocusedChild())
+                SoftKeyboard.hide(holder.itemView)
         }
     }
 
@@ -112,6 +94,8 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     open inner class ViewHolder(view: ExpandableSelectableItemView<T>) :
         BootyCrateRecyclerView<T>.ViewHolder(view)
     {
+        open val view get() = itemView as ExpandableSelectableItemView<T>
+
         init {
             val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }
             val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
@@ -128,13 +112,23 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
                 ui.extraInfoEdit.setOnLongClickListener(onLongClick)
                 ui.amountEdit.ui.valueEdit.setOnLongClickListener(onLongClick)
                 ui.editButton.setOnClickListener {
-                    setExpandedItem(if (!view.isExpanded) adapterPosition else null)
+                    if (itemAnimator.changeAnimationInProgress) return@setOnClickListener
+                    if (isExpanded && clearFocusedChild())
+                        SoftKeyboard.hide(this)
+                    viewModel.setExpandedItem(if (isExpanded) null
+                                              else adapter.currentList[adapterPosition].id)
                 }
             }
         }
 
-        open fun hasFocusedChild() = (itemView as ExpandableSelectableItemView<*>).ui.run {
-            nameEdit.isFocused || extraInfoEdit.isFocused || amountEdit.ui.valueEdit.isFocused
+        /** Clear any focused child, and return whether or not any child
+         * view had its focus cleared. Subclasses should override this
+         * function if they add any focusable child views. */
+        open fun clearFocusedChild() = view.ui.run {
+            when { nameEdit.isFocused -> { nameEdit.clearFocus(); true }
+                   extraInfoEdit.isFocused -> { extraInfoEdit.clearFocus(); true }
+                   amountEdit.ui.valueEdit.isFocused -> { amountEdit.ui.valueEdit.clearFocus(); true }
+                   else -> false }
         }
     }
 }

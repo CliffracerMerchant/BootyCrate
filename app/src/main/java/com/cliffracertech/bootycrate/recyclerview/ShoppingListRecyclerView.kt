@@ -57,11 +57,6 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             ViewHolder(ShoppingListItemView(context, itemAnimator.animatorConfig))
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            holder.view.update(holder.item)
-            super.onBindViewHolder(holder, position)
-        }
-
         override fun onBindViewHolder(
             holder: ViewHolder,
             position: Int,
@@ -109,7 +104,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
      * that holds an instance of ShoppingListItemView to display the data for a
      * ShoppingListItem.
      */
-    inner class ViewHolder(val view: ShoppingListItemView) :
+    inner class ViewHolder(view: ShoppingListItemView) :
         ExpandableSelectableRecyclerView<ShoppingListItem>.ViewHolder(view)
     {
         init {
