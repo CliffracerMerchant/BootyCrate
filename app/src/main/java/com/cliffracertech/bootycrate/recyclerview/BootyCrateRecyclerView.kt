@@ -73,8 +73,6 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
         }
         ItemTouchHelper(swipeCallback).attachToRecyclerView(this)
         layoutManager = LinearLayoutManager(context)
-        isFocusable = true
-        isFocusableInTouchMode = true
     }
 
     private var deletedItemCount: Int = 0
@@ -119,7 +117,7 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
      *
      * BootyCrateRecyclerView.ViewHolder provides a simplified way of obtaining
      * the instance of the item that it represents through the property item, and
-     * connects changes to the fields made by the user to view model update calls.
+     * connects user changes to its editable fields to view model update calls.
      */
     open inner class ViewHolder(view: BootyCrateItemView<T>) : RecyclerView.ViewHolder(view) {
         val item: T get() = adapter.currentList[adapterPosition]

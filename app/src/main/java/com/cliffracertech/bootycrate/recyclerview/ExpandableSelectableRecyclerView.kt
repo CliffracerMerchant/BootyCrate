@@ -15,14 +15,13 @@ import com.cliffracertech.bootycrate.utils.SoftKeyboard
 /**
  * A BootyCrateRecyclerView subclass that enables multi-selection and expansion of items.
  *
- * ExpandableSelectableRecyclerView extends BootyCrateRecyclerView via the use
- * of an ExpandableSelectableItemViewModel along with the new function setExpandedItem.
- * Its selection property provides an interface for manipulating the recycler
- * view selection (see the documentation for the inner class Selection for more
- * details) as well as the function setExpandedItem to change or set to null
- * the currently expanded item. It also utilizes its own custom view holder to
- * enforce the use of an ExpandableSelectableItemView, and a custom adapter
- * that in turn enforces the use of ExpandableSelectableRecyclerView.ViewHolder.
+ * ExpandableSelectableRecyclerView extends BootyCrateRecyclerView by using a
+ * ExpandableItemAnimator instance to visually animate changes in items'
+ * expanded states, and by adding an interface for item selection through the
+ * property selection (see the documentation for the inner class Selection for
+ * more details). It also utilizes its own custom view holder to enforce the
+ * use of an ExpandableSelectableItemView, and a custom adapter that in turn
+ * enforces the use of ExpandableSelectableRecyclerView.ViewHolder.
  */
 @Suppress("LeakingThis")
 abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
@@ -31,10 +30,21 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
 ) : BootyCrateRecyclerView<T>(context, attrs) {
     protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
     val selection = Selection()
+    private var needToHideSoftKeyboard = false
 
     init {
         addItemDecoration(ItemSpacingDecoration(context))
         setHasFixedSize(true)
+        itemAnimator.onItemCollapseStartedListener = { viewHolder ->
+            val vh = viewHolder as ExpandableSelectableRecyclerView<*>.ViewHolder
+            needToHideSoftKeyboard = vh.view.focusedChild != null
+        }
+        itemAnimator.onItemCollapseEndedListener = { viewHolder ->
+            if (needToHideSoftKeyboard) {
+                clearFocus()
+                SoftKeyboard.hide(this)
+            }
+        }
         setItemAnimator(itemAnimator)
     }
 
@@ -75,8 +85,10 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
 
         override fun onViewDetachedFromWindow(holder: VHType) {
             super.onViewDetachedFromWindow(holder)
-            if (holder.clearFocusedChild())
+            if (holder.view.focusedChild != null) {
+                clearFocus()
                 SoftKeyboard.hide(holder.itemView)
+            }
         }
     }
 
@@ -112,23 +124,10 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
                 ui.extraInfoEdit.setOnLongClickListener(onLongClick)
                 ui.amountEdit.ui.valueEdit.setOnLongClickListener(onLongClick)
                 ui.editButton.setOnClickListener {
-                    if (itemAnimator.changeAnimationInProgress) return@setOnClickListener
-                    if (isExpanded && clearFocusedChild())
-                        SoftKeyboard.hide(this)
                     viewModel.setExpandedItem(if (isExpanded) null
                                               else adapter.currentList[adapterPosition].id)
                 }
             }
-        }
-
-        /** Clear any focused child, and return whether or not any child
-         * view had its focus cleared. Subclasses should override this
-         * function if they add any focusable child views. */
-        open fun clearFocusedChild() = view.ui.run {
-            when { nameEdit.isFocused -> { nameEdit.clearFocus(); true }
-                   extraInfoEdit.isFocused -> { extraInfoEdit.clearFocus(); true }
-                   amountEdit.ui.valueEdit.isFocused -> { amountEdit.ui.valueEdit.clearFocus(); true }
-                   else -> false }
         }
     }
 }

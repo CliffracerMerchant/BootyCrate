@@ -104,12 +104,6 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
                     viewModel.updateAutoAddToShoppingListAmount(item.id, value)
             }
         }
-
-        override fun clearFocusedChild() = super.clearFocusedChild() ||
-            view.detailsUi.autoAddToShoppingListAmountEdit.ui.valueEdit.run {
-                if (isFocused) { clearFocus(); true }
-                else false
-            }
     }
 
     /**
