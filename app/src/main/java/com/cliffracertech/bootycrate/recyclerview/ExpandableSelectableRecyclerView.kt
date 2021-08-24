@@ -31,16 +31,22 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
     val selection = Selection()
     private var needToHideSoftKeyboard = false
+    private var expandCollapseAnimRunning = false
 
     init {
         addItemDecoration(ItemSpacingDecoration(context))
         setHasFixedSize(true)
-        itemAnimator.onItemCollapseStartedListener = { viewHolder ->
-            val vh = viewHolder as ExpandableSelectableRecyclerView<*>.ViewHolder
-            needToHideSoftKeyboard = vh.view.focusedChild != null
+        itemAnimator.onAnimStartedListener = { viewHolder, expanding ->
+            expandCollapseAnimRunning = true
+            if (!expanding) {
+                val vh = viewHolder as ExpandableSelectableRecyclerView<*>.ViewHolder
+                vh.view.hasFocus()
+                needToHideSoftKeyboard = vh.view.focusedChild != null
+            }
         }
-        itemAnimator.onItemCollapseEndedListener = { viewHolder ->
-            if (needToHideSoftKeyboard) {
+        itemAnimator.onAnimEndedListener = { viewHolder, expanding ->
+            expandCollapseAnimRunning = false
+            if (!expanding && needToHideSoftKeyboard) {
                 clearFocus()
                 SoftKeyboard.hide(this)
             }
@@ -106,6 +112,7 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     open inner class ViewHolder(view: ExpandableSelectableItemView<T>) :
         BootyCrateRecyclerView<T>.ViewHolder(view)
     {
+        @Suppress("UNCHECKED_CAST")
         open val view get() = itemView as ExpandableSelectableItemView<T>
 
         init {
@@ -124,8 +131,10 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
                 ui.extraInfoEdit.setOnLongClickListener(onLongClick)
                 ui.amountEdit.ui.valueEdit.setOnLongClickListener(onLongClick)
                 ui.editButton.setOnClickListener {
+                    if (expandCollapseAnimRunning)
+                        return@setOnClickListener
                     viewModel.setExpandedItem(if (isExpanded) null
-                                              else adapter.currentList[adapterPosition].id)
+                                              else            item.id)
                 }
             }
         }

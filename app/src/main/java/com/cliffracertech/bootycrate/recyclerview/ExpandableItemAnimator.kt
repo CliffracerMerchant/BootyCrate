@@ -23,20 +23,19 @@ import com.cliffracertech.bootycrate.utils.setHeight
  * collapsing items. The recycler view that uses ExpandableItemAnimator must
  * use item views that implement the ExpandableRecyclerViewItem interface.
  *
- * Listeners can be set for the start or end of expand animations and the
- * start or end of collapse animations through the properties onItemExpandStartedListener,
- * onItemExpandEndedListener, onItemCollapseStartedListener, and onItemCollapseEndedListener,
- * respectively.
+ * Listeners can be set for the start or end of animations through the
+ * properties onAnimStartedListener and onAnimEndedListener, respectively. The
+ * second argument in these listeners represents whether the animation is an
+ * expand animation (i.e. a value of false implies the animation is a collapse
+ * animation instead).
  */
 class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimator() {
     private val pendingAnimators = mutableListOf<Animator>()
     private val pendingViewPropAnimators = mutableListOf<ViewPropertyAnimator>()
     private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
 
-    var onItemExpandStartedListener: ((RecyclerView.ViewHolder) -> Unit)? = null
-    var onItemExpandEndedListener: ((RecyclerView.ViewHolder) -> Unit)? = null
-    var onItemCollapseStartedListener: ((RecyclerView.ViewHolder) -> Unit)? = null
-    var onItemCollapseEndedListener: ((RecyclerView.ViewHolder) -> Unit)? = null
+    var onAnimStartedListener: ((RecyclerView.ViewHolder, Boolean) -> Unit)? = null
+    var onAnimEndedListener: ((RecyclerView.ViewHolder, Boolean) -> Unit)? = null
 
     var animatorConfig = animatorConfig
         set(value) { field = value
@@ -71,11 +70,9 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
         val expanding = endHeight > startHeight
         intValueAnimator(view::setHeight, startHeight, endHeight, animatorConfig).apply {
             doOnStart { dispatchChangeStarting(newHolder, true)
-                        if (expanding) onItemExpandStartedListener?.invoke(newHolder)
-                        else           onItemCollapseStartedListener?.invoke(newHolder) }
+                        onAnimStartedListener?.invoke(newHolder, expanding) }
             doOnEnd { dispatchChangeFinished(newHolder, true)
-                      if (expanding) onItemExpandEndedListener?.invoke(newHolder)
-                      else           onItemCollapseEndedListener?.invoke(newHolder) }
+                      onAnimEndedListener?.invoke(newHolder, expanding) }
             pendingAnimators.add(this)
         }
 
