@@ -32,10 +32,10 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     val selection = Selection()
     private var needToHideSoftKeyboard = false
     private var expandCollapseAnimRunning = false
+    private var queuedEditButtonPressPos = -1
+    private var editButtonLastPressTimestamp = 0L
 
     init {
-        addItemDecoration(ItemSpacingDecoration(context))
-        setHasFixedSize(true)
         itemAnimator.onAnimStartedListener = { viewHolder, expanding ->
             expandCollapseAnimRunning = true
             if (!expanding) {
@@ -44,11 +44,32 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
                 needToHideSoftKeyboard = vh.view.focusedChild != null
             }
         }
-        itemAnimator.onAnimEndedListener = { viewHolder, expanding ->
+        // While allowing all edit button presses to be responded to would be ideal,
+        // rapid edit button presses seem to cause flickering in the item views
+        // (perhaps due to layouts occurring when the item view is still in the
+        // middle of an expand collapse animation). If all edit buttons presses are
+        // ignored when an expand/collapse animation is playing, this causes the
+        // item expand/collapse function to seem sluggish due to ignoring most of
+        // the user's inputs if they occur rapidly. To compromise, an edit button
+        // press when an expand/collapse animation is occurring will be queued, and
+        // acted out when the current expand/collapse animation is finished if the
+        // queued edit button press occurred less than half the duration of the
+        // expand/collapse animations ago.
+        itemAnimator.onAnimEndedListener = { _, expanding ->
             expandCollapseAnimRunning = false
             if (!expanding && needToHideSoftKeyboard) {
                 clearFocus()
                 SoftKeyboard.hide(this)
+            }
+            if (queuedEditButtonPressPos != -1) {
+                val now = System.currentTimeMillis()
+                val allowableMargin = itemAnimator.changeDuration / 2
+                if ((editButtonLastPressTimestamp + allowableMargin) >= now) {
+                    val vh = findViewHolderForAdapterPosition(queuedEditButtonPressPos)
+                    val view = vh?.itemView as? ExpandableSelectableItemView<*>
+                    view?.ui?.editButton?.performClick()
+                }
+                queuedEditButtonPressPos = -1
             }
         }
         setItemAnimator(itemAnimator)
@@ -130,11 +151,15 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
                 ui.nameEdit.setOnLongClickListener(onLongClick)
                 ui.extraInfoEdit.setOnLongClickListener(onLongClick)
                 ui.amountEdit.ui.valueEdit.setOnLongClickListener(onLongClick)
+
                 ui.editButton.setOnClickListener {
-                    if (expandCollapseAnimRunning)
-                        return@setOnClickListener
-                    viewModel.setExpandedItem(if (isExpanded) null
-                                              else            item.id)
+                    if (!expandCollapseAnimRunning)
+                        viewModel.setExpandedItem(if (isExpanded) null
+                                                  else            item.id)
+                    else {
+                        editButtonLastPressTimestamp = System.currentTimeMillis()
+                        queuedEditButtonPressPos = adapterPosition
+                    }
                 }
             }
         }

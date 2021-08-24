@@ -72,6 +72,8 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
             showDeletedItemsSnackBar(1)
         }
         ItemTouchHelper(swipeCallback).attachToRecyclerView(this)
+        addItemDecoration(ItemSpacingDecoration(context))
+        setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
     }
 
