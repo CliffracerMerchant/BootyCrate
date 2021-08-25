@@ -8,7 +8,6 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
- import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -19,14 +18,12 @@ import androidx.core.view.doOnNextLayout
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
-import com.google.android.gms.common.internal.Constants
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.shape.EdgeTreatment
 import com.google.android.material.shape.MaterialShapeDrawable
 import com.google.android.material.shape.ShapeAppearanceModel
 import com.google.android.material.shape.ShapePath
 import kotlin.math.atan
-import kotlin.math.atan2
 
 /**
  * A custom toolbar that has a cutout in its top edge to hold the contents of a layout.
@@ -88,57 +85,14 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
         doOnNextLayout { cradleLayout = findViewById(cradleLayoutResId) }
     }
 
-    private val upperLeftCurve = Path()
-    private val bottomLeftCurve = Path()
-    private val bottomRightCurve = Path()
-    private val upperRightCurve = Path()
-
     override fun onDraw(canvas: Canvas?) {
         if (canvas == null) return
         canvas.drawPath(outlinePath, backgroundPaint)
-        val bgShader = backgroundPaint.shader
-        backgroundPaint.shader = null
-        backgroundPaint.style = Paint.Style.STROKE
-        backgroundPaint.strokeWidth = 10f
-        backgroundPaint.color = Color.RED
-        canvas.drawPath(upperLeftCurve, backgroundPaint)
-        backgroundPaint.color = Color.BLUE
-        canvas.drawPath(bottomLeftCurve, backgroundPaint)
-        backgroundPaint.color = Color.YELLOW
-        canvas.drawPath(bottomRightCurve, backgroundPaint)
-        backgroundPaint.color = Color.GREEN
-        canvas.drawPath(upperRightCurve, backgroundPaint)
-        backgroundPaint.style = Paint.Style.FILL
-        backgroundPaint.shader = bgShader
     }
 
     private val arcQuarter = 90f
     private val angleDown = 90f
     private val angleUp = 270f
-
-    private val topLeftEllipse = RectF()
-    private val bottomLeftEllipse = RectF()
-    private val bottomRightEllipse = RectF()
-    private val topRightEllipse = RectF()
-
-    fun ShapePath.addArc(
-        ellipseBounds: RectF,
-        startX: Double, startY: Double,
-        endX: Double, endY: Double
-    ) {
-        val centerX = (ellipseBounds.right - ellipseBounds.left) / 2
-        val centerY = (ellipseBounds.bottom - ellipseBounds.top) / 2
-        var alpha = atan2(centerY - startY, centerX - startX)
-        if (alpha < 0.0)
-            alpha = alpha * -1.0 + Math.PI
-        var beta = atan2(centerY - endY, centerX - endX)
-        if (beta < 0.0)
-            beta = beta * -1.0 + Math.PI
-        addArc(ellipseBounds.left, ellipseBounds.top,
-               ellipseBounds.right, ellipseBounds.bottom,
-               alpha.toFloat() + Math.PI,
-               (beta - alpha).toFloat() + Math.PI
-    }
 
     /** An EdgeTreatment used to draw a cradle cutout for the BottomAppBar.
      *
@@ -151,132 +105,71 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
             interpolation: Float,
             shapePath: ShapePath
         ) {
-            val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin
+            val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin * (1f - 0.1f * interpolation)
             // start will be the x coordinate of the start of the cradle if cradleTopCornerRadius is zero
             val start = (cradleLayout?.x ?: return) - cradleContentsMargin
             val end = start + cradleFullWidth
             val bottom = cradleDepth * interpolation
-            val topCornerRadius = cradleTopCornerRadius * (1f)// + 9f * (1f - interpolation))
-            val bottomCornerRadius = cradleBottomCornerRadius * (1f)// + 9f * (1f - interpolation))
+            // To create the appearance of the curve collapsing vertically, x coordinate
+            // values will always use the full corner radius values without taking the
+            // interpolation into account, while y coordinate values will use these
+            // interpolated corner radius values instead.
+            val interpedTopCornerRadius = cradleTopCornerRadius * interpolation
+            val interpedBottomCornerRadius = cradleBottomCornerRadius * interpolation
 
             // If the top and bottom corner radii combined are less than the cradle depth,
             // there will be vertical sides to the cradle. Conversely, if the top and bottom
             // corner radii add up to more than the cradle depth, then the sweep angles of
             // the top and bottom corners will be less than the full ninety degrees.
-            val cradleVerticalSideLength = bottom - topCornerRadius - bottomCornerRadius
+            val cradleVerticalSideLength = bottom - cradleTopCornerRadius - cradleBottomCornerRadius
 
-            val topCornerArc = //interpolation *
+            val topCornerArc =
                 if (cradleVerticalSideLength < 0) {
-                    val distanceX = topCornerRadius
+                    val distanceX = cradleTopCornerRadius.toDouble()
                     val distanceY = -cradleVerticalSideLength.toDouble()
-                    val arcOffset = Math.toDegrees(atan(distanceY / distanceX))
-                    (arcQuarter - arcOffset.toFloat()).coerceAtMost(90f)
+                    val offset = Math.toDegrees(atan(distanceY / distanceX))
+                    (arcQuarter - offset.toFloat()).coerceAtMost(90f)
                 } else arcQuarter
-            val bottomCornerArc = //interpolation *
+            val bottomCornerArc =
                 if (cradleVerticalSideLength < 0) {
-                    val distanceX = bottomCornerRadius
+                    val distanceX = cradleBottomCornerRadius.toDouble()
                     val distanceY = -cradleVerticalSideLength.toDouble()
-                    val arcOffset = Math.toDegrees(atan(distanceY / distanceX))
-                    (arcOffset.toFloat() - arcQuarter).coerceAtLeast(-90f)
+                    val offset = Math.toDegrees(atan(distanceY / distanceX))
+                    (offset.toFloat() - arcQuarter).coerceAtLeast(-90f)
                 } else -arcQuarter
-
-            topLeftEllipse.left = start - 2 * topCornerRadius
-            topLeftEllipse.top = 0f
-            topLeftEllipse.right = start + cradleTopCornerRadius - topCornerRadius
-            topLeftEllipse.bottom = 2 * topCornerRadius
-
-            bottomLeftEllipse.left = start,
-            bottomLeftEllipse.top = bottom - 2 * bottomCornerRadius
-            bottomLeftEllipse.right = start + 2 * bottomCornerRadius
-            bottomLeftEllipse.bottom = bottom
-
-            bottomRightEllipse.left = end - 2 * bottomCornerRadius
-            bottomRightEllipse.top = bottom - 2 * bottomCornerRadius
-            bottomRightEllipse.right = end
-            bottomRightEllipse.bottom = bottom
-
-            topRightEllipse.left = end
-            topRightEllipse.top = 0f
-            topRightEllipse.right = end + 2 * topCornerRadius
-            topRightEllipse.bottom = 2 * topCornerRadius
 
             shapePath.apply {
                 lineTo(start - cradleTopCornerRadius, 0f)
-                addArc(/*left*/       topLeftEllipse.left,
-                       /*top*/        topLeftEllipse.top,
-                       /*right*/      topLeftEllipse.right,
-                       /*bottom*/     topLeftEllipse.bottom,
+                addArc(/*left*/       start - 2 * cradleTopCornerRadius,
+                       /*top*/        0f,
+                       /*right*/      start,
+                       /*bottom*/     2 * interpedTopCornerRadius,
                        /*startAngle*/ angleUp,
                        /*sweepAngle*/ topCornerArc)
                 if (cradleVerticalSideLength > 0)
-                    lineTo(start, bottom - bottomCornerRadius)
+                    lineTo(start, bottom - interpedBottomCornerRadius)
                 addArc(/*left*/       start,
-                       /*top*/        bottom - 2 * bottomCornerRadius,
-                       /*right*/      start + 2 * bottomCornerRadius,
+                       /*top*/        bottom - 2 * interpedBottomCornerRadius,
+                       /*right*/      start + 2 * cradleBottomCornerRadius,
                        /*bottom*/     bottom,
                        /*startAngle*/ angleDown + topCornerArc,
                        /*sweepAngle*/ bottomCornerArc)
                 lineTo(end - cradleBottomCornerRadius, bottom)
-                addArc(/*left*/       end - 2 * bottomCornerRadius,
-                       /*top*/        bottom - 2 * bottomCornerRadius,
+                addArc(/*left*/       end - 2 * cradleBottomCornerRadius,
+                       /*top*/        bottom - 2 * interpedBottomCornerRadius,
                        /*right*/      end,
                        /*bottom*/     bottom,
                        /*startAngle*/ angleDown,
                        /*sweepAngle*/ bottomCornerArc)
                 if (cradleVerticalSideLength > 0)
-                    lineTo(end, bottom - bottomCornerRadius)
+                    lineTo(end, bottom - interpedBottomCornerRadius)
                 addArc(/*left*/       end,
                        /*top*/        0f,
-                       /*right*/      end + 2 * topCornerRadius,
-                       /*bottom*/     2 * topCornerRadius,
+                       /*right*/      end + 2 * cradleTopCornerRadius,
+                       /*bottom*/     2 * interpedTopCornerRadius,
                        /*startAngle*/ angleUp + bottomCornerArc,
                        /*sweepAngle*/ topCornerArc)
 
-//                val c = 0.551915024494f
-//                cubicToPoint(
-//                    /*x1*/ start - topCornerRadius * (1 - c),
-//                    /*y1*/ 0f,
-//                    /*x2*/ start,
-//                    /*y2*/ topCornerRadius * c,
-//                    /*toX*/ start,
-//                    /*toY*/ topCornerRadius)
-//                cubicToPoint(
-//                    /*x1*/ start,
-//                    /*y1*/ bottom - bottomCornerRadius * (1 - c),
-//                    /*x2*/ start + bottomCornerRadius * (1 - c),
-//                    /*y2*/ bottom,
-//                    /*toX*/ start + bottomCornerRadius,
-//                    /*toY*/ bottom)
-//                lineTo(end - bottomCornerRadius, bottom)
-//                cubicToPoint(
-//                    /*x1*/ end - bottomCornerRadius * (1 - c),
-//                    /*y1*/ bottom,
-//                    /*x2*/ end,
-//                    /*y2*/ bottom - bottomCornerRadius * (1 - c),
-//                    /*toX*/ end,
-//                    /*toY*/ bottom - bottomCornerRadius)
-//                cubicToPoint(
-//                    /*x1*/ end,
-//                    /*y1*/ topCornerRadius * (1 - c),
-//                    /*x2*/ end + topCornerRadius * c,
-//                    /*y2*/ 0f,
-//                    /*toX*/ end + topCornerRadius,
-//                    /*toY*/ 0f)
-
-//                cubicToPoint(
-//                    /*x1*/ start - topCornerRadius * (1 - c),
-//                    /*y1*/ 0f,
-//                    /*x2*/ start,
-//                    /*y2*/ topCornerRadius * c,
-//                    /*toX*/ start,
-//                    /*toY*/ topCornerRadius)
-//                cubicToPoint(
-//                    /*x1*/ start,
-//                    /*y1*/ bottom - bottomCornerRadius * (1 - c),
-//                    /*x2*/ start + bottomCornerRadius * (1 - c),
-//                    /*y2*/ bottom,
-//                    /*toX*/ start + bottomCornerRadius,
-//                    /*toY*/ bottom)
                 lineTo(width.toFloat(), 0f)
             }
             // Copy the shapePath to topEdgePath and outlinePath, and additionally
@@ -287,77 +180,6 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
             outlinePath.lineTo(length, height.toFloat())
             outlinePath.lineTo(0f, height.toFloat())
             outlinePath.close()
-
-            upperLeftCurve.rewind()
-            bottomLeftCurve.rewind()
-            bottomRightCurve.rewind()
-            upperRightCurve.rewind()
-
-            upperLeftCurve.moveTo(start - topCornerRadius, 0f)
-            upperLeftCurve.addArc(
-                /*left*/       start - 2 * topCornerRadius,
-                /*top*/        0f,
-                /*right*/      start,
-                /*bottom*/     2 * topCornerRadius,
-                /*startAngle*/ angleUp,
-                /*sweepAngle*/ topCornerArc)
-            bottomLeftCurve.moveTo(start, topCornerRadius)
-            bottomLeftCurve.addArc(
-                /*left*/       start,
-                /*top*/        bottom - 2 * bottomCornerRadius,
-                /*right*/      start + 2 * bottomCornerRadius,
-                /*bottom*/     bottom,
-                /*startAngle*/ angleDown + topCornerArc,
-                /*sweepAngle*/ bottomCornerArc)
-            bottomRightCurve.moveTo(end - bottomCornerRadius, bottom)
-            bottomRightCurve.addArc(
-                /*left*/       end - 2 * bottomCornerRadius,
-                /*top*/        bottom - 2 * bottomCornerRadius,
-                /*right*/      end,
-                /*bottom*/     bottom,
-                /*startAngle*/ angleDown,
-                /*sweepAngle*/ bottomCornerArc)
-            upperRightCurve.moveTo(end, topCornerRadius)
-            upperRightCurve.addArc(
-                /*left*/       end,
-                /*top*/        0f,
-                /*right*/      end + 2 * topCornerRadius,
-                /*bottom*/     2 * topCornerRadius,
-                /*startAngle*/ angleUp + bottomCornerArc,
-                /*sweepAngle*/ topCornerArc)
-
-//            upperLeftCurve.moveTo(start - topCornerRadius, 0f)
-//            upperLeftCurve.cubicTo(
-//                /*x1*/ start - topCornerRadius * (1 - c),
-//                /*y1*/ 0f,
-//                /*x2*/ start,
-//                /*y2*/ topCornerRadius * c,
-//                /*toX*/ start,
-//                /*toY*/ topCornerRadius)
-//            bottomLeftCurve.moveTo(start, topCornerRadius)
-//            bottomLeftCurve.cubicTo(
-//                /*x1*/ start,
-//                /*y1*/ bottom - bottomCornerRadius * (1 - c),
-//                /*x2*/ start + bottomCornerRadius * (1 - c),
-//                /*y2*/ bottom,
-//                /*toX*/ start + bottomCornerRadius,
-//                /*toY*/ bottom)
-//            bottomRightCurve.moveTo(end - bottomCornerRadius, bottom)
-//            bottomRightCurve.cubicTo(
-//                /*x1*/ end - bottomCornerRadius * (1 - c),
-//                /*y1*/ bottom,
-//                /*x2*/ end,
-//                /*y2*/ bottom - bottomCornerRadius * (1 - c),
-//                /*toX*/ end,
-//                /*toY*/ bottom - bottomCornerRadius)
-//            upperRightCurve.moveTo(end, topCornerRadius)
-//            upperRightCurve.cubicTo(
-//                /*x1*/ end,
-//                /*y1*/ topCornerRadius * (1 - c),
-//                /*x2*/ end + topCornerRadius * c,
-//                /*y2*/ 0f,
-//                /*toX*/ end + topCornerRadius,
-//                /*toY*/ 0f)
         }
     }
 }
