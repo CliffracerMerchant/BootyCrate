@@ -200,7 +200,6 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         isFocusableInTouchMode = editable
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
                     else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-        if (!editable && isFocused) clearFocus()
 
         val oldBaseline = baseline
         minHeight = if (!editable) 0 else

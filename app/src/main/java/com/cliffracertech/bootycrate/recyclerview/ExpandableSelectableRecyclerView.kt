@@ -15,14 +15,13 @@ import com.cliffracertech.bootycrate.utils.SoftKeyboard
 /**
  * A BootyCrateRecyclerView subclass that enables multi-selection and expansion of items.
  *
- * ExpandableSelectableRecyclerView extends BootyCrateRecyclerView via the use
- * of an ExpandableSelectableItemViewModel along with the new function setExpandedItem.
- * Its selection property provides an interface for manipulating the recycler
- * view selection (see the documentation for the inner class Selection for more
- * details) as well as the function setExpandedItem to change or set to null
- * the currently expanded item. It also utilizes its own custom view holder to
- * enforce the use of an ExpandableSelectableItemView, and a custom adapter
- * that in turn enforces the use of ExpandableSelectableRecyclerView.ViewHolder.
+ * ExpandableSelectableRecyclerView extends BootyCrateRecyclerView by using a
+ * ExpandableItemAnimator instance to visually animate changes in items'
+ * expanded states, and by adding an interface for item selection through the
+ * property selection (see the documentation for the inner class Selection for
+ * more details). It also utilizes its own custom view holder to enforce the
+ * use of an ExpandableSelectableItemView, and a custom adapter that in turn
+ * enforces the use of ExpandableSelectableRecyclerView.ViewHolder.
  */
 @Suppress("LeakingThis")
 abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
@@ -31,10 +30,48 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
 ) : BootyCrateRecyclerView<T>(context, attrs) {
     protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
     val selection = Selection()
+    private var needToHideSoftKeyboard = false
+    private var expandCollapseAnimRunning = false
+    private var queuedEditButtonPressPos = -1
+    private var editButtonLastPressTimestamp = 0L
 
     init {
-        addItemDecoration(ItemSpacingDecoration(context))
-        setHasFixedSize(true)
+        itemAnimator.onAnimStartedListener = { viewHolder, expanding ->
+            expandCollapseAnimRunning = true
+            if (!expanding) {
+                val vh = viewHolder as ExpandableSelectableRecyclerView<*>.ViewHolder
+                vh.view.hasFocus()
+                needToHideSoftKeyboard = vh.view.focusedChild != null
+            }
+        }
+        // While allowing all edit button presses to be responded to would be ideal,
+        // rapid edit button presses seem to cause flickering in the item views
+        // (perhaps due to layouts occurring when the item view is still in the
+        // middle of an expand collapse animation). If all edit buttons presses are
+        // ignored when an expand/collapse animation is playing, this causes the
+        // item expand/collapse function to seem sluggish due to ignoring most of
+        // the user's inputs if they occur rapidly. To compromise, an edit button
+        // press when an expand/collapse animation is occurring will be queued, and
+        // acted out when the current expand/collapse animation is finished if the
+        // queued edit button press occurred less than half the duration of the
+        // expand/collapse animations ago.
+        itemAnimator.onAnimEndedListener = { _, expanding ->
+            expandCollapseAnimRunning = false
+            if (!expanding && needToHideSoftKeyboard) {
+                clearFocus()
+                SoftKeyboard.hide(this)
+            }
+            if (queuedEditButtonPressPos != -1) {
+                val now = System.currentTimeMillis()
+                val allowableMargin = itemAnimator.changeDuration / 2
+                if ((editButtonLastPressTimestamp + allowableMargin) >= now) {
+                    val vh = findViewHolderForAdapterPosition(queuedEditButtonPressPos)
+                    val view = vh?.itemView as? ExpandableSelectableItemView<*>
+                    view?.ui?.editButton?.performClick()
+                }
+                queuedEditButtonPressPos = -1
+            }
+        }
         setItemAnimator(itemAnimator)
     }
 
@@ -75,8 +112,10 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
 
         override fun onViewDetachedFromWindow(holder: VHType) {
             super.onViewDetachedFromWindow(holder)
-            if (holder.clearFocusedChild())
+            if (holder.view.focusedChild != null) {
+                clearFocus()
                 SoftKeyboard.hide(holder.itemView)
+            }
         }
     }
 
@@ -94,6 +133,7 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     open inner class ViewHolder(view: ExpandableSelectableItemView<T>) :
         BootyCrateRecyclerView<T>.ViewHolder(view)
     {
+        @Suppress("UNCHECKED_CAST")
         open val view get() = itemView as ExpandableSelectableItemView<T>
 
         init {
@@ -111,24 +151,17 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
                 ui.nameEdit.setOnLongClickListener(onLongClick)
                 ui.extraInfoEdit.setOnLongClickListener(onLongClick)
                 ui.amountEdit.ui.valueEdit.setOnLongClickListener(onLongClick)
+
                 ui.editButton.setOnClickListener {
-                    if (itemAnimator.changeAnimationInProgress) return@setOnClickListener
-                    if (isExpanded && clearFocusedChild())
-                        SoftKeyboard.hide(this)
-                    viewModel.setExpandedItem(if (isExpanded) null
-                                              else adapter.currentList[adapterPosition].id)
+                    if (!expandCollapseAnimRunning)
+                        viewModel.setExpandedItem(if (isExpanded) null
+                                                  else            item.id)
+                    else {
+                        editButtonLastPressTimestamp = System.currentTimeMillis()
+                        queuedEditButtonPressPos = adapterPosition
+                    }
                 }
             }
-        }
-
-        /** Clear any focused child, and return whether or not any child
-         * view had its focus cleared. Subclasses should override this
-         * function if they add any focusable child views. */
-        open fun clearFocusedChild() = view.ui.run {
-            when { nameEdit.isFocused -> { nameEdit.clearFocus(); true }
-                   extraInfoEdit.isFocused -> { extraInfoEdit.clearFocus(); true }
-                   amountEdit.ui.valueEdit.isFocused -> { amountEdit.ui.valueEdit.clearFocus(); true }
-                   else -> false }
         }
     }
 }

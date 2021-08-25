@@ -50,8 +50,6 @@ open class IntegerEdit(context: Context, attrs: AttributeSet?) : LinearLayout(co
     var valueIsFocusable get() = ui.valueEdit.isFocusableInTouchMode
         set(value) {
             ui.valueEdit.isFocusableInTouchMode = value
-            if (!value && ui.valueEdit.isFocused)
-                ui.valueEdit.clearFocus()
             underlineAlpha = if (value) 255 else 0
             ui.valueEdit.minWidth = if (!value) 0 else
                 resources.getDimensionPixelSize(R.dimen.integer_edit_editable_value_min_width)
@@ -146,7 +144,6 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
         if (!animate) { valueIsFocusable = focusable; return null }
 
         ui.valueEdit.isFocusableInTouchMode = focusable
-        ui.valueEdit.isClickable = focusable
         val underlineEndAlpha = if (focusable) 255 else 0
 
         val oldValueWidth = ui.valueEdit.width

@@ -20,17 +20,22 @@ import com.cliffracertech.bootycrate.utils.setHeight
  *
  * ExpandableItemAnimator is a RecyclerView.ItemAnimator that provides an
  * override of animateChange to animate the height changes of expanding or
- * collapsing items. It assumes that only one item can be expanded at a
- * time, and that a previously expanded item will be collapsed when a new
- * one is expanded. The recycler view that uses ExpandableItemAnimator must
+ * collapsing items. The recycler view that uses ExpandableItemAnimator must
  * use item views that implement the ExpandableRecyclerViewItem interface.
+ *
+ * Listeners can be set for the start or end of animations through the
+ * properties onAnimStartedListener and onAnimEndedListener, respectively. The
+ * second argument in these listeners represents whether the animation is an
+ * expand animation (i.e. a value of false implies the animation is a collapse
+ * animation instead).
  */
 class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimator() {
     private val pendingAnimators = mutableListOf<Animator>()
     private val pendingViewPropAnimators = mutableListOf<ViewPropertyAnimator>()
     private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
-    private var _changeAnimationInProgress = false
-    val changeAnimationInProgress get() = _changeAnimationInProgress
+
+    var onAnimStartedListener: ((RecyclerView.ViewHolder, Boolean) -> Unit)? = null
+    var onAnimEndedListener: ((RecyclerView.ViewHolder, Boolean) -> Unit)? = null
 
     var animatorConfig = animatorConfig
         set(value) { field = value
@@ -62,11 +67,12 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
             "implement ExpandableItemAnimator.ExpandableRecyclerViewItem.")
 
         view.setHeight(startHeight)
+        val expanding = endHeight > startHeight
         intValueAnimator(view::setHeight, startHeight, endHeight, animatorConfig).apply {
             doOnStart { dispatchChangeStarting(newHolder, true)
-                        _changeAnimationInProgress = true }
+                        onAnimStartedListener?.invoke(newHolder, expanding) }
             doOnEnd { dispatchChangeFinished(newHolder, true)
-                      _changeAnimationInProgress = false }
+                      onAnimEndedListener?.invoke(newHolder, expanding) }
             pendingAnimators.add(this)
         }
 
