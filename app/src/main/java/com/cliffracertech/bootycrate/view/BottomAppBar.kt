@@ -105,15 +105,16 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
             interpolation: Float,
             shapePath: ShapePath
         ) {
-            val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin * (1f - 0.1f * interpolation)
+            val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin
+            val startEndAdjust = cradleFullWidth * 0.1f * (1f - interpolation)
             // start will be the x coordinate of the start of the cradle if cradleTopCornerRadius is zero
-            val start = (cradleLayout?.x ?: return) - cradleContentsMargin
-            val end = start + cradleFullWidth
+            val start = (cradleLayout?.x ?: return) - cradleContentsMargin + startEndAdjust
+            val end = start + cradleFullWidth - 2 * startEndAdjust
             val bottom = cradleDepth * interpolation
-            // To create the appearance of the curve collapsing vertically, x coordinate
-            // values will always use the full corner radius values without taking the
-            // interpolation into account, while y coordinate values will use these
-            // interpolated corner radius values instead.
+            // To create the appearance of the curve collapsing vertically, x
+            // coordinate values will always use the full corner radius values
+            // without taking the interpolation into account, while y coordinate
+            // values will use these interpolated corner radius values instead.
             val interpedTopCornerRadius = cradleTopCornerRadius * interpolation
             val interpedBottomCornerRadius = cradleBottomCornerRadius * interpolation
 
@@ -210,6 +211,8 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
                             set(value) { indicatorPaint.color = value }
     var indicatorGradient get() = indicatorPaint.shader
                           set(value) { indicatorPaint.shader = value }
+    var indicatorAlpha get() = indicatorPaint.alpha / 255f
+                       set(value) { indicatorPaint.alpha = (value * 255).toInt().coerceIn(0, 255) }
     private var indicatorXPos = 0
     var indicatorAnimatorConfig: AnimatorConfig? = null
 

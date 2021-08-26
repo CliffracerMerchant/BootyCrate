@@ -40,6 +40,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : AppBarLayo
                     override fun onSlide(bottomSheet: View, slideOffset: Float) {
                         ui.navBarAppTitleSwitcher.secondViewFraction = slideOffset
                         ui.bottomAppBar.cradleInterpolation = 1f - slideOffset
+                        ui.bottomAppBar.indicatorAlpha = 1f - slideOffset
                         ui.cradleLayout.alpha = 1f - slideOffset
                         ui.cradleLayout.scaleX = 1f - 0.1f * slideOffset
                         ui.cradleLayout.scaleY = 1f - 0.1f * slideOffset

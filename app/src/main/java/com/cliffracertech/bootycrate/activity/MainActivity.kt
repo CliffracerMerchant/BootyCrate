@@ -62,16 +62,6 @@ open class MainActivity : MultiFragmentActivity() {
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         (ui.bottomNavigationBar.getIconAt(2).parent as View)
             .importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-
-
-        ui.root.doOnNextLayout {
-            val rect = Rect()
-            ui.bottomNavigationDrawer.getGlobalVisibleRect(rect)
-            Log.d("bounds", "ui.bottomNavigationDrawer.bounds = $rect")
-            val behavior = BottomSheetBehavior.from(ui.bottomNavigationDrawer)
-            behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            behavior.state = BottomSheetBehavior.STATE_COLLAPSED
-        }
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
