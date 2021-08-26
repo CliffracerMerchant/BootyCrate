@@ -195,6 +195,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         if (!animate) {
             ui.extraInfoEdit.isVisible = expanding || !extraInfoIsBlank
             ui.extraInfoEdit.alpha = if (expanding || !extraInfoIsBlank) 1f else 0f
+            ui.extraInfoEdit.translationY = 0f
             return null
         }
         pendingAnimations.add(animInfo!!.translateAnimator)
