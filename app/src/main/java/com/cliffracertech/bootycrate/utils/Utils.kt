@@ -77,3 +77,6 @@ fun Context.getIntArray(arrayResId: Int): IntArray {
     ta.recycle()
     return array
 }
+
+/** Add the nullable element to the list if it is not null, or do nothing otherwise. */
+fun <T> MutableList<T>.add(element: T?) { if (element != null) add(element) }

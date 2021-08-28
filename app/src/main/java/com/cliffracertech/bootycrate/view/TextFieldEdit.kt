@@ -11,9 +11,11 @@ import android.graphics.Rect
 import android.text.InputType
 import android.text.TextUtils
 import android.util.AttributeSet
+import android.util.Log
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
+import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.*
@@ -173,7 +175,7 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
      */
     data class AnimInfo(
         val translateAnimator: ValueAnimator,
-        val underlineAnimator: ValueAnimator,
+        val underlineAnimator: ValueAnimator?,
         private var startTranslationY: Float,
         private var endTranslationY: Float
     ) {
@@ -184,12 +186,30 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
         }
     }
 
+    /** A set of options describing how the underline alpha will be updated during a call to setExpanded. */
+    enum class UnderlineAlphaUpdateMode {
+        /** The underline alpha will be set immediately before the setExpanded
+         *  animation occurs, useful if the view is currently not visible but
+         *  will appear during the setExpanded animation. */
+        BeforeAnimation,
+        /** The underline alpha will be set immediately after the setExpanded
+         *  animation finishes, useful it the view is currently visible but will
+         *  not be by the end of the setExpanded animation. */
+        AfterAnimation,
+        /** The underline alpha will be animated from its current value to
+         *  its final value alongside the setExpandedAnimation. */
+        Animate
+    }
+
     /** Set the editable state of the TextFieldEdit, and return the AnimInfo
-     * containing information about the internal animations set up during
-     * the state change if @param animate == true, or null otherwise. */
+     *  containing information about the internal animations set up during
+     *  the state change if @param animate == true, or null otherwise. The
+     *  value of the param underlineAlphaUpdateMode will determine how the
+     *  underline alpha will be updated. */
     fun setEditable(
         editable: Boolean,
         animate: Boolean = true,
+        underlineAlphaUpdateMode: UnderlineAlphaUpdateMode = UnderlineAlphaUpdateMode.Animate,
         startAnimationsImmediately: Boolean = true
     ): AnimInfo? {
         if (!animate) {
@@ -211,10 +231,24 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
 
         translationY -= baselineChange
         val translateAnimator = floatValueAnimator(::setTranslationY, translationY, 0f, animatorConfig)
-        val underlineAnimator = intValueAnimator(::setUnderlineAlphaPrivate, underlineAlpha,
-                                                 newUnderlineAlpha, animatorConfig)
+        val underlineAnimator = when (underlineAlphaUpdateMode) {
+            UnderlineAlphaUpdateMode.Animate ->
+                intValueAnimator(::setUnderlineAlphaPrivate, underlineAlpha,
+                                 newUnderlineAlpha, animatorConfig)
+            UnderlineAlphaUpdateMode.BeforeAnimation -> {
+                underlineAlpha = newUnderlineAlpha
+                setLayerType(LAYER_TYPE_HARDWARE, null)
+                translateAnimator.doOnEnd { setLayerType(LAYER_TYPE_NONE, null) }
+                null
+            } UnderlineAlphaUpdateMode.AfterAnimation -> {
+                setLayerType(LAYER_TYPE_HARDWARE, null)
+                translateAnimator.doOnEnd { setLayerType(LAYER_TYPE_NONE, null)
+                                            underlineAlpha = newUnderlineAlpha }
+                null
+            }
+        }
         if (startAnimationsImmediately) { translateAnimator.start()
-                                          underlineAnimator.start() }
+                                          underlineAnimator?.start() }
         return AnimInfo(translateAnimator, underlineAnimator, translationY, 0f)
     }
 
