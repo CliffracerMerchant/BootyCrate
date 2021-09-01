@@ -23,7 +23,7 @@ import com.cliffracertech.bootycrate.utils.intValueAnimator
  * or right. The Int parameter will be the RecyclerView.Adapter position of the
  * swiped item.
  *
- * The recycler view that the SwipeToDeleteCallback will be  attached to is
+ * The recycler view that the SwipeToDeleteCallback will be attached to is
  * required during construction so that it can create a helper ItemDecoration
  * that will fade the delete background out after an item is swiped. A float
  * value can optionally be passed in that will be used as the corner radius

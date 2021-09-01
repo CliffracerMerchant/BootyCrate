@@ -20,6 +20,7 @@ import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
 import com.cliffracertech.bootycrate.utils.intValueAnimator
+import com.cliffracertech.bootycrate.utils.add
 import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
 
 /**
@@ -161,16 +162,21 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     }
 
     /** The cached new value for the height of the nameEdit; only to
-     * be used in the body of setExpanded or one of its sub-functions. */
+     *  be used in the body of setExpanded or one of its sub-functions. */
     private var nameNewHeight = 0
-    /** Update the editable state of nameEdit, animating if param animate == true,
-     * and return the TextFieldEdit.AnimInfo for the animation and the new height
-     * of the nameEdit, or null if no animation occurred. */
+    /** Update the editable state of nameEdit, animating if param
+     *  animate == true, and return the TextFieldEdit.AnimInfo for
+     *  the animation, or null if no animation occurred. */
     private fun updateNameEditState(
         expanding: Boolean,
         animate: Boolean
     ): AnimatedStrikeThroughTextFieldEdit.AnimInfo? {
-        val animInfo = ui.nameEdit.setEditable(expanding, animate, false) ?: return null
+        val animInfo = ui.nameEdit.setEditable(
+            editable = expanding,
+            animate = animate,
+            startAnimationsImmediately = false
+        ) ?: return null
+
         pendingAnimations.add(animInfo.translateAnimator)
         pendingAnimations.add(animInfo.underlineAnimator)
         val minHeight = if (!expanding) 0 else
@@ -180,21 +186,35 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     }
 
     /** The cached new value for the height of the extraInfoEdit; only to
-     * be used in the body of setExpanded or one of its sub-functions. */
+     *  be used in the body of setExpanded or one of its sub-functions. */
     private var extraInfoNewHeight = 0
     private var hidingExtraInfo = false
-    /** Update the editable state of extraInfoEdit, animating if param animate == true and
-     * the extraInfoEdit is not blank, and returning the TextFieldEdit.AnimInfo for the
-     * animation and the new height of the extraInfoEdit, or null if no animation occurred. */
+    /** Update the editable state of extraInfoEdit, animating if param animate ==
+     *  true and the extraInfoEdit is not blank, and returning the TextFieldEdit.AnimInfo
+     *  for the animation, or null if no animation occurred. */
     private fun updateExtraInfoState(
         expanding: Boolean,
         animate: Boolean
     ): AnimatedStrikeThroughTextFieldEdit.AnimInfo? {
         val extraInfoIsBlank = ui.extraInfoEdit.text.isNullOrBlank()
-        val animInfo = ui.extraInfoEdit.setEditable(expanding, animate, false)
+        val extraInfoUnderlineUpdateMode =
+            if (!extraInfoIsBlank)
+                AnimatedStrikeThroughTextFieldEdit.UnderlineAlphaUpdateMode.Animate
+            else if (expanding)
+                AnimatedStrikeThroughTextFieldEdit.UnderlineAlphaUpdateMode.BeforeAnimation
+            else
+                AnimatedStrikeThroughTextFieldEdit.UnderlineAlphaUpdateMode.AfterAnimation
+
+        val animInfo = ui.extraInfoEdit.setEditable(
+            editable = expanding,
+            animate = animate,
+            underlineAlphaUpdateMode = extraInfoUnderlineUpdateMode,
+            startAnimationsImmediately = false)
+
         if (!animate) {
             ui.extraInfoEdit.isVisible = expanding || !extraInfoIsBlank
             ui.extraInfoEdit.alpha = if (expanding || !extraInfoIsBlank) 1f else 0f
+            ui.extraInfoEdit.translationY = 0f
             return null
         }
         pendingAnimations.add(animInfo!!.translateAnimator)
@@ -381,13 +401,11 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         }
     }
 
-    /**
-     * For some reason both nameEdit and extraInfoEdit have their width set
+    /** For some reason both nameEdit and extraInfoEdit have their width set
      * to their new expanded width sometime after setExpanded but before the
      * end animations are started, causing a visual flicker. The property
      * textFieldLockedRight, when set to a non-null value, prevents this
-     * resize from taking place, and in turn prevents the flicker.
-     */
+     * resize from taking place, and in turn prevents the flicker. */
     private var textFieldLockedRight: Int? = null
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         super.onLayout(changed, left, top, right, bottom)

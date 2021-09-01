@@ -84,8 +84,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
     }
 
     override fun onDraw(canvas: Canvas?) {
-        if (canvas == null) return
-        canvas.drawPath(outlinePath, backgroundPaint)
+        canvas?.drawPath(outlinePath, backgroundPaint)
     }
 
     private val arcQuarter = 90f
