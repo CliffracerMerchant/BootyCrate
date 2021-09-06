@@ -24,6 +24,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             android:elevation="10dp"
+            android:clipChildren="false"
             android:layout_marginTop="-10dp" >
 
             <com.cliffracertech.bootycrate.view.CheckoutButton

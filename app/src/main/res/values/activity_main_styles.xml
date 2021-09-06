@@ -27,6 +27,7 @@
         <item name="indicatorThickness">10dp</item>
         <item name="cradleLayoutResId">@id/cradleLayout</item>
         <item name="navBarResId">@id/bottomNavigationBar</item>
+        <item name="android:clipChildren">false</item>
     </style>
 
     <style name="BottomNavigationView">

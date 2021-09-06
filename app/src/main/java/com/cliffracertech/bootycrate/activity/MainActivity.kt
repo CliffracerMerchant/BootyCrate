@@ -87,22 +87,15 @@ open class MainActivity : MultiFragmentActivity() {
                             primaryFragmentTransitionAnimatorConfig)
         val showsCheckoutButton = newFragment.showsCheckoutButton()
         if (showsCheckoutButton != null)
-            showCheckoutButton(showsCheckoutButton, needToAnimateCheckoutButton)
+            // The cradle animation is stored here and started in the cradle
+            // layout's layoutTransition's transition listener's transitionStart
+            // override so that the animation is synced with the layout transition.
+            pendingCradleAnim = ui.showCheckoutButton(
+                showing = showsCheckoutButton,
+                animatorConfig = primaryFragmentTransitionAnimatorConfig,
+                animate = needToAnimateCheckoutButton)
         ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
         newFragment.onActiveStateChanged(isActive = true, ui)
-    }
-
-    private var showingCheckoutButton: Boolean? = null
-    // The cradle animation is stored here and started in the cradle
-    // layout's layoutTransition's transition listener's transitionStart
-    // override so that the animation is synced with the layout transition.
-    private var pendingCradleAnim: Animator? = null
-    private fun showCheckoutButton(show: Boolean, animate: Boolean = true) {
-        if (showingCheckoutButton == show) return
-        showingCheckoutButton = show
-        if (!animate) ui.showCheckoutButton(show)
-        else pendingCradleAnim =
-            ui.showCheckoutButtonAnimation(show, primaryFragmentTransitionAnimatorConfig)
     }
 
     private fun setThemeFromPreferences() {
@@ -145,10 +138,13 @@ open class MainActivity : MultiFragmentActivity() {
             // This interpolator shows the indicator going around the bottom app bar cradle slightly better.
             .copy(interpolator = PathInterpolator(.4f,.6f,.6f,.4f))
         ui.checkoutButton.animatorConfig = transitionAnimConfig
-        ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig)
-        ui.cradleLayout.layoutTransition.doOnStart {
-            pendingCradleAnim?.start()
-            pendingCradleAnim = null
+        ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig).apply {
+            // views with bottomSheetBehaviors do not like to be animated by layout
+            // transitions (it makes them jump up to the top of the screen), so we
+            // have to set animatedParentHierarchy to false to prevent this
+            setAnimateParentHierarchy(false)
+            doOnStart { pendingCradleAnim?.start()
+                        pendingCradleAnim = null }
         }
     }
 

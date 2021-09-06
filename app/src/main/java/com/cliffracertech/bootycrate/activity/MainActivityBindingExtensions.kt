@@ -7,11 +7,9 @@ package com.cliffracertech.bootycrate.activity
 import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.res.ColorStateList
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Shader
+import android.graphics.*
 import android.view.View
+import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
@@ -59,23 +57,51 @@ private fun MainActivityBinding.cradleWidth(showingCheckoutButton: Boolean) =
         cradleLayout.measuredWidth
     }
 
-fun MainActivityBinding.showCheckoutButton(show: Boolean) {
-    checkoutButton.isVisible = show
-    bottomAppBar.cradleWidth = cradleWidth(show)
-}
-
-/** Provide an animation to show or hide the checkout button, according
- * to the parameter show, using the values of the parameter animatorConfig
- * as the animation's duration and interpolator if not null. */
-fun MainActivityBinding.showCheckoutButtonAnimation(
+private val checkoutButtonClipBounds = Rect()
+/** Show or hide the checkout button according to the value of @param
+ * showing, returning the animator used if @param animate == true or
+ * null otherwise, while using the values of the @param animatorConfig
+ * as the animation's duration and interpolator if not null.*/
+fun MainActivityBinding.showCheckoutButton(
     showing: Boolean,
-    animatorConfig: AnimatorConfig? = null
-): Animator {
+    animatorConfig: AnimatorConfig? = null,
+    animate: Boolean = true
+): Animator? {
+    if (!animate) {
+        checkoutButton.isVisible = showing
+        bottomAppBar.cradleWidth = cradleWidth(showing)
+        return null
+    }
+
     checkoutButton.isVisible = showing
-    val cradleEndWidth = cradleWidth(showing)
-    return ValueAnimator.ofInt(bottomAppBar.cradleWidth, cradleEndWidth).apply {
+    val cradleStartWidth = bottomAppBar.cradleWidth
+    val cradleNewWidth = cradleWidth(showing)
+    val cradleWidthChange = cradleNewWidth - cradleStartWidth
+
+    // Ideally we would only animate the cradle's width, and let the cradleLayout's
+    // layoutTransition handle the rest. Unfortunately it will only animate its own
+    // translationX if it has animateParentHierarchy set to true. Due to this
+    // causing the BottomNavigationDrawer to jump to the top of the screen whenever
+    // the layoutTransition animates (apparently a bug with BottomSheetBehavior),
+    // we have to animate the cradleLayout's translationX ourselves.
+    val cradleNewLeft = (bottomAppBar.width - cradleNewWidth) / 2
+    val cradleLeftChange = cradleNewLeft - cradleLayout.left
+    cradleLayout.translationX -= cradleLeftChange
+    val cradleStartTransX = cradleLayout.translationX
+
+    // The checkoutButton's clipBounds is set here to prevent it's right edge
+    // from sticking out underneath the addButton during the animation
+    checkoutButton.getDrawingRect(checkoutButtonClipBounds)
+    val addButtonHalfWidth = addButton.width / 2
+    return ValueAnimator.ofFloat(0f, 1f).apply {
         applyConfig(animatorConfig)
-        addUpdateListener { bottomAppBar.cradleWidth = it.animatedValue as Int }
+        addUpdateListener {
+            bottomAppBar.cradleWidth = cradleStartWidth + (cradleWidthChange * it.animatedFraction).toInt()
+            cradleLayout.translationX = cradleStartTransX * (1f - it.animatedFraction)
+            checkoutButtonClipBounds.right = addButton.x.toInt() + addButtonHalfWidth
+            checkoutButton.clipBounds = checkoutButtonClipBounds
+        }
+        doOnEnd { checkoutButton.clipBounds = null }
     }
 }
 
