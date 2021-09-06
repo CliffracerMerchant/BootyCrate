@@ -11,17 +11,17 @@
     <!-- The height of the canvas a path is drawn on. -->
     <attr name="pathHeight" format="float" />
     <!-- The left color of the background gradient. -->
-    <attr name="backgroundGradientColorLeft" format="color" />
+    <attr name="backgroundGradientLeftColor" format="color" />
     <!-- The middle color of the background gradient. -->
-    <attr name="backgroundGradientColorMiddle" format="color" />
+    <attr name="backgroundGradientMiddleColor" format="color" />
     <!-- The right color of the background gradient. -->
-    <attr name="backgroundGradientColorRight" format="color" />
+    <attr name="backgroundGradientRightColor" format="color" />
     <!-- The left color of the foreground gradient. -->
-    <attr name="foregroundGradientColorLeft" format="color" />
+    <attr name="foregroundGradientLeftColor" format="color" />
     <!-- The middle color of the foreground gradient. -->
-    <attr name="foregroundGradientColorMiddle" format="color" />
+    <attr name="foregroundGradientMiddleColor" format="color" />
     <!-- The right color of the foreground gradient. -->
-    <attr name="foregroundGradientColorRight" format="color" />
+    <attr name="foregroundGradientRightColor" format="color" />
     <!-- The alpha value used for the checkout button background when it is disabled. -->
     <attr name="checkoutButtonDisabledAlpha" format="integer" />
 
@@ -72,9 +72,9 @@
         <attr name="navBarResId"        format="reference" />
     </declare-styleable>
 
-    <attr name="recyclerViewItemSelectionLeftGradientColor"   format="color" />
-    <attr name="recyclerViewItemSelectionMiddleGradientColor" format="color" />
-    <attr name="recyclerViewItemSelectionRightGradientColor"  format="color" />
+    <attr name="recyclerViewItemSelectionGradientLeftColor"   format="color" />
+    <attr name="recyclerViewItemSelectionGradientMiddleColor" format="color" />
+    <attr name="recyclerViewItemSelectionGradientRightColor"  format="color" />
 
     <declare-styleable name="TextFieldEdit">
         <!-- Whether the TextFieldEdit will start in an editable state. -->

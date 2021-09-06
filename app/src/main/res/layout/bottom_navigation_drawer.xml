@@ -73,11 +73,9 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/settingsButton"
         app:layout_constraintTop_toTopOf="parent"
-        android:textSize="22sp"
-        android:alpha="0"
-        android:textColor="?android:attr/textColorPrimary" />
+        style="@style/AppTitle"/>
 
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/settingsButton"
         android:layout_width="48dp"
         android:layout_height="48dp"
@@ -85,9 +83,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginEnd="24dp"
-        android:padding="12dp"
-        android:contentDescription="@string/settings_description"
-        app:srcCompat="@drawable/ic_baseline_settings_24" />
+        style="@style/SettingsButton"/>
 
     <TextView
         android:id="@+id/bottomNavigationDrawerContent"

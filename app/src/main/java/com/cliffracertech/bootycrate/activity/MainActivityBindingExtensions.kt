@@ -9,6 +9,7 @@ import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.graphics.*
 import android.view.View
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
@@ -114,22 +115,22 @@ fun MainActivityBinding.showCheckoutButton(
  * performs additional operations to initialize the desired style. Its
  * foreground gradient (used to tint the text and icon drawables in the action
  * bar and bottom app bar) is made by creating a linear gradient using the
- * values of the XML attributes foregroundGradientColorLeft, foregroundGradientColorMiddle,
- * and foregroundGradientColorRight. The background gradient (smaller subsets
+ * values of the XML attributes foregroundGradientLeftColor, foregroundGradientMiddleColor,
+ * and foregroundGradientRightColor. The background gradient (smaller subsets
  * of which are used as the backgrounds for the checkout and add buttons) is
- * made from the colors backgroundGradientColorLeft, backgroundGradientColorMiddle,
- * and backgroundGradientColorRight.
+ * made from the colors backgroundGradientLeftColor, backgroundGradientMiddleColor,
+ * and backgroundGradientRightColor.
  */
 fun MainActivity.initGradientStyle() {
     val screenWidth = resources.displayMetrics.widthPixels
     val actionBarHeight = theme.resolveIntAttribute(R.attr.actionBarSize).toFloat()
 
-    val fgColors = intArrayOf(theme.resolveIntAttribute(R.attr.foregroundGradientColorLeft),
-                              theme.resolveIntAttribute(R.attr.foregroundGradientColorMiddle),
-                              theme.resolveIntAttribute(R.attr.foregroundGradientColorRight))
-    val bgColors = intArrayOf(theme.resolveIntAttribute(R.attr.backgroundGradientColorLeft),
-                              theme.resolveIntAttribute(R.attr.backgroundGradientColorMiddle),
-                              theme.resolveIntAttribute(R.attr.backgroundGradientColorRight))
+    val fgColors = intArrayOf(theme.resolveIntAttribute(R.attr.foregroundGradientLeftColor),
+                              theme.resolveIntAttribute(R.attr.foregroundGradientMiddleColor),
+                              theme.resolveIntAttribute(R.attr.foregroundGradientRightColor))
+    val bgColors = intArrayOf(theme.resolveIntAttribute(R.attr.backgroundGradientLeftColor),
+                              theme.resolveIntAttribute(R.attr.backgroundGradientMiddleColor),
+                              theme.resolveIntAttribute(R.attr.backgroundGradientRightColor))
 
     val fgGradientBuilder = GradientBuilder(x2 = screenWidth.toFloat(), colors = fgColors)
     val fgGradientShader = fgGradientBuilder.buildLinearGradient()
@@ -147,7 +148,7 @@ fun MainActivity.initGradientStyle() {
     canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
 
     ui.styleActionBarContents(screenWidth, fgGradientShader, fgGradientBitmap)
-    ui.styleBottomAppBarContents(screenWidth, fgGradientBitmap, fgGradientBuilder, bgGradientBuilder)
+    ui.styleBottomNavDrawerContents(screenWidth, fgGradientBitmap, fgGradientBuilder, bgGradientBuilder)
 }
 
 private fun MainActivityBinding.styleActionBarContents(screenWidth: Int,
@@ -166,9 +167,10 @@ private fun MainActivityBinding.styleActionBarContents(screenWidth: Int,
     actionBar.ui.searchButton.drawable?.setTint(fgGradientBitmap.getPixel(x, 0))
 }
 
-private fun MainActivityBinding.styleBottomAppBarContents(screenWidth: Int, fgGradientBitmap: Bitmap,
-                                                          fgGradientBuilder: GradientBuilder,
-                                                          bgGradientBuilder: GradientBuilder) {
+private fun MainActivityBinding.styleBottomNavDrawerContents(screenWidth: Int,
+                                                             fgGradientBitmap: Bitmap,
+                                                             fgGradientBuilder: GradientBuilder,
+                                                             bgGradientBuilder: GradientBuilder) {
     // Checkout button
     val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
     cradleLayout.measure(wrapContent, wrapContent)
@@ -182,10 +184,10 @@ private fun MainActivityBinding.styleBottomAppBarContents(screenWidth: Int, fgGr
     // Add button
     val addButtonWidth = addButton.layoutParams.width
     val addButtonLeft = cradleLeft + cradleWidth - addButtonWidth * 1f
-    addButton.foregroundGradient = fgGradientBuilder
-        .setX1(-addButtonLeft).setX2(screenWidth - addButtonLeft).buildLinearGradient()
-    addButton.backgroundGradient = bgGradientBuilder
-        .setX1(-addButtonLeft).setX2(screenWidth - addButtonLeft).buildLinearGradient()
+    addButton.foregroundGradient = fgGradientBuilder.setX1(-addButtonLeft)
+        .setX2(screenWidth - addButtonLeft).buildLinearGradient()
+    addButton.backgroundGradient = bgGradientBuilder.setX1(-addButtonLeft)
+        .setX2(screenWidth - addButtonLeft).buildLinearGradient()
 
     // Bottom navigation view
     val menuSize = bottomNavigationBar.menu.size()
@@ -196,6 +198,16 @@ private fun MainActivityBinding.styleBottomAppBarContents(screenWidth: Int, fgGr
         bottomNavigationBar.setTextTintList(i, tint)
     }
     bottomNavigationBar.invalidate()
+
+    // App title
+    val titleLeft = (appTitle.layoutParams as ConstraintLayout.LayoutParams).marginStart * 1f
+    appTitle.paint.shader = fgGradientBuilder.setX1(-titleLeft)
+        .setX2(screenWidth - titleLeft).buildLinearGradient()
+
+    // settings button
+    val layoutParams = settingsButton.layoutParams as ConstraintLayout.LayoutParams
+    val settingsButtonLeft = screenWidth - layoutParams.marginEnd - layoutParams.width
+    settingsButton.drawable.setTint(fgGradientBitmap.getPixel(settingsButtonLeft, 0))
 }
 
 private fun ActionBarTitle.setShader(shader: Shader?) {
@@ -211,3 +223,5 @@ val MainActivityBinding.cradleLayout get() = bottomNavigationDrawer.ui.cradleLay
 val MainActivityBinding.checkoutButton get() = bottomNavigationDrawer.ui.checkoutButton
 val MainActivityBinding.addButton get() = bottomNavigationDrawer.ui.addButton
 val MainActivityBinding.shoppingListBadge get() = bottomNavigationDrawer.ui.shoppingListBadge
+val MainActivityBinding.appTitle get() = bottomNavigationDrawer.ui.appTitle
+val MainActivityBinding.settingsButton get() = bottomNavigationDrawer.ui.settingsButton

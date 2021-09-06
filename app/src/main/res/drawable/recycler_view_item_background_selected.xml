@@ -9,9 +9,9 @@
         <shape android:shape="rectangle">
             <corners android:radius="@dimen/recycler_view_item_rounded_corner_radius" />
             <gradient android:angle="0"
-                android:startColor="?attr/recyclerViewItemSelectionLeftGradientColor"
-                android:centerColor="?attr/recyclerViewItemSelectionMiddleGradientColor"
-                android:endColor="?attr/recyclerViewItemSelectionRightGradientColor" />
+                android:startColor="?attr/recyclerViewItemSelectionGradientLeftColor"
+                android:centerColor="?attr/recyclerViewItemSelectionGradientMiddleColor"
+                android:endColor="?attr/recyclerViewItemSelectionGradientRightColor" />
         </shape>
     </item>
     <item

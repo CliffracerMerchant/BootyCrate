@@ -46,9 +46,9 @@
     </string-array>
 
     <integer-array name="background_gradient">
-        <item>?attr/backgroundGradientColorLeft</item>
-        <item>?attr/backgroundGradientColorMiddle</item>
-        <item>?attr/backgroundGradientColorRight</item>
+        <item>?attr/backgroundGradientLeftColor</item>
+        <item>?attr/backgroundGradientMiddleColor</item>
+        <item>?attr/backgroundGradientRightColor</item>
     </integer-array>
 
     <integer-array name="color_accent">
