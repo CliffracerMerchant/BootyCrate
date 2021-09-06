@@ -7,19 +7,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.android.gms.oss-licenses-plugin'
 
-def keystorePropertiesFile = rootProject.file("keystore.properties")
-def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-
 android {
-    signingConfigs {
-        release {
-            storeFile file(keystoreProperties["storeFile"])
-            storePassword keystoreProperties["storePassword"]
-            keyAlias keystoreProperties["keyAlias"]
-            keyPassword keystoreProperties["keyPassword"]
-        }
-    }
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
     defaultConfig {
@@ -44,7 +32,6 @@ android {
             debuggable false
             minifyEnabled true
             shrinkResources true
-            signingConfig signingConfigs.release
         }
     }
     buildFeatures { viewBinding true }
