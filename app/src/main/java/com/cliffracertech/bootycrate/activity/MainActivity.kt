@@ -44,6 +44,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 @Suppress("LeakingThis")
 open class MainActivity : MultiFragmentActivity() {
     lateinit var ui: MainActivityBinding
+    private var pendingCradleAnim: Animator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setThemeFromPreferences()

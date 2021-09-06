@@ -10,6 +10,7 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.getResourceIdOrThrow
@@ -45,7 +46,7 @@ import kotlin.math.atan
  * Alternatively the background can be set to a Shader instance using the
  * property backgroundGradient.
  */
-open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs) {
+open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
     private var cradleLayout: ViewGroup? = null
     var cradleWidth = 0
         set(value) { field = value
@@ -106,11 +107,15 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : ConstraintLayou
             shapePath: ShapePath
         ) {
             val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin
+
+            // The cradle width is interpolated down to 90% of its full width
             val startEndAdjust = cradleFullWidth * 0.1f * (1f - interpolation)
+
             // start will be the x coordinate of the start of the cradle if cradleTopCornerRadius is zero
             val start = (cradleLayout?.x ?: return) - cradleContentsMargin + startEndAdjust
             val end = start + cradleFullWidth - 2 * startEndAdjust
             val bottom = cradleDepth * interpolation
+
             // To create the appearance of the curve collapsing vertically, x
             // coordinate values will always use the full corner radius values
             // without taking the interpolation into account, while y coordinate
