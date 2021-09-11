@@ -14,10 +14,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.GradientBuilder
-import com.cliffracertech.bootycrate.utils.applyConfig
-import com.cliffracertech.bootycrate.utils.resolveIntAttribute
+import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.view.ActionBarTitle
 import com.cliffracertech.bootycrate.view.GradientVectorDrawable
 
@@ -94,11 +91,13 @@ fun MainActivityBinding.showCheckoutButton(
     // from sticking out underneath the addButton during the animation
     checkoutButton.getDrawingRect(checkoutButtonClipBounds)
     val addButtonHalfWidth = addButton.width / 2
+
     return ValueAnimator.ofFloat(0f, 1f).apply {
         applyConfig(animatorConfig)
         addUpdateListener {
-            bottomAppBar.cradleWidth = cradleStartWidth + (cradleWidthChange * it.animatedFraction).toInt()
             cradleLayout.translationX = cradleStartTransX * (1f - it.animatedFraction)
+            bottomAppBar.cradleWidth = cradleStartWidth + (cradleWidthChange * it.animatedFraction).toInt()
+            bottomAppBar.invalidate()
             checkoutButtonClipBounds.right = addButton.x.toInt() + addButtonHalfWidth
             checkoutButton.clipBounds = checkoutButtonClipBounds
         }
