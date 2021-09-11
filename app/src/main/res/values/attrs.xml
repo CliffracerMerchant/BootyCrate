@@ -22,6 +22,12 @@
     <attr name="foregroundGradientMiddleColor" format="color" />
     <!-- The right color of the foreground gradient. -->
     <attr name="foregroundGradientRightColor" format="color" />
+    <!-- The left color of the indicator gradient. -->
+    <attr name="indicatorGradientLeftColor" format="color" />
+    <!-- The middle color of the indicator gradient. -->
+    <attr name="indicatorGradientMiddleColor" format="color" />
+    <!-- The right color of the indicator gradient. -->
+    <attr name="indicatorGradientRightColor" format="color" />
     <!-- The alpha value used for the checkout button background when it is disabled. -->
     <attr name="checkoutButtonDisabledAlpha" format="integer" />
 
@@ -62,14 +68,14 @@
     </declare-styleable>
 
     <declare-styleable name="BottomAppBarWithIndicator">
-        <!-- The thickness of the indicator. -->
-        <attr name="indicatorThickness" format="dimension" />
+        <!-- The height / thickness of the indicator. -->
+        <attr name="indicatorHeight" format="dimension" />
         <!-- The width of the indicator. -->
-        <attr name="indicatorWidth"     format="dimension" />
+        <attr name="indicatorWidth"  format="dimension" />
         <!-- The initial tint of the indicator. -->
-        <attr name="indicatorTint"      format="color" />
+        <attr name="indicatorTint"   format="color" />
         <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
-        <attr name="navBarResId"        format="reference" />
+        <attr name="navBarResId"     format="reference" />
     </declare-styleable>
 
     <attr name="recyclerViewItemSelectionGradientLeftColor"   format="color" />

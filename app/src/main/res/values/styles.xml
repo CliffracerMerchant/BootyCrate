@@ -38,6 +38,9 @@
         <item name="foregroundGradientLeftColor">@color/colorRecyclerViewItemLight</item>
         <item name="foregroundGradientMiddleColor">@color/colorRecyclerViewItemLight</item>
         <item name="foregroundGradientRightColor">@color/colorRecyclerViewItemLight</item>
+        <item name="indicatorGradientLeftColor">@color/bootyCrateItemColor11</item>
+        <item name="indicatorGradientMiddleColor">@color/bootyCrateItemColor11</item>
+        <item name="indicatorGradientRightColor">@color/bootyCrateItemColor11</item>
         <item name="recyclerViewItemSelectionGradientLeftColor">@color/lightThemeBgGradientLeft</item>
         <item name="recyclerViewItemSelectionGradientMiddleColor">@color/lightThemeBgGradientMiddle</item>
         <item name="recyclerViewItemSelectionGradientRightColor">@color/lightThemeBgGradientRight</item>

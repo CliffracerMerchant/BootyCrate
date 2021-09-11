@@ -210,8 +210,8 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     private lateinit var navBar: BottomNavigationView
     private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
     var indicatorWidth = 0
-    var indicatorThickness get() = indicatorPaint.strokeWidth
-                           set(value) { indicatorPaint.strokeWidth = value }
+    var indicatorHeight get() = indicatorPaint.strokeWidth
+                        set(value) { indicatorPaint.strokeWidth = value }
     var indicatorTint: Int get() = indicatorPaint.color
                             set(value) { indicatorPaint.color = value }
     var indicatorGradient get() = indicatorPaint.shader
@@ -223,7 +223,7 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBarWithIndicator)
-        indicatorThickness = a.getDimension(R.styleable.BottomAppBarWithIndicator_indicatorThickness, 0f)
+        indicatorHeight = a.getDimension(R.styleable.BottomAppBarWithIndicator_indicatorHeight, 0f)
         indicatorWidth = a.getDimensionPixelOffset(R.styleable.BottomAppBarWithIndicator_indicatorWidth, 0)
         indicatorPaint.color = a.getColor(R.styleable.BottomAppBarWithIndicator_indicatorTint,
                                           ContextCompat.getColor(context, android.R.color.black))

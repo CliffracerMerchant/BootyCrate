@@ -118,7 +118,11 @@ fun MainActivityBinding.showCheckoutButton(
  * and foregroundGradientRightColor. The background gradient (smaller subsets
  * of which are used as the backgrounds for the checkout and add buttons) is
  * made from the colors backgroundGradientLeftColor, backgroundGradientMiddleColor,
- * and backgroundGradientRightColor.
+ * and backgroundGradientRightColor. The gradient used for the indicator of the
+ * bottom navigation bar is recommended to be the same as the foreground
+ * gradient for thematic consistency, but can be changed through the properties
+ * indicatorGradientLeftColor, indicatorGradientMiddleColor, and indicatorGradientRightColor
+ * if needed for better visibility.
  */
 fun MainActivity.initGradientStyle() {
     val screenWidth = resources.displayMetrics.widthPixels
@@ -130,14 +134,19 @@ fun MainActivity.initGradientStyle() {
     val bgColors = intArrayOf(theme.resolveIntAttribute(R.attr.backgroundGradientLeftColor),
                               theme.resolveIntAttribute(R.attr.backgroundGradientMiddleColor),
                               theme.resolveIntAttribute(R.attr.backgroundGradientRightColor))
+    val indicatorColors = intArrayOf(theme.resolveIntAttribute(R.attr.indicatorGradientLeftColor),
+                                     theme.resolveIntAttribute(R.attr.indicatorGradientMiddleColor),
+                                     theme.resolveIntAttribute(R.attr.indicatorGradientRightColor))
 
     val fgGradientBuilder = GradientBuilder(x2 = screenWidth.toFloat(), colors = fgColors)
     val fgGradientShader = fgGradientBuilder.buildLinearGradient()
     ui.bottomAppBar.indicatorGradient = fgGradientShader
 
     val bgGradientBuilder = fgGradientBuilder.copy(colors  = bgColors)
-    val bgGradientShader = bgGradientBuilder.buildLinearGradient()
-    ui.bottomAppBar.backgroundGradient = bgGradientShader
+    ui.bottomAppBar.backgroundGradient = bgGradientBuilder.buildLinearGradient()
+
+    ui.bottomAppBar.indicatorGradient = fgGradientBuilder
+        .copy(colors  = indicatorColors).buildLinearGradient()
 
     val paint = Paint()
     paint.style = Paint.Style.FILL
