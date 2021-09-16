@@ -74,11 +74,13 @@
         <item name="titleFont">@font/comfortaa</item>
         <item name="android:text">@string/app_name</item>
         <item name="android:alpha">0</item>
+        <item name="android:visibility">gone</item>
     </style>
 
     <style name="SettingsButton">
         <item name="android:padding">12dp</item>
         <item name="android:alpha">0</item>
+        <item name="android:visibility">gone</item>
         <item name="android:contentDescription">@string/settings_description</item>
         <item name="srcCompat">@drawable/ic_baseline_settings_24</item>
     </style>
