@@ -21,7 +21,7 @@ import androidx.core.graphics.PathParser
  * ground gradient that "shows through" certain UI components) due to its use
  * of the paint.shader property.
  */
-open class GradientVectorDrawable(
+class GradientVectorDrawable(
     private val pathWidth: Float,
     private val pathHeight: Float,
     pathData: String
@@ -54,6 +54,24 @@ open class GradientVectorDrawable(
         if (paint.style != Paint.Style.STROKE || paint.strokeWidth != 0f)
             canvas.drawPath(path, paint)
     }
+
+    override fun setAlpha(alpha: Int) { paint.alpha = alpha }
+
+    override fun setColorFilter(colorFilter: ColorFilter?) { paint.colorFilter = colorFilter }
+
+    override fun getOpacity(): Int = when (paint.alpha) { 0    -> PixelFormat.TRANSPARENT
+                                                          255  -> PixelFormat.OPAQUE
+                                                          else -> PixelFormat.TRANSLUCENT }
+}
+
+/** A simple drawable that draws the path described by its property path. Both
+ * the path and the paint used to draw the path (accessed through the property
+ * paint) are fully public in order to allow for easy customization. */
+class PathDrawable() : Drawable() {
+    var paint = Paint()
+    val path = Path()
+
+    override fun draw(canvas: Canvas) = canvas.drawPath(path, paint)
 
     override fun setAlpha(alpha: Int) { paint.alpha = alpha }
 

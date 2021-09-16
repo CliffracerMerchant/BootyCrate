@@ -41,7 +41,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
                         ui.settingsButton.isVisible = slideOffset != 0f
                         ui.settingsButton.alpha = slideOffset
 
-                        ui.bottomAppBar.cradleInterpolation = 1f - slideOffset
+                        ui.bottomAppBar.interpolation = 1f - slideOffset
                         ui.bottomAppBar.indicatorAlpha = 1f - slideOffset
                         ui.cradleLayout.alpha = 1f - slideOffset
                         ui.cradleLayout.scaleX = 1f - 0.1f * slideOffset

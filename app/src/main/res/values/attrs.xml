@@ -55,6 +55,8 @@
     </declare-styleable>
 
     <declare-styleable name="BottomAppBar">
+        <!-- The corner radius of the top left and top right corners. -->
+        <attr name="topCornerRadii"           format="dimension" />
         <!-- The depth of the BottomAppBar cradle. -->
         <attr name="cradleDepth"              format="dimension" />
         <!-- The radius of the cradle curved top corners. -->

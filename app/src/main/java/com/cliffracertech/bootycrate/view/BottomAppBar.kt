@@ -10,21 +10,18 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.getResourceIdOrThrow
-import androidx.core.graphics.withClip
 import androidx.core.view.doOnNextLayout
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
+import com.cliffracertech.bootycrate.utils.findIndex
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.shape.EdgeTreatment
-import com.google.android.material.shape.MaterialShapeDrawable
-import com.google.android.material.shape.ShapeAppearanceModel
-import com.google.android.material.shape.ShapePath
-import kotlin.math.atan
+import com.google.android.material.shape.*
+import kotlin.math.*
 
 /**
  * A custom toolbar that has a cutout in its top edge to hold the contents of a layout.
@@ -40,6 +37,10 @@ import kotlin.math.atan
  * cradleDepth, cradleTopCornerRadius, cradleBottomCornerRadius, and
  * cradleContentsMargin.
  *
+ * In addition to the cradle cutout, BottomAppBar also styles its top left
+ * and top right corners with rounded corners with a radius equal to the
+ * value of the XML attr topCornerRadii.
+ *
  * Like the Material library BottomAppBar, BottomAppBar manages its own
  * background. In order to tint the background a solid color, the property
  * backgroundTint can be set in XML or programmatically to an int color code.
@@ -48,28 +49,27 @@ import kotlin.math.atan
  */
 open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
     private var cradleLayout: ViewGroup? = null
+    var interpolation = 1f
+        set(value) { field = value; invalidate() }
+    var topCornerRadii = 0f
+        set(value) { field = value; invalidate() }
     var cradleWidth = 0
-        set(value) { field = value
-                     materialShapeDrawable.invalidateSelf() }
+        set(value) { field = value; invalidate() }
     var cradleDepth: Int
     var cradleTopCornerRadius: Int
     var cradleBottomCornerRadius: Int
     var cradleContentsMargin: Int
 
-    var cradleInterpolation get() = materialShapeDrawable.interpolation
-        set(value) { materialShapeDrawable.interpolation = value }
-    private val materialShapeDrawable = MaterialShapeDrawable()
-    protected val outlinePath = Path()
-    protected val topEdgePath = Path()
+    protected val drawable = PathDrawable()
 
-    protected val backgroundPaint = Paint().apply { style = Paint.Style.FILL }
-    var backgroundTint: Int get() = backgroundPaint.color
-                            set(value) { backgroundPaint.color = value }
-    var backgroundGradient get() = backgroundPaint.shader
-                           set(value) { backgroundPaint.shader = value }
+    var backgroundTint: Int get() = drawable.paint.color
+                            set(value) { drawable.paint.color = value }
+    var backgroundGradient get() = drawable.paint.shader
+                           set(value) { drawable.paint.shader = value }
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
+        topCornerRadii = a.getDimension(R.styleable.BottomAppBar_topCornerRadii, 0f)
         cradleDepth = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleDepth, 0)
         cradleTopCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleTopCornerRadius, 0)
         cradleBottomCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0)
@@ -79,114 +79,89 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
                                     ContextCompat.getColor(context, android.R.color.white))
         a.recycle()
 
-        materialShapeDrawable.shapeAppearanceModel =
-            ShapeAppearanceModel.builder().setTopEdge(CradleTopEdgeTreatment()).build()
-        background = materialShapeDrawable
-        @Suppress("LeakingThis") setWillNotDraw(false)
-        doOnNextLayout { cradleLayout = findViewById(cradleLayoutResId) }
+        background = drawable
+        doOnNextLayout {
+            cradleLayout = findViewById(cradleLayoutResId)
+            invalidate()
+        }
     }
 
-    override fun onDraw(canvas: Canvas?) {
-        if (canvas == null) return
-        canvas.drawPath(outlinePath, backgroundPaint)
-    }
+    private val curvePaint = Paint().apply { style = Paint.Style.STROKE
+                                             strokeWidth = 8f
+                                             alpha = 30 }
 
-    private val arcQuarter = 90f
     private val angleDown = 90f
     private val angleUp = 270f
 
-    /** An EdgeTreatment used to draw a cradle cutout for the BottomAppBar.
-     *
-     *  CradleTopEdgeTreatment's getEdgePath draws a cutout shape for the BottomAppBar
-     *  to hold the contents of the BottomAppBar's cradle layout. */
-    inner class CradleTopEdgeTreatment : EdgeTreatment() {
-        override fun getEdgePath(
-            length: Float,
-            center: Float,
-            interpolation: Float,
-            shapePath: ShapePath
-        ) {
-            val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin
+    private fun Path.arcTo(
+        centerX: Float, centerY: Float,
+        radius: Float,
+        startAngle: Float, sweepAngle: Float,
+    ) = arcTo(centerX - radius, centerY - radius,
+              centerX + radius, centerY + radius,
+              startAngle, sweepAngle, false)
 
+    override fun invalidate() = drawable.path.run {
+        rewind()
+        moveTo(0f, topCornerRadii)
+        arcTo(centerX = topCornerRadii,
+              centerY = topCornerRadii,
+              radius = topCornerRadii,
+              startAngle = angleLeft,
+              sweepAngle = 90f)
+
+        if (interpolation > 0.01f) {
+            val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin
             // The cradle width is interpolated down to 90% of its full width
             val startEndAdjust = cradleFullWidth * 0.1f * (1f - interpolation)
+            val cradleLayoutX = cradleLayout?.x ?: return@run
 
             // start will be the x coordinate of the start of the cradle if cradleTopCornerRadius is zero
-            val start = (cradleLayout?.x ?: return) - cradleContentsMargin + startEndAdjust
+            val start = cradleLayoutX - cradleContentsMargin + startEndAdjust
             val end = start + cradleFullWidth - 2 * startEndAdjust
-            val bottom = cradleDepth * interpolation
+            val yDistance = cradleDepth * interpolation
 
-            // To create the appearance of the curve collapsing vertically, x
-            // coordinate values will always use the full corner radius values
-            // without taking the interpolation into account, while y coordinate
-            // values will use these interpolated corner radius values instead.
-            val interpedTopCornerRadius = cradleTopCornerRadius * interpolation
-            val interpedBottomCornerRadius = cradleBottomCornerRadius * interpolation
+            val topRadiusFraction = cradleTopCornerRadius.toFloat() / (cradleTopCornerRadius + cradleBottomCornerRadius)
+            val topCurveYDistance = topRadiusFraction * yDistance
 
-            // If the top and bottom corner radii combined are less than the cradle depth,
-            // there will be vertical sides to the cradle. Conversely, if the top and bottom
-            // corner radii add up to more than the cradle depth, then the sweep angles of
-            // the top and bottom corners will be less than the full ninety degrees.
-            val cradleVerticalSideLength = bottom - cradleTopCornerRadius - cradleBottomCornerRadius
+            val sweepAngleRads = Math.PI / 2 - asin(1.0 - topCurveYDistance / cradleTopCornerRadius).coerceIn(0.0, 90.0)
+            val topCurveXDistance = cradleTopCornerRadius * cos(Math.PI / 2 - sweepAngleRads).toFloat()
+            val bottomCurveXDistance = cradleBottomCornerRadius * cos(Math.PI / 2 - sweepAngleRads).toFloat()
 
-            val topCornerArc =
-                if (cradleVerticalSideLength < 0) {
-                    val distanceX = cradleTopCornerRadius.toDouble()
-                    val distanceY = -cradleVerticalSideLength.toDouble()
-                    val offset = Math.toDegrees(atan(distanceY / distanceX))
-                    (arcQuarter - offset.toFloat()).coerceAtMost(90f)
-                } else arcQuarter
-            val bottomCornerArc =
-                if (cradleVerticalSideLength < 0) {
-                    val distanceX = cradleBottomCornerRadius.toDouble()
-                    val distanceY = -cradleVerticalSideLength.toDouble()
-                    val offset = Math.toDegrees(atan(distanceY / distanceX))
-                    (offset.toFloat() - arcQuarter).coerceAtLeast(-90f)
-                } else -arcQuarter
+            val sweepAngle = Math.toDegrees(sweepAngleRads).toFloat()
 
-            shapePath.apply {
-                lineTo(start - cradleTopCornerRadius, 0f)
-                addArc(/*left*/       start - 2 * cradleTopCornerRadius,
-                       /*top*/        0f,
-                       /*right*/      start,
-                       /*bottom*/     2 * interpedTopCornerRadius,
-                       /*startAngle*/ angleUp,
-                       /*sweepAngle*/ topCornerArc)
-                if (cradleVerticalSideLength > 0)
-                    lineTo(start, bottom - interpedBottomCornerRadius)
-                addArc(/*left*/       start,
-                       /*top*/        bottom - 2 * interpedBottomCornerRadius,
-                       /*right*/      start + 2 * cradleBottomCornerRadius,
-                       /*bottom*/     bottom,
-                       /*startAngle*/ angleDown + topCornerArc,
-                       /*sweepAngle*/ bottomCornerArc)
-                lineTo(end - cradleBottomCornerRadius, bottom)
-                addArc(/*left*/       end - 2 * cradleBottomCornerRadius,
-                       /*top*/        bottom - 2 * interpedBottomCornerRadius,
-                       /*right*/      end,
-                       /*bottom*/     bottom,
-                       /*startAngle*/ angleDown,
-                       /*sweepAngle*/ bottomCornerArc)
-                if (cradleVerticalSideLength > 0)
-                    lineTo(end, bottom - interpedBottomCornerRadius)
-                addArc(/*left*/       end,
-                       /*top*/        0f,
-                       /*right*/      end + 2 * cradleTopCornerRadius,
-                       /*bottom*/     2 * interpedTopCornerRadius,
-                       /*startAngle*/ angleUp + bottomCornerArc,
-                       /*sweepAngle*/ topCornerArc)
-
-                lineTo(width.toFloat(), 0f)
-            }
-            // Copy the shapePath to topEdgePath and outlinePath, and additionally
-            // finish the outlinePath so that it goes all the way around the view.
-            topEdgePath.rewind()
-            shapePath.applyToPath(Matrix(), topEdgePath)
-            outlinePath.set(topEdgePath)
-            outlinePath.lineTo(length, height.toFloat())
-            outlinePath.lineTo(0f, height.toFloat())
-            outlinePath.close()
-        }
+            lineTo(start - cradleTopCornerRadius, 0f)
+            arcTo(centerX =    start - topCurveXDistance,
+                  centerY =    cradleTopCornerRadius.toFloat(),
+                  radius =     cradleTopCornerRadius.toFloat(),
+                  startAngle = angleUp,
+                  sweepAngle = sweepAngle)
+            arcTo(centerX =    start + bottomCurveXDistance,
+                  centerY =    yDistance - cradleBottomCornerRadius,
+                  radius =     cradleBottomCornerRadius.toFloat(),
+                  startAngle = angleDown + sweepAngle,
+                  sweepAngle = -sweepAngle)
+            arcTo(centerX =    end - bottomCurveXDistance,
+                  centerY =    yDistance - cradleBottomCornerRadius,
+                  radius =     cradleBottomCornerRadius.toFloat(),
+                  startAngle = angleDown,
+                  sweepAngle = -sweepAngle)
+            arcTo(centerX =    end + topCurveXDistance,
+                  centerY =    cradleTopCornerRadius.toFloat(),
+                  radius =     cradleTopCornerRadius.toFloat(),
+                  startAngle = angleUp - sweepAngle,
+                  sweepAngle = sweepAngle)
+    }
+        lineTo(width - topCornerRadii, 0f)
+        arcTo(centerX = width - topCornerRadii,
+              centerY = topCornerRadii,
+              radius = topCornerRadii,
+              startAngle = angleUp,
+              sweepAngle = 90f)
+        lineTo(width.toFloat(), height.toFloat())
+        lineTo(0f, height.toFloat())
+        close()
+        super.invalidate()
     }
 }
 
@@ -198,7 +173,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
  * can be moved to be above a given nav bar menu item by calling the function
  * moveIndicatorToNavBarItem with the id of the menu item. The BottomNavigationView
  * must be referenced through the XML attribute navBarResId, and must be a
- * descendant of the BottomAppBarWithIndicator. The XML attributes indicatorThickness
+ * descendant of the BottomAppBarWithIndicator. The XML attributes indicatorHeight
  * and indicatorWidth are used to define the dimensions of the indicator.
  * Besides a solid color tint, the indicator can also be painted with a Shader
  * object using the property indicatorGradient.
@@ -258,7 +233,7 @@ class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
         canvas?.withClip(indicatorXPos, 0, indicatorXPos + indicatorWidth, bottom) {
-            drawPath(topEdgePath, indicatorPaint)
+            //drawPath(topEdgePath, indicatorPaint)
         }
     }
 }
