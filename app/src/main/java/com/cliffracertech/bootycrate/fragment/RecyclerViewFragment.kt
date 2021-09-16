@@ -43,9 +43,8 @@ import java.util.*
  * The value of the open property actionModeCallback will be used as the
  * callback when an action mode is started. Subclasses can override it with a
  * with a descendant of SelectionActionModeCallback if they wish to perform
- * work when the action action mode starts or finishes.
+ * work when the action mode starts or finishes.
  */
-@Suppress("LeakingThis")
 abstract class RecyclerViewFragment<T: BootyCrateItem> :
     Fragment(), MainActivity.MainActivityFragment
 {
@@ -58,8 +57,6 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
     private var actionBar: RecyclerViewActionBar? = null
     private val actionModeIsStarted get() = actionBar?.actionMode?.callback == actionModeCallback
     private val searchIsActive get() = actionBar?.activeSearchQuery != null
-
-    init { setHasOptionsMenu(true) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
