@@ -61,6 +61,12 @@
         <attr name="navBarResId"              format="reference" />
         <!-- The corner radius of the top left and top right corners. -->
         <attr name="topOuterCornerRadius"     format="dimension" />
+        <!-- The color used as the background tint, if no background gradient is set. -->
+        <attr name="backgroundTint"           format="color" />
+
+        <!-- The interpolation of the cradle; the valid range is [0f, 1f].
+        0f implies a straight line, while 1f implies a fully drawn cradle. -->
+        <attr name="cradleInterpolation"      format="float" />
         <!-- The depth of the BottomAppBar cradle. -->
         <attr name="cradleDepth"              format="dimension" />
         <!-- The radius of the cradle curved top corners. -->
@@ -69,14 +75,15 @@
         <attr name="cradleBottomCornerRadius" format="dimension" />
         <!-- The margin in between the cradle and the cradle layout contents. -->
         <attr name="cradleContentsMargin"     format="dimension" />
-        <!-- The color used as the background tint, if no background gradient is set. -->
-        <attr name="backgroundTint"           format="color" />
+
         <!-- The height / thickness of the indicator. -->
         <attr name="indicatorHeight"          format="dimension" />
         <!-- The width of the indicator. -->
         <attr name="indicatorWidth"           format="dimension" />
         <!-- The initial tint of the indicator. -->
         <attr name="indicatorTint"            format="color" />
+        <!-- The initial alpha of the indicator in the range [0f, 1f] -->
+        <attr name="indicatorAlpha"           format="float" />
 
     </declare-styleable>
 

@@ -24,16 +24,21 @@ import kotlin.math.*
 /**
  * A custom toolbar that has a cutout in its top edge to hold the contents of a layout.
  *
- * BottomAppBar functions mostly as a regular Toolbar, except that its custom
- * CradleTopEdgeTreatment used on its top edge gives it a cutout in its shape
- * that can be used to hold the contents of a layout. The layout in question
- * must be referenced by the XML attribute cradleLayoutResId, and must be a
- * child of the BottomAppBar. The activity or fragment that uses a BottomAppbar
- * is responsible for setting the correct on screen position of the cradle
- * layout contents. This being the case, BottomAppBar will draw the cradle
- * around the cradle layout using the values of the parameters cradleWidth,
- * cradleDepth, cradleTopCornerRadius, cradleBottomCornerRadius, and
- * cradleContentsMargin.
+ * BottomAppBar functions mostly as a regular Toolbar, except that it draws a
+ * cutout in its shape that can be used to hold the contents of a child layout,
+ * and it draws an indicator along its top edge (taking into account the cradle
+ * cutout) that can be set to match the position of a child BottomNavigationView
+ * item. The layout that holds the cradle contents must be referenced by the XML
+ * attribute cradleLayoutResId, and must be a child of the BottomAppBar.
+ * Likewise, the BottomNavigationView must be referenced by the XML attribute
+ * navBarResId.
+ *
+ * BottomAppBar contains a member, cradle, that holds the values (e.g. width)
+ * that describe how to draw the cradle around the cradle layout contents. See
+ * the inner class Cradle documentation for a description of these properties
+ * and the corresponding XML attributes that they are initialized with.
+ * Likewise, the values relating to the indicator are held in the member
+ * indicator, an instance of the inner class Indicator.
  *
  * In addition to the cradle cutout, BottomAppBar also styles its top left
  * and top right corners with rounded corners with a radius equal to the
@@ -71,6 +76,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         backgroundTint = a.getColor(R.styleable.BottomAppBar_backgroundTint,
                                     ContextCompat.getColor(context, android.R.color.white))
 
+        cradle.interpolation = a.getFloat(R.styleable.BottomAppBar_cradleInterpolation, 1f)
         cradle.depth = a.getDimension(R.styleable.BottomAppBar_cradleDepth, 0f)
         cradle.topCornerRadius = a.getDimension(R.styleable.BottomAppBar_cradleTopCornerRadius, 0f)
         cradle.bottomCornerRadius = a.getDimension(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0f)
@@ -78,6 +84,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
 
         indicator.height = a.getDimension(R.styleable.BottomAppBar_indicatorHeight, 0f)
         indicator.width = a.getDimension(R.styleable.BottomAppBar_indicatorWidth, 0f)
+        indicator.alpha = a.getFloat(R.styleable.BottomAppBar_indicatorAlpha, 1f)
         indicator.tint = a.getColor(R.styleable.BottomAppBar_indicatorTint,
                                     ContextCompat.getColor(context, android.R.color.black))
 
@@ -137,6 +144,28 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         invalidate()
     }
 
+    /** A state holder that stores values that describe how to draw a cradle
+     * cutout on a path.
+     *
+     * Cradle stores the following publicly accessible values that describe how
+     * it draws it cradle on a Path instance:
+     *
+     * - interpolation: Initialized using the XML attribute cradleInterpolation.
+     *      The interpolation value for the cradle. The valid range is 0f - 1f.
+     *      A value of 0f will result in a straight line, while a value of 1f
+     *      will fully draw the cradle.
+     * - width: Initialized using the XML attribute cradleWidth.
+     *      The contents width of the cradle. This value is publicly accessible
+     *      so that it can be used in animations.
+     * - depth: Initialized using the XML attribute cradleDepth.
+     *      The full depth of the cradle, when interpolation is 1f.
+     * - contentsMargin: Initialized using the XML attribute cradleContentsMargin.
+     *      The margin in between the cradle cutout and its contents.
+     * - topCornerRadius: Initialized using the XML attribute cradleTopCornerRadius.
+     *      The radius of the top-left and top-right corners of the cradle cutout.
+     * - bottomCornerRadius: Initialized using the XML attribute cradleBottomCornerRadius.
+     *      The radius of the bottom-left and bottom-right corners of the cradle cutout.
+    */
     inner class Cradle {
         private var _totalLength = 0f
         private var _totalWidth = 0f
@@ -165,7 +194,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             // The cradle width is interpolated down to 90% of its full width
             val startEndAdjust = fullWidth * 0.1f * (1f - interpolation)
 
-            // start will be the x coordinate of the start of the cradle if cradleTopCornerRadius is zero
+            // start will be the x coordinate of the start of the cradle if topCornerRadius is zero
             val start = layoutX - contentsMargin + startEndAdjust
             val end = start + fullWidth - 2 * startEndAdjust
             val yDistance = depth * interpolation
@@ -209,6 +238,31 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         }
     }
 
+    /** A state holder that stores values that describe how to draw the navigation indicator.
+     *
+     * Indicator provides the function moveToNavBarItem that, when called with
+     * the id of an item in the outer BottomAppBar's navigationView member,
+     * will animate the indicator from its current location to a new location
+     * that is above the menu item. It also stores the following publicly
+     * accessible values that describe how it draws its indicator on a
+     * BottomAppBar instance:
+     *
+     * - animatorConfig: Not initializable through XML.
+     *      If not null, the value of animatorConfig will be used in indicator
+     *      animations when calling moveToNavBarItem with animate == true.
+     * - width: Initialized using the XML attribute indicatorWidth.
+     *      The width of the indicator.
+     * - height: Initialized using the XML attribute indicatorHeight.
+     *      The height / thickness of the indicator.
+     * - alpha: Initialized using the XML attribute indicatorAlpha.
+     *      The alpha value used when drawing the indicator, with a valid range of 0f - 1f.
+     * - tint: Initialized using the XML attribute indicatorTint.
+     *      The tint used when drawing the indicator. tint will
+     *      be overridden by indicatorGradient if it is not null.
+     * - gradient: Not initializable through XML.
+     *      The gradient used when drawing the indicator. gradient will
+     *      override the value of tint if gradient is not null.
+     */
     inner class Indicator() {
         private val path = Path()
         private val pathMeasure = PathMeasure()
