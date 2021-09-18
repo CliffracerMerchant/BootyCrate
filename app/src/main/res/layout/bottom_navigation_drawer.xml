@@ -10,7 +10,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
-    <com.cliffracertech.bootycrate.view.BottomAppBarWithIndicator
+    <com.cliffracertech.bootycrate.view.BottomAppBar
         android:id="@+id/bottomAppBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
@@ -63,7 +63,7 @@
 
         </com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx>
 
-    </com.cliffracertech.bootycrate.view.BottomAppBarWithIndicator>
+    </com.cliffracertech.bootycrate.view.BottomAppBar>
 
     <TextView
         android:id="@+id/appTitle"

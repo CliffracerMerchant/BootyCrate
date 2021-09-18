@@ -10,7 +10,6 @@ import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.getResourceIdOrThrow
@@ -18,7 +17,6 @@ import androidx.core.view.doOnNextLayout
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
-import com.cliffracertech.bootycrate.utils.findIndex
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.shape.*
 import kotlin.math.*
@@ -39,7 +37,7 @@ import kotlin.math.*
  *
  * In addition to the cradle cutout, BottomAppBar also styles its top left
  * and top right corners with rounded corners with a radius equal to the
- * value of the XML attr topCornerRadii.
+ * value of the XML attr topOuterCornerRadius.
  *
  * Like the Material library BottomAppBar, BottomAppBar manages its own
  * background. In order to tint the background a solid color, the property
@@ -47,20 +45,18 @@ import kotlin.math.*
  * Alternatively the background can be set to a Shader instance using the
  * property backgroundGradient.
  */
-open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
-    private var cradleLayout: ViewGroup? = null
-    var interpolation = 1f
-        set(value) { field = value; invalidate() }
-    var topCornerRadii = 0f
-        set(value) { field = value; invalidate() }
-    var cradleWidth = 0
-        set(value) { field = value; invalidate() }
-    var cradleDepth: Int
-    var cradleTopCornerRadius: Int
-    var cradleBottomCornerRadius: Int
-    var cradleContentsMargin: Int
+class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
 
-    protected val drawable = PathDrawable()
+    private val drawable = PathDrawable()
+    private var navBar: BottomNavigationView? = null
+    private var _topOuterCornerRadius = 0f
+    private var topOuterCornerArcLength = 0f
+
+    val cradle = Cradle()
+    val indicator = Indicator()
+
+    var topOuterCornerRadius get() = _topOuterCornerRadius
+                             set(value) = setTopCornerRadiusPrivate(value)
 
     var backgroundTint: Int get() = drawable.paint.color
                             set(value) { drawable.paint.color = value }
@@ -69,28 +65,35 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
-        topCornerRadii = a.getDimension(R.styleable.BottomAppBar_topCornerRadii, 0f)
-        cradleDepth = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleDepth, 0)
-        cradleTopCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleTopCornerRadius, 0)
-        cradleBottomCornerRadius = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0)
-        cradleContentsMargin = a.getDimensionPixelOffset(R.styleable.BottomAppBar_cradleContentsMargin, 0)
         val cradleLayoutResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_cradleLayoutResId)
+        val navBarResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_navBarResId)
+        topOuterCornerRadius = a.getDimension(R.styleable.BottomAppBar_topOuterCornerRadius, 0f)
         backgroundTint = a.getColor(R.styleable.BottomAppBar_backgroundTint,
                                     ContextCompat.getColor(context, android.R.color.white))
-        a.recycle()
 
+        cradle.depth = a.getDimension(R.styleable.BottomAppBar_cradleDepth, 0f)
+        cradle.topCornerRadius = a.getDimension(R.styleable.BottomAppBar_cradleTopCornerRadius, 0f)
+        cradle.bottomCornerRadius = a.getDimension(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0f)
+        cradle.contentsMargin = a.getDimension(R.styleable.BottomAppBar_cradleContentsMargin, 0f)
+
+        indicator.height = a.getDimension(R.styleable.BottomAppBar_indicatorHeight, 0f)
+        indicator.width = a.getDimension(R.styleable.BottomAppBar_indicatorWidth, 0f)
+        indicator.tint = a.getColor(R.styleable.BottomAppBar_indicatorTint,
+                                    ContextCompat.getColor(context, android.R.color.black))
+
+        a.recycle()
+        setWillNotDraw(false)
         background = drawable
         doOnNextLayout {
-            cradleLayout = findViewById(cradleLayoutResId)
+            cradle.initLayout(cradleLayoutResId)
+            navBar = findViewById(navBarResId)
             invalidate()
+            navBar?.let { indicator.moveToNavBarItem(it.selectedItemId, animate = false) }
         }
     }
 
-    private val curvePaint = Paint().apply { style = Paint.Style.STROKE
-                                             strokeWidth = 8f
-                                             alpha = 30 }
-
     private val angleDown = 90f
+    private val angleLeft = 180f
     private val angleUp = 270f
 
     private fun Path.arcTo(
@@ -103,65 +106,170 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
 
     override fun invalidate() = drawable.path.run {
         rewind()
-        moveTo(0f, topCornerRadii)
-        arcTo(centerX = topCornerRadii,
-              centerY = topCornerRadii,
-              radius = topCornerRadii,
+        moveTo(0f, topOuterCornerRadius)
+        arcTo(centerX = topOuterCornerRadius,
+              centerY = topOuterCornerRadius,
+              radius = topOuterCornerRadius,
               startAngle = angleLeft,
               sweepAngle = 90f)
-
-        if (interpolation > 0.01f) {
-            val cradleFullWidth = cradleWidth + 2 * cradleContentsMargin
-            // The cradle width is interpolated down to 90% of its full width
-            val startEndAdjust = cradleFullWidth * 0.1f * (1f - interpolation)
-            val cradleLayoutX = cradleLayout?.x ?: return@run
-
-            // start will be the x coordinate of the start of the cradle if cradleTopCornerRadius is zero
-            val start = cradleLayoutX - cradleContentsMargin + startEndAdjust
-            val end = start + cradleFullWidth - 2 * startEndAdjust
-            val yDistance = cradleDepth * interpolation
-
-            val topRadiusFraction = cradleTopCornerRadius.toFloat() / (cradleTopCornerRadius + cradleBottomCornerRadius)
-            val topCurveYDistance = topRadiusFraction * yDistance
-
-            val sweepAngleRads = Math.PI / 2 - asin(1.0 - topCurveYDistance / cradleTopCornerRadius).coerceIn(0.0, 90.0)
-            val topCurveXDistance = cradleTopCornerRadius * cos(Math.PI / 2 - sweepAngleRads).toFloat()
-            val bottomCurveXDistance = cradleBottomCornerRadius * cos(Math.PI / 2 - sweepAngleRads).toFloat()
-
-            val sweepAngle = Math.toDegrees(sweepAngleRads).toFloat()
-
-            lineTo(start - cradleTopCornerRadius, 0f)
-            arcTo(centerX =    start - topCurveXDistance,
-                  centerY =    cradleTopCornerRadius.toFloat(),
-                  radius =     cradleTopCornerRadius.toFloat(),
-                  startAngle = angleUp,
-                  sweepAngle = sweepAngle)
-            arcTo(centerX =    start + bottomCurveXDistance,
-                  centerY =    yDistance - cradleBottomCornerRadius,
-                  radius =     cradleBottomCornerRadius.toFloat(),
-                  startAngle = angleDown + sweepAngle,
-                  sweepAngle = -sweepAngle)
-            arcTo(centerX =    end - bottomCurveXDistance,
-                  centerY =    yDistance - cradleBottomCornerRadius,
-                  radius =     cradleBottomCornerRadius.toFloat(),
-                  startAngle = angleDown,
-                  sweepAngle = -sweepAngle)
-            arcTo(centerX =    end + topCurveXDistance,
-                  centerY =    cradleTopCornerRadius.toFloat(),
-                  radius =     cradleTopCornerRadius.toFloat(),
-                  startAngle = angleUp - sweepAngle,
-                  sweepAngle = sweepAngle)
-    }
-        lineTo(width - topCornerRadii, 0f)
-        arcTo(centerX = width - topCornerRadii,
-              centerY = topCornerRadii,
-              radius = topCornerRadii,
+        cradle.addTo(this)
+        arcTo(centerX = width - topOuterCornerRadius,
+              centerY = topOuterCornerRadius,
+              radius = topOuterCornerRadius,
               startAngle = angleUp,
               sweepAngle = 90f)
         lineTo(width.toFloat(), height.toFloat())
         lineTo(0f, height.toFloat())
         close()
         super.invalidate()
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+        indicator.draw(canvas)
+    }
+
+    private fun setTopCornerRadiusPrivate(radius: Float) {
+        _topOuterCornerRadius = radius
+        // Since circumference of a circle = 2*pi*r,
+        // a quarter circle circumference = 2*pi*r / 4 = pi/2 * r
+        topOuterCornerArcLength = (radius * Math.PI / 2.0).toFloat()
+        invalidate()
+    }
+
+    inner class Cradle {
+        private var _totalLength = 0f
+        private var _totalWidth = 0f
+        private var _startXPos = 0f
+        private var layout: ViewGroup? = null
+
+        val totalWidth get() = _totalWidth
+        val totalLength get() = _totalLength
+        val startXPos get() = _startXPos
+
+        var interpolation = 1f
+        var width = 0f
+        var depth = 0f
+        var contentsMargin = 0f
+        var topCornerRadius = 0f
+        var bottomCornerRadius = 0f
+
+        fun initLayout(cradleLayoutResId: Int) {
+            layout = findViewById(cradleLayoutResId)
+        }
+
+        fun addTo(path: Path) = path.apply {
+            if (interpolation < 0.01f) return@apply
+            val layoutX = layout?.x ?: return@apply
+            val fullWidth = width + 2 * contentsMargin
+            // The cradle width is interpolated down to 90% of its full width
+            val startEndAdjust = fullWidth * 0.1f * (1f - interpolation)
+
+            // start will be the x coordinate of the start of the cradle if cradleTopCornerRadius is zero
+            val start = layoutX - contentsMargin + startEndAdjust
+            val end = start + fullWidth - 2 * startEndAdjust
+            val yDistance = depth * interpolation
+
+            val topRadiusFraction = topCornerRadius / (topCornerRadius + bottomCornerRadius)
+            val topCurveYDistance = topRadiusFraction * yDistance
+
+            val sweepAngleRads = Math.PI / 2 - asin(1.0 - topCurveYDistance / topCornerRadius).coerceIn(0.0, 90.0)
+            val topCurveXDistance = topCornerRadius * cos(Math.PI / 2 - sweepAngleRads).toFloat()
+            val bottomCurveXDistance = bottomCornerRadius * cos(Math.PI / 2 - sweepAngleRads).toFloat()
+
+            val sweepAngle = Math.toDegrees(sweepAngleRads).toFloat()
+
+            lineTo(start - topCornerRadius, 0f)
+            arcTo(centerX =    start - topCurveXDistance,
+                  centerY =    topCornerRadius,
+                  radius =     topCornerRadius,
+                  startAngle = angleUp,
+                  sweepAngle = sweepAngle)
+            arcTo(centerX =    start + bottomCurveXDistance,
+                  centerY =    yDistance - bottomCornerRadius,
+                  radius =     bottomCornerRadius,
+                  startAngle = angleDown + sweepAngle,
+                  sweepAngle = -sweepAngle)
+            arcTo(centerX =    end - bottomCurveXDistance,
+                  centerY =    yDistance - bottomCornerRadius,
+                  radius =     bottomCornerRadius,
+                  startAngle = angleDown,
+                  sweepAngle = -sweepAngle)
+            arcTo(centerX =    end + topCurveXDistance,
+                  centerY =    topCornerRadius,
+                  radius =     topCornerRadius,
+                  startAngle = angleUp - sweepAngle,
+                  sweepAngle = sweepAngle)
+
+            val cradleBottomLength = (end - start - 2 * bottomCurveXDistance)
+            val cradleCurvesLength = 2 * sweepAngleRads * (topCornerRadius + bottomCornerRadius)
+            _totalLength = cradleCurvesLength.toFloat() + cradleBottomLength
+            _totalWidth = end - start + 2 * topCurveXDistance
+            _startXPos = start - topCurveXDistance
+        }
+    }
+
+    inner class Indicator() {
+        private val path = Path()
+        private val pathMeasure = PathMeasure()
+        private val paint = Paint().apply { style = Paint.Style.STROKE
+                                            strokeCap = Paint.Cap.ROUND }
+
+        var animatorConfig: AnimatorConfig? = null
+        var startDistance = 0f
+            set(value) { field = value; updatePath() }
+        var width = 0f
+
+        var height get() = paint.strokeWidth
+                   set(value) { paint.strokeWidth = value }
+
+        var alpha get() = paint.alpha / 255f
+                  set(value) { paint.alpha = (value * 255).roundToInt().coerceIn(0, 255) }
+
+        var tint: Int get() = paint.color
+                      set(value) { paint.color = value }
+
+        var gradient: Shader? get() = paint.shader
+                              set(value) { paint.shader = value }
+
+        fun draw(canvas: Canvas?) = canvas?.drawPath(path, paint)
+
+        private val rect = Rect()
+        /** Move the indicator to be above the item with id equal to @param menuItemId,
+         * animating the change if @param animate is equal to true. */
+        fun moveToNavBarItem(menuItemId: Int, animate: Boolean = true) {
+            navBar?.findViewById<View>(menuItemId)?.let {
+                // Using it.centerX() instead of getting the global visible rect's centerX
+                // seems to result in a slightly incorrect value when in landscape mode.
+                it.getGlobalVisibleRect(rect)
+                val newXPos = rect.centerX() - width / 2f
+                val targetStartDistance = findDistanceForX(newXPos)
+                if (!animate) startDistance = targetStartDistance
+                else ValueAnimator.ofFloat(startDistance, targetStartDistance).apply {
+                    addUpdateListener { startDistance = animatedValue as Float; invalidate() }
+                    applyConfig(animatorConfig)
+                }.start()
+            }
+        }
+
+        private fun findDistanceForX(x: Float) = when {
+            x < cradle.startXPos -> {
+                x + topOuterCornerArcLength - topOuterCornerRadius
+            } x > (cradle.startXPos + cradle.totalWidth) -> {
+                val cradleEndDistance = cradle.startXPos + topOuterCornerArcLength - topOuterCornerRadius + cradle.totalLength
+                val cradleEndX = cradle.startXPos + cradle.totalWidth
+                (x - cradleEndX) + cradleEndDistance
+                //x + topOuterCornerArcLength - topOuterCornerRadius + cradle.totalLength - cradle.totalWidth
+            } else -> {
+                cradle.startXPos + (x - cradle.startXPos * cradle.totalLength / cradle.totalWidth)
+            }
+        }
+
+        private fun updatePath() {
+            path.rewind()
+            pathMeasure.setPath(drawable.path, false)
+            pathMeasure.getSegment(startDistance, startDistance + width, path, true)
+        }
     }
 }
 
@@ -178,62 +286,3 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
  * Besides a solid color tint, the indicator can also be painted with a Shader
  * object using the property indicatorGradient.
  */
-@Suppress("LeakingThis")
-class BottomAppBarWithIndicator(context: Context, attrs: AttributeSet) :
-    BottomAppBar(context, attrs)
-{
-    private lateinit var navBar: BottomNavigationView
-    private val indicatorPaint = Paint().apply { style = Paint.Style.STROKE }
-    var indicatorWidth = 0
-    var indicatorHeight get() = indicatorPaint.strokeWidth
-                        set(value) { indicatorPaint.strokeWidth = value }
-    var indicatorTint: Int get() = indicatorPaint.color
-                            set(value) { indicatorPaint.color = value }
-    var indicatorGradient get() = indicatorPaint.shader
-                          set(value) { indicatorPaint.shader = value }
-    var indicatorAlpha get() = indicatorPaint.alpha / 255f
-                       set(value) { indicatorPaint.alpha = (value * 255).toInt().coerceIn(0, 255) }
-    private var indicatorXPos = 0
-    var indicatorAnimatorConfig: AnimatorConfig? = null
-
-    init {
-        val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBarWithIndicator)
-        indicatorHeight = a.getDimension(R.styleable.BottomAppBarWithIndicator_indicatorHeight, 0f)
-        indicatorWidth = a.getDimensionPixelOffset(R.styleable.BottomAppBarWithIndicator_indicatorWidth, 0)
-        indicatorPaint.color = a.getColor(R.styleable.BottomAppBarWithIndicator_indicatorTint,
-                                          ContextCompat.getColor(context, android.R.color.black))
-        val navBarResId = a.getResourceIdOrThrow(R.styleable.BottomAppBarWithIndicator_navBarResId)
-        a.recycle()
-
-        setWillNotDraw(false)
-        doOnNextLayout {
-            navBar = findViewById(navBarResId)
-            moveIndicatorToNavBarItem(navBar.selectedItemId, animate = false)
-        }
-    }
-
-    private val rect = Rect()
-    /** Move the indicator to be above the item with id equal to @param menuItemId,
-     * animating the change if @param animate is equal to true. */
-    fun moveIndicatorToNavBarItem(menuItemId: Int, animate: Boolean = true) {
-        if (!::navBar.isInitialized) return
-        navBar.findViewById<View>(menuItemId)?.let {
-            // Using it.centerX() instead of getting the global visible rect's centerX
-            // seems to result in a slightly incorrect value when in landscape mode.
-            it.getGlobalVisibleRect(rect)
-            val newIndicatorXPos = rect.centerX() - indicatorWidth / 2
-            if (!animate) indicatorXPos = newIndicatorXPos
-            else ValueAnimator.ofInt(indicatorXPos, newIndicatorXPos).apply {
-                addUpdateListener { indicatorXPos = animatedValue as Int; invalidate() }
-                applyConfig(indicatorAnimatorConfig)
-            }.start()
-        }
-    }
-
-    override fun onDraw(canvas: Canvas?) {
-        super.onDraw(canvas)
-        canvas?.withClip(indicatorXPos, 0, indicatorXPos + indicatorWidth, bottom) {
-            //drawPath(topEdgePath, indicatorPaint)
-        }
-    }
-}

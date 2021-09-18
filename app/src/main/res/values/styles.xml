@@ -38,12 +38,12 @@
         <item name="foregroundGradientLeftColor">@color/colorRecyclerViewItemLight</item>
         <item name="foregroundGradientMiddleColor">@color/colorRecyclerViewItemLight</item>
         <item name="foregroundGradientRightColor">@color/colorRecyclerViewItemLight</item>
-        <item name="indicatorGradientLeftColor">@color/bootyCrateItemColor11</item>
-        <item name="indicatorGradientMiddleColor">@color/bootyCrateItemColor11</item>
-        <item name="indicatorGradientRightColor">@color/bootyCrateItemColor11</item>
-        <item name="recyclerViewItemSelectionGradientLeftColor">@color/lightThemeBgGradientLeft</item>
-        <item name="recyclerViewItemSelectionGradientMiddleColor">@color/lightThemeBgGradientMiddle</item>
-        <item name="recyclerViewItemSelectionGradientRightColor">@color/lightThemeBgGradientRight</item>
+        <item name="indicatorGradientLeftColor">@color/lightThemeIndicatorColor</item>
+        <item name="indicatorGradientMiddleColor">@color/lightThemeIndicatorColor</item>
+        <item name="indicatorGradientRightColor">@color/lightThemeIndicatorColor</item>
+        <item name="recyclerViewItemSelectionGradientLeftColor">?attr/backgroundGradientLeftColor</item>
+        <item name="recyclerViewItemSelectionGradientMiddleColor">?attr/backgroundGradientLeftColor</item>
+        <item name="recyclerViewItemSelectionGradientRightColor">?attr/backgroundGradientLeftColor</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">

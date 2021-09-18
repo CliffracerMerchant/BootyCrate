@@ -55,8 +55,12 @@
     </declare-styleable>
 
     <declare-styleable name="BottomAppBar">
+        <!-- The id of the contained cradle layout. -->
+        <attr name="cradleLayoutResId"        format="reference" />
+        <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
+        <attr name="navBarResId"              format="reference" />
         <!-- The corner radius of the top left and top right corners. -->
-        <attr name="topCornerRadii"           format="dimension" />
+        <attr name="topOuterCornerRadius"     format="dimension" />
         <!-- The depth of the BottomAppBar cradle. -->
         <attr name="cradleDepth"              format="dimension" />
         <!-- The radius of the cradle curved top corners. -->
@@ -65,19 +69,15 @@
         <attr name="cradleBottomCornerRadius" format="dimension" />
         <!-- The margin in between the cradle and the cradle layout contents. -->
         <attr name="cradleContentsMargin"     format="dimension" />
-        <!-- The id of the contained cradle layout. -->
-        <attr name="cradleLayoutResId"        format="reference" />
-    </declare-styleable>
-
-    <declare-styleable name="BottomAppBarWithIndicator">
+        <!-- The color used as the background tint, if no background gradient is set. -->
+        <attr name="backgroundTint"           format="color" />
         <!-- The height / thickness of the indicator. -->
-        <attr name="indicatorHeight" format="dimension" />
+        <attr name="indicatorHeight"          format="dimension" />
         <!-- The width of the indicator. -->
-        <attr name="indicatorWidth"  format="dimension" />
+        <attr name="indicatorWidth"           format="dimension" />
         <!-- The initial tint of the indicator. -->
-        <attr name="indicatorTint"   format="color" />
-        <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
-        <attr name="navBarResId"     format="reference" />
+        <attr name="indicatorTint"            format="color" />
+
     </declare-styleable>
 
     <attr name="recyclerViewItemSelectionGradientLeftColor"   format="color" />

@@ -48,11 +48,11 @@ fun MainActivityBinding.showBottomAppBar(
 
 private fun MainActivityBinding.cradleWidth(showingCheckoutButton: Boolean) =
     if (!showingCheckoutButton)
-        addButton.layoutParams.width
+        addButton.layoutParams.width.toFloat()
     else {
         val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
         cradleLayout.measure(wrapContent, wrapContent)
-        cradleLayout.measuredWidth
+        cradleLayout.measuredWidth.toFloat()
     }
 
 private val checkoutButtonClipBounds = Rect()
@@ -67,12 +67,12 @@ fun MainActivityBinding.showCheckoutButton(
 ): Animator? {
     if (!animate) {
         checkoutButton.isVisible = showing
-        bottomAppBar.cradleWidth = cradleWidth(showing)
+        bottomAppBar.cradle.width = cradleWidth(showing)
         return null
     }
 
     checkoutButton.isVisible = showing
-    val cradleStartWidth = bottomAppBar.cradleWidth
+    val cradleStartWidth = bottomAppBar.cradle.width
     val cradleNewWidth = cradleWidth(showing)
     val cradleWidthChange = cradleNewWidth - cradleStartWidth
 
@@ -96,7 +96,7 @@ fun MainActivityBinding.showCheckoutButton(
         applyConfig(animatorConfig)
         addUpdateListener {
             cradleLayout.translationX = cradleStartTransX * (1f - it.animatedFraction)
-            bottomAppBar.cradleWidth = cradleStartWidth + (cradleWidthChange * it.animatedFraction).toInt()
+            bottomAppBar.cradle.width = cradleStartWidth + (cradleWidthChange * it.animatedFraction).toInt()
             bottomAppBar.invalidate()
             checkoutButtonClipBounds.right = addButton.x.toInt() + addButtonHalfWidth
             checkoutButton.clipBounds = checkoutButtonClipBounds
@@ -140,13 +140,12 @@ fun MainActivity.initGradientStyle() {
 
     val fgGradientBuilder = GradientBuilder(x2 = screenWidth.toFloat(), colors = fgColors)
     val fgGradientShader = fgGradientBuilder.buildLinearGradient()
-    ui.bottomAppBar.indicatorGradient = fgGradientShader
 
     val bgGradientBuilder = fgGradientBuilder.copy(colors  = bgColors)
     ui.bottomAppBar.backgroundGradient = bgGradientBuilder.buildLinearGradient()
 
-    ui.bottomAppBar.indicatorGradient = fgGradientBuilder
-        .copy(colors  = indicatorColors).buildLinearGradient()
+    ui.bottomAppBar.indicator.gradient =
+        fgGradientBuilder.copy(colors  = indicatorColors).buildLinearGradient()
 
     val paint = Paint()
     paint.style = Paint.Style.FILL

@@ -89,7 +89,7 @@ open class MainActivity : MultiFragmentActivity() {
                 showing = showsCheckoutButton,
                 animatorConfig = primaryFragmentTransitionAnimatorConfig,
                 animate = needToAnimateCheckoutButton)
-        ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
+        ui.bottomAppBar.indicator.moveToNavBarItem(navigationBar.selectedItemId)
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
@@ -128,10 +128,10 @@ open class MainActivity : MultiFragmentActivity() {
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
         ui.actionBar.animatorConfig = transitionAnimConfig
-        ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
-        ui.bottomAppBar.indicatorAnimatorConfig = transitionAnimConfig
-            // This interpolator shows the indicator going around the bottom app bar cradle slightly better.
-            .copy(interpolator = PathInterpolator(.4f,.6f,.6f,.4f))
+        ui.bottomAppBar.indicator.width = 2.5f * ui.bottomNavigationBar.itemIconSize
+        ui.bottomAppBar.indicator.animatorConfig = transitionAnimConfig
+            // The indicator animation doesn't look very good at short durations
+            .copy(duration = (transitionAnimConfig.duration * 1.2f).toLong())
         ui.checkoutButton.animatorConfig = transitionAnimConfig
         ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig).apply {
             // views with bottomSheetBehaviors do not like to be animated by layout
