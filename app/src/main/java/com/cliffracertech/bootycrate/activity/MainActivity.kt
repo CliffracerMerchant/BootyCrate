@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
-import android.view.animation.PathInterpolator
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -89,7 +88,10 @@ open class MainActivity : MultiFragmentActivity() {
                 showing = showsCheckoutButton,
                 animatorConfig = primaryFragmentTransitionAnimatorConfig,
                 animate = needToAnimateCheckoutButton)
-        ui.bottomAppBar.indicator.moveToNavBarItem(navigationBar.selectedItemId)
+        ui.moveNavIndicatorToItem(
+            navItemId = navigationBar.selectedItemId,
+            animate = needToAnimateCheckoutButton,
+            checkoutButtonAppearing = showsCheckoutButton)
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
@@ -128,10 +130,8 @@ open class MainActivity : MultiFragmentActivity() {
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
         ui.actionBar.animatorConfig = transitionAnimConfig
-        ui.bottomAppBar.indicator.width = 2.5f * ui.bottomNavigationBar.itemIconSize
-        ui.bottomAppBar.indicator.animatorConfig = transitionAnimConfig
-            // The indicator animation doesn't look very good at short durations
-            .copy(duration = (transitionAnimConfig.duration * 1.2f).toLong())
+        ui.bottomAppBar.navIndicator.width = 2.5f * ui.bottomNavigationBar.itemIconSize
+        ui.bottomAppBar.navIndicator.animatorConfig = transitionAnimConfig
         ui.checkoutButton.animatorConfig = transitionAnimConfig
         ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig).apply {
             // views with bottomSheetBehaviors do not like to be animated by layout

@@ -94,11 +94,21 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         }
     }
 
+    // See the documentation for checkQueuedMenuItemPress for an
+    // explanation of queuedMenuItem and menuItemLastPressTimestamp
+    private var queuedMenuItem: MenuItem? = null
+    private var menuItemLastPressTimestamp = 0L
     private var exitingFragmentView: View? = null
     /** Attempt to switch to a new active fragment corresponding to the @param
      * menuItem, and @return whether or not the switch was successful. */
     private fun switchToNewPrimaryFragment(menuItem: MenuItem): Boolean {
         if (menuItem.itemId == navigationBar.selectedItemId || !showingPrimaryFragment) return false
+        if (exitingFragmentView != null) {
+            queuedMenuItem = menuItem
+            menuItemLastPressTimestamp = System.currentTimeMillis()
+            return false
+        }
+
         val newFragment = navBarMenuItemFragmentMap[menuItem.itemId] ?: return false
 
         val oldFragmentMenuItem = navigationBar.menu.findItem(navigationBar.selectedItemId)
@@ -112,10 +122,11 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             val endTranslation = width / 2f * if (leftToRight) -1f else 1f
             animate().alpha(0f).translationX(endTranslation).withLayer()
                 .applyConfig(primaryFragmentTransitionAnimatorConfig)
-                .withEndAction { if (this === exitingFragmentView) {
-                    visibility = View.GONE
-                    exitingFragmentView = null
-                }}.start()
+                .withEndAction {
+                    if (this === exitingFragmentView) { visibility = View.GONE
+                                                        exitingFragmentView = null }
+                    checkQueuedMenuItemPress()
+                }.start()
         }
         newFragment.view?.apply {
             if (!isVisible) {
@@ -129,10 +140,28 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         return true
     }
 
-    @Suppress("NAME_SHADOWING")
+    /** To prevent visual bugs due to new animations starting before the old
+     * ones are finished while still allowing the UI to feel responsive,
+     * MultiFragmentActivity queues navigation menu item presses that occur
+     * during the last half of the transition animation, and plays them when
+     * the transition animation is finished. */
+    private fun checkQueuedMenuItemPress() {
+        queuedMenuItem?.let {
+            val now = System.currentTimeMillis()
+            val animDuration = primaryFragmentTransitionAnimatorConfig?.duration ?: 300L
+            val allowableMargin = animDuration / 2
+            if ((menuItemLastPressTimestamp + allowableMargin) >= now)
+                switchToNewPrimaryFragment(it)
+        }
+        this.queuedMenuItem = null
+    }
+
     fun addSecondaryFragment(fragment: Fragment, enterAnimResId: Int? = null, exitAnimResId: Int? = null) {
+        @Suppress("NAME_SHADOWING")
         val enterAnimResId = enterAnimResId ?: defaultSecondaryFragmentEnterAnimResId
+        @Suppress("NAME_SHADOWING")
         val exitAnimResId = exitAnimResId ?: defaultSecondaryFragmentExitAnimResId
+
         val tag = supportFragmentManager.backStackEntryCount.toString()
         val transaction = supportFragmentManager.beginTransaction()
             .setCustomAnimations(enterAnimResId, exitAnimResId, enterAnimResId, exitAnimResId)

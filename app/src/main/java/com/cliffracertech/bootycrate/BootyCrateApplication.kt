@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate
 
 import android.app.Application
+import android.util.Log
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 
@@ -15,3 +16,5 @@ class BootyCrateApplication : Application() {
         BootyCrateItem.initColors(this)
     }
 }
+
+fun dlog(msg: String) = Log.d("BootyCrate", msg)
