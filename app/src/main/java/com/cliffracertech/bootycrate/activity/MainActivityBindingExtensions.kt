@@ -14,7 +14,10 @@ import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.GradientBuilder
+import com.cliffracertech.bootycrate.utils.applyConfig
+import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.cliffracertech.bootycrate.view.ActionBarTitle
 import com.cliffracertech.bootycrate.view.GradientVectorDrawable
 
@@ -46,6 +49,8 @@ fun MainActivityBinding.showBottomAppBar(
     }
 }
 
+/** Return the appropriate target BottomAppBar.cradle.width value for a checkout
+ * button visibility matching the value of @param showingCheckoutButton. */
 private fun MainActivityBinding.cradleWidth(showingCheckoutButton: Boolean) =
     if (!showingCheckoutButton)
         addButton.layoutParams.width.toFloat()
@@ -72,9 +77,7 @@ fun MainActivityBinding.showCheckoutButton(
     }
 
     checkoutButton.isVisible = showing
-    val cradleStartWidth = bottomAppBar.cradle.width
     val cradleNewWidth = cradleWidth(showing)
-    val cradleWidthChange = cradleNewWidth - cradleStartWidth
 
     // Ideally we would only animate the cradle's width, and let the cradleLayout's
     // layoutTransition handle the rest. Unfortunately it will only animate its own
@@ -83,20 +86,18 @@ fun MainActivityBinding.showCheckoutButton(
     // the layoutTransition animates (apparently a bug with BottomSheetBehavior),
     // we have to animate the cradleLayout's translationX ourselves.
     val cradleNewLeft = (bottomAppBar.width - cradleNewWidth) / 2
-    val cradleLeftChange = cradleNewLeft - cradleLayout.left
-    cradleLayout.translationX -= cradleLeftChange
-    val cradleStartTransX = cradleLayout.translationX
+    val cradleStartTranslationX = cradleLayout.left - cradleNewLeft
 
     // The checkoutButton's clipBounds is set here to prevent it's right edge
     // from sticking out underneath the addButton during the animation
     checkoutButton.getDrawingRect(checkoutButtonClipBounds)
     val addButtonHalfWidth = addButton.width / 2
 
-    return ValueAnimator.ofFloat(0f, 1f).apply {
+    return ValueAnimator.ofFloat(bottomAppBar.cradle.width, cradleNewWidth).apply {
         applyConfig(animatorConfig)
         addUpdateListener {
-            cradleLayout.translationX = cradleStartTransX * (1f - it.animatedFraction)
-            bottomAppBar.cradle.width = cradleStartWidth + (cradleWidthChange * it.animatedFraction).toInt()
+            cradleLayout.translationX = cradleStartTranslationX * (1f - it.animatedFraction)
+            bottomAppBar.cradle.width = it.animatedValue as Float
             bottomAppBar.invalidate()
             checkoutButtonClipBounds.right = addButton.x.toInt() + addButtonHalfWidth
             checkoutButton.clipBounds = checkoutButtonClipBounds
@@ -144,7 +145,7 @@ fun MainActivity.initGradientStyle() {
     val bgGradientBuilder = fgGradientBuilder.copy(colors  = bgColors)
     ui.bottomAppBar.backgroundGradient = bgGradientBuilder.buildLinearGradient()
 
-    ui.bottomAppBar.indicator.gradient =
+    ui.bottomAppBar.navIndicator.gradient =
         fgGradientBuilder.copy(colors  = indicatorColors).buildLinearGradient()
 
     val paint = Paint()

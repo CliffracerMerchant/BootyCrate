@@ -65,9 +65,12 @@
         <item name="backgroundGradientLeftColor">@color/darkThemeBgGradientLeft</item>
         <item name="backgroundGradientMiddleColor">@color/darkThemeBgGradientMiddle</item>
         <item name="backgroundGradientRightColor">@color/darkThemeBgGradientRight</item>
-        <item name="foregroundGradientLeftColor">@color/colorRecyclerViewItemDark</item>
-        <item name="foregroundGradientMiddleColor">@color/colorRecyclerViewItemDark</item>
-        <item name="foregroundGradientRightColor">@color/colorRecyclerViewItemDark</item>
+        <item name="foregroundGradientLeftColor">@color/colorWindowBackgroundDark</item>
+        <item name="foregroundGradientMiddleColor">@color/colorWindowBackgroundDark</item>
+        <item name="foregroundGradientRightColor">@color/colorWindowBackgroundDark</item>
+        <item name="indicatorGradientLeftColor">@color/darkThemeIndicatorColor</item>
+        <item name="indicatorGradientMiddleColor">@color/darkThemeIndicatorColor</item>
+        <item name="indicatorGradientRightColor">@color/darkThemeIndicatorColor</item>
     </style>
 
     <style name="TextAppearance" parent="TextAppearance.AppCompat">

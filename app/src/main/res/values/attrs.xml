@@ -76,14 +76,14 @@
         <!-- The margin in between the cradle and the cradle layout contents. -->
         <attr name="cradleContentsMargin"     format="dimension" />
 
-        <!-- The height / thickness of the indicator. -->
-        <attr name="indicatorHeight"          format="dimension" />
-        <!-- The width of the indicator. -->
-        <attr name="indicatorWidth"           format="dimension" />
-        <!-- The initial tint of the indicator. -->
-        <attr name="indicatorTint"            format="color" />
-        <!-- The initial alpha of the indicator in the range [0f, 1f] -->
-        <attr name="indicatorAlpha"           format="float" />
+        <!-- The height / thickness of the navigation indicator. -->
+        <attr name="navIndicatorHeight"      format="dimension" />
+        <!-- The width of the navigation indicator. -->
+        <attr name="navIndicatorWidth"       format="dimension" />
+        <!-- The initial tint of the navigation indicator. -->
+        <attr name="navIndicatorTint"        format="color" />
+        <!-- The initial alpha of the navigation indicator in the range [0f, 1f] -->
+        <attr name="navIndicatorAlpha"       format="float" />
 
     </declare-styleable>
 

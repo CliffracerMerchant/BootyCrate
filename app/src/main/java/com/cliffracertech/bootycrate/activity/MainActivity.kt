@@ -88,10 +88,8 @@ open class MainActivity : MultiFragmentActivity() {
                 showing = showsCheckoutButton,
                 animatorConfig = primaryFragmentTransitionAnimatorConfig,
                 animate = needToAnimateCheckoutButton)
-        ui.moveNavIndicatorToItem(
-            navItemId = navigationBar.selectedItemId,
-            animate = needToAnimateCheckoutButton,
-            checkoutButtonAppearing = showsCheckoutButton)
+        ui.bottomAppBar.navIndicator.moveToItem(menuItemId = navigationBar.selectedItemId,
+                                                animate = needToAnimateCheckoutButton)
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
@@ -132,6 +130,8 @@ open class MainActivity : MultiFragmentActivity() {
         ui.actionBar.animatorConfig = transitionAnimConfig
         ui.bottomAppBar.navIndicator.width = 2.5f * ui.bottomNavigationBar.itemIconSize
         ui.bottomAppBar.navIndicator.animatorConfig = transitionAnimConfig
+            // The nav indicator anim duration is increased to improve its visbility
+            .copy(duration = (transitionAnimConfig.duration * 1.2f).toLong())
         ui.checkoutButton.animatorConfig = transitionAnimConfig
         ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig).apply {
             // views with bottomSheetBehaviors do not like to be animated by layout

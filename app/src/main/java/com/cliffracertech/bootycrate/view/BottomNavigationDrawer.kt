@@ -42,7 +42,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
                         ui.settingsButton.alpha = slideOffset
 
                         ui.bottomAppBar.cradle.interpolation = 1f - slideOffset
-                        ui.bottomAppBar.indicator.alpha = 1f - slideOffset
+                        ui.bottomAppBar.navIndicator.alpha = 1f - slideOffset
                         ui.cradleLayout.alpha = 1f - slideOffset
                         ui.cradleLayout.scaleX = 1f - 0.1f * slideOffset
                         ui.cradleLayout.scaleY = 1f - 0.1f * slideOffset
