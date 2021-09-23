@@ -185,7 +185,7 @@ open class MainActivity : MultiFragmentActivity() {
             val overlap = (bottomNavDrawerMinBottom - gestureTop).coerceAtLeast(0)
 
             val bottomSheetBehavior = BottomSheetBehavior.from(ui.bottomNavigationDrawer)
-            val drawerContent = ui.bottomNavigationDrawer.ui.bottomNavigationDrawerContent
+            val drawerContent = ui.bottomNavigationDrawer.ui.inventorySelectorLayout
             val contentTop = drawerContent.top + drawerContent.paddingTop
 
             val newPeekHeight = (bottomSheetBehavior.peekHeight + overlap).coerceAtMost(contentTop)
