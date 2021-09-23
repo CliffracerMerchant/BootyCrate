@@ -19,6 +19,7 @@ import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 import java.util.*
@@ -188,10 +189,14 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             actionBar = null
             activityUi.actionBar.onSearchQueryChangedListener = null
         } else {
-            recyclerView.snackBarAnchor = activityUi.bottomAppBar
             actionBar = activityUi.actionBar
-            activityUi.actionBar.onSearchQueryChangedListener = { newText ->
-                recyclerView.searchFilter = newText.toString()
+            recyclerView.apply {
+                snackBarAnchor = activityUi.bottomAppBar
+                activityUi.actionBar.onSearchQueryChangedListener = { newText ->
+                    searchFilter = newText.toString()
+                }
+                val bottomSheetPeekHeight = BottomSheetBehavior.from(activityUi.bottomNavigationDrawer).peekHeight
+                setPadding(paddingLeft, paddingTop, paddingRight, bottomSheetPeekHeight)
             }
 
             val actionModeCallback = if (recyclerView.selection.isEmpty) null

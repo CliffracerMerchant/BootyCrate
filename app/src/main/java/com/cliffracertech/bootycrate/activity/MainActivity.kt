@@ -5,13 +5,21 @@
 package com.cliffracertech.bootycrate.activity
 
 import android.animation.Animator
+import android.content.Context
 import android.content.res.Configuration
+import android.graphics.Point
+import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
 import android.view.animation.AnimationUtils
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.doOnNextLayout
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
@@ -21,6 +29,7 @@ import com.cliffracertech.bootycrate.fragment.PreferencesFragment
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.doOnStart
 import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -48,6 +57,7 @@ open class MainActivity : MultiFragmentActivity() {
         super.onCreate(savedInstanceState)
         setupOnClickListeners()
         initAnimatorConfigs()
+        adjustBottomNavDrawerHeight()
         window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
         initGradientStyle()
         // Setting android:importantForAccessibility in the bottom_navigation_menu.xml
@@ -77,8 +87,8 @@ open class MainActivity : MultiFragmentActivity() {
         if (newFragment !is MainActivityFragment) return
 
         val needToAnimateCheckoutButton = needToAnimate && ui.bottomAppBar.isVisible
-        ui.showBottomAppBar(newFragment.showsBottomAppBar(), needToAnimate,
-                            primaryFragmentTransitionAnimatorConfig)
+//        ui.showBottomAppBar(newFragment.showsBottomAppBar(), needToAnimate,
+//                            primaryFragmentTransitionAnimatorConfig)
         val showsCheckoutButton = newFragment.showsCheckoutButton()
         if (showsCheckoutButton != null)
             // The cradle animation is stored here and started in the cradle
@@ -143,12 +153,52 @@ open class MainActivity : MultiFragmentActivity() {
         }
     }
 
+    private var systemBottomGestureHeight = 0
+    /**
+     * Adjust the peek height of the bottom navigation drawer to prevent interference
+     * with the system bottom gesture, if needed.
+     *
+     * If the touch target of the collapsed bottom navigation drawer overlaps with
+     * the system gesture inset, we want to increase the peek height of the bottom
+     * nav drawer as much as we can without showing the inventory selector to reduce
+     * the likelihood of the bottom sheet gesture interfering with the system home
+     * gesture.
+     */
+    private fun adjustBottomNavDrawerHeight() {
+        ViewCompat.setOnApplyWindowInsetsListener(window.decorView) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())
+            systemBottomGestureHeight = insets.bottom
+            windowInsets
+        }
+        ui.root.doOnNextLayout {
+            val rect = Rect()
+            ui.bottomNavigationDrawer.getGlobalVisibleRect(rect)
+            val bottomNavDrawerMinBottom = rect.bottom
+
+            val displaySize = Point()
+            val display = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display
+                           else (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay)
+                          ?: (getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+            display.getRealSize(displaySize)
+
+            val gestureTop = displaySize.y - systemBottomGestureHeight
+            val overlap = (bottomNavDrawerMinBottom - gestureTop).coerceAtLeast(0)
+
+            val bottomSheetBehavior = BottomSheetBehavior.from(ui.bottomNavigationDrawer)
+            val drawerContent = ui.bottomNavigationDrawer.ui.bottomNavigationDrawerContent
+            val contentTop = drawerContent.top + drawerContent.paddingTop
+
+            val newPeekHeight = (bottomSheetBehavior.peekHeight + overlap).coerceAtMost(contentTop)
+            bottomSheetBehavior.peekHeight = newPeekHeight
+        }
+    }
+
     /**
      * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
      *
      * MainActivityFragment can be implemented by a Fragment subclass to
-     * inform the MainActivity how its UI should be displayed when the frag-
-     * ment is in the foreground, and to provide a callback for back button
+     * inform the MainActivity as to how its UI should be displayed when the
+     * fragment is in the foreground, and to provide a callback for back button
      * (either the hardware/software bottom back button or the action bar's
      * back button) presses. Fragments should always indicate their desired
      * bottom app bar and checkout button states through an override of the

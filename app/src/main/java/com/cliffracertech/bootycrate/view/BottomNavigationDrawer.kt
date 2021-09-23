@@ -46,7 +46,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
                         ui.cradleLayout.alpha = 1f - slideOffset
                         ui.cradleLayout.scaleX = 1f - 0.1f * slideOffset
                         ui.cradleLayout.scaleY = 1f - 0.1f * slideOffset
-                        ui.cradleLayout.translationY = ui.cradleLayout.height * -0.8f * slideOffset
+                        ui.cradleLayout.translationY = ui.cradleLayout.height * -0.9f * slideOffset
                         ui.bottomAppBar.invalidate()
                     }
                 })
