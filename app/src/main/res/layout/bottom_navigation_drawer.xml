@@ -88,9 +88,9 @@
         style="@style/SettingsButton"/>
 
     <FrameLayout
-        android:id="@+id/inventory_selector_layout"
+        android:id="@+id/bottomNavDrawerContentsLayout"
         android:layout_width="match_parent"
-        android:layout_height="400dp"
+        android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/bottomAppBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -100,12 +100,9 @@
         <View
             android:id="@+id/inventory_selector"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
+            android:layout_height="400dp"
             android:background="@drawable/alert_dialog_background" />
 
     </FrameLayout>
-
-
 
 </merge>

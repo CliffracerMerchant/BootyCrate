@@ -5,7 +5,6 @@
 
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
@@ -30,8 +29,6 @@
         android:id="@+id/bottomNavigationDrawer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
-        app:behavior_peekHeight="?attr/actionBarSize"
         android:clipChildren="false" >
 
     </com.cliffracertech.bootycrate.view.BottomNavigationDrawer>

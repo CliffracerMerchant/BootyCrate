@@ -195,7 +195,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
                 activityUi.actionBar.onSearchQueryChangedListener = { newText ->
                     searchFilter = newText.toString()
                 }
-                val bottomSheetPeekHeight = BottomSheetBehavior.from(activityUi.bottomNavigationDrawer).peekHeight
+                val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
                 setPadding(paddingLeft, paddingTop, paddingRight, bottomSheetPeekHeight)
             }
 

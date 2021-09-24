@@ -77,3 +77,8 @@ fun Context.getIntArray(arrayResId: Int): IntArray {
     ta.recycle()
     return array
 }
+
+/** Adjust the view's padding by the provided amounts. */
+fun View.adjustPadding(leftAdjust: Int, topAdjust: Int, rightAdjust: Int, bottomAdjust: Int) =
+    setPadding(paddingLeft + leftAdjust, paddingTop + topAdjust,
+               paddingRight + rightAdjust, paddingBottom + bottomAdjust)
