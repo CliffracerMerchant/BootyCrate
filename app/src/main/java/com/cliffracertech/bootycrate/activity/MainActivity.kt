@@ -60,6 +60,7 @@ open class MainActivity : MultiFragmentActivity() {
         adjustBottomNavDrawerHeight()
         window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
         initGradientStyle()
+
         // Setting android:importantForAccessibility in the bottom_navigation_menu.xml
         // for the disabled menu items seems not to work, so it must be done here instead
         (ui.bottomNavigationBar.getIconAt(1).parent as View).
@@ -69,12 +70,6 @@ open class MainActivity : MultiFragmentActivity() {
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
-
-    override fun onOptionsItemSelected(item: MenuItem) =
-        if (item.itemId == R.id.settings_menu_item) {
-            addSecondaryFragment(PreferencesFragment())
-            true
-        } else visibleFragment?.onOptionsItemSelected(item) ?: false
 
     private var currentFragment: Fragment? = null
     override fun onNewFragmentSelected(newFragment: Fragment) {
@@ -87,8 +82,8 @@ open class MainActivity : MultiFragmentActivity() {
         if (newFragment !is MainActivityFragment) return
 
         val needToAnimateCheckoutButton = needToAnimate && ui.bottomAppBar.isVisible
-//        ui.showBottomAppBar(newFragment.showsBottomAppBar(), needToAnimate,
-//                            primaryFragmentTransitionAnimatorConfig)
+        if (newFragment.showsBottomAppBar()) ui.bottomNavigationDrawer.show()
+        else                                 ui.bottomNavigationDrawer.hide()
         val showsCheckoutButton = newFragment.showsCheckoutButton()
         if (showsCheckoutButton != null)
             // The cradle animation is stored here and started in the cradle
@@ -117,6 +112,9 @@ open class MainActivity : MultiFragmentActivity() {
         })
     }
 
+    private fun fwdMenuItemClick(menuItem: MenuItem) =
+        visibleFragment?.onOptionsItemSelected(menuItem) ?: false
+
     private fun setupOnClickListeners() {
         ui.actionBar.ui.backButton.setOnClickListener {
             val fragment = visibleFragment as? MainActivityFragment
@@ -126,8 +124,12 @@ open class MainActivity : MultiFragmentActivity() {
         ui.actionBar.onDeleteButtonClickedListener = {
             onOptionsItemSelected(ui.actionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
         }
-        ui.actionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
-        ui.actionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
+        ui.actionBar.setOnSortOptionClickedListener(::fwdMenuItemClick)
+        ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
+        ui.settingsButton.setOnClickListener {
+            addSecondaryFragment(PreferencesFragment())
+            ui.bottomNavigationDrawer.collapse()
+        }
     }
 
     private fun initAnimatorConfigs() {
