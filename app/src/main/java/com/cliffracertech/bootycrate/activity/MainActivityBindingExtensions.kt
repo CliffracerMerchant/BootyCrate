@@ -21,34 +21,6 @@ import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.cliffracertech.bootycrate.view.ActionBarTitle
 import com.cliffracertech.bootycrate.view.GradientVectorDrawable
 
-/** Show the bottom app bar according to the value of the parameter show,
- * animating if the parameter animate == true, and using the AnimatorConfig
- * provided in the parameter animatorConfig for the animations duration
- * and interpolator. */
-fun MainActivityBinding.showBottomAppBar(
-    show: Boolean = true,
-    animate: Boolean = true,
-    animatorConfig: AnimatorConfig? = null
-) {
-    if (bottomAppBar.isVisible == show) return
-    val screenHeight = bottomAppBar.resources.displayMetrics.heightPixels.toFloat()
-
-    if (!animate) bottomAppBar.isVisible = show
-    else {
-        val translationAmount = screenHeight - cradleLayout.top - bottomAppBar.top
-        val translationStart = if (show) translationAmount else 0f
-        val translationEnd = if (show) 0f else translationAmount
-        bottomAppBar.translationY = translationStart
-        bottomAppBar.isVisible = true
-        val anim = bottomAppBar.animate().translationY(translationEnd).applyConfig(animatorConfig)
-        if (!show) anim.withEndAction {
-            if (bottomAppBar.y > screenHeight)
-                bottomAppBar.isVisible = false
-        }
-        anim.start()
-    }
-}
-
 /** Return the appropriate target BottomAppBar.cradle.width value for a checkout
  * button visibility matching the value of @param showingCheckoutButton. */
 private fun MainActivityBinding.cradleWidth(showingCheckoutButton: Boolean) =

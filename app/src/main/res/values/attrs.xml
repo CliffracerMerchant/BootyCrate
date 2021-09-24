@@ -6,7 +6,7 @@
 <resources>
     <!-- Used as the background color for recycler view items. -->
     <attr name="recyclerViewItemColor" format="color" />
-    <!-- The width of the canvas a path is drawn o. -->
+    <!-- The width of the canvas a path is drawn on. -->
     <attr name="pathWidth" format="float" />
     <!-- The height of the canvas a path is drawn on. -->
     <attr name="pathHeight" format="float" />
