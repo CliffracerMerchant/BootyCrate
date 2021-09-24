@@ -14,54 +14,17 @@
         android:id="@+id/bottomAppBar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        style="@style/BottomAppBar" >
-
-        <LinearLayout
-            android:id="@+id/cradleLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:elevation="10dp"
-            android:clipChildren="false"
-            android:layout_marginTop="-10dp" >
-
-            <com.cliffracertech.bootycrate.view.CheckoutButton
-                android:id="@+id/checkoutButton"
-                android:layout_width="120dp"
-                android:layout_height="46dp"
-                android:layout_gravity="bottom"
-                tools:ignore="RtlHardcoded"
-                android:layout_marginRight="-14dp"
-                style="@style/CheckoutButton" />
-
-            <com.cliffracertech.bootycrate.view.GradientButton
-                android:id="@+id/addButton"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:contentDescription="@string/add_button_description"
-                android:elevation="1dp"
-                style="@style/AddButton" />
-        </LinearLayout>
+        style="?attr/bottomAppBarStyle" >
 
     <!-- BottomNavigationViewEx is used instead of the default Android Bottom-
          NavigationView because it makes it easier to access the views used to
          represent menu items (which is needed for some of the gradient styling). -->
         <com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx
-            android:id="@+id/bottomNavigationBar"
+            android:id="@+id/bottomNavigationView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             tools:background="@drawable/background_gradient"
-            style="@style/BottomNavigationView">
-
-            <TextView
-                android:id="@+id/shoppingListBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="60dp"
-                android:layout_marginTop="2dp"
-                style="@style/ShoppingListBadge" />
-
-        </com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx>
+            style="?attr/bottomNavigationViewStyle" />
 
     </com.cliffracertech.bootycrate.view.BottomAppBar>
 
@@ -74,7 +37,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginStart="24dp"
         android:layout_marginTop="12dp"
-        style="@style/AppTitle"/>
+        style="?attr/bottomNavDrawerAppTitleStyle"/>
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/settingsButton"

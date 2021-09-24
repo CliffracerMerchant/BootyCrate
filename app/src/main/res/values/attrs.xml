@@ -54,15 +54,26 @@
         <attr name="searchQueryFont" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="BottomNavigationDrawer">
+        <!-- The style for the BottomAppBar. -->
+        <attr name="bottomAppBarStyle"                  format="reference" />
+        <!-- The style used for the BottomNavigationView contained within the BottomAppBar. -->
+        <attr name="bottomNavigationViewStyle"          format="reference" />
+        <!-- The style used for the TextView that displays the app title. -->
+        <attr name="bottomNavDrawerAppTitleStyle"       format="reference" />
+        <!-- A reference to the layout that will be used as the bottom navigation drawer contents. -->
+        <attr name="bottomNavDrawerContentsLayoutResId" format="reference" />
+    </declare-styleable>
+
     <declare-styleable name="BottomAppBar">
         <!-- The id of the contained cradle layout. -->
-        <attr name="cradleLayoutResId"        format="reference" />
+        <attr name="cradleLayoutResId"    format="reference" />
         <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
-        <attr name="navBarResId"              format="reference" />
+        <attr name="navViewResId"         format="reference" />
         <!-- The corner radius of the top left and top right corners. -->
-        <attr name="topOuterCornerRadius"     format="dimension" />
+        <attr name="topOuterCornerRadius" format="dimension" />
         <!-- The color used as the background tint, if no background gradient is set. -->
-        <attr name="backgroundTint"           format="color" />
+        <attr name="backgroundTint"       format="color" />
 
         <!-- The interpolation of the cradle; the valid range is [0f, 1f].
         0f implies a straight line, while 1f implies a fully drawn cradle. -->
@@ -77,13 +88,13 @@
         <attr name="cradleContentsMargin"     format="dimension" />
 
         <!-- The height / thickness of the navigation indicator. -->
-        <attr name="navIndicatorHeight"      format="dimension" />
+        <attr name="navIndicatorHeight" format="dimension" />
         <!-- The width of the navigation indicator. -->
-        <attr name="navIndicatorWidth"       format="dimension" />
+        <attr name="navIndicatorWidth"  format="dimension" />
         <!-- The initial tint of the navigation indicator. -->
-        <attr name="navIndicatorTint"        format="color" />
+        <attr name="navIndicatorTint"   format="color" />
         <!-- The initial alpha of the navigation indicator in the range [0f, 1f] -->
-        <attr name="navIndicatorAlpha"       format="float" />
+        <attr name="navIndicatorAlpha"  format="float" />
 
     </declare-styleable>
 

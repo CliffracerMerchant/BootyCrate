@@ -32,7 +32,7 @@ import kotlin.math.*
  * item. The layout that holds the cradle contents must be referenced by the XML
  * attribute cradleLayoutResId, and must be a child of the BottomAppBar.
  * Likewise, the BottomNavigationView must be referenced by the XML attribute
- * navBarResId.
+ * navViewResId.
  *
  * BottomAppBar contains a member, cradle, that holds the values (e.g. width)
  * that describe how to draw the cradle around the cradle layout contents. See
@@ -48,13 +48,14 @@ import kotlin.math.*
  * Like the Material library BottomAppBar, BottomAppBar manages its own
  * background. In order to tint the background a solid color, the property
  * backgroundTint can be set in XML or programmatically to an int color code.
- * Alternatively the background can be set to a Shader instance using the
+ * Alternatively, the background can be set to a Shader instance using the
  * property backgroundGradient.
  */
 class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
-
+    private val rect = Rect()
     private val drawable = PathDrawable()
     private var navBar: BottomNavigationView? = null
+    private var pathIsDirty = true
 
     val cradle = Cradle()
     val navIndicator = NavIndicator()
@@ -68,7 +69,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
         val cradleLayoutResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_cradleLayoutResId)
-        val navBarResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_navBarResId)
+        val navBarResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_navViewResId)
         topOuterCornerRadius = a.getDimension(R.styleable.BottomAppBar_topOuterCornerRadius, 0f)
         backgroundTint = a.getColor(R.styleable.BottomAppBar_backgroundTint,
                                     ContextCompat.getColor(context, android.R.color.white))
@@ -91,8 +92,11 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         doOnNextLayout {
             cradle.initLayout(cradleLayoutResId)
             navBar = findViewById(navBarResId)
-            invalidate()
-            navBar?.let { navIndicator.moveToItem(it.selectedItemId, animate = false) }
+
+            cradle.layout.doOnNextLayout {
+                invalidate()
+                navBar?.let { navIndicator.moveToItem(it.selectedItemId, animate = false) }
+            }
         }
     }
 
@@ -108,23 +112,25 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
               centerX + radius, centerY + radius,
               startAngle, sweepAngle, false)
 
-    override fun invalidate() = drawable.path.run {
-        rewind()
-        moveTo(0f, topOuterCornerRadius)
-        arcTo(centerX = topOuterCornerRadius,
-              centerY = topOuterCornerRadius,
-              radius = topOuterCornerRadius,
-              startAngle = angleLeft,
-              sweepAngle = 90f)
-        cradle.addTo(this)
-        arcTo(centerX = width - topOuterCornerRadius,
-              centerY = topOuterCornerRadius,
-              radius = topOuterCornerRadius,
-              startAngle = angleUp,
-              sweepAngle = 90f)
-        lineTo(width.toFloat(), height.toFloat())
-        lineTo(0f, height.toFloat())
-        close()
+    override fun invalidate() {
+        if (pathIsDirty) drawable.path.run {
+            rewind()
+            moveTo(0f, topOuterCornerRadius)
+            arcTo(centerX = topOuterCornerRadius,
+                centerY = topOuterCornerRadius,
+                radius = topOuterCornerRadius,
+                startAngle = angleLeft,
+                sweepAngle = 90f)
+            cradle.addTo(this)
+            arcTo(centerX = width - topOuterCornerRadius,
+                centerY = topOuterCornerRadius,
+                radius = topOuterCornerRadius,
+                startAngle = angleUp,
+                sweepAngle = 90f)
+            lineTo(width.toFloat(), height.toFloat())
+            lineTo(0f, height.toFloat())
+            close()
+        }
         super.invalidate()
     }
 
@@ -181,7 +187,8 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
 
         private var maxTheta = 0.0
         private var topRadiusFraction = 0f
-        private var layout: ViewGroup? = null
+        lateinit var layout: ViewGroup
+            private set
 
         var interpolation = 1f
         var width = 0f
@@ -203,10 +210,14 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             val overlap = topCornerRadius + bottomCornerRadius - depth
             maxTheta = if (overlap < 0f) Math.PI / 2
                        else Math.PI / 2 - atan(overlap / topCornerRadius)
+            pathIsDirty = true
         }
 
         fun initLayout(cradleLayoutResId: Int) {
-            layout = findViewById(cradleLayoutResId)
+            layout = rootView.findViewById(cradleLayoutResId) ?:
+                throw IllegalArgumentException("No ViewGroup was found that matched the" +
+                                               "cradle layout resource id $cradleLayoutResId")
+            layout.requestLayout()
         }
 
         private val decelerate = DecelerateInterpolator()
@@ -222,7 +233,11 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
                 return@apply
             }
 
-            val layoutX = layout?.x ?: return@apply
+            layout.getGlobalVisibleRect(rect)
+            var layoutX = rect.left
+            getGlobalVisibleRect(rect)
+            layoutX -= rect.left
+
             val fullWidth = width + 2 * contentsMargin
             // The cradle width is interpolated down to 90% of its full width
             val startEndAdjust = fullWidth * 0.1f * (1f - interpolation)
@@ -318,7 +333,6 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
      *      override the value of tint if gradient is not null.
      */
     inner class NavIndicator() {
-        private val rect = Rect()
         private val path = Path()
         private val pathMeasure = PathMeasure()
         private val paint = Paint().apply { style = Paint.Style.STROKE
@@ -328,7 +342,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         var alpha get() = paint.alpha / 255f
                   set(value) { paint.alpha = (value * 255).roundToInt().coerceIn(0, 255) }
         var startDistance = 0f
-            set(value) { field = value; updatePath() }
+            set(value) { field = value; invalidate() }
         var width = 0f
         var height get() = paint.strokeWidth
                    set(value) { paint.strokeWidth = value }
@@ -405,11 +419,11 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             return distance
         }
 
-        private fun updatePath() {
+        fun invalidate() {
             path.rewind()
             pathMeasure.setPath(drawable.path, false)
             pathMeasure.getSegment(startDistance, startDistance + width, path, true)
-            invalidate()
+            this@BottomAppBar.invalidate()
         }
     }
 }

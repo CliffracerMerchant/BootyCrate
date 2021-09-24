@@ -170,14 +170,14 @@ private fun MainActivityBinding.styleBottomNavDrawerContents(screenWidth: Int,
         .setX2(screenWidth - addButtonLeft).buildLinearGradient()
 
     // Bottom navigation view
-    val menuSize = bottomNavigationBar.menu.size()
+    val menuSize = bottomNavigationView.menu.size()
     for (i in 0 until menuSize) {
         val center = ((i + 0.5f) / menuSize * screenWidth).toInt()
         val tint = ColorStateList.valueOf(fgGradientBitmap.getPixel(center, 0))
-        bottomNavigationBar.getIconAt(i).imageTintList = tint
-        bottomNavigationBar.setTextTintList(i, tint)
+        bottomNavigationView.getIconAt(i).imageTintList = tint
+        bottomNavigationView.setTextTintList(i, tint)
     }
-    bottomNavigationBar.invalidate()
+    bottomNavigationView.invalidate()
 
     // App title
     val titleLeft = (appTitle.layoutParams as ConstraintLayout.LayoutParams).marginStart * 1f
@@ -198,10 +198,6 @@ private fun ActionBarTitle.setShader(shader: Shader?) {
 }
 
 val MainActivityBinding.bottomAppBar get() = bottomNavigationDrawer.ui.bottomAppBar
-val MainActivityBinding.bottomNavigationBar get() = bottomNavigationDrawer.ui.bottomNavigationBar
-val MainActivityBinding.cradleLayout get() = bottomNavigationDrawer.ui.cradleLayout
-val MainActivityBinding.checkoutButton get() = bottomNavigationDrawer.ui.checkoutButton
-val MainActivityBinding.addButton get() = bottomNavigationDrawer.ui.addButton
-val MainActivityBinding.shoppingListBadge get() = bottomNavigationDrawer.ui.shoppingListBadge
+val MainActivityBinding.bottomNavigationView get() = bottomNavigationDrawer.ui.bottomNavigationView
 val MainActivityBinding.appTitle get() = bottomNavigationDrawer.ui.appTitle
 val MainActivityBinding.settingsButton get() = bottomNavigationDrawer.ui.settingsButton

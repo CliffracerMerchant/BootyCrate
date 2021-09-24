@@ -44,7 +44,7 @@ open class MainActivity : MultiFragmentActivity() {
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
         fragmentContainerId = ui.fragmentContainer.id
-        navigationBar = ui.bottomNavigationBar
+        navigationBar = ui.bottomNavigationView
         super.onCreate(savedInstanceState)
         setupOnClickListeners()
         initAnimatorConfigs()
@@ -53,9 +53,9 @@ open class MainActivity : MultiFragmentActivity() {
 
         // Setting android:importantForAccessibility in the bottom_navigation_menu.xml
         // for the disabled menu items seems not to work, so it must be done here instead
-        (ui.bottomNavigationBar.getIconAt(1).parent as View).
+        (ui.bottomNavigationView.getIconAt(1).parent as View).
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        (ui.bottomNavigationBar.getIconAt(2).parent as View)
+        (ui.bottomNavigationView.getIconAt(2).parent as View)
             .importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
@@ -71,9 +71,10 @@ open class MainActivity : MultiFragmentActivity() {
         currentFragment = newFragment
         if (newFragment !is MainActivityFragment) return
 
-        val needToAnimateCheckoutButton = needToAnimate && ui.bottomAppBar.isVisible
         if (newFragment.showsBottomAppBar()) ui.bottomNavigationDrawer.show()
         else                                 ui.bottomNavigationDrawer.hide()
+
+        val needToAnimateCheckoutButton = needToAnimate && ui.bottomAppBar.isVisible
         val showsCheckoutButton = newFragment.showsCheckoutButton()
         if (showsCheckoutButton != null)
             // The cradle animation is stored here and started in the cradle
@@ -83,6 +84,7 @@ open class MainActivity : MultiFragmentActivity() {
                 showing = showsCheckoutButton,
                 animatorConfig = primaryFragmentTransitionAnimatorConfig,
                 animate = needToAnimateCheckoutButton)
+
         ui.bottomAppBar.navIndicator.moveToItem(menuItemId = navigationBar.selectedItemId,
                                                 animate = needToAnimateCheckoutButton)
         newFragment.onActiveStateChanged(isActive = true, ui)
@@ -130,7 +132,7 @@ open class MainActivity : MultiFragmentActivity() {
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
         ui.actionBar.animatorConfig = transitionAnimConfig
-        ui.bottomAppBar.navIndicator.width = 2.5f * ui.bottomNavigationBar.itemIconSize
+        ui.bottomAppBar.navIndicator.width = 2.5f * ui.bottomNavigationView.itemIconSize
         ui.bottomAppBar.navIndicator.animatorConfig = transitionAnimConfig
             // The nav indicator anim duration is increased to improve its visbility
             .copy(duration = (transitionAnimConfig.duration * 1.2f).toLong())

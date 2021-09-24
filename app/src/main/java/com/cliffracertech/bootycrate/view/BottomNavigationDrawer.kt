@@ -103,22 +103,22 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
         }
 
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            ui.bottomNavigationBar.isVisible = slideOffset != 1f
-            ui.cradleLayout.isVisible = slideOffset != 1f
+            ui.bottomNavigationView.isVisible = slideOffset != 1f
+            ui.bottomAppBar.cradle.layout.isVisible = slideOffset != 1f
             ui.appTitle.isVisible = slideOffset != 0f
             ui.settingsButton.isVisible = slideOffset != 0f
 
-            ui.bottomNavigationBar.alpha = 1f - slideOffset
-            ui.cradleLayout.alpha = 1f - slideOffset
+            ui.bottomNavigationView.alpha = 1f - slideOffset
+            ui.bottomAppBar.cradle.layout.alpha = 1f - slideOffset
             ui.bottomAppBar.navIndicator.alpha = 1f - slideOffset
-            ui.cradleLayout.alpha = 1f - slideOffset
+            ui.bottomAppBar.cradle.layout.alpha = 1f - slideOffset
             ui.appTitle.alpha = slideOffset
             ui.settingsButton.alpha = slideOffset
 
             ui.bottomAppBar.cradle.interpolation = 1f - slideOffset
-            ui.cradleLayout.scaleX = 1f - 0.1f * slideOffset
-            ui.cradleLayout.scaleY = 1f - 0.1f * slideOffset
-            ui.cradleLayout.translationY = ui.cradleLayout.height * -0.9f * slideOffset
+            ui.bottomAppBar.cradle.layout.scaleX = 1f - 0.1f * slideOffset
+            ui.bottomAppBar.cradle.layout.scaleY = 1f - 0.1f * slideOffset
+            ui.bottomAppBar.cradle.layout.translationY = ui.bottomAppBar.cradle.layout.height * -0.9f * slideOffset
 
             ui.bottomAppBar.invalidate()
         }

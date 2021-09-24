@@ -11,8 +11,6 @@ import android.view.ViewGroup
 import androidx.annotation.Keep
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.*
-import com.cliffracertech.bootycrate.activity.addButton
-import com.cliffracertech.bootycrate.activity.checkoutButton
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.database.ShoppingListViewModel
