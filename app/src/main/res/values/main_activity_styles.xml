@@ -96,4 +96,10 @@
         <item name="android:paddingTop">4dp</item>
     </style>
 
+    <style name="BottomNavigationDrawer">
+        <item name="isHideable">onlyByApp</item>
+        <item name="behavior_peekHeight">?attr/actionBarSize</item>
+        <item name="android:clipChildren">false</item>
+    </style>
+
 </resources>

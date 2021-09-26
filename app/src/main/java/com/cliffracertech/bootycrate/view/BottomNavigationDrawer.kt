@@ -21,7 +21,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs) {
     private val behavior = BottomSheetBehavior<BottomNavigationDrawer>()
-    private val basePeekHeight: Int
+    private val minPeekHeight: Int
+    enum class IsHideable { Yes, No, OnlyByApp }
+    val isHideable: IsHideable
 
     val ui = BottomNavigationDrawerBinding.inflate(LayoutInflater.from(context), this)
     var peekHeight get() = behavior.peekHeight
@@ -31,9 +33,13 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
     var onSlideListener: ((View, Float) -> Unit)? = null
 
     init {
-        val a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.behavior_peekHeight))
+        var a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.behavior_peekHeight))
         val defaultPeekHeight = ui.appTitle.layoutParams.run { height + marginTop }
-        basePeekHeight = a.getDimensionPixelSize(0, defaultPeekHeight)
+        minPeekHeight = a.getDimensionPixelSize(0, defaultPeekHeight)
+
+        a = context.obtainStyledAttributes(attrs, R.styleable.BottomNavigationDrawer)
+        isHideable = IsHideable.values()[a.getInt(R.styleable.BottomNavigationDrawer_isHideable, 0)]
+        behavior.isHideable = isHideable == IsHideable.Yes
         a.recycle()
 
         var systemBottomGestureHeight = 0
@@ -43,23 +49,31 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, windowInsets ->
             var insets = windowInsets.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())
             systemBottomGestureHeight = insets.bottom
-
             insets = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
             statusBarHeight = insets.top
-
             windowInsets
         }
+
         doOnNextLayout {
             behavior.addBottomSheetCallback(BottomNavDrawerSheetCallback())
-            setBottomNavDrawerPeekHeight(context, systemBottomGestureHeight, statusBarHeight)
+            adjustBottomNavDrawerPeekHeight(context, systemBottomGestureHeight, statusBarHeight)
             (layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
         }
     }
 
-    fun expand() { behavior.state = BottomSheetBehavior.STATE_EXPANDED }
-    fun collapse() { behavior.state = BottomSheetBehavior.STATE_COLLAPSED }
+    fun expand() {
+        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN)
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+    }
+
+    fun collapse() {
+        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN)
+            behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+    }
 
     fun hide() {
+        if (isHideable == IsHideable.No) return
+
         behavior.isHideable = true
         behavior.state = BottomSheetBehavior.STATE_HIDDEN
     }
@@ -67,7 +81,9 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
     private var showing = false
     fun show() {
         behavior.state = BottomSheetBehavior.STATE_COLLAPSED
-        showing = true
+
+        if (isHideable == IsHideable.OnlyByApp)
+            showing = true
     }
 
     /**
@@ -80,7 +96,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
      * contents to reduce the likelihood of the bottom sheet gesture
      * interfering with the system home gesture.
      */
-    private fun setBottomNavDrawerPeekHeight(
+    private fun adjustBottomNavDrawerPeekHeight(
         context: Context,
         gestureHeight: Int,
         statusBarHeight: Int
@@ -93,17 +109,19 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
                       ?: (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
         display.getRealSize(displaySize)
 
-        val defaultBottom = context.resources.displayMetrics.heightPixels + statusBarHeight
+        val collapsedBottom = context.resources.displayMetrics.heightPixels + statusBarHeight
         val gestureTop = displaySize.y - gestureHeight
-        val overlap = (defaultBottom - gestureTop).coerceAtLeast(0)
+        val overlap = (collapsedBottom - gestureTop).coerceAtLeast(0)
 
         val contentTop = ui.bottomNavDrawerContentsLayout.run { top + paddingTop }
-        behavior.peekHeight = (basePeekHeight + overlap).coerceAtMost(contentTop)
+        behavior.peekHeight = (minPeekHeight + overlap).coerceAtMost(contentTop)
     }
 
     private inner class BottomNavDrawerSheetCallback : BottomSheetBehavior.BottomSheetCallback() {
         override fun onStateChanged(bottomSheet: View, newState: Int) {
-            if (newState == BottomSheetBehavior.STATE_COLLAPSED && showing) {
+            if (newState == BottomSheetBehavior.STATE_COLLAPSED &&
+                isHideable == IsHideable.OnlyByApp && showing
+            ) {
                 behavior.isHideable = false
                 showing = false
             }

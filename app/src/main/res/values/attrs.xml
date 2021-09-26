@@ -55,14 +55,16 @@
     </declare-styleable>
 
     <declare-styleable name="BottomNavigationDrawer">
-        <!-- The style for the BottomAppBar. -->
-        <attr name="bottomAppBarStyle"                  format="reference" />
-        <!-- The style used for the BottomNavigationView contained within the BottomAppBar. -->
-        <attr name="bottomNavigationViewStyle"          format="reference" />
         <!-- The style used for the TextView that displays the app title. -->
         <attr name="bottomNavDrawerAppTitleStyle"       format="reference" />
         <!-- A reference to the layout that will be used as the bottom navigation drawer contents. -->
         <attr name="bottomNavDrawerContentsLayoutResId" format="reference" />
+        <!-- The hideability of the BottomNavigationDrawer. -->
+        <attr name="isHideable"  format="enum" >
+            <enum name="yes" value="0" />
+            <enum name="no" value="1" />
+            <enum name="onlyByApp" value="2" />
+        </attr>
     </declare-styleable>
 
     <declare-styleable name="BottomAppBar">

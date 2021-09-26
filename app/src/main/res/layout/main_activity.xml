@@ -30,8 +30,7 @@
         android:id="@+id/bottomNavigationDrawer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:behavior_peekHeight="?attr/actionBarSize"
-        android:clipChildren="false" >
+        style="@style/BottomNavigationDrawer" >
 
         <com.cliffracertech.bootycrate.view.BottomAppBar
             android:id="@+id/bottomAppBar"
@@ -40,7 +39,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            style="?attr/bottomAppBarStyle" >
+            style="@style/BottomAppBar" >
 
         <!-- BottomNavigationViewEx is used instead of the default Android Bottom-
              NavigationView because it makes it easier to access the views used to
@@ -50,7 +49,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 tools:background="@drawable/background_gradient"
-                style="?attr/bottomNavigationViewStyle" />
+                style="@style/BottomNavigationView" />
 
             <TextView
                 android:id="@+id/shoppingListBadge"
