@@ -8,25 +8,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
-
-    <com.cliffracertech.bootycrate.view.BottomAppBar
-        android:id="@+id/bottomAppBar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        style="?attr/bottomAppBarStyle" >
-
-    <!-- BottomNavigationViewEx is used instead of the default Android Bottom-
-         NavigationView because it makes it easier to access the views used to
-         represent menu items (which is needed for some of the gradient styling). -->
-        <com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx
-            android:id="@+id/bottomNavigationView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:background="@drawable/background_gradient"
-            style="?attr/bottomNavigationViewStyle" />
-
-    </com.cliffracertech.bootycrate.view.BottomAppBar>
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout" >
 
     <TextView
         android:id="@+id/appTitle"
@@ -35,9 +17,10 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/settingsButton"
         app:layout_constraintTop_toTopOf="parent"
+        android:elevation="1dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="12dp"
-        style="?attr/bottomNavDrawerAppTitleStyle"/>
+        style="?attr/bottomNavDrawerAppTitleStyle" />
 
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/settingsButton"
@@ -47,8 +30,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="12dp"
+        android:elevation="1dp"
         android:layout_marginEnd="24dp"
-        style="@style/SettingsButton"/>
+        style="@style/SettingsButton" />
 
     <FrameLayout
         android:id="@+id/bottomNavDrawerContentsLayout"

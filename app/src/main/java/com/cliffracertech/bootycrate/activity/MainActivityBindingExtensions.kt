@@ -197,7 +197,5 @@ private fun ActionBarTitle.setShader(shader: Shader?) {
     (searchQueryView.background as? GradientVectorDrawable)?.gradient = shader
 }
 
-val MainActivityBinding.bottomAppBar get() = bottomNavigationDrawer.ui.bottomAppBar
-val MainActivityBinding.bottomNavigationView get() = bottomNavigationDrawer.ui.bottomNavigationView
 val MainActivityBinding.appTitle get() = bottomNavigationDrawer.ui.appTitle
 val MainActivityBinding.settingsButton get() = bottomNavigationDrawer.ui.settingsButton

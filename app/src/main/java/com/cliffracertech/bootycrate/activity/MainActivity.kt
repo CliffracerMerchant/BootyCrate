@@ -122,6 +122,22 @@ open class MainActivity : MultiFragmentActivity() {
             addSecondaryFragment(PreferencesFragment())
             ui.bottomNavigationDrawer.collapse()
         }
+
+        ui.bottomNavigationDrawer.onSlideListener = { _, slideOffset ->
+            ui.bottomNavigationView.isVisible = slideOffset != 1f
+            ui.bottomNavigationView.alpha = 1f - slideOffset
+            ui.bottomAppBar.apply {
+                cradle.layout.isVisible = slideOffset != 1f
+                cradle.layout.alpha = 1f - slideOffset
+                navIndicator.alpha = 1f - slideOffset
+                cradle.layout.alpha = 1f - slideOffset
+                cradle.interpolation = 1f - slideOffset
+                cradle.layout.scaleX = 1f - 0.1f * slideOffset
+                cradle.layout.scaleY = 1f - 0.1f * slideOffset
+                cradle.layout.translationY = cradle.layout.height * -0.9f * slideOffset
+                invalidate()
+            }
+        }
     }
 
     private fun initAnimatorConfigs() {

@@ -13,21 +13,29 @@ import android.view.View
 import android.view.WindowManager
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.doOnNextLayout
-import androidx.core.view.isVisible
+import androidx.core.view.*
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.BottomNavigationDrawerBinding
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs) {
     private val behavior = BottomSheetBehavior<BottomNavigationDrawer>()
+    private val basePeekHeight: Int
 
     val ui = BottomNavigationDrawerBinding.inflate(LayoutInflater.from(context), this)
-    val peekHeight get() = behavior.peekHeight
+    var peekHeight get() = behavior.peekHeight
+                   set(value) { behavior.peekHeight = value }
+
+    var onStateChangedListener: ((View, Int) -> Unit)? = null
+    var onSlideListener: ((View, Float) -> Unit)? = null
 
     init {
+        val a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.behavior_peekHeight))
+        val defaultPeekHeight = ui.appTitle.layoutParams.run { height + marginTop }
+        basePeekHeight = a.getDimensionPixelSize(0, defaultPeekHeight)
+        a.recycle()
+
         var systemBottomGestureHeight = 0
         var statusBarHeight = 0
 
@@ -43,7 +51,6 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
         }
         doOnNextLayout {
             behavior.addBottomSheetCallback(BottomNavDrawerSheetCallback())
-            behavior.peekHeight = ui.bottomAppBar.height
             setBottomNavDrawerPeekHeight(context, systemBottomGestureHeight, statusBarHeight)
             (layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
         }
@@ -91,7 +98,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
         val overlap = (defaultBottom - gestureTop).coerceAtLeast(0)
 
         val contentTop = ui.bottomNavDrawerContentsLayout.run { top + paddingTop }
-        behavior.peekHeight = (ui.bottomAppBar.height + overlap).coerceAtMost(contentTop)
+        behavior.peekHeight = (basePeekHeight + overlap).coerceAtMost(contentTop)
     }
 
     private inner class BottomNavDrawerSheetCallback : BottomSheetBehavior.BottomSheetCallback() {
@@ -100,27 +107,15 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
                 behavior.isHideable = false
                 showing = false
             }
+            onStateChangedListener?.invoke(bottomSheet, newState)
         }
 
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            ui.bottomNavigationView.isVisible = slideOffset != 1f
-            ui.bottomAppBar.cradle.layout.isVisible = slideOffset != 1f
             ui.appTitle.isVisible = slideOffset != 0f
             ui.settingsButton.isVisible = slideOffset != 0f
-
-            ui.bottomNavigationView.alpha = 1f - slideOffset
-            ui.bottomAppBar.cradle.layout.alpha = 1f - slideOffset
-            ui.bottomAppBar.navIndicator.alpha = 1f - slideOffset
-            ui.bottomAppBar.cradle.layout.alpha = 1f - slideOffset
             ui.appTitle.alpha = slideOffset
             ui.settingsButton.alpha = slideOffset
-
-            ui.bottomAppBar.cradle.interpolation = 1f - slideOffset
-            ui.bottomAppBar.cradle.layout.scaleX = 1f - 0.1f * slideOffset
-            ui.bottomAppBar.cradle.layout.scaleY = 1f - 0.1f * slideOffset
-            ui.bottomAppBar.cradle.layout.translationY = ui.bottomAppBar.cradle.layout.height * -0.9f * slideOffset
-
-            ui.bottomAppBar.invalidate()
+            onSlideListener?.invoke(bottomSheet, slideOffset)
         }
     }
 }
