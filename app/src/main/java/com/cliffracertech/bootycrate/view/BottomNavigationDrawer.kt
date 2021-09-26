@@ -19,6 +19,53 @@ import com.cliffracertech.bootycrate.databinding.BottomNavigationDrawerBinding
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
+/**
+ * A view that can be used as a bottom navigation drawer when included in a CoordinatorLayout.
+ *
+ * BottomNavigationDrawer is a custom view that can act as a bottom navigation
+ * drawer for an app when included in its top-level CoordinatorLayout.
+ * BottomNavigationDrawer includes an application title bar that displays the
+ * application title along with a settings button at its end, and a FrameLayout
+ * to hold the expanded contents of the bottom nav drawer.
+ *
+ * BottomNavigationDrawer manages its own BottomSheetBehavior instance, and
+ * does not need one to be set in XML. It will read the value of the XML
+ * attribute behavior_peekHeight, and use this value as its minimum peek height.
+ * If the system bottom gesture overlaps with the BottomNavigationDrawer in its
+ * collapsed state, it will attempt to increase its peek height above the
+ * minimum peek height so that the effective touch target size matches the peek
+ * height set in XML. The peek height can also be accessed and manually
+ * adjusted through the property peekHeight.
+ *
+ * BottomNavigationDrawer provides a new bottom sheet API in place of the one
+ * provided by BottomSheetBehavior. Rather than calling setState, the state is
+ * changed through the functions expand, collapse, hide, and show. The
+ * drawer's hideability is controlled through the property isHideable, which
+ * can only be set in XML using the XML attribute by the same name. If set to
+ * IsHideable.Yes or IsHideable.No, this will behave in the same as the
+ * BottomSheetBehavior property isHideable. If set to IsHideable.OnlyByApp,
+ * the drawer still collapse when using the functions hide and show, but will
+ * not be hideable by the user through swiping.
+ *
+ * If the drawer is not hidden, the functions expand and collapse will change
+ * the current state to the corresponding BottomSheetBehavior states STATE_EXPANDED
+ * and STATE_COLLAPSED, respectively. If isHideable is not equal to isHideable.No,
+ * the functions hide and show will set the current state to the corresponding
+ * BottomSheetBehavior states STATE_HIDDEN and STATE_COLLAPSED, respectively.
+ *
+ * The new API also introduces onStateChangedListener and onSlideListener,
+ * which are called in the same situations that BottomSheetBehavior.BottomSheetCallback's
+ * onStateChanged and onSlide functions, respectively, are called. This allows
+ * these functions to be used via composition, rather than inheritance. The
+ * BottomNavigationDrawer also fades in its app title and settings button as
+ * the drawer is slid towards its expanded state, and hides them as it is slid
+ * towards its collapsed state.
+ *
+ * BottomNavigationDrawer uses the value of the theme attributes bottomAppBarStyle
+ * to style its inner BottomAppBar, bottomNavigationViewStyle to style its
+ * BottomNavigationView, and bottomNavDrawerAppTitleStyle to style the TextView
+ * used as the application title.
+ */
 class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs) {
     private val behavior = BottomSheetBehavior<BottomNavigationDrawer>()
     private val minPeekHeight: Int
