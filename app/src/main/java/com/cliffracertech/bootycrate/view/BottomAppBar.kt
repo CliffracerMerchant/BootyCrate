@@ -29,17 +29,19 @@ import kotlin.math.*
  * cutout in its shape that can be used to hold the contents of a child layout,
  * and it draws an indicator along its top edge (taking into account the cradle
  * cutout) that can be set to match the position of a child BottomNavigationView
- * item. The layout that holds the cradle contents must be referenced by the XML
- * attribute cradleLayoutResId, and must be a child of the BottomAppBar.
- * Likewise, the BottomNavigationView must be referenced by the XML attribute
- * navViewResId.
+ * item. The layout that holds the cradle contents must be added as a child of
+ * the BottomAppBar (either programmatically or in XML), and the value of the
+ * BottomAppBar XML attribute cradleLayoutResId must be equal to the id of the
+ * child cradle layout. Likewise, the BottomNavigationView must be a child of
+ * the BottomAppBar, and must referenced by the XML attribute navViewResId.
  *
  * BottomAppBar contains a member, cradle, that holds the values (e.g. width)
- * that describe how to draw the cradle around the cradle layout contents. See
+ * that describe how it draws its cradle around the cradle layout contents. See
  * the inner class Cradle documentation for a description of these properties
  * and the corresponding XML attributes that they are initialized with.
  * Likewise, the values relating to the navigation indicator are held in the
- * member navIndicator, an instance of the inner class NavIndicator.
+ * member navIndicator, an instance of the inner class NavIndicator. The nav
+ * indicator is moved to new items using the NavIndicator function moveToItem.
  *
  * In addition to the cradle cutout, BottomAppBar also styles its top left
  * and top right corners with rounded corners with a radius equal to the
@@ -54,7 +56,6 @@ import kotlin.math.*
 class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
     private val rect = Rect()
     private val drawable = PathDrawable()
-    private var navBar: BottomNavigationView? = null
     private var pathIsDirty = true
 
     val cradle = Cradle()
@@ -91,12 +92,8 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         background = drawable
         doOnNextLayout {
             cradle.initLayout(cradleLayoutResId)
-            navBar = findViewById(navBarResId)
-
-            cradle.layout.doOnNextLayout {
-                invalidate()
-                navBar?.let { navIndicator.moveToItem(it.selectedItemId, animate = false) }
-            }
+            navIndicator.initNavView(navBarResId)
+            invalidate()
         }
     }
 
@@ -139,11 +136,12 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         navIndicator.draw(canvas)
     }
 
-    /** A state holder that stores values that describe how to draw a cradle
+    /**
+     * A state holder that stores values that describe how to draw a cradle
      * cutout on a path.
      *
      * Cradle stores the following publicly accessible values that describe how
-     * it draws it cradle on a Path instance:
+     * it draws its cradle on a Path instance:
      *
      * - interpolation: Initialized using the XML attribute cradleInterpolation.
      *      The interpolation value for the cradle. The valid range is 0f - 1f.
@@ -162,6 +160,16 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
      *      The radius of the bottom-left and bottom-right corners of the cradle cutout.
     */
     inner class Cradle {
+        lateinit var layout: ViewGroup
+            private set
+
+        var interpolation = 1f
+        var width = 0f
+        var depth = 0f
+        var contentsMargin = 0f
+        var topCornerRadius = 0f
+        var bottomCornerRadius = 0f
+
         var leftCurveStartX = 0f
             private set
         var leftCurveInflectionX = 0f
@@ -185,36 +193,8 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         val topCurveLength get() = (interpedTopRadius * theta).toFloat()
         val bottomCurveLength get() = (interpedBotRadius * theta).toFloat()
 
-        private var maxTheta = 0.0
-        private var topRadiusFraction = 0f
-        lateinit var layout: ViewGroup
-            private set
-
-        var interpolation = 1f
-        var width = 0f
-        var depth = 0f
-            set(value) { field = value; updateCachedValues() }
-        var contentsMargin = 0f
-        var topCornerRadius = 0f
-            set(value) { field = value; updateCachedValues() }
-        var bottomCornerRadius = 0f
-            set(value) { field = value; updateCachedValues() }
-
-        /** Update values used in addTo(Path) that only need updated after changes to
-         * depth, topCornerRadius, and bottomCornerRadius. Calling updateCachedValues
-         * every time one of these members are changed prevents the need to calculate
-         * these values in every call to addTo, even when they are unchanged. */
-        private fun updateCachedValues() {
-            topRadiusFraction = topCornerRadius / (topCornerRadius + bottomCornerRadius)
-
-            val overlap = topCornerRadius + bottomCornerRadius - depth
-            maxTheta = if (overlap < 0f) Math.PI / 2
-                       else Math.PI / 2 - atan(overlap / topCornerRadius)
-            pathIsDirty = true
-        }
-
         fun initLayout(cradleLayoutResId: Int) {
-            layout = rootView.findViewById(cradleLayoutResId) ?:
+            layout = findViewById(cradleLayoutResId) ?:
                 throw IllegalArgumentException("No ViewGroup was found that matched the" +
                                                "cradle layout resource id $cradleLayoutResId")
             layout.requestLayout()
@@ -233,21 +213,17 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
                 return@apply
             }
 
-            layout.getGlobalVisibleRect(rect)
-            var layoutX = rect.left
-            getGlobalVisibleRect(rect)
-            layoutX -= rect.left
-
             val fullWidth = width + 2 * contentsMargin
             // The cradle width is interpolated down to 90% of its full width
             val startEndAdjust = fullWidth * 0.1f * (1f - interpolation)
 
             // start will be the x coordinate of the start of the cradle if topCornerRadius is zero
-            val start = layoutX - contentsMargin + startEndAdjust
+            val start = layout.x - contentsMargin + startEndAdjust
             val end = start + fullWidth - 2 * startEndAdjust
 
             // yDistance is the y distance covered by both the top and bottom curves together.
             val yDistance = depth * interpolation
+            val topRadiusFraction = topCornerRadius / (topCornerRadius + bottomCornerRadius)
             val topYDistance = yDistance * topRadiusFraction
 
             // Because the x distances covered by the top and bottom curves varies in a non-linear
@@ -268,7 +244,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             //   = r * (1 - sin(π/2 - ϴ))
             // Solving this for ϴ gives:
             // ϴ = π/2 - arcsin(1 - y/r)
-            theta = Math.PI / 2 - asin(1 - topYDistance / interpedTopRadius).coerceIn(0.0, 90.0)
+            theta = Math.PI / 2 - asin(1 - topYDistance / interpedTopRadius)
             val thetaDegrees = Math.toDegrees(theta).toFloat()
 
             val unscaledXDistance = cos(Math.PI / 2 - theta)
@@ -309,12 +285,11 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
 
     /** A state holder that stores values that describe how to draw the navigation indicator.
      *
-     * NavIndicator provides the function moveToNavBarItem that, when called
-     * with the id of an item in the outer BottomAppBar's navigationView member,
-     * will animate the indicator from its current location to a new location
-     * that is above the menu item. It also stores the following publicly
-     * accessible values that describe how it draws its indicator on a
-     * BottomAppBar instance:
+     * NavIndicator provides the function moveToItem that, when called with the id
+     * of an item in the outer BottomAppBar's navigationView member, will animate
+     * the indicator from its current location to a new location that is above the
+     * menu item. It also stores the following publicly accessible values that
+     * describe how it draws its indicator on a BottomAppBar instance:
      *
      * - animatorConfig: Not initializable through XML.
      *      If not null, the value of animatorConfig will be used in indicator
@@ -337,12 +312,13 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         private val pathMeasure = PathMeasure()
         private val paint = Paint().apply { style = Paint.Style.STROKE
                                             strokeCap = Paint.Cap.ROUND }
+        private var navView: BottomNavigationView? = null
 
         var animatorConfig: AnimatorConfig? = null
         var alpha get() = paint.alpha / 255f
                   set(value) { paint.alpha = (value * 255).roundToInt().coerceIn(0, 255) }
         var startDistance = 0f
-            set(value) { field = value; invalidate() }
+            set(value) { field = value; updateIndicatorPath() }
         var width = 0f
         var height get() = paint.strokeWidth
                    set(value) { paint.strokeWidth = value }
@@ -354,10 +330,17 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
 
         fun draw(canvas: Canvas?) = canvas?.drawPath(path, paint)
 
+        fun initNavView(navViewResId: Int) {
+            navView = findViewById(navViewResId)
+            cradle.layout.doOnNextLayout {
+                moveToItem(navView?.selectedItemId ?: -1, animate = false)
+            }
+        }
+
         /** Move the indicator to be above the item with id equal to @param
          * menuItemId, animating the change if @param animate == true. */
-        fun moveToItem(menuItemId: Int, animate: Boolean = true) =
-            navBar?.findViewById<View>(menuItemId)?.let {
+        fun moveToItem(menuItemId: Int, animate: Boolean = true) {
+            navView?.findViewById<View>(menuItemId)?.let {
                 it.getGlobalVisibleRect(rect)
                 val newXPos = rect.centerX() - width / 2f
                 val targetStartDistance = findDistanceForX(newXPos)
@@ -367,8 +350,9 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
                     applyConfig(animatorConfig)
                 }.start()
             }
+        }
 
-        fun findDistanceForX(x: Float): Float {
+        private fun findDistanceForX(x: Float): Float {
             var distance = 0f
 
             if (x < topOuterCornerRadius) {
@@ -419,11 +403,11 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             return distance
         }
 
-        fun invalidate() {
+        private fun updateIndicatorPath() {
             path.rewind()
             pathMeasure.setPath(drawable.path, false)
             pathMeasure.getSegment(startDistance, startDistance + width, path, true)
-            this@BottomAppBar.invalidate()
+            invalidate()
         }
     }
 }
