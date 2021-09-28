@@ -18,6 +18,7 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.BottomNavigationDrawerBinding
 import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlin.math.abs
 
 /**
  * A view that can be used as a bottom navigation drawer when included in a CoordinatorLayout.
@@ -57,6 +58,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
  * which are called in the same situations that BottomSheetBehavior.BottomSheetCallback's
  * onStateChanged and onSlide functions, respectively, are called. This allows
  * these functions to be used via composition, rather than inheritance. The
+ * onSlideListener also includes a new int parameter, targetState, that will
+ * be equal to either BottomSheetBehavior.STATE_COLLAPSED, STATE_EXPANDED, or
+ * STATE_HIDDEN depending on which state the slide is moving towards. The
  * BottomNavigationDrawer also fades in its app title and settings button as
  * the drawer is slid towards its expanded state, and hides them as it is slid
  * towards its collapsed state.
@@ -71,13 +75,15 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
     private val minPeekHeight: Int
     enum class IsHideable { Yes, No, OnlyByApp }
     val isHideable: IsHideable
+    var targetState = BottomSheetBehavior.STATE_COLLAPSED
+        private set
 
     val ui = BottomNavigationDrawerBinding.inflate(LayoutInflater.from(context), this)
     var peekHeight get() = behavior.peekHeight
                    set(value) { behavior.peekHeight = value }
 
     var onStateChangedListener: ((View, Int) -> Unit)? = null
-    var onSlideListener: ((View, Float) -> Unit)? = null
+    var onSlideListener: ((View, Float, Int) -> Unit)? = null
 
     init {
         var a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.behavior_peekHeight))
@@ -109,13 +115,17 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
     }
 
     fun expand() {
-        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN)
+        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN) {
             behavior.state = BottomSheetBehavior.STATE_EXPANDED
+            targetState = BottomSheetBehavior.STATE_EXPANDED
+        }
     }
 
     fun collapse() {
-        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN)
+        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN) {
             behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+            targetState = BottomSheetBehavior.STATE_COLLAPSED
+        }
     }
 
     fun hide() {
@@ -123,12 +133,13 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
 
         behavior.isHideable = true
         behavior.state = BottomSheetBehavior.STATE_HIDDEN
+        targetState = BottomSheetBehavior.STATE_HIDDEN
     }
 
     private var showing = false
     fun show() {
         behavior.state = BottomSheetBehavior.STATE_COLLAPSED
-
+        targetState = BottomSheetBehavior.STATE_COLLAPSED
         if (isHideable == IsHideable.OnlyByApp)
             showing = true
     }
@@ -148,7 +159,10 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
         gestureHeight: Int,
         statusBarHeight: Int
     ) {
-        if (gestureHeight == 0) return
+        if (gestureHeight == 0) {
+            peekHeight = minPeekHeight
+            return
+        }
 
         val displaySize = Point()
         val display = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display
@@ -176,11 +190,14 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
         }
 
         override fun onSlide(bottomSheet: View, slideOffset: Float) {
-            ui.appTitle.isVisible = slideOffset != 0f
-            ui.settingsButton.isVisible = slideOffset != 0f
-            ui.appTitle.alpha = slideOffset
-            ui.settingsButton.alpha = slideOffset
-            onSlideListener?.invoke(bottomSheet, slideOffset)
+            if (targetState != BottomSheetBehavior.STATE_HIDDEN) {
+                val slide = abs(slideOffset)
+                ui.appTitle.isVisible = slide != 0f
+                ui.settingsButton.isVisible = slide != 0f
+                ui.appTitle.alpha = slide
+                ui.settingsButton.alpha = slide
+            }
+            onSlideListener?.invoke(bottomSheet, slideOffset, targetState)
         }
     }
 }

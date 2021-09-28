@@ -21,6 +21,8 @@ import com.cliffracertech.bootycrate.fragment.PreferencesFragment
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.doOnStart
 import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlin.math.abs
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -44,7 +46,7 @@ open class MainActivity : MultiFragmentActivity() {
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
         fragmentContainerId = ui.fragmentContainer.id
-        navigationBar = ui.bottomNavigationView
+        navigationView = ui.bottomNavigationView
         super.onCreate(savedInstanceState)
         setupOnClickListeners()
         initAnimatorConfigs()
@@ -85,7 +87,7 @@ open class MainActivity : MultiFragmentActivity() {
                 animatorConfig = primaryFragmentTransitionAnimatorConfig,
                 animate = needToAnimateCheckoutButton)
 
-        ui.bottomAppBar.navIndicator.moveToItem(menuItemId = navigationBar.selectedItemId,
+        ui.bottomAppBar.navIndicator.moveToItem(menuItemId = navigationView.selectedItemId,
                                                 animate = needToAnimateCheckoutButton)
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
@@ -123,19 +125,22 @@ open class MainActivity : MultiFragmentActivity() {
             ui.bottomNavigationDrawer.collapse()
         }
 
-        ui.bottomNavigationDrawer.onSlideListener = { _, slideOffset ->
-            ui.bottomNavigationView.isVisible = slideOffset != 1f
-            ui.bottomNavigationView.alpha = 1f - slideOffset
-            ui.bottomAppBar.apply {
-                cradle.layout.isVisible = slideOffset != 1f
-                cradle.layout.alpha = 1f - slideOffset
-                navIndicator.alpha = 1f - slideOffset
-                cradle.layout.alpha = 1f - slideOffset
-                cradle.interpolation = 1f - slideOffset
-                cradle.layout.scaleX = 1f - 0.1f * slideOffset
-                cradle.layout.scaleY = 1f - 0.1f * slideOffset
-                cradle.layout.translationY = cradle.layout.height * -0.9f * slideOffset
-                invalidate()
+        ui.bottomNavigationDrawer.onSlideListener = { _, slideOffset, targetState ->
+            if (targetState != BottomSheetBehavior.STATE_HIDDEN) {
+                val slide = abs(slideOffset)
+                ui.bottomNavigationView.isVisible = slide != 1f
+                ui.bottomNavigationView.alpha = 1f - slide
+                ui.bottomAppBar.apply {
+                    cradle.layout?.apply {
+                        isVisible = slide != 1f
+                        alpha = 1f - slide
+                        scaleX = 1f - 0.1f * slide
+                        scaleY = 1f - 0.1f * slide
+                        translationY = height * -0.9f * slide
+                    }
+                    navIndicator.alpha = 1f - slide
+                    cradle.interpolation = 1f - slide
+                }
             }
         }
     }

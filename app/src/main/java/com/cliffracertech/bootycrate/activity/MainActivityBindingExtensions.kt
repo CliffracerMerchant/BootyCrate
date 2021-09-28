@@ -42,7 +42,7 @@ fun MainActivityBinding.showCheckoutButton(
     animatorConfig: AnimatorConfig? = null,
     animate: Boolean = true
 ): Animator? {
-    if (!animate) {
+    if (!animate || checkoutButton.isVisible == showing) {
         checkoutButton.isVisible = showing
         bottomAppBar.cradle.width = cradleWidth(showing)
         return null
