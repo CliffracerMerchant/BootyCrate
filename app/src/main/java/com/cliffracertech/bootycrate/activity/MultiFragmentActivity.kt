@@ -17,55 +17,53 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 
 /**
  * An activity that, when linked up with a navigation bar instance, will
- * automatically create and manage fragment instances for each navigation
- * bar menu item.
+ * automatically create and manage fragment instances for each navigation bar
+ * menu item.
  *
- * MultiFragmentActivity will automatically add a fragment instance for
- * each menu item of the navigation bar menu that it is connected to.
- * These automatically generated fragments are called primary fragments.
- * These primary fragments are intended to be used for fragments that need
- * to be switched between often, and for which repeated destruction and
- * recreation is undesirable. To facilitate this, the primary fragments
- * are never replaced, but instead will have their views' visibilities set
- * to View.GONE when not in use. Because this increases memory consumption,
- * it is not recommended to add more than a few commonly used fragments.
- * If other, less frequently used fragments need to be used temporarily,
- * this can be accomplished using the function addSecondaryFragment.
+ * MultiFragmentActivity will automatically add a fragment instance for each
+ * menu item of the navigation bar menu that it is connected to. These
+ * automatically generated fragments are called primary fragments. These
+ * primary fragments are intended to be used for fragments that need to be
+ * switched between often, and for which repeated destruction and recreation is
+ * undesirable. To facilitate this, the primary fragments are never replaced,
+ * but instead will have their views' visibilities set to View.GONE when not in
+ * use. Because this increases memory consumption, it is not recommended to add
+ * more than a few commonly used fragments. If other, less frequently used
+ * fragments need to be used temporarily, this can be accomplished using the
+ * function addSecondaryFragment.
  *
- * In order for the primary fragment auto-generation to succeed, the prop-
- * erty navigationBar must be initialized in a subclass before MultiFrag-
- * mentActivity's onCreate is called, the property fragmentContainerId
- * must be set to the id of the container that the fragments will be added
- * to, and the resource pointed to by the id R.array.multi_fragment_activity_fragments
- * must be a string array that contains the names of the primary fragments,
- * including package name. This being the case, MultiFragmentActivity will
- * attempt to associate each primary fragment in the order they are listed
- * with a navigation bar menu item, skipping disabled menu items. If the
- * navigation menu does not have at least as many enabled menu items as
- * the number of primary fragments, an indexOutOfBoundsException will be
- * thrown. If primary fragment auto-generation succeeds, MultiFragment-
- * Activity will set itself as the OnNavigationItemSelectedListener for
- * the navigation bar, and will automatically switch to the corresponding
- * fragment with an animation.
+ * In order for the primary fragment auto-generation to succeed, the property
+ * navigationView must be initialized in a subclass before MultiFragmentActivity's
+ * onCreate is called, the property fragmentContainerId must be set to the id
+ * of the container that the fragments will be added to, and the resource
+ * pointed to by the id R.array.multi_fragment_activity_fragments must be a
+ * string array that contains the names of the primary fragments, including
+ * package name. This being the case, MultiFragmentActivity will attempt to
+ * associate each primary fragment in the order they are listed with a
+ * navigation bar menu item, skipping disabled menu items. If the navigation
+ * menu does not have at least as many enabled menu items as the number of
+ * primary fragments, an indexOutOfBoundsException will be thrown. If primary
+ * fragment auto-generation succeeds, MultiFragment- Activity will set itself
+ * as the OnNavigationItemSelectedListener for the navigation bar, and will
+ * automatically switch to the corresponding fragment with an animation.
  *
  * FragmentContainer uses its own slide left or right animations for its
  * primary fragments, although the duration and the interpolators used for
- * these animations can be set through the property primaryFragmentTransi-
- * tionAnimatorConfig. The animations used for the addition or popping of
- * secondary fragments can either be passed in directly to a call of add-
- * SecondaryFragment, or will default to the value of the properties
- * secondaryFragmentDefaultEnterAnimResId and secondaryFragmentDefaultExit-
- * AnimResId.
+ * these animations can be set through the property primaryFragmentTransitionAnimatorConfig.
+ * The animations used for the addition or popping of secondary fragments can
+ * either be passed in directly to a call of addSecondaryFragment, or will
+ * default to the value of the properties secondaryFragmentDefaultEnterAnimResId
+ * and secondaryFragmentDefaultExitAnimResId.
  *
- * The property visibleFragment will always be equal to the topmost frag-
- * ment, including secondary fragments. When a new primary or secondary
- * fragment becomes visible to the user, the open function onNewFragment-
- * Selected will be called. Override onNewFragmentSelected in subclasses
- * if special behavior when the visible fragment changes is desired.
+ * The property visibleFragment will always be equal to the topmost fragment,
+ * including secondary fragments. When a new primary or secondary fragment
+ * becomes visible to the user, the open function onNewFragmentSelected will be
+ * called. Override onNewFragmentSelected in subclasses if special behavior
+ * when the visible fragment changes is desired.
  */
 abstract class MultiFragmentActivity : AppCompatActivity() {
     protected var fragmentContainerId = 0
-    protected lateinit var navigationBar: BottomNavigationView
+    protected lateinit var navigationView: BottomNavigationView
     private val navBarMenuItemFragmentMap = mutableMapOf<Int, Fragment>()
 
     val visibleFragment get() =
@@ -75,7 +73,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         } ?: supportFragmentManager.fragments.last()
 
     val showingPrimaryFragment get() = supportFragmentManager.backStackEntryCount == 0
-    val selectedPrimaryFragment get() = navBarMenuItemFragmentMap.getValue(navigationBar.selectedItemId)
+    val selectedPrimaryFragment get() = navBarMenuItemFragmentMap.getValue(navigationView.selectedItemId)
 
     var primaryFragmentTransitionAnimatorConfig: AnimatorConfig? = null
     protected var defaultSecondaryFragmentEnterAnimResId: Int = 0
@@ -102,7 +100,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     /** Attempt to switch to a new active fragment corresponding to the @param
      * menuItem, and @return whether or not the switch was successful. */
     private fun switchToNewPrimaryFragment(menuItem: MenuItem): Boolean {
-        if (menuItem.itemId == navigationBar.selectedItemId || !showingPrimaryFragment) return false
+        if (menuItem.itemId == navigationView.selectedItemId || !showingPrimaryFragment) return false
         if (exitingFragmentView != null) {
             queuedMenuItem = menuItem
             menuItemLastPressTimestamp = System.currentTimeMillis()
@@ -111,7 +109,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
 
         val newFragment = navBarMenuItemFragmentMap[menuItem.itemId] ?: return false
 
-        val oldFragmentMenuItem = navigationBar.menu.findItem(navigationBar.selectedItemId)
+        val oldFragmentMenuItem = navigationView.menu.findItem(navigationView.selectedItemId)
         menuItem.isChecked = true
         onNewFragmentSelected(newFragment)
 
@@ -179,7 +177,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             supportFragmentManager.putFragment(
                 outState, idAndFragment.key.toString(), idAndFragment.value)
         outState.putBoolean("wasShowingPrimaryFragment", showingPrimaryFragment)
-        outState.putInt("selectedNavItemId", navigationBar.selectedItemId)
+        outState.putInt("selectedNavItemId", navigationView.selectedItemId)
     }
 
     open fun onNewFragmentSelected(newFragment: Fragment) { }
@@ -190,7 +188,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         var assignedFragments = 0
         try { while (assignedFragments < fragmentNames.size) {
             val name = fragmentNames[assignedFragments]
-            val menuItem = navigationBar.menu.getItem(menuItemIndex++)
+            val menuItem = navigationView.menu.getItem(menuItemIndex++)
             if (!menuItem.isEnabled) continue
             val fragment = supportFragmentManager.run {
                 if (savedInstanceState == null)
@@ -219,17 +217,17 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
             savedInstanceState?.getBoolean("wasShowingPrimaryFragment") ?: true
         val savedNavItemId = savedInstanceState?.getInt("selectedNavItemId")
         if (savedNavItemId != null)
-            navigationBar.selectedItemId = savedNavItemId
+            navigationView.selectedItemId = savedNavItemId
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
-            if (menuItemId != navigationBar.selectedItemId || !wasShowingPrimaryFragment)
+            if (menuItemId != navigationView.selectedItemId || !wasShowingPrimaryFragment)
                 // Even though the inactive fragments views' visibilities are later
                 // set to View.GONE, setting them to INVISIBLE this first time ensures
                 // that the transition animation plays correctly the first time.
                 fragment.view?.visibility = View.INVISIBLE
         }
-        navigationBar.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
+        navigationView.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
         onNewFragmentSelected(visibleFragment!!)
     }
 }

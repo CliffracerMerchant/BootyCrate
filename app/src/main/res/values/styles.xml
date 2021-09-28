@@ -43,8 +43,8 @@
         <item name="indicatorGradientMiddleColor">@color/lightThemeIndicatorColor</item>
         <item name="indicatorGradientRightColor">@color/lightThemeIndicatorColor</item>
         <item name="recyclerViewItemSelectionGradientLeftColor">?attr/backgroundGradientLeftColor</item>
-        <item name="recyclerViewItemSelectionGradientMiddleColor">?attr/backgroundGradientLeftColor</item>
-        <item name="recyclerViewItemSelectionGradientRightColor">?attr/backgroundGradientLeftColor</item>
+        <item name="recyclerViewItemSelectionGradientMiddleColor">?attr/backgroundGradientMiddleColor</item>
+        <item name="recyclerViewItemSelectionGradientRightColor">?attr/backgroundGradientRightColor</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">
