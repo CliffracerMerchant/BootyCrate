@@ -57,10 +57,12 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
     private val rect = Rect()
     private val drawable = PathDrawable()
     private var pathIsDirty = true
+        set(value) { field = value; invalidate() }
 
     val cradle = Cradle()
     val navIndicator = NavIndicator()
     var topOuterCornerRadius = 0f
+        set(value) { field = value; pathIsDirty = true}
 
     var backgroundTint: Int get() = drawable.paint.color
                             set(value) { drawable.paint.color = value }
@@ -85,7 +87,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         navIndicator.width = a.getDimension(R.styleable.BottomAppBar_navIndicatorWidth, 0f)
         navIndicator.alpha = a.getFloat(R.styleable.BottomAppBar_navIndicatorAlpha, 1f)
         navIndicator.tint = a.getColor(R.styleable.BottomAppBar_navIndicatorTint,
-                                    ContextCompat.getColor(context, android.R.color.black))
+                                       ContextCompat.getColor(context, android.R.color.black))
 
         a.recycle()
         setWillNotDraw(false)
@@ -110,7 +112,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
               startAngle, sweepAngle, false)
 
     override fun invalidate() {
-        if (pathIsDirty) drawable.path.run {
+        if (pathIsDirty && cradle.layout != null) drawable.path.run {
             rewind()
             moveTo(0f, topOuterCornerRadius)
             arcTo(centerX = topOuterCornerRadius,
@@ -127,6 +129,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             lineTo(width.toFloat(), height.toFloat())
             lineTo(0f, height.toFloat())
             close()
+            pathIsDirty = false
         }
         super.invalidate()
     }
@@ -160,15 +163,21 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
      *      The radius of the bottom-left and bottom-right corners of the cradle cutout.
     */
     inner class Cradle {
-        lateinit var layout: ViewGroup
+        var layout: ViewGroup? = null
             private set
 
         var interpolation = 1f
+            set(value) { field = value; pathIsDirty = true}
         var width = 0f
+            set(value) { field = value; pathIsDirty = true}
         var depth = 0f
+            set(value) { field = value; pathIsDirty = true}
         var contentsMargin = 0f
+            set(value) { field = value; pathIsDirty = true}
         var topCornerRadius = 0f
+            set(value) { field = value; pathIsDirty = true}
         var bottomCornerRadius = 0f
+            set(value) { field = value; pathIsDirty = true}
 
         var leftCurveStartX = 0f
             private set
@@ -197,7 +206,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             layout = findViewById(cradleLayoutResId) ?:
                 throw IllegalArgumentException("No ViewGroup was found that matched the" +
                                                "cradle layout resource id $cradleLayoutResId")
-            layout.requestLayout()
+            layout?.requestLayout()
         }
 
         private val decelerate = DecelerateInterpolator()
@@ -218,7 +227,8 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             val startEndAdjust = fullWidth * 0.1f * (1f - interpolation)
 
             // start will be the x coordinate of the start of the cradle if topCornerRadius is zero
-            val start = layout.x - contentsMargin + startEndAdjust
+            val layoutX = layout?.x ?: return@apply
+            val start = layoutX - contentsMargin + startEndAdjust
             val end = start + fullWidth - 2 * startEndAdjust
 
             // yDistance is the y distance covered by both the top and bottom curves together.
@@ -317,8 +327,8 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         var animatorConfig: AnimatorConfig? = null
         var alpha get() = paint.alpha / 255f
                   set(value) { paint.alpha = (value * 255).roundToInt().coerceIn(0, 255) }
-        var startDistance = 0f
-            set(value) { field = value; updateIndicatorPath() }
+        private var startDistance = 0f
+            set(value) { field = value; updatePath() }
         var width = 0f
         var height get() = paint.strokeWidth
                    set(value) { paint.strokeWidth = value }
@@ -332,14 +342,19 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
 
         fun initNavView(navViewResId: Int) {
             navView = findViewById(navViewResId)
-            cradle.layout.doOnNextLayout {
-                moveToItem(navView?.selectedItemId ?: -1, animate = false)
+            cradle.layout?.doOnNextLayout {
+                invalidate()
+                doOnNextLayout() {
+                    moveToItem(navView?.selectedItemId ?: -1, animate = false)
+                }
             }
         }
 
+        private var selectedMenuItemId = -1
         /** Move the indicator to be above the item with id equal to @param
          * menuItemId, animating the change if @param animate == true. */
         fun moveToItem(menuItemId: Int, animate: Boolean = true) {
+            if (menuItemId == selectedMenuItemId) return
             navView?.findViewById<View>(menuItemId)?.let {
                 it.getGlobalVisibleRect(rect)
                 val newXPos = rect.centerX() - width / 2f
@@ -349,6 +364,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
                     addUpdateListener { startDistance = animatedValue as Float }
                     applyConfig(animatorConfig)
                 }.start()
+                selectedMenuItemId = menuItemId
             }
         }
 
@@ -403,7 +419,8 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             return distance
         }
 
-        private fun updateIndicatorPath() {
+       private fun updatePath() {
+            if (cradle.interpolation != 1f) return
             path.rewind()
             pathMeasure.setPath(drawable.path, false)
             pathMeasure.getSegment(startDistance, startDistance + width, path, true)
