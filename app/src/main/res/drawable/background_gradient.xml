@@ -8,6 +8,5 @@
     <gradient
         android:startColor="?attr/backgroundGradientLeftColor"
         android:centerColor="?attr/backgroundGradientMiddleColor"
-        android:endColor="?attr/backgroundGradientRightColor"
-        android:angle="0" />
+        android:endColor="?attr/backgroundGradientRightColor" />
 </shape>

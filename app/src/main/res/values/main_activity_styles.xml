@@ -71,8 +71,8 @@
     <style name="AppTitle">
         <item name="android:gravity">center_vertical</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
-        <item name="android:textSize">22sp</item>
-        <item name="titleFont">@font/comfortaa</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/comfortaa</item>
         <item name="android:text">@string/app_name</item>
         <item name="android:alpha">0</item>
         <item name="android:visibility">gone</item>

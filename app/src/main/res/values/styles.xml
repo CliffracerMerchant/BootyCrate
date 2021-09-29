@@ -29,7 +29,6 @@
         <item name="snackbarButtonStyle">@style/SnackbarActionTextAppearance</item>
         <item name="actionBarTitleStyle">@style/ActionBarTitle</item>
         <item name="android:textAppearance">@style/TextAppearance</item>
-        <item name="bottomNavDrawerAppTitleStyle">@style/AppTitle</item>
 
         <item name="colorPrimary">@color/lightThemeBgGradientLeft</item>
         <item name="colorAccent">@color/lightThemeBgGradientLeft</item>

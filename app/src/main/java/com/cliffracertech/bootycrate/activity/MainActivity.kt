@@ -128,8 +128,16 @@ open class MainActivity : MultiFragmentActivity() {
         ui.bottomNavigationDrawer.onSlideListener = { _, slideOffset, targetState ->
             if (targetState != BottomSheetBehavior.STATE_HIDDEN) {
                 val slide = abs(slideOffset)
+
+                ui.appTitle.isVisible = slide != 0f
+                ui.settingsButton.isVisible = slide != 0f
                 ui.bottomNavigationView.isVisible = slide != 1f
+
+                ui.appTitle.alpha = slide
+                ui.settingsButton.alpha = slide
+                ui.inventorySelector.alpha = slide
                 ui.bottomNavigationView.alpha = 1f - slide
+
                 ui.bottomAppBar.apply {
                     cradle.layout?.apply {
                         isVisible = slide != 1f

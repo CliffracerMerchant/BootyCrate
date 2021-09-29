@@ -55,12 +55,13 @@
     </declare-styleable>
 
     <declare-styleable name="BottomNavigationDrawer">
-        <!-- The style used for the TextView that displays the app title. -->
-        <attr name="bottomNavDrawerAppTitleStyle"       format="reference" />
-        <!-- A reference to the layout that will be used as the bottom navigation drawer contents. -->
-        <attr name="bottomNavDrawerContentsLayoutResId" format="reference" />
+        <!-- The maximum peek height of the drawer. The drawer will never auto-adjust
+             its peek height above this value, but setting it too low may result in
+             the drawer's effective touch target size being below the intended value
+             if the user is using system gestures. -->
+        <attr name="maxPeekHeight" format="dimension" />
         <!-- The hideability of the BottomNavigationDrawer. -->
-        <attr name="isHideable"  format="enum" >
+        <attr name="isHideable"    format="enum" >
             <enum name="yes" value="0" />
             <enum name="no" value="1" />
             <enum name="onlyByApp" value="2" />

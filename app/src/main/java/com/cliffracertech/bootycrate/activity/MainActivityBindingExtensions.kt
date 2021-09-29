@@ -9,6 +9,7 @@ import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.graphics.*
 import android.view.View
+import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
@@ -196,6 +197,3 @@ private fun ActionBarTitle.setShader(shader: Shader?) {
     searchQueryView.paint.shader = shader
     (searchQueryView.background as? GradientVectorDrawable)?.gradient = shader
 }
-
-val MainActivityBinding.appTitle get() = bottomNavigationDrawer.ui.appTitle
-val MainActivityBinding.settingsButton get() = bottomNavigationDrawer.ui.settingsButton
