@@ -122,7 +122,6 @@ open class MainActivity : MultiFragmentActivity() {
         ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
         ui.settingsButton.setOnClickListener {
             addSecondaryFragment(PreferencesFragment())
-            ui.bottomNavigationDrawer.collapse()
         }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
     }

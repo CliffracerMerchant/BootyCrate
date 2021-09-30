@@ -14,10 +14,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.GradientBuilder
-import com.cliffracertech.bootycrate.utils.applyConfig
-import com.cliffracertech.bootycrate.utils.resolveIntAttribute
+import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.view.ActionBarTitle
 import com.cliffracertech.bootycrate.view.GradientVectorDrawable
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -200,20 +197,16 @@ private fun ActionBarTitle.setShader(shader: Shader?) {
 }
 
 fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.BottomSheetCallback() {
-    override fun onStateChanged(bottomSheet: View, newState: Int) {
-        val collapsed = newState == BottomSheetBehavior.STATE_COLLAPSED
-        appTitle.isVisible = !collapsed
-        settingsButton.isVisible = !collapsed
-
-        val expanded = newState == BottomSheetBehavior.STATE_EXPANDED
-        bottomNavigationView.isVisible = !expanded
-        bottomAppBar.cradle.layout?.apply { isVisible = !expanded }
-    }
+    override fun onStateChanged(bottomSheet: View, newState: Int) { }
 
     override fun onSlide(bottomSheet: View, slideOffset: Float) {
         if (bottomNavigationDrawer.targetState == BottomSheetBehavior.STATE_HIDDEN)
             return
         val slide = abs(slideOffset)
+
+        appTitle.isVisible = slideOffset != 0f
+        settingsButton.isVisible = slideOffset != 0f
+        bottomNavigationView.isVisible = slideOffset != 1f
 
         appTitle.alpha = slide
         settingsButton.alpha = slide
@@ -222,6 +215,7 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
 
         bottomAppBar.apply {
             cradle.layout?.apply {
+                isVisible = slideOffset != 1f
                 alpha = 1f - slide
                 scaleX = 1f - 0.1f * slide
                 scaleY = 1f - 0.1f * slide
