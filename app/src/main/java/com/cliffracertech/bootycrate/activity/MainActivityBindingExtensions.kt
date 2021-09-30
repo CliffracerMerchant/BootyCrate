@@ -10,7 +10,6 @@ import android.content.res.ColorStateList
 import android.graphics.*
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
@@ -21,6 +20,8 @@ import com.cliffracertech.bootycrate.utils.applyConfig
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.cliffracertech.bootycrate.view.ActionBarTitle
 import com.cliffracertech.bootycrate.view.GradientVectorDrawable
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlin.math.abs
 
 /** Return the appropriate target BottomAppBar.cradle.width value for a checkout
  * button visibility matching the value of @param showingCheckoutButton. */
@@ -181,12 +182,12 @@ private fun MainActivityBinding.styleBottomNavDrawerContents(screenWidth: Int,
     bottomNavigationView.invalidate()
 
     // App title
-    val titleLeft = (appTitle.layoutParams as ConstraintLayout.LayoutParams).marginStart * 1f
+    val titleLeft = (appTitle.layoutParams as ViewGroup.MarginLayoutParams).marginStart * 1f
     appTitle.paint.shader = fgGradientBuilder.setX1(-titleLeft)
         .setX2(screenWidth - titleLeft).buildLinearGradient()
 
     // settings button
-    val layoutParams = settingsButton.layoutParams as ConstraintLayout.LayoutParams
+    val layoutParams = settingsButton.layoutParams as ViewGroup.MarginLayoutParams
     val settingsButtonLeft = screenWidth - layoutParams.marginEnd - layoutParams.width
     settingsButton.drawable.setTint(fgGradientBitmap.getPixel(settingsButtonLeft, 0))
 }
@@ -196,4 +197,38 @@ private fun ActionBarTitle.setShader(shader: Shader?) {
     actionModeTitleView.paint.shader = shader
     searchQueryView.paint.shader = shader
     (searchQueryView.background as? GradientVectorDrawable)?.gradient = shader
+}
+
+fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.BottomSheetCallback() {
+    override fun onStateChanged(bottomSheet: View, newState: Int) {
+        val collapsed = newState == BottomSheetBehavior.STATE_COLLAPSED
+        appTitle.isVisible = !collapsed
+        settingsButton.isVisible = !collapsed
+
+        val expanded = newState == BottomSheetBehavior.STATE_EXPANDED
+        bottomNavigationView.isVisible = !expanded
+        bottomAppBar.cradle.layout?.apply { isVisible = !expanded }
+    }
+
+    override fun onSlide(bottomSheet: View, slideOffset: Float) {
+        if (bottomNavigationDrawer.targetState == BottomSheetBehavior.STATE_HIDDEN)
+            return
+        val slide = abs(slideOffset)
+
+        appTitle.alpha = slide
+        settingsButton.alpha = slide
+        inventorySelector.alpha = slide
+        bottomNavigationView.alpha = 1f - slide
+
+        bottomAppBar.apply {
+            cradle.layout?.apply {
+                alpha = 1f - slide
+                scaleX = 1f - 0.1f * slide
+                scaleY = 1f - 0.1f * slide
+                translationY = height * -0.9f * slide
+            }
+            navIndicator.alpha = 1f - slide
+            cradle.interpolation = 1f - slide
+        }
+    }
 }

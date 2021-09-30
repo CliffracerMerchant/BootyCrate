@@ -124,33 +124,7 @@ open class MainActivity : MultiFragmentActivity() {
             addSecondaryFragment(PreferencesFragment())
             ui.bottomNavigationDrawer.collapse()
         }
-
-        ui.bottomNavigationDrawer.onSlideListener = { _, slideOffset, targetState ->
-            if (targetState != BottomSheetBehavior.STATE_HIDDEN) {
-                val slide = abs(slideOffset)
-
-                ui.appTitle.isVisible = slide != 0f
-                ui.settingsButton.isVisible = slide != 0f
-                ui.bottomNavigationView.isVisible = slide != 1f
-
-                ui.appTitle.alpha = slide
-                ui.settingsButton.alpha = slide
-                ui.inventorySelector.alpha = slide
-                ui.bottomNavigationView.alpha = 1f - slide
-
-                ui.bottomAppBar.apply {
-                    cradle.layout?.apply {
-                        isVisible = slide != 1f
-                        alpha = 1f - slide
-                        scaleX = 1f - 0.1f * slide
-                        scaleY = 1f - 0.1f * slide
-                        translationY = height * -0.9f * slide
-                    }
-                    navIndicator.alpha = 1f - slide
-                    cradle.interpolation = 1f - slide
-                }
-            }
-        }
+        ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
     }
 
     private fun initAnimatorConfigs() {

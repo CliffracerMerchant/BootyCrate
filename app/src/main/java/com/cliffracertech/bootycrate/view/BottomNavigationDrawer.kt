@@ -49,17 +49,16 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
  * the functions hide and show will set the current state to the corresponding
  * BottomSheetBehavior states STATE_HIDDEN and STATE_COLLAPSED, respectively.
  *
- * The new API also introduces onStateChangedListener and onSlideListener,
- * which are called in the same situations that BottomSheetBehavior.BottomSheetCallback's
- * onStateChanged and onSlide functions, respectively, are called. This allows
- * these functions to be used via composition, rather than inheritance. The
- * onSlideListener also includes a new int parameter, targetState, that will
- * be equal to either BottomSheetBehavior.STATE_COLLAPSED, STATE_EXPANDED, or
- * STATE_HIDDEN depending on which state the slide is moving towards.
+ * BottomSheetCallbacks can be added to the drawer's BottomSheetBehavior using
+ * the function addBottomSheetCallback. BottomNavigationDrawer also adds the
+ * public val targetState, which will be equal to either BottomSheetBehavior.STATE_COLLAPSED,
+ * STATE_EXPANDED, or STATE_HIDDEN depending on which state the drawer is
+ * moving towards.
  */
 class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs) {
     private val behavior = BottomSheetBehavior<BottomNavigationDrawer>()
-    private var targetState = BottomSheetBehavior.STATE_COLLAPSED
+    var targetState = BottomSheetBehavior.STATE_COLLAPSED
+        private set
 
     enum class IsHideable { Yes, No, OnlyByApp }
     val isHideable: IsHideable
@@ -67,15 +66,13 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
     var peekHeight get() = behavior.peekHeight
                    set(value) { behavior.peekHeight = value }
 
-    var onStateChangedListener: ((View, Int) -> Unit)? = null
-    var onSlideListener: ((View, Float, Int) -> Unit)? = null
-
     init {
         var a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.behavior_peekHeight))
         peekHeight = a.getDimensionPixelSize(0, 0)
 
         a = context.obtainStyledAttributes(attrs, R.styleable.BottomNavigationDrawer)
-        val maxPeekHeight = a.getDimensionPixelSize(R.styleable.BottomNavigationDrawer_maxPeekHeight, Integer.MAX_VALUE)
+        val maxPeekHeight = a.getDimensionPixelSize(R.styleable.BottomNavigationDrawer_maxPeekHeight,
+                                                    Integer.MAX_VALUE)
         isHideable = IsHideable.values()[a.getInt(R.styleable.BottomNavigationDrawer_isHideable, 0)]
         behavior.isHideable = isHideable == IsHideable.Yes
         a.recycle()
@@ -122,13 +119,16 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
         targetState = BottomSheetBehavior.STATE_HIDDEN
     }
 
-    private var showing = false
+    private var unhiding = false
     fun show() {
         behavior.state = BottomSheetBehavior.STATE_COLLAPSED
         targetState = BottomSheetBehavior.STATE_COLLAPSED
         if (isHideable == IsHideable.OnlyByApp)
-            showing = true
+            unhiding = true
     }
+
+    fun addBottomSheetCallback(callback: BottomSheetBehavior.BottomSheetCallback) =
+        behavior.addBottomSheetCallback(callback)
 
     /**
      * Adjust the peek height of the bottom navigation drawer to prevent
@@ -163,16 +163,12 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
 
     private inner class BottomNavDrawerSheetCallback : BottomSheetBehavior.BottomSheetCallback() {
         override fun onStateChanged(bottomSheet: View, newState: Int) {
-            if (newState == BottomSheetBehavior.STATE_COLLAPSED &&
-                isHideable == IsHideable.OnlyByApp && showing
-            ) {
+            if (newState == BottomSheetBehavior.STATE_COLLAPSED && unhiding) {
                 behavior.isHideable = false
-                showing = false
+                unhiding = false
             }
-            onStateChangedListener?.invoke(bottomSheet, newState)
         }
 
-        override fun onSlide(bottomSheet: View, slideOffset: Float) =
-            onSlideListener?.invoke(bottomSheet, slideOffset, targetState) ?: Unit
+        override fun onSlide(bottomSheet: View, slideOffset: Float) { }
     }
 }
