@@ -9,12 +9,16 @@ import androidx.test.espresso.Espresso.pressBack
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import com.cliffracertech.bootycrate.activity.MainActivity
+import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.view.BottomAppBar
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.common.truth.Truth.assertThat
+import org.hamcrest.Matchers.allOf
 import org.hamcrest.core.IsNot.not
 import org.junit.Rule
 import org.junit.Test
@@ -46,8 +50,8 @@ class NavigationTests {
     }
 
     @Test fun navigatingToPreferencesFragment() {
-        onView(withId(R.id.menuButton)).perform(click())
-        onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+        onView(withId(R.id.settingsButton)).perform(click())
         onView(withText(R.string.pref_light_dark_mode_title)).check(matches(isDisplayed()))
     }
 
@@ -88,4 +92,50 @@ class NavigationTests {
         onView(withText(R.string.update_list_reminder_description)).check(doesNotExist())
     }
 
+    @Test fun navigationDrawerCollapsedState() {
+        onView(withId(R.id.bottomNavigationDrawer)).check(matches(allOf(isDisplayed(), not(isCompletelyDisplayed()))))
+        onView(withId(R.id.appTitle)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.settingsButton)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventorySelector)).check(matches(allOf(hasAlpha(0f), not(isCompletelyDisplayed()))))
+        onView(withId(R.id.bottomNavigationView)).check(matches(isDisplayed()))
+        onView(withId(R.id.bottomAppBar)).perform(doStuff<BottomAppBar> {
+            assertThat(it.cradle.interpolation).isEqualTo(1f)
+            assertThat(it.navIndicator.alpha).isEqualTo(1f)
+        })
+    }
+
+    @Test fun navigationDrawerExpandedState() {
+        navigationDrawerCollapsedState()
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+
+        onView(withId(R.id.bottomNavigationDrawer)).check(matches(isCompletelyDisplayed()))
+        onView(withId(R.id.appTitle)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
+        onView(withId(R.id.settingsButton)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
+        onView(withId(R.id.inventorySelector)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
+        onView(withId(R.id.bottomNavigationView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.bottomAppBar)).perform(doStuff<BottomAppBar> {
+            assertThat(it.cradle.interpolation).isEqualTo(0f)
+            assertThat(it.navIndicator.alpha).isEqualTo(0f)
+        })
+    }
+
+    @Test fun navigationDrawerCollapsesAfterExpandedState() {
+        navigationDrawerExpandedState()
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setCollapsedAndWaitForSettling())
+        navigationDrawerCollapsedState()
+    }
+
+    @Test fun navigationDrawerHidesInPreferences() {
+        navigationDrawerCollapsedState()
+        navigatingToPreferencesFragment()
+        Thread.sleep(500L)
+        onView(withId(R.id.bottomNavigationDrawer)).check(
+            matches(hasSheetState(BottomSheetBehavior.STATE_HIDDEN)))
+    }
+
+    @Test fun navigationDrawerUnhidesAfterLeavingPreferences() {
+        navigationDrawerHidesInPreferences()
+        onView(withId(R.id.backButton)).perform(click())
+        navigationDrawerCollapsedState()
+    }
 }

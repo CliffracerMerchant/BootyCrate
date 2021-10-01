@@ -61,9 +61,5 @@
         android:title="@string/share_description"
         app:showAsAction="never" />
 
-    <item android:id="@+id/settings_menu_item"
-        android:title="@string/settings_description"
-        app:showAsAction="never" />
-
 </group>
 </menu>

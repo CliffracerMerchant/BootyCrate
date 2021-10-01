@@ -6,22 +6,28 @@
 <resources>
     <!-- Used as the background color for recycler view items. -->
     <attr name="recyclerViewItemColor" format="color" />
-    <!-- The width of the canvas a path is drawn o. -->
+    <!-- The width of the canvas a path is drawn on. -->
     <attr name="pathWidth" format="float" />
     <!-- The height of the canvas a path is drawn on. -->
     <attr name="pathHeight" format="float" />
     <!-- The left color of the background gradient. -->
-    <attr name="backgroundGradientColorLeft" format="color" />
+    <attr name="backgroundGradientLeftColor" format="color" />
     <!-- The middle color of the background gradient. -->
-    <attr name="backgroundGradientColorMiddle" format="color" />
+    <attr name="backgroundGradientMiddleColor" format="color" />
     <!-- The right color of the background gradient. -->
-    <attr name="backgroundGradientColorRight" format="color" />
+    <attr name="backgroundGradientRightColor" format="color" />
     <!-- The left color of the foreground gradient. -->
-    <attr name="foregroundGradientColorLeft" format="color" />
+    <attr name="foregroundGradientLeftColor" format="color" />
     <!-- The middle color of the foreground gradient. -->
-    <attr name="foregroundGradientColorMiddle" format="color" />
+    <attr name="foregroundGradientMiddleColor" format="color" />
     <!-- The right color of the foreground gradient. -->
-    <attr name="foregroundGradientColorRight" format="color" />
+    <attr name="foregroundGradientRightColor" format="color" />
+    <!-- The left color of the indicator gradient. -->
+    <attr name="indicatorGradientLeftColor" format="color" />
+    <!-- The middle color of the indicator gradient. -->
+    <attr name="indicatorGradientMiddleColor" format="color" />
+    <!-- The right color of the indicator gradient. -->
+    <attr name="indicatorGradientRightColor" format="color" />
     <!-- The alpha value used for the checkout button background when it is disabled. -->
     <attr name="checkoutButtonDisabledAlpha" format="integer" />
 
@@ -48,7 +54,33 @@
         <attr name="searchQueryFont" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="BottomNavigationDrawer">
+        <!-- The maximum peek height of the drawer. The drawer will never auto-adjust
+             its peek height above this value, but setting it too low may result in
+             the drawer's effective touch target size being below the intended value
+             if the user is using system gestures. -->
+        <attr name="maxPeekHeight" format="dimension" />
+        <!-- The hideability of the BottomNavigationDrawer. -->
+        <attr name="isHideable"    format="enum" >
+            <enum name="yes" value="0" />
+            <enum name="no" value="1" />
+            <enum name="onlyByApp" value="2" />
+        </attr>
+    </declare-styleable>
+
     <declare-styleable name="BottomAppBar">
+        <!-- The id of the contained cradle layout. -->
+        <attr name="cradleLayoutResId"    format="reference" />
+        <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
+        <attr name="navViewResId"         format="reference" />
+        <!-- The corner radius of the top left and top right corners. -->
+        <attr name="topOuterCornerRadius" format="dimension" />
+        <!-- The color used as the background tint, if no background gradient is set. -->
+        <attr name="backgroundTint"       format="color" />
+
+        <!-- The interpolation of the cradle; the valid range is [0f, 1f].
+        0f implies a straight line, while 1f implies a fully drawn cradle. -->
+        <attr name="cradleInterpolation"      format="float" />
         <!-- The depth of the BottomAppBar cradle. -->
         <attr name="cradleDepth"              format="dimension" />
         <!-- The radius of the cradle curved top corners. -->
@@ -57,24 +89,21 @@
         <attr name="cradleBottomCornerRadius" format="dimension" />
         <!-- The margin in between the cradle and the cradle layout contents. -->
         <attr name="cradleContentsMargin"     format="dimension" />
-        <!-- The id of the contained cradle layout. -->
-        <attr name="cradleLayoutResId"        format="reference" />
+
+        <!-- The height / thickness of the navigation indicator. -->
+        <attr name="navIndicatorHeight" format="dimension" />
+        <!-- The width of the navigation indicator. -->
+        <attr name="navIndicatorWidth"  format="dimension" />
+        <!-- The initial tint of the navigation indicator. -->
+        <attr name="navIndicatorTint"   format="color" />
+        <!-- The initial alpha of the navigation indicator in the range [0f, 1f] -->
+        <attr name="navIndicatorAlpha"  format="float" />
+
     </declare-styleable>
 
-    <declare-styleable name="BottomAppBarWithIndicator">
-        <!-- The thickness of the indicator. -->
-        <attr name="indicatorThickness" format="dimension" />
-        <!-- The width of the indicator. -->
-        <attr name="indicatorWidth"     format="dimension" />
-        <!-- The initial tint of the indicator. -->
-        <attr name="indicatorTint"      format="color" />
-        <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
-        <attr name="navBarResId"        format="reference" />
-    </declare-styleable>
-
-    <attr name="recyclerViewItemSelectionLeftGradientColor"   format="color" />
-    <attr name="recyclerViewItemSelectionMiddleGradientColor" format="color" />
-    <attr name="recyclerViewItemSelectionRightGradientColor"  format="color" />
+    <attr name="recyclerViewItemSelectionGradientLeftColor"   format="color" />
+    <attr name="recyclerViewItemSelectionGradientMiddleColor" format="color" />
+    <attr name="recyclerViewItemSelectionGradientRightColor"  format="color" />
 
     <declare-styleable name="TextFieldEdit">
         <!-- Whether the TextFieldEdit will start in an editable state. -->

@@ -38,7 +38,10 @@
     <color name="darkThemeBgGradientLeft">#BF6844</color>
     <color name="darkThemeBgGradientMiddle">#CF5F5F</color>
     <color name="darkThemeBgGradientRight">#C15A7E</color>
+
     <color name="lightThemeFgColor">#DDDDDD</color>
+    <color name="lightThemeIndicatorColor">#AAAAAA</color>
+    <color name="darkThemeIndicatorColor">#606060</color>
 
 <!-- teal-cyan theme -->
 <!--    <color name="lightThemeBgGradientLeft">#53E393</color>-->

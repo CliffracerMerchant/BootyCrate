@@ -13,7 +13,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -21,6 +20,7 @@ import androidx.test.filters.LargeTest
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
+import com.cliffracertech.bootycrate.utils.setExpandedAndWaitForSettling
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Rule
@@ -34,8 +34,8 @@ class PreferenceTests {
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Before fun navigateToPreferences() {
-        onView(withId(R.id.menuButton)).perform(click())
-        onView(withText(R.string.settings_description)).inRoot(isPlatformPopup()).perform(click())
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+        onView(withId(R.id.settingsButton)).perform(click())
     }
 
     @Test fun changingAppTheme() {
@@ -77,6 +77,11 @@ class PreferenceTests {
     @Test fun showAboutAppDialog() {
         onView(withText(R.string.pref_about_app_title)).perform(click())
         onView(withText(R.string.about_app_body)).check(matches(isDisplayed()))
+    }
+
+    @Test fun showPrivacyPolicyDialog() {
+        onView(withText(R.string.pref_privacy_policy_title)).perform(click())
+        onView(withText(R.string.privacy_policy_text)).check(matches(isDisplayed()))
     }
 }
 

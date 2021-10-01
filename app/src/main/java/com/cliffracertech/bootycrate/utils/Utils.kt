@@ -14,6 +14,7 @@ import android.util.TypedValue
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.FragmentActivity
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 /** Return a NotificationManager system service from the context. */
 fun notificationManager(context: Context) =
@@ -80,3 +81,9 @@ fun Context.getIntArray(arrayResId: Int): IntArray {
 
 /** Add the nullable element to the list if it is not null, or do nothing otherwise. */
 fun <T> MutableList<T>.add(element: T?) { if (element != null) add(element) }
+
+val <T: View>BottomSheetBehavior<T>.isExpanded get() = state == BottomSheetBehavior.STATE_EXPANDED
+val <T: View>BottomSheetBehavior<T>.isCollapsed get() = state == BottomSheetBehavior.STATE_COLLAPSED
+val <T: View>BottomSheetBehavior<T>.isDragging get() = state == BottomSheetBehavior.STATE_DRAGGING
+val <T: View>BottomSheetBehavior<T>.isSettling get() = state == BottomSheetBehavior.STATE_SETTLING
+val <T: View>BottomSheetBehavior<T>.isHidden get() = state == BottomSheetBehavior.STATE_HIDDEN

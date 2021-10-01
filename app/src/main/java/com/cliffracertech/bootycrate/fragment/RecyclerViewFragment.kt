@@ -14,10 +14,12 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.activity.MainActivity
+import com.cliffracertech.bootycrate.activity.*
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 import java.util.*
@@ -42,9 +44,8 @@ import java.util.*
  * The value of the open property actionModeCallback will be used as the
  * callback when an action mode is started. Subclasses can override it with a
  * with a descendant of SelectionActionModeCallback if they wish to perform
- * work when the action action mode starts or finishes.
+ * work when the action mode starts or finishes.
  */
-@Suppress("LeakingThis")
 abstract class RecyclerViewFragment<T: BootyCrateItem> :
     Fragment(), MainActivity.MainActivityFragment
 {
@@ -57,8 +58,6 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
     private var actionBar: RecyclerViewActionBar? = null
     private val actionModeIsStarted get() = actionBar?.actionMode?.callback == actionModeCallback
     private val searchIsActive get() = actionBar?.activeSearchQuery != null
-
-    init { setHasOptionsMenu(true) }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -190,10 +189,14 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             actionBar = null
             activityUi.actionBar.onSearchQueryChangedListener = null
         } else {
-            recyclerView.snackBarAnchor = activityUi.bottomAppBar
             actionBar = activityUi.actionBar
-            activityUi.actionBar.onSearchQueryChangedListener = { newText ->
-                recyclerView.searchFilter = newText.toString()
+            recyclerView.apply {
+                snackBarAnchor = activityUi.bottomAppBar
+                activityUi.actionBar.onSearchQueryChangedListener = { newText ->
+                    searchFilter = newText.toString()
+                }
+                val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
+                setPadding(paddingLeft, paddingTop, paddingRight, bottomSheetPeekHeight)
             }
 
             val actionModeCallback = if (recyclerView.selection.isEmpty) null

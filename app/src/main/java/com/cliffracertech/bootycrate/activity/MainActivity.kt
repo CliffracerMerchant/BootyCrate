@@ -11,7 +11,6 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
-import android.view.animation.PathInterpolator
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -22,6 +21,8 @@ import com.cliffracertech.bootycrate.fragment.PreferencesFragment
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.doOnStart
 import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlin.math.abs
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -38,33 +39,29 @@ import com.cliffracertech.bootycrate.utils.layoutTransition
 @Suppress("LeakingThis")
 open class MainActivity : MultiFragmentActivity() {
     lateinit var ui: MainActivityBinding
+    private var pendingCradleAnim: Animator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setThemeFromPreferences()
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
         fragmentContainerId = ui.fragmentContainer.id
-        navigationBar = ui.bottomNavigationBar
+        navigationView = ui.bottomNavigationView
         super.onCreate(savedInstanceState)
         setupOnClickListeners()
         initAnimatorConfigs()
         window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
         initGradientStyle()
+
         // Setting android:importantForAccessibility in the bottom_navigation_menu.xml
         // for the disabled menu items seems not to work, so it must be done here instead
-        (ui.bottomNavigationBar.getIconAt(1).parent as View).
+        (ui.bottomNavigationView.getIconAt(1).parent as View).
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        (ui.bottomNavigationBar.getIconAt(2).parent as View)
+        (ui.bottomNavigationView.getIconAt(2).parent as View)
             .importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
-
-    override fun onOptionsItemSelected(item: MenuItem) =
-        if (item.itemId == R.id.settings_menu_item) {
-            addSecondaryFragment(PreferencesFragment())
-            true
-        } else visibleFragment?.onOptionsItemSelected(item) ?: false
 
     private var currentFragment: Fragment? = null
     override fun onNewFragmentSelected(newFragment: Fragment) {
@@ -76,27 +73,23 @@ open class MainActivity : MultiFragmentActivity() {
         currentFragment = newFragment
         if (newFragment !is MainActivityFragment) return
 
+        if (newFragment.showsBottomAppBar()) ui.bottomNavigationDrawer.show()
+        else                                 ui.bottomNavigationDrawer.hide()
+
         val needToAnimateCheckoutButton = needToAnimate && ui.bottomAppBar.isVisible
-        ui.showBottomAppBar(newFragment.showsBottomAppBar(), needToAnimate,
-                            primaryFragmentTransitionAnimatorConfig)
         val showsCheckoutButton = newFragment.showsCheckoutButton()
         if (showsCheckoutButton != null)
-            showCheckoutButton(showsCheckoutButton, needToAnimateCheckoutButton)
-        ui.bottomAppBar.moveIndicatorToNavBarItem(navigationBar.selectedItemId)
-        newFragment.onActiveStateChanged(isActive = true, ui)
-    }
+            // The cradle animation is stored here and started in the cradle
+            // layout's layoutTransition's transition listener's transitionStart
+            // override so that the animation is synced with the layout transition.
+            pendingCradleAnim = ui.showCheckoutButton(
+                showing = showsCheckoutButton,
+                animatorConfig = primaryFragmentTransitionAnimatorConfig,
+                animate = needToAnimateCheckoutButton)
 
-    private var showingCheckoutButton: Boolean? = null
-    // The cradle animation is stored here and started in the cradle
-    // layout's layoutTransition's transition listener's transitionStart
-    // override so that the animation is synced with the layout transition.
-    private var pendingCradleAnim: Animator? = null
-    private fun showCheckoutButton(show: Boolean, animate: Boolean = true) {
-        if (showingCheckoutButton == show) return
-        showingCheckoutButton = show
-        if (!animate) ui.showCheckoutButton(show)
-        else pendingCradleAnim =
-            ui.showCheckoutButtonAnimation(show, primaryFragmentTransitionAnimatorConfig)
+        ui.bottomAppBar.navIndicator.moveToItem(menuItemId = navigationView.selectedItemId,
+                                                animate = needToAnimateCheckoutButton)
+        newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
     private fun setThemeFromPreferences() {
@@ -113,6 +106,9 @@ open class MainActivity : MultiFragmentActivity() {
         })
     }
 
+    private fun fwdMenuItemClick(menuItem: MenuItem) =
+        visibleFragment?.onOptionsItemSelected(menuItem) ?: false
+
     private fun setupOnClickListeners() {
         ui.actionBar.ui.backButton.setOnClickListener {
             val fragment = visibleFragment as? MainActivityFragment
@@ -122,8 +118,12 @@ open class MainActivity : MultiFragmentActivity() {
         ui.actionBar.onDeleteButtonClickedListener = {
             onOptionsItemSelected(ui.actionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
         }
-        ui.actionBar.setOnSortOptionClickedListener { item -> onOptionsItemSelected(item) }
-        ui.actionBar.setOnOptionsItemClickedListener { item -> onOptionsItemSelected(item) }
+        ui.actionBar.setOnSortOptionClickedListener(::fwdMenuItemClick)
+        ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
+        ui.settingsButton.setOnClickListener {
+            addSecondaryFragment(PreferencesFragment())
+        }
+        ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
     }
 
     private fun initAnimatorConfigs() {
@@ -134,15 +134,18 @@ open class MainActivity : MultiFragmentActivity() {
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
         ui.actionBar.animatorConfig = transitionAnimConfig
-        ui.bottomAppBar.indicatorWidth = 3 * ui.bottomNavigationBar.itemIconSize
-        ui.bottomAppBar.indicatorAnimatorConfig = transitionAnimConfig
-            // This interpolator shows the indicator going around the bottom app bar cradle slightly better.
-            .copy(interpolator = PathInterpolator(.4f,.6f,.6f,.4f))
+        ui.bottomAppBar.navIndicator.width = 2.5f * ui.bottomNavigationView.itemIconSize
+        ui.bottomAppBar.navIndicator.animatorConfig = transitionAnimConfig
+            // The nav indicator anim duration is increased to improve its visbility
+            .copy(duration = (transitionAnimConfig.duration * 1.2f).toLong())
         ui.checkoutButton.animatorConfig = transitionAnimConfig
-        ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig)
-        ui.cradleLayout.layoutTransition.doOnStart {
-            pendingCradleAnim?.start()
-            pendingCradleAnim = null
+        ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig).apply {
+            // views with bottomSheetBehaviors do not like to be animated by layout
+            // transitions (it makes them jump up to the top of the screen), so we
+            // have to set animatedParentHierarchy to false to prevent this
+            setAnimateParentHierarchy(false)
+            doOnStart { pendingCradleAnim?.start()
+                        pendingCradleAnim = null }
         }
     }
 
@@ -150,8 +153,8 @@ open class MainActivity : MultiFragmentActivity() {
      * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
      *
      * MainActivityFragment can be implemented by a Fragment subclass to
-     * inform the MainActivity how its UI should be displayed when the frag-
-     * ment is in the foreground, and to provide a callback for back button
+     * inform the MainActivity as to how its UI should be displayed when the
+     * fragment is in the foreground, and to provide a callback for back button
      * (either the hardware/software bottom back button or the action bar's
      * back button) presses. Fragments should always indicate their desired
      * bottom app bar and checkout button states through an override of the

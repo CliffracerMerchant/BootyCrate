@@ -20,13 +20,15 @@
 
     <style name="BottomAppBar">
         <item name="contentInsetStart">0dp</item>
+        <item name="topOuterCornerRadius">@dimen/dialog_rounded_corner_radius</item>
         <item name="cradleTopCornerRadius">25dp</item>
-        <item name="cradleBottomCornerRadius">34dp</item>
+        <item name="cradleBottomCornerRadius">33dp</item>
         <item name="cradleDepth">52dp</item>
         <item name="cradleContentsMargin">5dp</item>
-        <item name="indicatorThickness">10dp</item>
+        <item name="navIndicatorHeight">8dp</item>
         <item name="cradleLayoutResId">@id/cradleLayout</item>
-        <item name="navBarResId">@id/bottomNavigationBar</item>
+        <item name="navViewResId">@id/bottomNavigationView</item>
+        <item name="android:clipChildren">false</item>
     </style>
 
     <style name="BottomNavigationView">
@@ -42,7 +44,7 @@
         <item name="android:alpha">0</item>
         <item name="android:paddingLeft">4dp</item>
         <item name="android:paddingRight">4dp</item>
-        <item name="android:textColor">?attr/foregroundGradientColorLeft</item>
+        <item name="android:textColor">?attr/foregroundGradientLeftColor</item>
         <item name="android:textSize" tools:ignore="SpUsage">22dp</item>
         <item name="android:textStyle">bold</item>
     </style>
@@ -66,6 +68,24 @@
         <item name="iconStrokeWidth">4dp</item>
     </style>
 
+    <style name="AppTitle">
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textAppearance">@style/TextAppearance</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:fontFamily">@font/comfortaa</item>
+        <item name="android:text">@string/app_name</item>
+        <item name="android:alpha">0</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="SettingsButton">
+        <item name="android:padding">12dp</item>
+        <item name="android:alpha">0</item>
+        <item name="android:visibility">gone</item>
+        <item name="android:contentDescription">@string/settings_description</item>
+        <item name="srcCompat">@drawable/ic_baseline_settings_24</item>
+    </style>
+
     <style name="EmptyRecyclerViewStyle" parent="@style/TitleTextAppearance">
         <item name="android:text">@string/no_search_results_message</item>
     </style>
@@ -74,6 +94,12 @@
         <item name="android:clipToPadding">false</item>
         <item name="android:paddingBottom">?attr/actionBarSize</item>
         <item name="android:paddingTop">4dp</item>
+    </style>
+
+    <style name="BottomNavigationDrawer">
+        <item name="isHideable">onlyByApp</item>
+        <item name="behavior_peekHeight">?attr/actionBarSize</item>
+        <item name="android:clipChildren">false</item>
     </style>
 
 </resources>

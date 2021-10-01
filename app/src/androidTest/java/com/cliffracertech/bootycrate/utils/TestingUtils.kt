@@ -7,11 +7,8 @@ package com.cliffracertech.bootycrate.utils
 import android.view.View
 import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.test.espresso.*
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.NoMatchingViewException
-import androidx.test.espresso.UiController
-import androidx.test.espresso.ViewAction
-import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
@@ -23,21 +20,23 @@ import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
+import com.cliffracertech.bootycrate.view.BottomNavigationDrawer
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.common.truth.Truth.assertThat
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.Description
 import org.hamcrest.Matcher
+import org.hamcrest.TypeSafeMatcher
 
 /** A ViewAction that allows direct operation on a view.
  * Thanks to the author of this blog post for the idea.
  * https://medium.com/android-news/call-view-methods-when-testing-by-espresso-and-kotlin-in-android-781262f7348e */
-fun <T>doStuff(method: (view: T) -> Unit): ViewAction {
-    return object: ViewAction {
-        override fun getDescription() = method.toString()
-        override fun getConstraints() = isEnabled()
-        @Suppress("UNCHECKED_CAST")
-        override fun perform(uiController: UiController?, view: View) =
-            method(view as? T ?: throw IllegalStateException("The matched view is null or not of type T"))
-    }
+class doStuff<T: View>(private val method: (view: T) -> Unit): ViewAction {
+    override fun getDescription() = method.toString()
+    override fun getConstraints(): Matcher<View> = isEnabled()
+    @Suppress("UNCHECKED_CAST")
+    override fun perform(uiController: UiController?, view: View) =
+        method(view as? T ?: throw IllegalStateException("The matched view is null or not of type T"))
 }
 
 /** Perform the given actions on the recycler view item view at the given position. */
@@ -144,8 +143,8 @@ class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
     }
 }
 
-/** Asserts that the matching view is an ExpandableSelectableRecyclerView subclass
- * that only shows the provided inventory items, in the order given. */
+/** Asserts that the matching view is an ExpandableSelectableRecyclerView
+ * subclass that only shows the provided inventory items, in the order given. */
 class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
     onlyShownItemsAre<InventoryItem>(*items)
 {
@@ -159,3 +158,42 @@ class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
         assertThat(view.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(item.autoAddToShoppingListAmount)
     }
 }
+
+class hasAlpha(private val alpha: Float) : TypeSafeMatcher<View>() {
+    override fun describeTo(description: Description) {
+        description.appendText("with alpha value = $alpha")
+    }
+    override fun matchesSafely(item: View) = item.alpha == alpha
+}
+
+/** A matcher that matches a view that has a BottomSheetBehavior
+ * instance with a state that matches the given state. */
+class hasSheetState(@BottomSheetBehavior.State private val state: Int) : TypeSafeMatcher<View>() {
+    override fun describeTo(description: Description) {
+        description.appendText("has bottom sheet behavior state = $state")
+    }
+    override fun matchesSafely(item: View): Boolean {
+        val behavior = BottomSheetBehavior.from(item)
+        return behavior.state == state
+    }
+}
+
+/** A ViewAction that will set a view's BottomSheetBehavior instance to the
+ * specified state, and wait up to 1.5 seconds for the change to occur. */
+class setStateAndWaitForSettling(@BottomSheetBehavior.State private val state: Int) : ViewAction {
+    override fun getConstraints(): Matcher<View> = isAssignableFrom(BottomNavigationDrawer::class.java)
+    override fun getDescription() = "Set state to $state and await settling."
+
+    override fun perform(uiController: UiController, view: View) {
+        val sheetBehavior = BottomSheetBehavior.from(view)
+        sheetBehavior.state = state
+
+        var counter = 0
+        while (sheetBehavior.isSettling && counter++ < 15)
+            Thread.sleep(100L)
+    }
+}
+
+
+fun setExpandedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_EXPANDED)
+fun setCollapsedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_COLLAPSED)
