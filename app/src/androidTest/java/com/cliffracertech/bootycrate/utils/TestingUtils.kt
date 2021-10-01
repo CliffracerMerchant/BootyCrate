@@ -26,9 +26,7 @@ import com.google.common.truth.Truth.assertThat
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Description
 import org.hamcrest.Matcher
-import org.hamcrest.Matchers
 import org.hamcrest.TypeSafeMatcher
-import org.hamcrest.core.IsInstanceOf
 
 /** A ViewAction that allows direct operation on a view.
  * Thanks to the author of this blog post for the idea.

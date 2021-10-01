@@ -171,4 +171,10 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
 
         override fun onSlide(bottomSheet: View, slideOffset: Float) { }
     }
+
+    val isExpanded get() = behavior.state == BottomSheetBehavior.STATE_EXPANDED
+    val isCollapsed get() = behavior.state == BottomSheetBehavior.STATE_COLLAPSED
+    val isDragging get() = behavior.state == BottomSheetBehavior.STATE_DRAGGING
+    val isSettling get() = behavior.state == BottomSheetBehavior.STATE_SETTLING
+    val isHidden get() = behavior.state == BottomSheetBehavior.STATE_HIDDEN
 }
