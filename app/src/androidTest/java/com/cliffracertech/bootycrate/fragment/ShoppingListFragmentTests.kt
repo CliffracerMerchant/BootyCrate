@@ -572,8 +572,8 @@ class ShoppingListFragmentTests {
         checkIndividualItems()
         redItem0.isChecked = true
         yellowItem2.isChecked = true
-        onView(withId(R.id.menuButton)).perform(click())
-        onPopupView(withText(R.string.settings_description)).perform(click())
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+        onView(withId(R.id.settingsButton)).perform(click())
         onView(withText(R.string.pref_sort_by_checked_title)).perform(click())
         pressBack()
         onView(withId(R.id.shoppingListRecyclerView)).check(
