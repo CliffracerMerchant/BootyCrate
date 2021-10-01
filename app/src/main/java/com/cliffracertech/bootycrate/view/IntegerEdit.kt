@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.LinearLayout
+import androidx.core.animation.doOnEnd
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.IntegerEditBinding
 import com.cliffracertech.bootycrate.utils.*
@@ -160,10 +161,12 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
 
         ui.valueEdit.translationX -= widthChange / 2f
         ui.increaseButton.translationX -= widthChange
+        ui.increaseButton.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         val anims = listOf(
             floatValueAnimator(ui.valueEdit::setTranslationX, ui.valueEdit.translationX, 0f, animatorConfig),
             floatValueAnimator(ui.increaseButton::setTranslationX, ui.increaseButton.translationX, 0f, animatorConfig),
             intValueAnimator(::setUnderlineAlphaPrivate, underlineAlpha, underlineEndAlpha, animatorConfig))
+        anims[1].doOnEnd { ui.increaseButton.setLayerType(View.LAYER_TYPE_NONE, null) }
         if (startAnimationsImmediately)
             anims.forEach { it.start() }
         return AnimInfo(anims, widthChange + width)

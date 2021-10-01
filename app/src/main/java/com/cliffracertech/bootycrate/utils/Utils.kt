@@ -79,10 +79,8 @@ fun Context.getIntArray(arrayResId: Int): IntArray {
     return array
 }
 
-/** Adjust the view's padding by the provided amounts. */
-fun View.adjustPadding(leftAdjust: Int, topAdjust: Int, rightAdjust: Int, bottomAdjust: Int) =
-    setPadding(paddingLeft + leftAdjust, paddingTop + topAdjust,
-               paddingRight + rightAdjust, paddingBottom + bottomAdjust)
+/** Add the nullable element to the list if it is not null, or do nothing otherwise. */
+fun <T> MutableList<T>.add(element: T?) { if (element != null) add(element) }
 
 val <T: View>BottomSheetBehavior<T>.isExpanded get() = state == BottomSheetBehavior.STATE_EXPANDED
 val <T: View>BottomSheetBehavior<T>.isCollapsed get() = state == BottomSheetBehavior.STATE_COLLAPSED

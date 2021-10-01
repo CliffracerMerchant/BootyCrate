@@ -82,13 +82,12 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         cradle.topCornerRadius = a.getDimension(R.styleable.BottomAppBar_cradleTopCornerRadius, 0f)
         cradle.bottomCornerRadius = a.getDimension(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0f)
         cradle.contentsMargin = a.getDimension(R.styleable.BottomAppBar_cradleContentsMargin, 0f)
-
+        
         navIndicator.height = a.getDimension(R.styleable.BottomAppBar_navIndicatorHeight, 0f)
         navIndicator.width = a.getDimension(R.styleable.BottomAppBar_navIndicatorWidth, 0f)
         navIndicator.alpha = a.getFloat(R.styleable.BottomAppBar_navIndicatorAlpha, 1f)
         navIndicator.tint = a.getColor(R.styleable.BottomAppBar_navIndicatorTint,
                                        ContextCompat.getColor(context, android.R.color.black))
-
         a.recycle()
         setWillNotDraw(false)
         background = drawable
