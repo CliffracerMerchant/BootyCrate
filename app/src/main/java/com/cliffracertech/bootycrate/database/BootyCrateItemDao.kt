@@ -14,13 +14,13 @@ private const val likeSearchFilter = "(name LIKE :filter OR extraInfo LIKE :filt
 private const val onShoppingList = "shoppingListAmount != -1 AND NOT inShoppingListTrash"
 private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
 
-private const val shoppingListItemFields = "id, name, extraInfo, color, " +
+private const val shoppingListItemFields = "id, inventoryId, name, extraInfo, color, " +
                                            "shoppingListAmount as amount, " +
                                            "expandedInShoppingList as isExpanded, " +
                                            "selectedInShoppingList as isSelected, " +
                                            "(SELECT $inInventory) as isLinked, " +
                                            "isChecked"
-private const val inventoryItemFields = "id, name, extraInfo, color, " +
+private const val inventoryItemFields = "id, inventoryId, name, extraInfo, color, " +
                                         "inventoryAmount as amount, " +
                                         "expandedInInventory as isExpanded, " +
                                         "selectedInInventory as isSelected, " +

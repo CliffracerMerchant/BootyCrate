@@ -4,11 +4,13 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.database
 
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.themedAlertDialogBuilder
@@ -25,7 +27,7 @@ import java.io.File
  * of the bootycrate_item table. BootyCrateDatabase functions as a singleton,
  * with the current instance obtained using the static function get.
  */
-@Database(entities = [DatabaseBootyCrateItem::class], version = 1)
+@Database(entities = [DatabaseBootyCrateItem::class, BootyCrateInventory::class], version = 2)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun dao(): BootyCrateItemDao
@@ -38,6 +40,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             else Room.databaseBuilder(context.applicationContext,
                                       BootyCrateDatabase::class.java,
                                       "booty-crate-db").addCallback(callback)
+                                      .addMigrations(Migration1to2())
                                       .build().also { this.instance = it }
         }
 
@@ -95,6 +98,8 @@ abstract class BootyCrateDatabase : RoomDatabase() {
 
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
+                db.execSQL("INSERT INTO inventory (name) VALUES ('BootyCrate')")
+
                 // The auto_delete_items trigger will remove an item from the database when
                 // its shoppingListAmount and inventoryAmount fields both are equal to -1
                 db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_delete_items`
@@ -141,4 +146,43 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                      WHERE id = new.id"""
         }
     }
+
+    fun SupportSQLiteDatabase.execSQL(statements: Array<String>) {
+        for (statement in statements) execSQL(statement)
+    }
+
+    private class Migration1to2 : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE TABLE inventory (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)")
+            val values = ContentValues().apply { put("name", "BootyCrate") }
+            val insertedId = db.insert("inventory", 0, values)
+
+            db.execSQL("PRAGMA foreign_keys=off")
+            db.execSQL("BEGIN TRANSACTION")
+            db.execSQL("""CREATE TABLE IF NOT EXISTS temp_table (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `inventoryId` INTEGER NOT NULL, 
+                `name` TEXT NOT NULL, `extraInfo` TEXT NOT NULL DEFAULT '', `color` INTEGER NOT NULL DEFAULT 0,
+                `isChecked` INTEGER NOT NULL DEFAULT 0, `shoppingListAmount` INTEGER NOT NULL DEFAULT -1,
+                `expandedInShoppingList` INTEGER NOT NULL DEFAULT 0, `selectedInShoppingList` INTEGER NOT NULL DEFAULT 0,
+                `inShoppingListTrash` INTEGER NOT NULL DEFAULT 0, `inventoryAmount` INTEGER NOT NULL DEFAULT -1,
+                `expandedInInventory` INTEGER NOT NULL DEFAULT 0, `selectedInInventory` INTEGER NOT NULL DEFAULT 0,
+                `autoAddToShoppingList` INTEGER NOT NULL DEFAULT 0, `autoAddToShoppingListAmount` INTEGER NOT NULL DEFAULT 1,
+                `inInventoryTrash` INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY(`inventoryId`) REFERENCES `inventory`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )""")
+            db.execSQL("""INSERT INTO temp_table(id, inventoryId, name, extraInfo, color, isChecked, shoppingListAmount,
+                                                 expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
+                                                 inventoryAmount, expandedInInventory, selectedInInventory,
+                                                 autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash)
+                          SELECT id, (SELECT $insertedId), name, extraInfo, color, isChecked, shoppingListAmount,
+                                 expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
+                                 inventoryAmount, expandedInInventory, selectedInInventory,
+                                 autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash
+                          FROM bootycrate_item;""")
+            db.execSQL("DROP TABLE bootycrate_item;")
+            db.execSQL("ALTER TABLE temp_table RENAME TO bootycrate_item;")
+            db.execSQL("COMMIT;")
+            db.execSQL("PRAGMA foreign_keys=on;")
+        }
+    }
+
 }
