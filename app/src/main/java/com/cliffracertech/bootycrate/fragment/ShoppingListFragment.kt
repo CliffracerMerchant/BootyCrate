@@ -12,9 +12,9 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
-import com.cliffracertech.bootycrate.database.InventoryViewModel
+import com.cliffracertech.bootycrate.database.InventoryItemViewModel
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.database.ShoppingListViewModel
+import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.ShoppingListFragmentBinding
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
@@ -41,8 +41,8 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
  * to its normal state.
  */
 @Keep class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
-    override val viewModel: ShoppingListViewModel by activityViewModels()
-    private val inventoryViewModel: InventoryViewModel by activityViewModels()
+    override val viewModel: ShoppingListItemViewModel by activityViewModels()
+    private val inventoryItemViewModel: InventoryItemViewModel by activityViewModels()
     override var recyclerView: ShoppingListRecyclerView? = null
     override lateinit var collectionName: String
     override val actionModeCallback = ShoppingListActionModeCallback()
@@ -88,7 +88,7 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.add_to_inventory_button -> {
-            inventoryViewModel.addFromSelectedShoppingListItems()
+            inventoryItemViewModel.addFromSelectedShoppingListItems()
             recyclerView?.selection?.clear()
             true
         } R.id.check_all_menu_item -> { viewModel.checkAll(); true }

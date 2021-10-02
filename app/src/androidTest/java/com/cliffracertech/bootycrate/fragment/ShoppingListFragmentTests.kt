@@ -47,7 +47,7 @@ import org.junit.runner.RunWith
 class ShoppingListFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val dao = BootyCrateDatabase.get(context as Application).dao()
+    private val dao = BootyCrateDatabase.get(context as Application).itemDao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
     private var redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
@@ -57,9 +57,9 @@ class ShoppingListFragmentTests {
 
     @Before fun resetItems() {
         activityRule.scenario.onActivity {
-            val shoppingListViewModel: ShoppingListViewModel by it.viewModels()
-            shoppingListViewModel.sortByChecked = false
-            shoppingListViewModel.sort = BootyCrateItemSort.Color
+            val shoppingListItemViewModel: ShoppingListItemViewModel by it.viewModels()
+            shoppingListItemViewModel.sortByChecked = false
+            shoppingListItemViewModel.sort = BootyCrateItemSort.Color
             val prefs = PreferenceManager.getDefaultSharedPreferences(it)
             prefs.edit().putBoolean(it.getString(R.string.pref_sort_by_checked_key), false).apply()
         }

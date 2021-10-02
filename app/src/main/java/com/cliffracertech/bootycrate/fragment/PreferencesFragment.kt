@@ -15,7 +15,7 @@ import androidx.preference.SwitchPreferenceCompat
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.database.ShoppingListViewModel
+import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.utils.AboutAppDialog
 import com.cliffracertech.bootycrate.utils.PrivacyPolicyDialog
@@ -41,7 +41,7 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
 //            getString(R.string.pref_theme_gradient_screen) -> { }
             getString(R.string.pref_sort_by_checked_key) -> {
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
-                val viewModel: ShoppingListViewModel by activityViewModels()
+                val viewModel: ShoppingListItemViewModel by activityViewModels()
                 viewModel.sortByChecked = sortByChecked
             } getString(R.string.pref_update_list_reminder_enabled_key) ->
                 addSecondaryFragment(UpdateListReminder.SettingsFragment())

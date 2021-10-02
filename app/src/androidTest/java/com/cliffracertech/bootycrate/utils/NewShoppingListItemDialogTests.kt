@@ -35,7 +35,7 @@ fun inNewItemDialog(matcher: Matcher<View>) =
 class NewShoppingListItemDialogTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val dao = BootyCrateDatabase.get(context as Application).dao()
+    private val dao = BootyCrateDatabase.get(context as Application).itemDao()
 
     private val testItem = ShoppingListItem(color = 5, name = "Test Item 1", amount = 3,
                                             extraInfo = "Test Item 1 Extra Info")

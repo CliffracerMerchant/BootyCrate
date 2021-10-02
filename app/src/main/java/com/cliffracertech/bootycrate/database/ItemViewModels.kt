@@ -24,10 +24,10 @@ enum class BootyCrateItemSort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
 }
 
 fun shoppingListViewModel(context: Context) =
-    ViewModelProvider(context.asFragmentActivity()).get(ShoppingListViewModel::class.java)
+    ViewModelProvider(context.asFragmentActivity()).get(ShoppingListItemViewModel::class.java)
 
 fun inventoryViewModel(context: Context) =
-    ViewModelProvider(context.asFragmentActivity()).get(InventoryViewModel::class.java)
+    ViewModelProvider(context.asFragmentActivity()).get(InventoryItemViewModel::class.java)
 
 /**
  * An abstract AndroidViewModel that provides an interface for asynchronously manipulating a BootyCrateDatabase.
@@ -55,7 +55,7 @@ fun inventoryViewModel(context: Context) =
  * and itemWithNameAlreadyExistsInInventory.
  */
 abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): AndroidViewModel(app) {
-    protected val dao = BootyCrateDatabase.get(app).dao()
+    protected val dao = BootyCrateDatabase.get(app).itemDao()
 
     fun add(item: T) = viewModelScope.launch { dao.add(item.toDbBootyCrateItem()) }
     fun add(items: List<T>) = viewModelScope.launch {
@@ -142,7 +142,7 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
  * described by the sort property. It also adds functions to manipulate the
  * checked state of items, and the checkout function.
  */
-class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingListItem>(app) {
+class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<ShoppingListItem>(app) {
     var sortByChecked = false
         set(value) { field = value; notifySortOptionsChanged() }
 
@@ -222,7 +222,7 @@ class ShoppingListViewModel(app: Application) : BootyCrateViewModel<ShoppingList
 /** An implementation of BootyCrateViewModel<InventoryItem> that adds functions
  * to  manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
  * fields of items in the database. */
-class InventoryViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(app) {
+class InventoryItemViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(app) {
 
     override fun itemsSwitchMapFunc() = run {
         val filter = "%$searchFilter%"

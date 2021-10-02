@@ -46,7 +46,7 @@ import org.junit.runner.RunWith
 class InventoryFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val dao = BootyCrateDatabase.get(context as Application).dao()
+    private val dao = BootyCrateDatabase.get(context as Application).itemDao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
     private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
@@ -56,8 +56,8 @@ class InventoryFragmentTests {
 
     @Before fun setup() {
         activityRule.scenario.onActivity {
-            val inventoryViewModel: InventoryViewModel by it.viewModels()
-            inventoryViewModel.sort = BootyCrateItemSort.Color
+            val inventoryItemViewModel: InventoryItemViewModel by it.viewModels()
+            inventoryItemViewModel.sort = BootyCrateItemSort.Color
         }
         runBlocking {
             dao.deleteAllShoppingListItems()

@@ -33,7 +33,7 @@ import org.junit.Test
 class NewInventoryItemDialogTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val dao = BootyCrateDatabase.get(context as Application).dao()
+    private val dao = BootyCrateDatabase.get(context as Application).itemDao()
 
     private val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Extra Info 1",
                                          color = 5, amount = 3, autoAddToShoppingList = true,

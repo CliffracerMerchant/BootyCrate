@@ -27,10 +27,11 @@ import java.io.File
  * of the bootycrate_item table. BootyCrateDatabase functions as a singleton,
  * with the current instance obtained using the static function get.
  */
-@Database(entities = [DatabaseBootyCrateItem::class, BootyCrateInventory::class], version = 2)
+@Database(entities = [DatabaseBootyCrateItem::class, DatabaseInventory::class], version = 2)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
-    abstract fun dao(): BootyCrateItemDao
+    abstract fun itemDao(): BootyCrateItemDao
+    abstract fun inventoryDao(): BootyCrateInventoryDao
 
     companion object {
         var instance: BootyCrateDatabase? = null
@@ -64,21 +65,34 @@ abstract class BootyCrateDatabase : RoomDatabase() {
 
             val tempDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName).
                                         allowMainThreadQueries().createFromFile(tempDbFile).build()
-            val items = try { tempDb.dao().getAllNow() }
+            val inventories = try { tempDb.inventoryDao().getAllNow() }
+                              catch(e: IllegalStateException) { emptyList() }
+            val items = try { tempDb.itemDao().getAllNow() }
                         catch(e: IllegalStateException) { emptyList() }
             tempDb.close()
             tempDbFile.delete()
 
-            if (items.isEmpty()) themedAlertDialogBuilder(context)
-                .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
-                .setMessage(R.string.invalid_imported_db_error_message)
-                .setTitle(R.string.error).show()
+            if (inventories.isEmpty() || items.isEmpty())
+                themedAlertDialogBuilder(context)
+                    .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
+                    .setMessage(R.string.invalid_imported_db_error_message)
+                    .setTitle(R.string.error).show()
             else CoroutineScope(Dispatchers.IO).launch {
                 val currentDb = get(context)
-                if (overwriteExistingDb)
-                    currentDb.dao().deleteAll()
-                else items.forEach { it.id = 0 }
-                currentDb.dao().add(items)
+                if (overwriteExistingDb) {
+                    currentDb.inventoryDao().deleteAll()
+                    currentDb.inventoryDao().add(inventories)
+                    currentDb.itemDao().deleteAll()
+                } else for (inventory in inventories) {
+                    val oldId = inventory.id
+                    inventory.id = 0
+                    val newId = currentDb.inventoryDao().add(inventory)
+                    items.filter { it.inventoryId == oldId }.forEach {
+                        it.inventoryId = newId
+                        it.id = 0
+                    }
+                }
+                currentDb.itemDao().add(items)
             }
         }
 

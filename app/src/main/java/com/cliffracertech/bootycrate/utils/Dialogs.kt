@@ -240,7 +240,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
 class NewShoppingListItemDialog(context: Context) :
     NewBootyCrateItemDialog<ShoppingListItem>(context)
 {
-    override val viewModel: ShoppingListViewModel by activityViewModels()
+    override val viewModel: ShoppingListItemViewModel by activityViewModels()
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_shopping_list_item_duplicate_name_warning)
@@ -264,7 +264,7 @@ class NewShoppingListItemDialog(context: Context) :
 class NewInventoryItemDialog(context: Context) :
     NewBootyCrateItemDialog<InventoryItem>(context, useDefaultLayout = false)
 {
-    override val viewModel: InventoryViewModel by activityViewModels()
+    override val viewModel: InventoryItemViewModel by activityViewModels()
     private val newInventoryItemView = InventoryItemView(context, null)
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =

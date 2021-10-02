@@ -12,15 +12,22 @@ import androidx.room.PrimaryKey
 import com.cliffracertech.bootycrate.R
 
 @Entity(tableName = "inventory")
-class BootyCrateInventory(
+open class DatabaseInventory(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name="id")   var id: Long = 0,
-    @ColumnInfo(name="name") var name: String = "",
+    @ColumnInfo(name="name") var name: String,
 )
+
+class BootyCrateInventory(
+    id: Long = 0,
+    name: String,
+    var shoppingListItemCount: Int,
+    var inventoryItemCount: Int,
+) : DatabaseInventory(id, name)
 
 /** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item table. */
 @Entity(tableName = "bootycrate_item",
-        foreignKeys = [ForeignKey(entity = BootyCrateInventory::class,
+        foreignKeys = [ForeignKey(entity = DatabaseInventory::class,
                                   parentColumns=["id"],
                                   childColumns=["inventoryId"],
                                   onDelete=ForeignKey.CASCADE)])
