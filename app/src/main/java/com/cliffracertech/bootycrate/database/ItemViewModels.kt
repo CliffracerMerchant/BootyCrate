@@ -23,10 +23,10 @@ enum class BootyCrateItemSort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
     }
 }
 
-fun shoppingListViewModel(context: Context) =
+fun shoppingListItemViewModel(context: Context) =
     ViewModelProvider(context.asFragmentActivity()).get(ShoppingListItemViewModel::class.java)
 
-fun inventoryViewModel(context: Context) =
+fun inventoryItemViewModel(context: Context) =
     ViewModelProvider(context.asFragmentActivity()).get(InventoryItemViewModel::class.java)
 
 /**

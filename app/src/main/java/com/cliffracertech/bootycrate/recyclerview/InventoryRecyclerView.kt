@@ -9,7 +9,7 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.inventoryViewModel
+import com.cliffracertech.bootycrate.database.inventoryItemViewModel
 import java.util.*
 
 /** A RecyclerView to display the data provided by an InventoryViewModel. */
@@ -18,7 +18,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
 {
     override val diffUtilCallback = DiffUtilCallback()
     override val adapter = Adapter()
-    override val viewModel = inventoryViewModel(context)
+    override val viewModel = inventoryItemViewModel(context)
 
     /**
      * A RecyclerView.Adapter to display the contents of a list of inventory items.

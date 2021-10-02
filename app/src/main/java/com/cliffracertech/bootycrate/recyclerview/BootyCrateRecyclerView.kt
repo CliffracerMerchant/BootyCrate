@@ -4,12 +4,9 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.recyclerview
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.doOnNextLayout
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.*
 import com.cliffracertech.bootycrate.R
@@ -17,7 +14,6 @@ import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.database.BootyCrateViewModel
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 
@@ -75,13 +71,13 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
             showDeletedItemsSnackBar(1)
         }
         ItemTouchHelper(swipeCallback).attachToRecyclerView(this)
-        addItemDecoration(ItemSpacingDecoration(context))
+        val spacing = resources.getDimensionPixelSize(R.dimen.recycler_view_item_spacing)
+        addItemDecoration(ItemSpacingDecoration(spacing))
         setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
     }
 
     private var deletedItemCount: Int = 0
-    @SuppressLint("ShowToast")
     fun showDeletedItemsSnackBar(newDeletedItemsCount: Int) {
         deletedItemCount += newDeletedItemsCount
         val text = context.getString(R.string.delete_snackbar_text, deletedItemCount)
@@ -102,7 +98,7 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
 
     fun observeViewModel(owner: LifecycleOwner) {
         setAdapter(adapter)
-        viewModel.items.observe(owner) { items -> adapter.submitList(items) }
+        viewModel.items.observe(owner) { adapter.submitList(it) }
     }
 
     /** A ListAdapter derived RecyclerView.Adapter for BootyCrateRecyclerView

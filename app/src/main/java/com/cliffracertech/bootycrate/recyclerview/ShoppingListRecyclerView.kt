@@ -11,7 +11,7 @@ import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.database.shoppingListViewModel
+import com.cliffracertech.bootycrate.database.shoppingListItemViewModel
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import java.util.*
 import kotlin.collections.set
@@ -30,7 +30,7 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 {
     override val diffUtilCallback = DiffUtilCallback()
     override val adapter = Adapter()
-    override val viewModel = shoppingListViewModel(context)
+    override val viewModel = shoppingListItemViewModel(context)
 
     var sortByChecked get() = viewModel.sortByChecked
         set(value) { viewModel.sortByChecked = value }

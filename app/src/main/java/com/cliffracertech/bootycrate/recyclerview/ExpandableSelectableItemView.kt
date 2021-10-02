@@ -85,7 +85,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
                                           pendingViewPropAnimations.clear() }
 
     init {
-        val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_background) as LayerDrawable
+        val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item) as LayerDrawable
         gradientOutline = (background.getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
         this.background = background
         clipChildren = false

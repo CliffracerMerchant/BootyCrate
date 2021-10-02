@@ -9,6 +9,7 @@
     <dimen name="dialog_rounded_corner_radius">16dp</dimen>
 
     <dimen name="recycler_view_item_vertical_padding">3dp</dimen>
+    <dimen name="recycler_view_item_spacing">8dp</dimen>
     <dimen name="recycler_view_item_rounded_corner_radius">18dp</dimen>
     <dimen name="recycler_view_item_selection_border_thickness">3dp</dimen>
     <!-- inner rounded corner radius should be equal to rounded corner radius minus the selection border thickness -->
