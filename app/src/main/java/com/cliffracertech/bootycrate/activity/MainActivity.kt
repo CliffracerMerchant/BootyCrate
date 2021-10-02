@@ -17,12 +17,11 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
+import com.cliffracertech.bootycrate.fragment.InventorySelectorFragment
 import com.cliffracertech.bootycrate.fragment.PreferencesFragment
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.doOnStart
 import com.cliffracertech.bootycrate.utils.layoutTransition
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import kotlin.math.abs
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -48,6 +47,9 @@ open class MainActivity : MultiFragmentActivity() {
         fragmentContainerId = ui.fragmentContainer.id
         navigationView = ui.bottomNavigationView
         super.onCreate(savedInstanceState)
+        supportFragmentManager.beginTransaction()
+            .add(R.id.bottomNavigationDrawerBackground, InventorySelectorFragment())
+            .commit()
         setupOnClickListeners()
         initAnimatorConfigs()
         window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))

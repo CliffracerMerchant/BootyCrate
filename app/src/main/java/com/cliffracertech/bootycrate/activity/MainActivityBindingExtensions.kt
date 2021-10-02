@@ -10,7 +10,9 @@ import android.content.res.ColorStateList
 import android.graphics.*
 import android.view.View
 import android.view.ViewGroup
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
+import androidx.core.view.get
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
@@ -226,3 +228,5 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
         }
     }
 }
+
+val MainActivityBinding.inventorySelector get() = bottomNavigationDrawerBackground[0] as ConstraintLayout

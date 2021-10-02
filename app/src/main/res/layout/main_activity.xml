@@ -112,17 +112,8 @@
             app:layout_constraintTop_toBottomOf="@id/bottomAppBar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:paddingHorizontal="10dp"
             android:background="@drawable/background_gradient" >
-
-            <View
-                android:id="@+id/inventorySelector"
-                android:layout_width="match_parent"
-                android:layout_height="400dp"
-                android:background="@drawable/alert_dialog_background"
-                android:alpha="0" />
         </FrameLayout>
-
 
     </com.cliffracertech.bootycrate.view.BottomNavigationDrawer>
 
