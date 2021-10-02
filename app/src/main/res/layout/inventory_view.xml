@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2021 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<merge
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    tools:parentTag="LinearLayout"
+    tools:background="@drawable/recycler_view_item_base">
+
+    <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
+        android:id="@+id/nameView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_weight="1"
+        tools:text="Inventory name"
+        style="@style/NormalTextAppearance"/>
+
+    <TextView
+        android:id="@+id/shoppingListItemCountView"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginEnd="12dp"
+        tools:text="4"
+        tools:drawableStart="@drawable/shopping_cart_icon"
+
+        android:gravity="center"
+        style="@style/SecondaryTextAppearance" />
+
+    <TextView
+        android:id="@+id/inventoryItemCountView"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        tools:text="5"
+        tools:drawableStart="@drawable/inventory_icon"
+        android:gravity="center"
+        style="@style/SecondaryTextAppearance" />
+
+    <ImageView
+        android:id="@+id/editButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        app:srcCompat="@drawable/animated_edit_to_collapse"
+        style="@style/BootyCrateItemEditButton" />
+
+</merge>

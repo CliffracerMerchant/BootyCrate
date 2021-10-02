@@ -24,6 +24,14 @@ class BootyCrateInventory(
     var shoppingListItemCount: Int,
     var inventoryItemCount: Int,
 ) : DatabaseInventory(id, name) {
+    override fun equals(other: Any?) = when (other) {
+        null -> false
+        !is BootyCrateInventory -> false
+        else ->  id == other.id && name == other.name &&
+                 shoppingListItemCount == other.shoppingListItemCount &&
+                 inventoryItemCount == other.inventoryItemCount
+    }
+
     override fun toString() = """
 id = $id
 name = $name
