@@ -23,7 +23,14 @@ class BootyCrateInventory(
     name: String,
     var shoppingListItemCount: Int,
     var inventoryItemCount: Int,
-) : DatabaseInventory(id, name)
+) : DatabaseInventory(id, name) {
+    override fun toString() = """
+id = $id
+name = $name
+shoppingListItemCount = $shoppingListItemCount
+inventoryItemCount = $inventoryItemCount
+"""
+}
 
 /** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item table. */
 @Entity(tableName = "bootycrate_item",
@@ -34,7 +41,7 @@ class BootyCrateInventory(
 class DatabaseBootyCrateItem(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name="id")                         var id: Long = 0,
-    @ColumnInfo(name="inventoryId")                var inventoryId: Long = 0,
+    @ColumnInfo(name="inventoryId", index = true)  var inventoryId: Long = 0,
     @ColumnInfo(name="name")                       var name: String = "",
     @ColumnInfo(name="extraInfo", defaultValue="") var extraInfo: String = "",
     @ColumnInfo(name="color", defaultValue="0")    var color: Int = 0,

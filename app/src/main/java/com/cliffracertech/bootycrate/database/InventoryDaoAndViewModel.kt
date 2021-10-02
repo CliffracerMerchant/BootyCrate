@@ -13,6 +13,15 @@ import androidx.room.Query
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+private const val shoppingListItemCount = "(SELECT count(*) FROM bootycrate_item " +
+                                          "WHERE bootycrate_item.inventoryId = inventory.id " +
+                                          "AND bootycrate_item.shoppingListAmount != -1) " +
+                                          "AS shoppingListItemCount"
+private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " +
+                                       "WHERE bootycrate_item.inventoryId = inventory.id " +
+                                       "AND bootycrate_item.inventoryAmount != -1) " +
+                                       "AS inventoryItemCount"
+
 @Dao abstract class BootyCrateInventoryDao {
     @Insert abstract suspend fun add(inventory: DatabaseInventory): Long
     @Insert abstract suspend fun add(items: List<DatabaseInventory>)
@@ -20,9 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
     @Query("UPDATE inventory SET name = :name WHERE id = :id")
     abstract suspend fun updateName(id: Long, name: String)
 
-    @Query("""SELECT id, name, (SELECT count(*) FROM bootycrate_item WHERE bootycrate_item.id = id AND shoppingListAmount != -1),
-                               (SELECT count(*) FROM bootycrate_item WHERE bootycrate_item.id = id AND inventoryAmount != -1)
-              FROM inventory""")
+    @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount FROM inventory")
     abstract fun getAll() : LiveData<List<BootyCrateInventory>>
 
     @Query("SELECT * FROM inventory")

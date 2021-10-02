@@ -183,20 +183,21 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 `autoAddToShoppingList` INTEGER NOT NULL DEFAULT 0, `autoAddToShoppingListAmount` INTEGER NOT NULL DEFAULT 1,
                 `inInventoryTrash` INTEGER NOT NULL DEFAULT 0,
                 FOREIGN KEY(`inventoryId`) REFERENCES `inventory`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )""")
-            db.execSQL("""INSERT INTO temp_table(id, inventoryId, name, extraInfo, color, isChecked, shoppingListAmount,
-                                                 expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
-                                                 inventoryAmount, expandedInInventory, selectedInInventory,
-                                                 autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash)
+            db.execSQL("""INSERT INTO temp_table(
+                              id, inventoryId, name, extraInfo, color, isChecked, shoppingListAmount,
+                              expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
+                              inventoryAmount, expandedInInventory, selectedInInventory,
+                              autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash)
                           SELECT id, (SELECT $insertedId), name, extraInfo, color, isChecked, shoppingListAmount,
                                  expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
                                  inventoryAmount, expandedInInventory, selectedInInventory,
                                  autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash
                           FROM bootycrate_item;""")
+            db.execSQL("CREATE INDEX `index_bootycrate_item_inventoryId` ON `temp_table` (`inventoryId`)");
             db.execSQL("DROP TABLE bootycrate_item;")
             db.execSQL("ALTER TABLE temp_table RENAME TO bootycrate_item;")
             db.execSQL("COMMIT;")
             db.execSQL("PRAGMA foreign_keys=on;")
         }
     }
-
 }
