@@ -10,44 +10,80 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:parentTag="LinearLayout"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
     tools:background="@drawable/recycler_view_item_base">
 
     <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
         android:id="@+id/nameView"
+        style="@style/NormalTextAppearance"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginStart="16dp"
-        android:layout_weight="1"
-        tools:text="Inventory name"
-        style="@style/NormalTextAppearance"/>
+        android:gravity="center_vertical"
+        app:layout_constraintEnd_toStartOf="@+id/shoppingListItemCountView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Inventory name" />
 
     <TextView
         android:id="@+id/shoppingListItemCountView"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
-        android:layout_marginEnd="12dp"
-        tools:text="4"
-        tools:drawableStart="@drawable/shopping_cart_icon"
-        app:drawableTint="?android:attr/textColorPrimary"
+        app:layout_constraintEnd_toStartOf="@id/inventoryItemCountView"
+        app:layout_constraintStart_toEndOf="@id/nameView"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginEnd="8dp"
         android:gravity="center"
-        style="@style/SecondaryTextAppearance" />
+        app:drawableTint="?android:attr/textColorPrimary"
+        tools:drawableStart="@drawable/shopping_cart_icon"
+        tools:text="4"
+        style="@style/SecondaryTextAppearance"/>
 
     <TextView
         android:id="@+id/inventoryItemCountView"
         android:layout_width="wrap_content"
         android:layout_height="48dp"
-        tools:text="5"
-        tools:drawableStart="@drawable/inventory_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/editButton"
+        app:layout_constraintStart_toEndOf="@id/shoppingListItemCountView"
         android:gravity="center"
         app:drawableTint="?android:attr/textColorPrimary"
+        tools:drawableStart="@drawable/inventory_icon"
+        tools:text="5"
         style="@style/SecondaryTextAppearance" />
 
     <ImageView
         android:id="@+id/editButton"
         android:layout_width="48dp"
         android:layout_height="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/inventoryItemCountView"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:srcCompat="@drawable/animated_edit_to_collapse"
         style="@style/BootyCrateItemEditButton" />
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/useInCombinedShoppingListSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/use_in_combined_shopping_list"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/nameView"
+        app:switchPadding="6dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:layout_marginStart="16dp"/>
+
+    <ImageView
+        android:id="@+id/deleteButton"
+        style="@style/ImageButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:padding="14dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:srcCompat="@drawable/ic_delete_black_24dp" />
 
 </merge>
