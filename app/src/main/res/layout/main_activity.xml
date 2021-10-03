@@ -112,6 +112,7 @@
             app:layout_constraintTop_toBottomOf="@id/bottomAppBar"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            android:paddingHorizontal="10dp"
             android:background="@drawable/background_gradient" >
         </FrameLayout>
 

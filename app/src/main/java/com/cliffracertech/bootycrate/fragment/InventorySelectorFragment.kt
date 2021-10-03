@@ -60,7 +60,6 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         setAdapter(adapter)
         setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
-        background = ContextCompat.getDrawable(context, R.drawable.alert_dialog_background)
         val spacing = resources.getDimensionPixelSize(R.dimen.recycler_view_item_spacing)
         addItemDecoration(ItemSpacingDecoration(spacing))
     }

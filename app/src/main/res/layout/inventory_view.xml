@@ -29,7 +29,7 @@
         android:layout_marginEnd="12dp"
         tools:text="4"
         tools:drawableStart="@drawable/shopping_cart_icon"
-
+        app:drawableTint="?android:attr/textColorPrimary"
         android:gravity="center"
         style="@style/SecondaryTextAppearance" />
 
@@ -40,6 +40,7 @@
         tools:text="5"
         tools:drawableStart="@drawable/inventory_icon"
         android:gravity="center"
+        app:drawableTint="?android:attr/textColorPrimary"
         style="@style/SecondaryTextAppearance" />
 
     <ImageView

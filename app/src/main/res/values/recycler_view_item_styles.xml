@@ -33,6 +33,7 @@
 
     <style name="BootyCrateItemEditButton">
         <item name="android:src">@drawable/edit_and_collapse_button</item>
+        <item name="android:tint">?android:attr/textColorPrimary</item>
         <item name="android:padding">12dp</item>
     </style>
 
