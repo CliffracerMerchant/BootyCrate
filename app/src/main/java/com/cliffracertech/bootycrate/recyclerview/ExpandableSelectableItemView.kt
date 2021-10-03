@@ -64,8 +64,8 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
 ) : BootyCrateItemView<T>(context, useDefaultLayout),
     ExpandableItemAnimator.ExpandableRecyclerViewItem
 {
-    val isExpanded get() = _isExpanded
-    private var _isExpanded = false
+    var isExpanded = false
+        private set
     private val gradientOutline: GradientDrawable
     private var isLinkedToAnotherItem = false
 
@@ -147,7 +147,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         had horrific performance in this case on both emulated and real devices
         when tested (around 4-5 fps). Unless another alternative presents itself,
         the internal expand / collapse animations must be done manually. */
-        _isExpanded = expanding
+        isExpanded = expanding
 
         val nameAnimInfo = updateNameEditState(expanding, animate)
         val extraInfoAnimInfo = updateExtraInfoState(expanding, animate)

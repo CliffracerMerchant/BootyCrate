@@ -27,7 +27,7 @@ import java.io.File
  * of the bootycrate_item table. BootyCrateDatabase functions as a singleton,
  * with the current instance obtained using the static function get.
  */
-@Database(entities = [DatabaseBootyCrateItem::class, DatabaseInventory::class], version = 2)
+@Database(entities = [DatabaseBootyCrateItem::class, DatabaseInventory::class], version = 3)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun itemDao(): BootyCrateItemDao
@@ -41,7 +41,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             else Room.databaseBuilder(context.applicationContext,
                                       BootyCrateDatabase::class.java,
                                       "booty-crate-db").addCallback(callback)
-                                      .addMigrations(Migration1to2())
+                                      .addMigrations(Migration1to2(), Migration2to3())
                                       .build().also { this.instance = it }
         }
 
@@ -193,11 +193,18 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                                  inventoryAmount, expandedInInventory, selectedInInventory,
                                  autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash
                           FROM bootycrate_item;""")
-            db.execSQL("CREATE INDEX `index_bootycrate_item_inventoryId` ON `temp_table` (`inventoryId`)");
+            db.execSQL("CREATE INDEX `index_bootycrate_item_inventoryId` ON `temp_table` (`inventoryId`)")
             db.execSQL("DROP TABLE bootycrate_item;")
             db.execSQL("ALTER TABLE temp_table RENAME TO bootycrate_item;")
             db.execSQL("COMMIT;")
             db.execSQL("PRAGMA foreign_keys=on;")
+        }
+    }
+
+    private class Migration2to3 : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE inventory ADD COLUMN `isExpanded` INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE inventory ADD COLUMN `useInCombinedShoppingList` INTEGER NOT NULL DEFAULT 1")
         }
     }
 }

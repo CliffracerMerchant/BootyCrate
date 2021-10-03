@@ -11,35 +11,6 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.cliffracertech.bootycrate.R
 
-@Entity(tableName = "inventory")
-open class DatabaseInventory(
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name="id")   var id: Long = 0,
-    @ColumnInfo(name="name") var name: String,
-)
-
-class BootyCrateInventory(
-    id: Long = 0,
-    name: String,
-    var shoppingListItemCount: Int,
-    var inventoryItemCount: Int,
-) : DatabaseInventory(id, name) {
-    override fun equals(other: Any?) = when (other) {
-        null -> false
-        !is BootyCrateInventory -> false
-        else ->  id == other.id && name == other.name &&
-                 shoppingListItemCount == other.shoppingListItemCount &&
-                 inventoryItemCount == other.inventoryItemCount
-    }
-
-    override fun toString() = """
-id = $id
-name = $name
-shoppingListItemCount = $shoppingListItemCount
-inventoryItemCount = $inventoryItemCount
-"""
-}
-
 /** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item table. */
 @Entity(tableName = "bootycrate_item",
         foreignKeys = [ForeignKey(entity = DatabaseInventory::class,

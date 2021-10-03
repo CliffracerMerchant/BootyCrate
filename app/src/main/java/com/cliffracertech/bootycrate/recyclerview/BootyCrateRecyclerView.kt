@@ -125,7 +125,8 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
 
         init { view.apply {
             ui.checkBox.onColorChangedListener = { color ->
-                viewModel.updateColor(item.id, BootyCrateItem.Colors.indexOf(color))
+                if (adapterPosition != -1)
+                    viewModel.updateColor(item.id, BootyCrateItem.Colors.indexOf(color))
             }
             ui.nameEdit.onTextChangedListener = { newName ->
                 if (adapterPosition != -1) viewModel.updateName(item.id, newName)
