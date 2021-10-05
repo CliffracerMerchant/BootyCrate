@@ -70,17 +70,22 @@
 
     <declare-styleable name="BottomAppBar">
         <!-- The id of the contained cradle layout. -->
-        <attr name="cradleLayoutResId"    format="reference" />
+        <attr name="cradleLayoutResId" format="reference" />
         <!-- The id of the BottomNavigationView whose menu items the indicator will track. -->
-        <attr name="navViewResId"         format="reference" />
-        <!-- The corner radius of the top left and top right corners. -->
-        <attr name="topOuterCornerRadius" format="dimension" />
+        <attr name="navViewResId"      format="reference" />
         <!-- The color used as the background tint, if no background gradient is set. -->
-        <attr name="backgroundTint"       format="color" />
+        <attr name="backgroundTint"    format="color" />
+        <!-- The interpolation of the BottomAppBar's top edge; the valid range is [0f, 1f].
+             For the cradle, 0f implies a straight line, while 1f implies a fully drawn cradle.
+             For the top outer corners, 0f will make the corner radii equal to the value of
+             topOuterCornerStartRadius, while a value of 1f will make the corner radii equal
+             to the value of topOuterCornerEndRadius. -->
+        <attr name="interpolation"             format="float" />
+        <!-- The corner radius of the top left and top right corners. -->
+        <attr name="topOuterCornerStartRadius" format="dimension" />
+        <!-- The corner radius of the top left and top right corners. -->
+        <attr name="topOuterCornerEndRadius"   format="dimension" />
 
-        <!-- The interpolation of the cradle; the valid range is [0f, 1f].
-        0f implies a straight line, while 1f implies a fully drawn cradle. -->
-        <attr name="cradleInterpolation"      format="float" />
         <!-- The depth of the BottomAppBar cradle. -->
         <attr name="cradleDepth"              format="dimension" />
         <!-- The radius of the cradle curved top corners. -->

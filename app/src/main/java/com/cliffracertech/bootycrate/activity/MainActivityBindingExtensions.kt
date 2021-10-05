@@ -224,7 +224,7 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
                 translationY = height * -0.9f * slide
             }
             navIndicator.alpha = 1f - slide
-            cradle.interpolation = 1f - slide
+            interpolation = 1f - slide
         }
     }
 }

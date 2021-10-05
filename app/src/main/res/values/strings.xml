@@ -132,6 +132,8 @@
     <string name="item_color_9_description">magenta</string>
     <string name="item_color_10_description">pink</string>
     <string name="item_color_11_description">gray</string>
+
     <string name="use_in_combined_shopping_list">Use in combined shopping list</string>
+    <string name="more_options_description">More options</string>
 
 </resources>

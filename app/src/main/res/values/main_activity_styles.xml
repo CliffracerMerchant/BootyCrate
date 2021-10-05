@@ -20,7 +20,8 @@
 
     <style name="BottomAppBar">
         <item name="contentInsetStart">0dp</item>
-        <item name="topOuterCornerRadius">@dimen/dialog_rounded_corner_radius</item>
+        <item name="topOuterCornerStartRadius">@dimen/dialog_rounded_corner_radius</item>
+        <item name="topOuterCornerEndRadius">25dp</item>
         <item name="cradleTopCornerRadius">25dp</item>
         <item name="cradleBottomCornerRadius">33dp</item>
         <item name="cradleDepth">52dp</item>
