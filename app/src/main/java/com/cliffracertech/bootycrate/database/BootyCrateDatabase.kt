@@ -27,13 +27,14 @@ import java.io.File
  * of the bootycrate_item table. BootyCrateDatabase functions as a singleton,
  * with the current instance obtained using the static function get.
  */
-@Database(entities = [DatabaseBootyCrateItem::class, DatabaseInventory::class], version = 3)
+@Database(entities = [DatabaseBootyCrateItem::class, DatabaseInventory::class], version = 2)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun itemDao(): BootyCrateItemDao
     abstract fun inventoryDao(): BootyCrateInventoryDao
 
     companion object {
+        private const val firstInventoryName="BootyCrate"
         var instance: BootyCrateDatabase? = null
         fun get(context: Context, overwriteExistingDb: Boolean = false) = run {
             val instance = this.instance
@@ -41,7 +42,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             else Room.databaseBuilder(context.applicationContext,
                                       BootyCrateDatabase::class.java,
                                       "booty-crate-db").addCallback(callback)
-                                      .addMigrations(Migration1to2(), Migration2to3())
+                                      .addMigrations(Migration1to2())
                                       .build().also { this.instance = it }
         }
 
@@ -87,7 +88,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                     val oldId = inventory.id
                     inventory.id = 0
                     val newId = currentDb.inventoryDao().add(inventory)
-                    items.filter { it.inventoryId == oldId }.forEach {
+                    items.filter { it.inventoryId == oldId && it.id != 0L }.forEach {
                         it.inventoryId = newId
                         it.id = 0
                     }
@@ -112,7 +113,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
 
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
-                db.execSQL("INSERT INTO inventory (name) VALUES ('BootyCrate')")
+                db.execSQL("INSERT INTO inventory (name, isSelected) VALUES (firstInventoryName, 1)")
 
                 // The auto_delete_items trigger will remove an item from the database when
                 // its shoppingListAmount and inventoryAmount fields both are equal to -1
@@ -167,8 +168,10 @@ abstract class BootyCrateDatabase : RoomDatabase() {
 
     private class Migration1to2 : Migration(1, 2) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("CREATE TABLE inventory (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL)")
-            val values = ContentValues().apply { put("name", "BootyCrate") }
+            db.execSQL("""CREATE TABLE inventory (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                                                  `name` TEXT NOT NULL,
+                                                  `isSelected` INTEGER NOT NULL DEFAULT 0)""")
+            val values = ContentValues().apply { put("name", firstInventoryName) }
             val insertedId = db.insert("inventory", 0, values)
 
             db.execSQL("PRAGMA foreign_keys=off")
@@ -198,13 +201,6 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             db.execSQL("ALTER TABLE temp_table RENAME TO bootycrate_item;")
             db.execSQL("COMMIT;")
             db.execSQL("PRAGMA foreign_keys=on;")
-        }
-    }
-
-    private class Migration2to3 : Migration(2, 3) {
-        override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("ALTER TABLE inventory ADD COLUMN `isExpanded` INTEGER NOT NULL DEFAULT 0")
-            db.execSQL("ALTER TABLE inventory ADD COLUMN `useInCombinedShoppingList` INTEGER NOT NULL DEFAULT 1")
         }
     }
 }

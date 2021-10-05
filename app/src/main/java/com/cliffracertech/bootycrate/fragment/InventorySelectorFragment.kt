@@ -8,12 +8,15 @@
 package com.cliffracertech.bootycrate.fragment
 
 import android.content.Context
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewPropertyAnimator
+import android.widget.LinearLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -33,6 +36,7 @@ import com.cliffracertech.bootycrate.recyclerview.ItemSpacingDecoration
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
 import com.cliffracertech.bootycrate.utils.dpToPixels
+import com.cliffracertech.bootycrate.utils.intValueAnimator
 import java.util.*
 
 class InventorySelectorFragment : Fragment() {
@@ -100,11 +104,8 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
                     ui.shoppingListItemCountView.text = item.shoppingListItemCount.toString()
                 if (changes.contains(Field.InventoryItemCount))
                     ui.inventoryItemCountView.text = item.inventoryItemCount.toString()
-                if (changes.contains(Field.IsExpanded))
-                    holder.view.setExpanded(item.isExpanded)
-                if (changes.contains(Field.UseInCombinedShoppingList) &&
-                    ui.useInCombinedShoppingListSwitch.isChecked != item.useInCombinedShoppingList)
-                        ui.useInCombinedShoppingListSwitch.isChecked = item.useInCombinedShoppingList
+                if (changes.contains(Field.IsSelected))
+                    holder.view.setSelectedState(item.isSelected)
             }
         }
 
@@ -116,20 +117,13 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         val item: BootyCrateInventory get() = adapter.currentList[adapterPosition]
 
         init {
-            view.ui.nameView.onTextChangedListener = { viewModel.updateName(item.id, it) }
-            view.ui.editButton.setOnClickListener {
-                if (adapterPosition != -1)
-                    viewModel.setExpandedItem(if (view.isExpanded) null else item.id)
-            }
-            view.ui.useInCombinedShoppingListSwitch.setOnCheckedChangeListener { _, isChecked ->
-                if (adapterPosition != -1)
-                    viewModel.updateUseInCombinedShoppingList(item.id, isChecked)
+            view.ui.optionsButton.setOnClickListener {
+
             }
         }
     }
 
-    private enum class Field { Name, ShoppingListItemCount, InventoryItemCount,
-                               IsExpanded, UseInCombinedShoppingList }
+    private enum class Field { Name, ShoppingListItemCount, InventoryItemCount, IsSelected }
 
     private class DiffUtilCallback : DiffUtil.ItemCallback<BootyCrateInventory>() {
         private val listChanges = mutableMapOf<Long, EnumSet<Field>>()
@@ -147,10 +141,8 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
                     add(Field.ShoppingListItemCount)
                 if (newItem.inventoryItemCount != oldItem.inventoryItemCount)
                     add(Field.InventoryItemCount)
-                if (newItem.isExpanded != oldItem.isExpanded)
-                    add(Field.IsExpanded)
-                if (newItem.useInCombinedShoppingList != oldItem.useInCombinedShoppingList)
-                    add(Field.UseInCombinedShoppingList)
+                if (newItem.isSelected != oldItem.isSelected)
+                    add(Field.IsSelected)
 
                 if (!isEmpty())
                     listChanges[newItem.id] = EnumSet.copyOf(this)
@@ -161,17 +153,9 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
     }
 }
 
-class InventoryView(context: Context) : ConstraintLayout(context),
-    ExpandableItemAnimator.ExpandableRecyclerViewItem
-{
+class InventoryView(context: Context) : LinearLayout(context) {
     val ui = InventoryViewBinding.inflate(LayoutInflater.from(context), this)
-    private val pendingAnimators = mutableListOf<ViewPropertyAnimator>()
-    var isExpanded = false
-        private set
-
-    var animatorConfig: AnimatorConfig? = null
-        set(value) { field = value
-                     ui.nameView.animatorConfig = value }
+    private val gradientOutline: GradientDrawable
 
     init {
         val inventoryIcon = ContextCompat.getDrawable(context, R.drawable.inventory_icon)
@@ -182,7 +166,9 @@ class InventoryView(context: Context) : ConstraintLayout(context),
         inventoryIcon?.bounds?.inset(iconPadding, iconPadding)
         shoppingListIcon?.bounds?.inset(iconPadding, iconPadding)
 
-        background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item_base)
+        background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item).also {
+            gradientOutline = ((it as LayerDrawable).getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
+        }
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
     }
@@ -193,40 +179,16 @@ class InventoryView(context: Context) : ConstraintLayout(context),
         ui.inventoryItemCountView.text = inventory.inventoryItemCount.toString()
     }
 
-    override fun setExpanded(expanding: Boolean, animate: Boolean) {
-        isExpanded = expanding
-        ui.nameView.setEditable(expanding, animate)
-        if (!animate) {
-            ui.deleteButton.isVisible = expanding
-            ui.useInCombinedShoppingListSwitch.isVisible = expanding
-            return
-        }
-
-        ui.deleteButton.isVisible = true
-        ui.deleteButton.alpha = if (expanding) 0f else 1f
-        pendingAnimators.add(ui.deleteButton.run {
-            animate().alpha(if (expanding) 1f else 0f).applyConfig(animatorConfig).withLayer()
-                .withEndAction { if (alpha == 0f) ui.deleteButton.isVisible = false }
-        })
-
-        ui.useInCombinedShoppingListSwitch.isVisible = true
-        ui.useInCombinedShoppingListSwitch.alpha = if (expanding) 0f else 1f
-        pendingAnimators.add(ui.useInCombinedShoppingListSwitch.run {
-            animate().alpha(if (expanding) 1f else 0f).applyConfig(animatorConfig)
-                .withLayer().withEndAction { if (alpha == 0f) isVisible = false }
-        })
-
-        ui.editButton.isActivated = expanding
-        val editButtonTransYAmount = ui.editButton.layoutParams.height
-        if (expanding)
-            ui.editButton.translationY = -1f * editButtonTransYAmount
-        val editButtonEndTranslation = if (expanding) 0f else -editButtonTransYAmount.toFloat()
-        pendingAnimators.add(ui.editButton.animate().applyConfig(animatorConfig)
-                            .translationY(editButtonEndTranslation).withLayer())
-    }
-
-    override fun runPendingAnimations() {
-        pendingAnimators.forEach { it.start() }
-        pendingAnimators.clear()
+    private var _isInSelectedState = false
+    val isInSelectedState get() = _isInSelectedState
+    fun select() = setSelectedState(true)
+    fun deselect() = setSelectedState(false)
+    fun setSelectedState(selected: Boolean, animate: Boolean = true) {
+        _isInSelectedState = selected
+        val endAlpha = if (selected) 255 else 0
+        if (animate) intValueAnimator(setter = gradientOutline::setAlpha,
+                                      from = gradientOutline.alpha,
+                                      to = endAlpha).start()
+        else gradientOutline.alpha = endAlpha
     }
 }

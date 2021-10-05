@@ -57,4 +57,10 @@
         <item name="valueIsFocusable">true</item>
     </style>
 
+    <style name="InventoryMorOptionsButton">
+        <item name="srcCompat">@drawable/ic_more_vert_black_24dp</item>
+        <item name="android:tint">?android:attr/textColorPrimary</item>
+        <item name="android:padding">12dp</item>
+    </style>
+
 </resources>

@@ -23,10 +23,8 @@ open class DatabaseInventory(
     var id: Long = 0,
     @ColumnInfo(name="name")
     var name: String,
-    @ColumnInfo(name="isExpanded", defaultValue="0")
-    var isExpanded: Boolean = false,
-    @ColumnInfo(name="useInCombinedShoppingList", defaultValue="1")
-    var useInCombinedShoppingList: Boolean = true,
+    @ColumnInfo(name="isSelected", defaultValue="0")
+    var isSelected: Boolean = false,
 )
 
 class BootyCrateInventory(
@@ -41,8 +39,7 @@ class BootyCrateInventory(
         else ->  id == other.id && name == other.name &&
                 shoppingListItemCount == other.shoppingListItemCount &&
                 inventoryItemCount == other.inventoryItemCount &&
-                isExpanded == other.isExpanded &&
-                useInCombinedShoppingList == other.useInCombinedShoppingList
+                isSelected == other.isSelected
     }
 
     override fun toString() = """
@@ -50,8 +47,7 @@ id = $id
 name = $name
 shoppingListItemCount = $shoppingListItemCount
 inventoryItemCount = $inventoryItemCount
-isExpanded = $isExpanded
-useInCombinedShoppingList = $useInCombinedShoppingList
+isSelected = $isSelected
 """
 
     override fun hashCode() = shoppingListItemCount * 31 + inventoryItemCount
@@ -65,7 +61,6 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
                                        "WHERE bootycrate_item.inventoryId = inventory.id " +
                                        "AND bootycrate_item.inventoryAmount != -1) " +
                                        "AS inventoryItemCount"
-private const val allFields = "id, name, $shoppingListItemCount, $inventoryItemCount, isExpanded, useInCombinedShoppingList"
 
 @Dao abstract class BootyCrateInventoryDao {
     @Insert abstract suspend fun add(inventory: DatabaseInventory): Long
@@ -74,25 +69,22 @@ private const val allFields = "id, name, $shoppingListItemCount, $inventoryItemC
     @Query("UPDATE inventory SET name = :name WHERE id = :id")
     abstract suspend fun updateName(id: Long, name: String)
 
-    @Query("SELECT $allFields FROM inventory")
+    @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount, isSelected FROM inventory")
     abstract fun getAll() : LiveData<List<BootyCrateInventory>>
 
     @Query("SELECT * FROM inventory")
     abstract fun getAllNow() : List<DatabaseInventory>
 
-    @Query("UPDATE inventory SET isExpanded = 1 WHERE id = :id")
-    protected abstract suspend fun expand(id: Long)
+    @Query("UPDATE inventory SET isSelected = :isSelected WHERE id = :id")
+    abstract suspend fun updateIsSelected(id: Long, isSelected: Boolean)
 
-    @Query("UPDATE inventory SET isExpanded = 0")
-    abstract suspend fun clearExpandedItem()
+    @Query("UPDATE inventory SET isSelected = 0")
+    protected abstract fun clearSelected(): Int
 
-    @Transaction open suspend fun setExpandedItem(id: Long?) {
-        clearExpandedItem()
-        if (id != null) expand(id)
+    @Transaction open suspend fun singleSelect(id: Long) {
+        clearSelected()
+        updateIsSelected(id, true)
     }
-
-    @Query("UPDATE inventory SET useInCombinedShoppingList = :useInCombinedShoppingList WHERE id = :id")
-    abstract suspend fun updateUseInCombinedShoppingList(id: Long, useInCombinedShoppingList: Boolean)
 
     @Query("DELETE FROM inventory WHERE id = :id")
     abstract suspend fun delete(id: Long)
@@ -114,8 +106,8 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
 
     fun updateName(id: Long, name: String) = viewModelScope.launch { dao.updateName(id, name) }
 
-    fun setExpandedItem(id: Long?) = viewModelScope.launch { dao.setExpandedItem(id) }
+    fun updateIsSelected(id: Long, isSelected: Boolean) =
+        viewModelScope.launch { dao.updateIsSelected(id, isSelected) }
 
-    fun updateUseInCombinedShoppingList(id: Long, useInCombinedShoppingList: Boolean) =
-        viewModelScope.launch { dao.updateUseInCombinedShoppingList(id, useInCombinedShoppingList) }
+    fun singleSelect(id: Long) = viewModelScope.launch { dao.singleSelect(id) }
 }

@@ -42,7 +42,7 @@ private const val inventoryItemFields = "id, inventoryId, name, extraInfo, color
     @Query("UPDATE bootycrate_item SET extraInfo = :extraInfo WHERE id = :id")
     abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
 
-    @Query("""UPDATE bootycrate_item SET color = :color WHERE id = :id""")
+    @Query("UPDATE bootycrate_item SET color = :color WHERE id = :id")
     abstract suspend fun updateColor(id: Long, color: Int)
 
     @Query("SELECT * FROM bootycrate_item")
