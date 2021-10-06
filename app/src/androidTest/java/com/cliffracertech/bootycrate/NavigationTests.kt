@@ -32,21 +32,21 @@ class NavigationTests {
 
     @Test fun startingFragmentVisibility() {
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
     }
 
-    @Test fun switchingToInventoryFragment() {
+    @Test fun switchingToInventoryItemFragment() {
         startingFragmentVisibility()
         onView(withId(R.id.inventoryButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(not(isCompletelyDisplayed())))
-        onView(withId(R.id.inventoryFragmentView)).check(matches(isDisplayed()))
+        onView(withId(R.id.inventoryItemFragmentView)).check(matches(isDisplayed()))
     }
 
     @Test fun switchingBackToShoppingListFragment() {
-        switchingToInventoryFragment()
+        switchingToInventoryItemFragment()
         onView(withId(R.id.shoppingListButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isCompletelyDisplayed())))
+        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isCompletelyDisplayed())))
     }
 
     @Test fun navigatingToPreferencesFragment() {
@@ -59,7 +59,7 @@ class NavigationTests {
         navigatingToPreferencesFragment()
         pressBack()
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
     }
 
@@ -67,7 +67,7 @@ class NavigationTests {
         navigatingToPreferencesFragment()
         onView(withId(R.id.backButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
     }
 
@@ -96,10 +96,10 @@ class NavigationTests {
         onView(withId(R.id.bottomNavigationDrawer)).check(matches(allOf(isDisplayed(), not(isCompletelyDisplayed()))))
         onView(withId(R.id.appTitle)).check(matches(not(isDisplayed())))
         onView(withId(R.id.settingsButton)).check(matches(not(isDisplayed())))
-        onView(withId(R.id.inventorySelector)).check(matches(allOf(hasAlpha(0f), not(isCompletelyDisplayed()))))
+        onView(withId(R.id.inventorySelectorRecyclerView)).check(matches(allOf(hasAlpha(0f), not(isCompletelyDisplayed()))))
         onView(withId(R.id.bottomNavigationView)).check(matches(isDisplayed()))
         onView(withId(R.id.bottomAppBar)).perform(doStuff<BottomAppBar> {
-            assertThat(it.cradle.interpolation).isEqualTo(1f)
+            assertThat(it.interpolation).isEqualTo(1f)
             assertThat(it.navIndicator.alpha).isEqualTo(1f)
         })
     }
@@ -111,10 +111,10 @@ class NavigationTests {
         onView(withId(R.id.bottomNavigationDrawer)).check(matches(isCompletelyDisplayed()))
         onView(withId(R.id.appTitle)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
         onView(withId(R.id.settingsButton)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
-        onView(withId(R.id.inventorySelector)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
+        onView(withId(R.id.inventorySelectorRecyclerView)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
         onView(withId(R.id.bottomNavigationView)).check(matches(not(isDisplayed())))
         onView(withId(R.id.bottomAppBar)).perform(doStuff<BottomAppBar> {
-            assertThat(it.cradle.interpolation).isEqualTo(0f)
+            assertThat(it.interpolation).isEqualTo(0f)
             assertThat(it.navIndicator.alpha).isEqualTo(0f)
         })
     }

@@ -81,7 +81,6 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
 
         var systemBottomGestureHeight = 0
         var statusBarHeight = 0
-        val rootView = context.asFragmentActivity().window.decorView
         ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, windowInsets ->
             var insets = windowInsets.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())
             systemBottomGestureHeight = insets.bottom

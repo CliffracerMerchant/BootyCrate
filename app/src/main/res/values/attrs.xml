@@ -6,10 +6,6 @@
 <resources>
     <!-- Used as the background color for recycler view items. -->
     <attr name="recyclerViewItemColor" format="color" />
-    <!-- The width of the canvas a path is drawn on. -->
-    <attr name="pathWidth" format="float" />
-    <!-- The height of the canvas a path is drawn on. -->
-    <attr name="pathHeight" format="float" />
     <!-- The left color of the background gradient. -->
     <attr name="backgroundGradientLeftColor" format="color" />
     <!-- The middle color of the background gradient. -->
@@ -145,6 +141,10 @@
         <attr name="iconPathData" format="string" />
         <!-- The stroke width of the icon. A value of 0 will use Paint.FILL instead of Paint.STROKE. -->
         <attr name="iconStrokeWidth" format="dimension" />
+        <!-- The width of the canvas the background and icon path is drawn on. -->
+        <attr name="pathWidth" format="float" />
+        <!-- The height of the canvas a path is drawn on. -->
+        <attr name="pathHeight" format="float" />
     </declare-styleable>
 
     <declare-styleable name="DisableableGradientButton">

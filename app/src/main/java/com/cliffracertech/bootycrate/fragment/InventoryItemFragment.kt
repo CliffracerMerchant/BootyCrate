@@ -14,25 +14,24 @@ import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.InventoryItemViewModel
 import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
-import com.cliffracertech.bootycrate.databinding.InventoryFragmentBinding
+import com.cliffracertech.bootycrate.databinding.InventoryItemFragmentBinding
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
+import com.cliffracertech.bootycrate.recyclerview.InventoryItemRecyclerView
 import com.cliffracertech.bootycrate.utils.NewInventoryItemDialog
 import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
 
 /**
  * A fragment to display and modify the user's inventory.
  *
- * InventoryFragment is a RecyclerViewFragment subclass to view and modify the
- * user's inventory using an InventoryRecyclerView. It does almost nothing
- * different from RecyclerViewFragment apart from implementing its abstract
- * properties with values suitable for display of an InventoryRecyclerView,
- * and using its own action mode callback.
+ * InventoryItemFragment is a RecyclerViewFragment subclass to view and modify
+ * the user's inventory using an InventoryItemRecyclerView. It implements
+ * nRecyclerViewFragment's abstract properties with values suitable for display
+ * of an InventoryItemRecyclerView, and using its own action mode callback.
  */
-@Keep class InventoryFragment: RecyclerViewFragment<InventoryItem>() {
+@Keep class InventoryItemFragment: RecyclerViewFragment<InventoryItem>() {
     override val viewModel: InventoryItemViewModel by activityViewModels()
     private val shoppingListItemViewModel: ShoppingListItemViewModel by activityViewModels()
-    override var recyclerView: InventoryRecyclerView? = null
+    override var recyclerView: InventoryItemRecyclerView? = null
     override lateinit var collectionName: String
     override val actionModeCallback = InventoryActionModeCallback()
 
@@ -40,8 +39,8 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ) = InventoryFragmentBinding.inflate(inflater, container, false).apply {
-        recyclerView = inventoryRecyclerView
+    ) = InventoryItemFragmentBinding.inflate(inflater, container, false).apply {
+        recyclerView = inventoryItemRecyclerView
         collectionName = inflater.context.getString(R.string.inventory_item_collection_name)
     }.root
 

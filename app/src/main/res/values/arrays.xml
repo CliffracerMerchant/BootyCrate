@@ -12,7 +12,7 @@
 
     <string-array name="multi_fragment_activity_fragments">
         <item>com.cliffracertech.bootycrate.fragment.ShoppingListFragment</item>
-        <item>com.cliffracertech.bootycrate.fragment.InventoryFragment</item>
+        <item>com.cliffracertech.bootycrate.fragment.InventoryItemFragment</item>
     </string-array>
 
     <integer-array name="bootycrate_item_colors">

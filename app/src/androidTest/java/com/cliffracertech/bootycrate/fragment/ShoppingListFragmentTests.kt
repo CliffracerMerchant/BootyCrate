@@ -385,7 +385,7 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.inventoryButton)).perform(click())
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView)).check(onlyShownInventoryItemsAre(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(onlyShownInventoryItemsAre(
             InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
                           amount = 0, color = orangeItem1.color),
             InventoryItem(name = grayItem11.name, amount = 0, color = grayItem11.color)))
@@ -564,7 +564,7 @@ class ShoppingListFragmentTests {
                                           color = orangeItem1.color, amount = orangeItem1.amount)
         val expectedItem2 = InventoryItem(name = grayItem11.name, color = grayItem11.color, amount = 0)
         // grayItem11 was not checked and should not have its amount updated.
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(expectedItem1, expectedItem2))
     }
 

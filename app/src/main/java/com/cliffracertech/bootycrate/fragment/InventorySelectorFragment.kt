@@ -50,7 +50,7 @@ class InventorySelectorFragment : Fragment() {
         .apply { ui = this }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        ui?.recyclerView?.observeViewModel(viewLifecycleOwner)
+        ui?.inventorySelectorRecyclerView?.observeViewModel(viewLifecycleOwner)
     }
 
     override fun onDestroyView() {

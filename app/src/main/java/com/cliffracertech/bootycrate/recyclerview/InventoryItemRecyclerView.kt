@@ -12,8 +12,8 @@ import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.inventoryItemViewModel
 import java.util.*
 
-/** A RecyclerView to display the data provided by an InventoryViewModel. */
-class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
+/** A RecyclerView to display the data provided by an InventoryItemViewModel. */
+class InventoryItemRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<InventoryItem>(context, attrs)
 {
     override val diffUtilCallback = DiffUtilCallback()
@@ -23,12 +23,12 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     /**
      * A RecyclerView.Adapter to display the contents of a list of inventory items.
      *
-     * InventoryRecyclerView.Adapter is a subclass of ExpandableSelectableRecyclerView.Adapter
-     * using InventoryRecyclerView.ViewHolder instances to represent inventory
+     * InventoryItemRecyclerView.Adapter is a subclass of ExpandableSelectableRecyclerView.Adapter
+     * using InventoryItemRecyclerView.ViewHolder instances to represent inventory
      * items. Its overrides of onBindViewHolder make use of the InventoryItem.Field
-     * values passed by InventoryRecyclerView.DiffUtilCallback to support partial
-     * binding. Note that InventoryAdapter assumes that any change payloads passed
-     * to it are of the type EnumSet<InventoryItem.Field>. If a payload of another
+     * values passed by InventoryItemRecyclerView.DiffUtilCallback to support partial
+     * binding. Note that the adapetr assumes that any change payloads passed to
+     * it are of the type EnumSet<InventoryItem.Field>. If a payload of another
      * type is passed to it, an exception will be thrown.
      */
     inner class Adapter : ExpandableSelectableRecyclerView<InventoryItem>.Adapter<ViewHolder>() {
@@ -86,7 +86,7 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     /**
      * A ExpandableSelectableRecyclerView.ViewHolder that wraps an instance of InventoryItemView.
      *
-     * InventoryRecyclerView.ViewHolder is a subclass of ExpandableSelectableRecyclerView.ViewHolder
+     * InventoryItemRecyclerView.ViewHolder is a subclass of ExpandableSelectableRecyclerView.ViewHolder
      * that holds an instance of InventoryItemView to display the data for an
      * InventoryItem.
      */
@@ -109,10 +109,11 @@ class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
     /**
      * Computes a diff between two inventory item lists.
      *
-     * InventoryRecyclerView.DiffUtilCallback uses the ids of inventory items to
-     * determine if they are the same or not. If they are the same, the change
-     * payload will be an instance of EnumSet<InventoryItem.Field> that contains
-     * the InventoryItem.Field values for all of the fields that were changed.
+     * InventoryItemRecyclerView.DiffUtilCallback uses the ids of inventory
+     * items to determine if they are the same or not. If they are the same,
+     * the change payload will be an instance of EnumSet<InventoryItem.Field>
+     * contains InventoryItem.Field values for all of the fields that were
+     * changed.
      */
     class DiffUtilCallback : DiffUtil.ItemCallback<InventoryItem>() {
         private val listChanges = mutableMapOf<Long, EnumSet<InventoryItem.Field>>()
