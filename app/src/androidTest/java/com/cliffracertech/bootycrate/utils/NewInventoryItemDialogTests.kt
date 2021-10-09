@@ -198,7 +198,7 @@ class NewInventoryItemDialogTests {
                                      color = 5, amount = 3, autoAddToShoppingList = true,
                                      autoAddToShoppingListAmount = 4)
         addTestInventoryItems(leaveDialogOpen = false, testItem)
-        onView(withId(R.id.inventoryRecyclerView))
+        onView(withId(R.id.inventoryItemRecyclerView))
             .check(onlyShownInventoryItemsAre(testItem))
     }
 
@@ -208,7 +208,7 @@ class NewInventoryItemDialogTests {
                                       color = 7, amount = 8, autoAddToShoppingList = true,
                                       autoAddToShoppingListAmount = 2)
         addTestInventoryItems(leaveDialogOpen = false, testItem, testItem2)
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(testItem, testItem2))
     }
 }

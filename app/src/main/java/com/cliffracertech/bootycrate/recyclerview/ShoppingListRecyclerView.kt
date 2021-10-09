@@ -8,10 +8,13 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import androidx.activity.ComponentActivity
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.database.shoppingListItemViewModel
+import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import java.util.*
 import kotlin.collections.set
@@ -24,13 +27,18 @@ import kotlin.collections.set
  * adds a sortByChecked property, which mirrors the ShoppingListViewModel
  * property, for convenience. sortByChecked should not be changed the
  * property viewModel is initialized, or an exception will be thrown.
+ *
+ * ShoppingListRecyclerView provides an overload of BootyCrateRecyclerView's
+ * initViewModel function that requires an instance of either a Fragment or a
+ * ComponentActivity. This overload must be called, and also calls
+ * BootyCrateRecyclerView's initViewModel for you.
  */
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs)
 {
     override val diffUtilCallback = DiffUtilCallback()
     override val adapter = Adapter()
-    override val viewModel = shoppingListItemViewModel(context)
+    override lateinit var viewModel: ShoppingListItemViewModel
 
     var sortByChecked get() = viewModel.sortByChecked
         set(value) { viewModel.sortByChecked = value }
@@ -39,6 +47,16 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
         itemAnimator.animatorConfig = AnimatorConfig(
             context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
+    }
+
+    fun initViewModel(fragment: Fragment) {
+        this.viewModel = ViewModelProvider(fragment).get(ShoppingListItemViewModel::class.java)
+        initViewModel(fragment.viewLifecycleOwner)
+    }
+
+    fun initViewModel(activity: ComponentActivity) {
+        this.viewModel = ViewModelProvider(activity).get(ShoppingListItemViewModel::class.java)
+        initViewModel(activity)
     }
 
     /**

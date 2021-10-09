@@ -5,9 +5,7 @@
 package com.cliffracertech.bootycrate.database
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.*
-import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,12 +20,6 @@ enum class BootyCrateItemSort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
                  catch(e: IllegalArgumentException) { Color }
     }
 }
-
-fun shoppingListItemViewModel(context: Context) =
-    ViewModelProvider(context.asFragmentActivity()).get(ShoppingListItemViewModel::class.java)
-
-fun inventoryItemViewModel(context: Context) =
-    ViewModelProvider(context.asFragmentActivity()).get(InventoryItemViewModel::class.java)
 
 /**
  * An abstract AndroidViewModel that provides an interface for asynchronously manipulating a BootyCrateDatabase.

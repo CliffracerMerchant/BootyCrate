@@ -20,6 +20,7 @@ import android.widget.LinearLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.preference.PreferenceManager
 import ca.antonious.materialdaypicker.MaterialDayPicker
 import com.cliffracertech.bootycrate.R
@@ -27,7 +28,6 @@ import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.UpdateListReminderSettingsFragmentBinding
 import com.cliffracertech.bootycrate.utils.alarmManager
-import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.notificationManager
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -94,7 +94,11 @@ object UpdateListReminder {
         }
     }
 
-    /** A fragment to display and alter UpdateListReminder.Settings parameters. */
+    /** A fragment to display and alter UpdateListReminder.Settings parameters
+     *
+     * SettingsFragment assumes that the context it is running in is an instance
+     * of FragmentActivity, and will not work properly if this is not the case.
+     */
     class SettingsFragment : Fragment(), MainActivity.MainActivityFragment {
         private lateinit var ui: UpdateListReminderSettingsFragmentBinding
         private lateinit var currentSettings: Settings
@@ -133,7 +137,7 @@ object UpdateListReminder {
                 context?.let { scheduleNotifications(it, currentSettings) }
             }
             reminderTimeView.setOnClickListener {
-                val context = this@SettingsFragment.context ?:
+                val activity = context as? FragmentActivity ?:
                     return@setOnClickListener
                 MaterialTimePicker.Builder()
                     .setHour(currentSettings.time.hour)
@@ -145,9 +149,9 @@ object UpdateListReminder {
                             sharedPreferences.edit()
                                 .putInt(Settings.hourKey, hour)
                                 .putInt(Settings.minuteKey, minute).apply()
-                            scheduleNotifications(context, currentSettings)
+                            scheduleNotifications(activity, currentSettings)
                         }
-                    }.show(context.asFragmentActivity().supportFragmentManager, null)
+                    }.show(activity.supportFragmentManager, null)
             }
 
             reminderRepeatCheckBox.setOnCheckedChangeListener { _, checked ->

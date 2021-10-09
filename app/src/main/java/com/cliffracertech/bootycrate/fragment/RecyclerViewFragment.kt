@@ -19,7 +19,6 @@ import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 import java.util.*
@@ -68,7 +67,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
         recyclerView?.apply {
             sort = BootyCrateItemSort.fromString(sortStr)
             selection.sizeLiveData.observe(viewLifecycleOwner, ::onSelectionSizeChanged)
-            observeViewModel(viewLifecycleOwner)
+            initViewModel(this@RecyclerViewFragment)
         }
 
         val multiStateView = view as? MultiStateView
