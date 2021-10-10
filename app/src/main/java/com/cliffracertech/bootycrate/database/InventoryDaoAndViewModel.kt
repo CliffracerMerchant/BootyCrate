@@ -60,6 +60,8 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
 @Dao abstract class BootyCrateInventoryDao {
     @Insert abstract suspend fun add(inventory: DatabaseInventory): Long
     @Insert abstract suspend fun add(items: List<DatabaseInventory>)
+    @Query("INSERT INTO inventory (name) VALUES (:name)")
+    abstract suspend fun add(name: String)
 
     @Query("UPDATE inventory SET name = :name WHERE id = :id")
     abstract suspend fun updateName(id: Long, name: String)
@@ -92,6 +94,8 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
     private val dao = BootyCrateDatabase.get(app).inventoryDao()
 
     val inventories = dao.getAll()
+
+    fun add(name: String) = viewModelScope.launch { dao.add(name) }
 
     fun updateName(id: Long, name: String) = viewModelScope.launch { dao.updateName(id, name) }
 

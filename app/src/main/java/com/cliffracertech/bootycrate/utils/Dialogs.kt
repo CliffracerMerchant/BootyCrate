@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -47,6 +48,47 @@ fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
         .setBackground(ContextCompat.getDrawable(context, R.drawable.alert_dialog_background))
         .setBackgroundInsetStart(0)
         .setBackgroundInsetEnd(0)
+
+/** Shows a dialog to rename an item with the name initially set to @param
+ * initialName, with a hint equal to @param hint, which invokes @param
+ * onFinish if the user taps the ok button. */
+fun nameDialog(
+    context: Context,
+    hint: String,
+    initialName: String? = null,
+    onFinish: ((String) -> Unit)
+): AlertDialog {
+    val editText = EditText(context).apply {
+        setText(initialName)
+        setHint(hint)
+    }
+    return themedAlertDialogBuilder(context)
+        .setTitle(R.string.rename_inventory_description)
+        .setPositiveButton(android.R.string.ok) { _, _ ->
+            onFinish(editText.text.toString())
+        }.setNegativeButton(android.R.string.cancel, null)
+        .create().apply {
+            val spacing = context.dpToPixels(16f).toInt()
+            setView(editText, spacing, 0, spacing, 0)
+            setOnShowListener {
+                val okButton = getButton(AlertDialog.BUTTON_POSITIVE)
+                okButton.isEnabled = !initialName.isNullOrBlank()
+                editText.handler.postDelayed({
+                    editText.requestFocus()
+                    SoftKeyboard.show(editText)
+                }, 50L)
+            }
+            editText.doOnTextChanged { text, _, _, _ ->
+                val okButton = getButton(AlertDialog.BUTTON_POSITIVE)
+                okButton.isEnabled = !text.isNullOrBlank()
+            }
+        }
+}
+
+/** Shows a dialog to set the name for a new inventory item,
+ * invoking @param onFinish if the user taps the ok button. */
+fun newInventoryNameDialog(context: Context, onFinish: ((String) -> Unit)) =
+    nameDialog(context, hint = context.getString(R.string.inventory_name_hint), onFinish = onFinish)
 
 /** Open a dialog to ask the user to the type of database import they want (merge
  *  existing or overwrite, and recreate the given activity if the import requires it. */

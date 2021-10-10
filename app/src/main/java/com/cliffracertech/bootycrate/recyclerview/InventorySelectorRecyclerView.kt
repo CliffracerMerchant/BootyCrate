@@ -15,8 +15,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -25,7 +24,7 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateInventory
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
-  import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.intValueAnimator
 import java.util.*
@@ -46,9 +45,11 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         itemAnimator = animator
     }
 
-    fun initViewModel(activity: FragmentActivity) {
-        this.viewModel = ViewModelProvider(activity).get(InventoryViewModel::class.java)
-        viewModel.inventories.observe(activity) { adapter.submitList(it) }
+    fun initViewModel(viewModel: InventoryViewModel, lifecycleOwner: LifecycleOwner) {
+        this.viewModel = viewModel
+        viewModel.inventories.observe(lifecycleOwner) {
+            adapter.submitList(it)
+        }
     }
 
     private inner class Adapter : ListAdapter<BootyCrateInventory, ViewHolder>(DiffUtilCallback()) {
@@ -150,6 +151,7 @@ class InventoryView(context: Context) : LinearLayout(context) {
         ui.nameView.setText(inventory.name)
         ui.shoppingListItemCountView.text = inventory.shoppingListItemCount.toString()
         ui.inventoryItemCountView.text = inventory.inventoryItemCount.toString()
+        setSelectedState(inventory.isSelected, animate = false)
     }
 
     private var _isInSelectedState = false

@@ -11,15 +11,15 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
+import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.PreferencesFragment
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.doOnStart
-import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.cliffracertech.bootycrate.utils.*
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -35,6 +35,7 @@ import com.cliffracertech.bootycrate.utils.layoutTransition
  */
 @Suppress("LeakingThis")
 open class MainActivity : MultiFragmentActivity() {
+    private val inventoryViewModel: InventoryViewModel by viewModels()
     lateinit var ui: MainActivityBinding
     private var pendingCradleAnim: Animator? = null
 
@@ -45,7 +46,7 @@ open class MainActivity : MultiFragmentActivity() {
         fragmentContainerId = ui.fragmentContainer.id
         navigationView = ui.bottomNavigationView
         super.onCreate(savedInstanceState)
-        ui.inventorySelectorRecyclerView.initViewModel(this)
+        ui.inventorySelectorRecyclerView.initViewModel(inventoryViewModel, this)
         setupOnClickListeners()
         initAnimatorConfigs()
         initGradientStyle()
@@ -119,6 +120,9 @@ open class MainActivity : MultiFragmentActivity() {
         ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
         ui.settingsButton.setOnClickListener { addSecondaryFragment(PreferencesFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
+        ui.addInventoryButton.setOnClickListener {
+            newInventoryNameDialog(this) { inventoryViewModel.add(it) }.show()
+        }
     }
 
     private fun initAnimatorConfigs() {
