@@ -10,13 +10,16 @@ import android.content.res.ColorStateList
 import android.graphics.*
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.animation.doOnEnd
-import androidx.core.view.get
+import androidx.core.content.ContextCompat
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.GradientBuilder
+import com.cliffracertech.bootycrate.utils.applyConfig
+import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.cliffracertech.bootycrate.view.ActionBarTitle
 import com.cliffracertech.bootycrate.view.GradientVectorDrawable
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -99,6 +102,8 @@ fun MainActivityBinding.showCheckoutButton(
  * if needed for better visibility.
  */
 fun MainActivity.initGradientStyle() {
+    window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
+
     val screenWidth = resources.displayMetrics.widthPixels
     val actionBarHeight = theme.resolveIntAttribute(R.attr.actionBarSize).toFloat()
 
@@ -189,6 +194,8 @@ private fun MainActivityBinding.styleBottomNavDrawerContents(screenWidth: Int,
     val layoutParams = settingsButton.layoutParams as ViewGroup.MarginLayoutParams
     val settingsButtonLeft = screenWidth - layoutParams.marginEnd - layoutParams.width
     settingsButton.drawable.setTint(fgGradientBitmap.getPixel(settingsButtonLeft, 0))
+    inventorySelectorOptionsButton.drawable.setTint(
+        fgGradientBitmap.getPixel(inventorySelectorOptionsButton.left, 0))
 }
 
 private fun ActionBarTitle.setShader(shader: Shader?) {
@@ -208,11 +215,14 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
 
         appTitle.isVisible = slideOffset != 0f
         settingsButton.isVisible = slideOffset != 0f
+        inventorySelectorOptionsButton.isVisible = slideOffset != 0f
+        inventorySelectorRecyclerView.isInvisible = slideOffset == 0f
         bottomNavigationView.isVisible = slideOffset != 1f
 
         appTitle.alpha = slide
         settingsButton.alpha = slide
-        inventorySelector.alpha = slide
+        inventorySelectorOptionsButton.alpha = slide
+        inventorySelectorRecyclerView.alpha = slide
         bottomNavigationView.alpha = 1f - slide
 
         bottomAppBar.apply {
@@ -228,5 +238,3 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
         }
     }
 }
-
-val MainActivityBinding.inventorySelector get() = bottomNavigationDrawerBackground[0] as ConstraintLayout

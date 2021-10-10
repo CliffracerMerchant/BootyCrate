@@ -5,64 +5,35 @@
  * or in the file LICENSE in the project's root directory.
  */
 
-package com.cliffracertech.bootycrate.fragment
+package com.cliffracertech.bootycrate.recyclerview
 
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
-import android.os.Bundle
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.view.ViewPropertyAnimator
 import android.widget.LinearLayout
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleOwner
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateInventory
-import com.cliffracertech.bootycrate.database.inventoryViewModel
-import com.cliffracertech.bootycrate.databinding.InventorySelectorBinding
+import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
-import com.cliffracertech.bootycrate.recyclerview.ExpandableItemAnimator
-import com.cliffracertech.bootycrate.recyclerview.ItemSpacingDecoration
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.applyConfig
+  import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.intValueAnimator
 import java.util.*
 
-class InventorySelectorFragment : Fragment() {
-    var ui: InventorySelectorBinding? = null
-
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ) = InventorySelectorBinding.inflate(inflater, container, false)
-        .apply { ui = this }.root
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        ui?.inventorySelectorRecyclerView?.observeViewModel(viewLifecycleOwner)
-    }
-
-    override fun onDestroyView() {
-        ui = null
-        super.onDestroyView()
-    }
-}
-
 class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
     RecyclerView(context, attrs)
 {
-    private val viewModel = inventoryViewModel(context)
+    private lateinit var viewModel: InventoryViewModel
     private val adapter = Adapter()
     private val animator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
 
@@ -75,8 +46,10 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         itemAnimator = animator
     }
 
-    fun observeViewModel(owner: LifecycleOwner) =
-        viewModel.inventories.observe(owner) { adapter.submitList(it) }
+    fun initViewModel(activity: FragmentActivity) {
+        this.viewModel = ViewModelProvider(activity).get(InventoryViewModel::class.java)
+        viewModel.inventories.observe(activity) { adapter.submitList(it) }
+    }
 
     private inner class Adapter : ListAdapter<BootyCrateInventory, ViewHolder>(DiffUtilCallback()) {
 

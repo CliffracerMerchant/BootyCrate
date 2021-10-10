@@ -11,13 +11,11 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.fragment.InventorySelectorFragment
 import com.cliffracertech.bootycrate.fragment.PreferencesFragment
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.doOnStart
@@ -47,12 +45,9 @@ open class MainActivity : MultiFragmentActivity() {
         fragmentContainerId = ui.fragmentContainer.id
         navigationView = ui.bottomNavigationView
         super.onCreate(savedInstanceState)
-        supportFragmentManager.beginTransaction()
-            .add(R.id.bottomNavigationDrawerBackground, InventorySelectorFragment())
-            .commit()
+        ui.inventorySelectorRecyclerView.initViewModel(this)
         setupOnClickListeners()
         initAnimatorConfigs()
-        window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
         initGradientStyle()
 
         // Setting android:importantForAccessibility in the bottom_navigation_menu.xml
@@ -122,9 +117,7 @@ open class MainActivity : MultiFragmentActivity() {
         }
         ui.actionBar.setOnSortOptionClickedListener(::fwdMenuItemClick)
         ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
-        ui.settingsButton.setOnClickListener {
-            addSecondaryFragment(PreferencesFragment())
-        }
+        ui.settingsButton.setOnClickListener { addSecondaryFragment(PreferencesFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
     }
 

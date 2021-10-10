@@ -13,7 +13,7 @@
     tools:parentTag="LinearLayout"
     tools:background="@drawable/recycler_view_item">
 
-    <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
+    <TextView
         android:id="@+id/nameView"
         android:layout_width="0dp"
         android:layout_height="48dp"
@@ -48,6 +48,7 @@
         android:id="@+id/optionsButton"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        style="@style/InventoryMorOptionsButton" />
+        android:contentDescription="@string/more_options_description"
+        style="@style/InventoryMoreOptionsButton" />
 
 </merge>
