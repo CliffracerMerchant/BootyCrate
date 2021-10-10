@@ -13,7 +13,6 @@
         <item name="colorSurface">@color/colorWindowBackgroundLight</item>
         <item name="colorOnPrimary">@color/colorWindowBackgroundDark</item>
         <item name="colorOnSurface">@color/colorWindowBackgroundDark</item>
-        <item name="snackbarStyle">@style/SnackbarStyle</item>
         <item name="android:textColorPrimary">@color/color_text_dark</item>
         <item name="android:textColorSecondary">@color/color_text_dark_secondary</item>
         <item name="android:textColorHint">@color/color_text_dark_secondary</item>
@@ -25,6 +24,7 @@
         <item name="android:textViewStyle">@style/TextAppearance</item>
         <item name="editTextStyle">?android:attr/textAppearance</item>
         <item name="checkboxStyle">@style/CheckBox</item>
+        <item name="snackbarStyle">@style/SnackbarStyle</item>
         <item name="snackbarTextViewStyle">?android:attr/textViewStyle</item>
         <item name="snackbarButtonStyle">@style/SnackbarActionTextAppearance</item>
         <item name="actionBarTitleStyle">@style/ActionBarTitle</item>

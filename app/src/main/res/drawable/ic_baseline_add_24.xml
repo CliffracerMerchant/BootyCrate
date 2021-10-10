@@ -8,9 +8,9 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24"
-    android:tint="?attr/colorControlNormal">
+    android:tint="?attr/foregroundGradientRightColor" >
   <path
       android:pathData="M5,12 h14 M 12,5 v14"
-      android:strokeColor="?attr/foregroundGradientRightColor"
+      android:strokeColor="@android:color/white"
       android:strokeWidth="3"/>
 </vector>
