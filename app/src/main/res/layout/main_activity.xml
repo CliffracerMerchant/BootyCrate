@@ -30,6 +30,7 @@
         android:id="@+id/bottomNavigationDrawer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        tools:translationY="-456dp"
         style="@style/BottomNavigationDrawer" >
 
         <com.cliffracertech.bootycrate.view.BottomAppBar
@@ -75,7 +76,7 @@
                     tools:ignore="RtlHardcoded"
                     style="@style/CheckoutButton" />
 
-                <com.cliffracertech.bootycrate.view.GradientButton
+                <ImageView
                     android:id="@+id/addButton"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
@@ -139,10 +140,8 @@
                 android:layout_gravity="bottom|end"
                 android:layout_marginEnd="16dp"
                 android:layout_marginBottom="12dp"
-                android:contentDescription="@string/add_button_description"
-                android:src="@drawable/ic_baseline_add_24"
-                android:background="@drawable/add_button"
-                android:padding="12dp" />
+                android:contentDescription="@string/add_inventory_description"
+                style="@style/AddButton"/>
         </FrameLayout>
 
     </com.cliffracertech.bootycrate.view.BottomNavigationDrawer>

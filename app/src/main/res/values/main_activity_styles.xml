@@ -63,10 +63,9 @@
 
     <style name="AddButton">
         <item name="backgroundPathData">@string/add_button_background_path_data</item>
-        <item name="iconPathData">@string/add_button_plus_path_data</item>
-        <item name="pathWidth">56.0</item>
-        <item name="pathHeight">56.0</item>
-        <item name="iconStrokeWidth">4dp</item>
+        <item name="android:src">@drawable/ic_baseline_add_24</item>
+        <item name="android:background">@drawable/add_button</item>
+        <item name="android:padding">12dp</item>
     </style>
 
     <style name="AppTitle">

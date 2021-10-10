@@ -8,6 +8,7 @@ import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.graphics.*
+import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.animation.doOnEnd
@@ -105,7 +106,6 @@ fun MainActivity.initGradientStyle() {
     window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
 
     val screenWidth = resources.displayMetrics.widthPixels
-    val actionBarHeight = theme.resolveIntAttribute(R.attr.actionBarSize).toFloat()
 
     val fgColors = intArrayOf(theme.resolveIntAttribute(R.attr.foregroundGradientLeftColor),
                               theme.resolveIntAttribute(R.attr.foregroundGradientMiddleColor),
@@ -121,7 +121,8 @@ fun MainActivity.initGradientStyle() {
     val fgGradientShader = fgGradientBuilder.buildLinearGradient()
 
     val bgGradientBuilder = fgGradientBuilder.copy(colors  = bgColors)
-    ui.bottomAppBar.backgroundGradient = bgGradientBuilder.buildLinearGradient()
+    val bgGradientShader = bgGradientBuilder.buildLinearGradient()
+    ui.bottomAppBar.backgroundGradient = bgGradientShader
 
     ui.bottomAppBar.navIndicator.gradient =
         fgGradientBuilder.copy(colors  = indicatorColors).buildLinearGradient()
@@ -129,12 +130,18 @@ fun MainActivity.initGradientStyle() {
     val paint = Paint()
     paint.style = Paint.Style.FILL
     paint.shader = fgGradientShader
-    val fgGradientBitmap = Bitmap.createBitmap(screenWidth, actionBarHeight.toInt(), Bitmap.Config.ARGB_8888)
+    val fgGradientBitmap = Bitmap.createBitmap(screenWidth, 1, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(fgGradientBitmap)
-    canvas.drawRect(0f, 0f, screenWidth.toFloat(), actionBarHeight, paint)
+    canvas.drawRect(0f, 0f, screenWidth.toFloat(), 1f, paint)
+
+    val bgGradientBitmap = Bitmap.createBitmap(screenWidth, 1, Bitmap.Config.ARGB_8888)
+    paint.shader = bgGradientShader
+    canvas.setBitmap(bgGradientBitmap)
+    canvas.drawRect(0f, 0f, screenWidth.toFloat(), 1f, paint)
 
     ui.styleActionBarContents(screenWidth, fgGradientShader, fgGradientBitmap)
-    ui.styleBottomNavDrawerContents(screenWidth, fgGradientBitmap, fgGradientBuilder, bgGradientBuilder)
+    ui.styleBottomNavDrawerContents(screenWidth, fgGradientBitmap, fgGradientBuilder,
+                                                 bgGradientBitmap, bgGradientBuilder)
 }
 
 private fun MainActivityBinding.styleActionBarContents(screenWidth: Int,
@@ -156,6 +163,7 @@ private fun MainActivityBinding.styleActionBarContents(screenWidth: Int,
 private fun MainActivityBinding.styleBottomNavDrawerContents(screenWidth: Int,
                                                              fgGradientBitmap: Bitmap,
                                                              fgGradientBuilder: GradientBuilder,
+                                                             bgGradientBitmap: Bitmap,
                                                              bgGradientBuilder: GradientBuilder) {
     // Checkout button
     val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
@@ -168,12 +176,15 @@ private fun MainActivityBinding.styleBottomNavDrawerContents(screenWidth: Int,
         .setX1(-cradleLeft).setX2(screenWidth - cradleLeft).buildLinearGradient()
 
     // Add button
-    val addButtonWidth = addButton.layoutParams.width
-    val addButtonLeft = cradleLeft + cradleWidth - addButtonWidth * 1f
-    addButton.foregroundGradient = fgGradientBuilder.setX1(-addButtonLeft)
-        .setX2(screenWidth - addButtonLeft).buildLinearGradient()
-    addButton.backgroundGradient = bgGradientBuilder.setX1(-addButtonLeft)
-        .setX2(screenWidth - addButtonLeft).buildLinearGradient()
+    var right = cradleLeft.toInt() + cradleWidth
+    var left = right - addButton.layoutParams.width
+    val addButtonCenter = right - addButton.layoutParams.width / 2f
+    val color = fgGradientBitmap.getPixel(addButtonCenter.toInt(), 0)
+    addButton.background.mutate()
+    addButton.imageTintList = ColorStateList.valueOf(color)
+    var leftColor = bgGradientBitmap.getPixel(left, 0)
+    var rightColor = bgGradientBitmap.getPixel(right, 0)
+    (addButton.background as GradientDrawable).colors = intArrayOf(leftColor, rightColor)
 
     // Bottom navigation view
     val menuSize = bottomNavigationView.menu.size()
@@ -186,16 +197,24 @@ private fun MainActivityBinding.styleBottomNavDrawerContents(screenWidth: Int,
     bottomNavigationView.invalidate()
 
     // App title
-    val titleLeft = (appTitle.layoutParams as ViewGroup.MarginLayoutParams).marginStart * 1f
-    appTitle.paint.shader = fgGradientBuilder.setX1(-titleLeft)
-        .setX2(screenWidth - titleLeft).buildLinearGradient()
+    left = (appTitle.layoutParams as ViewGroup.MarginLayoutParams).marginStart
+    appTitle.paint.shader = fgGradientBuilder.setX1(-left.toFloat())
+        .setX2(screenWidth - left.toFloat()).buildLinearGradient()
 
-    // settings button
-    val layoutParams = settingsButton.layoutParams as ViewGroup.MarginLayoutParams
-    val settingsButtonLeft = screenWidth - layoutParams.marginEnd - layoutParams.width
-    settingsButton.drawable.setTint(fgGradientBitmap.getPixel(settingsButtonLeft, 0))
-    inventorySelectorOptionsButton.drawable.setTint(
-        fgGradientBitmap.getPixel(inventorySelectorOptionsButton.left, 0))
+    // Settings and inventory selector more options button
+    val layoutParams = inventorySelectorOptionsButton.layoutParams as ViewGroup.MarginLayoutParams
+    left = screenWidth - layoutParams.marginEnd - inventorySelectorOptionsButton.width
+    inventorySelectorOptionsButton.drawable.setTint(fgGradientBitmap.getPixel(left, 0))
+    left -= settingsButton.layoutParams.width
+    settingsButton.drawable.setTint(fgGradientBitmap.getPixel(left, 0))
+
+    // Add inventory button
+    val marginEnd = (addInventoryButton.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
+    right = screenWidth - inventorySelectorBackground.paddingEnd - marginEnd
+    left = right - addInventoryButton.layoutParams.width
+    leftColor = bgGradientBitmap.getPixel(left, 0)
+    rightColor = bgGradientBitmap.getPixel(right, 0)
+    (addInventoryButton.background as GradientDrawable).colors = intArrayOf(leftColor, rightColor)
 }
 
 private fun ActionBarTitle.setShader(shader: Shader?) {
