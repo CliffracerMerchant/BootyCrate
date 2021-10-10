@@ -17,11 +17,9 @@ import com.cliffracertech.bootycrate.utils.SoftKeyboard
  *
  * ExpandableSelectableRecyclerView extends BootyCrateRecyclerView by using a
  * ExpandableItemAnimator instance to visually animate changes in items'
- * expanded states, and by adding an interface for item selection through the
- * property selection (see the documentation for the inner class Selection for
- * more details). It also utilizes its own custom view holder to enforce the
- * use of an ExpandableSelectableItemView, and a custom adapter that in turn
- * enforces the use of ExpandableSelectableRecyclerView.ViewHolder.
+ * expanded states. It utilizes its own custom view holder to enforce the use
+ * of ExpandableSelectableItemViews, and a custom adapter that in turn enforces
+ * the use of ExpandableSelectableRecyclerView.ViewHolder.
  */
 @Suppress("LeakingThis")
 abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
@@ -29,7 +27,6 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
     attrs: AttributeSet
 ) : BootyCrateRecyclerView<T>(context, attrs) {
     protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
-    val selection = Selection()
     private var needToHideSoftKeyboard = false
     private var expandCollapseAnimRunning = false
     private var queuedEditButtonPressPos = -1
@@ -75,32 +72,9 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
         setItemAnimator(itemAnimator)
     }
 
-    /**
-     * A class that provides an interface for manipulating the selection of the parent recycler view.
-     *
-     * Selection is a memberless class whose purpose is to make the manipulation
-     * of the recycler view selection more idiomatic (e.g. recyclerView.selection.add()
-     * instead of recyclerView.addToSelection()). The size of the selection can be
-     * queried through the properties size and isEmpty, as well as sizeLiveData in
-     * case an observable selection size is desired.
-     *
-     * The contents of the selection are modified for single items through the
-     * self-explanatory functions add, remove, and toggle, which accept the stable
-     * id of the item being operated on. The function clear will erase the
-     * selection entirely.
-     */
-    inner class Selection {
-        val sizeLiveData get() = viewModel.selectedItemCount
-        val size get() = sizeLiveData.value ?: 0
-        val isEmpty get() = size == 0
-        val isNotEmpty get() = size != 0
-
-        fun addAll() = viewModel.selectAll()
-        fun add(id: Long) = viewModel.updateIsSelected(id, true)
-        fun remove(id: Long) = viewModel.updateIsSelected(id, false)
-        fun toggle(id: Long) = viewModel.toggleIsSelected(id)
-        fun clear() = viewModel.clearSelection()
-    }
+    private val selectionIsEmpty get() = (viewModel.selectedItemCount.value ?: 0) == 0
+    private fun toggleSelected(id: Long) = viewModel.toggleIsSelected(id)
+    private fun clearSelection() = viewModel.clearSelection()
 
     /** An abstract (due to not implementing onCreateViewHolder) subclass of
      * BootyCrateRecyclerView.Adapter that enforces the use of
@@ -137,8 +111,8 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
         open val view get() = itemView as ExpandableSelectableItemView<T>
 
         init {
-            val onClick = OnClickListener { if (!selection.isEmpty) selection.toggle(itemId) }
-            val onLongClick = OnLongClickListener { selection.toggle(itemId); true }
+            val onClick = OnClickListener { if (!selectionIsEmpty) toggleSelected(itemId) }
+            val onLongClick = OnLongClickListener { toggleSelected(itemId); true }
 
             view.apply {
                 startAnimationsImmediately = false

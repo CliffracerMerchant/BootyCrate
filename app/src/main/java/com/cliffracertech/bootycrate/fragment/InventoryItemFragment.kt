@@ -7,6 +7,7 @@ package com.cliffracertech.bootycrate.fragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.Keep
 import androidx.fragment.app.activityViewModels
@@ -25,8 +26,8 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
  *
  * InventoryItemFragment is a RecyclerViewFragment subclass to view and modify
  * the user's inventory using an InventoryItemRecyclerView. It implements
- * nRecyclerViewFragment's abstract properties with values suitable for display
- * of an InventoryItemRecyclerView, and using its own action mode callback.
+ * RecyclerViewFragment's abstract properties with values suitable for display
+ * of an InventoryItemRecyclerView, and uses its own action mode callback.
  */
 @Keep class InventoryItemFragment: RecyclerViewFragment<InventoryItem>() {
     override val viewModel: InventoryItemViewModel by activityViewModels()
@@ -44,6 +45,11 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
         collectionName = inflater.context.getString(R.string.inventory_item_collection_name)
     }.root
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        recyclerView?.initViewModel(viewModel)
+        super.onViewCreated(view, savedInstanceState)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         recyclerView = null
@@ -52,7 +58,7 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
     override fun onOptionsItemSelected(item: MenuItem) =
         if (item.itemId == R.id.add_to_shopping_list_button) {
             shoppingListItemViewModel.addFromSelectedInventoryItems()
-            recyclerView?.selection?.clear()
+            viewModel.clearSelection()
             true
         } else super.onOptionsItemSelected(item)
 

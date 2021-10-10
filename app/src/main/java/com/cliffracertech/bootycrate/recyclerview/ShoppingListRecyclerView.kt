@@ -8,9 +8,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
-import androidx.activity.ComponentActivity
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ShoppingListItem
@@ -22,16 +19,8 @@ import kotlin.collections.set
 /**
  * A RecyclerView to display the data provided by a ShoppingListViewModel.
  *
- * ShoppingListRecyclerView is a ExpandableSelectableRecyclerView subclass
- * specialized for displaying the contents of a shopping list. ShoppingListRecyclerView
- * adds a sortByChecked property, which mirrors the ShoppingListViewModel
- * property, for convenience. sortByChecked should not be changed the
- * property viewModel is initialized, or an exception will be thrown.
- *
- * ShoppingListRecyclerView provides an overload of BootyCrateRecyclerView's
- * initViewModel function that requires an instance of either a Fragment or a
- * ComponentActivity. This overload must be called, and also calls
- * BootyCrateRecyclerView's initViewModel for you.
+ * The function initViewModel must be called with an instance of ShoppingListItemViewModel.
+ * Failure to do so will prevent any items from appearing.
  */
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs)
@@ -40,24 +29,13 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     override val adapter = Adapter()
     override lateinit var viewModel: ShoppingListItemViewModel
 
-    var sortByChecked get() = viewModel.sortByChecked
-        set(value) { viewModel.sortByChecked = value }
-
     init {
         itemAnimator.animatorConfig = AnimatorConfig(
             context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }
 
-    fun initViewModel(fragment: Fragment) {
-        this.viewModel = ViewModelProvider(fragment).get(ShoppingListItemViewModel::class.java)
-        initViewModel(fragment.viewLifecycleOwner)
-    }
-
-    fun initViewModel(activity: ComponentActivity) {
-        this.viewModel = ViewModelProvider(activity).get(ShoppingListItemViewModel::class.java)
-        initViewModel(activity)
-    }
+    fun initViewModel(viewModel: ShoppingListItemViewModel) { this.viewModel = viewModel }
 
     /**
      * An adapter to display the contents of a list of shopping list items.

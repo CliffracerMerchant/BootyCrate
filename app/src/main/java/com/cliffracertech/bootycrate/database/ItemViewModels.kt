@@ -122,6 +122,8 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
     abstract fun deleteSelected(): Job
     abstract fun selectAll(): Job
     abstract fun clearSelection(): Job
+
+    val selectionIsEmpty get() = (selectedItemCount.value ?: 0) == 0
 }
 
 

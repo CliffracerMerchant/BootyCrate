@@ -31,12 +31,12 @@ import com.google.android.material.snackbar.Snackbar
  * concrete BootyCrateViewModel<T> subclass.
  *
  * After the viewModel property is overridden and initialized in subclasses,
- * the function initViewModel must be called with a LifecycleOwner that matches
- * the BootyCrateRecyclerView's lifespan. If initViewModel is not called then
- * the recycler view will always be empty. Once the viewModel property is
- * initialized properly, the properties sort and searchFilter, which mirror
- * these properties from the view model, can be changed to change the sorting
- * or text filter of the displayed items.
+ * the function observeViewModel must be called with a LifecycleOwner that
+ * matches the BootyCrateRecyclerView's lifespan. If observeViewModel is not
+ * called then the recycler view will always be empty. Once the viewModel
+ * property is initialized properly, the properties sort and searchFilter,
+ * which mirror these properties from the view model, can be changed to change
+ * the sorting or text filter of the displayed items.
  *
  * BootyCrateRecyclerView utilizes a ItemTouchHelper with a SwipeToDeleteCallback
  * to allow the user to delete swiped items. When items are deleted, a snack bar
@@ -55,11 +55,6 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
     protected abstract val viewModel: BootyCrateViewModel<T>
     var snackBarAnchor: View? = null
 
-    var sort get() = viewModel.sort
-             set(value) { viewModel.sort = value }
-    var searchFilter: String get() = viewModel.searchFilter
-                             set(value) { viewModel.searchFilter = value }
-
     init {
         val cornerRadius = resources.getDimension(R.dimen.recycler_view_item_rounded_corner_radius)
         val swipeCallback = SwipeToDeleteCallback(context, this, cornerRadius) { pos ->
@@ -77,7 +72,7 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
         layoutManager = LinearLayoutManager(context)
     }
 
-    fun initViewModel(owner: LifecycleOwner) {
+    fun observeViewModel(owner: LifecycleOwner) {
         setAdapter(adapter)
         viewModel.items.observe(owner) { adapter.submitList(it) }
     }

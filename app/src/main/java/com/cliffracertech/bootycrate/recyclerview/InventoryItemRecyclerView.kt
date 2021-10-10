@@ -7,20 +7,16 @@ package com.cliffracertech.bootycrate.recyclerview
 import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
-import androidx.activity.ComponentActivity
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.InventoryItemViewModel
 import java.util.*
 
-/** A RecyclerView to display the data provided by an InventoryItemViewModel.
+/**
+ * A RecyclerView to display the data provided by an InventoryItemViewModel.
  *
- * InventoryItemRecyclerView provides an overload of BootyCrateRecyclerView's
- * initViewModel function that requires an instance of either a Fragment or a
- * ComponentActivity. This overload must be called, and also calls
- * BootyCrateRecyclerView's initViewModel for you.
+ * The function initViewModel must be called with an instance of InventoryItemViewModel.
+ * Failure to do so will prevent any items from appearing.
  */
 class InventoryItemRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<InventoryItem>(context, attrs)
@@ -29,15 +25,7 @@ class InventoryItemRecyclerView(context: Context, attrs: AttributeSet) :
     override val adapter = Adapter()
     override lateinit var viewModel: InventoryItemViewModel
 
-    fun initViewModel(fragment: Fragment) {
-        this.viewModel = ViewModelProvider(fragment).get(InventoryItemViewModel::class.java)
-        initViewModel(fragment.viewLifecycleOwner)
-    }
-
-    fun initViewModel(activity: ComponentActivity) {
-        this.viewModel = ViewModelProvider(activity).get(InventoryItemViewModel::class.java)
-        initViewModel(activity)
-    }
+    fun initViewModel(viewModel: InventoryItemViewModel) { this.viewModel = viewModel }
 
     /**
      * A RecyclerView.Adapter to display the contents of a list of inventory items.

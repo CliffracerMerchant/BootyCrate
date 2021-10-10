@@ -60,11 +60,12 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
     }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        recyclerView?.initViewModel(viewModel)
         super.onViewCreated(view, savedInstanceState)
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked_key)
         val sortByCheckedPrefValue = prefs.getBoolean(sortByCheckedPrefKey, false)
-        recyclerView?.sortByChecked = sortByCheckedPrefValue
+        viewModel.sortByChecked = sortByCheckedPrefValue
         viewModel.checkedItemsSize.observe(viewLifecycleOwner) { newSize ->
             checkoutButton?.isEnabled = newSize != 0
             // Sometimes onChanged is called before onActiveStateChanged is called, causing
@@ -72,7 +73,7 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
             // and initialize the checkout button's state in onActiveStateChanged.
             checkoutButtonShouldBeEnabled =  newSize != 0
         }
-        viewModel.items.observe(viewLifecycleOwner) { newList -> updateBadge(newList) }
+        viewModel.items.observe(viewLifecycleOwner, ::updateBadge)
     }
 
     override fun onDestroyView() {
@@ -89,7 +90,7 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.add_to_inventory_button -> {
             inventoryItemViewModel.addFromSelectedShoppingListItems()
-            recyclerView?.selection?.clear()
+            viewModel.clearSelection()
             true
         } R.id.check_all_menu_item -> { viewModel.checkAll(); true }
         R.id.uncheck_all_menu_item -> { viewModel.uncheckAll(); true }
