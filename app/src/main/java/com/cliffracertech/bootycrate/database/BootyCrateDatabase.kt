@@ -142,6 +142,13 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                                     WHEN new.autoAddToShoppingList == 1
                                     AND new.inventoryAmount < new.autoAddToShoppingListAmount
                               BEGIN $updateShoppingListAmount; END""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_inventory`
+                              BEFORE DELETE ON inventory WHEN (SELECT count(*) FROM inventory) == 1
+                              BEGIN SELECT RAISE(ABORT,"Can't delete last inventory"); END;""")
+                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory`
+                              BEFORE UPDATE OF isSelected ON inventory
+                              WHEN new.isSelected == 0 AND (SELECT count(*) FROM inventory WHERE isSelected) == 1
+                              BEGIN SELECT RAISE(ABORT,"Can't deselect the last selected inventory"); END;""")
             }
 
             /* Unfortunately SQLite's limitation of not being able to use common table

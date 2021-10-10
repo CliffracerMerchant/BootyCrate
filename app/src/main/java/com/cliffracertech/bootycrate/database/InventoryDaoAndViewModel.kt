@@ -5,15 +5,10 @@
 package com.cliffracertech.bootycrate.database
 
 import android.app.Application
-import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.room.*
-import com.cliffracertech.bootycrate.utils.asFragmentActivity
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @Entity(tableName = "inventory")
@@ -93,14 +88,8 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
     abstract suspend fun deleteAll()
 }
 
-fun inventoryViewModel(context: Context) =
-    ViewModelProvider(context.asFragmentActivity()).get(InventoryViewModel::class.java)
-
 class InventoryViewModel(app: Application): AndroidViewModel(app) {
     private val dao = BootyCrateDatabase.get(app).inventoryDao()
-
-    private val _selectedInventoryId = MutableStateFlow(-1L)
-    val selectedInventoryId = _selectedInventoryId.asStateFlow()
 
     val inventories = dao.getAll()
 
