@@ -4,19 +4,18 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.view
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Point
 import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import android.view.WindowManager
-import androidx.constraintlayout.widget.ConstraintLayout
+import android.widget.FrameLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.doOnNextLayout
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 /**
@@ -51,11 +50,11 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
  *
  * BottomSheetCallbacks can be added to the drawer's BottomSheetBehavior using
  * the function addBottomSheetCallback. BottomNavigationDrawer also adds the
- * public val targetState, which will be equal to either BottomSheetBehavior.STATE_COLLAPSED,
- * STATE_EXPANDED, or STATE_HIDDEN depending on which state the drawer is
- * moving towards.
+ * public property targetState, which will be equal to either
+ * BottomSheetBehavior.STATE_COLLAPSED, STATE_EXPANDED, or STATE_HIDDEN
+ * depending on which state the drawer is moving towards.
  */
-class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : ConstraintLayout(context, attrs) {
+class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
     private val behavior = BottomSheetBehavior<BottomNavigationDrawer>()
     var targetState = BottomSheetBehavior.STATE_COLLAPSED
         private set
@@ -68,7 +67,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
 
     init {
         var a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.behavior_peekHeight))
-        peekHeight = a.getDimensionPixelSize(0, 0)
+        val basePeekHeight = a.getDimensionPixelSize(0, 0)
 
         a = context.obtainStyledAttributes(attrs, R.styleable.BottomNavigationDrawer)
         val maxPeekHeight = a.getDimensionPixelSize(R.styleable.BottomNavigationDrawer_maxPeekHeight,
@@ -78,22 +77,12 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
         a.recycle()
 
         behavior.addBottomSheetCallback(BottomNavDrawerSheetCallback())
+        adjustBottomNavDrawerPeekHeight(context, basePeekHeight, maxPeekHeight)
+    }
 
-        var systemBottomGestureHeight = 0
-        var statusBarHeight = 0
-        ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, windowInsets ->
-            var insets = windowInsets.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())
-            systemBottomGestureHeight = insets.bottom
-            insets = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
-            statusBarHeight = insets.top
-            windowInsets
-        }
-
-        doOnNextLayout {
-            adjustBottomNavDrawerPeekHeight(context, systemBottomGestureHeight,
-                                            statusBarHeight, maxPeekHeight)
-            (layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
-        }
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        (layoutParams as CoordinatorLayout.LayoutParams).behavior = behavior
     }
 
     fun expand() {
@@ -133,31 +122,38 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : Constraint
      * Adjust the peek height of the bottom navigation drawer to prevent
      * interference with the system bottom gesture, if needed.
      *
-     * If the touch target of the collapsed bottom navigation drawer overlaps
-     * with the system gesture inset, we want to increase the peek height of
-     * the bottom nav drawer as much as we can without showing the nav drawer
-     * contents to reduce the likelihood of the bottom sheet gesture
-     * interfering with the system home gesture.
+     * If the touch target of the collapsed bottom navigation drawer overlaps with
+     * the system gesture inset, we want to increase the peek height of the bottom
+     * nav drawer as much as we can without showing the nav drawer contents to
+     * reduce the likelihood of the bottom sheet gesture interfering with the
+     * system home gesture.
      */
     private fun adjustBottomNavDrawerPeekHeight(
         context: Context,
-        gestureHeight: Int,
-        statusBarHeight: Int,
+        basePeekHeight: Int,
         maxPeekHeight: Int
     ) {
-        if (gestureHeight == 0) return
+        val rootView = (context as? Activity)?.window?.decorView ?: return
 
-        val displaySize = Point()
-        val display = (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display
-                       else (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay)
-                      ?: (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
-        display.getRealSize(displaySize)
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { _, windowInsets ->
+            var insets = windowInsets.getInsets(WindowInsetsCompat.Type.mandatorySystemGestures())
+            val systemBottomGestureHeight = insets.bottom
 
-        val collapsedBottom = context.resources.displayMetrics.heightPixels + statusBarHeight
-        val gestureTop = displaySize.y - gestureHeight
-        val overlap = (collapsedBottom - gestureTop).coerceAtLeast(0)
+            insets = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
+            val statusBarHeight = insets.top
 
-        behavior.peekHeight = (peekHeight + overlap).coerceAtMost(maxPeekHeight)
+            val displaySize = Point()
+            val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display
+                          else (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+            display.getRealSize(displaySize)
+
+            val collapsedBottom = context.resources.displayMetrics.heightPixels + statusBarHeight
+            val gestureTop = displaySize.y - systemBottomGestureHeight
+            val overlap = (collapsedBottom - gestureTop).coerceAtLeast(0)
+
+            behavior.peekHeight = (basePeekHeight + overlap).coerceAtMost(maxPeekHeight)
+            windowInsets
+        }
     }
 
     private inner class BottomNavDrawerSheetCallback : BottomSheetBehavior.BottomSheetCallback() {
