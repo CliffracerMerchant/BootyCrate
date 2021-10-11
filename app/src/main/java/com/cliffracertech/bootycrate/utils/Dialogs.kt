@@ -49,9 +49,9 @@ fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
         .setBackgroundInsetStart(0)
         .setBackgroundInsetEnd(0)
 
-/** Shows a dialog to rename an inventory with the name initially set
- * to initialName, with a hint equal to hint, which invokes onFinish
- * if the user taps the ok button. */
+/** Show a dialog to rename an inventory, with the name initially set
+ * to initialName, and with a hint equal to hint, and which invokes
+ * onFinish if the user taps the ok button. */
 fun inventoryNameDialog(
     context: Context,
     initialName: String? = null,
@@ -80,6 +80,14 @@ fun inventoryNameDialog(
             }
         }
 }
+
+/** Show a dialog to confirm the deletion of an inventory. */
+fun deleteInventoryDialog(context: Context, onConfirm: () -> Unit) =
+    themedAlertDialogBuilder(context)
+        .setMessage(R.string.delete_inventory_confirmation_message)
+        .setPositiveButton(android.R.string.ok) { _, _ -> onConfirm() }
+        .setNegativeButton(android.R.string.cancel, null)
+        .create()
 
 /** Open a dialog to ask the user to the type of database import they want (merge
  *  existing or overwrite, and recreate the given activity if the import requires it. */

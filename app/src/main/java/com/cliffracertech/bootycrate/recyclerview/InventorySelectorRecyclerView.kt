@@ -25,10 +25,7 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateInventory
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.dpToPixels
-import com.cliffracertech.bootycrate.utils.intValueAnimator
-import com.cliffracertech.bootycrate.utils.inventoryNameDialog
+import com.cliffracertech.bootycrate.utils.*
 import java.util.*
 
 class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
@@ -87,9 +84,10 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
     }
 
     private fun rename(item: BootyCrateInventory) =
-        inventoryNameDialog(context, item.name) {
-            viewModel.updateName(item.id, it)
-        }.show()
+        inventoryNameDialog(context, item.name) { viewModel.updateName(item.id, it) }.show()
+
+    private fun delete(item: BootyCrateInventory) =
+        deleteInventoryDialog(context) { viewModel.delete(item.id) }.show()
 
     private inner class ViewHolder(view: InventoryView) : RecyclerView.ViewHolder(view) {
         val view get() = itemView as InventoryView
@@ -101,7 +99,7 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
                 menu.inflate(R.menu.inventory_options_menu)
                 menu.setOnMenuItemClickListener {
                     when(it.itemId) { R.id.renameInventoryButton -> rename(item)
-                                      else /*R.id.deleteInventoryButton*/ -> { } }
+                                      else /*R.id.deleteInventoryButton*/ -> { delete(item) } }
                     true
                 }
                 menu.show()

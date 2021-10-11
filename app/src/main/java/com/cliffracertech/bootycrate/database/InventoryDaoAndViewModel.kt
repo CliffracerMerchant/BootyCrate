@@ -97,6 +97,8 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
 
     fun add(name: String) = viewModelScope.launch { dao.add(name) }
 
+    fun delete(id: Long) = viewModelScope.launch { dao.delete(id) }
+
     fun updateName(id: Long, name: String) = viewModelScope.launch { dao.updateName(id, name) }
 
     fun updateIsSelected(id: Long, isSelected: Boolean) =
