@@ -14,6 +14,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
@@ -27,6 +28,7 @@ import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.intValueAnimator
+import com.cliffracertech.bootycrate.utils.inventoryNameDialog
 import java.util.*
 
 class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
@@ -47,9 +49,7 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
 
     fun initViewModel(viewModel: InventoryViewModel, lifecycleOwner: LifecycleOwner) {
         this.viewModel = viewModel
-        viewModel.inventories.observe(lifecycleOwner) {
-            adapter.submitList(it)
-        }
+        viewModel.inventories.observe(lifecycleOwner) { adapter.submitList(it) }
     }
 
     private inner class Adapter : ListAdapter<BootyCrateInventory, ViewHolder>(DiffUtilCallback()) {
@@ -73,7 +73,7 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
                 val changes = payload as EnumSet<Field>
 
                 if (changes.contains(Field.Name) && item.name != ui.nameView.text.toString())
-                    ui.nameView.setText(item.name)
+                    ui.nameView.text = item.name
                 if (changes.contains(Field.ShoppingListItemCount))
                     ui.shoppingListItemCountView.text = item.shoppingListItemCount.toString()
                 if (changes.contains(Field.InventoryItemCount))
@@ -86,13 +86,25 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         override fun getItemId(position: Int) = currentList[position].id
     }
 
+    private fun rename(item: BootyCrateInventory) =
+        inventoryNameDialog(context, item.name) {
+            viewModel.updateName(item.id, it)
+        }.show()
+
     private inner class ViewHolder(view: InventoryView) : RecyclerView.ViewHolder(view) {
         val view get() = itemView as InventoryView
         val item: BootyCrateInventory get() = adapter.currentList[adapterPosition]
 
         init {
             view.ui.optionsButton.setOnClickListener {
-
+                val menu = PopupMenu(context, view.ui.optionsButton)
+                menu.inflate(R.menu.inventory_options_menu)
+                menu.setOnMenuItemClickListener {
+                    when(it.itemId) { R.id.renameInventoryButton -> rename(item)
+                                      else /*R.id.deleteInventoryButton*/ -> { } }
+                    true
+                }
+                menu.show()
             }
         }
     }
@@ -148,7 +160,7 @@ class InventoryView(context: Context) : LinearLayout(context) {
     }
 
     fun update(inventory: BootyCrateInventory) {
-        ui.nameView.setText(inventory.name)
+        ui.nameView.text = inventory.name
         ui.shoppingListItemCountView.text = inventory.shoppingListItemCount.toString()
         ui.inventoryItemCountView.text = inventory.inventoryItemCount.toString()
         setSelectedState(inventory.isSelected, animate = false)

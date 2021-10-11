@@ -135,7 +135,9 @@
 
     <string name="add_inventory_description">Add new inventory</string>
     <string name="inventory_name_hint">Inventory name</string>
-    <string name="rename_inventory_description">Enter inventory name</string>
+    <string name="rename_inventory_popup_title">Enter inventory name</string>
     <string name="more_options_description">More options</string>
+    <string name="rename_description">Rename</string>
+    <string name="delete_description">Delete</string>
 
 </resources>

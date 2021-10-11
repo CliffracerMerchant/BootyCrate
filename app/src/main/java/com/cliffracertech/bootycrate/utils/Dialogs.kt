@@ -45,25 +45,24 @@ class PrivacyPolicyDialog : DialogFragment() {
 /** Return a MaterialAlertDialogBuilder with the context theme's materialAlertDialogTheme style applied. */
 fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
     context, context.theme.resolveIntAttribute(R.attr.materialAlertDialogTheme))
-        .setBackground(ContextCompat.getDrawable(context, R.drawable.alert_dialog_background))
+        .setBackground(ContextCompat.getDrawable(context, R.drawable.alert_dialog))
         .setBackgroundInsetStart(0)
         .setBackgroundInsetEnd(0)
 
-/** Shows a dialog to rename an item with the name initially set to @param
- * initialName, with a hint equal to @param hint, which invokes @param
- * onFinish if the user taps the ok button. */
-fun nameDialog(
+/** Shows a dialog to rename an inventory with the name initially set
+ * to initialName, with a hint equal to hint, which invokes onFinish
+ * if the user taps the ok button. */
+fun inventoryNameDialog(
     context: Context,
-    hint: String,
     initialName: String? = null,
     onFinish: ((String) -> Unit)
 ): AlertDialog {
     val editText = EditText(context).apply {
         setText(initialName)
-        setHint(hint)
+        setHint(R.string.inventory_name_hint)
     }
     return themedAlertDialogBuilder(context)
-        .setTitle(R.string.rename_inventory_description)
+        .setTitle(R.string.rename_inventory_popup_title)
         .setPositiveButton(android.R.string.ok) { _, _ ->
             onFinish(editText.text.toString())
         }.setNegativeButton(android.R.string.cancel, null)
@@ -73,10 +72,7 @@ fun nameDialog(
             setOnShowListener {
                 val okButton = getButton(AlertDialog.BUTTON_POSITIVE)
                 okButton.isEnabled = !initialName.isNullOrBlank()
-                editText.handler.postDelayed({
-                    editText.requestFocus()
-                    SoftKeyboard.show(editText)
-                }, 50L)
+                SoftKeyboard.showWithDelay(editText)
             }
             editText.doOnTextChanged { text, _, _, _ ->
                 val okButton = getButton(AlertDialog.BUTTON_POSITIVE)
@@ -84,11 +80,6 @@ fun nameDialog(
             }
         }
 }
-
-/** Shows a dialog to set the name for a new inventory item,
- * invoking @param onFinish if the user taps the ok button. */
-fun newInventoryNameDialog(context: Context, onFinish: ((String) -> Unit)) =
-    nameDialog(context, hint = context.getString(R.string.inventory_name_hint), onFinish = onFinish)
 
 /** Open a dialog to ask the user to the type of database import they want (merge
  *  existing or overwrite, and recreate the given activity if the import requires it. */
@@ -187,10 +178,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                     // Showing the soft input seems not to work when done as
                     // a fragment is appearing. Showing the soft input after
                     // a small delay seems to be a workaround.
-                    newItemView.ui.nameEdit.handler.postDelayed({
-                        newItemView.ui.nameEdit.requestFocus()
-                        SoftKeyboard.show(newItemView.ui.nameEdit)
-                    }, 50L)
+                    SoftKeyboard.showWithDelay(newItemView.ui.nameEdit)
                 }
             }
     }

@@ -121,7 +121,7 @@ open class MainActivity : MultiFragmentActivity() {
         ui.settingsButton.setOnClickListener { addSecondaryFragment(PreferencesFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
         ui.addInventoryButton.setOnClickListener {
-            newInventoryNameDialog(this) { inventoryViewModel.add(it) }.show()
+            inventoryNameDialog(this, null) { inventoryViewModel.add(it) }.show()
         }
     }
 

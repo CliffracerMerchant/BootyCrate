@@ -23,7 +23,7 @@ fun alarmManager(context: Context) =
 
 /** An object that, once initialized by calling init with an instance of Context,
  * can be used to either hide or show the soft input given a view instance using
- * the functions hide and show. */
+ * the functions hide and show, and showWithDelay. */
 object SoftKeyboard {
     private lateinit var imm: InputMethodManager
     fun init(context: Context) {
@@ -31,6 +31,15 @@ object SoftKeyboard {
     }
     fun hide(view: View) = imm.hideSoftInputFromWindow(view.windowToken, 0)
     fun show(view: View) = imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+    /** Show the soft input after a given delay. which is useful when the soft input
+     * should appear alongside a popup alert dialog (for some reason, requesting the
+     * soft input to show at the same time as the dialog does not work). */
+    fun showWithDelay(view: View, delay: Long = 50L) {
+        view.handler.postDelayed({
+            view.requestFocus()
+            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        }, delay)
+    }
 }
 
 fun View.setHeight(height: Int) { bottom = top + height }
