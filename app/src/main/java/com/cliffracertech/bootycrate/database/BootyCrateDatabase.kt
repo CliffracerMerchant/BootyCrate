@@ -173,6 +173,9 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                         ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount) END
                  WHERE id = new.id"""
 
+        private fun SupportSQLiteDatabase.addSelectedInventoriesIndex() = execSQL(
+            "CREATE INDEX IF NOT EXISTS `selected_inventories` ON inventory (id) WHERE isSelected")
+
         private val callback = object: Callback() {
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
@@ -196,6 +199,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 db.addEnforceSingleSelectInventoryTriggers()
                 db.addAutoDeleteTrigger()
                 db.addAutoAddToShoppingListTriggers()
+                db.addSelectedInventoriesIndex()
             }
         }
     }
@@ -247,6 +251,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             db.addEnsureAtLeastOneInventoryTrigger()
             db.addEnsureAtLeastOneSelectedInventoryTrigger()
             db.addEnforceSingleSelectInventoryTriggers()
+            db.addSelectedInventoriesIndex()
         }
     }
 }
