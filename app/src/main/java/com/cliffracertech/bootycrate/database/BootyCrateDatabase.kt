@@ -27,7 +27,8 @@ import java.io.File
  * of the bootycrate_item table. BootyCrateDatabase functions as a singleton,
  * with the current instance obtained using the static function get.
  */
-@Database(entities = [DatabaseBootyCrateItem::class, DatabaseInventory::class], version = 2)
+@Database(entities = [DatabaseBootyCrateItem::class, DatabaseInventory::class,
+                      DatabaseSettings::class], version = 3)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun itemDao(): BootyCrateItemDao
@@ -42,7 +43,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             else Room.databaseBuilder(context.applicationContext,
                                       BootyCrateDatabase::class.java,
                                       "booty-crate-db").addCallback(callback)
-                                      .addMigrations(Migration1to2())
+                                      .addMigrations(Migration1to2(), Migration2to3())
                                       .build().also { this.instance = it }
         }
 
@@ -97,6 +98,81 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             }
         }
 
+        private fun SupportSQLiteDatabase.addEnsureAtLeastOneInventoryTrigger() =
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_inventory`
+                       BEFORE DELETE ON inventory WHEN (SELECT count(*) FROM inventory) == 1
+                       BEGIN SELECT RAISE(IGNORE); END;""")
+        private fun SupportSQLiteDatabase.addEnsureAtLeastOneSelectedInventoryTrigger() =
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory`
+                       AFTER DELETE ON inventory
+                       WHEN (SELECT COUNT(*) FROM inventory WHERE isSelected) == 0
+                       BEGIN UPDATE inventory SET isSelected = 1
+                             WHERE id = (SELECT id FROM inventory LIMIT 1);
+                       END;""")
+        private fun SupportSQLiteDatabase.addEnforceSingleSelectInventoryTriggers() {
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_1`
+                       BEFORE UPDATE OF isSelected ON inventory
+                       WHEN new.isSelected == 1
+                       AND (SELECT singleSelectInventories FROM dbSettings LIMIT 1) == 1
+                       BEGIN UPDATE inventory SET isSelected = 0; END;""")
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_2`
+                       AFTER UPDATE OF singleSelectInventories ON dbSettings
+                       WHEN new.singleSelectInventories == 1
+                       BEGIN UPDATE inventory SET isSelected = 1
+                             WHERE inventory.id = (SELECT id FROM inventory
+                                                   WHERE isSelected LIMIT 1);
+                       END;""")
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_3`
+                       AFTER INSERT ON inventory
+                       WHEN (SELECT COUNT(*) FROM inventory WHERE isSelected) > 1
+                       AND (select singleSelectInventories FROM dbSettings LIMIT 1) == 1
+                       BEGIN UPDATE inventory SET isSelected = 0 WHERE id = new.id; END;""")
+        }
+
+        /** The auto_delete_items trigger will remove an item from the database when
+         * its shoppingListAmount and inventoryAmount fields both are equal to -1. */
+        private fun SupportSQLiteDatabase.addAutoDeleteTrigger() = execSQL("""
+            CREATE TRIGGER IF NOT EXISTS `auto_delete_items`
+            AFTER UPDATE OF inventoryAmount, shoppingListAmount ON bootycrate_item
+            WHEN new.shoppingListAmount == -1 AND new.inventoryAmount == -1
+            BEGIN DELETE FROM bootycrate_item WHERE id = new.id; END""")
+
+        /** The auto add to shopping list triggers will execute the auto add to shopping
+         * list feature of inventory items if an item's amount falls below its
+         * autoAddToShoppingListAmount and its autoAddToShoppingList field is true */
+        private fun SupportSQLiteDatabase.addAutoAddToShoppingListTriggers() {
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_amount_update`
+                              AFTER UPDATE OF inventoryAmount ON bootycrate_item
+                                    WHEN new.autoAddToShoppingList == 1
+                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                              BEGIN $updateShoppingListAmount; END""")
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_update`
+                              AFTER UPDATE OF autoAddToShoppingList ON bootycrate_item
+                                    WHEN new.autoAddToShoppingList == 1
+                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                              BEGIN $updateShoppingListAmount; END""")
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_amount_update`
+                              AFTER UPDATE OF autoAddToShoppingListAmount ON bootycrate_item
+                                    WHEN new.autoAddToShoppingList == 1
+                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                              BEGIN $updateShoppingListAmount; END""")
+        }
+
+        /* Unfortunately SQLite's limitation of not being able to use common table
+         * expressions in triggers makes the following less readable than it should
+         * be. The query below updates the shopping list amount of the BootyCrateItem
+         * to be the greater of its current amount (if it is already on the shopping
+         * list) or the inventory item it is based on's addToShoppingListAmount
+         * minus its current amount). */
+        private const val updateShoppingListAmount =
+            """UPDATE bootycrate_item
+                 SET inShoppingListTrash = 0, shoppingListAmount =
+                   CASE WHEN shoppingListAmount >
+                             (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
+                        THEN shoppingListAmount
+                        ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount) END
+                 WHERE id = new.id"""
+
         private val callback = object: Callback() {
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
@@ -114,63 +190,14 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
                 db.execSQL("INSERT INTO inventory (name, isSelected) VALUES (firstInventoryName, 1)")
-
-                // The auto_delete_items trigger will remove an item from the database when
-                // its shoppingListAmount and inventoryAmount fields both are equal to -1
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `auto_delete_items`
-                              AFTER UPDATE OF inventoryAmount, shoppingListAmount
-                                    ON bootycrate_item
-                                    WHEN new.shoppingListAmount == -1
-                                    AND new.inventoryAmount == -1
-                              BEGIN DELETE FROM bootycrate_item WHERE id = new.id; END""")
-
-                // These triggers will execute the auto add to shopping list feature of
-                // inventory items if an item's amount falls below its autoAddToShoppingListAmount
-                // and its autoAddToShoppingList field is true
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_amount_update`
-                              AFTER UPDATE OF inventoryAmount ON bootycrate_item
-                                    WHEN new.autoAddToShoppingList == 1
-                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
-                              BEGIN $updateShoppingListAmount; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_update`
-                              AFTER UPDATE OF autoAddToShoppingList ON bootycrate_item
-                                    WHEN new.autoAddToShoppingList == 1
-                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
-                              BEGIN $updateShoppingListAmount; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_amount_update`
-                              AFTER UPDATE OF autoAddToShoppingListAmount ON bootycrate_item
-                                    WHEN new.autoAddToShoppingList == 1
-                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
-                              BEGIN $updateShoppingListAmount; END""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_inventory`
-                              BEFORE DELETE ON inventory WHEN (SELECT count(*) FROM inventory) == 1
-                              BEGIN SELECT RAISE(ABORT,"Can't delete last inventory"); END;""")
-                db.execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory`
-                              BEFORE UPDATE OF isSelected ON inventory
-                              WHEN new.isSelected == 0 AND (SELECT count(*) FROM inventory WHERE isSelected) == 1
-                              BEGIN SELECT RAISE(ABORT,"Can't deselect the last selected inventory"); END;""")
+                db.execSQL("INSERT INTO settings DEFAULT VALUES")
+                db.addEnsureAtLeastOneInventoryTrigger()
+                db.addEnsureAtLeastOneSelectedInventoryTrigger()
+                db.addEnforceSingleSelectInventoryTriggers()
+                db.addAutoDeleteTrigger()
+                db.addAutoAddToShoppingListTriggers()
             }
-
-            /* Unfortunately SQLite's limitation of not being able to use common table
-             * expressions in triggers makes the following less readable than it should
-             * be. The query below updates the shopping list amount of the BootyCrateItem
-             * to be the greater of its current amount (if it is already on the shopping
-             * list) or the inventory item it is based on's addToShoppingListAmount
-             * minus its current amount). */
-            private val updateShoppingListAmount =
-                """UPDATE bootycrate_item
-                     SET inShoppingListTrash = 0, shoppingListAmount =
-                       CASE WHEN shoppingListAmount >
-                                 (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
-                            THEN shoppingListAmount
-                            ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
-                       END
-                     WHERE id = new.id"""
         }
-    }
-
-    fun SupportSQLiteDatabase.execSQL(statements: Array<String>) {
-        for (statement in statements) execSQL(statement)
     }
 
     private class Migration1to2 : Migration(1, 2) {
@@ -208,6 +235,18 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             db.execSQL("ALTER TABLE temp_table RENAME TO bootycrate_item;")
             db.execSQL("COMMIT;")
             db.execSQL("PRAGMA foreign_keys=on;")
+        }
+    }
+
+    private class Migration2to3 : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("""CREATE TABLE IF NOT EXISTS dbSettings (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `singleSelectInventories` INTEGER NOT NULL DEFAULT 1)""")
+            db.execSQL("INSERT INTO dbSettings DEFAULT VALUES")
+            db.addEnsureAtLeastOneInventoryTrigger()
+            db.addEnsureAtLeastOneSelectedInventoryTrigger()
+            db.addEnforceSingleSelectInventoryTriggers()
         }
     }
 }

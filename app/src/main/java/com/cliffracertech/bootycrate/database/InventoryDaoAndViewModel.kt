@@ -75,14 +75,6 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
     @Query("UPDATE inventory SET isSelected = :isSelected WHERE id = :id")
     abstract suspend fun updateIsSelected(id: Long, isSelected: Boolean)
 
-    @Query("UPDATE inventory SET isSelected = 0")
-    protected abstract fun clearSelected(): Int
-
-    @Transaction open suspend fun singleSelect(id: Long) {
-        clearSelected()
-        updateIsSelected(id, true)
-    }
-
     @Query("DELETE FROM inventory WHERE id = :id")
     abstract suspend fun delete(id: Long)
 
@@ -103,6 +95,4 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
 
     fun updateIsSelected(id: Long, isSelected: Boolean) =
         viewModelScope.launch { dao.updateIsSelected(id, isSelected) }
-
-    fun singleSelect(id: Long) = viewModelScope.launch { dao.singleSelect(id) }
 }
