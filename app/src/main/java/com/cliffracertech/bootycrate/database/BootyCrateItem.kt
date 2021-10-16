@@ -53,7 +53,7 @@ class DatabaseBootyCrateItem(
 ) {
     init { color.coerceIn(BootyCrateItem.Colors.indices) }
 
-    // An interface for objects to provide a way to convert themselves into a DataBaseBootyCrateItem
+    /** An interface for objects to provide a way to convert themselves into a DataBaseBootyCrateItem. */
     interface Convertible {
         fun toDbBootyCrateItem(): DatabaseBootyCrateItem
     }
@@ -84,8 +84,8 @@ inInventoryTrash = $inInventoryTrash"""
  * of the object. */
 abstract class BootyCrateItem(
     var id: Long = 0,
-    var inventoryId: Long = 0,
-    var name: String = "",
+    var inventoryId: Long,
+    var name: String,
     var extraInfo: String = "",
     var color: Int = 0,
     var amount: Int = 1,
@@ -114,8 +114,8 @@ abstract class BootyCrateItem(
  * and adds the isChecked field to mirror the DatabaseBootyCrateItem field. */
 class ShoppingListItem(
     id: Long = 0,
-    inventoryId: Long = 0,
-    name: String = "",
+    inventoryId: Long,
+    name: String,
     extraInfo: String = "",
     color: Int = 0,
     amount: Int = 1,
@@ -143,8 +143,8 @@ class ShoppingListItem(
  * mirror the DatabaseBootyCrateItem fields. */
 class InventoryItem(
     id: Long = 0,
-    inventoryId: Long = 0,
-    name: String = "",
+    inventoryId: Long,
+    name: String,
     extraInfo: String = "",
     color: Int = 0,
     amount: Int = 0,

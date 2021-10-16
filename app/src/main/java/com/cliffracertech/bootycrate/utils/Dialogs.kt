@@ -290,6 +290,7 @@ class NewShoppingListItemDialog(context: Context) :
     init { newItemView.ui.checkBox.setInColorEditMode(true, animate = false) }
 
     override fun createItemFromView() = ShoppingListItem(
+        inventoryId = 1,
         name = newItemView.ui.nameEdit.text.toString(),
         extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
         color = newItemView.ui.checkBox.colorIndex,
@@ -330,6 +331,7 @@ class NewInventoryItemDialog(context: Context) :
     }
 
     override fun createItemFromView() = InventoryItem(
+        inventoryId = 1,
         name = newItemView.ui.nameEdit.text.toString(),
         extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
         color = newItemView.ui.checkBox.colorIndex,

@@ -46,13 +46,16 @@ import org.junit.runner.RunWith
 class InventoryItemFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val dao = BootyCrateDatabase.get(context as Application).itemDao()
+    private val db = BootyCrateDatabase.get(context as Application)
+    private val dao = db.itemDao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
-    private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
-    private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
-    private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1)
-    private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9, autoAddToShoppingList = true)
+    private val inventoryId = db.run { runBlocking { inventoryDao().deleteAll() }
+                                       inventoryDao().getAllNow()[0].id }
+    private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8, inventoryId = inventoryId)
+    private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2, inventoryId = inventoryId)
+    private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1, inventoryId = inventoryId)
+    private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9, autoAddToShoppingList = true, inventoryId = inventoryId)
 
     @Before fun setup() {
         activityRule.scenario.onActivity {
@@ -313,7 +316,7 @@ class InventoryItemFragmentTests {
 
     @Test fun emptyMessageDisappears() {
         emptyMessageAppears()
-        runBlocking{ dao.add(InventoryItem(name = "new item")) }
+        runBlocking{ dao.add(InventoryItem(name = "new item", inventoryId = inventoryId)) }
         Thread.sleep(30L)
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
@@ -399,8 +402,9 @@ class InventoryItemFragmentTests {
         onPopupView(withText(R.string.color_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(onlyShownShoppingListItemsAre(
             ShoppingListItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                             amount = 1, color = orangeItem1.color),
-            ShoppingListItem(name = grayItem11.name, amount = 1, color = grayItem11.color)))
+                             amount = 1, color = orangeItem1.color, inventoryId = inventoryId),
+            ShoppingListItem(name = grayItem11.name, amount = 1, color = grayItem11.color,
+                             inventoryId = inventoryId)))
     }
 
     @Test fun changeItemColor() {
@@ -535,7 +539,9 @@ class InventoryItemFragmentTests {
                 clickEditButton()))
         onView(withId(R.id.shoppingListButton)).perform(click())
         val expectedItem = ShoppingListItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                                            color = orangeItem1.color, amount = 12 - orangeItem1.amount)
+                                            color = orangeItem1.color, amount = 12 - orangeItem1.amount,
+                                            inventoryId = inventoryId)
+
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }
@@ -550,9 +556,8 @@ class InventoryItemFragmentTests {
                     replaceValueEditText("6")),
                 clickEditButton()))
         onView(withId(R.id.shoppingListButton)).perform(click())
-        val expectedItem = ShoppingListItem(name = grayItem11.name,
-                                            color = grayItem11.color,
-                                            amount = 3)
+        val expectedItem = ShoppingListItem(name = grayItem11.name, color = grayItem11.color,
+                                            amount = 3, inventoryId = inventoryId)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }
@@ -565,10 +570,9 @@ class InventoryItemFragmentTests {
                     replaceValueEditText("11")),
                 clickEditButton()))
         onView(withId(R.id.shoppingListButton)).perform(click())
-        val expectedItem = ShoppingListItem(name = grayItem11.name,
-                                            extraInfo = grayItem11.extraInfo,
-                                            color = grayItem11.color,
-                                            amount = 11 - grayItem11.amount)
+        val expectedItem = ShoppingListItem(name = grayItem11.name, extraInfo = grayItem11.extraInfo,
+                                            color = grayItem11.color, amount = 11 - grayItem11.amount,
+                                            inventoryId = inventoryId)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }

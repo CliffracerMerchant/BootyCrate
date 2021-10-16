@@ -59,9 +59,9 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
 
 @Dao abstract class BootyCrateInventoryDao {
     @Insert abstract suspend fun add(inventory: DatabaseInventory): Long
-    @Insert abstract suspend fun add(items: List<DatabaseInventory>)
+    @Insert abstract suspend fun add(items: List<DatabaseInventory>): List<Long>
     @Query("INSERT INTO inventory (name) VALUES (:name)")
-    abstract suspend fun add(name: String)
+    abstract suspend fun add(name: String): Long
 
     @Query("UPDATE inventory SET name = :name WHERE id = :id")
     abstract suspend fun updateName(id: Long, name: String)
