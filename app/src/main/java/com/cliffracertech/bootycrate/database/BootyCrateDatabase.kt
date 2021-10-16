@@ -47,6 +47,10 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                                       .build().also { this.instance = it }
         }
 
+        fun getInMemoryDb(context: Context) =
+            Room.inMemoryDatabaseBuilder(context.applicationContext, BootyCrateDatabase::class.java)
+                .addCallback(callback).build()
+
         fun backup(context: Context, backupUri: Uri) {
             val db = get(context)
             val databasePath = db.openHelper.readableDatabase.path
@@ -82,8 +86,10 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             else CoroutineScope(Dispatchers.IO).launch {
                 val currentDb = get(context)
                 if (overwriteExistingDb) {
+                    currentDb.openHelper.writableDatabase.execSQL("DROP TRIGGER `ensure_at_least_one_inventory`")
                     currentDb.inventoryDao().deleteAll()
                     currentDb.inventoryDao().add(inventories)
+                    currentDb.openHelper.writableDatabase.addEnsureAtLeastOneInventoryTrigger()
                     currentDb.itemDao().deleteAll()
                 } else for (inventory in inventories) {
                     val oldId = inventory.id
@@ -126,7 +132,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                        AFTER INSERT ON inventory
                        WHEN (SELECT COUNT(*) FROM inventory WHERE isSelected) > 1
                        AND (select singleSelectInventories FROM dbSettings LIMIT 1) == 1
-                       BEGIN UPDATE inventory SET isSelected = 0 WHERE id = new.id; END;""")
+                       BEGIN UPDATE inventory SET isSelected = 1 WHERE id = new.id; END;""")
         }
 
         /** The auto_delete_items trigger will remove an item from the database when
@@ -192,8 +198,9 @@ abstract class BootyCrateDatabase : RoomDatabase() {
 
             override fun onCreate(db: SupportSQLiteDatabase) {
                 super.onCreate(db)
-                db.execSQL("INSERT INTO inventory (name, isSelected) VALUES (firstInventoryName, 1)")
-                db.execSQL("INSERT INTO settings DEFAULT VALUES")
+                db.execSQL("INSERT INTO dbSettings DEFAULT VALUES")
+                db.insert("inventory", 0, ContentValues().apply { put("name", firstInventoryName)
+                                                                  put("isSelected", 1) })
                 db.addEnsureAtLeastOneInventoryTrigger()
                 db.addEnsureAtLeastOneSelectedInventoryTrigger()
                 db.addEnforceSingleSelectInventoryTriggers()
@@ -209,7 +216,8 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             db.execSQL("""CREATE TABLE inventory (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                                   `name` TEXT NOT NULL,
                                                   `isSelected` INTEGER NOT NULL DEFAULT 0)""")
-            val values = ContentValues().apply { put("name", firstInventoryName) }
+            val values = ContentValues().apply { put("name", firstInventoryName)
+                                                 put("isSelected", 1) }
             val insertedId = db.insert("inventory", 0, values)
 
             db.execSQL("PRAGMA foreign_keys=off")

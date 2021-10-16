@@ -6,6 +6,8 @@ package com.cliffracertech.bootycrate.utils
 
 import android.view.View
 import androidx.annotation.CallSuper
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.*
 import androidx.test.espresso.Espresso.onView
@@ -23,10 +25,15 @@ import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.view.BottomNavigationDrawer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
+import java.util.concurrent.TimeoutException
 
 /** A ViewAction that allows direct operation on a view.
  * Thanks to the author of this blog post for the idea.
@@ -153,7 +160,7 @@ class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
         item: InventoryItem
     ) {
         super.assertItemFromViewMatchesOriginalItem(view, item)
-        val view = view as InventoryItemView
+        view as InventoryItemView
         assertThat(view.detailsUi.autoAddToShoppingListCheckBox.isChecked).isEqualTo(item.autoAddToShoppingList)
         assertThat(view.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(item.autoAddToShoppingListAmount)
     }
@@ -197,3 +204,32 @@ class setStateAndWaitForSettling(@BottomSheetBehavior.State private val state: I
 
 fun setExpandedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_EXPANDED)
 fun setCollapsedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_COLLAPSED)
+
+/** Perform a series of actions and consequent tests on the LiveData instance.
+ * The size of actions and tests must be the same. Each action will be performed,
+ * after which the change in the LiveData value will be waited for up to the
+ * value of the parameter timeOut. The corresponding entry in tests will be ran
+ * after the LiveData changes. The process is repeated for each entry in actions
+ * and tests. */
+@DelicateCoroutinesApi
+fun <T> LiveData<T>.observeForTesting(
+    timeOut: Long,
+    actions: List<() -> Unit>,
+    tests: List<() -> Unit>,
+) {
+    assertThat(actions.size).isEqualTo(tests.size)
+    var index = 0
+    val observer = Observer<T> { tests[index].invoke(); index++ }
+    GlobalScope.launch(Dispatchers.Main) { observeForever(observer) }
+
+    while (index < actions.size) {
+        val start = System.currentTimeMillis()
+        val currentIndex = index
+        actions[index].invoke()
+        while (index == currentIndex && (System.currentTimeMillis() - start) < timeOut )
+            Thread.sleep(timeOut / 10L)
+        if (index == currentIndex) throw TimeoutException(
+            "The LiveData did not update before the timeout ($timeOut) was reached.")
+    }
+    GlobalScope.launch(Dispatchers.Main) { removeObserver(observer) }
+}
