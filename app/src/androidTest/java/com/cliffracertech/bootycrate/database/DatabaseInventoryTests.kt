@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.database
 
 import android.content.Context
+import androidx.lifecycle.asLiveData
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.cliffracertech.bootycrate.utils.observeForTesting
@@ -27,19 +28,16 @@ class DatabaseInventoryTests {
         dao = db.inventoryDao()
     }
 
-    @After @Throws(IOException::class)
-    fun closeDb() = db.close()
+    @After fun closeDb() = db.close()
 
-    @Test @Throws(Exception::class)
-    fun initialState() {
+    @Test fun initialState() {
         val items = dao.getAllNow()
         assertThat(items.size).isEqualTo(1)
         assertThat(items[0].isSelected).isTrue()
         assertThat(items[0].name).isNotEmpty()
     }
 
-    @Test @Throws(Exception::class)
-    fun inserting() {
+    @Test fun inserting() {
         val names = listOf("Pantry", "Refrigerator", "Pantry2", "Refrigerator2")
         runBlocking {
             dao.add(names[0])
@@ -52,8 +50,7 @@ class DatabaseInventoryTests {
         names.forEach { assertThat(it in itemNames) }
     }
 
-    @Test @Throws(Exception::class)
-    fun deleting() {
+    @Test fun deleting() {
         runBlocking {
             listOf("Pantry", "Refrigerator", "Pantry2", "Refrigerator2")
                 .forEach { dao.add(it) }
@@ -71,9 +68,7 @@ class DatabaseInventoryTests {
         assertThat(itemIds.size).isEqualTo(3)
     }
 
-    @Test @Throws(Exception::class)
-    fun lastInventoryIsUndeletable() {
-        initialState()
+    @Test fun lastInventoryIsUndeletable() {
         val itemId = dao.getAllNow()[0].id
         runBlocking { dao.delete(itemId) }
         var items = dao.getAllNow()
@@ -89,8 +84,7 @@ class DatabaseInventoryTests {
         assertThat(items.size).isEqualTo(1)
     }
 
-    @Test @Throws(Exception::class)
-    fun updateNames() {
+    @Test fun updateNames() {
         var id = dao.getAllNow()[0].id
         runBlocking { dao.updateName(id, "new name")
                       id = dao.add("new item") }
@@ -103,8 +97,7 @@ class DatabaseInventoryTests {
         assertThat(names.contains("another new name")).isTrue()
     }
 
-    @Test @Throws(Exception::class)
-    fun liveData() {
+    @Test fun liveData() {
         val items = dao.getAll()
         var newInventoryId = -1L
         items.observeForTesting(
@@ -137,4 +130,67 @@ class DatabaseInventoryTests {
                 assertThat(inventory.shoppingListItemCount == 2)
             }))
     }
+
+    @Test fun addedInventoryIsSelected() {
+        val newId = runBlocking { dao.add("") }
+        val newItem = dao.getAllNow().find { it.id == newId }
+        assertThat(newItem).isNotNull()
+        assertThat(newItem!!.isSelected).isTrue()
+    }
+
+    @Test fun isSingleSelectByDefault() {
+        val singleSelect = runBlocking {
+            val cursor = db.query("SELECT singleSelectInventories FROM dbSettings LIMIT 1", null)
+            cursor.moveToFirst()
+            cursor.getInt(0) == 1
+        }
+        assertThat(singleSelect).isTrue()
+    }
+
+    @Test fun singleSelect() {
+        var firstItem = dao.getAllNow()[0]
+        assertThat(firstItem.isSelected).isTrue()
+        addedInventoryIsSelected()
+        runBlocking { dao.updateIsSelected(firstItem.id, true) }
+
+        val items = dao.getAllNow()
+        firstItem = items.find { it.id == firstItem.id }!!
+        assertThat(firstItem.isSelected).isTrue()
+        val secondItem = items.find { it.id != firstItem.id }!!
+        assertThat(secondItem.isSelected).isFalse()
+    }
+
+    @Test fun updateSingleSelect() {
+        val dao = db.dbSettingsDao()
+        val liveData = dao.getSingleSelectInventories().asLiveData()
+        liveData.observeForTesting(
+            timeOut = 100L,
+            actions = listOf({ runBlocking { dao.updateSingleSelectInventories(false) } },
+                             { runBlocking { dao.updateSingleSelectInventories(true) } }),
+            tests = listOf({ assertThat(liveData.value).isEqualTo(false) },
+                           { assertThat(liveData.value).isEqualTo(true) }))
+    }
+
+    @Test fun multiSelectInventories() {
+        runBlocking {
+            db.dbSettingsDao().updateSingleSelectInventories(false)
+            dao.add("")
+        }
+        assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(2)
+        runBlocking { dao.add("") }
+        assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(3)
+    }
+
+    @Test fun changingToSingleSelectWithMultiSelection() {
+        runBlocking {
+            db.dbSettingsDao().updateSingleSelectInventories(false)
+            dao.add("")
+            dao.add("")
+            assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(3)
+            db.dbSettingsDao().updateSingleSelectInventories(true)
+        }
+        assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(1)
+    }
+
+
 }
