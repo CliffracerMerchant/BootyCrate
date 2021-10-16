@@ -233,3 +233,10 @@ fun <T> LiveData<T>.observeForTesting(
     }
     GlobalScope.launch(Dispatchers.Main) { removeObserver(observer) }
 }
+
+@DelicateCoroutinesApi
+fun <T> LiveData<T>.observeForTesting(
+    timeOut: Long,
+    actions: () -> Unit,
+    tests: () -> Unit
+) = observeForTesting(timeOut, listOf(actions), listOf(tests))

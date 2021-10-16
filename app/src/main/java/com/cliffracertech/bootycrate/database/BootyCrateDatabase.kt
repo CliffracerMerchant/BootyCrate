@@ -33,6 +33,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun itemDao(): BootyCrateItemDao
     abstract fun inventoryDao(): BootyCrateInventoryDao
+    abstract fun dbSettingsDao(): DatabaseSettingsDao
 
     companion object {
         private const val firstInventoryName="BootyCrate"
