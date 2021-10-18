@@ -6,11 +6,12 @@ package com.cliffracertech.bootycrate.utils
 
 import android.view.View
 import androidx.annotation.CallSuper
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.espresso.*
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoMatchingViewException
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
@@ -25,10 +26,11 @@ import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.view.BottomNavigationDrawer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestCoroutineScope
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -205,23 +207,29 @@ class setStateAndWaitForSettling(@BottomSheetBehavior.State private val state: I
 fun setExpandedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_EXPANDED)
 fun setCollapsedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_COLLAPSED)
 
-/** Perform a series of actions and consequent tests on the LiveData instance.
- * The size of actions and tests must be the same. Each action will be performed,
- * after which the change in the LiveData value will be waited for up to the
- * value of the parameter timeOut. The corresponding entry in tests will be ran
- * after the LiveData changes. The process is repeated for each entry in actions
- * and tests. */
-@DelicateCoroutinesApi
-fun <T> LiveData<T>.observeForTesting(
-    timeOut: Long,
-    actions: List<() -> Unit>,
-    tests: List<() -> Unit>,
-) {
-    assertThat(actions.size).isEqualTo(tests.size)
-    var index = 0
-    val observer = Observer<T> { tests[index].invoke(); index++ }
-    GlobalScope.launch(Dispatchers.Main) { observeForever(observer) }
+fun <T> Flow<T>.resultAfter(timeOut: Long, action: () -> Unit): T? {
+    var result: T? = null
+    TestCoroutineScope().launch {
+        take(1).collect { result = it }
+    }
+    action()
+    val start = System.currentTimeMillis()
+    while (result == null && (System.currentTimeMillis() - start) < timeOut)
+        Thread.sleep(timeOut / 10L)
+    return result
+}
 
+/** Perform a series of actions on the Flow instance. The emitted values after
+ * each action is performed will be returned in a list. Each new value will be
+ * waited for up to the value of the parameter timeOut. */
+fun <T> Flow<T>.collectForTesting(timeOut: Long, vararg actions: () -> Unit): List<T> {
+    var index = 0
+    val results = mutableListOf<T>()
+    TestCoroutineScope().launch {
+        take(actions.size).collect {
+            results.add(it); index++
+        }
+    }
     while (index < actions.size) {
         val start = System.currentTimeMillis()
         val currentIndex = index
@@ -229,14 +237,7 @@ fun <T> LiveData<T>.observeForTesting(
         while (index == currentIndex && (System.currentTimeMillis() - start) < timeOut )
             Thread.sleep(timeOut / 10L)
         if (index == currentIndex) throw TimeoutException(
-            "The LiveData did not update before the timeout ($timeOut) was reached.")
+            "The Flow did not update before the timeout ($timeOut) was reached.")
     }
-    GlobalScope.launch(Dispatchers.Main) { removeObserver(observer) }
+    return results
 }
-
-@DelicateCoroutinesApi
-fun <T> LiveData<T>.observeForTesting(
-    timeOut: Long,
-    actions: () -> Unit,
-    tests: () -> Unit
-) = observeForTesting(timeOut, listOf(actions), listOf(tests))

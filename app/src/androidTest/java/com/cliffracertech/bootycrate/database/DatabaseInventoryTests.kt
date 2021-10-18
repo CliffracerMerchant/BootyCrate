@@ -5,17 +5,17 @@
 package com.cliffracertech.bootycrate.database
 
 import android.content.Context
-import androidx.lifecycle.asLiveData
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.cliffracertech.bootycrate.utils.observeForTesting
+import com.cliffracertech.bootycrate.dlog
+import com.cliffracertech.bootycrate.utils.collectForTesting
+import com.cliffracertech.bootycrate.utils.resultAfter
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class DatabaseInventoryTests {
@@ -97,38 +97,34 @@ class DatabaseInventoryTests {
         assertThat(names.contains("another new name")).isTrue()
     }
 
-    @Test fun liveData() {
-        val items = dao.getAll()
+    @Test fun inventoriesFlow() {
         var newInventoryId = -1L
-        items.observeForTesting(
-            timeOut = 100L,
-            actions = listOf(
-                { },
-                { newInventoryId = runBlocking { dao.add("new inventory") }},
-                { runBlocking {
-                    db.itemDao().add(ShoppingListItem(inventoryId = newInventoryId, name = "1"))
-                    db.itemDao().add(ShoppingListItem(inventoryId = newInventoryId, name = "2"))
-                    db.itemDao().add(InventoryItem(inventoryId = newInventoryId, name = "3")) }
-                }),
-            tests = listOf({
-                val items = items.value
-                assertThat(items).isNotNull()
-                assertThat(items!!.size).isEqualTo(1)
-                assertThat(items[0].shoppingListItemCount).isEqualTo(0)
-                assertThat(items[0].inventoryItemCount).isEqualTo(0)
-            }, {
-                val items = items.value
-                assertThat(items).isNotNull()
-                assertThat(items!!.size).isEqualTo(2)
-                assertThat(items.find { it.name == "new inventory"}).isNotNull()
-            }, {
-                val items = items.value
-                assertThat(items).isNotNull()
-                val inventory = items!!.find { it.id == newInventoryId }
-                assertThat(inventory).isNotNull()
-                assertThat(inventory!!.inventoryItemCount == 1)
-                assertThat(inventory.shoppingListItemCount == 2)
-            }))
+        val results = dao.getAll().collectForTesting(timeOut = 100L, { },
+            { newInventoryId = runBlocking { dao.add("new inventory") }},
+            { runBlocking { db.itemDao().addConvertibles(listOf(
+                ShoppingListItem(inventoryId = newInventoryId, name = ""),
+                ShoppingListItem(inventoryId = newInventoryId, name = ""),
+                InventoryItem(inventoryId = newInventoryId, name = "")))
+            }})
+
+        assertThat(results.size).isEqualTo(3)
+        var items = results[0]
+        assertThat(items.size).isEqualTo(1)
+        assertThat(items[0].shoppingListItemCount).isEqualTo(0)
+        assertThat(items[0].inventoryItemCount).isEqualTo(0)
+
+        items = results[1]
+        assertThat(items.size).isEqualTo(2)
+        assertThat(items.find { it.name == "new inventory"}).isNotNull()
+
+        items = results[2]
+        assertThat(items).isNotNull()
+        val inventory = items.find { it.id == newInventoryId }
+        assertThat(inventory).isNotNull()
+
+        assertThat(inventory!!.inventoryItemCount).isEqualTo(1)
+        assertThat(inventory.shoppingListItemCount).isEqualTo(2)
+
     }
 
     @Test fun addedInventoryIsSelected() {
@@ -147,7 +143,7 @@ class DatabaseInventoryTests {
         assertThat(singleSelect).isTrue()
     }
 
-    @Test fun singleSelect() {
+    @Test fun singleSelectInventories() {
         var firstItem = dao.getAllNow()[0]
         assertThat(firstItem.isSelected).isTrue()
         addedInventoryIsSelected()
@@ -162,13 +158,22 @@ class DatabaseInventoryTests {
 
     @Test fun updateSingleSelect() {
         val dao = db.dbSettingsDao()
-        val liveData = dao.getSingleSelectInventories().asLiveData()
-        liveData.observeForTesting(
-            timeOut = 100L,
-            actions = listOf({ runBlocking { dao.updateSingleSelectInventories(false) } },
-                             { runBlocking { dao.updateSingleSelectInventories(true) } }),
-            tests = listOf({ assertThat(liveData.value).isEqualTo(false) },
-                           { assertThat(liveData.value).isEqualTo(true) }))
+        val flow = dao.getSingleSelectInventories()
+        var result = flow.resultAfter(200L) { runBlocking { dao.updateSingleSelectInventories(false) }}
+        dlog("1 " + result.toString())
+        //assertThat(result).isEqualTo(false)
+        result = flow.resultAfter(200L) { runBlocking { dao.updateSingleSelectInventories(true) }}
+        dlog("2 " + result.toString())
+        //assertThat(result).isEqualTo(true)
+        result = flow.resultAfter(200L) { }
+        dlog("3 " + result.toString())
+//        val results = flow.collectForTesting(timeOut = 500L,
+//            { },
+//            { runBlocking { dao.updateSingleSelectInventories(true) }})
+//        dlog(results.toString())
+//        assertThat(results.size).isEqualTo(2)
+//        assertThat(results[0]).isFalse()
+//        assertThat(results[1]).isTrue()
     }
 
     @Test fun multiSelectInventories() {

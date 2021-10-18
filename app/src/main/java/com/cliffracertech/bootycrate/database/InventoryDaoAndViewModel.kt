@@ -6,9 +6,10 @@ package com.cliffracertech.bootycrate.database
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 @Entity(tableName = "inventory")
@@ -67,7 +68,7 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
     abstract suspend fun updateName(id: Long, name: String)
 
     @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount, isSelected FROM inventory")
-    abstract fun getAll() : LiveData<List<BootyCrateInventory>>
+    abstract fun getAll() : Flow<List<BootyCrateInventory>>
 
     @Query("SELECT * FROM inventory")
     abstract fun getAllNow() : List<DatabaseInventory>
@@ -85,7 +86,7 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
 class InventoryViewModel(app: Application): AndroidViewModel(app) {
     private val dao = BootyCrateDatabase.get(app).inventoryDao()
 
-    val inventories = dao.getAll()
+    val inventories = dao.getAll().asLiveData()
 
     fun add(name: String) = viewModelScope.launch { dao.add(name) }
 
