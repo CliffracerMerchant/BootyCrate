@@ -109,13 +109,18 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_inventory`
                        BEFORE DELETE ON inventory WHEN (SELECT count(*) FROM inventory) == 1
                        BEGIN SELECT RAISE(IGNORE); END;""")
-        private fun SupportSQLiteDatabase.addEnsureAtLeastOneSelectedInventoryTrigger() =
-            execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory`
+        private fun SupportSQLiteDatabase.addEnsureAtLeastOneSelectedInventoryTriggers() {
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory_1`
                        AFTER DELETE ON inventory
                        WHEN (SELECT COUNT(*) FROM inventory WHERE isSelected) == 0
                        BEGIN UPDATE inventory SET isSelected = 1
                              WHERE id = (SELECT id FROM inventory LIMIT 1);
                        END;""")
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory_2`
+                       AFTER UPDATE OF isSelected ON inventory
+                       WHEN (SELECT COUNT(*) FROM inventory WHERE isSelected) == 0
+                       BEGIN UPDATE inventory SET isSelected = 1 WHERE id == (new.id); END;""")
+        }
         private fun SupportSQLiteDatabase.addEnforceSingleSelectInventoryTriggers() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_1`
                        BEFORE UPDATE OF isSelected ON inventory
@@ -149,20 +154,20 @@ abstract class BootyCrateDatabase : RoomDatabase() {
          * autoAddToShoppingListAmount and its autoAddToShoppingList field is true */
         private fun SupportSQLiteDatabase.addAutoAddToShoppingListTriggers() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_amount_update`
-                              AFTER UPDATE OF inventoryAmount ON bootycrate_item
-                                    WHEN new.autoAddToShoppingList == 1
-                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
-                              BEGIN $updateShoppingListAmount; END""")
+                           AFTER UPDATE OF inventoryAmount ON bootycrate_item
+                                 WHEN new.autoAddToShoppingList == 1
+                                 AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                           BEGIN $updateShoppingListAmount; END""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_update`
-                              AFTER UPDATE OF autoAddToShoppingList ON bootycrate_item
-                                    WHEN new.autoAddToShoppingList == 1
-                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
-                              BEGIN $updateShoppingListAmount; END""")
+                           AFTER UPDATE OF autoAddToShoppingList ON bootycrate_item
+                                 WHEN new.autoAddToShoppingList == 1
+                                 AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                           BEGIN $updateShoppingListAmount; END""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_amount_update`
-                              AFTER UPDATE OF autoAddToShoppingListAmount ON bootycrate_item
-                                    WHEN new.autoAddToShoppingList == 1
-                                    AND new.inventoryAmount < new.autoAddToShoppingListAmount
-                              BEGIN $updateShoppingListAmount; END""")
+                           AFTER UPDATE OF autoAddToShoppingListAmount ON bootycrate_item
+                                 WHEN new.autoAddToShoppingList == 1
+                                 AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                           BEGIN $updateShoppingListAmount; END""")
         }
 
         /* Unfortunately SQLite's limitation of not being able to use common table
@@ -173,12 +178,12 @@ abstract class BootyCrateDatabase : RoomDatabase() {
          * minus its current amount). */
         private const val updateShoppingListAmount =
             """UPDATE bootycrate_item
-                 SET inShoppingListTrash = 0, shoppingListAmount =
-                   CASE WHEN shoppingListAmount >
-                             (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
-                        THEN shoppingListAmount
-                        ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount) END
-                 WHERE id = new.id"""
+                   SET inShoppingListTrash = 0, shoppingListAmount =
+                       CASE WHEN shoppingListAmount >
+                           (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount)
+                       THEN shoppingListAmount
+                       ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount) END
+                   WHERE id = new.id"""
 
         private fun SupportSQLiteDatabase.addSelectedInventoriesIndex() = execSQL(
             "CREATE INDEX IF NOT EXISTS `selected_inventories` ON inventory (id) WHERE isSelected")
@@ -203,7 +208,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 db.insert("inventory", 0, ContentValues().apply { put("name", firstInventoryName)
                                                                   put("isSelected", 1) })
                 db.addEnsureAtLeastOneInventoryTrigger()
-                db.addEnsureAtLeastOneSelectedInventoryTrigger()
+                db.addEnsureAtLeastOneSelectedInventoryTriggers()
                 db.addEnforceSingleSelectInventoryTriggers()
                 db.addAutoDeleteTrigger()
                 db.addAutoAddToShoppingListTriggers()
@@ -258,7 +263,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 `singleSelectInventories` INTEGER NOT NULL DEFAULT 1)""")
             db.execSQL("INSERT INTO dbSettings DEFAULT VALUES")
             db.addEnsureAtLeastOneInventoryTrigger()
-            db.addEnsureAtLeastOneSelectedInventoryTrigger()
+            db.addEnsureAtLeastOneSelectedInventoryTriggers()
             db.addEnforceSingleSelectInventoryTriggers()
             db.addSelectedInventoriesIndex()
         }

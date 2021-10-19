@@ -94,7 +94,7 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         val item: BootyCrateInventory get() = adapter.currentList[adapterPosition]
 
         init {
-            view.setOnClickListener { viewModel.updateIsSelected(item.id, true) }
+            view.setOnClickListener { viewModel.updateIsSelected(item.id) }
             view.ui.optionsButton.setOnClickListener {
                 val menu = PopupMenu(context, view.ui.optionsButton)
                 menu.inflate(R.menu.inventory_options_menu)

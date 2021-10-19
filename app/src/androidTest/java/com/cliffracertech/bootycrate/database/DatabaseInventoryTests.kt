@@ -9,7 +9,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.cliffracertech.bootycrate.dlog
 import com.cliffracertech.bootycrate.utils.collectForTesting
-import com.cliffracertech.bootycrate.utils.resultAfter
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -99,7 +98,9 @@ class DatabaseInventoryTests {
 
     @Test fun inventoriesFlow() {
         var newInventoryId = -1L
-        val results = dao.getAll().collectForTesting(timeOut = 100L, { },
+        val results = dao.getAll().collectForTesting(
+            timeOut = 200L,
+            { },
             { newInventoryId = runBlocking { dao.add("new inventory") }},
             { runBlocking { db.itemDao().addConvertibles(listOf(
                 ShoppingListItem(inventoryId = newInventoryId, name = ""),
@@ -121,10 +122,8 @@ class DatabaseInventoryTests {
         assertThat(items).isNotNull()
         val inventory = items.find { it.id == newInventoryId }
         assertThat(inventory).isNotNull()
-
         assertThat(inventory!!.inventoryItemCount).isEqualTo(1)
         assertThat(inventory.shoppingListItemCount).isEqualTo(2)
-
     }
 
     @Test fun addedInventoryIsSelected() {
@@ -147,7 +146,7 @@ class DatabaseInventoryTests {
         var firstItem = dao.getAllNow()[0]
         assertThat(firstItem.isSelected).isTrue()
         addedInventoryIsSelected()
-        runBlocking { dao.updateIsSelected(firstItem.id, true) }
+        runBlocking { dao.updateIsSelected(firstItem.id) }
 
         val items = dao.getAllNow()
         firstItem = items.find { it.id == firstItem.id }!!
@@ -156,37 +155,22 @@ class DatabaseInventoryTests {
         assertThat(secondItem.isSelected).isFalse()
     }
 
-    @Test fun updateSingleSelect() {
-        val dao = db.dbSettingsDao()
-        val flow = dao.getSingleSelectInventories()
-        var result = flow.resultAfter(200L) { runBlocking { dao.updateSingleSelectInventories(false) }}
-        dlog("1 " + result.toString())
-        //assertThat(result).isEqualTo(false)
-        result = flow.resultAfter(200L) { runBlocking { dao.updateSingleSelectInventories(true) }}
-        dlog("2 " + result.toString())
-        //assertThat(result).isEqualTo(true)
-        result = flow.resultAfter(200L) { }
-        dlog("3 " + result.toString())
-//        val results = flow.collectForTesting(timeOut = 500L,
-//            { },
-//            { runBlocking { dao.updateSingleSelectInventories(true) }})
-//        dlog(results.toString())
-//        assertThat(results.size).isEqualTo(2)
-//        assertThat(results[0]).isFalse()
-//        assertThat(results[1]).isTrue()
-    }
-
     @Test fun multiSelectInventories() {
-        runBlocking {
+        val secondItemId = runBlocking {
             db.dbSettingsDao().updateSingleSelectInventories(false)
             dao.add("")
         }
         assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(2)
         runBlocking { dao.add("") }
         assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(3)
+
+        runBlocking { dao.updateIsSelected(secondItemId) }
+        val items = dao.getAllNow()
+        assertThat(items.count { it.isSelected }).isEqualTo(2)
+        assertThat(items.find { it.id == secondItemId}?.isSelected).isEqualTo(false)
     }
 
-    @Test fun changingToSingleSelectWithMultiSelection() {
+    @Test fun changingToSingleSelectWithMultiSelectionUnselectsAllButOne() {
         runBlocking {
             db.dbSettingsDao().updateSingleSelectInventories(false)
             dao.add("")
@@ -197,5 +181,17 @@ class DatabaseInventoryTests {
         assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(1)
     }
 
-
+    @Test fun cannotDeselectLastInventoryWhileMultiSelecting() {
+        val firstItemId = dao.getAllNow()[0].id
+        runBlocking {
+            db.dbSettingsDao().updateSingleSelectInventories(false)
+            val id = dao.add("")
+            dao.updateIsSelected(id)
+        }
+        assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(1)
+        assertThat(dao.getAllNow().find { it.id == firstItemId }?.isSelected).isEqualTo(true)
+        runBlocking { dao.updateIsSelected(firstItemId) }
+        assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(1)
+        assertThat(dao.getAllNow().find { it.id == firstItemId }?.isSelected).isEqualTo(true)
+    }
 }

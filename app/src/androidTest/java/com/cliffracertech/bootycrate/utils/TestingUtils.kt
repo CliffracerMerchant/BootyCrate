@@ -203,40 +203,27 @@ class setStateAndWaitForSettling(@BottomSheetBehavior.State private val state: I
     }
 }
 
-
 fun setExpandedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_EXPANDED)
 fun setCollapsedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_COLLAPSED)
 
-fun <T> Flow<T>.resultAfter(timeOut: Long, action: () -> Unit): T? {
-    var result: T? = null
-    TestCoroutineScope().launch {
-        take(1).collect { result = it }
-    }
-    action()
-    val start = System.currentTimeMillis()
-    while (result == null && (System.currentTimeMillis() - start) < timeOut)
-        Thread.sleep(timeOut / 10L)
-    return result
-}
-
-/** Perform a series of actions on the Flow instance. The emitted values after
- * each action is performed will be returned in a list. Each new value will be
- * waited for up to the value of the parameter timeOut. */
+/** Perform a series of actions on the Flow instance. The emitted values
+ * after each action is performed will be returned in a list. Each new
+ * value will be waited for up to the value of the parameter timeOut. */
 fun <T> Flow<T>.collectForTesting(timeOut: Long, vararg actions: () -> Unit): List<T> {
     var index = 0
     val results = mutableListOf<T>()
     TestCoroutineScope().launch {
         take(actions.size).collect {
-            results.add(it); index++
+            results.add(it)
+            index++
         }
     }
     while (index < actions.size) {
-        val start = System.currentTimeMillis()
-        val currentIndex = index
         actions[index].invoke()
-        while (index == currentIndex && (System.currentTimeMillis() - start) < timeOut )
+        val start = System.currentTimeMillis()
+        while (results.size < (index + 1) && (System.currentTimeMillis() - start) < timeOut)
             Thread.sleep(timeOut / 10L)
-        if (index == currentIndex) throw TimeoutException(
+        if (results.size < (index)) throw TimeoutException(
             "The Flow did not update before the timeout ($timeOut) was reached.")
     }
     return results
