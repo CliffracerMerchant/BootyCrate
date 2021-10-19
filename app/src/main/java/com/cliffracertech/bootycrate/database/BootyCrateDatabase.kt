@@ -109,6 +109,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_inventory`
                        BEFORE DELETE ON inventory WHEN (SELECT count(*) FROM inventory) == 1
                        BEGIN SELECT RAISE(IGNORE); END;""")
+
         private fun SupportSQLiteDatabase.addEnsureAtLeastOneSelectedInventoryTriggers() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory_1`
                        AFTER DELETE ON inventory
@@ -117,16 +118,20 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                              WHERE id = (SELECT id FROM inventory LIMIT 1);
                        END;""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory_2`
-                       AFTER UPDATE OF isSelected ON inventory
-                       WHEN (SELECT COUNT(*) FROM inventory WHERE isSelected) == 0
-                       BEGIN UPDATE inventory SET isSelected = 1 WHERE id == (new.id); END;""")
+                       BEFORE UPDATE OF isSelected ON inventory
+                       WHEN new.isSelected == 0 AND old.isSelected == 1
+                       AND (SELECT COUNT(*) FROM inventory WHERE isSelected) == 1
+                       AND (SELECT singleSelectInventories FROM dbSettings LIMIT1) == 1
+                       BEGIN SELECT RAISE(IGNORE); END;""")
         }
         private fun SupportSQLiteDatabase.addEnforceSingleSelectInventoryTriggers() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_1`
-                       BEFORE UPDATE OF isSelected ON inventory
+                       AFTER UPDATE OF isSelected ON inventory
                        WHEN new.isSelected == 1
                        AND (SELECT singleSelectInventories FROM dbSettings LIMIT 1) == 1
-                       BEGIN UPDATE inventory SET isSelected = 0; END;""")
+                       BEGIN UPDATE inventory SET isSelected = 0
+                       WHERE id != new.id; END;""")
+
             execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_2`
                        AFTER UPDATE OF singleSelectInventories ON dbSettings
                        WHEN new.singleSelectInventories == 1

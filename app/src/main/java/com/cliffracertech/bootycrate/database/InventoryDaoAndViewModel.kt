@@ -74,11 +74,10 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
     abstract fun getAllNow() : List<DatabaseInventory>
 
     @Query("""UPDATE inventory SET isSelected =
-                CASE WHEN (SELECT singleSelectInventories FROM dbSettings LIMIT 1) == 1
-                THEN 1 ELSE (1 - isSelected) END
+                  CASE WHEN (SELECT singleSelectInventories FROM dbSettings LIMIT 1)
+                  THEN 1 ELSE (1 - isSelected) END
               WHERE id = :id""")
     abstract suspend fun updateIsSelected(id: Long)
-
 
     @Query("DELETE FROM inventory WHERE id = :id")
     abstract suspend fun delete(id: Long)
