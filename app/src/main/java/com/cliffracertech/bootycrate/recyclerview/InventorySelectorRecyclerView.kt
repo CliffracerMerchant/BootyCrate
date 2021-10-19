@@ -97,7 +97,7 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
             view.setOnClickListener { viewModel.updateIsSelected(item.id) }
             view.ui.optionsButton.setOnClickListener {
                 val menu = PopupMenu(context, view.ui.optionsButton)
-                menu.inflate(R.menu.inventory_options_menu)
+                menu.inflate(R.menu.inventory_options)
                 menu.setOnMenuItemClickListener {
                     when(it.itemId) { R.id.renameInventoryButton -> rename(item)
                                       else /*R.id.deleteInventoryButton*/ -> { delete(item) } }

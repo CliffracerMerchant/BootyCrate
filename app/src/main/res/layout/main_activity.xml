@@ -82,6 +82,7 @@
                     android:layout_height="56dp"
                     android:contentDescription="@string/add_button_description"
                     android:elevation="10dp"
+                    android:outlineProvider="none"
                     style="@style/AddButton" />
             </LinearLayout>
 
