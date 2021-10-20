@@ -12,6 +12,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
@@ -123,6 +124,16 @@ open class MainActivity : MultiFragmentActivity() {
         ui.addInventoryButton.setOnClickListener {
             inventoryNameDialog(this, null) { inventoryViewModel.add(it) }.show()
         }
+        ui.inventorySelectorOptionsButton.setOnClickListener {
+            val menu = PopupMenu(this, ui.inventorySelectorOptionsButton)
+            menu.inflate(R.menu.inventory_selector_options)
+            menu.setOnMenuItemClickListener {
+                when(it.itemId) { R.id.multiSelectInventoriesSwitch -> { }
+                                  else /*R.id.selectAllInventories*/ -> { } }
+                true
+            }
+            menu.show()
+        }
     }
 
     private fun initAnimatorConfigs() {
@@ -135,7 +146,7 @@ open class MainActivity : MultiFragmentActivity() {
         ui.actionBar.animatorConfig = transitionAnimConfig
         ui.bottomAppBar.navIndicator.width = 2.5f * ui.bottomNavigationView.itemIconSize
         ui.bottomAppBar.navIndicator.animatorConfig = transitionAnimConfig
-            // The nav indicator anim duration is increased to improve its visbility
+            // The nav indicator anim duration is increased to improve its visibility
             .copy(duration = (transitionAnimConfig.duration * 1.2f).toLong())
         ui.checkoutButton.animatorConfig = transitionAnimConfig
         ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig).apply {
