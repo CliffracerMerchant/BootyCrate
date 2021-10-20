@@ -205,6 +205,12 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 db.execSQL("UPDATE bootycrate_item " +
                            "SET inventoryAmount = -1, inInventoryTrash = 0 " +
                            "WHERE inInventoryTrash")
+
+                // Because the selected_inventories index is a partial index it must be added
+                // via a direct SQL statement. Unfortunately this makes the 1 to 2 migration
+                // fail because it does not see the index in Room's generated schema. Adding
+                // the index at runtime is a workaround.
+                db.addSelectedInventoriesIndex()
             }
 
             override fun onCreate(db: SupportSQLiteDatabase) {
@@ -217,7 +223,6 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 db.addEnforceSingleSelectInventoryTriggers()
                 db.addAutoDeleteTrigger()
                 db.addAutoAddToShoppingListTriggers()
-                db.addSelectedInventoriesIndex()
             }
         }
     }
@@ -270,7 +275,6 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             db.addEnsureAtLeastOneInventoryTrigger()
             db.addEnsureAtLeastOneSelectedInventoryTriggers()
             db.addEnforceSingleSelectInventoryTriggers()
-            db.addSelectedInventoriesIndex()
         }
     }
 }
