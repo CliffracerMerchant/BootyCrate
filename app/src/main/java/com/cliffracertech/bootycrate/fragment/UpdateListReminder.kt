@@ -80,17 +80,16 @@ object UpdateListReminder {
                                !settings.repeat -> listOf(now.dayOfWeek)
                                else -> settings.repeatDays.map { it.toJavaDayOfWeek() } }
         for (day in DayOfWeek.values()) {
-            val pendingIntent = PendingIntent.getBroadcast(context, day.ordinal, intent, 0)
+            val pendingIntent = PendingIntent.getBroadcast(context, day.ordinal, intent, intentFlags)
             alarmManager.cancel(pendingIntent)
             if (!alarmDays.contains(day)) continue
 
             val targetDate = LocalDate.now().with(nextOrSame(day))
-            val targetDateTime = ZonedDateTime.of(targetDate, settings.time, now.zone).let {
-                if (it.isAfter(now)) it
-                else it.with(next(day))
-            }
+            val targetDateTime = ZonedDateTime.of(targetDate, settings.time, now.zone)
+                .let { if (it.isAfter(now)) it
+                       else it.with(next(day)) }
             val targetInstant = targetDateTime.toInstant().toEpochMilli()
-            alarmManager.setExact(AlarmManager.RTC, targetInstant, pendingIntent)
+            alarmManager.set(AlarmManager.RTC, targetInstant, pendingIntent)
         }
     }
 
@@ -245,11 +244,12 @@ object UpdateListReminder {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             val channelId = context.getString(R.string.update_list_notification_channel_id)
+            val alarmIntent = PendingIntent.getActivity(context, 0, notificationIntent, intentFlags)
             val notification = NotificationCompat.Builder(context, "reminder")
                 .setSmallIcon(R.drawable.shopping_cart_icon)
                 .setContentTitle(context.getString(R.string.update_list_reminder_title))
                 .setContentText(context.getString(R.string.update_list_reminder_message))
-                .setContentIntent(PendingIntent.getActivity(context, 0, notificationIntent, 0))
+                .setContentIntent(alarmIntent)
                 .setChannelId(channelId).build()
             notification.flags = notification.flags or Notification.FLAG_AUTO_CANCEL
 
@@ -273,13 +273,17 @@ object UpdateListReminder {
                 val targetDateTime = ZonedDateTime.of(targetDate, settings.time, now.zone)
                 val targetInstant = targetDateTime.toInstant().toEpochMilli()
                 val alarmManager = alarmManager(context) ?: return
-                val pendingIntent = PendingIntent.getBroadcast(context, targetDate.dayOfWeek.ordinal, intent, 0)
-                alarmManager.setExact(AlarmManager.RTC, targetInstant, pendingIntent)
+                val pendingIntent = PendingIntent.getBroadcast(context, targetDate.dayOfWeek.ordinal,
+                                                               intent, intentFlags)
+                alarmManager.set(AlarmManager.RTC, targetInstant, pendingIntent)
             }
             else prefs.edit().putBoolean(Settings.enabledKey, false).apply()
         }
     }
 }
+
+private val intentFlags get() = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) 0
+                                else PendingIntent.FLAG_IMMUTABLE
 
 fun List<MaterialDayPicker.Weekday>.serialize() = StringBuilder().also {
     for (day in this) it.append(day.ordinal)
