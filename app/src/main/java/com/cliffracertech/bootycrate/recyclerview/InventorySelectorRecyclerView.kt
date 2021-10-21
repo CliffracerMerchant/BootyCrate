@@ -12,6 +12,7 @@ import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.appcompat.widget.PopupMenu
@@ -23,6 +24,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateInventory
+import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
 import com.cliffracertech.bootycrate.utils.*
@@ -136,6 +138,26 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         override fun getChangePayload(oldItem: BootyCrateInventory, newItem: BootyCrateInventory) =
             listChanges.remove(newItem.id)
     }
+
+    fun showOptionsMenu(dbSettingsViewModel: DatabaseSettingsViewModel, anchor: View) =
+        PopupMenu(context, anchor).apply {
+            inflate(R.menu.inventory_selector_options)
+            val checkbox = menu.findItem(R.id.multiSelectInventoriesSwitch)
+            checkbox.isChecked = dbSettingsViewModel.multiSelectInventories.value
+
+            val selectAll = menu.findItem(R.id.selectAllInventories)
+            selectAll.isEnabled = checkbox.isChecked
+
+            setOnMenuItemClickListener {
+                when(it.itemId) {
+                    R.id.multiSelectInventoriesSwitch -> {
+                        checkbox.isChecked = !checkbox.isChecked
+                        dbSettingsViewModel.toggleMultiSelectInventories()
+                    } R.id.selectAllInventories ->
+                        viewModel.selectAll()
+                }; true
+            }
+        }.show()
 }
 
 class InventoryView(context: Context) : LinearLayout(context) {

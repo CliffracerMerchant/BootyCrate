@@ -12,15 +12,18 @@ import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
-import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.PreferencesFragment
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.AnimatorConfig
+import com.cliffracertech.bootycrate.utils.doOnStart
+import com.cliffracertech.bootycrate.utils.inventoryNameDialog
+import com.cliffracertech.bootycrate.utils.layoutTransition
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -37,6 +40,8 @@ import com.cliffracertech.bootycrate.utils.*
 @Suppress("LeakingThis")
 open class MainActivity : MultiFragmentActivity() {
     private val inventoryViewModel: InventoryViewModel by viewModels()
+    private val dbSettingsViewModel: DatabaseSettingsViewModel by viewModels()
+
     lateinit var ui: MainActivityBinding
     private var pendingCradleAnim: Animator? = null
 
@@ -125,14 +130,7 @@ open class MainActivity : MultiFragmentActivity() {
             inventoryNameDialog(this, null) { inventoryViewModel.add(it) }.show()
         }
         ui.inventorySelectorOptionsButton.setOnClickListener {
-            val menu = PopupMenu(this, ui.inventorySelectorOptionsButton)
-            menu.inflate(R.menu.inventory_selector_options)
-            menu.setOnMenuItemClickListener {
-                when(it.itemId) { R.id.multiSelectInventoriesSwitch -> { }
-                                  else /*R.id.selectAllInventories*/ -> { } }
-                true
-            }
-            menu.show()
+            ui.inventorySelectorRecyclerView.showOptionsMenu(dbSettingsViewModel, it)
         }
     }
 
