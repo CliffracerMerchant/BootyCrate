@@ -73,11 +73,11 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
     @Query("SELECT * FROM inventory")
     abstract fun getAllNow() : List<DatabaseInventory>
 
-    @Query("""UPDATE inventory SET isSelected =
-                  CASE WHEN (SELECT singleSelectInventories FROM dbSettings LIMIT 1)
-                  THEN 1 ELSE (1 - isSelected) END
-              WHERE id = :id""")
+    @Query("UPDATE inventory SET isSelected = (1 - isSelected) WHERE id = :id")
     abstract suspend fun updateIsSelected(id: Long)
+
+    @Query("UPDATE inventory SET isSelected = 1")
+    abstract suspend fun selectAll()
 
     @Query("DELETE FROM inventory WHERE id = :id")
     abstract suspend fun delete(id: Long)
@@ -101,4 +101,6 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
      * parameter id. If the database is in single select inventory mode, this
      * will select the given inventory; it will otherwise toggle the selection. */
     fun updateIsSelected(id: Long) = viewModelScope.launch { dao.updateIsSelected(id) }
+
+    fun selectAll() = viewModelScope.launch { dao.selectAll() }
 }

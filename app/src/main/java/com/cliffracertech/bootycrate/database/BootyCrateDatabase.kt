@@ -121,29 +121,31 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                        BEFORE UPDATE OF isSelected ON inventory
                        WHEN new.isSelected == 0 AND old.isSelected == 1
                        AND (SELECT COUNT(*) FROM inventory WHERE isSelected) == 1
-                       AND (SELECT singleSelectInventories FROM dbSettings LIMIT1) == 1
                        BEGIN SELECT RAISE(IGNORE); END;""")
         }
         private fun SupportSQLiteDatabase.addEnforceSingleSelectInventoryTriggers() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_1`
                        AFTER UPDATE OF isSelected ON inventory
                        WHEN new.isSelected == 1
-                       AND (SELECT singleSelectInventories FROM dbSettings LIMIT 1) == 1
+                       AND (SELECT multiSelectInventories FROM dbSettings LIMIT 1) == 0
                        BEGIN UPDATE inventory SET isSelected = 0
                        WHERE id != new.id; END;""")
 
             execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_2`
-                       AFTER UPDATE OF singleSelectInventories ON dbSettings
-                       WHEN new.singleSelectInventories == 1
-                       BEGIN UPDATE inventory SET isSelected = 1
-                             WHERE inventory.id = (SELECT id FROM inventory
-                                                   WHERE isSelected LIMIT 1);
+                       AFTER UPDATE OF multiSelectInventories ON dbSettings
+                       WHEN new.multiSelectInventories == 0
+                       BEGIN UPDATE inventory SET isSelected = 0
+                             WHERE inventory.id != (SELECT id FROM inventory
+                                                    WHERE isSelected LIMIT 1);
                        END;""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_3`
                        AFTER INSERT ON inventory
                        WHEN (SELECT COUNT(*) FROM inventory WHERE isSelected) > 1
-                       AND (select singleSelectInventories FROM dbSettings LIMIT 1) == 1
-                       BEGIN UPDATE inventory SET isSelected = 1 WHERE id = new.id; END;""")
+                       AND (select multiSelectInventories FROM dbSettings LIMIT 1) == 0
+                       BEGIN UPDATE inventory SET isSelected = 0
+                             WHERE inventory.id != (SELECT id FROM inventory
+                                                    WHERE isSelected LIMIT 1);
+                       END;""")
         }
 
         /** The auto_delete_items trigger will remove an item from the database when

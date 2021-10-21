@@ -7,7 +7,6 @@ package com.cliffracertech.bootycrate.database
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.cliffracertech.bootycrate.dlog
 import com.cliffracertech.bootycrate.utils.collectForTesting
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
@@ -135,9 +134,9 @@ class DatabaseInventoryTests {
 
     @Test fun isSingleSelectByDefault() {
         val singleSelect = runBlocking {
-            val cursor = db.query("SELECT singleSelectInventories FROM dbSettings LIMIT 1", null)
+            val cursor = db.query("SELECT multiSelectInventories FROM dbSettings LIMIT 1", null)
             cursor.moveToFirst()
-            cursor.getInt(0) == 1
+            cursor.getInt(0) == 0
         }
         assertThat(singleSelect).isTrue()
     }
@@ -157,7 +156,7 @@ class DatabaseInventoryTests {
 
     @Test fun multiSelectInventories() {
         val secondItemId = runBlocking {
-            db.dbSettingsDao().updateSingleSelectInventories(false)
+            db.dbSettingsDao().updateMultiSelectInventories(false)
             dao.add("")
         }
         assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(2)
@@ -172,11 +171,11 @@ class DatabaseInventoryTests {
 
     @Test fun changingToSingleSelectWithMultiSelectionUnselectsAllButOne() {
         runBlocking {
-            db.dbSettingsDao().updateSingleSelectInventories(false)
+            db.dbSettingsDao().updateMultiSelectInventories(false)
             dao.add("")
             dao.add("")
             assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(3)
-            db.dbSettingsDao().updateSingleSelectInventories(true)
+            db.dbSettingsDao().updateMultiSelectInventories(true)
         }
         assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(1)
     }
@@ -184,7 +183,7 @@ class DatabaseInventoryTests {
     @Test fun cannotDeselectLastInventoryWhileMultiSelecting() {
         val firstItemId = dao.getAllNow()[0].id
         runBlocking {
-            db.dbSettingsDao().updateSingleSelectInventories(false)
+            db.dbSettingsDao().updateMultiSelectInventories(false)
             val id = dao.add("")
             dao.updateIsSelected(id)
         }
