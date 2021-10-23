@@ -142,5 +142,6 @@
     <string name="delete_inventory_confirmation_message">Deleting an inventory will delete all items in it and on its associated shopping list, and cannot be undone. Are you sure?</string>
     <string name="multi_select_inventories_description">Multi-select inventories</string>
     <string name="select_all_inventories_description">Select all inventories</string>
+    <string name="multiple_selected_inventories_description">Multiple lists</string>
 
 </resources>

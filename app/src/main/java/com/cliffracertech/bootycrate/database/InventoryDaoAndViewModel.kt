@@ -9,7 +9,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.room.*
+import com.cliffracertech.bootycrate.R
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @Entity(tableName = "inventory")
@@ -73,6 +77,10 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
     @Query("SELECT * FROM inventory")
     abstract fun getAllNow() : List<DatabaseInventory>
 
+    @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount, isSelected " +
+           "FROM inventory WHERE isSelected")
+    abstract fun getSelectedInventories(): Flow<List<BootyCrateInventory>>
+
     @Query("UPDATE inventory SET isSelected = (1 - isSelected) WHERE id = :id")
     abstract suspend fun updateIsSelected(id: Long)
 
@@ -88,8 +96,14 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
 
 class InventoryViewModel(app: Application): AndroidViewModel(app) {
     private val dao = BootyCrateDatabase.get(app).inventoryDao()
+    private val nameForMultiSelection = app.getString(R.string.multiple_selected_inventories_description)
 
     val inventories = dao.getAll().asLiveData()
+
+    val selectedInventoryName = dao.getSelectedInventories().map {
+        if (it.size == 1) it.first().name
+        else nameForMultiSelection
+    }.stateIn(viewModelScope, SharingStarted.Lazily, nameForMultiSelection)
 
     fun add(name: String) = viewModelScope.launch { dao.add(name) }
 

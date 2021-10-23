@@ -12,6 +12,7 @@
 
     <style name="ActionBarTitle">
         <item name="android:gravity">center_vertical</item>
+        <item name="titleFont">@font/comfortaa</item>
         <item name="android:textSize">19sp</item>
     </style>
 

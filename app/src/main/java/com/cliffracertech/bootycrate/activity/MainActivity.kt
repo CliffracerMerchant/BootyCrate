@@ -14,6 +14,7 @@ import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
@@ -24,6 +25,8 @@ import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.doOnStart
 import com.cliffracertech.bootycrate.utils.inventoryNameDialog
 import com.cliffracertech.bootycrate.utils.layoutTransition
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -53,6 +56,10 @@ open class MainActivity : MultiFragmentActivity() {
         navigationView = ui.bottomNavigationView
         super.onCreate(savedInstanceState)
         ui.inventorySelectorRecyclerView.initViewModel(inventoryViewModel, this)
+        lifecycleScope.launch {
+            inventoryViewModel.selectedInventoryName
+                .collectLatest { ui.actionBar.ui.titleSwitcher.title = it }
+        }
         setupOnClickListeners()
         initAnimatorConfigs()
         initGradientStyle()
