@@ -142,15 +142,23 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
             insets = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
             val statusBarHeight = insets.top
 
-            val displaySize = Point()
-            val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) display
-                          else (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
-            display.getRealSize(displaySize)
+            val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            val realDisplayHeight =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
+                    windowManager.currentWindowMetrics.bounds.height()
+                else Point().also { windowManager.defaultDisplay.getRealSize(it) }.y
+            val gestureTop = realDisplayHeight - systemBottomGestureHeight
 
-            val collapsedBottom = context.resources.displayMetrics.heightPixels + statusBarHeight
-            val gestureTop = displaySize.y - systemBottomGestureHeight
+            // displayMetrics.heightPixels seems to include the status bar height on
+            // some systems, but not others. Comparing the real display size minus
+            // the bottom bar height to the value returned by displayMetrics.height-
+            // Pixels allows us to see if this value includes the status bar or not.
+            val height = context.resources.displayMetrics.heightPixels
+            val heightIncludesStatusBar = realDisplayHeight - systemBottomGestureHeight == height
+            val statusBarAdjust = if (heightIncludesStatusBar) 0 else statusBarHeight
+            val collapsedBottom = height + statusBarAdjust
+
             val overlap = (collapsedBottom - gestureTop).coerceAtLeast(0)
-
             behavior.peekHeight = (basePeekHeight + overlap).coerceAtMost(maxPeekHeight)
             windowInsets
         }
