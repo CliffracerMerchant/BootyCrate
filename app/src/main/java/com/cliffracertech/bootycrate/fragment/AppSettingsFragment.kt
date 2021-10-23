@@ -61,13 +61,20 @@ class AppSettingsFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
         return true
     }
 
+    private var oldTitle: CharSequence = ""
     override fun showsBottomAppBar() = false
     override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-        if (isActive) activityUi.actionBar.transition(
-            backButtonVisible = true,
-            searchButtonVisible = false,
-            changeSortButtonVisible = false,
-            menuButtonVisible = false)
+        if (!isActive)
+            activityUi.actionBar.ui.titleSwitcher.title = oldTitle
+        else {
+            oldTitle = activityUi.actionBar.ui.titleSwitcher.title
+            activityUi.actionBar.ui.titleSwitcher.title = getString(R.string.settings_description)
+            activityUi.actionBar.transition(
+                backButtonVisible = true,
+                searchButtonVisible = false,
+                changeSortButtonVisible = false,
+                menuButtonVisible = false)
+        }
     }
 
     private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->

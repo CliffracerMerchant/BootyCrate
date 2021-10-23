@@ -8,7 +8,7 @@
     <string name="app_version">v1.0.0</string>
     <string name="inventory_navigation_item_name">Inventory</string>
     <string name="shopping_list_navigation_item_name">Shopping List</string>
-    <string name="settings_description">Settings</string>
+    <string name="settings_description">BootyCrate settings</string>
     <string name="search_description">Search</string>
     <string name="back_description">Back</string>
     <string name="search_query_description">Search query</string>
