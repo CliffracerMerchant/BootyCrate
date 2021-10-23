@@ -19,7 +19,7 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.fragment.PreferencesFragment
+import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.doOnStart
 import com.cliffracertech.bootycrate.utils.inventoryNameDialog
@@ -46,7 +46,7 @@ open class MainActivity : MultiFragmentActivity() {
     private var pendingCradleAnim: Animator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setThemeFromPreferences()
+        setThemeFromAppSettings()
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
         fragmentContainerId = ui.fragmentContainer.id
@@ -96,7 +96,7 @@ open class MainActivity : MultiFragmentActivity() {
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
-    private fun setThemeFromPreferences() {
+    private fun setThemeFromAppSettings() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val prefKey = getString(R.string.pref_light_dark_mode_key)
         val themeDefault = getString(R.string.pref_theme_sys_default_title)
@@ -124,7 +124,7 @@ open class MainActivity : MultiFragmentActivity() {
         }
         ui.actionBar.setOnSortOptionClickedListener(::fwdMenuItemClick)
         ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
-        ui.settingsButton.setOnClickListener { addSecondaryFragment(PreferencesFragment()) }
+        ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
         ui.addInventoryButton.setOnClickListener {
             inventoryNameDialog(this, null) { inventoryViewModel.add(it) }.show()

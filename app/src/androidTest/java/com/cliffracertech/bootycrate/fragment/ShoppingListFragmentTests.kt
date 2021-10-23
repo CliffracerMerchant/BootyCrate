@@ -136,9 +136,9 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.shoppingListButton)).perform(click())
     }
 
-    private fun switchToPreferencesAndBack() {
-        onView(withId(R.id.menuButton)).perform(click())
-        onPopupView(withText(R.string.settings_description)).perform(click())
+    private fun switchToSettingsAndBack() {
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+        onView(withId(R.id.settingsButton)).perform(click())
         onView(withId(R.id.backButton)).perform(click())
     }
 
@@ -154,19 +154,19 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.shoppingListButton)).perform(click())
     }
 
-    private fun changeOrientationWhileInPreferences() {
-        onView(withId(R.id.menuButton)).perform(click())
-        onPopupView(withText(R.string.settings_description)).perform(click())
+    private fun changeOrientationWhileInSettings() {
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+        onView(withId(R.id.settingsButton)).perform(click())
         uiDevice.setOrientationLeft()
         uiDevice.setOrientationNatural()
         onView(withId(R.id.backButton)).perform(click())
     }
 
     @Test fun expandedItemSurvivesSwitchingToInventory() = expandedItemSurvives(::switchToInventoryAndBack)
-    @Test fun expandedItemSurvivesSwitchingToPreferences() = expandedItemSurvives(::switchToPreferencesAndBack)
+    @Test fun expandedItemSurvivesSwitchingToSettings() = expandedItemSurvives(::switchToSettingsAndBack)
     @Test fun expandedItemSurvivesOrientationChange() = expandedItemSurvives(::changeOrientationAndBack)
     @Test fun expandedItemSurvivesOrientationChangeWhileInInventory() = expandedItemSurvives(::changeOrientationWhileInInventory)
-    @Test fun expandedItemSurvivesOrientationChangeWhileInPreferences() = expandedItemSurvives(::changeOrientationWhileInPreferences)
+    @Test fun expandedItemSurvivesOrientationChangeWhileInSettings() = expandedItemSurvives(::changeOrientationWhileInSettings)
 
     @Test fun selectIndividualItems() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
@@ -215,10 +215,10 @@ class ShoppingListFragmentTests {
             .check(onlySelectedIndicesAre(1, 3))
     }
     @Test fun selectionSurvivesSwitchingToInventory() = selectionSurvives(::switchToInventoryAndBack)
-    @Test fun selectionSurvivesSwitchingToPreferences() = selectionSurvives(::switchToPreferencesAndBack)
+    @Test fun selectionSurvivesSwitchingToSettings() = selectionSurvives(::switchToSettingsAndBack)
     @Test fun selectionSurvivesOrientationChange() = selectionSurvives(::changeOrientationAndBack)
     @Test fun selectionSurvivesOrientationChangeWhileInInventory() = selectionSurvives(::changeOrientationWhileInInventory)
-    @Test fun selectionSurvivesOrientationChangeWhileInPreferences() = selectionSurvives(::changeOrientationWhileInPreferences)
+    @Test fun selectionSurvivesOrientationChangeWhileInSettings() = selectionSurvives(::changeOrientationWhileInSettings)
 
     @Test fun search() {
         onView(withId(R.id.searchButton)).perform(click())
@@ -280,10 +280,10 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun searchQuerySurvivesSwitchingToInventory() = searchQuerySurvives(::switchToInventoryAndBack)
-    @Test fun searchQuerySurvivesSwitchingToPreferences() = searchQuerySurvives(::switchToPreferencesAndBack)
+    @Test fun searchQuerySurvivesSwitchingToSettings() = searchQuerySurvives(::switchToSettingsAndBack)
     @Test fun searchQuerySurvivesOrientationChange() = searchQuerySurvives(::changeOrientationAndBack)
     @Test fun searchQuerySurvivesOrientationChangeWhileInInventory() = searchQuerySurvives(::changeOrientationWhileInInventory)
-    @Test fun searchQuerySurvivesOrientationChangeWhileInPreferences() = searchQuerySurvives(::changeOrientationWhileInPreferences)
+    @Test fun searchQuerySurvivesOrientationChangeWhileInSettings() = searchQuerySurvives(::changeOrientationWhileInSettings)
     @Test fun searchQuerySurvivesSelectionAndDeselection() = searchQuerySurvives(::deselectAllWithActionBarBackButton)
 
     private fun emptySearchResultsMessage() = allOf(withId(R.id.emptyRecyclerViewMessage),

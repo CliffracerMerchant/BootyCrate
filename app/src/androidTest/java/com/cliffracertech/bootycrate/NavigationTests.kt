@@ -49,44 +49,44 @@ class NavigationTests {
         onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isCompletelyDisplayed())))
     }
 
-    @Test fun navigatingToPreferencesFragment() {
+    @Test fun navigatingToSettingsFragment() {
         onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
         onView(withId(R.id.settingsButton)).perform(click())
         onView(withText(R.string.pref_light_dark_mode_title)).check(matches(isDisplayed()))
     }
 
-    @Test fun navigatingUpFromPreferencesUsingNavigationBackButton() {
-        navigatingToPreferencesFragment()
+    @Test fun navigatingUpFromSettingsUsingNavigationBackButton() {
+        navigatingToSettingsFragment()
         pressBack()
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
         onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
     }
 
-    @Test fun navigatingUpFromPreferencesUsingActionBarBackButton() {
-        navigatingToPreferencesFragment()
+    @Test fun navigatingUpFromSettingsUsingActionBarBackButton() {
+        navigatingToSettingsFragment()
         onView(withId(R.id.backButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
         onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
     }
 
-    @Test fun navigatingToNestedPreferenceScreen() {
-        navigatingToPreferencesFragment()
+    @Test fun navigatingToNestedSettingsScreen() {
+        navigatingToSettingsFragment()
         onView(withText(R.string.pref_update_list_reminder_title)).perform(click())
         onView(withText(R.string.pref_update_list_reminder_title)).check(doesNotExist())
         onView(withText(R.string.update_list_reminder_description)).check(matches(isDisplayed()))
     }
 
-    @Test fun navigatingUpFromNestedPreferenceScreenUsingNavigationBackButton() {
-        navigatingToNestedPreferenceScreen()
+    @Test fun navigatingUpFromNestedSettingsScreenUsingNavigationBackButton() {
+        navigatingToNestedSettingsScreen()
         pressBack()
         onView(withText(R.string.pref_light_dark_mode_title)).check(matches(isDisplayed()))
         onView(withText(R.string.update_list_reminder_description)).check(doesNotExist())
     }
 
-    @Test fun navigatingUpFromNestedPreferencesScreenUsingActionBarBackButton() {
-        navigatingToNestedPreferenceScreen()
+    @Test fun navigatingUpFromNestedSettingsScreenUsingActionBarBackButton() {
+        navigatingToNestedSettingsScreen()
         onView(withId(R.id.backButton)).perform(click())
         onView(withText(R.string.pref_light_dark_mode_title)).check(matches(isDisplayed()))
         onView(withText(R.string.update_list_reminder_description)).check(doesNotExist())
@@ -125,16 +125,16 @@ class NavigationTests {
         navigationDrawerCollapsedState()
     }
 
-    @Test fun navigationDrawerHidesInPreferences() {
+    @Test fun navigationDrawerHidesInSettings() {
         navigationDrawerCollapsedState()
-        navigatingToPreferencesFragment()
+        navigatingToSettingsFragment()
         Thread.sleep(500L)
         onView(withId(R.id.bottomNavigationDrawer)).check(
             matches(hasSheetState(BottomSheetBehavior.STATE_HIDDEN)))
     }
 
-    @Test fun navigationDrawerUnhidesAfterLeavingPreferences() {
-        navigationDrawerHidesInPreferences()
+    @Test fun navigationDrawerUnhidesAfterLeavingSettings() {
+        navigationDrawerHidesInSettings()
         onView(withId(R.id.backButton)).perform(click())
         navigationDrawerCollapsedState()
     }

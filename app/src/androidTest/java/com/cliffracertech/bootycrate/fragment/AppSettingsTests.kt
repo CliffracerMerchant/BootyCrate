@@ -29,11 +29,11 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class PreferenceTests {
+class AppSettingsTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
 
-    @Before fun navigateToPreferences() {
+    @Before fun navigateToSettings() {
         onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
         onView(withId(R.id.settingsButton)).perform(click())
     }

@@ -13,7 +13,6 @@ import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
-import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.activity.*
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
