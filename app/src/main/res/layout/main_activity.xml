@@ -88,7 +88,7 @@
 
         </com.cliffracertech.bootycrate.view.BottomAppBar>
 
-        <TextView
+        <com.google.android.material.textview.MaterialTextView
             android:id="@+id/appTitle"
             android:layout_width="wrap_content"
             android:layout_height="?android:attr/actionBarSize"

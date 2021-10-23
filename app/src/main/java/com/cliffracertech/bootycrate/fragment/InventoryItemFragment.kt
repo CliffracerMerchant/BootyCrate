@@ -74,7 +74,8 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
         activityUi.checkoutButton.checkoutCallback = null
     }
 
-    /** An override of SelectionActionModeCallback that alters the visibility of menu items specific to inventory items. */
+    /** An override of SelectionActionModeCallback that alters the
+     * visibility of menu items specific to inventory items. */
     inner class InventoryActionModeCallback : SelectionActionModeCallback() {
         override fun onStart(actionMode: RecyclerViewActionBar.ActionMode, actionBar: RecyclerViewActionBar) {
             super.onStart(actionMode, actionBar)

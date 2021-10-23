@@ -12,10 +12,7 @@
 
     <style name="ActionBarTitle">
         <item name="android:gravity">center_vertical</item>
-        <item name="android:textAppearance">@style/TextAppearance</item>
         <item name="android:textSize">19sp</item>
-        <item name="titleFont">@font/comfortaa</item>
-        <item name="android:text">@string/app_name</item>
     </style>
 
     <style name="BottomAppBar">
@@ -68,11 +65,10 @@
         <item name="android:padding">12dp</item>
     </style>
 
-    <style name="AppTitle">
+    <style name="AppTitle" parent="@style/TitleTextAppearance">
         <item name="android:gravity">center_vertical</item>
-        <item name="android:textAppearance">@style/TextAppearance</item>
         <item name="android:textSize">20sp</item>
-        <item name="android:fontFamily">@font/comfortaa</item>
+        <item name="fontFamily">@font/comfortaa</item>
         <item name="android:text">@string/app_name</item>
         <item name="android:alpha">0</item>
         <item name="android:visibility">gone</item>

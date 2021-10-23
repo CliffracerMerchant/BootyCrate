@@ -32,7 +32,7 @@ import com.cliffracertech.bootycrate.utils.dpToPixels
  * The fragment title, action mode title, and search query view will have
  * their ids set to the values of R.id.actionBarTitle_fragmentTitle,
  * R.id.actionBarTitle_actionModeTitle, and R.id.actionBarTitle_searchQuery
- * respectively. They can also be accessed programmatically through the
+ * respectively. The TextViews themselves can also be accessed through the
  * properties fragmentTitleView, actionModeTitleView, and searchQueryView.
  */
 class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(context, attrs) {
