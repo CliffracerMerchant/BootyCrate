@@ -192,10 +192,10 @@ open class MainActivity : MultiFragmentActivity() {
         fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) { }
 
         fun addSecondaryFragment(fragment: Fragment) {
-            val mainActivityFragment = this as? Fragment ?:
-                throw IllegalStateException("Implementors of MainActivityFragment must inherit from androidx.fragment.app.Fragment")
-            val mainActivity = mainActivityFragment.activity as? MainActivity ?:
-                throw IllegalStateException("Implementors of MainActivityFragment must be hosted inside a MainActivity instance.")
+            val mainActivityFragment = this as? Fragment ?: throw IllegalStateException(
+                "Implementors of MainActivityFragment must inherit from androidx.fragment.app.Fragment")
+            val mainActivity = mainActivityFragment.activity as? MainActivity ?: throw IllegalStateException(
+                "Implementors of MainActivityFragment must be hosted inside a MainActivity instance.")
             mainActivity.addSecondaryFragment(fragment)
         }
     }
