@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Entity(tableName = "dbSettings")
 class DatabaseSettings(
@@ -26,6 +27,9 @@ class DatabaseSettings(
     @Query("SELECT multiSelectInventories FROM dbSettings LIMIT 1")
     abstract fun getMultiSelectInventories(): Flow<Boolean>
 
+    @Query("SELECT multiSelectInventories FROM dbSettings LIMIT 1")
+    abstract suspend fun getMultiSelectInventoriesNow(): Boolean
+
     @Query("UPDATE dbSettings SET multiSelectInventories = :multiSelect")
     abstract suspend fun updateMultiSelectInventories(multiSelect: Boolean)
 }
@@ -34,7 +38,8 @@ class DatabaseSettingsViewModel(app: Application) : AndroidViewModel(app) {
     private val dao = BootyCrateDatabase.get(app).dbSettingsDao()
 
     val multiSelectInventories = dao.getMultiSelectInventories()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        .stateIn(viewModelScope, SharingStarted.Eagerly,
+                 runBlocking { dao.getMultiSelectInventoriesNow() })
 
     fun updateMultiSelectInventories(multiSelect: Boolean): Job =
         viewModelScope.launch { dao.updateMultiSelectInventories(multiSelect) }

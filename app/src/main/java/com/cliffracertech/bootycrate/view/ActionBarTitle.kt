@@ -136,6 +136,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
 
             actionModeTitleView.animate().alpha(0f).withLayer().withEndAction {
                 actionModeTitleView.isVisible = false
+                actionModeTitleView.alpha = 1f
                 actionModeTitleView.text = oldActionModeTitle
                 actionModeTitleView.typeface = oldActionModeFont
             }.start()
