@@ -12,7 +12,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
-import androidx.core.view.isVisible
+import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
@@ -76,18 +76,28 @@ open class MainActivity : MultiFragmentActivity() {
 
     private var currentFragment: Fragment? = null
     override fun onNewFragmentSelected(newFragment: Fragment) {
-        currentFragment?.let {
-            if (it is MainActivityFragment)
-                it.onActiveStateChanged(isActive = false, ui)
+        val currentFragment = currentFragment
+        if (currentFragment != null)
+            (currentFragment as? MainActivityFragment)?.onActiveStateChanged(isActive = false, ui)
+        else if (newFragment is MainActivityFragment) {
+            // currentFragment being null implies an activity restart. In
+            // this case we need to set cradleLayout to visible or invisible
+            // to ensure that the bottom app bar measures its top edge path
+            // length properly, and initialize the nav indicator alpha so
+            // that it isn't visible when the bottomAppBar is hidden.
+            val showsBottomAppBar = newFragment.showsBottomAppBar()
+            ui.cradleLayout.isInvisible = !showsBottomAppBar
+            ui.bottomAppBar.navIndicator.alpha = if (showsBottomAppBar) 1f else 0f
         }
+
         val needToAnimate = currentFragment != null
-        currentFragment = newFragment
+        this.currentFragment = newFragment
         if (newFragment !is MainActivityFragment) return
 
         if (newFragment.showsBottomAppBar()) ui.bottomNavigationDrawer.show()
         else                                 ui.bottomNavigationDrawer.hide()
 
-        val needToAnimateCheckoutButton = needToAnimate && ui.bottomAppBar.isVisible
+        val needToAnimateCheckoutButton = needToAnimate && !ui.bottomNavigationDrawer.isHidden
         val showsCheckoutButton = newFragment.showsCheckoutButton()
         if (showsCheckoutButton != null)
             // The cradle animation is stored here and started in the cradle

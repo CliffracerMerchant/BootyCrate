@@ -17,10 +17,7 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.GradientBuilder
-import com.cliffracertech.bootycrate.utils.applyConfig
-import com.cliffracertech.bootycrate.utils.resolveIntAttribute
+import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.view.ActionBarTitle
 import com.cliffracertech.bootycrate.view.GradientVectorDrawable
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -48,11 +45,10 @@ fun MainActivityBinding.showCheckoutButton(
     animate: Boolean = true
 ): Animator? {
     if (!animate || checkoutButton.isVisible == showing) {
-        checkoutButton.isVisible = showing
+        cradleLayout.withoutLayoutTransition { checkoutButton.isVisible = showing }
         bottomAppBar.cradle.width = cradleWidth(showing)
         return null
     }
-
     checkoutButton.isVisible = showing
     val cradleNewWidth = cradleWidth(showing)
 

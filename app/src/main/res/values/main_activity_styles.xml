@@ -21,8 +21,8 @@
         <item name="topOuterCornerStartRadius">@dimen/dialog_rounded_corner_radius</item>
         <item name="topOuterCornerEndRadius">25dp</item>
         <item name="cradleTopCornerRadius">25dp</item>
-        <item name="cradleBottomCornerRadius">34dp</item>
-        <item name="cradleDepth">52dp</item>
+        <item name="cradleBottomCornerRadius">33.5dp</item>
+        <item name="cradleDepth">51.5dp</item>
         <item name="cradleContentsMargin">5dp</item>
         <item name="navIndicatorHeight">8dp</item>
         <item name="cradleLayoutResId">@id/cradleLayout</item>

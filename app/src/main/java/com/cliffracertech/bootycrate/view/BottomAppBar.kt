@@ -364,7 +364,6 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         /** Move the indicator to be above the item with id equal to @param
          * menuItemId, animating the change if @param animate == true. */
         fun moveToItem(menuItemId: Int, animate: Boolean = true) {
-            if (menuItemId == selectedMenuItemId) return
             navView?.findViewById<View>(menuItemId)?.let {
                 it.getGlobalVisibleRect(rect)
                 val newXPos = rect.centerX() - width / 2f

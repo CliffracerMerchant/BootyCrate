@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.util.TypedValue
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
@@ -84,3 +85,12 @@ val <T: View>BottomSheetBehavior<T>.isCollapsed get() = state == BottomSheetBeha
 val <T: View>BottomSheetBehavior<T>.isDragging get() = state == BottomSheetBehavior.STATE_DRAGGING
 val <T: View>BottomSheetBehavior<T>.isSettling get() = state == BottomSheetBehavior.STATE_SETTLING
 val <T: View>BottomSheetBehavior<T>.isHidden get() = state == BottomSheetBehavior.STATE_HIDDEN
+
+/** Perform the given block without the caller's LayoutTransition instance.
+ * This is useful when changes need to be made instantaneously. */
+fun ViewGroup.withoutLayoutTransition(block: () -> Unit) {
+    val layoutTransitionBackup = layoutTransition
+    layoutTransition = null
+    block()
+    layoutTransition = layoutTransitionBackup
+}
