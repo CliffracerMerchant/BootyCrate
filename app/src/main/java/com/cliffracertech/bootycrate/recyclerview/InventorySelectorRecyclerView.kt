@@ -15,9 +15,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.activity.ComponentActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -30,6 +32,21 @@ import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
 import com.cliffracertech.bootycrate.utils.*
 import java.util.*
 
+/**
+ * A RecyclerView to display a list of all of the inventories exposed by an
+ * instance of InventoryViewModel.
+ *
+ * InventorySelectorRecyclerView will display a list of all of the user's
+ * inventories as exposed by an instance of InventoryViewModel. An instance
+ * of InventoryViewModel must be initialized with the function initViewModel,
+ * during which an appropriate LifecycleOwner should be provided as well.
+ *
+ * Tapping an inventory will call InventoryViewModel's updateIsSelected on
+ * the item. Tapping an inventory's options button will open an options
+ * menu for that item, providing rename and delete options. Both of these
+ * options also communicate the user's intent to the InventoryViewModel's
+ * updateName and delete functions.
+ */
 class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
     RecyclerView(context, attrs)
 {
@@ -85,12 +102,6 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         override fun getItemId(position: Int) = currentList[position].id
     }
 
-    private fun rename(item: BootyCrateInventory) =
-        inventoryNameDialog(context, item.name) { viewModel.updateName(item.id, it) }.show()
-
-    private fun delete(item: BootyCrateInventory) =
-        deleteInventoryDialog(context) { viewModel.delete(item.id) }.show()
-
     private inner class ViewHolder(view: InventoryView) : RecyclerView.ViewHolder(view) {
         val view get() = itemView as InventoryView
         val item: BootyCrateInventory get() = adapter.currentList[adapterPosition]
@@ -101,8 +112,10 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
                 val menu = PopupMenu(context, view.ui.optionsButton)
                 menu.inflate(R.menu.inventory_options)
                 menu.setOnMenuItemClickListener {
-                    when(it.itemId) { R.id.renameInventoryButton -> rename(item)
-                                      else /*R.id.deleteInventoryButton*/ -> { delete(item) } }
+                    if (it.itemId == R.id.renameInventoryButton)
+                        inventoryNameDialog(context, item.name) { viewModel.updateName(item.id, it) }
+                    else /*R.id.deleteInventoryButton*/
+                        deleteInventoryDialog(context) { viewModel.delete(item.id) }
                     true
                 }
                 menu.show()
@@ -139,8 +152,14 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
             listChanges.remove(newItem.id)
     }
 
-    fun showOptionsMenu(dbSettingsViewModel: DatabaseSettingsViewModel, anchor: View) =
+    /** Show a popup options menu with options relating to the function of the
+     * InventorySelectorRecyclerView. Because InventorySelectorRecyclerView
+     * doesn't itself have a view that will open this menu, it is expected that
+     * an external entity will set showOptionsMenu as the onClickListener for
+     * a suitable view. This same view should also be passed as the anchor. */
+    fun showOptionsMenu(activity: ComponentActivity, anchor: View) =
         PopupMenu(context, anchor).apply {
+            val dbSettingsViewModel = ViewModelProvider(activity).get(DatabaseSettingsViewModel::class.java)
             inflate(R.menu.inventory_selector_options)
             val checkbox = menu.findItem(R.id.multiSelectInventoriesSwitch)
             checkbox.isChecked = dbSettingsViewModel.multiSelectInventories.value

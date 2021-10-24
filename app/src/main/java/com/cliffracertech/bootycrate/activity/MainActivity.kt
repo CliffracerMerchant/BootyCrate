@@ -43,7 +43,6 @@ import kotlinx.coroutines.launch
 @Suppress("LeakingThis")
 open class MainActivity : MultiFragmentActivity() {
     private val inventoryViewModel: InventoryViewModel by viewModels()
-    private val dbSettingsViewModel: DatabaseSettingsViewModel by viewModels()
 
     lateinit var ui: MainActivityBinding
     private var pendingCradleAnim: Animator? = null
@@ -144,10 +143,10 @@ open class MainActivity : MultiFragmentActivity() {
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
         ui.addInventoryButton.setOnClickListener {
-            inventoryNameDialog(this, null) { inventoryViewModel.add(it) }.show()
+            inventoryNameDialog(this, null) { inventoryViewModel.add(it) }
         }
         ui.inventorySelectorOptionsButton.setOnClickListener {
-            ui.inventorySelectorRecyclerView.showOptionsMenu(dbSettingsViewModel, it)
+            ui.inventorySelectorRecyclerView.showOptionsMenu(this, it)
         }
     }
 

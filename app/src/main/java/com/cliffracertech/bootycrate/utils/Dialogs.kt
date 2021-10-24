@@ -50,18 +50,18 @@ fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
         .setBackgroundInsetEnd(0)
 
 /** Show a dialog to rename an inventory, with the name initially set
- * to initialName, and with a hint equal to hint, and which invokes
+ * to initialName, with a hint equal to hint, and which invokes
  * onFinish if the user taps the ok button. */
 fun inventoryNameDialog(
     context: Context,
     initialName: String? = null,
     onFinish: ((String) -> Unit)
-): AlertDialog {
+) {
     val editText = EditText(context).apply {
         setText(initialName)
         setHint(R.string.inventory_name_hint)
     }
-    return themedAlertDialogBuilder(context)
+    themedAlertDialogBuilder(context)
         .setTitle(R.string.rename_inventory_popup_title)
         .setPositiveButton(android.R.string.ok) { _, _ ->
             onFinish(editText.text.toString())
@@ -78,7 +78,7 @@ fun inventoryNameDialog(
                 val okButton = getButton(AlertDialog.BUTTON_POSITIVE)
                 okButton.isEnabled = !text.isNullOrBlank()
             }
-        }
+        }.show()
 }
 
 /** Show a dialog to confirm the deletion of an inventory. */
@@ -87,7 +87,7 @@ fun deleteInventoryDialog(context: Context, onConfirm: () -> Unit) =
         .setMessage(R.string.delete_inventory_confirmation_message)
         .setPositiveButton(android.R.string.ok) { _, _ -> onConfirm() }
         .setNegativeButton(android.R.string.cancel, null)
-        .create()
+        .create().show()
 
 /** Open a dialog to ask the user to the type of database import they want (merge
  *  existing or overwrite, and recreate the given activity if the import requires it. */
