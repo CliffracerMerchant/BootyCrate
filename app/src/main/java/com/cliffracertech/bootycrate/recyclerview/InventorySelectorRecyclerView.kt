@@ -18,6 +18,7 @@ import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
@@ -29,7 +30,10 @@ import com.cliffracertech.bootycrate.database.BootyCrateInventory
 import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.deleteInventoryDialog
+import com.cliffracertech.bootycrate.utils.dpToPixels
+import com.cliffracertech.bootycrate.utils.intValueAnimator
+import com.cliffracertech.bootycrate.utils.inventoryNameDialog
 import java.util.*
 
 /**
@@ -37,22 +41,36 @@ import java.util.*
  * instance of InventoryViewModel.
  *
  * InventorySelectorRecyclerView will display a list of all of the user's
- * inventories as exposed by an instance of InventoryViewModel. An instance
+ * inventories exposed by an instance of InventoryViewModel. An instance
  * of InventoryViewModel must be initialized with the function initViewModel,
  * during which an appropriate LifecycleOwner should be provided as well.
  *
- * Tapping an inventory will call InventoryViewModel's updateIsSelected on
- * the item. Tapping an inventory's options button will open an options
- * menu for that item, providing rename and delete options. Both of these
- * options also communicate the user's intent to the InventoryViewModel's
- * updateName and delete functions.
+ *  In its normal mode, accessed by passing a false value for the parameter
+ * inSelectedInventoryPickerMode, all inventories will be shown. Inventories
+ * can be tapped to update their corresponding view model item's selected
+ * state, and each inventory will have an options button that allows the
+ * user to rename or delete items.
+ *
+ * InventorySelectorRecyclerView's alternate single inventory picker mode
+ * is accessed by passing a true value for the parameter inSelectedInventoryPickerMode
+ * during construction. In this mode, only inventories that are selected
+ * will be displayed. A tap on an inventory will pick it, and unpick the
+ * previously picked inventory, if any. The chosen inventory's id, if any,
+ * can be accessed through the property chosenInventoryId.
  */
-class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
-    RecyclerView(context, attrs)
-{
+class InventorySelectorRecyclerView(
+    context: Context, attrs: AttributeSet,
+    private val inSelectedInventoryPickerMode: Boolean
+) : RecyclerView(context, attrs) {
+
     private lateinit var viewModel: InventoryViewModel
     private val adapter = Adapter()
-    private val animator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
+    private var chosenPosition: Int? = null
+        private set
+
+    val chosenInventoryId get() = adapter.currentList.getOrNull(chosenPosition ?: -1)?.id
+
+    constructor(context: Context, attrs: AttributeSet) : this(context, attrs, false)
 
     init {
         setAdapter(adapter)
@@ -60,12 +78,13 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         layoutManager = LinearLayoutManager(context)
         val spacing = resources.getDimensionPixelSize(R.dimen.recycler_view_item_spacing)
         addItemDecoration(ItemSpacingDecoration(spacing))
-        itemAnimator = animator
     }
 
     fun initViewModel(viewModel: InventoryViewModel, lifecycleOwner: LifecycleOwner) {
         this.viewModel = viewModel
-        viewModel.inventories.observe(lifecycleOwner) { adapter.submitList(it) }
+        val liveData = if (inSelectedInventoryPickerMode) viewModel.selectedInventories
+                       else                               viewModel.inventories
+        liveData.observe(lifecycleOwner) { adapter.submitList(it) }
     }
 
     private inner class Adapter : ListAdapter<BootyCrateInventory, ViewHolder>(DiffUtilCallback()) {
@@ -106,21 +125,34 @@ class InventorySelectorRecyclerView(context: Context, attrs: AttributeSet) :
         val view get() = itemView as InventoryView
         val item: BootyCrateInventory get() = adapter.currentList[adapterPosition]
 
-        init {
-            view.setOnClickListener { viewModel.updateIsSelected(item.id) }
-            view.ui.optionsButton.setOnClickListener {
-                val menu = PopupMenu(context, view.ui.optionsButton)
-                menu.inflate(R.menu.inventory_options)
-                menu.setOnMenuItemClickListener {
-                    if (it.itemId == R.id.renameInventoryButton)
-                        inventoryNameDialog(context, item.name) { viewModel.updateName(item.id, it) }
-                    else /*R.id.deleteInventoryButton*/
-                        deleteInventoryDialog(context) { viewModel.delete(item.id) }
-                    true
+        init { view.apply {
+            if (inSelectedInventoryPickerMode) {
+                ui.optionsButton.isVisible = false
+                setSelectedState(adapterPosition == chosenPosition, animate = false)
+                setOnClickListener {
+                    chosenPosition?.let {
+                        (findViewHolderForAdapterPosition(it) as? ViewHolder)
+                            ?.view?.setSelectedState(false)
+                    }
+                    setSelectedState(true)
+                    chosenPosition = adapterPosition
                 }
-                menu.show()
+            } else {
+                setOnClickListener { viewModel.updateIsSelected(item.id) }
+                ui.optionsButton.setOnClickListener {
+                    val menu = PopupMenu(context, ui.optionsButton)
+                    menu.inflate(R.menu.inventory_options)
+                    menu.setOnMenuItemClickListener {
+                        if (it.itemId == R.id.renameInventoryButton)
+                            inventoryNameDialog(context, item.name) { viewModel.updateName(item.id, it) }
+                        else /*R.id.deleteInventoryButton*/
+                            deleteInventoryDialog(context) { viewModel.delete(item.id) }
+                        true
+                    }
+                    menu.show()
+                }
             }
-        }
+        }}
     }
 
     private enum class Field { Name, ShoppingListItemCount, InventoryItemCount, IsSelected }

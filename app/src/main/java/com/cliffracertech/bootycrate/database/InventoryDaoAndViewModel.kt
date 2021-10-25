@@ -100,6 +100,8 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
 
     val inventories = dao.getAll().asLiveData()
 
+    val selectedInventories = dao.getSelectedInventories().asLiveData()
+
     val selectedInventoryName = dao.getSelectedInventories().map {
         if (it.size == 1) it.first().name
         else nameForMultiSelection
