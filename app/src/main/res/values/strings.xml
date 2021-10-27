@@ -5,7 +5,7 @@
 
 <resources>
     <string name="app_name">BootyCrate</string>
-    <string name="app_version">v1.0.0</string>
+    <string name="app_version">v1.1.0</string>
     <string name="inventory_navigation_item_name">Inventory</string>
     <string name="shopping_list_navigation_item_name">Shopping List</string>
     <string name="settings_description">BootyCrate settings</string>
@@ -144,6 +144,6 @@
     <string name="select_all_inventories_description">Select all inventories</string>
     <string name="multiple_selected_inventories_description">Multiple inventories</string>
     <string name="select_an_inventory_message">Pick an inventory to add the item to:</string>
-    <string name="new_item_has_no_inventory_error_message">The item must belong to an inventory. Select one to add it to above.</string>
-
+    <string name="new_shopping_list_item_has_no_inventory_id_error_message">The item must belong to a shopping list. Select one to add it to.</string>
+    <string name="new_inventory_item_has_no_inventory_id_error_message">The item must belong to an inventory. Select one to add it to.</string>
 </resources>

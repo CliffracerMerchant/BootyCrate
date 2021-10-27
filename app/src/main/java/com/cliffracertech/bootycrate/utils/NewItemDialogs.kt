@@ -6,19 +6,16 @@ package com.cliffracertech.bootycrate.utils
 
 import android.app.Dialog
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.*
@@ -26,88 +23,6 @@ import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.recyclerview.SelectedInventoryPicker
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-
-/** Open a dialog to display an about app screen. */
-class AboutAppDialog : DialogFragment() {
-    override fun onCreateDialog(savedInstanceState: Bundle?) =
-        themedAlertDialogBuilder(requireContext())
-            .setView(R.layout.about_app_dialog)
-            .setPositiveButton(android.R.string.ok, null).create()
-}
-
-class PrivacyPolicyDialog : DialogFragment() {
-    override fun onCreateDialog(savedInstanceState: Bundle?) =
-        themedAlertDialogBuilder(requireContext())
-            .setView(R.layout.privacy_policy_dialog)
-            .setPositiveButton(android.R.string.ok, null).create()
-}
-
-/** Return a MaterialAlertDialogBuilder with the context theme's materialAlertDialogTheme style applied. */
-fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
-    context, context.theme.resolveIntAttribute(R.attr.materialAlertDialogTheme))
-        .setBackground(ContextCompat.getDrawable(context, R.drawable.alert_dialog))
-        .setBackgroundInsetStart(0)
-        .setBackgroundInsetEnd(0)
-
-/** Show a dialog to rename an inventory, with the name initially set
- * to initialName, with a hint equal to hint, and which invokes
- * onFinish if the user taps the ok button. */
-fun inventoryNameDialog(
-    context: Context,
-    initialName: String? = null,
-    onFinish: ((String) -> Unit)
-) {
-    val editText = EditText(context).apply {
-        setText(initialName)
-        setHint(R.string.inventory_name_hint)
-        setSingleLine()
-    }
-    themedAlertDialogBuilder(context)
-        .setTitle(R.string.rename_inventory_popup_title)
-        .setPositiveButton(android.R.string.ok) { _, _ ->
-            onFinish(editText.text.toString())
-        }.setNegativeButton(android.R.string.cancel, null)
-        .create().apply {
-            val spacing = context.dpToPixels(16f).toInt()
-            setView(editText, spacing, 0, spacing, 0)
-            setOnShowListener {
-                val okButton = getButton(AlertDialog.BUTTON_POSITIVE)
-                okButton.isEnabled = !initialName.isNullOrBlank()
-                SoftKeyboard.showWithDelay(editText)
-            }
-            editText.doOnTextChanged { text, _, _, _ ->
-                val okButton = getButton(AlertDialog.BUTTON_POSITIVE)
-                okButton.isEnabled = !text.isNullOrBlank()
-            }
-        }.show()
-}
-
-/** Show a dialog to confirm the deletion of an inventory. */
-fun deleteInventoryDialog(context: Context, onConfirm: () -> Unit) =
-    themedAlertDialogBuilder(context)
-        .setMessage(R.string.delete_inventory_confirmation_message)
-        .setPositiveButton(android.R.string.ok) { _, _ -> onConfirm() }
-        .setNegativeButton(android.R.string.cancel, null)
-        .create().show()
-
-/** Open a dialog to ask the user to the type of database import they want (merge
- *  existing or overwrite, and recreate the given activity if the import requires it. */
-fun importDatabaseFromUriDialog(uri: Uri, activity: FragmentActivity) {
-    themedAlertDialogBuilder(activity).
-        setMessage(R.string.import_database_question_message).
-        setNeutralButton(android.R.string.cancel) { _, _ -> }.
-        setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
-            BootyCrateDatabase.importBackup(activity, uri, overwriteExistingDb = false)
-        }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
-        themedAlertDialogBuilder(activity).
-            setMessage(R.string.import_database_overwrite_confirmation_message).
-            setNegativeButton(android.R.string.cancel) { _, _ -> }.
-            setPositiveButton(android.R.string.ok) { _, _ ->
-                BootyCrateDatabase.importBackup(activity, uri, overwriteExistingDb = true)
-            }.show()
-        }.show()
-}
 
 /**
  * An abstract DialogFragment to create a new BootyCrateItem.
@@ -154,6 +69,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
 
     abstract val itemWithNameAlreadyExistsInCollectionWarningMessage: String
     abstract val itemWithNameAlreadyExistsInOtherCollectionWarningMessage: String
+    abstract val itemHasNoInventoryIdErrorMessage: String
 
     init { if (useDefaultLayout) newItemView = ExpandableSelectableItemView(context) }
 
@@ -289,13 +205,13 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                 WarningMessage.ItemWithSameNameAlreadyExistsInOtherCollection ->
                     itemWithNameAlreadyExistsInOtherCollectionWarningMessage
                 WarningMessage.ItemHasNoInventoryId ->
-                    context.getString(R.string.new_item_has_no_inventory_error_message)
+                    itemHasNoInventoryIdErrorMessage
                 else -> context.getString(R.string.new_item_no_name_error)
             }
             val iconResId = if (warning == WarningMessage.ItemHasNoName ||
-                                warning == WarningMessage.ItemHasNoInventoryId)
-                                    R.drawable.ic_baseline_error_24
-                            else R.drawable.ic_round_warning_24
+                warning == WarningMessage.ItemHasNoInventoryId)
+                R.drawable.ic_baseline_error_24
+            else R.drawable.ic_round_warning_24
             val icon = ContextCompat.getDrawable(context, iconResId)
             ui.warningMessage.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
 
@@ -320,9 +236,10 @@ class NewShoppingListItemDialog(context: Context) :
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_shopping_list_item_duplicate_name_warning)
     override val itemWithNameAlreadyExistsInOtherCollectionWarningMessage =
-        context.getString(
-            R.string.new_shopping_list_item_will_not_be_linked_warning,
-            context.getString(R.string.add_to_shopping_list_description))
+        context.getString(R.string.new_shopping_list_item_will_not_be_linked_warning,
+                          context.getString(R.string.add_to_shopping_list_description))
+    override val itemHasNoInventoryIdErrorMessage =
+        context.getString(R.string.new_shopping_list_item_has_no_inventory_id_error_message)
 
     init { newItemView.ui.checkBox.setInColorEditMode(true, animate = false) }
 
@@ -347,9 +264,10 @@ class NewInventoryItemDialog(context: Context) :
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_inventory_item_duplicate_name_warning)
     override val itemWithNameAlreadyExistsInOtherCollectionWarningMessage =
-        context.getString(
-            R.string.new_inventory_item_will_not_be_linked_warning,
-            context.getString(R.string.add_to_inventory_description))
+        context.getString(R.string.new_inventory_item_will_not_be_linked_warning,
+                          context.getString(R.string.add_to_inventory_description))
+    override val itemHasNoInventoryIdErrorMessage =
+        context.getString(R.string.new_inventory_item_has_no_inventory_id_error_message)
 
     init {
         newItemView = newInventoryItemView.apply {
@@ -378,3 +296,4 @@ class NewInventoryItemDialog(context: Context) :
         autoAddToShoppingList = newInventoryItemView.detailsUi.autoAddToShoppingListCheckBox.isChecked,
         autoAddToShoppingListAmount = newInventoryItemView.detailsUi.autoAddToShoppingListAmountEdit.value)
 }
+
