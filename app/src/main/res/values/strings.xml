@@ -143,5 +143,7 @@
     <string name="multi_select_inventories_description">Multi-select inventories</string>
     <string name="select_all_inventories_description">Select all inventories</string>
     <string name="multiple_selected_inventories_description">Multiple inventories</string>
+    <string name="select_an_inventory_message">Pick an inventory to add the item to:</string>
+    <string name="new_item_has_no_inventory_error_message">The item must belong to an inventory. Select one to add it to above.</string>
 
 </resources>

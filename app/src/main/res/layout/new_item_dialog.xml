@@ -3,21 +3,18 @@
    ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
    ~ or in the file LICENSE in the project's root directory. -->
 
-<androidx.constraintlayout.widget.ConstraintLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:orientation="vertical"
     android:layout_margin="10dp" >
 
     <FrameLayout
         android:id="@+id/newItemViewContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="6dp"
         android:layout_marginHorizontal="6dp"
         tools:layout_height="110dp" />
@@ -27,12 +24,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/newItemViewContainer"
         tools:visibility="visible"
         tools:text="@string/new_item_no_name_error"
         tools:drawableStart="@drawable/ic_baseline_error_24"
         style="@style/AddNewItemDialogMessage" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

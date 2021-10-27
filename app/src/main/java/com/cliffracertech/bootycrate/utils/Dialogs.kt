@@ -25,6 +25,7 @@ import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
+import com.cliffracertech.bootycrate.recyclerview.SelectedInventoryPicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /** Open a dialog to display an about app screen. */
@@ -60,6 +61,7 @@ fun inventoryNameDialog(
     val editText = EditText(context).apply {
         setText(initialName)
         setHint(R.string.inventory_name_hint)
+        setSingleLine()
     }
     themedAlertDialogBuilder(context)
         .setTitle(R.string.rename_inventory_popup_title)
@@ -138,12 +140,17 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     context: Context,
     useDefaultLayout: Boolean = true
 ) : DialogFragment() {
-    abstract val viewModel: BootyCrateViewModel<T>
+    abstract val itemViewModel: BootyCrateViewModel<T>
+    private val inventoryViewModel: InventoryViewModel by activityViewModels()
+
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
     protected var ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
     protected lateinit var newItemView: ExpandableSelectableItemView<T>
+    protected var inventoryPicker: SelectedInventoryPicker? = null
+    protected var targetInventoryId: Long? = null
+        private set
 
     abstract val itemWithNameAlreadyExistsInCollectionWarningMessage: String
     abstract val itemWithNameAlreadyExistsInOtherCollectionWarningMessage: String
@@ -151,8 +158,8 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     init { if (useDefaultLayout) newItemView = ExpandableSelectableItemView(context) }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        viewModel.newItemName = ""
-        viewModel.newItemExtraInfo = ""
+        itemViewModel.newItemName = ""
+        itemViewModel.newItemExtraInfo = ""
         ui.newItemViewContainer.addView(newItemView)
         newItemView.apply {
             setExpanded(true, animate = false)
@@ -161,18 +168,16 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             setSelectedState(false, animate = false)
             ui.editButton.visibility = View.GONE
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
-                viewModel.newItemExtraInfo = text.toString()
+                itemViewModel.newItemExtraInfo = text.toString()
             }
             updateContentDescriptions(getString(R.string.new_item_description))
         }
         newItemView.ui.nameEdit.doOnTextChanged { text, _, _, _ ->
-            viewModel.newItemName = text.toString()
-            if (shownWarningMessage == WarningMessage.ItemHasNoName && text?.isNotBlank() == true) {
-                showWarningMessage(WarningMessage.None)
-                addAnotherButton.isEnabled = true
-                okButton.isEnabled = true
-            }
+            itemViewModel.newItemName = text.toString()
+            if (shownWarningMessage == WarningMessage.ItemHasNoName && text?.isNotBlank() == true)
+                clearWarningMessageAndEnableButtons()
         }
+
         return themedAlertDialogBuilder(requireContext())
             .setTitle(R.string.add_button_description)
             .setNeutralButton(android.R.string.cancel) { _, _ -> }
@@ -200,8 +205,8 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.newItemNameIsAlreadyUsed.observe(viewLifecycleOwner) { nameIsAlreadyUsed ->
-            showWarningMessage(when (nameIsAlreadyUsed) {
+        itemViewModel.newItemNameIsAlreadyUsed.observe(viewLifecycleOwner) {
+            showWarningMessage(when (it) {
                 BootyCrateViewModel.NameIsAlreadyUsed.TrueForCurrentList ->
                     WarningMessage.ItemWithSameNameAlreadyExistsInCollection
                 BootyCrateViewModel.NameIsAlreadyUsed.TrueForSiblingList ->
@@ -209,6 +214,25 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                 else ->//BootyCrateViewModel.NameIsAlreadyUsed.False
                     WarningMessage.None
             })
+        }
+
+        inventoryViewModel.selectedInventories.observe(viewLifecycleOwner) {
+            targetInventoryId = if (it.size != 1) null else it.first().id
+            if (targetInventoryId == null) {
+                if (inventoryPicker == null) {
+                    val context = this.context ?: return@observe
+                    val inflater = LayoutInflater.from(context)
+                    val container = inflater.inflate(R.layout.selected_inventory_picker, ui.root, false)
+                    val inventoryPicker = container.findViewById<SelectedInventoryPicker>(R.id.inventoryPicker)
+                    inventoryPicker?.initViewModel(inventoryViewModel, viewLifecycleOwner)
+                    inventoryPicker?.onChosenInventoryIdChangedListener = {
+                        targetInventoryId = it
+                        if (shownWarningMessage == WarningMessage.ItemHasNoInventoryId && it != null)
+                            clearWarningMessageAndEnableButtons()
+                    }
+                    ui.root.addView(container, 1)
+                } else inventoryPicker?.isVisible = true
+            } else inventoryPicker?.isVisible = false
         }
     }
 
@@ -222,16 +246,21 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
         SoftKeyboard.show(ui.nameEdit)
     }
 
-    private fun addItem() =
-        if (newItemView.ui.nameEdit.text?.isBlank() == true) {
+    private fun addItem() = when {
+        newItemView.ui.nameEdit.text?.isBlank() == true -> {
             showWarningMessage(WarningMessage.ItemHasNoName)
             addAnotherButton.isEnabled = false
             okButton.isEnabled = false
             false
-        } else {
-            viewModel.add(createItemFromView())
+        } targetInventoryId == null -> {
+            showWarningMessage(WarningMessage.ItemHasNoInventoryId)
+            addAnotherButton.isEnabled = false
+            okButton.isEnabled = false
+            false
+        } else -> {
+            itemViewModel.add(createItemFromView())
             true
-        }
+        }}
 
     abstract fun createItemFromView(): T
 
@@ -239,12 +268,13 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
         ItemWithSameNameAlreadyExistsInCollection,
         ItemWithSameNameAlreadyExistsInOtherCollection,
         ItemHasNoName,
+        ItemHasNoInventoryId,
         None
     }
 
     private var _shownWarningMessage = WarningMessage.None
     protected val shownWarningMessage get() = _shownWarningMessage
-    private  fun showWarningMessage(warning: WarningMessage) {
+    private fun showWarningMessage(warning: WarningMessage) {
         if (_shownWarningMessage == warning) return
         _shownWarningMessage = warning
 
@@ -253,22 +283,29 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
         else {
             val context = this.context ?: return
 
-            val iconResId = if (warning == WarningMessage.ItemHasNoName)
-                                R.drawable.ic_baseline_error_24
-                            else R.drawable.ic_round_warning_24
-            val icon = ContextCompat.getDrawable(context, iconResId)
-
-            val message = when (warning) {
+            ui.warningMessage.text = when (warning) {
                 WarningMessage.ItemWithSameNameAlreadyExistsInCollection ->
                     itemWithNameAlreadyExistsInCollectionWarningMessage
                 WarningMessage.ItemWithSameNameAlreadyExistsInOtherCollection ->
                     itemWithNameAlreadyExistsInOtherCollectionWarningMessage
+                WarningMessage.ItemHasNoInventoryId ->
+                    context.getString(R.string.new_item_has_no_inventory_error_message)
                 else -> context.getString(R.string.new_item_no_name_error)
             }
-            ui.warningMessage.text = message
+            val iconResId = if (warning == WarningMessage.ItemHasNoName ||
+                                warning == WarningMessage.ItemHasNoInventoryId)
+                                    R.drawable.ic_baseline_error_24
+                            else R.drawable.ic_round_warning_24
+            val icon = ContextCompat.getDrawable(context, iconResId)
             ui.warningMessage.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
+
             ui.warningMessage.visibility = View.VISIBLE
         }
+    }
+    private fun clearWarningMessageAndEnableButtons() {
+        showWarningMessage(WarningMessage.None)
+        addAnotherButton.isEnabled = true
+        okButton.isEnabled = true
     }
 }
 
@@ -278,7 +315,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
 class NewShoppingListItemDialog(context: Context) :
     NewBootyCrateItemDialog<ShoppingListItem>(context)
 {
-    override val viewModel: ShoppingListItemViewModel by activityViewModels()
+    override val itemViewModel: ShoppingListItemViewModel by activityViewModels()
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_shopping_list_item_duplicate_name_warning)
@@ -290,7 +327,8 @@ class NewShoppingListItemDialog(context: Context) :
     init { newItemView.ui.checkBox.setInColorEditMode(true, animate = false) }
 
     override fun createItemFromView() = ShoppingListItem(
-        inventoryId = 1,
+        // NewBootyCrateItemDialog should ensure that targetInventoryId is not null
+        inventoryId = targetInventoryId!!,
         name = newItemView.ui.nameEdit.text.toString(),
         extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
         color = newItemView.ui.checkBox.colorIndex,
@@ -303,7 +341,7 @@ class NewShoppingListItemDialog(context: Context) :
 class NewInventoryItemDialog(context: Context) :
     NewBootyCrateItemDialog<InventoryItem>(context, useDefaultLayout = false)
 {
-    override val viewModel: InventoryItemViewModel by activityViewModels()
+    override val itemViewModel: InventoryItemViewModel by activityViewModels()
     private val newInventoryItemView = InventoryItemView(context, null)
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
@@ -331,7 +369,8 @@ class NewInventoryItemDialog(context: Context) :
     }
 
     override fun createItemFromView() = InventoryItem(
-        inventoryId = 1,
+        // NewBootyCrateItemDialog should ensure that targetInventoryId is not null
+        inventoryId = targetInventoryId!!,
         name = newItemView.ui.nameEdit.text.toString(),
         extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
         color = newItemView.ui.checkBox.colorIndex,
