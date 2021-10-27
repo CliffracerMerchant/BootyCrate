@@ -9,10 +9,13 @@ import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.Context
 import android.content.res.Resources
+import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.LinearLayout
+import com.cliffracertech.bootycrate.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 /** Return a NotificationManager system service from the context. */
@@ -93,4 +96,21 @@ fun ViewGroup.withoutLayoutTransition(block: () -> Unit) {
     layoutTransition = null
     block()
     layoutTransition = layoutTransitionBackup
+}
+
+/** A LinearLayout that allows settings a max height with the XML attribute maxHeight. */
+class MaxHeightLinearLayout(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
+    var maxHeight = -1
+        set(value) { field = value; invalidate() }
+
+    init {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.MaxHeightLinearLayout)
+        maxHeight = a.getDimensionPixelSize(R.styleable.MaxHeightLinearLayout_maxHeight, -1)
+        a.recycle()
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val maxHeightSpec = MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
+        super.onMeasure(widthMeasureSpec, maxHeightSpec)
+    }
 }

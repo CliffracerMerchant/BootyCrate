@@ -161,4 +161,8 @@
         <attr name="colorDescriptionsResId" format="reference" />
     </declare-styleable>
 
+    <declare-styleable name="MaxHeightLinearLayout">
+        <attr name="maxHeight" format="dimension" />
+    </declare-styleable>
+
 </resources>
