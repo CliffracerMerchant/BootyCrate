@@ -7,6 +7,7 @@
 <com.cliffracertech.bootycrate.utils.MaxHeightLinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/inventoryPickerContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -14,10 +15,10 @@
     app:maxHeight="206dp" >
 
     <TextView
-        android:id="@+id/inventoryPickerMessage"
+        android:id="@+id/inventoryPickerPrompt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/select_an_inventory_message"
+        tools:text="@string/select_an_inventory_message"
         android:layout_marginTop="10dp"
         android:layout_marginHorizontal="10dp"
         android:layout_marginBottom="8dp"

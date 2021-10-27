@@ -55,11 +55,13 @@ isSelected = $isSelected
 
 private const val shoppingListItemCount = "(SELECT count(*) FROM bootycrate_item " +
                                           "WHERE bootycrate_item.inventoryId = inventory.id " +
-                                          "AND bootycrate_item.shoppingListAmount != -1) " +
+                                          "AND bootycrate_item.shoppingListAmount != -1 " +
+                                          "AND NOT bootycrate_item.inShoppingListTrash) " +
                                           "AS shoppingListItemCount"
 private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " +
                                        "WHERE bootycrate_item.inventoryId = inventory.id " +
-                                       "AND bootycrate_item.inventoryAmount != -1) " +
+                                       "AND bootycrate_item.inventoryAmount != -1 " +
+                                       "AND NOT bootycrate_item.inInventoryTrash) " +
                                        "AS inventoryItemCount"
 
 @Dao abstract class BootyCrateInventoryDao {
