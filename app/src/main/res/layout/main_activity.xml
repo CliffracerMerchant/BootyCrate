@@ -121,8 +121,8 @@
             android:paddingHorizontal="10dp"
             android:background="@drawable/background_gradient">
 
-            <com.cliffracertech.bootycrate.recyclerview.InventorySelectorRecyclerView
-                android:id="@+id/inventorySelectorRecyclerView"
+            <com.cliffracertech.bootycrate.recyclerview.InventorySelector
+                android:id="@+id/inventorySelector"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/inventory_selector"

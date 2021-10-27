@@ -21,6 +21,7 @@ import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
+import com.cliffracertech.bootycrate.recyclerview.InventorySelectionOptionsMenu
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.doOnStart
 import com.cliffracertech.bootycrate.utils.inventoryNameDialog
@@ -54,7 +55,7 @@ open class MainActivity : MultiFragmentActivity() {
         fragmentContainerId = ui.fragmentContainer.id
         navigationView = ui.bottomNavigationView
         super.onCreate(savedInstanceState)
-        ui.inventorySelectorRecyclerView.initViewModel(inventoryViewModel, this)
+        ui.inventorySelector.initViewModel(inventoryViewModel, this)
         lifecycleScope.launch {
             inventoryViewModel.selectedInventoryName
                 .collectLatest { ui.actionBar.ui.titleSwitcher.title = it }
@@ -63,8 +64,8 @@ open class MainActivity : MultiFragmentActivity() {
         initAnimatorConfigs()
         initGradientStyle()
 
-        // Setting android:importantForAccessibility in the bottom_navigation_menu.xml
-        // for the disabled menu items seems not to work, so it must be done here instead
+        // Setting android:importantForAccessibility in bottom_navigation_bar.xml for
+        // the disabled menu items seems not to work, so it must be done here instead
         (ui.bottomNavigationView.getIconAt(1).parent as View).
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         (ui.bottomNavigationView.getIconAt(2).parent as View)
@@ -145,9 +146,10 @@ open class MainActivity : MultiFragmentActivity() {
         ui.addInventoryButton.setOnClickListener {
             inventoryNameDialog(this, null) { inventoryViewModel.add(it) }
         }
-        ui.inventorySelectorOptionsButton.setOnClickListener {
-            ui.inventorySelectorRecyclerView.showOptionsMenu(this, it)
-        }
+        val dbSettingsViewModel: DatabaseSettingsViewModel by viewModels()
+        InventorySelectionOptionsMenu.openOnClickOf(ui.inventorySelectorOptionsButton,
+                                                    dbSettingsViewModel, inventoryViewModel)
+
     }
 
     private fun initAnimatorConfigs() {
