@@ -105,11 +105,14 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
             activityUi.checkoutButton.isEnabled = checkoutButtonShouldBeEnabled
         }
         newItemsBadge = activityUi.shoppingListBadge
-        activityUi.actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_menu_group, isActive)
+        activityUi.actionBar.optionsMenu.setGroupVisible(
+            R.id.shopping_list_view_menu_group, isActive)
         if (!isActive) return
+
         activityUi.addButton.setOnClickListener {
             val activity = this.activity ?: return@setOnClickListener
-            NewShoppingListItemDialog(activity).show(activity.supportFragmentManager, null)
+            NewShoppingListItemDialog(activity)
+                .show(activity.supportFragmentManager, null)
         }
         activityUi.checkoutButton.checkoutCallback = { viewModel.checkout() }
     }

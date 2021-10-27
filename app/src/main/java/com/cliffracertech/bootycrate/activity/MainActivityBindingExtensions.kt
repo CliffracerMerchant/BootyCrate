@@ -231,13 +231,13 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
         appTitle.isVisible = slideOffset != 0f
         settingsButton.isVisible = slideOffset != 0f
         inventorySelectorOptionsButton.isVisible = slideOffset != 0f
-        inventorySelectorRecyclerView.isInvisible = slideOffset == 0f
+        inventorySelector.isInvisible = slideOffset == 0f
         bottomNavigationView.isVisible = slideOffset != 1f
 
         appTitle.alpha = slide
         settingsButton.alpha = slide
         inventorySelectorOptionsButton.alpha = slide
-        inventorySelectorRecyclerView.alpha = slide
+        inventorySelector.alpha = slide
         bottomNavigationView.alpha = 1f - slide
 
         bottomAppBar.apply {

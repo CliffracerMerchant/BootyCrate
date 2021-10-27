@@ -96,7 +96,7 @@ class NavigationTests {
         onView(withId(R.id.bottomNavigationDrawer)).check(matches(allOf(isDisplayed(), not(isCompletelyDisplayed()))))
         onView(withId(R.id.appTitle)).check(matches(not(isDisplayed())))
         onView(withId(R.id.settingsButton)).check(matches(not(isDisplayed())))
-        onView(withId(R.id.inventorySelectorRecyclerView)).check(matches(allOf(hasAlpha(0f), not(isCompletelyDisplayed()))))
+        onView(withId(R.id.inventorySelector)).check(matches(allOf(hasAlpha(0f), not(isCompletelyDisplayed()))))
         onView(withId(R.id.bottomNavigationView)).check(matches(isDisplayed()))
         onView(withId(R.id.bottomAppBar)).perform(doStuff<BottomAppBar> {
             assertThat(it.interpolation).isEqualTo(1f)
@@ -111,7 +111,7 @@ class NavigationTests {
         onView(withId(R.id.bottomNavigationDrawer)).check(matches(isCompletelyDisplayed()))
         onView(withId(R.id.appTitle)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
         onView(withId(R.id.settingsButton)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
-        onView(withId(R.id.inventorySelectorRecyclerView)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
+        onView(withId(R.id.inventorySelector)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
         onView(withId(R.id.bottomNavigationView)).check(matches(not(isDisplayed())))
         onView(withId(R.id.bottomAppBar)).perform(doStuff<BottomAppBar> {
             assertThat(it.interpolation).isEqualTo(0f)

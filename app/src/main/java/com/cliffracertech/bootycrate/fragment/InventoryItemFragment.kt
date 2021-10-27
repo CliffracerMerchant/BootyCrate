@@ -65,11 +65,14 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
     override fun showsCheckoutButton() = false
     override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
         super.onActiveStateChanged(isActive, activityUi)
-        activityUi.actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_menu_group, isActive)
+        activityUi.actionBar.optionsMenu.setGroupVisible(
+            R.id.inventory_view_menu_group, isActive)
         if (!isActive) return
+
         activityUi.addButton.setOnClickListener {
             val activity = this.activity ?: return@setOnClickListener
-            NewInventoryItemDialog(activity).show(activity.supportFragmentManager, null)
+            NewInventoryItemDialog(activity)
+                .show(activity.supportFragmentManager, null)
         }
         activityUi.checkoutButton.checkoutCallback = null
     }
