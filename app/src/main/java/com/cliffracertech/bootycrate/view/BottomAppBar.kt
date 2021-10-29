@@ -246,7 +246,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             val topRadiusFraction = topCornerRadius / (topCornerRadius + bottomCornerRadius)
             val topYDistance = yDistance * topRadiusFraction
 
-            // Because the x distances covered by the top and bottom curves varies in a non-linear
+            // Because the y distances covered by the top and bottom curves varies in a non-linear
             // fashion with respect to the interpolation value, passing the interpolation value
             // through a decelerate interpolator results in a more linear change.
             val adjustedInterp = decelerate.getInterpolation(interpolation).toDouble()
@@ -430,9 +430,15 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         }
 
        private fun updatePath() {
-            if (interpolation != 1f) return
-            path.rewind()
-            pathMeasure.setPath(drawable.path, false)
+           path.rewind()
+           // We don't want the nav indicator's path to be updated when the interpolation
+           // is not 1f, because it will cause the indicator to not be centered over its
+           // intended target. preventing the indicator path from updating this way will
+           // cause it to not follow the bottom app bar cradle curve perfectly during an
+           // animation, but as the animation occurs fairly quickly anyways, this is still
+           // preferable to the nav indicator coming to rest in the wrong position.
+            if (interpolation == 1f)
+                pathMeasure.setPath(drawable.path, false)
             pathMeasure.getSegment(startDistance, startDistance + width, path, true)
             invalidate()
         }
