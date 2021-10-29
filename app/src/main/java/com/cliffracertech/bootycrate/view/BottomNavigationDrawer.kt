@@ -61,6 +61,8 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
 
     enum class IsHideable { Yes, No, OnlyByApp }
     val isHideable: IsHideable
+    var isDraggable get() = behavior.isDraggable
+                    set(value) { behavior.isDraggable = value }
 
     var peekHeight get() = behavior.peekHeight
                    set(value) { behavior.peekHeight = value }

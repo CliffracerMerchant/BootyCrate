@@ -65,6 +65,7 @@ fun MainActivityBinding.showCheckoutButton(
     // from sticking out underneath the addButton during the animation
     checkoutButton.getDrawingRect(checkoutButtonClipBounds)
     val addButtonHalfWidth = addButton.width / 2
+    bottomNavigationDrawer.isDraggable = false
 
     return ValueAnimator.ofFloat(bottomAppBar.cradle.width, cradleNewWidth).apply {
         applyConfig(animatorConfig)
@@ -75,7 +76,8 @@ fun MainActivityBinding.showCheckoutButton(
             checkoutButtonClipBounds.right = addButton.x.toInt() + addButtonHalfWidth
             checkoutButton.clipBounds = checkoutButtonClipBounds
         }
-        doOnEnd { checkoutButton.clipBounds = null }
+        doOnEnd { checkoutButton.clipBounds = null
+                  bottomNavigationDrawer.isDraggable = true }
     }
 }
 
