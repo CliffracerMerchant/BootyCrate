@@ -70,8 +70,11 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             val tempDbFile = context.getDatabasePath(tempDbName)
             tempDbFile.writeBytes(importReader.readBytes())
 
-            val tempDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName).
-                                        allowMainThreadQueries().createFromFile(tempDbFile).build()
+            val tempDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName)
+                .allowMainThreadQueries()
+                .createFromFile(tempDbFile)
+                .addMigrations(Migration1to2(), Migration2to3())
+                .build()
             val inventories = try { tempDb.inventoryDao().getAllNow() }
                               catch(e: IllegalStateException) { emptyList() }
             val items = try { tempDb.itemDao().getAllNow() }
@@ -272,7 +275,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("""CREATE TABLE IF NOT EXISTS dbSettings (
                 `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                `singleSelectInventories` INTEGER NOT NULL DEFAULT 1)""")
+                `multiSelectInventories` INTEGER NOT NULL DEFAULT 0)""")
             db.execSQL("INSERT INTO dbSettings DEFAULT VALUES")
             db.addEnsureAtLeastOneInventoryTrigger()
             db.addEnsureAtLeastOneSelectedInventoryTriggers()
