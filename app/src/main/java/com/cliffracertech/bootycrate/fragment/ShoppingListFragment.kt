@@ -125,9 +125,16 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
             if (newShoppingList.isNotEmpty())
                 shoppingListSize = newShoppingList.size
         } else {
-            val sizeChange = newShoppingList.size - shoppingListSize
             val badge = newItemsBadge ?: return
-            if (view?.isVisible == false && sizeChange > 0) {
+            val badgeParent = badge.parent as? ViewGroup
+            val sizeChange = newShoppingList.size - shoppingListSize
+            // The fragment view visibility check is to prevent the shopping list badge
+            // from appearing when the shopping list fragment is active (since they can
+            // see the items appear on screen anyways, the badge is not necessary in
+            // this case). The badge parent visibility check is to prevent the badge
+            // from appearing in the middle of its fade out animation if the parent is
+            // made visible during the animation.
+            if (view?.isVisible == false && badgeParent?.isVisible == true && sizeChange > 0) {
                 shoppingListNumNewItems += sizeChange
                 badge.text = getString(R.string.shopping_list_badge_text, shoppingListNumNewItems)
                 badge.alpha = 1f

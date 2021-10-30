@@ -48,15 +48,17 @@
                 android:id="@+id/bottomNavigationView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                style="@style/BottomNavigationView" />
+                style="@style/BottomNavigationView">
 
-            <TextView
-                android:id="@+id/shoppingListBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="60dp"
-                android:layout_marginTop="2dp"
-                style="@style/ShoppingListBadge" />
+                <TextView
+                    android:id="@+id/shoppingListBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginTop="2dp"
+                    style="@style/ShoppingListBadge" />
+
+            </com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx>
 
             <LinearLayout
                 android:id="@+id/cradleLayout"
