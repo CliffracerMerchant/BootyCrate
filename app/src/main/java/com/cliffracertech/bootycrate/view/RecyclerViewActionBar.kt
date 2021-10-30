@@ -12,6 +12,7 @@ import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.res.getColorOrThrow
 import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
@@ -107,7 +108,19 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
         val a = context.obtainStyledAttributes(attrs, R.styleable.RecyclerViewActionBar)
         val changeSortMenuResId = a.getResourceIdOrThrow(R.styleable.RecyclerViewActionBar_changeSortMenuResId)
         val optionsMenuResId = a.getResourceIdOrThrow(R.styleable.RecyclerViewActionBar_optionsMenuResId)
+        val contentsTint = try { a.getColorOrThrow(R.styleable.RecyclerViewActionBar_actionBarContentsTint) }
+                           catch(e: IllegalArgumentException) { null }
         a.recycle()
+
+        contentsTint?.let {
+            ui.backButton.drawable.setTint(it)
+            ui.titleSwitcher.fragmentTitleView.setTextColor(it)
+            ui.titleSwitcher.actionModeTitleView.setTextColor(it)
+            ui.titleSwitcher.searchQueryView.setTextColor(it)
+            ui.searchButton.drawable.setTint(it)
+            ui.changeSortButton.drawable.setTint(it)
+            ui.menuButton.drawable.setTint(it)
+        }
 
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
         optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
