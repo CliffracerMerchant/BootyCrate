@@ -5,27 +5,17 @@
 
 <resources>
     <!-- Used as the background color for recycler view items. -->
-    <attr name="recyclerViewItemColor" format="color" />
+    <attr name="recyclerViewItemColor"         format="color" />
     <!-- The left color of the background gradient. -->
-    <attr name="backgroundGradientLeftColor" format="color" />
+    <attr name="backgroundGradientLeftColor"   format="color" />
     <!-- The middle color of the background gradient. -->
     <attr name="backgroundGradientMiddleColor" format="color" />
     <!-- The right color of the background gradient. -->
-    <attr name="backgroundGradientRightColor" format="color" />
-    <!-- The left color of the foreground gradient. -->
-    <attr name="foregroundGradientLeftColor" format="color" />
-    <!-- The middle color of the foreground gradient. -->
-    <attr name="foregroundGradientMiddleColor" format="color" />
-    <!-- The right color of the foreground gradient. -->
-    <attr name="foregroundGradientRightColor" format="color" />
-    <!-- The left color of the indicator gradient. -->
-    <attr name="indicatorGradientLeftColor" format="color" />
-    <!-- The middle color of the indicator gradient. -->
-    <attr name="indicatorGradientMiddleColor" format="color" />
-    <!-- The right color of the indicator gradient. -->
-    <attr name="indicatorGradientRightColor" format="color" />
+    <attr name="backgroundGradientRightColor"  format="color" />
+    <!-- The color that will be used for text on the background gradient. -->
+    <attr name="colorOnBackgroundGradient"     format="color" />
     <!-- The alpha value used for the checkout button background when it is disabled. -->
-    <attr name="checkoutButtonDisabledAlpha" format="integer" />
+    <attr name="checkoutButtonDisabledAlpha"   format="integer" />
 
     <declare-styleable name="RecyclerViewActionBar">
         <!-- The resource id of the menu to be used as the contents of the change sort menu. -->

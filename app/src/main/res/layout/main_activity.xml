@@ -41,10 +41,7 @@
             tools:backgroundTint="?attr/backgroundGradientLeftColor"
             style="@style/BottomAppBar" >
 
-        <!-- BottomNavigationViewEx is used instead of the default Android Bottom-
-             NavigationView because it makes it easier to access the views used to
-             represent menu items (which is needed for some of the gradient styling). -->
-            <com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx
+            <com.google.android.material.bottomnavigation.BottomNavigationView
                 android:id="@+id/bottomNavigationView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -57,8 +54,7 @@
                     android:layout_marginStart="60dp"
                     android:layout_marginTop="2dp"
                     style="@style/ShoppingListBadge" />
-
-            </com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx>
+            </com.google.android.material.bottomnavigation.BottomNavigationView>
 
             <LinearLayout
                 android:id="@+id/cradleLayout"

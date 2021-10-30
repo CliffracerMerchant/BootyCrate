@@ -147,4 +147,5 @@
     <string name="select_an_inventory_message">Pick an inventory to add the item to:</string>
     <string name="new_shopping_list_item_has_no_inventory_id_error_message">The item must belong to a shopping list. Select one to add it to.</string>
     <string name="new_inventory_item_has_no_inventory_id_error_message">The item must belong to an inventory. Select one to add it to.</string>
+    <string name="inventory_selector_options_description">Inventory selector options</string>
 </resources>
