@@ -111,9 +111,6 @@ fun MainActivity.initGradientStyle() {
     val bgColors = intArrayOf(theme.resolveIntAttribute(R.attr.backgroundGradientLeftColor),
                               theme.resolveIntAttribute(R.attr.backgroundGradientMiddleColor),
                               theme.resolveIntAttribute(R.attr.backgroundGradientRightColor))
-    val indicatorColors = intArrayOf(theme.resolveIntAttribute(R.attr.indicatorGradientLeftColor),
-                                     theme.resolveIntAttribute(R.attr.indicatorGradientMiddleColor),
-                                     theme.resolveIntAttribute(R.attr.indicatorGradientRightColor))
 
     val fgGradientBuilder = GradientBuilder(x2 = screenWidth.toFloat(), colors = fgColors)
     val fgGradientShader = fgGradientBuilder.buildLinearGradient()
@@ -121,9 +118,6 @@ fun MainActivity.initGradientStyle() {
     val bgGradientBuilder = fgGradientBuilder.copy(colors  = bgColors)
     val bgGradientShader = bgGradientBuilder.buildLinearGradient()
     ui.bottomAppBar.backgroundGradient = bgGradientShader
-
-    ui.bottomAppBar.navIndicator.gradient =
-        fgGradientBuilder.copy(colors  = indicatorColors).buildLinearGradient()
 
     val paint = Paint()
     paint.style = Paint.Style.FILL
