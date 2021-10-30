@@ -11,7 +11,7 @@ import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.database.shoppingListViewModel
+import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import java.util.*
 import kotlin.collections.set
@@ -19,27 +19,23 @@ import kotlin.collections.set
 /**
  * A RecyclerView to display the data provided by a ShoppingListViewModel.
  *
- * ShoppingListRecyclerView is a ExpandableSelectableRecyclerView subclass
- * specialized for displaying the contents of a shopping list. ShoppingListRecyclerView
- * adds a sortByChecked property, which mirrors the ShoppingListViewModel
- * property, for convenience. sortByChecked should not be changed the
- * property viewModel is initialized, or an exception will be thrown.
+ * The function initViewModel must be called with an instance of ShoppingListItemViewModel.
+ * Failure to do so will prevent any items from appearing.
  */
 class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
     ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs)
 {
     override val diffUtilCallback = DiffUtilCallback()
     override val adapter = Adapter()
-    override val viewModel = shoppingListViewModel(context)
-
-    var sortByChecked get() = viewModel.sortByChecked
-        set(value) { viewModel.sortByChecked = value }
+    override lateinit var viewModel: ShoppingListItemViewModel
 
     init {
         itemAnimator.animatorConfig = AnimatorConfig(
             context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }
+
+    fun initViewModel(viewModel: ShoppingListItemViewModel) { this.viewModel = viewModel }
 
     /**
      * An adapter to display the contents of a list of shopping list items.

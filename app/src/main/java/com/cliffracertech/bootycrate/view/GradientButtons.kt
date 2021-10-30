@@ -5,7 +5,6 @@
 
 package com.cliffracertech.bootycrate.view
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Paint
 import android.graphics.drawable.LayerDrawable
@@ -31,23 +30,18 @@ open class GradientButton(context: Context, attrs: AttributeSet) : AppCompatButt
         set(gradient) { backgroundDrawable.gradient = gradient }
     var foregroundGradient get() = iconDrawable.gradient
         set(gradient) { iconDrawable.gradient = gradient
-            paint.shader = gradient }
+                        paint.shader = gradient }
 
     protected var backgroundDrawable: GradientVectorDrawable
     protected var iconDrawable: GradientVectorDrawable
 
     init {
-        var a = context.obtainStyledAttributes(attrs, R.styleable.GradientButton)
+        val a = context.obtainStyledAttributes(attrs, R.styleable.GradientButton)
         val backgroundPathData = a.getString(R.styleable.GradientButton_backgroundPathData) ?: ""
         val iconPathData = a.getString(R.styleable.GradientButton_iconPathData) ?: ""
         val iconStrokeWidth = a.getDimension(R.styleable.GradientButton_iconStrokeWidth, 0f)
-        // Apparently if more than one attr is retrieved with a manual
-        // IntArray, they must be in numerical id order to work.
-        // Log.d("", "R.attr.pathWidth = ${R.attr.pathWidth}, R.attr.pathHeight=${R.attr.pathHeight}")
-        a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.pathHeight, R.attr.pathWidth))
-        val pathHeight = a.getFloat(0, 0f)
-        @SuppressLint("ResourceType")
-        val pathWidth = a.getFloat(1, 0f)
+        val pathWidth = a.getFloat(R.styleable.GradientButton_pathWidth, 0f)
+        val pathHeight = a.getFloat(R.styleable.GradientButton_pathHeight, 0f)
         a.recycle()
 
         backgroundDrawable = GradientVectorDrawable(pathWidth, pathHeight, backgroundPathData )

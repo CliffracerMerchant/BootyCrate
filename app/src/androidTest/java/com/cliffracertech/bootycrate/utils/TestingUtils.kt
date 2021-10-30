@@ -7,8 +7,11 @@ package com.cliffracertech.bootycrate.utils
 import android.view.View
 import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
-import androidx.test.espresso.*
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.NoMatchingViewException
+import androidx.test.espresso.UiController
+import androidx.test.espresso.ViewAction
+import androidx.test.espresso.ViewAssertion
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
@@ -23,10 +26,16 @@ import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.view.BottomNavigationDrawer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestCoroutineScope
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
+import java.util.concurrent.TimeoutException
 
 /** A ViewAction that allows direct operation on a view.
  * Thanks to the author of this blog post for the idea.
@@ -153,7 +162,7 @@ class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
         item: InventoryItem
     ) {
         super.assertItemFromViewMatchesOriginalItem(view, item)
-        val view = view as InventoryItemView
+        view as InventoryItemView
         assertThat(view.detailsUi.autoAddToShoppingListCheckBox.isChecked).isEqualTo(item.autoAddToShoppingList)
         assertThat(view.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(item.autoAddToShoppingListAmount)
     }
@@ -194,6 +203,28 @@ class setStateAndWaitForSettling(@BottomSheetBehavior.State private val state: I
     }
 }
 
-
 fun setExpandedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_EXPANDED)
 fun setCollapsedAndWaitForSettling() = setStateAndWaitForSettling(BottomSheetBehavior.STATE_COLLAPSED)
+
+/** Perform a series of actions on the Flow instance. The emitted values
+ * after each action is performed will be returned in a list. Each new
+ * value will be waited for up to the value of the parameter timeOut. */
+fun <T> Flow<T>.collectForTesting(timeOut: Long, vararg actions: () -> Unit): List<T> {
+    var index = 0
+    val results = mutableListOf<T>()
+    TestCoroutineScope().launch {
+        take(actions.size).collect {
+            results.add(it)
+            index++
+        }
+    }
+    while (index < actions.size) {
+        actions[index].invoke()
+        val start = System.currentTimeMillis()
+        while (results.size < (index + 1) && (System.currentTimeMillis() - start) < timeOut)
+            Thread.sleep(timeOut / 10L)
+        if (results.size < (index)) throw TimeoutException(
+            "The Flow did not update before the timeout ($timeOut) was reached.")
+    }
+    return results
+}

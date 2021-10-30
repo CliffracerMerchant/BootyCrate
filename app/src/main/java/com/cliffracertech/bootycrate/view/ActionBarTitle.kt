@@ -14,6 +14,7 @@ import android.widget.ViewFlipper
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
@@ -25,15 +26,22 @@ import com.cliffracertech.bootycrate.utils.dpToPixels
  *
  * ActionBarTitle is a ViewFlipper that adds two TextViews and an EditText
  * to be used as an app/activity/fragment title, an action mode title, and
- * a search query entry respectively, and preconfigures short fade in and
+ * a search query entry, respectively, and preconfigures short fade in and
  * out animations. XML attributes are passed on to these views so that
  * their attributes can be configured from an XML layout.
  *
  * The fragment title, action mode title, and search query view will have
  * their ids set to the values of R.id.actionBarTitle_fragmentTitle,
  * R.id.actionBarTitle_actionModeTitle, and R.id.actionBarTitle_searchQuery
- * respectively. They can also be accessed programmatically through the
+ * respectively. The TextViews themselves can also be accessed through the
  * properties fragmentTitleView, actionModeTitleView, and searchQueryView.
+ *
+ * ActionBarTitle will not animate a change in the action mode title or in
+ * the search query when they are already visible on screen due to the fact
+ * that they are likely to change by only one character at a time (e.g.
+ * from '2 items selected' to '3 items selected' or 'Search quer' to
+ * 'Search query'). It will animate changes in the app/activity/fragment
+ * title if it is visible when the change is made.
  */
 class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(context, attrs) {
 
@@ -109,11 +117,31 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         if (showingSearchView) return
         displayedChild = searchViewPos
         searchQueryView.requestFocus()
-        if (showSoftInput) SoftKeyboard.show(searchQueryView)
+        if (showSoftInput)
+            SoftKeyboard.show(searchQueryView)
     }
 
     fun setTitle(title: CharSequence, switchTo: Boolean = false) {
-        fragmentTitleView.text = title
+        if (!showingFragmentTitle)
+            fragmentTitleView.text = title
+        else {
+            val oldActionModeTitle = actionModeTitle
+            val oldActionModeFont = actionModeTitleView.typeface
+            actionModeTitleView.text = fragmentTitleView.text
+            actionModeTitleView.typeface = fragmentTitleView.typeface
+            actionModeTitleView.alpha = 1f
+            actionModeTitleView.isVisible = true
+            fragmentTitleView.alpha = 0f
+            fragmentTitleView.text = title
+
+            actionModeTitleView.animate().alpha(0f).withLayer().withEndAction {
+                actionModeTitleView.isVisible = false
+                actionModeTitleView.alpha = 1f
+                actionModeTitleView.text = oldActionModeTitle
+                actionModeTitleView.typeface = oldActionModeFont
+            }.start()
+            fragmentTitleView.animate().alpha(1f).withLayer().start()
+        }
         if (switchTo) showTitle()
     }
 
@@ -124,7 +152,6 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
 
     fun setSearchQuery(query: CharSequence?, switchTo: Boolean = false) {
         searchQueryView.setText(query)
-        if (!switchTo) return
-        showSearchQuery()
+        if (switchTo) showSearchQuery()
     }
 }

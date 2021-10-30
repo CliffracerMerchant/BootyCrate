@@ -5,25 +5,24 @@
 
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="TopActionBar">
-        <item name="optionsMenuResId">@menu/action_bar_menu</item>
+        <item name="optionsMenuResId">@menu/action_bar</item>
         <item name="changeSortMenuResId">@menu/change_sort</item>
         <item name="android:background">@drawable/background_gradient</item>
     </style>
 
     <style name="ActionBarTitle">
         <item name="android:gravity">center_vertical</item>
-        <item name="android:textAppearance">@style/TextAppearance</item>
-        <item name="android:textSize">19sp</item>
         <item name="titleFont">@font/comfortaa</item>
-        <item name="android:text">@string/app_name</item>
+        <item name="android:textSize">19sp</item>
     </style>
 
     <style name="BottomAppBar">
         <item name="contentInsetStart">0dp</item>
-        <item name="topOuterCornerRadius">@dimen/dialog_rounded_corner_radius</item>
+        <item name="topOuterCornerStartRadius">@dimen/dialog_rounded_corner_radius</item>
+        <item name="topOuterCornerEndRadius">25dp</item>
         <item name="cradleTopCornerRadius">25dp</item>
-        <item name="cradleBottomCornerRadius">33dp</item>
-        <item name="cradleDepth">52dp</item>
+        <item name="cradleBottomCornerRadius">33.5dp</item>
+        <item name="cradleDepth">51.5dp</item>
         <item name="cradleContentsMargin">5dp</item>
         <item name="navIndicatorHeight">8dp</item>
         <item name="cradleLayoutResId">@id/cradleLayout</item>
@@ -37,7 +36,7 @@
            ~ create its own background, covering up BottomAppBar's background.
            ~ Setting the background to a transparent rectangle is used to prevent this. -->
         <item name="android:background">@drawable/transparent_rectangle</item>
-        <item name="menu">@menu/bottom_navigation_bar_menu</item>
+        <item name="menu">@menu/bottom_navigation_bar</item>
     </style>
 
     <style name="ShoppingListBadge">
@@ -62,17 +61,15 @@
 
     <style name="AddButton">
         <item name="backgroundPathData">@string/add_button_background_path_data</item>
-        <item name="iconPathData">@string/add_button_plus_path_data</item>
-        <item name="pathWidth">56.0</item>
-        <item name="pathHeight">56.0</item>
-        <item name="iconStrokeWidth">4dp</item>
+        <item name="android:src">@drawable/ic_baseline_add_24</item>
+        <item name="android:background">@drawable/add_button</item>
+        <item name="android:padding">12dp</item>
     </style>
 
-    <style name="AppTitle">
+    <style name="AppTitle" parent="@style/TitleTextAppearance">
         <item name="android:gravity">center_vertical</item>
-        <item name="android:textAppearance">@style/TextAppearance</item>
         <item name="android:textSize">20sp</item>
-        <item name="android:fontFamily">@font/comfortaa</item>
+        <item name="fontFamily">@font/comfortaa</item>
         <item name="android:text">@string/app_name</item>
         <item name="android:alpha">0</item>
         <item name="android:visibility">gone</item>

@@ -12,9 +12,9 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
-import com.cliffracertech.bootycrate.database.InventoryViewModel
+import com.cliffracertech.bootycrate.database.InventoryItemViewModel
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.database.ShoppingListViewModel
+import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.ShoppingListFragmentBinding
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
@@ -41,8 +41,8 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
  * to its normal state.
  */
 @Keep class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
-    override val viewModel: ShoppingListViewModel by activityViewModels()
-    private val inventoryViewModel: InventoryViewModel by activityViewModels()
+    override val viewModel: ShoppingListItemViewModel by activityViewModels()
+    private val inventoryItemViewModel: InventoryItemViewModel by activityViewModels()
     override var recyclerView: ShoppingListRecyclerView? = null
     override lateinit var collectionName: String
     override val actionModeCallback = ShoppingListActionModeCallback()
@@ -60,11 +60,12 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
     }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        recyclerView?.initViewModel(viewModel)
         super.onViewCreated(view, savedInstanceState)
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked_key)
         val sortByCheckedPrefValue = prefs.getBoolean(sortByCheckedPrefKey, false)
-        recyclerView?.sortByChecked = sortByCheckedPrefValue
+        viewModel.sortByChecked = sortByCheckedPrefValue
         viewModel.checkedItemsSize.observe(viewLifecycleOwner) { newSize ->
             checkoutButton?.isEnabled = newSize != 0
             // Sometimes onChanged is called before onActiveStateChanged is called, causing
@@ -72,7 +73,7 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
             // and initialize the checkout button's state in onActiveStateChanged.
             checkoutButtonShouldBeEnabled =  newSize != 0
         }
-        viewModel.items.observe(viewLifecycleOwner) { newList -> updateBadge(newList) }
+        viewModel.items.observe(viewLifecycleOwner, ::updateBadge)
     }
 
     override fun onDestroyView() {
@@ -88,8 +89,8 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.add_to_inventory_button -> {
-            inventoryViewModel.addFromSelectedShoppingListItems()
-            recyclerView?.selection?.clear()
+            inventoryItemViewModel.addFromSelectedShoppingListItems()
+            viewModel.clearSelection()
             true
         } R.id.check_all_menu_item -> { viewModel.checkAll(); true }
         R.id.uncheck_all_menu_item -> { viewModel.uncheckAll(); true }
@@ -104,11 +105,14 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
             activityUi.checkoutButton.isEnabled = checkoutButtonShouldBeEnabled
         }
         newItemsBadge = activityUi.shoppingListBadge
-        activityUi.actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_menu_group, isActive)
+        activityUi.actionBar.optionsMenu.setGroupVisible(
+            R.id.shopping_list_view_menu_group, isActive)
         if (!isActive) return
+
         activityUi.addButton.setOnClickListener {
             val activity = this.activity ?: return@setOnClickListener
-            NewShoppingListItemDialog(activity).show(activity.supportFragmentManager, null)
+            NewShoppingListItemDialog(activity)
+                .show(activity.supportFragmentManager, null)
         }
         activityUi.checkoutButton.checkoutCallback = { viewModel.checkout() }
     }
@@ -121,9 +125,16 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
             if (newShoppingList.isNotEmpty())
                 shoppingListSize = newShoppingList.size
         } else {
-            val sizeChange = newShoppingList.size - shoppingListSize
             val badge = newItemsBadge ?: return
-            if (view?.isVisible == false && sizeChange > 0) {
+            val badgeParent = badge.parent as? ViewGroup
+            val sizeChange = newShoppingList.size - shoppingListSize
+            // The fragment view visibility check is to prevent the shopping list badge
+            // from appearing when the shopping list fragment is active (since they can
+            // see the items appear on screen anyways, the badge is not necessary in
+            // this case). The badge parent visibility check is to prevent the badge
+            // from appearing in the middle of its fade out animation if the parent is
+            // made visible during the animation.
+            if (view?.isVisible == false && badgeParent?.isVisible == true && sizeChange > 0) {
                 shoppingListNumNewItems += sizeChange
                 badge.text = getString(R.string.shopping_list_badge_text, shoppingListNumNewItems)
                 badge.alpha = 1f

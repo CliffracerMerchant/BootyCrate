@@ -4,12 +4,9 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.recyclerview
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.view.doOnNextLayout
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.*
 import com.cliffracertech.bootycrate.R
@@ -17,7 +14,6 @@ import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.database.BootyCrateViewModel
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 
@@ -59,11 +55,6 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
     protected abstract val viewModel: BootyCrateViewModel<T>
     var snackBarAnchor: View? = null
 
-    var sort get() = viewModel.sort
-             set(value) { viewModel.sort = value }
-    var searchFilter: String get() = viewModel.searchFilter
-                             set(value) { viewModel.searchFilter = value }
-
     init {
         val cornerRadius = resources.getDimension(R.dimen.recycler_view_item_rounded_corner_radius)
         val swipeCallback = SwipeToDeleteCallback(context, this, cornerRadius) { pos ->
@@ -75,13 +66,18 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
             showDeletedItemsSnackBar(1)
         }
         ItemTouchHelper(swipeCallback).attachToRecyclerView(this)
-        addItemDecoration(ItemSpacingDecoration(context))
+        val spacing = resources.getDimensionPixelSize(R.dimen.recycler_view_item_spacing)
+        addItemDecoration(ItemSpacingDecoration(spacing))
         setHasFixedSize(true)
         layoutManager = LinearLayoutManager(context)
     }
 
+    fun observeViewModel(owner: LifecycleOwner) {
+        setAdapter(adapter)
+        viewModel.items.observe(owner) { adapter.submitList(it) }
+    }
+
     private var deletedItemCount: Int = 0
-    @SuppressLint("ShowToast")
     fun showDeletedItemsSnackBar(newDeletedItemsCount: Int) {
         deletedItemCount += newDeletedItemsCount
         val text = context.getString(R.string.delete_snackbar_text, deletedItemCount)
@@ -98,11 +94,6 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
                     }
                 }
             }).show()
-    }
-
-    fun observeViewModel(owner: LifecycleOwner) {
-        setAdapter(adapter)
-        viewModel.items.observe(owner) { items -> adapter.submitList(items) }
     }
 
     /** A ListAdapter derived RecyclerView.Adapter for BootyCrateRecyclerView
@@ -129,7 +120,8 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
 
         init { view.apply {
             ui.checkBox.onColorChangedListener = { color ->
-                viewModel.updateColor(item.id, BootyCrateItem.Colors.indexOf(color))
+                if (adapterPosition != -1)
+                    viewModel.updateColor(item.id, BootyCrateItem.Colors.indexOf(color))
             }
             ui.nameEdit.onTextChangedListener = { newName ->
                 if (adapterPosition != -1) viewModel.updateName(item.id, newName)

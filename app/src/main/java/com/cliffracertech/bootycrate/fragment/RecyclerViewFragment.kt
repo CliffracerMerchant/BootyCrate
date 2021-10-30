@@ -13,13 +13,11 @@ import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
-import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.activity.*
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 import java.util.*
@@ -61,20 +59,18 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        viewModel.selectedItemCount.observe(viewLifecycleOwner, ::onSelectionSizeChanged)
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         sortModePrefKey = getString(R.string.pref_sort, collectionName)
         val sortStr = prefs.getString(sortModePrefKey, BootyCrateItemSort.Color.toString())
-        recyclerView?.apply {
-            sort = BootyCrateItemSort.fromString(sortStr)
-            selection.sizeLiveData.observe(viewLifecycleOwner, ::onSelectionSizeChanged)
-            observeViewModel(viewLifecycleOwner)
-        }
+        viewModel.sort = BootyCrateItemSort.fromString(sortStr)
 
         val multiStateView = view as? MultiStateView
         val emptyTextView = multiStateView?.getView(MultiStateView.ViewState.EMPTY) as? TextView
         emptyTextView?.text = getString(R.string.empty_recycler_view_message, collectionName)
 
+        recyclerView?.observeViewModel(this)
         viewModel.items.observe(viewLifecycleOwner) { items ->
             val stateView = view as? MultiStateView ?: return@observe
             stateView.viewState = when { items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
@@ -98,7 +94,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.delete_selected_menu_item -> deleteSelectedItems()
         R.id.share_menu_item -> shareList()
-        R.id.select_all_menu_item -> {  recyclerView?.selection?.addAll(); true }
+        R.id.select_all_menu_item -> {  viewModel.selectAll(); true }
         R.id.color_option -> { saveSortingOption(BootyCrateItemSort.Color, item) }
         R.id.name_ascending_option -> { saveSortingOption(BootyCrateItemSort.NameAsc, item) }
         R.id.name_descending_option -> { saveSortingOption(BootyCrateItemSort.NameDesc, item) }
@@ -151,11 +147,11 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
      * sortMenuItem, and save the sort to sharedPreferences.
      * @return whether the option was successfully saved to preferences. */
     private fun saveSortingOption(sort: BootyCrateItemSort, sortMenuItem: MenuItem) : Boolean {
-        recyclerView?.sort = sort
+        viewModel.sort = sort
         sortMenuItem.isChecked = true
         val context = this.context ?: return false
         PreferenceManager.getDefaultSharedPreferences(context).edit()
-            .putString(sortModePrefKey, recyclerView?.sort.toString()).apply()
+            .putString(sortModePrefKey, viewModel.sort.toString()).apply()
         return true
     }
 
@@ -168,7 +164,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
     }
 
     override fun onBackPressed() = when {
-        actionModeIsStarted  -> { recyclerView?.selection?.clear(); true }
+        actionModeIsStarted  -> { viewModel.clearSelection(); true }
         searchIsActive       -> { actionBar?.activeSearchQuery = null; true }
         else                 -> false
     }
@@ -193,13 +189,13 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             recyclerView.apply {
                 snackBarAnchor = activityUi.bottomAppBar
                 activityUi.actionBar.onSearchQueryChangedListener = { newText ->
-                    searchFilter = newText.toString()
+                    viewModel.searchFilter = newText.toString()
                 }
                 val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
                 setPadding(paddingLeft, paddingTop, paddingRight, bottomSheetPeekHeight)
             }
 
-            val actionModeCallback = if (recyclerView.selection.isEmpty) null
+            val actionModeCallback = if (viewModel.selectionIsEmpty) null
                                      else this.actionModeCallback
             val activeSearchQuery = if (viewModel.searchFilter.isBlank()) null
                                     else viewModel.searchFilter
@@ -207,7 +203,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
                 activeActionModeCallback = actionModeCallback,
                 activeSearchQuery = activeSearchQuery)
 
-            activityUi.actionBar.changeSortMenu.findItem(when (recyclerView.sort) {
+            activityUi.actionBar.changeSortMenu.findItem(when (viewModel.sort) {
                 BootyCrateItemSort.Color -> R.id.color_option
                 BootyCrateItemSort.NameAsc -> R.id.name_ascending_option
                 BootyCrateItemSort.NameDesc -> R.id.name_descending_option
@@ -222,7 +218,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             actionMode: RecyclerViewActionBar.ActionMode,
             actionBar: RecyclerViewActionBar
         ) {
-            val selectionSize = recyclerView?.selection?.size ?: 0
+            val selectionSize = viewModel.selectedItemCount.value ?: 0
             actionMode.title = actionModeTitle(selectionSize)
         }
     }

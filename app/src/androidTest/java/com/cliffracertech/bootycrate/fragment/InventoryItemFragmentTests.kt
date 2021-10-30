@@ -28,7 +28,7 @@ import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.*
-import com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
+import com.cliffracertech.bootycrate.recyclerview.InventoryItemRecyclerView
 import com.cliffracertech.bootycrate.utils.*
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
@@ -43,21 +43,24 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
-class InventoryFragmentTests {
+class InventoryItemFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val dao = BootyCrateDatabase.get(context as Application).dao()
+    private val db = BootyCrateDatabase.get(context as Application)
+    private val dao = db.itemDao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
-    private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
-    private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
-    private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1)
-    private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9, autoAddToShoppingList = true)
+    private val inventoryId = db.run { runBlocking { inventoryDao().deleteAll() }
+                                       inventoryDao().getAllNow()[0].id }
+    private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8, inventoryId = inventoryId)
+    private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2, inventoryId = inventoryId)
+    private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1, inventoryId = inventoryId)
+    private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9, autoAddToShoppingList = true, inventoryId = inventoryId)
 
     @Before fun setup() {
         activityRule.scenario.onActivity {
-            val inventoryViewModel: InventoryViewModel by it.viewModels()
-            inventoryViewModel.sort = BootyCrateItemSort.Color
+            val inventoryItemViewModel: InventoryItemViewModel by it.viewModels()
+            inventoryItemViewModel.sort = BootyCrateItemSort.Color
         }
         runBlocking {
             dao.deleteAllShoppingListItems()
@@ -72,14 +75,14 @@ class InventoryFragmentTests {
     @Test fun sortByColor() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
     }
 
     @Test fun sortByNameAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.name_ascending_description)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(grayItem11, orangeItem1, redItem0, yellowItem2))
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
@@ -88,7 +91,7 @@ class InventoryFragmentTests {
     @Test fun sortByNameDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.name_descending_description)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(yellowItem2, redItem0, orangeItem1, grayItem11))
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
@@ -97,7 +100,7 @@ class InventoryFragmentTests {
     @Test fun sortByAmountAscending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.amount_ascending_description)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(yellowItem2, orangeItem1, redItem0, grayItem11))
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
@@ -106,7 +109,7 @@ class InventoryFragmentTests {
     @Test fun sortByAmountDescending() {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.amount_descending_description)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(grayItem11, redItem0, orangeItem1, yellowItem2))
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
@@ -114,16 +117,16 @@ class InventoryFragmentTests {
 
     @Test fun expandItem() {
         runBlocking { dao.clearExpandedInventoryItem() }
-        onView(withId(R.id.inventoryRecyclerView)).check(onlyExpandedIndexIs(null))
+        onView(withId(R.id.inventoryItemRecyclerView)).check(onlyExpandedIndexIs(null))
 
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1, clickEditButton())
         ).check(onlyExpandedIndexIs(1))
     }
 
     @Test fun expandAnotherItem() {
         expandItem()
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(3, clickEditButton())
         ).check(onlyExpandedIndexIs(3))
     }
@@ -131,7 +134,7 @@ class InventoryFragmentTests {
     private fun expandedItemSurvives(action: Runnable) {
         expandItem()
         action.run()
-        onView(withId(R.id.inventoryRecyclerView))
+        onView(withId(R.id.inventoryItemRecyclerView))
             .check(onlyExpandedIndexIs(1))
     }
 
@@ -140,9 +143,9 @@ class InventoryFragmentTests {
         onView(withId(R.id.inventoryButton)).perform(click())
     }
 
-    private fun switchToPreferencesAndBack() {
-        onView(withId(R.id.menuButton)).perform(click())
-        onPopupView(withText(R.string.settings_description)).perform(click())
+    private fun switchToSettingsAndBack() {
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+        onView(withId(R.id.settingsButton)).perform(click())
         onView(withId(R.id.backButton)).perform(click())
     }
 
@@ -158,35 +161,35 @@ class InventoryFragmentTests {
         onView(withId(R.id.inventoryButton)).perform(click())
     }
 
-    private fun changeOrientationWhileInPreferences() {
-        onView(withId(R.id.menuButton)).perform(click())
-        onPopupView(withText(R.string.settings_description)).perform(click())
+    private fun changeOrientationWhileInSettings() {
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+        onView(withId(R.id.settingsButton)).perform(click())
         uiDevice.setOrientationLeft()
         uiDevice.setOrientationNatural()
         onView(withId(R.id.backButton)).perform(click())
     }
 
     @Test fun expandedItemSurvivesSwitchingToShoppingList() = expandedItemSurvives(::switchToShoppingListAndBack)
-    @Test fun expandedItemSurvivesSwitchingToPreferences() = expandedItemSurvives(::switchToPreferencesAndBack)
+    @Test fun expandedItemSurvivesSwitchingToSettings() = expandedItemSurvives(::switchToSettingsAndBack)
     @Test fun expandedItemSurvivesOrientationChange() = expandedItemSurvives(::changeOrientationAndBack)
     @Test fun expandedItemSurvivesOrientationChangeWhileInShoppingList() = selectionSurvives(::changeOrientationWhileInShoppingList)
-    @Test fun expandedItemSurvivesOrientationChangeWhileInPreferences() = expandedItemSurvives(::changeOrientationWhileInPreferences)
+    @Test fun expandedItemSurvivesOrientationChangeWhileInSettings() = expandedItemSurvives(::changeOrientationWhileInSettings)
 
     @Test fun selectIndividualItems() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1, longClick())
         ).check(onlySelectedIndicesAre(1))
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(3, click())
         ).check(onlySelectedIndicesAre(1, 3))
     }
 
     @Test fun deselectIndividualItems() {
         selectIndividualItems()
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1, click())
         ).check(onlySelectedIndicesAre(3))
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(3, click())
         ).check(onlySelectedIndicesAre())
     }
@@ -194,7 +197,7 @@ class InventoryFragmentTests {
     @Test fun selectAll() {
         onView(withId(R.id.menuButton)).perform(click())
         onPopupView(withText(R.string.select_all_description)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView))
+        onView(withId(R.id.inventoryItemRecyclerView))
             .check(onlySelectedIndicesAre(0, 1, 2, 3))
     }
 
@@ -204,48 +207,48 @@ class InventoryFragmentTests {
         // but not for the inventory?
         Thread.sleep(50L)
         onView(withId(R.id.backButton)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView))
+        onView(withId(R.id.inventoryItemRecyclerView))
             .check(onlySelectedIndicesAre())
     }
 
     @Test fun deselectAllWithNavigationBackButton() {
         runBlocking { dao.selectAllInventoryItems() }
         Espresso.pressBack()
-        onView(withId(R.id.inventoryRecyclerView))
+        onView(withId(R.id.inventoryItemRecyclerView))
             .check(onlySelectedIndicesAre())
     }
 
     private fun selectionSurvives(action: Runnable) {
         selectIndividualItems()
         action.run()
-        onView(withId(R.id.inventoryRecyclerView))
+        onView(withId(R.id.inventoryItemRecyclerView))
             .check(onlySelectedIndicesAre(1, 3))
     }
 
     @Test fun selectionSurvivesSwitchingToShoppingList() = selectionSurvives(::switchToShoppingListAndBack)
-    @Test fun selectionSurvivesSwitchingToPreferences() = selectionSurvives(::switchToPreferencesAndBack)
+    @Test fun selectionSurvivesSwitchingToSettings() = selectionSurvives(::switchToSettingsAndBack)
     @Test fun selectionSurvivesOrientationChange() = selectionSurvives(::changeOrientationAndBack)
     @Test fun selectionSurvivesOrientationChangeWhileInShoppingList() = selectionSurvives(::changeOrientationWhileInShoppingList)
-    @Test fun selectionSurvivesOrientationChangeWhileInPreferences() = selectionSurvives(::changeOrientationWhileInPreferences)
+    @Test fun selectionSurvivesOrientationChangeWhileInSettings() = selectionSurvives(::changeOrientationWhileInSettings)
 
     @Test fun searching() {
         onView(withId(R.id.searchButton)).perform(click())
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("y"))
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(yellowItem2, grayItem11))
     }
 
     @Test fun addingToExistingSearchQuery() {
         searching()
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("e"))
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(yellowItem2))
     }
 
     @Test fun searchingExtraInfo() {
         onView(withId(R.id.searchButton)).perform(click())
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("extra info"))
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(redItem0, orangeItem1))
     }
 
@@ -254,11 +257,11 @@ class InventoryFragmentTests {
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(pressKey(KeyEvent.KEYCODE_DEL))
         Thread.sleep(30L) // Test works fine with a small sleep, or if stepping through while debugging,
                           // but not otherwise? Might have something to do with pressing key KEYCODE_DEL
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(yellowItem2, grayItem11))
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(pressKey(KeyEvent.KEYCODE_DEL))
         Thread.sleep(30L)
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
     }
 
@@ -266,7 +269,7 @@ class InventoryFragmentTests {
         searching()
         onView(withId(R.id.backButton)).perform(click())
         onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("")))
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
     }
 
@@ -275,7 +278,7 @@ class InventoryFragmentTests {
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(closeSoftKeyboard())
         Espresso.pressBack()
         onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("")))
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(redItem0, orangeItem1, yellowItem2, grayItem11))
     }
 
@@ -284,22 +287,22 @@ class InventoryFragmentTests {
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(closeSoftKeyboard())
         action.run()
         onView(withId(R.id.actionBarTitle_searchQuery)).check(matches(withText("extra info")))
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(redItem0, orangeItem1))
     }
 
     @Test fun searchQuerySurvivesSwitchingToShoppingList() = searchQuerySurvives(::switchToShoppingListAndBack)
-    @Test fun searchQuerySurvivesSwitchingToPreferences() = searchQuerySurvives(::switchToPreferencesAndBack)
+    @Test fun searchQuerySurvivesSwitchingToSettings() = searchQuerySurvives(::switchToSettingsAndBack)
     @Test fun searchQuerySurvivesOrientationChange() = searchQuerySurvives(::changeOrientationAndBack)
     @Test fun searchQuerySurvivesOrientationChangeWhileInShoppingList() = searchQuerySurvives(::changeOrientationWhileInShoppingList)
-    @Test fun searchQuerySurvivesOrientationChangeWhileInPreferences() = searchQuerySurvives(::changeOrientationWhileInPreferences)
+    @Test fun searchQuerySurvivesOrientationChangeWhileInSettings() = searchQuerySurvives(::changeOrientationWhileInSettings)
     @Test fun searchQuerySurvivesSelectionAndDeselection() = searchQuerySurvives(::deselectAllWithActionBarBackButton)
 
     private fun emptySearchResultsMessage() = allOf(withId(R.id.emptyRecyclerViewMessage),
-                                                    withParent(withId(R.id.inventoryFragmentView)),
+                                                    withParent(withId(R.id.inventoryItemFragmentView)),
                                                     withText(R.string.no_search_results_message))
     private fun emptyRecyclerViewMessage() = allOf(withId(R.id.emptyRecyclerViewMessage),
-                                                   withParent(withId(R.id.inventoryFragmentView)),
+                                                   withParent(withId(R.id.inventoryItemFragmentView)),
                                                    withText(context.getString(R.string.empty_recycler_view_message,
                                                        context.getString(R.string.inventory_item_collection_name))))
 
@@ -308,16 +311,16 @@ class InventoryFragmentTests {
         Thread.sleep(30L)
         onView(emptyRecyclerViewMessage()).check(matches(isDisplayed()))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
-        onView(withId(R.id.inventoryRecyclerView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventoryItemRecyclerView)).check(matches(not(isDisplayed())))
     }
 
     @Test fun emptyMessageDisappears() {
         emptyMessageAppears()
-        runBlocking{ dao.add(InventoryItem(name = "new item")) }
+        runBlocking{ dao.add(InventoryItem(name = "new item", inventoryId = inventoryId)) }
         Thread.sleep(30L)
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
-        onView(withId(R.id.inventoryRecyclerView)).check(matches(isDisplayed()))
+        onView(withId(R.id.inventoryItemRecyclerView)).check(matches(isDisplayed()))
     }
 
     @Test fun noSearchResultsMessageAppears() {
@@ -325,7 +328,7 @@ class InventoryFragmentTests {
         onView(withId(R.id.actionBarTitle_searchQuery)).perform(typeText("Nonexistent item"))
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryRecyclerView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventoryItemRecyclerView)).check(matches(not(isDisplayed())))
     }
 
     @Test fun noSearchResultsMessageDisappears() {
@@ -333,15 +336,15 @@ class InventoryFragmentTests {
         onView(withId(R.id.backButton)).perform(click())
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
-        onView(withId(R.id.inventoryRecyclerView)).check(matches(isDisplayed()))
+        onView(withId(R.id.inventoryItemRecyclerView)).check(matches(isDisplayed()))
     }
 
     @Test fun deleteItemsViaSwiping() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1, swipeLeft())
         ).check(onlyShownInventoryItemsAre(redItem0, yellowItem2, grayItem11))
 
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(2, swipeRight())
         ).check(onlyShownInventoryItemsAre(redItem0, yellowItem2))
     }
@@ -349,7 +352,7 @@ class InventoryFragmentTests {
     @Test fun deleteItemsViaActionBarDeleteButton() {
         selectIndividualItems()
         onView(withId(R.id.changeSortButton)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(redItem0, yellowItem2))
     }
 
@@ -399,26 +402,27 @@ class InventoryFragmentTests {
         onPopupView(withText(R.string.color_description)).perform(click())
         onView(withId(R.id.shoppingListRecyclerView)).check(onlyShownShoppingListItemsAre(
             ShoppingListItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                             amount = 1, color = orangeItem1.color),
-            ShoppingListItem(name = grayItem11.name, amount = 1, color = grayItem11.color)))
+                             amount = 1, color = orangeItem1.color, inventoryId = inventoryId),
+            ShoppingListItem(name = grayItem11.name, amount = 1, color = grayItem11.color,
+                             inventoryId = inventoryId)))
     }
 
     @Test fun changeItemColor() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(2, clickCheckBox()))
         onView(withId(R.id.colorSheetList)).perform(
             actionsOnItemAtPosition(6, click()))
-        onView(withId(R.id.inventoryRecyclerView)).perform(doStuff<RecyclerView> {
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(doStuff<RecyclerView> {
             val item = (it.adapter as ListAdapter<*, *>).currentList[2] as InventoryItem
             assertThat(item.color).isEqualTo(6)
-            val vh = it.findViewHolderForAdapterPosition(2) as InventoryRecyclerView.ViewHolder
+            val vh = it.findViewHolderForAdapterPosition(2) as InventoryItemRecyclerView.ViewHolder
             assertThat(vh.view.ui.checkBox.colorIndex).isEqualTo(6)
             assertThat(vh.view.detailsUi.autoAddToShoppingListCheckBox.colorIndex).isEqualTo(6)
         })
     }
 
     @Test fun changeItemName() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(2,
                 clickEditButton(),
                 actionOnChildWithId(R.id.nameEdit, click(), typeText("er")),
@@ -426,13 +430,13 @@ class InventoryFragmentTests {
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[2] as InventoryItem
                 assertThat(item.name).isEqualTo("Yellower")
-                val vh = it.findViewHolderForAdapterPosition(2) as InventoryRecyclerView.ViewHolder
+                val vh = it.findViewHolderForAdapterPosition(2) as InventoryItemRecyclerView.ViewHolder
                 assertThat(vh.view.ui.nameEdit.text.toString()).isEqualTo("Yellower")
             })
     }
 
     @Test fun changeItemExtraInfo() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),
                 actionOnChildWithId(R.id.extraInfoEdit, click(), typeText(" 2.0")),
@@ -440,30 +444,30 @@ class InventoryFragmentTests {
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
                 assertThat(item.extraInfo).isEqualTo("Extra info 2.0")
-                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryItemRecyclerView.ViewHolder
                 assertThat(vh.view.ui.extraInfoEdit.text.toString()).isEqualTo("Extra info 2.0")
             })
     }
 
     @Test fun changeItemAmountUsingButtons() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1, onAmount(onIncreaseButton(click(), click()))),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
                 assertThat(item.amount).isEqualTo(4)
-                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryItemRecyclerView.ViewHolder
                 assertThat(vh.view.ui.amountEdit.value).isEqualTo(4)
             }, actionsOnItemAtPosition(1, onAmount(onDecreaseButton(click()))),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
                 assertThat(item.amount).isEqualTo(3)
-                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryItemRecyclerView.ViewHolder
                 assertThat(vh.view.ui.amountEdit.value).isEqualTo(3)
             })
     }
 
     @Test fun changeItemAmountUsingKeyboard() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),
                 actionOnChildWithId(R.id.amountEdit, replaceValueEditText("29")),
@@ -471,13 +475,13 @@ class InventoryFragmentTests {
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
                 assertThat(item.amount).isEqualTo(29)
-                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryItemRecyclerView.ViewHolder
                 assertThat(vh.view.ui.amountEdit.value).isEqualTo(29)
             })
     }
 
     @Test fun changeItemAddToShoppingList() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),
                 clickAddToShoppingListCheckBox(),
@@ -485,33 +489,33 @@ class InventoryFragmentTests {
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
                 assertThat(item.autoAddToShoppingList).isTrue()
-                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryItemRecyclerView.ViewHolder
                 assertThat(vh.view.detailsUi.autoAddToShoppingListCheckBox.isChecked).isTrue()
             })
     }
 
     @Test fun changeItemAddToShoppingListAmountUsingButtons() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),
                 onAddToShoppingListTrigger(onIncreaseButton(click(), click()))),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
                 assertThat(item.autoAddToShoppingListAmount).isEqualTo(3)
-                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryItemRecyclerView.ViewHolder
                 assertThat(vh.view.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(3)
             }, actionsOnItemAtPosition(1,
                 onAddToShoppingListTrigger(onDecreaseButton(click()))),
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
                 assertThat(item.autoAddToShoppingListAmount).isEqualTo(2)
-                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryItemRecyclerView.ViewHolder
                 assertThat(vh.view.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(2)
             })
     }
 
     @Test fun changeItemAddToShoppingListAmountUsingKeyboard() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),
                 actionOnChildWithId(R.id.autoAddToShoppingListAmountEdit,
@@ -520,13 +524,13 @@ class InventoryFragmentTests {
             doStuff<RecyclerView> {
                 val item = (it.adapter as ListAdapter<*, *>).currentList[1] as InventoryItem
                 assertThat(item.autoAddToShoppingListAmount).isEqualTo(12)
-                val vh = it.findViewHolderForAdapterPosition(1) as InventoryRecyclerView.ViewHolder
+                val vh = it.findViewHolderForAdapterPosition(1) as InventoryItemRecyclerView.ViewHolder
                 assertThat(vh.view.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(12)
             })
     }
 
     @Test fun addToShoppingListWorksWhenTurnedOnWithConditionsAlreadyMet() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(1,
                 clickEditButton(),
                 actionOnChildWithId(R.id.autoAddToShoppingListAmountEdit,
@@ -535,13 +539,15 @@ class InventoryFragmentTests {
                 clickEditButton()))
         onView(withId(R.id.shoppingListButton)).perform(click())
         val expectedItem = ShoppingListItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                                            color = orangeItem1.color, amount = 12 - orangeItem1.amount)
+                                            color = orangeItem1.color, amount = 12 - orangeItem1.amount,
+                                            inventoryId = inventoryId)
+
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }
 
     @Test fun addToShoppingListWorksWhenAmountIsDecreasedBelowTrigger() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(3,
                 clickEditButton(),
                 actionOnChildWithId(R.id.autoAddToShoppingListAmountEdit,
@@ -550,25 +556,23 @@ class InventoryFragmentTests {
                     replaceValueEditText("6")),
                 clickEditButton()))
         onView(withId(R.id.shoppingListButton)).perform(click())
-        val expectedItem = ShoppingListItem(name = grayItem11.name,
-                                            color = grayItem11.color,
-                                            amount = 3)
+        val expectedItem = ShoppingListItem(name = grayItem11.name, color = grayItem11.color,
+                                            amount = 3, inventoryId = inventoryId)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }
 
     @Test fun addToShoppingListWorksWhenTriggerIsRaisedAboveAmount() {
-        onView(withId(R.id.inventoryRecyclerView)).perform(
+        onView(withId(R.id.inventoryItemRecyclerView)).perform(
             actionsOnItemAtPosition(3,
                 clickEditButton(),
                 actionOnChildWithId(R.id.autoAddToShoppingListAmountEdit,
                     replaceValueEditText("11")),
                 clickEditButton()))
         onView(withId(R.id.shoppingListButton)).perform(click())
-        val expectedItem = ShoppingListItem(name = grayItem11.name,
-                                            extraInfo = grayItem11.extraInfo,
-                                            color = grayItem11.color,
-                                            amount = 11 - grayItem11.amount)
+        val expectedItem = ShoppingListItem(name = grayItem11.name, extraInfo = grayItem11.extraInfo,
+                                            color = grayItem11.color, amount = 11 - grayItem11.amount,
+                                            inventoryId = inventoryId)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(expectedItem))
     }

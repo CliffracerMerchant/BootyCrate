@@ -6,7 +6,7 @@
 <com.kennyc.view.MultiStateView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/inventoryFragmentView"
+    android:id="@+id/inventoryItemFragmentView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:msv_emptyView="@layout/empty_recycler_view"
@@ -15,8 +15,8 @@
     app:msv_animateViewChanges="true"
     app:msv_viewState="loading" >
 
-    <com.cliffracertech.bootycrate.recyclerview.InventoryRecyclerView
-        android:id="@+id/inventoryRecyclerView"
+    <com.cliffracertech.bootycrate.recyclerview.InventoryItemRecyclerView
+        android:id="@+id/inventoryItemRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         style="@style/RecyclerView" />

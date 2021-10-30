@@ -47,19 +47,22 @@ import org.junit.runner.RunWith
 class ShoppingListFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val dao = BootyCrateDatabase.get(context as Application).dao()
+    private val db = BootyCrateDatabase.get(context as Application)
+    private val dao = db.itemDao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
-    private var redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
-    private var orangeItem1 = ShoppingListItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
-    private var yellowItem2 = ShoppingListItem(name = "Yellow", color = 2, amount = 1)
-    private var grayItem11 = ShoppingListItem(name = "Gray", color = 11, amount = 9)
+    private val inventoryId = db.run { runBlocking { inventoryDao().deleteAll() }
+                                       inventoryDao().getAllNow()[0].id }
+    private var redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8, inventoryId = inventoryId)
+    private var orangeItem1 = ShoppingListItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2, inventoryId = inventoryId)
+    private var yellowItem2 = ShoppingListItem(name = "Yellow", color = 2, amount = 1, inventoryId = inventoryId)
+    private var grayItem11 = ShoppingListItem(name = "Gray", color = 11, amount = 9, inventoryId = inventoryId)
 
     @Before fun resetItems() {
         activityRule.scenario.onActivity {
-            val shoppingListViewModel: ShoppingListViewModel by it.viewModels()
-            shoppingListViewModel.sortByChecked = false
-            shoppingListViewModel.sort = BootyCrateItemSort.Color
+            val shoppingListItemViewModel: ShoppingListItemViewModel by it.viewModels()
+            shoppingListItemViewModel.sortByChecked = false
+            shoppingListItemViewModel.sort = BootyCrateItemSort.Color
             val prefs = PreferenceManager.getDefaultSharedPreferences(it)
             prefs.edit().putBoolean(it.getString(R.string.pref_sort_by_checked_key), false).apply()
         }
@@ -133,9 +136,9 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.shoppingListButton)).perform(click())
     }
 
-    private fun switchToPreferencesAndBack() {
-        onView(withId(R.id.menuButton)).perform(click())
-        onPopupView(withText(R.string.settings_description)).perform(click())
+    private fun switchToSettingsAndBack() {
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+        onView(withId(R.id.settingsButton)).perform(click())
         onView(withId(R.id.backButton)).perform(click())
     }
 
@@ -151,19 +154,19 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.shoppingListButton)).perform(click())
     }
 
-    private fun changeOrientationWhileInPreferences() {
-        onView(withId(R.id.menuButton)).perform(click())
-        onPopupView(withText(R.string.settings_description)).perform(click())
+    private fun changeOrientationWhileInSettings() {
+        onView(withId(R.id.bottomNavigationDrawer)).perform(setExpandedAndWaitForSettling())
+        onView(withId(R.id.settingsButton)).perform(click())
         uiDevice.setOrientationLeft()
         uiDevice.setOrientationNatural()
         onView(withId(R.id.backButton)).perform(click())
     }
 
     @Test fun expandedItemSurvivesSwitchingToInventory() = expandedItemSurvives(::switchToInventoryAndBack)
-    @Test fun expandedItemSurvivesSwitchingToPreferences() = expandedItemSurvives(::switchToPreferencesAndBack)
+    @Test fun expandedItemSurvivesSwitchingToSettings() = expandedItemSurvives(::switchToSettingsAndBack)
     @Test fun expandedItemSurvivesOrientationChange() = expandedItemSurvives(::changeOrientationAndBack)
     @Test fun expandedItemSurvivesOrientationChangeWhileInInventory() = expandedItemSurvives(::changeOrientationWhileInInventory)
-    @Test fun expandedItemSurvivesOrientationChangeWhileInPreferences() = expandedItemSurvives(::changeOrientationWhileInPreferences)
+    @Test fun expandedItemSurvivesOrientationChangeWhileInSettings() = expandedItemSurvives(::changeOrientationWhileInSettings)
 
     @Test fun selectIndividualItems() {
         onView(withId(R.id.shoppingListRecyclerView)).perform(
@@ -212,10 +215,10 @@ class ShoppingListFragmentTests {
             .check(onlySelectedIndicesAre(1, 3))
     }
     @Test fun selectionSurvivesSwitchingToInventory() = selectionSurvives(::switchToInventoryAndBack)
-    @Test fun selectionSurvivesSwitchingToPreferences() = selectionSurvives(::switchToPreferencesAndBack)
+    @Test fun selectionSurvivesSwitchingToSettings() = selectionSurvives(::switchToSettingsAndBack)
     @Test fun selectionSurvivesOrientationChange() = selectionSurvives(::changeOrientationAndBack)
     @Test fun selectionSurvivesOrientationChangeWhileInInventory() = selectionSurvives(::changeOrientationWhileInInventory)
-    @Test fun selectionSurvivesOrientationChangeWhileInPreferences() = selectionSurvives(::changeOrientationWhileInPreferences)
+    @Test fun selectionSurvivesOrientationChangeWhileInSettings() = selectionSurvives(::changeOrientationWhileInSettings)
 
     @Test fun search() {
         onView(withId(R.id.searchButton)).perform(click())
@@ -277,10 +280,10 @@ class ShoppingListFragmentTests {
     }
 
     @Test fun searchQuerySurvivesSwitchingToInventory() = searchQuerySurvives(::switchToInventoryAndBack)
-    @Test fun searchQuerySurvivesSwitchingToPreferences() = searchQuerySurvives(::switchToPreferencesAndBack)
+    @Test fun searchQuerySurvivesSwitchingToSettings() = searchQuerySurvives(::switchToSettingsAndBack)
     @Test fun searchQuerySurvivesOrientationChange() = searchQuerySurvives(::changeOrientationAndBack)
     @Test fun searchQuerySurvivesOrientationChangeWhileInInventory() = searchQuerySurvives(::changeOrientationWhileInInventory)
-    @Test fun searchQuerySurvivesOrientationChangeWhileInPreferences() = searchQuerySurvives(::changeOrientationWhileInPreferences)
+    @Test fun searchQuerySurvivesOrientationChangeWhileInSettings() = searchQuerySurvives(::changeOrientationWhileInSettings)
     @Test fun searchQuerySurvivesSelectionAndDeselection() = searchQuerySurvives(::deselectAllWithActionBarBackButton)
 
     private fun emptySearchResultsMessage() = allOf(withId(R.id.emptyRecyclerViewMessage),
@@ -301,7 +304,7 @@ class ShoppingListFragmentTests {
 
     @Test fun emptyMessageDisappears() {
         emptyMessageAppears()
-        runBlocking { dao.add(ShoppingListItem(name = "new item")) }
+        runBlocking { dao.add(ShoppingListItem(name = "new item", inventoryId = inventoryId)) }
         Thread.sleep(30L)
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
@@ -385,10 +388,11 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.inventoryButton)).perform(click())
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
-        onView(withId(R.id.inventoryRecyclerView)).check(onlyShownInventoryItemsAre(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(onlyShownInventoryItemsAre(
             InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                          amount = 0, color = orangeItem1.color),
-            InventoryItem(name = grayItem11.name, amount = 0, color = grayItem11.color)))
+                          amount = 0, color = orangeItem1.color, inventoryId = inventoryId),
+            InventoryItem(name = grayItem11.name, amount = 0,
+                          color = grayItem11.color, inventoryId = inventoryId)))
     }
 
     @Test fun changeItemColor() {
@@ -561,10 +565,12 @@ class ShoppingListFragmentTests {
         checkoutRemovesCheckedItems()
         onView(withId(R.id.inventoryButton)).perform(click())
         val expectedItem1 = InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                                          color = orangeItem1.color, amount = orangeItem1.amount)
-        val expectedItem2 = InventoryItem(name = grayItem11.name, color = grayItem11.color, amount = 0)
+                                          color = orangeItem1.color, amount = orangeItem1.amount,
+                                          inventoryId = inventoryId)
+        val expectedItem2 = InventoryItem(name = grayItem11.name, color = grayItem11.color,
+                                          amount = 0, inventoryId = inventoryId)
         // grayItem11 was not checked and should not have its amount updated.
-        onView(withId(R.id.inventoryRecyclerView)).check(
+        onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(expectedItem1, expectedItem2))
     }
 

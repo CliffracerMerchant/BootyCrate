@@ -19,21 +19,23 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.math.MathUtils.lerp
 import com.google.android.material.shape.*
 import kotlin.math.*
 
 /**
  * A custom toolbar that has a cutout in its top edge to hold the contents of a layout.
  *
- * BottomAppBar functions mostly as a regular Toolbar, except that it draws a
- * cutout in its shape that can be used to hold the contents of a child layout,
- * and it draws an indicator along its top edge (taking into account the cradle
- * cutout) that can be set to match the position of a child BottomNavigationView
- * item. The layout that holds the cradle contents must be added as a child of
- * the BottomAppBar (either programmatically or in XML), and the value of the
- * BottomAppBar XML attribute cradleLayoutResId must be equal to the id of the
- * child cradle layout. Likewise, the BottomNavigationView must be a child of
- * the BottomAppBar, and must referenced by the XML attribute navViewResId.
+ * BottomAppBar is a FrameLayout that is intended to hold a inner BottomNavigationView
+ * instance. It also draws a cutout in its top edge that can be used to hold
+ * the contents of a child layout, and it draws an indicator along its top edge
+ * (taking into account the cradle cutout) that can be set to match the
+ * position of the navigation view child's active item. The layout that holds
+ * the cradle contents must be added as a child of the BottomAppBar in XML),
+ * and the value of the BottomAppBar XML attribute cradleLayoutResId must be
+ * equal to the id of the child cradle layout that will be contained in the
+ * cradle cutout. Likewise, the BottomNavigationView must be a child of the
+ * BottomAppBar, and must referenced by the XML attribute navViewResId.
  *
  * BottomAppBar contains a member, cradle, that holds the values (e.g. width)
  * that describe how it draws its cradle around the cradle layout contents. See
@@ -44,8 +46,13 @@ import kotlin.math.*
  * indicator is moved to new items using the NavIndicator function moveToItem.
  *
  * In addition to the cradle cutout, BottomAppBar also styles its top left
- * and top right corners with rounded corners with a radius equal to the
- * value of the XML attr topOuterCornerRadius.
+ * and top right corners with rounded corners. The property interpolation
+ * describes how it will draw its cradle and its top outer corners. An
+ * interpolation value of 1f will result in a fully drawn cradle and top outer
+ * corners with a radius equal to the value of the XML attribute
+ * topOuterCornerStartRadius, while a value of 0f will result in a flat line
+ * where the cradle would be and top outer corners with a radius equal to the
+ * value of the XML attr topOuterCornerEndRadius.
  *
  * Like the Material library BottomAppBar, BottomAppBar manages its own
  * background. In order to tint the background a solid color, the property
@@ -61,8 +68,14 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
 
     val cradle = Cradle()
     val navIndicator = NavIndicator()
-    var topOuterCornerRadius = 0f
+    var interpolation = 1f
         set(value) { field = value; pathIsDirty = true}
+    var topOuterCornerStartRadius = 0f
+        set(value) { field = value; pathIsDirty = interpolation != 1f }
+    var topOuterCornerEndRadius = 0f
+        set(value) { field = value; pathIsDirty = interpolation != 0f }
+    val topOuterCornerRadius get() =
+        lerp(topOuterCornerEndRadius, topOuterCornerStartRadius, interpolation)
 
     var backgroundTint: Int get() = drawable.paint.color
                             set(value) { drawable.paint.color = value }
@@ -73,11 +86,12 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         val a = context.obtainStyledAttributes(attrs, R.styleable.BottomAppBar)
         val cradleLayoutResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_cradleLayoutResId)
         val navBarResId = a.getResourceIdOrThrow(R.styleable.BottomAppBar_navViewResId)
-        topOuterCornerRadius = a.getDimension(R.styleable.BottomAppBar_topOuterCornerRadius, 0f)
         backgroundTint = a.getColor(R.styleable.BottomAppBar_backgroundTint,
                                     ContextCompat.getColor(context, android.R.color.white))
+        interpolation = a.getFloat(R.styleable.BottomAppBar_interpolation, 1f)
+        topOuterCornerStartRadius = a.getDimension(R.styleable.BottomAppBar_topOuterCornerStartRadius, 0f)
+        topOuterCornerEndRadius = a.getDimension(R.styleable.BottomAppBar_topOuterCornerEndRadius, 0f)
 
-        cradle.interpolation = a.getFloat(R.styleable.BottomAppBar_cradleInterpolation, 1f)
         cradle.depth = a.getDimension(R.styleable.BottomAppBar_cradleDepth, 0f)
         cradle.topCornerRadius = a.getDimension(R.styleable.BottomAppBar_cradleTopCornerRadius, 0f)
         cradle.bottomCornerRadius = a.getDimension(R.styleable.BottomAppBar_cradleBottomCornerRadius, 0f)
@@ -111,24 +125,27 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
               startAngle, sweepAngle, false)
 
     override fun invalidate() {
-        if (pathIsDirty && cradle.layout != null) drawable.path.run {
-            rewind()
-            moveTo(0f, topOuterCornerRadius)
-            arcTo(centerX = topOuterCornerRadius,
-                centerY = topOuterCornerRadius,
-                radius = topOuterCornerRadius,
-                startAngle = angleLeft,
-                sweepAngle = 90f)
-            cradle.addTo(this)
-            arcTo(centerX = width - topOuterCornerRadius,
-                centerY = topOuterCornerRadius,
-                radius = topOuterCornerRadius,
-                startAngle = angleUp,
-                sweepAngle = 90f)
-            lineTo(width.toFloat(), height.toFloat())
-            lineTo(0f, height.toFloat())
-            close()
-            pathIsDirty = false
+        if (pathIsDirty && cradle.layout != null) {
+            val topOuterCornerRadius = this.topOuterCornerRadius
+            drawable.path.run {
+                rewind()
+                moveTo(0f, topOuterCornerRadius)
+                arcTo(centerX = topOuterCornerRadius,
+                    centerY = topOuterCornerRadius,
+                    radius = topOuterCornerRadius,
+                    startAngle = angleLeft,
+                    sweepAngle = 90f)
+                cradle.addTo(this)
+                arcTo(centerX = width - topOuterCornerRadius,
+                    centerY = topOuterCornerRadius,
+                    radius = topOuterCornerRadius,
+                    startAngle = angleUp,
+                    sweepAngle = 90f)
+                lineTo(width.toFloat(), height.toFloat())
+                lineTo(0f, height.toFloat())
+                close()
+                pathIsDirty = false
+            }
         }
         super.invalidate()
     }
@@ -144,11 +161,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
      *
      * Cradle stores the following publicly accessible values that describe how
      * it draws its cradle on a Path instance:
-     *
-     * - interpolation: Initialized using the XML attribute cradleInterpolation.
-     *      The interpolation value for the cradle. The valid range is 0f - 1f.
-     *      A value of 0f will result in a straight line, while a value of 1f
-     *      will fully draw the cradle.
+
      * - width: Initialized using the XML attribute cradleWidth.
      *      The contents width of the cradle. This value is publicly accessible
      *      so that it can be used in animations.
@@ -165,8 +178,6 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         var layout: ViewGroup? = null
             private set
 
-        var interpolation = 1f
-            set(value) { field = value; pathIsDirty = true}
         var width = 0f
             set(value) { field = value; pathIsDirty = true}
         var depth = 0f
@@ -235,7 +246,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             val topRadiusFraction = topCornerRadius / (topCornerRadius + bottomCornerRadius)
             val topYDistance = yDistance * topRadiusFraction
 
-            // Because the x distances covered by the top and bottom curves varies in a non-linear
+            // Because the y distances covered by the top and bottom curves varies in a non-linear
             // fashion with respect to the interpolation value, passing the interpolation value
             // through a decelerate interpolator results in a more linear change.
             val adjustedInterp = decelerate.getInterpolation(interpolation).toDouble()
@@ -353,7 +364,6 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         /** Move the indicator to be above the item with id equal to @param
          * menuItemId, animating the change if @param animate == true. */
         fun moveToItem(menuItemId: Int, animate: Boolean = true) {
-            if (menuItemId == selectedMenuItemId) return
             navView?.findViewById<View>(menuItemId)?.let {
                 it.getGlobalVisibleRect(rect)
                 val newXPos = rect.centerX() - width / 2f
@@ -368,6 +378,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         }
 
         private fun findDistanceForX(x: Float): Float {
+            val topOuterCornerRadius = this@BottomAppBar.topOuterCornerRadius
             var distance = 0f
 
             if (x < topOuterCornerRadius) {
@@ -418,8 +429,8 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             return distance
         }
 
-       private fun updatePath() {
-            if (cradle.interpolation != 1f) return
+        private fun updatePath() {
+            if (interpolation != 1f) return
             path.rewind()
             pathMeasure.setPath(drawable.path, false)
             pathMeasure.getSegment(startDistance, startDistance + width, path, true)

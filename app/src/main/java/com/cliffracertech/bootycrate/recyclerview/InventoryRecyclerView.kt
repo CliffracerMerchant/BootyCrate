@@ -1,146 +1,346 @@
-/* Copyright 2021 Nicholas Hochstetler
+/*
+ * Copyright 2021 Nicholas Hochstetler
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
- * or in the file LICENSE in the project's root directory. */
+ * or in the file LICENSE in the project's root directory.
+ */
+
 package com.cliffracertech.bootycrate.recyclerview
 
 import android.content.Context
+import android.content.res.Resources
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.content.ContextCompat
+import androidx.core.view.isInvisible
+import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.DiffUtil
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.inventoryViewModel
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.database.BootyCrateInventory
+import com.cliffracertech.bootycrate.database.DatabaseSettings
+import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
+import com.cliffracertech.bootycrate.database.InventoryViewModel
+import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
+import com.cliffracertech.bootycrate.utils.deleteInventoryDialog
+import com.cliffracertech.bootycrate.utils.dpToPixels
+import com.cliffracertech.bootycrate.utils.intValueAnimator
+import com.cliffracertech.bootycrate.utils.inventoryNameDialog
 import java.util.*
 
-/** A RecyclerView to display the data provided by an InventoryViewModel. */
-class InventoryRecyclerView(context: Context, attrs: AttributeSet) :
-    ExpandableSelectableRecyclerView<InventoryItem>(context, attrs)
+/**
+ * A RecyclerView to display a list of all of the inventories exposed by an instance of InventoryViewModel.
+ *
+ * InventoryRecyclerView comes with an internal adapter type, InventoryListAdapter,
+ * that will display a list of all of the user's inventories if provided with
+ * submitList. InventoryListAdapter uses a custom DiffUtil.ItemCallback to
+ * support full and partial binding of the InventoryView instances it uses to
+ * display each BootyCrateInventory in the submitted list. Subclasses may wish
+ * to override InventoryListAdapter with their own in order to perform work on
+ * each created InventoryView.
+ *
+ * InventoryRecyclerView does not set its own adapter, as it is assumed that
+ * subclasses will override InventoryListAdapter with their own implementation.
+ * It does set its layoutManager to a vertical LinearLayoutManager (due to the
+ * stretched horizontal aspect ratio of InventoryViews making another layout
+ * type impractical), and it provides its own item spacing decoration with
+ * spacing equal to to the value of the dimension R.dimen.recycler_view_item_spacing,
+ * or 0 if the dimension resource is not found.
+ */
+open class InventoryRecyclerView(context: Context, attrs: AttributeSet?) :
+    RecyclerView(context, attrs)
 {
-    override val diffUtilCallback = DiffUtilCallback()
-    override val adapter = Adapter()
-    override val viewModel = inventoryViewModel(context)
+    init {
+        setHasFixedSize(true)
+        layoutManager = LinearLayoutManager(context)
+        val spacing = try { resources.getDimensionPixelSize(R.dimen.recycler_view_item_spacing) }
+                      catch(e: Resources.NotFoundException) { 0 }
+        addItemDecoration(ItemSpacingDecoration(spacing))
+    }
 
-    /**
-     * A RecyclerView.Adapter to display the contents of a list of inventory items.
-     *
-     * InventoryRecyclerView.Adapter is a subclass of ExpandableSelectableRecyclerView.Adapter
-     * using InventoryRecyclerView.ViewHolder instances to represent inventory
-     * items. Its overrides of onBindViewHolder make use of the InventoryItem.Field
-     * values passed by InventoryRecyclerView.DiffUtilCallback to support partial
-     * binding. Note that InventoryAdapter assumes that any change payloads passed
-     * to it are of the type EnumSet<InventoryItem.Field>. If a payload of another
-     * type is passed to it, an exception will be thrown.
-     */
-    inner class Adapter : ExpandableSelectableRecyclerView<InventoryItem>.Adapter<ViewHolder>() {
+    protected open inner class InventoryListAdapter :
+        ListAdapter<BootyCrateInventory, InventoryViewHolder>(DiffUtilCallback())
+    {
+        init { setHasStableIds(true) }
+
+        override fun getItemId(position: Int) = currentList[position].id
+
+        override fun getItemCount() = currentList.size
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            ViewHolder(InventoryItemView(context, itemAnimator.animatorConfig))
+            InventoryViewHolder(InventoryView(context))
 
-        override fun onBindViewHolder(
-            holder: ViewHolder,
-            position: Int,
-            payloads: MutableList<Any>
-        ) {
+        override fun onBindViewHolder(holder: InventoryViewHolder, position: Int) =
+            holder.view.update(getItem(position))
+
+        override fun onBindViewHolder(holder: InventoryViewHolder, position: Int, payloads: MutableList<Any>) {
             if (payloads.size == 0)
                 return onBindViewHolder(holder, position)
 
             for (payload in payloads) {
                 val item = getItem(position)
-                @Suppress("UNCHECKED_CAST")
-                val changes = payload as EnumSet<InventoryItem.Field>
                 val ui = holder.view.ui
-                val detailsUi = holder.view.detailsUi
+                @Suppress("UNCHECKED_CAST")
+                val changes = payload as EnumSet<Field>
 
-                if (changes.contains(InventoryItem.Field.Name))
-                    holder.view.setNameText(item.name)
-                if (changes.contains(InventoryItem.Field.ExtraInfo) &&
-                    ui.extraInfoEdit.text.toString() != item.extraInfo)
-                        holder.view.setExtraInfoText(item.extraInfo)
-                if (changes.contains(InventoryItem.Field.Color)) {
-                    if (ui.checkBox.colorIndex != item.color)
-                        ui.checkBox.colorIndex = item.color
-                    if (detailsUi.autoAddToShoppingListCheckBox.colorIndex != item.color)
-                        detailsUi.autoAddToShoppingListCheckBox.colorIndex = item.color
-                }
-                if (changes.contains(InventoryItem.Field.Amount) &&
-                    ui.amountEdit.value != item.amount)
-                        ui.amountEdit.value = item.amount
-                if (changes.contains(InventoryItem.Field.IsExpanded) &&
-                    holder.view.isExpanded != item.isExpanded)
-                        holder.view.setExpanded(item.isExpanded)
-                if (changes.contains(InventoryItem.Field.IsSelected) &&
-                    holder.view.isInSelectedState != item.isSelected)
-                        holder.view.setSelectedState(item.isSelected)
-                if (changes.contains(InventoryItem.Field.IsLinked))
-                    holder.view.updateIsLinked(item.isLinked, animate = item.isExpanded)
-                if (changes.contains(InventoryItem.Field.AutoAddToShoppingList) &&
-                    detailsUi.autoAddToShoppingListCheckBox.isChecked != item.autoAddToShoppingList)
-                        detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
-                if (changes.contains(InventoryItem.Field.AutoAddToShoppingListAmount) &&
-                    detailsUi.autoAddToShoppingListAmountEdit.value != item.autoAddToShoppingListAmount)
-                        detailsUi.autoAddToShoppingListAmountEdit.value = item.autoAddToShoppingListAmount
+                if (changes.contains(Field.Name) && item.name != ui.nameView.text.toString())
+                    ui.nameView.text = item.name
+                if (changes.contains(Field.ShoppingListItemCount))
+                    ui.shoppingListItemCountView.text = item.shoppingListItemCount.toString()
+                if (changes.contains(Field.InventoryItemCount))
+                    ui.inventoryItemCountView.text = item.inventoryItemCount.toString()
+                if (changes.contains(Field.IsSelected))
+                    holder.view.setSelectedState(item.isSelected)
             }
         }
     }
 
-    /**
-     * A ExpandableSelectableRecyclerView.ViewHolder that wraps an instance of InventoryItemView.
-     *
-     * InventoryRecyclerView.ViewHolder is a subclass of ExpandableSelectableRecyclerView.ViewHolder
-     * that holds an instance of InventoryItemView to display the data for an
-     * InventoryItem.
-     */
-    inner class ViewHolder(view: InventoryItemView) :
-        ExpandableSelectableRecyclerView<InventoryItem>.ViewHolder(view) {
-
-        override val view get() = itemView as InventoryItemView
-
-        init {
-            view.detailsUi.autoAddToShoppingListCheckBox.onCheckedChangedListener = { checked ->
-                viewModel.updateAutoAddToShoppingList(item.id, checked)
-            }
-            view.detailsUi.autoAddToShoppingListAmountEdit.onValueChangedListener = { value ->
-                if (adapterPosition != -1)
-                    viewModel.updateAutoAddToShoppingListAmount(item.id, value)
-            }
-        }
+    inner class InventoryViewHolder(view: InventoryView) : RecyclerView.ViewHolder(view) {
+        val view get() = itemView as InventoryView
     }
 
-    /**
-     * Computes a diff between two inventory item lists.
-     *
-     * InventoryRecyclerView.DiffUtilCallback uses the ids of inventory items to
-     * determine if they are the same or not. If they are the same, the change
-     * payload will be an instance of EnumSet<InventoryItem.Field> that contains
-     * the InventoryItem.Field values for all of the fields that were changed.
-     */
-    class DiffUtilCallback : DiffUtil.ItemCallback<InventoryItem>() {
-        private val listChanges = mutableMapOf<Long, EnumSet<InventoryItem.Field>>()
-        private val itemChanges = EnumSet.noneOf(InventoryItem.Field::class.java)
+    protected enum class Field { Name, ShoppingListItemCount, InventoryItemCount, IsSelected }
 
-        override fun areItemsTheSame(oldItem: InventoryItem, newItem: InventoryItem) =
+    private class DiffUtilCallback : DiffUtil.ItemCallback<BootyCrateInventory>() {
+        private val listChanges = mutableMapOf<Long, EnumSet<Field>>()
+        private val itemChanges = EnumSet.noneOf(Field::class.java)
+
+        override fun areItemsTheSame(oldItem: BootyCrateInventory, newItem: BootyCrateInventory) =
             oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: InventoryItem, newItem: InventoryItem) =
+        override fun areContentsTheSame(oldItem: BootyCrateInventory, newItem: BootyCrateInventory) =
             itemChanges.apply {
                 clear()
-                if (newItem.name != oldItem.name)             add(InventoryItem.Field.Name)
-                if (newItem.extraInfo != oldItem.extraInfo)   add(InventoryItem.Field.ExtraInfo)
-                if (newItem.color != oldItem.color)           add(InventoryItem.Field.Color)
-                if (newItem.amount != oldItem.amount)         add(InventoryItem.Field.Amount)
-                if (newItem.isExpanded != oldItem.isExpanded) add(InventoryItem.Field.IsExpanded)
-                if (newItem.isSelected != oldItem.isSelected) add(InventoryItem.Field.IsSelected)
-                if (newItem.isLinked != oldItem.isLinked)     add(InventoryItem.Field.IsLinked)
-                if (newItem.autoAddToShoppingList != oldItem.autoAddToShoppingList)
-                    add(InventoryItem.Field.AutoAddToShoppingList)
-                if (newItem.autoAddToShoppingListAmount != oldItem.autoAddToShoppingListAmount)
-                    add(InventoryItem.Field.AutoAddToShoppingListAmount)
+                if (newItem.name != oldItem.name)
+                    add(Field.Name)
+                if (newItem.shoppingListItemCount != oldItem.shoppingListItemCount)
+                    add(Field.ShoppingListItemCount)
+                if (newItem.inventoryItemCount != oldItem.inventoryItemCount)
+                    add(Field.InventoryItemCount)
+                if (newItem.isSelected != oldItem.isSelected)
+                    add(Field.IsSelected)
 
                 if (!isEmpty())
                     listChanges[newItem.id] = EnumSet.copyOf(this)
             }.isEmpty()
 
-        override fun getChangePayload(oldItem: InventoryItem, newItem: InventoryItem) =
+        override fun getChangePayload(oldItem: BootyCrateInventory, newItem: BootyCrateInventory) =
             listChanges.remove(newItem.id)
+    }
+}
+
+/**
+ * An InventoryRecyclerView to display and allow for editing of all of the user's inventories.
+ *
+ * InventorySelector displays a list of all of the user's inventories, and
+ * allows the user to edit their state. User taps will select a single
+ * inventory when the database is in single-select mode, or select or deselect
+ * inventories when it is in multi-select mode. InventorySelector implements a
+ * popup menu that is displayed when the user taps the options button for an
+ * inventory, and provides dialogs that allow for renaming or deleting of
+ * inventories.
+ *
+ * In order to display the user's inventories, the function initViewModel
+ * should be called after construction with an instance of InventoryViewModel
+ * for it to observe and an instance of LifecycleOwner that matches the
+ * InventorySelector's lifespan.
+ */
+class InventorySelector(context: Context, attrs: AttributeSet?) :
+    InventoryRecyclerView(context, attrs)
+{
+    private val adapter = Adapter()
+    private lateinit var viewModel: InventoryViewModel
+
+    init { setAdapter(adapter) }
+
+    fun initViewModel(viewModel: InventoryViewModel, lifecycleOwner: LifecycleOwner) {
+        this.viewModel = viewModel
+        viewModel.inventories.observe(lifecycleOwner) { adapter.submitList(it) }
+    }
+
+    val InventoryViewHolder.item: BootyCrateInventory get() = adapter.currentList[adapterPosition]
+
+    protected inner class Adapter: InventoryListAdapter() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+            super.onCreateViewHolder(parent, viewType).apply {
+                view.setOnClickListener { viewModel.updateIsSelected(item.id) }
+                view.ui.optionsButton.setOnClickListener {
+                    val menu = PopupMenu(context, view.ui.optionsButton)
+                    menu.inflate(R.menu.inventory_options)
+                    menu.setOnMenuItemClickListener {
+                        if (it.itemId == R.id.renameInventoryButton)
+                            inventoryNameDialog(context, item.name) { viewModel.updateName(item.id, it) }
+                        else /*R.id.deleteInventoryButton*/
+                            deleteInventoryDialog(context) { viewModel.delete(item.id) }
+                        true
+                    }
+                    menu.show()
+                }
+            }
+    }
+}
+
+/** An options menu that provides a toggle checkbox for multi-selecting
+ * inventories, as well as a select all button. The view passed in to
+ * InventorySelectionOptionsMenu's constructor will have its onClickListener
+ * set to open the options menu instance, with the view as its anchor. The
+ * companion object function openOnClickOf provides the same functionality
+ * in a more idiomatic way. */
+class InventorySelectionOptionsMenu(
+    anchor: View,
+    private val dbSettingsViewModel: DatabaseSettingsViewModel,
+    private val inventoryViewModel: InventoryViewModel,
+) : PopupMenu(anchor.context, anchor) {
+
+    private val multiSelectCheckBox: MenuItem
+    private val selectAllButton: MenuItem
+
+    init {
+        inflate(R.menu.inventory_selector_options)
+        multiSelectCheckBox = menu.findItem(R.id.multiSelectInventoriesSwitch)
+        selectAllButton = menu.findItem(R.id.selectAllInventories)
+
+        setOnMenuItemClickListener {
+            when(it.itemId) {
+                R.id.multiSelectInventoriesSwitch -> {
+                    multiSelectCheckBox.apply { isChecked = !isChecked }
+                    dbSettingsViewModel.toggleMultiSelectInventories()
+                } R.id.selectAllInventories ->
+                    inventoryViewModel.selectAll()
+            }; true
+        }
+
+        anchor.setOnClickListener {
+            multiSelectCheckBox.isChecked = dbSettingsViewModel.multiSelectInventories.value
+            selectAllButton.isEnabled = multiSelectCheckBox.isChecked
+            show()
+        }
+    }
+
+    companion object {
+        fun openOnClickOf(
+            anchor: View,
+            dbSettingsViewModel: DatabaseSettingsViewModel,
+            inventoryViewmOdel: InventoryViewModel,
+        ) = InventorySelectionOptionsMenu(anchor, dbSettingsViewModel, inventoryViewmOdel)
+    }
+}
+
+/**
+ * An InventoryRecyclerView that allows the user to pick a single inventory from among all selected inventories.
+ *
+ * SelectedInventoryPicker, when initialized by calling initViewModel with an
+ * instance of InventoryViewModel and an appropriate LifeCycleOwner, will
+ * display all of the BootyCrateInventories exposed by the ViewModel that are
+ * also selected (i.e. the BootyCrateInventory member isSelected is true). The
+ * user may pick from among these inventories by tapping on one. The currently
+ * chosen inventory is visually indicated by setting the corresponding InventoryView's
+ * isInSelectedState property to true. The id of the currently chosen inventory,
+ * or null if one has not been chosen yet, can be queried with the property
+ * chosenInventoryId. If the user picks a new inventory, the member
+ * onChosenInventoryIdChangedListener will be called if it is not null.
+ */
+class SelectedInventoryPicker(context: Context, attrs: AttributeSet) :
+    InventoryRecyclerView(context, attrs)
+{
+    private val adapter = Adapter()
+
+    private var chosenPosition: Int? = null
+    val chosenInventoryId get() = adapter.currentList.getOrNull(chosenPosition ?: -1)?.id
+    var onChosenInventoryIdChangedListener: ((Long?) -> Unit)? = null
+
+    init { setAdapter(adapter) }
+
+    fun initViewModel(viewModel: InventoryViewModel, lifecycleOwner: LifecycleOwner) =
+        viewModel.selectedInventories.observe(lifecycleOwner) { adapter.submitList(it) }
+
+    val InventoryViewHolder.item: BootyCrateInventory get() = adapter.currentList[adapterPosition]
+
+    private inner class Adapter: InventoryListAdapter() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+            super.onCreateViewHolder(parent, viewType).apply {
+                view.ui.optionsButton.layoutParams.width = resources.dpToPixels(12f).toInt()
+                view.ui.optionsButton.isInvisible = true
+                view.setOnClickListener {
+                    if (chosenInventoryId == item.id) return@setOnClickListener
+
+                    val selectedViewHolder = findViewHolderForAdapterPosition(chosenPosition ?: -1)
+                                                                            as? InventoryViewHolder
+                    selectedViewHolder?.view?.setSelectedState(false)
+
+                    view.setSelectedState(true)
+                    chosenPosition = adapterPosition
+                    onChosenInventoryIdChangedListener?.invoke(chosenInventoryId)
+                }
+            }
+
+        override fun onBindViewHolder(holder: InventoryViewHolder, position: Int) {
+            super.onBindViewHolder(holder, position).also {
+                val isSelected = holder.adapterPosition == chosenPosition
+                holder.view.setSelectedState(isSelected, animate = false)
+            }
+        }
+    }
+}
+
+/**
+ * A view to represent an instance of BootyCrateInventory.
+ *
+ * InventoryView displays the name, the number of shopping list items, the
+ * number of inventory items, and an options button for the instance of
+ * BootyCrateInventory it is bound to using the function update. The selected
+ * state of the inventory is represented with a gradient outline, and is set
+ * using the functions select, deselect, and setSelectedState (note that the
+ * function setSelected is part of the Android framework's View class API, and
+ * is unrelated to InventoryView). The current selected state can be queried
+ * using the property isInSelectedState.
+ * */
+class InventoryView(context: Context) : LinearLayout(context) {
+    val ui = InventoryViewBinding.inflate(LayoutInflater.from(context), this)
+    private val gradientOutline: GradientDrawable
+
+    init {
+        val inventoryIcon = ContextCompat.getDrawable(context, R.drawable.inventory_icon)
+        val shoppingListIcon = ContextCompat.getDrawable(context, R.drawable.shopping_cart_icon)
+        val iconPadding = resources.dpToPixels(3f).toInt()
+        ui.shoppingListItemCountView.setCompoundDrawablesRelativeWithIntrinsicBounds(shoppingListIcon, null, null, null)
+        ui.inventoryItemCountView.setCompoundDrawablesRelativeWithIntrinsicBounds(inventoryIcon, null, null, null)
+        inventoryIcon?.bounds?.inset(iconPadding, iconPadding)
+        shoppingListIcon?.bounds?.inset(iconPadding, iconPadding)
+
+        background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item).also {
+            gradientOutline = ((it as LayerDrawable).getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
+        }
+        layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                                                 ViewGroup.LayoutParams.WRAP_CONTENT)
+    }
+
+    fun update(inventory: BootyCrateInventory) {
+        ui.nameView.text = inventory.name
+        ui.shoppingListItemCountView.text = inventory.shoppingListItemCount.toString()
+        ui.inventoryItemCountView.text = inventory.inventoryItemCount.toString()
+        setSelectedState(inventory.isSelected, animate = false)
+    }
+
+    private var _isInSelectedState = false
+    val isInSelectedState get() = _isInSelectedState
+    fun select() = setSelectedState(true)
+    fun deselect() = setSelectedState(false)
+    fun setSelectedState(selected: Boolean, animate: Boolean = true) {
+        _isInSelectedState = selected
+        val endAlpha = if (selected) 255 else 0
+        if (animate) intValueAnimator(setter = gradientOutline::setAlpha,
+                                      from = gradientOutline.alpha,
+                                      to = endAlpha).start()
+        else gradientOutline.alpha = endAlpha
     }
 }

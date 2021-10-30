@@ -6,7 +6,6 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -17,29 +16,29 @@
     <com.cliffracertech.bootycrate.view.RecyclerViewActionBar
         android:id="@+id/actionBar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
+        android:layout_height="?android:attr/actionBarSize"
         style="@style/TopActionBar" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?attr/actionBarSize" />
+        android:layout_marginTop="?android:attr/actionBarSize"
+        tools:name="com.cliffracertech.bootycrate.fragment.ShoppingListFragment" />
 
     <com.cliffracertech.bootycrate.view.BottomNavigationDrawer
         android:id="@+id/bottomNavigationDrawer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:layout_gravity="bottom"
+        tools:translationY="-456dp"
         style="@style/BottomNavigationDrawer" >
 
         <com.cliffracertech.bootycrate.view.BottomAppBar
             android:id="@+id/bottomAppBar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_height="?android:attr/actionBarSize"
+            android:layout_gravity="top"
+            tools:backgroundTint="?attr/backgroundGradientLeftColor"
             style="@style/BottomAppBar" >
 
         <!-- BottomNavigationViewEx is used instead of the default Android Bottom-
@@ -49,15 +48,17 @@
                 android:id="@+id/bottomNavigationView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                style="@style/BottomNavigationView" />
+                style="@style/BottomNavigationView">
 
-            <TextView
-                android:id="@+id/shoppingListBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="60dp"
-                android:layout_marginTop="2dp"
-                style="@style/ShoppingListBadge" />
+                <TextView
+                    android:id="@+id/shoppingListBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginTop="2dp"
+                    style="@style/ShoppingListBadge" />
+
+            </com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx>
 
             <LinearLayout
                 android:id="@+id/cradleLayout"
@@ -77,52 +78,74 @@
                     tools:ignore="RtlHardcoded"
                     style="@style/CheckoutButton" />
 
-                <com.cliffracertech.bootycrate.view.GradientButton
+                <ImageView
                     android:id="@+id/addButton"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
                     android:contentDescription="@string/add_button_description"
-                    android:elevation="1dp"
+                    android:elevation="10dp"
+                    android:outlineProvider="none"
                     style="@style/AddButton" />
             </LinearLayout>
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/appTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="?attr/actionBarSize"
-                android:elevation="10dp"
-                android:layout_gravity="center_vertical|start"
-                android:layout_marginStart="24dp"
-                style="@style/AppTitle" />
-
-            <androidx.appcompat.widget.AppCompatImageButton
-                android:id="@+id/settingsButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center_vertical|end"
-                android:layout_marginEnd="12dp"
-                style="@style/SettingsButton" />
-
         </com.cliffracertech.bootycrate.view.BottomAppBar>
 
-        <FrameLayout
-            android:id="@+id/bottomNavigationDrawerBackground"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/bottomAppBar"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:paddingHorizontal="10dp"
-            android:background="@drawable/background_gradient" >
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/appTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="?android:attr/actionBarSize"
+            android:layout_gravity="top|start"
+            android:layout_marginStart="24dp"
+            style="@style/AppTitle" />
 
-            <View
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/settingsButton"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:layout_gravity="top|end"
+            android:layout_marginEnd="60dp"
+            style="@style/SettingsButton" />
+
+        <androidx.appcompat.widget.AppCompatImageButton
+            android:id="@+id/inventorySelectorOptionsButton"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:layout_gravity="top|end"
+            android:layout_marginEnd="12dp"
+            style="@style/InventorySelectorOptionsButton" />
+
+        <FrameLayout
+            android:id="@+id/inventorySelectorBackground"
+            android:layout_width="match_parent"
+            android:layout_height="400dp"
+            android:layout_gravity="bottom"
+            android:layout_marginTop="?android:attr/actionBarSize"
+            android:paddingHorizontal="10dp"
+            android:background="@drawable/background_gradient">
+
+            <com.cliffracertech.bootycrate.recyclerview.InventorySelector
                 android:id="@+id/inventorySelector"
                 android:layout_width="match_parent"
-                android:layout_height="400dp"
-                android:background="@drawable/alert_dialog_background"
-                android:alpha="0" />
-        </FrameLayout>
+                android:layout_height="match_parent"
+                android:background="@drawable/inventory_selector"
+                android:paddingTop="5dp"
+                android:paddingBottom="52dp"
+                android:visibility="invisible"
+                android:alpha="0"
+                tools:visibility="visible"
+                tools:alpha="1"
+                android:clipToPadding="false" />
 
+            <ImageView
+                android:id="@+id/addInventoryButton"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="12dp"
+                android:contentDescription="@string/add_inventory_description"
+                style="@style/AddButton"/>
+        </FrameLayout>
 
     </com.cliffracertech.bootycrate.view.BottomNavigationDrawer>
 

@@ -5,10 +5,10 @@
 
 <resources>
     <string name="app_name">BootyCrate</string>
-    <string name="app_version">v1.0.0</string>
+    <string name="app_version">v1.1.0</string>
     <string name="inventory_navigation_item_name">Inventory</string>
     <string name="shopping_list_navigation_item_name">Shopping List</string>
-    <string name="settings_description">Settings</string>
+    <string name="settings_description">BootyCrate settings</string>
     <string name="search_description">Search</string>
     <string name="back_description">Back</string>
     <string name="search_query_description">Search query</string>
@@ -133,4 +133,18 @@
     <string name="item_color_10_description">pink</string>
     <string name="item_color_11_description">gray</string>
 
+    <string name="add_inventory_description">Add new inventory</string>
+    <string name="inventory_name_hint">Inventory name</string>
+    <string name="rename_inventory_popup_title">Enter inventory name</string>
+    <string name="more_options_description">More options</string>
+    <string name="rename_description">Rename</string>
+    <string name="delete_description">Delete</string>
+    <string name="delete_inventory_confirmation_message">Deleting an inventory will delete all items in it and on its associated shopping list, and cannot be undone. Are you sure?</string>
+    <string name="multi_select_inventories_description">Multi-select inventories</string>
+    <string name="select_all_inventories_description">Select all inventories</string>
+    <string name="multiple_selected_inventories_description">Multiple inventories</string>
+    <string name="select_a_shopping_list_message">Pick a shopping list to add the item to:</string>
+    <string name="select_an_inventory_message">Pick an inventory to add the item to:</string>
+    <string name="new_shopping_list_item_has_no_inventory_id_error_message">The item must belong to a shopping list. Select one to add it to.</string>
+    <string name="new_inventory_item_has_no_inventory_id_error_message">The item must belong to an inventory. Select one to add it to.</string>
 </resources>

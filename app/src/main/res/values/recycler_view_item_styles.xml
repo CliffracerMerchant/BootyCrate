@@ -33,6 +33,7 @@
 
     <style name="BootyCrateItemEditButton">
         <item name="android:src">@drawable/edit_and_collapse_button</item>
+        <item name="android:tint">?android:attr/textColorPrimary</item>
         <item name="android:padding">12dp</item>
     </style>
 
@@ -54,6 +55,19 @@
 
     <style name="InventoryItemAutoAddToShoppingListTriggerEdit" parent="@style/BootyCrateItemAmountEdit">
         <item name="valueIsFocusable">true</item>
+    </style>
+
+    <style name="InventoryMoreOptionsButton">
+        <item name="srcCompat">@drawable/ic_more_vert_black_24dp</item>
+        <item name="android:tint">?android:attr/textColorPrimary</item>
+        <item name="android:padding">12dp</item>
+    </style>
+
+    <style name="InventorySelectorOptionsButton">
+        <item name="srcCompat">@drawable/ic_more_vert_black_24dp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:alpha">0</item>
+        <item name="android:visibility">gone</item>
     </style>
 
 </resources>

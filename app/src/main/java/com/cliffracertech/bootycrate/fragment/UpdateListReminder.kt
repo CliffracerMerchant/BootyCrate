@@ -20,6 +20,7 @@ import android.widget.LinearLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.preference.PreferenceManager
 import ca.antonious.materialdaypicker.MaterialDayPicker
 import com.cliffracertech.bootycrate.R
@@ -27,7 +28,6 @@ import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.UpdateListReminderSettingsFragmentBinding
 import com.cliffracertech.bootycrate.utils.alarmManager
-import com.cliffracertech.bootycrate.utils.asFragmentActivity
 import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.notificationManager
 import com.google.android.material.timepicker.MaterialTimePicker
@@ -80,21 +80,24 @@ object UpdateListReminder {
                                !settings.repeat -> listOf(now.dayOfWeek)
                                else -> settings.repeatDays.map { it.toJavaDayOfWeek() } }
         for (day in DayOfWeek.values()) {
-            val pendingIntent = PendingIntent.getBroadcast(context, day.ordinal, intent, 0)
+            val pendingIntent = PendingIntent.getBroadcast(context, day.ordinal, intent, intentFlags)
             alarmManager.cancel(pendingIntent)
             if (!alarmDays.contains(day)) continue
 
             val targetDate = LocalDate.now().with(nextOrSame(day))
-            val targetDateTime = ZonedDateTime.of(targetDate, settings.time, now.zone).let {
-                if (it.isAfter(now)) it
-                else it.with(next(day))
-            }
+            val targetDateTime = ZonedDateTime.of(targetDate, settings.time, now.zone)
+                .let { if (it.isAfter(now)) it
+                       else it.with(next(day)) }
             val targetInstant = targetDateTime.toInstant().toEpochMilli()
-            alarmManager.setExact(AlarmManager.RTC, targetInstant, pendingIntent)
+            alarmManager.set(AlarmManager.RTC, targetInstant, pendingIntent)
         }
     }
 
-    /** A fragment to display and alter UpdateListReminder.Settings parameters. */
+    /** A fragment to display and alter UpdateListReminder.Settings parameters
+     *
+     * SettingsFragment assumes that the context it is running in is an instance
+     * of FragmentActivity, and will not work properly if this is not the case.
+     */
     class SettingsFragment : Fragment(), MainActivity.MainActivityFragment {
         private lateinit var ui: UpdateListReminderSettingsFragmentBinding
         private lateinit var currentSettings: Settings
@@ -133,7 +136,7 @@ object UpdateListReminder {
                 context?.let { scheduleNotifications(it, currentSettings) }
             }
             reminderTimeView.setOnClickListener {
-                val context = this@SettingsFragment.context ?:
+                val activity = context as? FragmentActivity ?:
                     return@setOnClickListener
                 MaterialTimePicker.Builder()
                     .setHour(currentSettings.time.hour)
@@ -145,9 +148,9 @@ object UpdateListReminder {
                             sharedPreferences.edit()
                                 .putInt(Settings.hourKey, hour)
                                 .putInt(Settings.minuteKey, minute).apply()
-                            scheduleNotifications(context, currentSettings)
+                            scheduleNotifications(activity, currentSettings)
                         }
-                    }.show(context.asFragmentActivity().supportFragmentManager, null)
+                    }.show(activity.supportFragmentManager, null)
             }
 
             reminderRepeatCheckBox.setOnCheckedChangeListener { _, checked ->
@@ -241,11 +244,12 @@ object UpdateListReminder {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             val channelId = context.getString(R.string.update_list_notification_channel_id)
+            val alarmIntent = PendingIntent.getActivity(context, 0, notificationIntent, intentFlags)
             val notification = NotificationCompat.Builder(context, "reminder")
                 .setSmallIcon(R.drawable.shopping_cart_icon)
                 .setContentTitle(context.getString(R.string.update_list_reminder_title))
                 .setContentText(context.getString(R.string.update_list_reminder_message))
-                .setContentIntent(PendingIntent.getActivity(context, 0, notificationIntent, 0))
+                .setContentIntent(alarmIntent)
                 .setChannelId(channelId).build()
             notification.flags = notification.flags or Notification.FLAG_AUTO_CANCEL
 
@@ -269,13 +273,17 @@ object UpdateListReminder {
                 val targetDateTime = ZonedDateTime.of(targetDate, settings.time, now.zone)
                 val targetInstant = targetDateTime.toInstant().toEpochMilli()
                 val alarmManager = alarmManager(context) ?: return
-                val pendingIntent = PendingIntent.getBroadcast(context, targetDate.dayOfWeek.ordinal, intent, 0)
-                alarmManager.setExact(AlarmManager.RTC, targetInstant, pendingIntent)
+                val pendingIntent = PendingIntent.getBroadcast(context, targetDate.dayOfWeek.ordinal,
+                                                               intent, intentFlags)
+                alarmManager.set(AlarmManager.RTC, targetInstant, pendingIntent)
             }
             else prefs.edit().putBoolean(Settings.enabledKey, false).apply()
         }
     }
 }
+
+private val intentFlags get() = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) 0
+                                else PendingIntent.FLAG_IMMUTABLE
 
 fun List<MaterialDayPicker.Weekday>.serialize() = StringBuilder().also {
     for (day in this) it.append(day.ordinal)

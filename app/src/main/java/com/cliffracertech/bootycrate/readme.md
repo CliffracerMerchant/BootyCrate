@@ -20,7 +20,7 @@ fragment contains all of the fragments used in the app. The two main content fra
 chain is:
 <pre>
 RecyclerViewFragment -> ShoppingListFragment
-                     -> InventoryFragment
+                     -> InventoryItemFragment
 </pre>
 
 ### recyclerview
@@ -28,7 +28,7 @@ recyclerview contains all of the classes used in the inheritance chain of the re
 the two main fragments:
 <pre>
 BootyCrateRecyclerView -> ExpandableSelectableRecyclerView -> ShoppingListRecyclerView
-                                                           -> InventoryRecyclerView
+                                                           -> InventoryItemRecyclerView
 </pre>
 and other associated classes (e.g. item views and item animators). The recycler views' item views'
 inheritance chain is:

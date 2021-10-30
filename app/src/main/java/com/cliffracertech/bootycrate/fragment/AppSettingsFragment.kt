@@ -15,7 +15,7 @@ import androidx.preference.SwitchPreferenceCompat
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.database.ShoppingListViewModel
+import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.utils.AboutAppDialog
 import com.cliffracertech.bootycrate.utils.PrivacyPolicyDialog
@@ -23,7 +23,7 @@ import com.cliffracertech.bootycrate.utils.importDatabaseFromUriDialog
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 
 /** A fragment to display the BootyCrate app settings. */
-class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivityFragment {
+class AppSettingsFragment : PreferenceFragmentCompat(), MainActivity.MainActivityFragment {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -41,7 +41,7 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
 //            getString(R.string.pref_theme_gradient_screen) -> { }
             getString(R.string.pref_sort_by_checked_key) -> {
                 val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
-                val viewModel: ShoppingListViewModel by activityViewModels()
+                val viewModel: ShoppingListItemViewModel by activityViewModels()
                 viewModel.sortByChecked = sortByChecked
             } getString(R.string.pref_update_list_reminder_enabled_key) ->
                 addSecondaryFragment(UpdateListReminder.SettingsFragment())
@@ -61,13 +61,20 @@ class PreferencesFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
         return true
     }
 
+    private var oldTitle: CharSequence = ""
     override fun showsBottomAppBar() = false
     override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-        if (isActive) activityUi.actionBar.transition(
-            backButtonVisible = true,
-            searchButtonVisible = false,
-            changeSortButtonVisible = false,
-            menuButtonVisible = false)
+        if (!isActive)
+            activityUi.actionBar.ui.titleSwitcher.title = oldTitle
+        else {
+            oldTitle = activityUi.actionBar.ui.titleSwitcher.title
+            activityUi.actionBar.ui.titleSwitcher.title = getString(R.string.settings_description)
+            activityUi.actionBar.transition(
+                backButtonVisible = true,
+                searchButtonVisible = false,
+                changeSortButtonVisible = false,
+                menuButtonVisible = false)
+        }
     }
 
     private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->

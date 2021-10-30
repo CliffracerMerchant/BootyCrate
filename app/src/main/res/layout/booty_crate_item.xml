@@ -9,7 +9,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:layout_height="wrap_content"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
-    tools:background="@drawable/recycler_view_item_background"
+    tools:background="@drawable/recycler_view_item"
     tools:paddingVertical="4dp" >
 
     <com.cliffracertech.bootycrate.view.TintableCheckbox

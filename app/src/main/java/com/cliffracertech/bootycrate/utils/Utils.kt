@@ -8,12 +8,14 @@ import android.app.Activity
 import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.res.Resources
+import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.fragment.app.FragmentActivity
+import android.widget.LinearLayout
+import com.cliffracertech.bootycrate.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 /** Return a NotificationManager system service from the context. */
@@ -23,19 +25,9 @@ fun notificationManager(context: Context) =
 fun alarmManager(context: Context) =
         context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
 
-/** Return @param context as a FragmentActivity. */
-fun Context.asFragmentActivity() =
-    try { this as FragmentActivity }
-    catch(e: ClassCastException) {
-        try { (this as ContextWrapper).baseContext as FragmentActivity }
-        catch(e: ClassCastException) {
-            throw ClassCastException("The provided context must be an instance of FragmentActivity")
-        }
-    }
-
 /** An object that, once initialized by calling init with an instance of Context,
  * can be used to either hide or show the soft input given a view instance using
- * the functions hide and show. */
+ * the functions hide and show, and showWithDelay. */
 object SoftKeyboard {
     private lateinit var imm: InputMethodManager
     fun init(context: Context) {
@@ -43,6 +35,15 @@ object SoftKeyboard {
     }
     fun hide(view: View) = imm.hideSoftInputFromWindow(view.windowToken, 0)
     fun show(view: View) = imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+    /** Show the soft input after a given delay. which is useful when the soft input
+     * should appear alongside a popup alert dialog (for some reason, requesting the
+     * soft input to show at the same time as the dialog does not work). */
+    fun showWithDelay(view: View, delay: Long = 50L) {
+        view.handler.postDelayed({
+            view.requestFocus()
+            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+        }, delay)
+    }
 }
 
 fun View.setHeight(height: Int) { bottom = top + height }
@@ -87,3 +88,29 @@ val <T: View>BottomSheetBehavior<T>.isCollapsed get() = state == BottomSheetBeha
 val <T: View>BottomSheetBehavior<T>.isDragging get() = state == BottomSheetBehavior.STATE_DRAGGING
 val <T: View>BottomSheetBehavior<T>.isSettling get() = state == BottomSheetBehavior.STATE_SETTLING
 val <T: View>BottomSheetBehavior<T>.isHidden get() = state == BottomSheetBehavior.STATE_HIDDEN
+
+/** Perform the given block without the caller's LayoutTransition instance.
+ * This is useful when changes need to be made instantaneously. */
+fun ViewGroup.withoutLayoutTransition(block: () -> Unit) {
+    val layoutTransitionBackup = layoutTransition
+    layoutTransition = null
+    block()
+    layoutTransition = layoutTransitionBackup
+}
+
+/** A LinearLayout that allows settings a max height with the XML attribute maxHeight. */
+class MaxHeightLinearLayout(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
+    var maxHeight = -1
+        set(value) { field = value; invalidate() }
+
+    init {
+        val a = context.obtainStyledAttributes(attrs, R.styleable.MaxHeightLinearLayout)
+        maxHeight = a.getDimensionPixelSize(R.styleable.MaxHeightLinearLayout_maxHeight, -1)
+        a.recycle()
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val maxHeightSpec = MeasureSpec.makeMeasureSpec(maxHeight, MeasureSpec.AT_MOST)
+        super.onMeasure(widthMeasureSpec, maxHeightSpec)
+    }
+}
