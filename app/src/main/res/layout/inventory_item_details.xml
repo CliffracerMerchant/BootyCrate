@@ -38,8 +38,6 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
-            android:layout_marginStart="-6dp"
-            android:layout_marginEnd="-8dp"
             style="@style/InventoryItemAutoAddToShoppingListCheckboxLabel" />
 
         <com.cliffracertech.bootycrate.view.IntegerEdit
