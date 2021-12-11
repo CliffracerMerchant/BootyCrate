@@ -53,10 +53,10 @@ class ShoppingListFragmentTests {
 
     private val inventoryId = db.run { runBlocking { inventoryDao().deleteAll() }
                                        inventoryDao().getAllNow()[0].id }
-    private var redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8, inventoryId = inventoryId)
-    private var orangeItem1 = ShoppingListItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2, inventoryId = inventoryId)
-    private var yellowItem2 = ShoppingListItem(name = "Yellow", color = 2, amount = 1, inventoryId = inventoryId)
-    private var grayItem11 = ShoppingListItem(name = "Gray", color = 11, amount = 9, inventoryId = inventoryId)
+    private var redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
+    private var orangeItem1 = ShoppingListItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
+    private var yellowItem2 = ShoppingListItem(name = "Yellow", color = 2, amount = 1)
+    private var grayItem11 = ShoppingListItem(name = "Gray", color = 11, amount = 9)
 
     @Before fun resetItems() {
         activityRule.scenario.onActivity {
@@ -69,7 +69,7 @@ class ShoppingListFragmentTests {
         runBlocking {
             dao.deleteAllInventoryItems()
             dao.deleteAllShoppingListItems()
-            dao.addConvertibles(listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
+            dao.addConvertibles(inventoryId, listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
         Thread.sleep(50L)
     }
@@ -304,7 +304,7 @@ class ShoppingListFragmentTests {
 
     @Test fun emptyMessageDisappears() {
         emptyMessageAppears()
-        runBlocking { dao.add(ShoppingListItem(name = "new item", inventoryId = inventoryId)) }
+        runBlocking { dao.add(ShoppingListItem(name = "new item").toDbBootyCrateItem(inventoryId)) }
         Thread.sleep(30L)
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
@@ -389,10 +389,9 @@ class ShoppingListFragmentTests {
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
         onView(withId(R.id.inventoryItemRecyclerView)).check(onlyShownInventoryItemsAre(
-            InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                          amount = 0, color = orangeItem1.color, inventoryId = inventoryId),
-            InventoryItem(name = grayItem11.name, amount = 0,
-                          color = grayItem11.color, inventoryId = inventoryId)))
+            InventoryItem(color = orangeItem1.color, name = orangeItem1.name,
+                          amount = 0, extraInfo = orangeItem1.extraInfo),
+            InventoryItem(name = grayItem11.name, amount = 0, color = grayItem11.color)))
     }
 
     @Test fun changeItemColor() {
@@ -565,10 +564,8 @@ class ShoppingListFragmentTests {
         checkoutRemovesCheckedItems()
         onView(withId(R.id.inventoryButton)).perform(click())
         val expectedItem1 = InventoryItem(name = orangeItem1.name, extraInfo = orangeItem1.extraInfo,
-                                          color = orangeItem1.color, amount = orangeItem1.amount,
-                                          inventoryId = inventoryId)
-        val expectedItem2 = InventoryItem(name = grayItem11.name, color = grayItem11.color,
-                                          amount = 0, inventoryId = inventoryId)
+                                          color = orangeItem1.color, amount = orangeItem1.amount)
+        val expectedItem2 = InventoryItem(name = grayItem11.name, color = grayItem11.color, amount = 0)
         // grayItem11 was not checked and should not have its amount updated.
         onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(expectedItem1, expectedItem2))

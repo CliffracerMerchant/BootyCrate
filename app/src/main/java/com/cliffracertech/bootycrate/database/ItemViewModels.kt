@@ -49,10 +49,8 @@ enum class BootyCrateItemSort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
 abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): AndroidViewModel(app) {
     protected val dao = BootyCrateDatabase.get(app).itemDao()
 
-    fun add(item: T) = viewModelScope.launch { dao.add(item.toDbBootyCrateItem()) }
-    fun add(items: List<T>) = viewModelScope.launch {
-        dao.add(items.map { it.toDbBootyCrateItem() })
-    }
+    fun add(item: T, inventoryId: Long) =
+        viewModelScope.launch { dao.add(item.toDbBootyCrateItem(inventoryId)) }
 
     fun updateName(id: Long, name: String) =
         viewModelScope.launch { dao.updateName(id, name) }
@@ -191,9 +189,8 @@ class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<Shopping
     override fun deleteSelected() =
         viewModelScope.launch { dao.deleteSelectedShoppingListItems() }
 
-    override fun selectAll() = viewModelScope.launch {
-        dao.selectShoppingListItems(items.value?.map { it.id } ?: emptyList())
-    }
+    override fun selectAll() = viewModelScope.launch { dao.selectAllShoppingListItems() }
+
     override fun clearSelection() = viewModelScope.launch { dao.clearShoppingListSelection() }
 
     fun addFromSelectedInventoryItems() =

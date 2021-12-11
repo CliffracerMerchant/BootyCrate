@@ -41,16 +41,18 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         fun get(context: Context, overwriteExistingDb: Boolean = false) = run {
             val instance = this.instance
             if (!overwriteExistingDb && instance != null) instance
-            else Room.databaseBuilder(context.applicationContext,
-                                      BootyCrateDatabase::class.java,
-                                      "booty-crate-db").addCallback(callback)
-                                      .addMigrations(Migration1to2(), Migration2to3())
-                                      .build().also { this.instance = it }
+            else Room.databaseBuilder(
+                context.applicationContext,
+                BootyCrateDatabase::class.java,
+                "booty-crate-db")
+                .addCallback(BootyCrateDbCallback())
+                .addMigrations(Migration1to2(), Migration2to3())
+                .build().also { this.instance = it }
         }
 
         fun getInMemoryDb(context: Context) =
             Room.inMemoryDatabaseBuilder(context.applicationContext, BootyCrateDatabase::class.java)
-                .addCallback(callback).build()
+                .addCallback(BootyCrateDbCallback()).build()
 
         fun backup(context: Context, backupUri: Uri) {
             val db = get(context)
@@ -164,20 +166,25 @@ abstract class BootyCrateDatabase : RoomDatabase() {
          * autoAddToShoppingListAmount and its autoAddToShoppingList field is true */
         private fun SupportSQLiteDatabase.addAutoAddToShoppingListTriggers() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_amount_update`
-                           AFTER UPDATE OF inventoryAmount ON bootycrate_item
-                                 WHEN new.autoAddToShoppingList == 1
-                                 AND new.inventoryAmount < new.autoAddToShoppingListAmount
-                           BEGIN $updateShoppingListAmount; END""")
+                       AFTER UPDATE OF inventoryAmount ON bootycrate_item
+                       WHEN new.autoAddToShoppingList == 1
+                       AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                       BEGIN $updateShoppingListAmount; END""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_update`
-                           AFTER UPDATE OF autoAddToShoppingList ON bootycrate_item
-                                 WHEN new.autoAddToShoppingList == 1
-                                 AND new.inventoryAmount < new.autoAddToShoppingListAmount
-                           BEGIN $updateShoppingListAmount; END""")
+                       AFTER UPDATE OF autoAddToShoppingList ON bootycrate_item
+                       WHEN new.autoAddToShoppingList == 1
+                       AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                       BEGIN $updateShoppingListAmount; END""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_amount_update`
-                           AFTER UPDATE OF autoAddToShoppingListAmount ON bootycrate_item
-                                 WHEN new.autoAddToShoppingList == 1
-                                 AND new.inventoryAmount < new.autoAddToShoppingListAmount
-                           BEGIN $updateShoppingListAmount; END""")
+                       AFTER UPDATE OF autoAddToShoppingListAmount ON bootycrate_item
+                       WHEN new.autoAddToShoppingList == 1
+                       AND new.inventoryAmount < new.autoAddToShoppingListAmount
+                       BEGIN $updateShoppingListAmount; END""")
+            execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_insertion`
+                       AFTER INSERT ON bootycrate_item
+                       WHEN new.autoAddToShoppingList == 1
+                       AND new.inventoryAmount BETWEEN 0 AND new.autoAddToShoppingListAmount - 1
+                       BEGIN $updateShoppingListAmount; END""")
         }
 
         /* Unfortunately SQLite's limitation of not being able to use common table
@@ -194,41 +201,32 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                        THEN shoppingListAmount
                        ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount) END
                    WHERE id = new.id"""
+    }
 
-        private fun SupportSQLiteDatabase.addSelectedInventoriesIndex() = execSQL(
-            "CREATE INDEX IF NOT EXISTS `selected_inventories` ON inventory (id) WHERE isSelected")
+    private class BootyCrateDbCallback : Callback() {
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            super.onOpen(db)
+            db.execSQL("UPDATE bootycrate_item " +
+                       "SET selectedInShoppingList = 0, expandedInShoppingList = 0, " +
+                       "selectedInInventory = 0, expandedInInventory = 0")
+            db.execSQL("UPDATE bootycrate_item " +
+                       "SET shoppingListAmount = -1, inShoppingListTrash = 0 " +
+                       "WHERE inShoppingListTrash")
+            db.execSQL("UPDATE bootycrate_item " +
+                       "SET inventoryAmount = -1, inInventoryTrash = 0 " +
+                       "WHERE inInventoryTrash")
+        }
 
-        private val callback = object: Callback() {
-            override fun onOpen(db: SupportSQLiteDatabase) {
-                super.onOpen(db)
-                db.execSQL("UPDATE bootycrate_item " +
-                           "SET selectedInShoppingList = 0, expandedInShoppingList = 0, " +
-                           "selectedInInventory = 0, expandedInInventory = 0")
-                db.execSQL("UPDATE bootycrate_item " +
-                           "SET shoppingListAmount = -1, inShoppingListTrash = 0 " +
-                           "WHERE inShoppingListTrash")
-                db.execSQL("UPDATE bootycrate_item " +
-                           "SET inventoryAmount = -1, inInventoryTrash = 0 " +
-                           "WHERE inInventoryTrash")
-
-                // Because the selected_inventories index is a partial index it must be added
-                // via a direct SQL statement. Unfortunately this makes the 1 to 2 migration
-                // fail because it does not see the index in Room's generated schema. Adding
-                // the index at runtime is a workaround.
-                db.addSelectedInventoriesIndex()
-            }
-
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                super.onCreate(db)
-                db.execSQL("INSERT INTO dbSettings DEFAULT VALUES")
-                db.insert("inventory", 0, ContentValues().apply { put("name", firstInventoryName)
-                                                                  put("isSelected", 1) })
-                db.addEnsureAtLeastOneInventoryTrigger()
-                db.addEnsureAtLeastOneSelectedInventoryTriggers()
-                db.addEnforceSingleSelectInventoryTriggers()
-                db.addAutoDeleteTrigger()
-                db.addAutoAddToShoppingListTriggers()
-            }
+        override fun onCreate(db: SupportSQLiteDatabase) {
+            super.onCreate(db)
+            db.execSQL("INSERT INTO dbSettings DEFAULT VALUES")
+            db.insert("inventory", 0, ContentValues().apply { put("name", firstInventoryName)
+                put("isSelected", 1) })
+            db.addEnsureAtLeastOneInventoryTrigger()
+            db.addEnsureAtLeastOneSelectedInventoryTriggers()
+            db.addEnforceSingleSelectInventoryTriggers()
+            db.addAutoDeleteTrigger()
+            db.addAutoAddToShoppingListTriggers()
         }
     }
 

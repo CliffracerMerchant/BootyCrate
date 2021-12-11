@@ -176,7 +176,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             SoftKeyboard.hide(ui.root)
             false
         } else -> {
-            itemViewModel.add(createItemFromView())
+            itemViewModel.add(createItemFromView(), targetInventoryId!!)
             true
         }}
 
@@ -248,8 +248,6 @@ class NewShoppingListItemDialog(context: Context) :
     init { newItemView.ui.checkBox.setInColorEditMode(true, animate = false) }
 
     override fun createItemFromView() = ShoppingListItem(
-        // NewBootyCrateItemDialog should ensure that targetInventoryId is not null
-        inventoryId = targetInventoryId!!,
         name = newItemView.ui.nameEdit.text.toString(),
         extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
         color = newItemView.ui.checkBox.colorIndex,
@@ -293,8 +291,6 @@ class NewInventoryItemDialog(context: Context) :
     }
 
     override fun createItemFromView() = InventoryItem(
-        // NewBootyCrateItemDialog should ensure that targetInventoryId is not null
-        inventoryId = targetInventoryId!!,
         name = newItemView.ui.nameEdit.text.toString(),
         extraInfo = newItemView.ui.extraInfoEdit.text.toString(),
         color = newItemView.ui.checkBox.colorIndex,

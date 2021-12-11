@@ -55,7 +55,9 @@ class DatabaseBootyCrateItem(
 
     /** An interface for objects to provide a way to convert themselves into a DataBaseBootyCrateItem. */
     interface Convertible {
-        fun toDbBootyCrateItem(): DatabaseBootyCrateItem
+        /** Return the convertible as a DatabaseBootyCrateItem,
+         *  with its inventoryId field set to the provided id. **/
+        fun toDbBootyCrateItem(inventoryId: Long): DatabaseBootyCrateItem
     }
 
     override fun toString() ="""
@@ -84,7 +86,6 @@ inInventoryTrash = $inInventoryTrash"""
  * of the object. */
 abstract class BootyCrateItem(
     var id: Long = 0,
-    var inventoryId: Long,
     var name: String,
     var extraInfo: String = "",
     var color: Int = 0,
@@ -114,7 +115,6 @@ abstract class BootyCrateItem(
  * and adds the isChecked field to mirror the DatabaseBootyCrateItem field. */
 class ShoppingListItem(
     id: Long = 0,
-    inventoryId: Long,
     name: String,
     extraInfo: String = "",
     color: Int = 0,
@@ -123,14 +123,14 @@ class ShoppingListItem(
     isSelected: Boolean = false,
     isLinked: Boolean = false,
     var isChecked: Boolean = false
-): BootyCrateItem(id, inventoryId, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
+): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
     enum class Field { Name, ExtraInfo, Color, Amount,
                        IsExpanded, IsSelected, IsLinked, IsChecked }
 
-    override fun toDbBootyCrateItem() = DatabaseBootyCrateItem(
+    override fun toDbBootyCrateItem(inventoryId: Long) = DatabaseBootyCrateItem(
         id, inventoryId, name, extraInfo, color,
         isChecked = isChecked,
         shoppingListAmount = amount,
@@ -143,7 +143,6 @@ class ShoppingListItem(
  * mirror the DatabaseBootyCrateItem fields. */
 class InventoryItem(
     id: Long = 0,
-    inventoryId: Long,
     name: String,
     extraInfo: String = "",
     color: Int = 0,
@@ -153,7 +152,7 @@ class InventoryItem(
     isLinked: Boolean = false,
     var autoAddToShoppingList: Boolean = false,
     var autoAddToShoppingListAmount: Int = 1
-): BootyCrateItem(id, inventoryId, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
+): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
@@ -162,7 +161,7 @@ class InventoryItem(
                        AutoAddToShoppingList,
                        AutoAddToShoppingListAmount }
 
-    override fun toDbBootyCrateItem() = DatabaseBootyCrateItem(
+    override fun toDbBootyCrateItem(inventoryId: Long) = DatabaseBootyCrateItem(
         id, inventoryId, name, extraInfo, color,
         inventoryAmount = amount,
         expandedInInventory = isExpanded,

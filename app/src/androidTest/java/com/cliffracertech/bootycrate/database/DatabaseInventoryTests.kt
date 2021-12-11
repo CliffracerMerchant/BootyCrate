@@ -101,10 +101,10 @@ class DatabaseInventoryTests {
             timeOut = 200L,
             { },
             { newInventoryId = runBlocking { dao.add("new inventory") }},
-            { runBlocking { db.itemDao().addConvertibles(listOf(
-                ShoppingListItem(inventoryId = newInventoryId, name = ""),
-                ShoppingListItem(inventoryId = newInventoryId, name = ""),
-                InventoryItem(inventoryId = newInventoryId, name = "")))
+            { runBlocking { db.itemDao().addConvertibles(inventoryId = newInventoryId, listOf(
+                ShoppingListItem(name = ""),
+                ShoppingListItem(name = ""),
+                InventoryItem(name = "")))
             }})
 
         assertThat(results.size).isEqualTo(3)
