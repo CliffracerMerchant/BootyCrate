@@ -55,7 +55,7 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
         itemAnimator.onAnimEndedListener = { _, expanding ->
             expandCollapseAnimRunning = false
             if (!expanding && needToHideSoftKeyboard) {
-                clearFocus()
+                requestFocus()
                 SoftKeyboard.hide(this)
             }
             if (queuedEditButtonPressPos != -1) {
@@ -87,7 +87,7 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
         override fun onViewDetachedFromWindow(holder: VHType) {
             super.onViewDetachedFromWindow(holder)
             if (holder.view.focusedChild != null) {
-                clearFocus()
+                requestFocus()
                 SoftKeyboard.hide(holder.itemView)
             }
         }

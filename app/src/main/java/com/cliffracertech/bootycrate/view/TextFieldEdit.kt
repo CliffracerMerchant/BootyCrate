@@ -11,11 +11,9 @@ import android.graphics.Rect
 import android.text.InputType
 import android.text.TextUtils
 import android.util.AttributeSet
-import android.util.Log
 import android.view.inputmethod.EditorInfo
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.animation.doOnEnd
-import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.*
@@ -86,8 +84,6 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
     fun setEditable(editable: Boolean) {
         if (editable) lastValue = text.toString()
         isFocusableInTouchMode = editable
-        isFocusable = editable
-        isClickable = editable
         /* Setting the input type here will prevent misspelling underlines from
          * being displayed when the TextFieldEdit is not in an editable state. */
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
