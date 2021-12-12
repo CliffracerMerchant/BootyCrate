@@ -44,8 +44,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
  * menu does not have at least as many enabled menu items as the number of
  * primary fragments, an indexOutOfBoundsException will be thrown. If primary
  * fragment auto-generation succeeds, MultiFragment- Activity will set itself
- * as the OnNavigationItemSelectedListener for the navigation bar, and will
- * automatically switch to the corresponding fragment with an animation.
+ * as the OnItemSelectedListener for the navigation bar, and will automatically
+ * switch to the corresponding fragment with an animation.
  *
  * FragmentContainer uses its own slide left or right animations for its
  * primary fragments, although the duration and the interpolators used for
@@ -117,8 +117,9 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         val oldFragment = navBarMenuItemFragmentMap.getValue(oldFragmentMenuItem.itemId)
         oldFragment.view?.apply {
             exitingFragmentView = this
-            val endTranslation = width / 2f * if (leftToRight) -1f else 1f
-            animate().alpha(0f).translationX(endTranslation).withLayer()
+            z = -1f
+            val endTranslation = width / 5f * if (leftToRight) -1f else 1f
+            animate().translationX(endTranslation).withLayer()
                 .applyConfig(primaryFragmentTransitionAnimatorConfig)
                 .withEndAction {
                     if (this === exitingFragmentView) { visibility = View.GONE
@@ -128,11 +129,11 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
         }
         newFragment.view?.apply {
             if (!isVisible) {
-                translationX =  width / 2f * if (leftToRight) 1f else -1f
-                alpha = 0f
+                translationX =  width * if (leftToRight) 1f else -1f
                 isVisible = true
             }
-            animate().alpha(1f).translationX(0f).withLayer()
+            z = 1f
+            animate().translationX(0f).withLayer()
                 .applyConfig(primaryFragmentTransitionAnimatorConfig).start()
         }
         return true
@@ -155,14 +156,13 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
     }
 
     fun addSecondaryFragment(fragment: Fragment, enterAnimResId: Int? = null, exitAnimResId: Int? = null) {
-        @Suppress("NAME_SHADOWING")
-        val enterAnimResId = enterAnimResId ?: defaultSecondaryFragmentEnterAnimResId
-        @Suppress("NAME_SHADOWING")
-        val exitAnimResId = exitAnimResId ?: defaultSecondaryFragmentExitAnimResId
+        val resolvedEnterAnimResId = enterAnimResId ?: defaultSecondaryFragmentEnterAnimResId
+        val resolvedExitAnimResId = exitAnimResId ?: defaultSecondaryFragmentExitAnimResId
 
         val tag = supportFragmentManager.backStackEntryCount.toString()
         val transaction = supportFragmentManager.beginTransaction()
-            .setCustomAnimations(enterAnimResId, exitAnimResId, enterAnimResId, exitAnimResId)
+            .setCustomAnimations(resolvedEnterAnimResId, resolvedExitAnimResId,
+                                 resolvedEnterAnimResId, resolvedExitAnimResId)
         if (showingPrimaryFragment) {
             transaction.hide(selectedPrimaryFragment)
             transaction.add(fragmentContainerId, fragment, tag)
@@ -227,7 +227,7 @@ abstract class MultiFragmentActivity : AppCompatActivity() {
                 // that the transition animation plays correctly the first time.
                 fragment.view?.visibility = View.INVISIBLE
         }
-        navigationView.setOnNavigationItemSelectedListener(::switchToNewPrimaryFragment)
+        navigationView.setOnItemSelectedListener(::switchToNewPrimaryFragment)
         onNewFragmentSelected(visibleFragment!!)
     }
 }
