@@ -64,10 +64,9 @@
     </style>
 
     <style name="AddButton">
-        <item name="backgroundPathData">@string/add_button_background_path_data</item>
         <item name="android:src">@drawable/ic_baseline_add_24</item>
         <item name="android:background">@drawable/add_button</item>
-        <item name="android:padding">12dp</item>
+        <item name="android:padding">16dp</item>
     </style>
 
     <style name="AppTitle" parent="@style/TitleTextAppearance">

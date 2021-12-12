@@ -20,8 +20,6 @@
     <string name="menu_button_description">Open options menu</string>
 
     <string name="checkout_button_background_path_data">M108,0 h-90 A 20.5 20.5 0 0 0 0,18 A 28 28 0 0 0 28,46 h90 A 32,32 0 0 1 108,0 Z</string>
-    <string name="add_button_background_path_data">M 28,0 A 28,28 0 1 1 28,56 A 28,28 0 1 1 28,0</string>
-    <string name="add_button_plus_path_data">M 28,19 L 28,37 M 19,28 L 37,28</string>
 
     <string name="add_button_description">Add new item</string>
     <string name="add_another_item_button_description">Add another</string>
