@@ -133,6 +133,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     /** Set the color of the checkbox to the color defined by colors[colorIndex],
      * and call onColorChangedListener with the new color. */
     fun setColorIndex(colorIndex: Int, animate: Boolean = true) {
+        if (colorIndex == _colorIndex) return
         val oldColor = color
         _colorIndex = colorIndex.coerceIn(colors.indices)
         val checkboxBg = (drawable as LayerDrawable).getDrawable(0)

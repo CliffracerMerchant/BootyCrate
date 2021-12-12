@@ -233,13 +233,9 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
                                  newUnderlineAlpha, animatorConfig)
             UnderlineAlphaUpdateMode.BeforeAnimation -> {
                 underlineAlpha = newUnderlineAlpha
-                setLayerType(LAYER_TYPE_HARDWARE, null)
-                translateAnimator.doOnEnd { setLayerType(LAYER_TYPE_NONE, null) }
                 null
             } UnderlineAlphaUpdateMode.AfterAnimation -> {
-                setLayerType(LAYER_TYPE_HARDWARE, null)
-                translateAnimator.doOnEnd { setLayerType(LAYER_TYPE_NONE, null)
-                                            underlineAlpha = newUnderlineAlpha }
+                translateAnimator.doOnEnd { underlineAlpha = newUnderlineAlpha }
                 null
             }
         }

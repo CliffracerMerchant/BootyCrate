@@ -45,7 +45,8 @@ open class IntegerEdit(context: Context, attrs: AttributeSet?) : LinearLayout(co
     var onValueChangedListener: ((Int)->Unit)? = null
     var value get() = try { ui.valueEdit.text.toString().toInt() }
                       catch (e: Exception) { 0 }
-              set(newValue) { val adjustedNewValue = newValue.coerceIn(minValue, maxValue)
+              set(newValue) { if (newValue == value) return
+                              val adjustedNewValue = newValue.coerceIn(minValue, maxValue)
                               ui.valueEdit.setText(adjustedNewValue.toString())
                               onValueChangedListener?.invoke(adjustedNewValue) }
     var valueIsFocusable get() = ui.valueEdit.isFocusableInTouchMode

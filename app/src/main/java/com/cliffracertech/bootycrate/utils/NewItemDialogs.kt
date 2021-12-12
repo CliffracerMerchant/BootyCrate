@@ -73,7 +73,10 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     abstract val itemWithNameAlreadyExistsInOtherCollectionWarningMessage: String
     abstract val itemHasNoInventoryIdErrorMessage: String
 
-    init { if (useDefaultLayout) newItemView = ExpandableSelectableItemView(context) }
+    init {
+        if (useDefaultLayout)
+            newItemView = ExpandableSelectableItemView(context)
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         itemViewModel.newItemName = ""
@@ -83,7 +86,6 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             setExpanded(true, animate = false)
             ui.amountEditSpacer.isVisible = false
             ui.checkBox.initColorIndex(0)
-            setSelectedState(false, animate = false)
             ui.editButton.visibility = View.GONE
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
                 itemViewModel.newItemExtraInfo = text.toString()

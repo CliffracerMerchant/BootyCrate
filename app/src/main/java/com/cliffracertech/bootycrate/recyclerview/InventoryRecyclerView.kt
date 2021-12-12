@@ -99,7 +99,7 @@ open class InventoryRecyclerView(context: Context, attrs: AttributeSet?) :
                 if (changes.contains(Field.InventoryItemCount))
                     ui.inventoryItemCountView.text = item.inventoryItemCount.toString()
                 if (changes.contains(Field.IsSelected))
-                    holder.view.setSelectedState(item.isSelected)
+                    holder.view.isSelected = item.isSelected
             }
         }
     }
@@ -275,9 +275,9 @@ class SelectedInventoryPicker(context: Context, attrs: AttributeSet) :
 
                     val selectedViewHolder = findViewHolderForAdapterPosition(chosenPosition ?: -1)
                                                                             as? InventoryViewHolder
-                    selectedViewHolder?.view?.setSelectedState(false)
+                    selectedViewHolder?.view?.isSelected = false
 
-                    view.setSelectedState(true)
+                    view.isSelected = true
                     chosenPosition = adapterPosition
                     onChosenInventoryIdChangedListener?.invoke(chosenInventoryId)
                 }
@@ -286,7 +286,7 @@ class SelectedInventoryPicker(context: Context, attrs: AttributeSet) :
         override fun onBindViewHolder(holder: InventoryViewHolder, position: Int) {
             super.onBindViewHolder(holder, position).also {
                 val isSelected = holder.adapterPosition == chosenPosition
-                holder.view.setSelectedState(isSelected, animate = false)
+                holder.view.isSelected = isSelected
             }
         }
     }
@@ -299,14 +299,10 @@ class SelectedInventoryPicker(context: Context, attrs: AttributeSet) :
  * number of inventory items, and an options button for the instance of
  * BootyCrateInventory it is bound to using the function update. The selected
  * state of the inventory is represented with a gradient outline, and is set
- * using the functions select, deselect, and setSelectedState (note that the
- * function setSelected is part of the Android framework's View class API, and
- * is unrelated to InventoryView). The current selected state can be queried
- * using the property isInSelectedState.
- * */
+ * using the Android framework's View's isSelected property.
+ */
 class InventoryView(context: Context) : LinearLayout(context) {
     val ui = InventoryViewBinding.inflate(LayoutInflater.from(context), this)
-    private val gradientOutline: GradientDrawable
 
     init {
         val inventoryIcon = ContextCompat.getDrawable(context, R.drawable.inventory_icon)
@@ -317,9 +313,7 @@ class InventoryView(context: Context) : LinearLayout(context) {
         inventoryIcon?.bounds?.inset(iconPadding, iconPadding)
         shoppingListIcon?.bounds?.inset(iconPadding, iconPadding)
 
-        background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item).also {
-            gradientOutline = ((it as LayerDrawable).getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
-        }
+        background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item)
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
     }
@@ -328,19 +322,6 @@ class InventoryView(context: Context) : LinearLayout(context) {
         ui.nameView.text = inventory.name
         ui.shoppingListItemCountView.text = inventory.shoppingListItemCount.toString()
         ui.inventoryItemCountView.text = inventory.inventoryItemCount.toString()
-        setSelectedState(inventory.isSelected, animate = false)
-    }
-
-    private var _isInSelectedState = false
-    val isInSelectedState get() = _isInSelectedState
-    fun select() = setSelectedState(true)
-    fun deselect() = setSelectedState(false)
-    fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        _isInSelectedState = selected
-        val endAlpha = if (selected) 255 else 0
-        if (animate) intValueAnimator(setter = gradientOutline::setAlpha,
-                                      from = gradientOutline.alpha,
-                                      to = endAlpha).start()
-        else gradientOutline.alpha = endAlpha
+        isSelected = inventory.isSelected
     }
 }

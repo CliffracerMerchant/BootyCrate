@@ -21,7 +21,7 @@
         android:bottom="@dimen/recycler_view_item_selection_border_thickness">
         <shape
             android:shape="rectangle">
-            <solid android:color="?attr/recyclerViewItemColor" />
+            <solid android:color="?attr/cardBackgroundColor" />
             <corners android:radius="@dimen/recycler_view_item_inner_rounded_corner_radius"/>
         </shape>
     </item>

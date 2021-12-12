@@ -8,8 +8,6 @@ import android.animation.Animator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.LayerDrawable
 import android.view.ViewPropertyAnimator
 import androidx.annotation.CallSuper
 import androidx.core.animation.doOnEnd
@@ -18,35 +16,26 @@ import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.applyConfig
-import com.cliffracertech.bootycrate.utils.intValueAnimator
 import com.cliffracertech.bootycrate.utils.add
+import com.cliffracertech.bootycrate.utils.applyConfig
 import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
 
 /**
  * A BootyCrateItemView subclass that provides an interface for a selection and expansion of the view.
  *
  * ExpandableSelectableItemView extends BootyCrateItemView by providing an
- * interface for expansion and selection, and with an update override that
- * will update the view to reflect the selection and expansion state of the
- * BootyCrateItem passed to it.
- *
- * The interface for selection and deselection consists of the functions
- * isInSelectedState, select, deselect, and setSelectedState. With the default
- * background these functions will give the view a surrounding gradient outline
- * or hide the outline depending on the item's selection state. Unless
- * setSelectedState is called with the parameter animate set to false, the
- * change in selection state will be animated with a fade in or out animation.
- * Note that setSelected and isSelected are part of the Android framework's
- * View's API, and have nothing to do with the selection API added by
- * ExpandableSelectableItemView.
+ * interface for expansion of extra details, a custom background to indicate a
+ * selected state, and with an update override that will update the view to
+ * reflect the selection and expansion state of the BootyCrateItem passed to it.
+ * The selected state is set using the View property isSelected. ExpandableSelectableItemView
+ * indicates its selected state by drawing a gradient outline around its edge.
  *
  * The interface for item expansion consists of expand, collapse, setExpanded,
  * and toggleExpanded. If subclasses need to alter the visibility of additional
  * views during expansion or collapse, they can override the function
- * onExpandedChanged with their additional changes. Like setSelectedState,
- * setExpanded will animate the changes inside the view unless it is called
- * with the parameter animate equal to false.
+ * onExpandedChanged with their additional changes. setExpanded will animate
+ * the changes inside the view unless it is called with the parameter animate
+ * set to false.
  *
  * In order to allow for easier synchronization with concurrent animations
  * outside the view, all of ExpandableSelectableItemView's internal animations
@@ -66,7 +55,6 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
 {
     var isExpanded = false
         private set
-    private val gradientOutline: GradientDrawable
     private var isLinkedToAnotherItem = false
 
     var animatorConfig: AnimatorConfig? = null
@@ -85,9 +73,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
                                           pendingViewPropAnimations.clear() }
 
     init {
-        val background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item) as LayerDrawable
-        gradientOutline = (background.getDrawable(1) as LayerDrawable).getDrawable(0) as GradientDrawable
-        this.background = background
+        background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item)
         clipChildren = false
         if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }
@@ -98,7 +84,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     override fun update(item: T) {
         super.update(item)
         setExpanded(item.isExpanded, animate = false)
-        setSelectedState(item.isSelected, animate = false)
+        isSelected = item.isSelected
         isLinkedToAnotherItem = item.isLinked
         if (isExpanded)
             ui.linkIndicator.isVisible = isLinkedToAnotherItem
@@ -118,18 +104,8 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         if (isExpanded) updateIsLinkedIndicatorState(isLinked, animate, translate = false)
     }
 
-    private var _isInSelectedState = false
-    val isInSelectedState get() = _isInSelectedState
-    fun select() = setSelectedState(true)
-    fun deselect() = setSelectedState(false)
-    fun setSelectedState(selected: Boolean, animate: Boolean = true) {
-        _isInSelectedState = selected
-        if (animate) intValueAnimator(setter = gradientOutline::setAlpha,
-                                      from = gradientOutline.alpha,
-                                      to = if (selected) 255 else 0,
-                                      config = animatorConfig).start()
-        else gradientOutline.alpha = if (selected) 255 else 0
-    }
+    fun select() { isSelected = true }
+    fun deselect() { isSelected = false }
 
     fun toggleExpanded() = setExpanded(!isExpanded)
     @CallSuper open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) {
@@ -140,6 +116,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     }
 
     override fun setExpanded(expanding: Boolean, animate: Boolean) {
+        if (isExpanded == expanding) return
      /* Both LayoutTransition and TransitionManager.beginDelayedTransition
         unfortunately don't seem to animate all the expand/collapse changes
         correctly, and do not provide a way to delay the animations so that

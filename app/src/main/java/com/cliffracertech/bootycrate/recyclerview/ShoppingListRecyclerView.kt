@@ -69,26 +69,20 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
 
                 if (changes.contains(ShoppingListItem.Field.Name))
                     holder.view.setNameText(item.name)
-                if (changes.contains(ShoppingListItem.Field.ExtraInfo) &&
-                    ui.extraInfoEdit.text.toString() != item.extraInfo)
-                        holder.view.setExtraInfoText(item.extraInfo)
-                if (changes.contains(ShoppingListItem.Field.Color) &&
-                    ui.checkBox.colorIndex != item.color)
-                        ui.checkBox.colorIndex = item.color
-                if (changes.contains(ShoppingListItem.Field.Amount) &&
-                    ui.amountEdit.value != item.amount)
-                        ui.amountEdit.value = item.amount
-                if (changes.contains(ShoppingListItem.Field.IsExpanded) &&
-                    holder.view.isExpanded != item.isExpanded)
-                        holder.view.setExpanded(item.isExpanded)
-                if (changes.contains(ShoppingListItem.Field.IsSelected) &&
-                    holder.view.isInSelectedState != item.isSelected)
-                        holder.view.setSelectedState(item.isSelected)
+                if (changes.contains(ShoppingListItem.Field.ExtraInfo))
+                    holder.view.setExtraInfoText(item.extraInfo)
+                if (changes.contains(ShoppingListItem.Field.Color))
+                    ui.checkBox.colorIndex = item.color
+                if (changes.contains(ShoppingListItem.Field.Amount))
+                    ui.amountEdit.value = item.amount
+                if (changes.contains(ShoppingListItem.Field.IsExpanded))
+                    holder.view.setExpanded(item.isExpanded)
+                if (changes.contains(ShoppingListItem.Field.IsSelected))
+                    holder.view.isSelected = item.isSelected
                 if (changes.contains(ShoppingListItem.Field.IsLinked))
                     holder.view.updateIsLinked(item.isLinked, animate = item.isExpanded)
-                if (changes.contains(ShoppingListItem.Field.IsChecked) &&
-                    ui.checkBox.isChecked != item.isChecked)
-                        ui.checkBox.isChecked = item.isChecked
+                if (changes.contains(ShoppingListItem.Field.IsChecked))
+                    ui.checkBox.initIsChecked(item.isChecked)
             }
         }
     }

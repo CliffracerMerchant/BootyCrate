@@ -4,8 +4,6 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <!-- Used as the background color for recycler view items. -->
-    <attr name="recyclerViewItemColor"         format="color" />
     <!-- The left color of the background gradient. -->
     <attr name="backgroundGradientLeftColor"   format="color" />
     <!-- The middle color of the background gradient. -->

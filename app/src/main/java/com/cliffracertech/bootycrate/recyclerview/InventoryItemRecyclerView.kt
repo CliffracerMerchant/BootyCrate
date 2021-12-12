@@ -60,32 +60,24 @@ class InventoryItemRecyclerView(context: Context, attrs: AttributeSet) :
 
                 if (changes.contains(InventoryItem.Field.Name))
                     holder.view.setNameText(item.name)
-                if (changes.contains(InventoryItem.Field.ExtraInfo) &&
-                    ui.extraInfoEdit.text.toString() != item.extraInfo)
-                        holder.view.setExtraInfoText(item.extraInfo)
+                if (changes.contains(InventoryItem.Field.ExtraInfo))
+                    holder.view.setExtraInfoText(item.extraInfo)
                 if (changes.contains(InventoryItem.Field.Color)) {
-                    if (ui.checkBox.colorIndex != item.color)
-                        ui.checkBox.colorIndex = item.color
-                    if (detailsUi.autoAddToShoppingListCheckBox.colorIndex != item.color)
-                        detailsUi.autoAddToShoppingListCheckBox.colorIndex = item.color
+                    ui.checkBox.colorIndex = item.color
+                    detailsUi.autoAddToShoppingListCheckBox.colorIndex = item.color
                 }
-                if (changes.contains(InventoryItem.Field.Amount) &&
-                    ui.amountEdit.value != item.amount)
-                        ui.amountEdit.value = item.amount
-                if (changes.contains(InventoryItem.Field.IsExpanded) &&
-                    holder.view.isExpanded != item.isExpanded)
-                        holder.view.setExpanded(item.isExpanded)
-                if (changes.contains(InventoryItem.Field.IsSelected) &&
-                    holder.view.isInSelectedState != item.isSelected)
-                        holder.view.setSelectedState(item.isSelected)
+                if (changes.contains(InventoryItem.Field.Amount))
+                    ui.amountEdit.value = item.amount
+                if (changes.contains(InventoryItem.Field.IsExpanded))
+                    holder.view.setExpanded(item.isExpanded)
+                if (changes.contains(InventoryItem.Field.IsSelected))
+                    holder.view.isSelected = item.isSelected
                 if (changes.contains(InventoryItem.Field.IsLinked))
                     holder.view.updateIsLinked(item.isLinked, animate = item.isExpanded)
-                if (changes.contains(InventoryItem.Field.AutoAddToShoppingList) &&
-                    detailsUi.autoAddToShoppingListCheckBox.isChecked != item.autoAddToShoppingList)
-                        detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
-                if (changes.contains(InventoryItem.Field.AutoAddToShoppingListAmount) &&
-                    detailsUi.autoAddToShoppingListAmountEdit.value != item.autoAddToShoppingListAmount)
-                        detailsUi.autoAddToShoppingListAmountEdit.value = item.autoAddToShoppingListAmount
+                if (changes.contains(InventoryItem.Field.AutoAddToShoppingList))
+                    detailsUi.autoAddToShoppingListCheckBox.initIsChecked(item.autoAddToShoppingList)
+                if (changes.contains(InventoryItem.Field.AutoAddToShoppingListAmount))
+                    detailsUi.autoAddToShoppingListAmountEdit.value = item.autoAddToShoppingListAmount
             }
         }
     }

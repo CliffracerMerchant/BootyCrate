@@ -7,6 +7,7 @@ package com.cliffracertech.bootycrate.recyclerview
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.view.ViewPropertyAnimator
 import androidx.annotation.CallSuper
@@ -54,8 +55,15 @@ open class BootyCrateItemView<T: BootyCrateItem>(
     init {
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
-        if (useDefaultLayout)
+        if (useDefaultLayout) {
             ui = BootyCrateItemBinding.inflate(LayoutInflater.from(context), this)
+            // Initializing isVisible to false here ensures that the extraInfoEdit
+            // is hidden even if the first bound item's extraInfo field is blank.
+            // If the first bound item's extraInfo field is not blank, then the
+            // extraInfoEdit's visibility will be set in the call to setExtraInfoText.
+            ui.extraInfoEdit.isVisible = false
+            ui.extraInfoEdit.alpha = 0f
+        }
 
         val verticalPadding = resources.getDimension(R.dimen.recycler_view_item_vertical_padding)
         setPadding(0, (verticalPadding * 2f / 3f).toInt(), 0, (verticalPadding * 4f / 3f).toInt())
@@ -84,6 +92,7 @@ open class BootyCrateItemView<T: BootyCrateItem>(
     /** Update the text of name edit, while also updating the contentDescriptions
      * of child views to take into account the new name. */
     fun setNameText(newName: String) {
+        if (newName == ui.nameEdit.text.toString()) return
         ui.nameEdit.setText(newName)
         updateContentDescriptions(newName)
     }
@@ -93,6 +102,7 @@ open class BootyCrateItemView<T: BootyCrateItem>(
      * to use this function rather than changing the extra info edit's text directly
      * to ensure that its visibility is set correctly. */
     fun setExtraInfoText(newText: String) {
+        if (newText == ui.extraInfoEdit.text.toString()) return
         ui.extraInfoEdit.setText(newText)
         if (ui.extraInfoEdit.text.isNullOrBlank() == ui.extraInfoEdit.isVisible) {
             ui.extraInfoEdit.isVisible = !ui.extraInfoEdit.isVisible
@@ -180,7 +190,7 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
             context.getString(R.string.item_auto_add_to_shopping_list_amount_decrease_description, itemName)
         detailsUi.autoAddToShoppingListAmountEdit.ui.increaseButton.contentDescription =
             context.getString(R.string.item_auto_add_to_shopping_list_amount_increase_description, itemName)
-        detailsUi.autoAddToShoppingListAmountEditLabel.text =
+        detailsUi.autoAddToShoppingListAmountEdit.contentDescription =
             context.getString(R.string.item_auto_add_to_shopping_list_amount_description, itemName)
     }
 

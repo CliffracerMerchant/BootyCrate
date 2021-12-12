@@ -6,7 +6,7 @@
 <resources>
     <style name="LightTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
-        <item name="recyclerViewItemColor">@color/colorRecyclerViewItemLight</item>
+        <item name="cardBackgroundColor">@color/colorRecyclerViewItemLight</item>
         <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
         <item name="alertDialogTheme">@style/LightAlertDialog</item>
         <item name="colorSurface">@color/colorWindowBackgroundLight</item>
@@ -44,7 +44,7 @@
 
     <style name="DarkTheme" parent="LightTheme">
         <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
-        <item name="recyclerViewItemColor">@color/colorRecyclerViewItemDark</item>
+        <item name="cardBackgroundColor">@color/colorRecyclerViewItemDark</item>
         <item name="materialAlertDialogTheme">@style/DarkAlertDialog</item>
         <item name="alertDialogTheme">@style/DarkAlertDialog</item>
         <item name="android:textColorPrimary">@color/color_text_light</item>
@@ -107,7 +107,7 @@
     </style>
 
     <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
-        <item name="backgroundTint">?attr/recyclerViewItemColor</item>
+        <item name="backgroundTint">?attr/cardBackgroundColor</item>
     </style>
 
     <style name="SnackbarActionTextAppearance" parent="Widget.MaterialComponents.Button.TextButton.Snackbar">

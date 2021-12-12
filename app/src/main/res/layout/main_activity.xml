@@ -9,6 +9,7 @@
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     android:clipChildren="false"
     tools:context=".activity.MainActivity" >
 
@@ -44,6 +45,7 @@
                 android:id="@+id/bottomNavigationView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                tools:background="@drawable/background_gradient"
                 style="@style/BottomNavigationView">
 
                 <TextView
@@ -115,7 +117,6 @@
             android:layout_height="400dp"
             android:layout_gravity="bottom"
             android:layout_marginTop="?android:attr/actionBarSize"
-            android:paddingHorizontal="10dp"
             android:background="@drawable/background_gradient">
 
             <com.cliffracertech.bootycrate.recyclerview.InventorySelector

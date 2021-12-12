@@ -51,7 +51,7 @@ class InventoryItemViewTests {
         val selectedBackground = background?.getDrawable(1) as? LayerDrawable
         val gradientOutline = selectedBackground?.getDrawable(0) as? GradientDrawable
         assertThat(gradientOutline?.alpha).isEqualTo(if (selected) 255 else 0)
-        assertThat(instance.isInSelectedState).isEqualTo(selected)
+        assertThat(instance.isSelected).isEqualTo(selected)
     }
 
     @Test fun initialCollapsedState() {

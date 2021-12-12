@@ -6,7 +6,6 @@ package com.cliffracertech.bootycrate.activity
 
 import android.animation.Animator
 import android.animation.ValueAnimator
-import android.content.res.ColorStateList
 import android.graphics.*
 import android.graphics.drawable.GradientDrawable
 import android.view.View
@@ -18,8 +17,6 @@ import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.view.ActionBarTitle
-import com.cliffracertech.bootycrate.view.GradientVectorDrawable
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlin.math.abs
 
