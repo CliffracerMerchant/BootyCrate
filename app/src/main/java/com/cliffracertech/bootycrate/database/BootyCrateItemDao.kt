@@ -4,11 +4,11 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.database
 
-import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import kotlinx.coroutines.flow.Flow
 
 /** A Room DAO that provides methods to manipulate a database of BootyCrateItems. */
 @Dao abstract class BootyCrateItemDao {
@@ -60,34 +60,55 @@ import androidx.room.Transaction
     abstract fun deleteAll()
 
     @Query("$selectShoppingListItems ORDER BY color")
-    abstract fun getShoppingListSortedByColor(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByColor(filter: String): Flow<List<ShoppingListItem>>
 
     @Query("$selectShoppingListItems ORDER BY bootycrate_item.name COLLATE NOCASE ASC")
-    abstract fun getShoppingListSortedByNameAsc(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByNameAsc(filter: String): Flow<List<ShoppingListItem>>
 
     @Query("$selectShoppingListItems ORDER BY bootycrate_item.name COLLATE NOCASE DESC")
-    abstract fun getShoppingListSortedByNameDesc(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByNameDesc(filter: String): Flow<List<ShoppingListItem>>
 
     @Query("$selectShoppingListItems ORDER BY shoppingListAmount ASC")
-    abstract fun getShoppingListSortedByAmountAsc(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByAmountAsc(filter: String): Flow<List<ShoppingListItem>>
 
     @Query("$selectShoppingListItems ORDER BY shoppingListAmount DESC")
-    abstract fun getShoppingListSortedByAmountDesc(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByAmountDesc(filter: String): Flow<List<ShoppingListItem>>
 
     @Query("$selectShoppingListItems ORDER BY isChecked, color")
-    abstract fun getShoppingListSortedByColorAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByColorAndChecked(filter: String): Flow<List<ShoppingListItem>>
 
     @Query("$selectShoppingListItems ORDER BY isChecked, bootycrate_item.name COLLATE NOCASE ASC")
-    abstract fun getShoppingListSortedByNameAscAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByNameAscAndChecked(filter: String): Flow<List<ShoppingListItem>>
 
     @Query("$selectShoppingListItems ORDER BY isChecked, bootycrate_item.name COLLATE NOCASE DESC")
-    abstract fun getShoppingListSortedByNameDescAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByNameDescAndChecked(filter: String): Flow<List<ShoppingListItem>>
 
     @Query("$selectShoppingListItems ORDER BY isChecked, shoppingListAmount ASC")
-    abstract fun getShoppingListSortedByAmountAscAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByAmountAscAndChecked(filter: String): Flow<List<ShoppingListItem>>
 
     @Query("$selectShoppingListItems ORDER BY isChecked, shoppingListAmount DESC")
-    abstract fun getShoppingListSortedByAmountDescAndChecked(filter: String): LiveData<List<ShoppingListItem>>
+    protected abstract fun getShoppingListSortedByAmountDescAndChecked(filter: String): Flow<List<ShoppingListItem>>
+
+    fun getShoppingList(
+        sort: BootyCrateItemSort,
+        sortByChecked: Boolean,
+        searchFilter: String? = null
+    ): Flow<List<ShoppingListItem>> {
+        val filter = "%${searchFilter ?: ""}%"
+        return if (!sortByChecked) when (sort) {
+            BootyCrateItemSort.Color -> getShoppingListSortedByColor(filter)
+            BootyCrateItemSort.NameAsc -> getShoppingListSortedByNameAsc(filter)
+            BootyCrateItemSort.NameDesc -> getShoppingListSortedByNameDesc(filter)
+            BootyCrateItemSort.AmountAsc -> getShoppingListSortedByAmountAsc(filter)
+            BootyCrateItemSort.AmountDesc -> getShoppingListSortedByAmountDesc(filter)
+        } else when (sort) {
+            BootyCrateItemSort.Color -> getShoppingListSortedByColorAndChecked(filter)
+            BootyCrateItemSort.NameAsc -> getShoppingListSortedByNameAscAndChecked(filter)
+            BootyCrateItemSort.NameDesc -> getShoppingListSortedByNameDescAndChecked(filter)
+            BootyCrateItemSort.AmountAsc -> getShoppingListSortedByAmountAscAndChecked(filter)
+            BootyCrateItemSort.AmountDesc -> getShoppingListSortedByAmountDescAndChecked(filter)
+        }
+    }
 
     @Query("SELECT EXISTS(SELECT id FROM bootycrate_item WHERE $onShoppingList " +
                          "AND name = :name AND extraInfo = :extraInfo " +
@@ -111,7 +132,7 @@ import androidx.room.Transaction
     @Query("SELECT COUNT(*) FROM bootycrate_item " +
            "WHERE selectedInShoppingList AND $onShoppingList " +
            "AND $inSelectedInventories")
-    abstract fun getSelectedShoppingListItemCount(): LiveData<Int>
+    abstract fun getSelectedShoppingListItemCount(): Flow<Int>
 
     @Query("UPDATE bootycrate_item SET selectedInShoppingList = :selected WHERE id = :id")
     abstract suspend fun updateSelectedInShoppingList(id: Long, selected: Boolean)
@@ -181,7 +202,7 @@ import androidx.room.Transaction
 
     @Query("SELECT COUNT(*) FROM bootycrate_item " +
            "WHERE isChecked AND $onShoppingList AND $inSelectedInventories")
-    abstract fun getCheckedShoppingListItemsSize() : LiveData<Int>
+    abstract fun getCheckedShoppingListItemsSize() : Flow<Int>
 
     @Query("""UPDATE bootycrate_item
               SET inventoryAmount = CASE WHEN $inInventory
@@ -195,19 +216,33 @@ import androidx.room.Transaction
     abstract suspend fun checkout()
 
     @Query("$selectInventoryItems ORDER BY color")
-    abstract fun getInventorySortedByColor(filter: String): LiveData<List<InventoryItem>>
+    protected abstract fun getInventorySortedByColor(filter: String): Flow<List<InventoryItem>>
 
     @Query("$selectInventoryItems ORDER BY bootycrate_item.name COLLATE NOCASE ASC")
-    abstract fun getInventorySortedByNameAsc(filter: String): LiveData<List<InventoryItem>>
+    protected abstract fun getInventorySortedByNameAsc(filter: String): Flow<List<InventoryItem>>
 
     @Query("$selectInventoryItems ORDER BY bootycrate_item.name COLLATE NOCASE DESC")
-    abstract fun getInventorySortedByNameDesc(filter: String): LiveData<List<InventoryItem>>
+    protected abstract fun getInventorySortedByNameDesc(filter: String): Flow<List<InventoryItem>>
 
     @Query("$selectInventoryItems ORDER BY inventoryAmount ASC")
-    abstract fun getInventorySortedByAmountAsc(filter: String): LiveData<List<InventoryItem>>
+    protected abstract fun getInventorySortedByAmountAsc(filter: String): Flow<List<InventoryItem>>
 
     @Query("$selectInventoryItems ORDER BY inventoryAmount DESC")
-    abstract fun getInventorySortedByAmountDesc(filter: String): LiveData<List<InventoryItem>>
+    protected abstract fun getInventorySortedByAmountDesc(filter: String): Flow<List<InventoryItem>>
+
+    fun getInventoryContents(
+        sort: BootyCrateItemSort,
+        searchFilter: String? = null
+    ): Flow<List<InventoryItem>> {
+        val filter = "%${searchFilter ?: ""}%"
+        return when (sort) {
+            BootyCrateItemSort.Color -> getInventorySortedByColor(filter)
+            BootyCrateItemSort.NameAsc -> getInventorySortedByNameAsc(filter)
+            BootyCrateItemSort.NameDesc -> getInventorySortedByNameDesc(filter)
+            BootyCrateItemSort.AmountAsc -> getInventorySortedByAmountAsc(filter)
+            BootyCrateItemSort.AmountDesc -> getInventorySortedByAmountDesc(filter)
+        }
+    }
 
     @Query("SELECT EXISTS(SELECT id FROM bootycrate_item WHERE $inInventory " +
                          "AND name = :name AND extraInfo = :extraInfo " +
@@ -231,7 +266,7 @@ import androidx.room.Transaction
     @Query("SELECT COUNT(*) FROM bootycrate_item " +
            "WHERE selectedInInventory AND $inInventory " +
            "AND $inSelectedInventories")
-    abstract fun getSelectedInventoryItemCount(): LiveData<Int>
+    abstract fun getSelectedInventoryItemCount(): Flow<Int>
 
     @Query("UPDATE bootycrate_item SET selectedInInventory = :selected WHERE id = :id")
     abstract suspend fun updateSelectedInInventory(id: Long, selected: Boolean)

@@ -62,10 +62,6 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerView?.initViewModel(viewModel)
         super.onViewCreated(view, savedInstanceState)
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        val sortByCheckedPrefKey = getString(R.string.pref_sort_by_checked_key)
-        val sortByCheckedPrefValue = prefs.getBoolean(sortByCheckedPrefKey, false)
-        viewModel.sortByChecked = sortByCheckedPrefValue
         viewModel.checkedItemsSize.observe(viewLifecycleOwner) { newSize ->
             checkoutButton?.isEnabled = newSize != 0
             // Sometimes onChanged is called before onActiveStateChanged is called, causing

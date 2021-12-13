@@ -62,7 +62,7 @@ class ShoppingListFragmentTests {
         activityRule.scenario.onActivity {
             val shoppingListItemViewModel: ShoppingListItemViewModel by it.viewModels()
             shoppingListItemViewModel.sortByChecked = false
-            shoppingListItemViewModel.sort = BootyCrateItemSort.Color
+            shoppingListItemViewModel.sort.value = BootyCrateItemSort.Color
             val prefs = PreferenceManager.getDefaultSharedPreferences(it)
             prefs.edit().putBoolean(it.getString(R.string.pref_sort_by_checked_key), false).apply()
         }

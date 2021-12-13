@@ -65,7 +65,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         sortModePrefKey = getString(R.string.pref_sort, collectionName)
         val sortStr = prefs.getString(sortModePrefKey, BootyCrateItemSort.Color.toString())
-        viewModel.sort = BootyCrateItemSort.fromString(sortStr)
+        viewModel.sort.value = BootyCrateItemSort.fromString(sortStr)
 
         val multiStateView = view as? MultiStateView
         val emptyTextView = multiStateView?.getView(MultiStateView.ViewState.EMPTY) as? TextView
@@ -148,7 +148,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
      * sortMenuItem, and save the sort to sharedPreferences.
      * @return whether the option was successfully saved to preferences. */
     private fun saveSortingOption(sort: BootyCrateItemSort, sortMenuItem: MenuItem) : Boolean {
-        viewModel.sort = sort
+        viewModel.sort.value = sort
         sortMenuItem.isChecked = true
         val context = this.context ?: return false
         PreferenceManager.getDefaultSharedPreferences(context).edit()
@@ -193,7 +193,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             recyclerView.apply {
                 snackBarAnchor = activityUi.bottomAppBar
                 activityUi.actionBar.onSearchQueryChangedListener = { newText ->
-                    viewModel.searchFilter = newText.toString()
+                    viewModel.searchFilter.value = newText.toString()
                 }
                 val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
                 setPadding(paddingLeft, paddingTop, paddingRight, bottomSheetPeekHeight)
@@ -201,13 +201,13 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
             val actionModeCallback = if (viewModel.selectionIsEmpty) null
                                      else this.actionModeCallback
-            val activeSearchQuery = if (viewModel.searchFilter.isBlank()) null
-                                    else viewModel.searchFilter
+            val activeSearchQuery = if (viewModel.searchFilter.value.isNullOrBlank()) null
+                                    else viewModel.searchFilter.value
             activityUi.actionBar.transition(
                 activeActionModeCallback = actionModeCallback,
                 activeSearchQuery = activeSearchQuery)
 
-            activityUi.actionBar.changeSortMenu.findItem(when (viewModel.sort) {
+            activityUi.actionBar.changeSortMenu.findItem(when (viewModel.sort.value) {
                 BootyCrateItemSort.Color -> R.id.color_option
                 BootyCrateItemSort.NameAsc -> R.id.name_ascending_option
                 BootyCrateItemSort.NameDesc -> R.id.name_descending_option
