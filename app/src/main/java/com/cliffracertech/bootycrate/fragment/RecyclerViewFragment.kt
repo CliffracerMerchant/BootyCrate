@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.activity.*
@@ -185,7 +186,10 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             actionBar = null
             activityUi.actionBar.onSearchQueryChangedListener = null
         } else {
-            actionBar = activityUi.actionBar
+            actionBar = activityUi.actionBar.also {
+                val inventoryViewModel: InventoryViewModel by activityViewModels()
+                it.ui.titleSwitcher.title = inventoryViewModel.selectedInventoryName.value
+            }
             recyclerView.apply {
                 snackBarAnchor = activityUi.bottomAppBar
                 activityUi.actionBar.onSearchQueryChangedListener = { newText ->

@@ -106,7 +106,7 @@ fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
         val shouldBeSelected = i in indices
         assertThat(vh.item.isSelected).isEqualTo(shouldBeSelected)
         val itemView = vh.itemView as ExpandableSelectableItemView<*>
-        assertThat(itemView.isInSelectedState).isEqualTo(shouldBeSelected)
+        assertThat(itemView.isSelected).isEqualTo(shouldBeSelected)
     }
 }
 
