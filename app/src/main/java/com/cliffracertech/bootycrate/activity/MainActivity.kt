@@ -9,7 +9,6 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
-import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
 import androidx.core.view.isInvisible
@@ -17,7 +16,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
@@ -76,9 +74,9 @@ open class MainActivity : MultiFragmentActivity() {
 
     private var currentFragment: Fragment? = null
     override fun onNewFragmentSelected(newFragment: Fragment) {
-        val currentFragment = currentFragment
-        if (currentFragment != null)
-            (currentFragment as? MainActivityFragment)?.onActiveStateChanged(isActive = false, ui)
+        val oldFragment = currentFragment
+        if (oldFragment != null)
+            (oldFragment as? MainActivityFragment)?.onActiveStateChanged(isActive = false, ui)
         else if (newFragment is MainActivityFragment) {
             // currentFragment being null implies an activity restart. In
             // this case we need to set cradleLayout to visible or invisible
@@ -90,7 +88,7 @@ open class MainActivity : MultiFragmentActivity() {
             ui.bottomAppBar.navIndicator.alpha = if (showsBottomAppBar) 1f else 0f
         }
 
-        val needToAnimate = currentFragment != null
+        val needToAnimate = oldFragment != null
         this.currentFragment = newFragment
         if (newFragment !is MainActivityFragment) return
 
@@ -146,10 +144,8 @@ open class MainActivity : MultiFragmentActivity() {
         ui.addInventoryButton.setOnClickListener {
             inventoryNameDialog(this, null) { inventoryViewModel.add(it) }
         }
-        val dbSettingsViewModel: DatabaseSettingsViewModel by viewModels()
-        InventorySelectionOptionsMenu.openOnClickOf(ui.inventorySelectorOptionsButton,
-                                                    dbSettingsViewModel, inventoryViewModel)
-
+        InventorySelectionOptionsMenu.openOnClickOf(
+            ui.inventorySelectorOptionsButton, inventoryViewModel)
     }
 
     private fun initAnimatorConfigs() {

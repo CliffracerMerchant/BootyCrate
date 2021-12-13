@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @Entity(tableName = "inventory")
 open class DatabaseInventory(
@@ -98,7 +99,16 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
 
 class InventoryViewModel(app: Application): AndroidViewModel(app) {
     private val dao = BootyCrateDatabase.get(app).inventoryDao()
+    private val dbSettingsDao = BootyCrateDatabase.get(app).dbSettingsDao()
     private val nameForMultiSelection = app.getString(R.string.multiple_selected_inventories_description)
+
+    val multiSelect = dbSettingsDao.getMultiSelectInventories()
+        .stateIn(viewModelScope, SharingStarted.Eagerly,
+            runBlocking { dbSettingsDao.getMultiSelectInventoriesNow() })
+
+    fun toggleMultiSelect() = viewModelScope.launch {
+        dbSettingsDao.updateMultiSelectInventories(!multiSelect.value)
+    }
 
     val inventories = dao.getAll().asLiveData()
 

@@ -33,17 +33,3 @@ class DatabaseSettings(
     @Query("UPDATE dbSettings SET multiSelectInventories = :multiSelect")
     abstract suspend fun updateMultiSelectInventories(multiSelect: Boolean)
 }
-
-class DatabaseSettingsViewModel(app: Application) : AndroidViewModel(app) {
-    private val dao = BootyCrateDatabase.get(app).dbSettingsDao()
-
-    val multiSelectInventories = dao.getMultiSelectInventories()
-        .stateIn(viewModelScope, SharingStarted.Eagerly,
-                 runBlocking { dao.getMultiSelectInventoriesNow() })
-
-    fun updateMultiSelectInventories(multiSelect: Boolean): Job =
-        viewModelScope.launch { dao.updateMultiSelectInventories(multiSelect) }
-
-    fun toggleMultiSelectInventories() =
-        viewModelScope.launch { dao.updateMultiSelectInventories(!multiSelectInventories.value) }
-}

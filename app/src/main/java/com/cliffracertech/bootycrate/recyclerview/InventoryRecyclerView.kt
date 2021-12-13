@@ -9,8 +9,6 @@ package com.cliffracertech.bootycrate.recyclerview
 
 import android.content.Context
 import android.content.res.Resources
-import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -27,13 +25,10 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateInventory
-import com.cliffracertech.bootycrate.database.DatabaseSettings
-import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
 import com.cliffracertech.bootycrate.utils.deleteInventoryDialog
 import com.cliffracertech.bootycrate.utils.dpToPixels
-import com.cliffracertech.bootycrate.utils.intValueAnimator
 import com.cliffracertech.bootycrate.utils.inventoryNameDialog
 import java.util.*
 
@@ -197,7 +192,6 @@ class InventorySelector(context: Context, attrs: AttributeSet?) :
  * in a more idiomatic way. */
 class InventorySelectionOptionsMenu(
     anchor: View,
-    private val dbSettingsViewModel: DatabaseSettingsViewModel,
     private val inventoryViewModel: InventoryViewModel,
 ) : PopupMenu(anchor.context, anchor) {
 
@@ -213,25 +207,22 @@ class InventorySelectionOptionsMenu(
             when(it.itemId) {
                 R.id.multiSelectInventoriesSwitch -> {
                     multiSelectCheckBox.apply { isChecked = !isChecked }
-                    dbSettingsViewModel.toggleMultiSelectInventories()
+                    inventoryViewModel.toggleMultiSelect()
                 } R.id.selectAllInventories ->
                     inventoryViewModel.selectAll()
             }; true
         }
 
         anchor.setOnClickListener {
-            multiSelectCheckBox.isChecked = dbSettingsViewModel.multiSelectInventories.value
+            multiSelectCheckBox.isChecked = inventoryViewModel.multiSelect.value
             selectAllButton.isEnabled = multiSelectCheckBox.isChecked
             show()
         }
     }
 
     companion object {
-        fun openOnClickOf(
-            anchor: View,
-            dbSettingsViewModel: DatabaseSettingsViewModel,
-            inventoryViewmOdel: InventoryViewModel,
-        ) = InventorySelectionOptionsMenu(anchor, dbSettingsViewModel, inventoryViewmOdel)
+        fun openOnClickOf(anchor: View, inventoryViewModel: InventoryViewModel) =
+            InventorySelectionOptionsMenu(anchor, inventoryViewModel)
     }
 }
 
