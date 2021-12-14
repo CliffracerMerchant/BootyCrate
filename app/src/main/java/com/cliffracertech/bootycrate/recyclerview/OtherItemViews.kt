@@ -7,7 +7,6 @@ package com.cliffracertech.bootycrate.recyclerview
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.view.ViewPropertyAnimator
 import androidx.annotation.CallSuper
@@ -169,6 +168,12 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
         val tempUi = InventoryItemBinding.inflate(LayoutInflater.from(context), this)
         ui = BootyCrateItemBinding.bind(tempUi.root)
         detailsUi = InventoryItemDetailsBinding.bind(tempUi.root)
+
+        ui.extraInfoEdit.isVisible = false
+        ui.extraInfoEdit.alpha = 0f
+        detailsUi.inventoryItemDetailsLayout.isVisible = false
+        detailsUi.inventoryItemDetailsLayout.alpha = 0f
+
         ui.editButton.setOnClickListener { toggleExpanded() }
         ui.checkBox.setInColorEditMode(true, animate = false)
         ui.amountEdit.minValue = 0

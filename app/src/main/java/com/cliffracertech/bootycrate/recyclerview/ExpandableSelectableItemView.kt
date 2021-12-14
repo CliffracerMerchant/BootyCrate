@@ -77,6 +77,8 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         clipChildren = false
         if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }
+            ui.linkIndicator.alpha = 0f
+            ui.linkIndicator.translationY = ui.linkIndicator.drawable.intrinsicHeight * -1f
             this.animatorConfig = animatorConfig
         }
     }
