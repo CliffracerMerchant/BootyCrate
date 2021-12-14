@@ -16,9 +16,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class DatabaseInventoryTests {
+class InventoryDatabaseTests {
     private lateinit var db: BootyCrateDatabase
-    private lateinit var dao: BootyCrateInventoryDao
+    private lateinit var dao: InventoryDao
 
     @Before fun createDb() {
         val context = ApplicationProvider.getApplicationContext<Context>()
@@ -39,9 +39,9 @@ class DatabaseInventoryTests {
         val names = listOf("Pantry", "Refrigerator", "Pantry2", "Refrigerator2")
         runBlocking {
             dao.add(names[0])
-            dao.add(DatabaseInventory(name = names[1]))
-            dao.add(listOf(DatabaseInventory(name = names[2]),
-                           DatabaseInventory(name = names[3])))
+            dao.add(Inventory(name = names[1]))
+            dao.add(listOf(Inventory(name = names[2]),
+                           Inventory(name = names[3])))
         }
         val itemNames = dao.getAllNow().map { it.name }
         assertThat(itemNames.size).isEqualTo(names.size + 1)

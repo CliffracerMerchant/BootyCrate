@@ -27,12 +27,12 @@ import java.io.File
  * of the bootycrate_item table. BootyCrateDatabase functions as a singleton,
  * with the current instance obtained using the static function get.
  */
-@Database(entities = [DatabaseBootyCrateItem::class, DatabaseInventory::class,
+@Database(entities = [DatabaseBootyCrateItem::class, Inventory::class,
                       DatabaseSettings::class], version = 3)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun itemDao(): BootyCrateItemDao
-    abstract fun inventoryDao(): BootyCrateInventoryDao
+    abstract fun inventoryDao(): InventoryDao
     abstract fun dbSettingsDao(): DatabaseSettingsDao
 
     companion object {

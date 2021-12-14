@@ -13,7 +13,7 @@ import com.cliffracertech.bootycrate.R
 
 /** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item table. */
 @Entity(tableName = "bootycrate_item",
-        foreignKeys = [ForeignKey(entity = DatabaseInventory::class,
+        foreignKeys = [ForeignKey(entity = Inventory::class,
                                   parentColumns=["id"],
                                   childColumns=["inventoryId"],
                                   onDelete=ForeignKey.CASCADE)])

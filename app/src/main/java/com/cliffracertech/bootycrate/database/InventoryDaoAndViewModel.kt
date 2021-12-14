@@ -17,8 +17,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
+/** A data only class that represents an inventory that contains
+ * BootyCrateItems, and an associated shopping list. **/
 @Entity(tableName = "inventory")
-open class DatabaseInventory(
+open class Inventory(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name="id")
     var id: Long = 0,
@@ -28,15 +30,17 @@ open class DatabaseInventory(
     var isSelected: Boolean = false,
 )
 
-class BootyCrateInventory(
+/** A subclass of Inventory that also contains the shopping
+ * list item and inventory item count for the inventory. */
+class InventorySummary(
     id: Long = 0,
     name: String,
     var shoppingListItemCount: Int,
     var inventoryItemCount: Int,
-) : DatabaseInventory(id, name) {
+) : Inventory(id, name) {
     override fun equals(other: Any?) = when (other) {
         null -> false
-        !is BootyCrateInventory -> false
+        !is InventorySummary -> false
         else ->  id == other.id && name == other.name &&
                 shoppingListItemCount == other.shoppingListItemCount &&
                 inventoryItemCount == other.inventoryItemCount &&
@@ -65,9 +69,9 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
                                        "AND NOT bootycrate_item.inInventoryTrash) " +
                                        "AS inventoryItemCount"
 
-@Dao abstract class BootyCrateInventoryDao {
-    @Insert abstract suspend fun add(inventory: DatabaseInventory): Long
-    @Insert abstract suspend fun add(items: List<DatabaseInventory>): List<Long>
+@Dao abstract class InventoryDao {
+    @Insert abstract suspend fun add(inventory: Inventory): Long
+    @Insert abstract suspend fun add(items: List<Inventory>): List<Long>
     @Query("INSERT INTO inventory (name, isSelected) VALUES (:name, 1)")
     abstract suspend fun add(name: String): Long
 
@@ -75,14 +79,14 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
     abstract suspend fun updateName(id: Long, name: String)
 
     @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount, isSelected FROM inventory")
-    abstract fun getAll() : Flow<List<BootyCrateInventory>>
+    abstract fun getAll() : Flow<List<InventorySummary>>
 
     @Query("SELECT * FROM inventory")
-    abstract fun getAllNow() : List<DatabaseInventory>
+    abstract fun getAllNow() : List<Inventory>
 
     @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount, isSelected " +
            "FROM inventory WHERE isSelected")
-    abstract fun getSelectedInventories(): Flow<List<BootyCrateInventory>>
+    abstract fun getSelectedInventories(): Flow<List<InventorySummary>>
 
     @Query("UPDATE inventory SET isSelected = (1 - isSelected) WHERE id = :id")
     abstract suspend fun updateIsSelected(id: Long)
@@ -97,18 +101,34 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
     abstract suspend fun deleteAll()
 }
 
+/** An AndroidViewModel to expose the contents of the database's inventory table.
+ *
+ * A Flow of the list of all inventories in the database can be accessed
+ * through the public property inventories. The property selectedInventories
+ * exposes a Flow of the list of all inventories whose property isSelected is
+ * true. The property selectedInventoryName is a StateFlow<String> whose
+ * current value will be equal to the name of the selected inventory if only
+ * one is selected, or a string to express that multiple inventories are
+ * selected otherwise.
+ *
+ * The functions add, delete, and updateName can be used to add new
+ * inventories, delete existing ones, or update the name of an existing
+ * inventory, respectively.
+ *
+ * The StateFlow multiSelect's current value represents the database's current
+ * allowance for multi-selecting inventories. If false, selecting an inventory
+ * other than the current one will deselect the previous selected inventory.
+ * multiSelect's value can be toggled with the function toggleMultiSelect. The
+ * isSelected state of individual inventories is updated by calling updateIsSelected
+ * with the inventory's id. When in multiselect mode, this will toggle the
+ * inventory's isSelected state. It will single select it otherwise. The
+ * function selectAll is provided for convenience, but will not work if the
+ * database is not in multiselect inventory mode.
+ */
 class InventoryViewModel(app: Application): AndroidViewModel(app) {
     private val dao = BootyCrateDatabase.get(app).inventoryDao()
     private val dbSettingsDao = BootyCrateDatabase.get(app).dbSettingsDao()
     private val nameForMultiSelection = app.getString(R.string.multiple_selected_inventories_description)
-
-    val multiSelect = dbSettingsDao.getMultiSelectInventories()
-        .stateIn(viewModelScope, SharingStarted.Eagerly,
-            runBlocking { dbSettingsDao.getMultiSelectInventoriesNow() })
-
-    fun toggleMultiSelect() = viewModelScope.launch {
-        dbSettingsDao.updateMultiSelectInventories(!multiSelect.value)
-    }
 
     val inventories = dao.getAll().asLiveData()
 
@@ -124,6 +144,15 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
     fun delete(id: Long) = viewModelScope.launch { dao.delete(id) }
 
     fun updateName(id: Long, name: String) = viewModelScope.launch { dao.updateName(id, name) }
+
+
+    val multiSelect = dbSettingsDao.getMultiSelectInventories()
+        .stateIn(viewModelScope, SharingStarted.Eagerly,
+            runBlocking { dbSettingsDao.getMultiSelectInventoriesNow() })
+
+    fun toggleMultiSelect() = viewModelScope.launch {
+        dbSettingsDao.updateMultiSelectInventories(!multiSelect.value)
+    }
 
     /** Update the selection state of the inventory whose id is equal to the
      * parameter id. If the database is in single select inventory mode, this

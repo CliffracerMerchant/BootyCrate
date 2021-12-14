@@ -24,7 +24,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.BootyCrateInventory
+import com.cliffracertech.bootycrate.database.InventorySummary
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
 import com.cliffracertech.bootycrate.utils.deleteInventoryDialog
@@ -39,7 +39,7 @@ import java.util.*
  * that will display a list of all of the user's inventories if provided with
  * submitList. InventoryListAdapter uses a custom DiffUtil.ItemCallback to
  * support full and partial binding of the InventoryView instances it uses to
- * display each BootyCrateInventory in the submitted list. Subclasses may wish
+ * display each InventorySummary in the submitted list. Subclasses may wish
  * to override InventoryListAdapter with their own in order to perform work on
  * each created InventoryView.
  *
@@ -63,7 +63,7 @@ open class InventoryRecyclerView(context: Context, attrs: AttributeSet?) :
     }
 
     protected open inner class InventoryListAdapter :
-        ListAdapter<BootyCrateInventory, InventoryViewHolder>(DiffUtilCallback())
+        ListAdapter<InventorySummary, InventoryViewHolder>(DiffUtilCallback())
     {
         init { setHasStableIds(true) }
 
@@ -105,14 +105,14 @@ open class InventoryRecyclerView(context: Context, attrs: AttributeSet?) :
 
     protected enum class Field { Name, ShoppingListItemCount, InventoryItemCount, IsSelected }
 
-    private class DiffUtilCallback : DiffUtil.ItemCallback<BootyCrateInventory>() {
+    private class DiffUtilCallback : DiffUtil.ItemCallback<InventorySummary>() {
         private val listChanges = mutableMapOf<Long, EnumSet<Field>>()
         private val itemChanges = EnumSet.noneOf(Field::class.java)
 
-        override fun areItemsTheSame(oldItem: BootyCrateInventory, newItem: BootyCrateInventory) =
+        override fun areItemsTheSame(oldItem: InventorySummary, newItem: InventorySummary) =
             oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: BootyCrateInventory, newItem: BootyCrateInventory) =
+        override fun areContentsTheSame(oldItem: InventorySummary, newItem: InventorySummary) =
             itemChanges.apply {
                 clear()
                 if (newItem.name != oldItem.name)
@@ -128,7 +128,7 @@ open class InventoryRecyclerView(context: Context, attrs: AttributeSet?) :
                     listChanges[newItem.id] = EnumSet.copyOf(this)
             }.isEmpty()
 
-        override fun getChangePayload(oldItem: BootyCrateInventory, newItem: BootyCrateInventory) =
+        override fun getChangePayload(oldItem: InventorySummary, newItem: InventorySummary) =
             listChanges.remove(newItem.id)
     }
 }
@@ -162,7 +162,7 @@ class InventorySelector(context: Context, attrs: AttributeSet?) :
         viewModel.inventories.observe(lifecycleOwner) { adapter.submitList(it) }
     }
 
-    val InventoryViewHolder.item: BootyCrateInventory get() = adapter.currentList[adapterPosition]
+    val InventoryViewHolder.item: InventorySummary get() = adapter.currentList[adapterPosition]
 
     protected inner class Adapter: InventoryListAdapter() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
@@ -231,12 +231,12 @@ class InventorySelectionOptionsMenu(
  *
  * SelectedInventoryPicker, when initialized by calling initViewModel with an
  * instance of InventoryViewModel and an appropriate LifeCycleOwner, will
- * display all of the BootyCrateInventories exposed by the ViewModel that are
- * also selected (i.e. the BootyCrateInventory member isSelected is true). The
- * user may pick from among these inventories by tapping on one. The currently
- * chosen inventory is visually indicated by setting the corresponding InventoryView's
- * isInSelectedState property to true. The id of the currently chosen inventory,
- * or null if one has not been chosen yet, can be queried with the property
+ * display all of the InventorySummaries exposed by the ViewModel that are also
+ * selected (i.e. the Inventory member isSelected is true). The user may pick
+ * from among these inventories by tapping on one. The currently chosen
+ * inventory is visually indicated by setting the corresponding InventoryView's
+ * isSelected property to true. The id of the currently chosen inventory, or
+ * null if one has not been chosen yet, can be queried with the property
  * chosenInventoryId. If the user picks a new inventory, the member
  * onChosenInventoryIdChangedListener will be called if it is not null.
  */
@@ -254,7 +254,7 @@ class SelectedInventoryPicker(context: Context, attrs: AttributeSet) :
     fun initViewModel(viewModel: InventoryViewModel, lifecycleOwner: LifecycleOwner) =
         viewModel.selectedInventories.observe(lifecycleOwner) { adapter.submitList(it) }
 
-    val InventoryViewHolder.item: BootyCrateInventory get() = adapter.currentList[adapterPosition]
+    val InventoryViewHolder.item: InventorySummary get() = adapter.currentList[adapterPosition]
 
     private inner class Adapter: InventoryListAdapter() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
@@ -284,11 +284,11 @@ class SelectedInventoryPicker(context: Context, attrs: AttributeSet) :
 }
 
 /**
- * A view to represent an instance of BootyCrateInventory.
+ * A view to represent an instance of InventorySummary.
  *
  * InventoryView displays the name, the number of shopping list items, the
  * number of inventory items, and an options button for the instance of
- * BootyCrateInventory it is bound to using the function update. The selected
+ * InventorySummary it is bound to using the function update. The selected
  * state of the inventory is represented with a gradient outline, and is set
  * using the Android framework's View's isSelected property.
  */
@@ -309,7 +309,7 @@ class InventoryView(context: Context) : LinearLayout(context) {
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
-    fun update(inventory: BootyCrateInventory) {
+    fun update(inventory: InventorySummary) {
         ui.nameView.text = inventory.name
         ui.shoppingListItemCountView.text = inventory.shoppingListItemCount.toString()
         ui.inventoryItemCountView.text = inventory.inventoryItemCount.toString()
