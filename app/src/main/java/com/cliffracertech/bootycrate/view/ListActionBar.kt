@@ -114,7 +114,7 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
             ui.backButton.drawable.setTint(it)
             ui.titleSwitcher.fragmentTitleView.setTextColor(it)
             ui.titleSwitcher.actionModeTitleView.setTextColor(it)
-            ui.titleSwitcher.searchQueryView.setTextColor(it)
+            ui.titleSwitcher.setSearchQueryTextColor(it)
             ui.searchButton.drawable.setTint(it)
             ui.changeSortButton.drawable.setTint(it)
             ui.menuButton.drawable.setTint(it)

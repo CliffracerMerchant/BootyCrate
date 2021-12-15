@@ -22,7 +22,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Space
+    <android.widget.Space
         android:id="@+id/backButtonSpacer"
         android:layout_width="48dp"
         android:layout_height="48dp"

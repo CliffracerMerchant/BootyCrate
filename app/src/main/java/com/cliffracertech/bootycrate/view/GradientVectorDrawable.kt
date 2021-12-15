@@ -67,7 +67,7 @@ class GradientVectorDrawable(
 /** A simple drawable that draws the path described by its property path. Both
  * the path and the paint used to draw the path (accessed through the property
  * paint) are fully public in order to allow for easy customization. */
-class PathDrawable() : Drawable() {
+class PathDrawable : Drawable() {
     var paint = Paint()
     val path = Path()
 
