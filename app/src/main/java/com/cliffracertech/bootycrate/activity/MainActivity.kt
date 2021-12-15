@@ -31,13 +31,13 @@ import kotlinx.coroutines.launch
  * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
  *
  * MainActivity is a MultiFragmentActivity subclass with a custom UI including
- * a RecyclerViewActionBar, a BottomAppBar, and a checkout button and an add
- * button in the cradle of the BottomAppBar. In order for fragments to inform
- * MainActivity which of these UI elements should be displayed when they are
- * active, the fragment should implement MainActivity.FragmentInterface. While
- * it is not necessary for fragments to implement FragmentInterface, fragments
- * that do not will not be able to affect the visibility of the MainActivity
- * UI when they are displayed.
+ * a ListActionBar, a BottomAppBar, and a checkout button and an add button in
+ * the cradle of the BottomAppBar. In order for fragments to inform MainActivity
+ * which of these UI elements should be displayed when they are active, the
+ * fragment should implement MainActivity.FragmentInterface. While it is not
+ * necessary for fragments to implement FragmentInterface, fragments that do
+ * not will not be able to affect the visibility of the MainActivity UI when
+ * they are displayed.
  */
 @Suppress("LeakingThis")
 open class MainActivity : MultiFragmentActivity() {

@@ -15,18 +15,13 @@
     <!-- The alpha value used for the checkout button background when it is disabled. -->
     <attr name="checkoutButtonDisabledAlpha"   format="integer" />
 
-    <declare-styleable name="RecyclerViewActionBar">
+    <declare-styleable name="ListActionBar">
         <!-- The resource id of the menu to be used as the contents of the change sort menu. -->
         <attr name="changeSortMenuResId"   format="reference" />
         <!-- The resource id of the menu to be used as the contents of the options menu. -->
         <attr name="optionsMenuResId"      format="reference" />
         <!-- A tint to use for all text and icons in the action bar. -->
         <attr name="actionBarContentsTint" format="color" />
-    </declare-styleable>
-
-    <declare-styleable name="TintableRecyclerViewActionBar">
-        <!-- The tint that will be applied to all of the buttons and text in the action bar. -->
-        <attr name="iconAndTextTint" format="color" />
     </declare-styleable>
 
     <attr name="actionBarTitleStyle" format="reference" />

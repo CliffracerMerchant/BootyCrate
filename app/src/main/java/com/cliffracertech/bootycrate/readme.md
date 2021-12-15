@@ -9,7 +9,7 @@ These classes are:
 MultiFragmentActivity -> MainActivity
 </pre>
 
-MainActivity's UI consists of an instance of RecyclerViewActionBar (a custom toolbar
+MainActivity's UI consists of an instance of ListActionBar (a custom toolbar
 implementation), an instance of BottomAppBar (another custom toolbar implementation), a
 BottomNavigationViewEx (acts as a BottomNavigationView but with better sub-view access
 for styling purposes), a checkout button, and an add button. This activity UI is shared
@@ -44,5 +44,5 @@ database contains the application's database, Room data access object, and view 
 miscellaneous utility classes, objects, and functions.
 
 ### view
-view contains all other custom views that don't fit into another package. The main activity's UI
-elements, such as the RecyclerViewActionBar and BottomAppBar, are located here.
+view contains all other custom views that don't fit into another package. The main
+activity's UI elements, such as the ListActionBar and BottomAppBar, are located here.

@@ -19,7 +19,7 @@ import com.cliffracertech.bootycrate.databinding.InventoryItemFragmentBinding
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemRecyclerView
 import com.cliffracertech.bootycrate.utils.NewInventoryItemDialog
-import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
+import com.cliffracertech.bootycrate.view.ListActionBar
 
 /**
  * A fragment to display and modify the user's inventory.
@@ -80,12 +80,12 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
     /** An override of SelectionActionModeCallback that alters the
      * visibility of menu items specific to inventory items. */
     inner class InventoryActionModeCallback : SelectionActionModeCallback() {
-        override fun onStart(actionMode: RecyclerViewActionBar.ActionMode, actionBar: RecyclerViewActionBar) {
+        override fun onStart(actionMode: ListActionBar.ActionMode, actionBar: ListActionBar) {
             super.onStart(actionMode, actionBar)
             actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
         }
 
-        override fun onFinish(actionMode: RecyclerViewActionBar.ActionMode, actionBar: RecyclerViewActionBar) =
+        override fun onFinish(actionMode: ListActionBar.ActionMode, actionBar: ListActionBar) =
             actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, false)
     }
 }

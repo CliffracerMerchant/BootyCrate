@@ -18,7 +18,7 @@ import com.cliffracertech.bootycrate.activity.*
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
-import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
+import com.cliffracertech.bootycrate.view.ListActionBar
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 import java.util.*
@@ -54,7 +54,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
     protected open val actionModeCallback = SelectionActionModeCallback()
     private lateinit var sortModePrefKey: String
 
-    private var actionBar: RecyclerViewActionBar? = null
+    private var actionBar: ListActionBar? = null
     private val actionModeIsStarted get() = actionBar?.actionMode?.callback == actionModeCallback
     private val searchIsActive get() = actionBar?.activeSearchQuery != null
 
@@ -217,10 +217,10 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
         }
     }
 
-    open inner class SelectionActionModeCallback : RecyclerViewActionBar.ActionModeCallback {
+    open inner class SelectionActionModeCallback : ListActionBar.ActionModeCallback {
         @CallSuper override fun onStart(
-            actionMode: RecyclerViewActionBar.ActionMode,
-            actionBar: RecyclerViewActionBar
+            actionMode: ListActionBar.ActionMode,
+            actionBar: ListActionBar
         ) {
             val selectionSize = viewModel.selectedItemCount.value ?: 0
             actionMode.title = actionModeTitle(selectionSize)

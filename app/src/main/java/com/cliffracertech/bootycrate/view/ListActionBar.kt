@@ -16,20 +16,19 @@ import androidx.core.content.res.getColorOrThrow
 import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.databinding.RecyclerViewActionBarBinding
+import com.cliffracertech.bootycrate.databinding.ListActionBarBinding
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
 import com.cliffracertech.bootycrate.utils.layoutTransition
 import java.util.*
 
 /**
- * A toolbar tailored towards interacting with a recycler view.
+ * A toolbar tailored towards interacting with a list of items.
  *
- * RecyclerViewActionBar acts as an entirely custom (i.e. it eschews the
- * Android setSupportActionBar API in favor of its own) action bar with an
- * interface tailored towards activities or fragments that primarily show
- * a recycler view. Through its binding property ui, the UI elements avail-
- * able are:
+ * ListActionBar acts as an entirely custom (i.e. it eschews the Android
+ * setSupportActionBar API in favor of its own) action bar with an interface
+ * tailored towards activities or fragments that primarily show a list of items.
+ * Through its binding property ui, the UI elements available are:
  *     - backButton, similar to the home as up indicator, hidden by default
  *     - titleSwitcher, an ActionBarTitle that is used as an activity or
  *       fragment title, an action mode title, or a search query entry.
@@ -51,13 +50,12 @@ import java.util.*
  * ected) is desired, the functions can be passed a lambda that manually
  * calls onOptionsItemSelected for the activity or fragment being used.
  *
- * RecyclerViewActionBar uses its own implementation of an action mode in
- * its inner class ActionMode. An action mode can be started by calling
- * the function startActionMode with an implementation of the ActionMode-
- * Callback interface. If another action mode was already started when a
- * new one is started, the old action mode will be finished. The current
- * action mode, or null if there isn't one, can be queried through the
- * property actionMode.
+ * ListActionBar uses its own implementation of an action mode in its inner
+ * class ActionMode. An action mode can be started by calling the function
+ * startActionMode with an implementation of the ActionModeCallback interface.
+ * If another action mode was already started when a new one is started, the
+ * old action mode will be finished. The current action mode, or null if there
+ * isn't one, can be queried through the property actionMode.
  *
  * The text entered in the search query view, or null if the search query
  * view is not shown, can be queried or set through the property activeSearchQuery.
@@ -71,10 +69,10 @@ import java.util.*
  * between smoothly.
  */
 @Suppress("LeakingThis")
-open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
+open class ListActionBar(context: Context, attrs: AttributeSet) :
     ConstraintLayout(context, attrs)
 {
-    val ui = RecyclerViewActionBarBinding.inflate(LayoutInflater.from(context), this)
+    val ui = ListActionBarBinding.inflate(LayoutInflater.from(context), this)
     var animatorConfig: AnimatorConfig? = null
         set(value) { field = value; layoutTransition.applyConfig(value) }
 
@@ -105,10 +103,10 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
     init {
         layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.WRAP_CONTENT)
-        val a = context.obtainStyledAttributes(attrs, R.styleable.RecyclerViewActionBar)
-        val changeSortMenuResId = a.getResourceIdOrThrow(R.styleable.RecyclerViewActionBar_changeSortMenuResId)
-        val optionsMenuResId = a.getResourceIdOrThrow(R.styleable.RecyclerViewActionBar_optionsMenuResId)
-        val contentsTint = try { a.getColorOrThrow(R.styleable.RecyclerViewActionBar_actionBarContentsTint) }
+        val a = context.obtainStyledAttributes(attrs, R.styleable.ListActionBar)
+        val changeSortMenuResId = a.getResourceIdOrThrow(R.styleable.ListActionBar_changeSortMenuResId)
+        val optionsMenuResId = a.getResourceIdOrThrow(R.styleable.ListActionBar_optionsMenuResId)
+        val contentsTint = try { a.getColorOrThrow(R.styleable.ListActionBar_actionBarContentsTint) }
                            catch(e: IllegalArgumentException) { null }
         a.recycle()
 
@@ -238,13 +236,12 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
 
 
     /**
-     * An reimplementation of ActionMode that uses an instance of RecyclerViewActionBar.
+     * An reimplementation of ActionMode that uses an instance of ListActionBar.
      *
-     * RecyclerViewActionBar.ActionMode is intended to be a replacement
-     * for an Android ActionMode that reuses a RecyclerViewActionBar
-     * instead of overlaying the support action bar. An implementation of
-     * the ActionModeCallback interface is required to be passed in to the
-     * constructor.
+     * ListActionBar.ActionMode is intended to be a replacement for an Android
+     * ActionMode that reuses a ListActionBar instead of overlaying the support
+     * action bar. An implementation of the ActionModeCallback interface is
+     * required to be passed in to the constructor.
      *
      * Once the action mode is created with a callback, calling start will
      * start the action mode, display the back button on the action bar,
@@ -285,12 +282,13 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                 ui.searchButton.isActivated = false
             if (!deleteButtonIsVisible)
                 setDeleteButtonIsVisible(true)
-            callback.onStart(this, this@RecyclerViewActionBar)
+            callback.onStart(this, this@ListActionBar)
         }
 
         fun finish(updateActionBarUi: Boolean = true) {
             if (updateActionBarUi) {
-                // The layout transition should take care of the search button fade in animation but doesn't for some reason.
+                // The layout transition should take care of the search
+                // button fade in animation, but doesn't for some reason.
                 if (!ui.searchButton.isVisible) {
                     ui.searchButton.alpha = 0f
                     ui.searchButton.isVisible = true
@@ -306,14 +304,14 @@ open class RecyclerViewActionBar(context: Context, attrs: AttributeSet) :
                     setBackButtonVisible(false)
                 }
             }
-            callback.onFinish(this, this@RecyclerViewActionBar)
+            callback.onFinish(this, this@ListActionBar)
             _actionMode = null
         }
     }
 
-    /** An interface to describe what happens when a RecyclerViewActionBar.ActionMode starts or finishes. */
+    /** An interface to describe what happens when a ListActionBar.ActionMode starts or finishes. */
     interface ActionModeCallback {
-        fun onStart(actionMode: ActionMode, actionBar: RecyclerViewActionBar) { }
-        fun onFinish(actionMode: ActionMode, actionBar: RecyclerViewActionBar) { }
+        fun onStart(actionMode: ActionMode, actionBar: ListActionBar) { }
+        fun onFinish(actionMode: ActionMode, actionBar: ListActionBar) { }
     }
 }

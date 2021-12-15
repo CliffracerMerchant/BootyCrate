@@ -10,7 +10,6 @@ import android.widget.TextView
 import androidx.annotation.Keep
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
-import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.database.InventoryItemViewModel
 import com.cliffracertech.bootycrate.database.ShoppingListItem
@@ -20,7 +19,7 @@ import com.cliffracertech.bootycrate.databinding.ShoppingListFragmentBinding
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.cliffracertech.bootycrate.utils.NewShoppingListItemDialog
 import com.cliffracertech.bootycrate.view.CheckoutButton
-import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
+import com.cliffracertech.bootycrate.view.ListActionBar
 
 /**
  * A fragment to display and modify the user's shopping list.
@@ -143,13 +142,13 @@ import com.cliffracertech.bootycrate.view.RecyclerViewActionBar
 
     /** An override of SelectionActionModeCallback that alters the visibility of menu items specific to shopping list items. */
     inner class ShoppingListActionModeCallback : SelectionActionModeCallback() {
-        override fun onStart(actionMode: RecyclerViewActionBar.ActionMode, actionBar: RecyclerViewActionBar) {
+        override fun onStart(actionMode: ListActionBar.ActionMode, actionBar: ListActionBar) {
             super.onStart(actionMode, actionBar)
             actionBar.optionsMenu.setGroupVisible(
                 R.id.shopping_list_view_action_mode_menu_group, true)
         }
 
-        override fun onFinish(actionMode: RecyclerViewActionBar.ActionMode, actionBar: RecyclerViewActionBar) =
+        override fun onFinish(actionMode: ListActionBar.ActionMode, actionBar: ListActionBar) =
             actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
     }
 }
