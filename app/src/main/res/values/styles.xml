@@ -7,8 +7,8 @@
     <style name="LightTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:colorBackground">@color/colorWindowBackgroundLight</item>
         <item name="cardBackgroundColor">@color/colorRecyclerViewItemLight</item>
-        <item name="materialAlertDialogTheme">@style/LightAlertDialog</item>
-        <item name="alertDialogTheme">@style/LightAlertDialog</item>
+        <item name="materialAlertDialogTheme">@style/AlertDialog</item>
+        <item name="alertDialogTheme">@style/AlertDialog</item>
         <item name="colorSurface">@color/colorWindowBackgroundLight</item>
         <item name="colorOnPrimary">@color/colorWindowBackgroundDark</item>
         <item name="colorOnSurface">@color/colorWindowBackgroundDark</item>
@@ -45,8 +45,6 @@
     <style name="DarkTheme" parent="LightTheme">
         <item name="android:colorBackground">@color/colorWindowBackgroundDark</item>
         <item name="cardBackgroundColor">@color/colorRecyclerViewItemDark</item>
-        <item name="materialAlertDialogTheme">@style/DarkAlertDialog</item>
-        <item name="alertDialogTheme">@style/DarkAlertDialog</item>
         <item name="android:textColorPrimary">@color/color_text_light</item>
         <item name="android:textColorSecondary">@color/color_text_light_secondary</item>
         <item name="android:textColorHint">@color/color_text_light_secondary</item>
@@ -92,18 +90,12 @@
         <item name="tint">?android:attr/textColorPrimary</item>
     </style>
 
-    <style name="LightAlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+    <style name="AlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
         <item name="android:windowTitleStyle">@style/TitleTextAppearance</item>
-        <item name="android:textColor">@color/color_text_dark</item>
-        <item name="textColorAlertDialogListItem">@color/color_text_dark</item>
-        <item name="android:colorBackground">@color/colorRecyclerViewItemLight</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+        <item name="textColorAlertDialogListItem">?android:attr/textColorPrimary</item>
+        <item name="android:colorBackground">?attr/cardBackgroundColor</item>
         <item name="dialogCornerRadius">@dimen/dialog_rounded_corner_radius</item>
-    </style>
-
-    <style name="DarkAlertDialog" parent="LightAlertDialog">
-        <item name="android:textColor">@color/color_text_light</item>
-        <item name="android:colorBackground">@color/colorRecyclerViewItemDark</item>
-        <item name="textColorAlertDialogListItem">@color/color_text_light</item>
     </style>
 
     <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
@@ -132,10 +124,6 @@
 
     <style name="UpdateListReminderEnableCheckBox" parent="@style/NormalTextAppearance">
         <item name="android:text">@string/update_list_reminder_description</item>
-    </style>
-
-    <style name="UpdateListReminderTimeView" parent="@style/NormalTextAppearance">
-        <item name="android:textSize">30sp</item>
     </style>
 
     <style name="UpdateListReminderRepeatCheckBox" parent="@style/NormalTextAppearance">

@@ -57,6 +57,10 @@
         <item name="valueIsFocusable">true</item>
     </style>
 
+    <style name="InventoryNameTextView" parent="@style/NormalTextAppearance">
+        <item name="android:singleLine">true</item>
+    </style>
+
     <style name="InventoryMoreOptionsButton">
         <item name="srcCompat">@drawable/ic_more_vert_black_24dp</item>
         <item name="android:tint">?android:attr/textColorPrimary</item>
