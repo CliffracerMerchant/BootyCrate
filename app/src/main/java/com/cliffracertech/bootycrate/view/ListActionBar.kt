@@ -14,11 +14,13 @@ import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.getColorOrThrow
 import androidx.core.content.res.getResourceIdOrThrow
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.ListActionBarBinding
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
+import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.layoutTransition
 import java.util.*
 
@@ -100,6 +102,8 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
     var onSearchQueryChangedListener get() = ui.titleSwitcher.onSearchQueryChangedListener
                                      set(value) { ui.titleSwitcher.onSearchQueryChangedListener = value }
 
+    private val backButtonHiddenTransX: Float
+
     init {
         layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.WRAP_CONTENT)
@@ -134,16 +138,25 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
                 changeSortPopupMenu.show()
             else onDeleteButtonClickedListener?.invoke()
         }
-        ui.menuButton.setOnClickListener{ optionsPopupMenu.show() }
+        ui.menuButton.setOnClickListener { optionsPopupMenu.show() }
+
+        backButtonHiddenTransX = ui.backButton.paddingRight + context.dpToPixels(4f) -
+                                 ui.backButton.layoutParams.width
     }
 
-    fun setBackButtonVisible(visible: Boolean, animate: Boolean = true) {
+    fun setBackButtonIsVisible(visible: Boolean, animate: Boolean = true) {
         if (ui.backButtonSpacer.isVisible == visible) return
-        if (!animate) ui.backButton.isVisible = visible
-        else ui.backButton.apply {
-            alpha = if (visible) 0f else 1f
-            isVisible = true
-            animate().withLayer().alpha(if (visible) 1f else 0f).applyConfig(animatorConfig).start()
+        val endTransX = if (visible) 0f else backButtonHiddenTransX
+
+        if (!animate) {
+            ui.backButton.isInvisible = !visible
+            ui.backButton.translationX = endTransX
+        } else {
+            ui.backButton.isVisible = true
+            ui.backButton.animate().withLayer().applyConfig(animatorConfig)
+                .translationX(endTransX).withEndAction {
+                    ui.backButton.isInvisible = !visible
+                }.start()
         }
         ui.backButtonSpacer.isVisible = visible
     }
@@ -166,7 +179,7 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
         menuButtonVisible: Boolean = true
     ) {
         if (activeActionModeCallback == null && activeSearchQuery == null)
-            setBackButtonVisible(backButtonVisible)
+            setBackButtonIsVisible(backButtonVisible)
 
         if (searchButtonVisible != ui.searchButton.isVisible && activeActionModeCallback == null)
             ui.searchButton.isVisible = searchButtonVisible
@@ -205,7 +218,7 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
     ) {
         val searchWasActive = activeSearchQuery != null
         if (hideBackButtonWhenDone || query != null)
-            setBackButtonVisible(query != null)
+            setBackButtonIsVisible(query != null)
         if (query != null) {
             ui.titleSwitcher.searchQuery = query
             if (!searchWasActive) {
@@ -274,14 +287,15 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
 
         fun start() {
             ui.titleSwitcher.setActionModeTitle(title, switchTo = true)
-            if (!ui.backButtonSpacer.isVisible)
-                setBackButtonVisible(true)
+            setBackButtonIsVisible(true)
+
             if (ui.searchButton.isVisible)
                 ui.searchButton.isVisible = false
             if (ui.searchButton.isActivated)
                 ui.searchButton.isActivated = false
             if (!deleteButtonIsVisible)
                 setDeleteButtonIsVisible(true)
+
             callback.onStart(this, this@ListActionBar)
         }
 
@@ -301,7 +315,7 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
                     ui.searchButton.isActivated = true
                 } else {
                     ui.titleSwitcher.showTitle()
-                    setBackButtonVisible(false)
+                    setBackButtonIsVisible(false)
                 }
             }
             callback.onFinish(this, this@ListActionBar)
