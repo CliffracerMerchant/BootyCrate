@@ -70,7 +70,7 @@
      the amount edit look as though it is constrained to the start of the edit
      button when the view is collapsed, but still move to the right edge of the
      view when the view is expanded and the edit button moves down. -->
-    <Space
+    <android.widget.Space
         android:id="@+id/amountEditSpacer"
         android:layout_width="48dp"
         android:layout_height="0dp"
@@ -87,14 +87,21 @@
         android:contentDescription="@string/edit_button_description"
         style="@style/BootyCrateItemEditButton" />
 
+    <!-- The link indicator is positioned in the top row of the view and has
+         its translationY set so that it appears in the bottom row. This is
+         done so that it doesn't interfere with the collapse animation.-->
     <ImageView
         android:id="@+id/linkIndicator"
         android:layout_width="48dp"
         android:layout_height="48dp"
         app:layout_constraintEnd_toStartOf="@id/editButton"
         app:layout_constraintTop_toTopOf="parent"
-        android:translationY="48dp"
+        android:translationY="24dp"
+        android:alpha="0"
         android:visibility="gone"
+        tools:translationY="48dp"
+        tools:alpha="1"
+        tools:visibility="visible"
         android:contentDescription="@string/link_status_description"
         style="@style/ShoppingListItemLinkIndicator" />
 

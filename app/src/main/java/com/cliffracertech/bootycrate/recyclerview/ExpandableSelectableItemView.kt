@@ -77,8 +77,6 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
         clipChildren = false
         if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }
-            ui.linkIndicator.alpha = 0f
-            ui.linkIndicator.translationY = ui.linkIndicator.drawable.intrinsicHeight * -1f
             this.animatorConfig = animatorConfig
         }
     }
@@ -333,22 +331,22 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
     private fun updateIsLinkedIndicatorState(showing: Boolean, animate: Boolean, translate: Boolean) {
         linkedIndicatorShouldBeVisible = showing && isLinkedToAnotherItem
         val endAlpha = if (linkedIndicatorShouldBeVisible) 1f else 0f
-        val transYEnd = ui.linkIndicator.layoutParams.height /
+        val endTransY = ui.linkIndicator.layoutParams.height /
                 if (linkedIndicatorShouldBeVisible) 1f else 2f
         if (!animate) {
             ui.linkIndicator.isVisible = linkedIndicatorShouldBeVisible
             ui.linkIndicator.alpha = endAlpha
-            if (translate) ui.linkIndicator.translationY = transYEnd
+            if (translate) ui.linkIndicator.translationY = endTransY
             return
         }
         if (!translate && showing)
-            ui.linkIndicator.translationY = transYEnd
+            ui.linkIndicator.translationY = endTransY
         ui.linkIndicator.isVisible = true
         val anim = ui.linkIndicator.animate().alpha(endAlpha)
             .withLayer().applyConfig(animatorConfig)
             .withEndAction { ui.linkIndicator.isVisible = linkedIndicatorShouldBeVisible ||
                                                           ui.linkIndicator.alpha != 0f }
-        if (translate) anim.translationY(transYEnd)
+        if (translate) anim.translationY(endTransY)
         pendingViewPropAnimations.add(anim)
     }
 
