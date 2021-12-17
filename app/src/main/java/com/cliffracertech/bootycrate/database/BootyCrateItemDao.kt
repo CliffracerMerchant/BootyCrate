@@ -4,10 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.database
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Transaction
+import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 /** A Room DAO that provides methods to manipulate a database of BootyCrateItems. */
@@ -17,7 +14,6 @@ import kotlinx.coroutines.flow.Flow
         private const val likeSearchFilter = "(bootycrate_item.name LIKE :filter OR extraInfo LIKE :filter)"
         private const val onShoppingList = "shoppingListAmount != -1 AND NOT inShoppingListTrash"
         private const val inInventory = "inventoryAmount != -1 AND NOT inInventoryTrash"
-        private const val inSelectedInventories = "inventoryId IN (SELECT id FROM inventory WHERE isSelected)"
 
         private const val shoppingListItemFields =
             "bootycrate_item.id, bootycrate_item.name, extraInfo, color, " +
@@ -110,9 +106,10 @@ import kotlinx.coroutines.flow.Flow
         }
     }
 
-    @Query("SELECT EXISTS(SELECT id FROM bootycrate_item WHERE $onShoppingList " +
-                         "AND name = :name AND extraInfo = :extraInfo " +
-                         "AND $inSelectedInventories)")
+    @Query("SELECT EXISTS(SELECT bootycrate_item.id FROM bootycrate_item " +
+                         "JOIN inventory ON bootycrate_item.id = inventory.id " +
+                         "WHERE inventory.isSelected AND $onShoppingList " +
+                         "AND bootycrate_item.name = :name AND extraInfo = :extraInfo)")
     abstract suspend fun itemWithNameAlreadyExistsInShoppingList(name: String, extraInfo: String): Boolean
 
     @Query("UPDATE bootycrate_item SET shoppingListAmount = :amount WHERE id = :id")
@@ -129,9 +126,9 @@ import kotlinx.coroutines.flow.Flow
         if (id != null) expandShoppingListItem(id)
     }
 
-    @Query("SELECT COUNT(*) FROM bootycrate_item " +
-           "WHERE selectedInShoppingList AND $onShoppingList " +
-           "AND $inSelectedInventories")
+    @Query("SELECT COUNT(bootycrate_item.id) FROM bootycrate_item " +
+           "JOIN inventory ON bootycrate_item.id = inventory.id " +
+           "WHERE inventory.isSelected AND selectedInShoppingList AND $onShoppingList ")
     abstract fun getSelectedShoppingListItemCount(): Flow<Int>
 
     @Query("UPDATE bootycrate_item SET selectedInShoppingList = :selected WHERE id = :id")
@@ -146,26 +143,32 @@ import kotlinx.coroutines.flow.Flow
            "WHERE $onShoppingList AND id in (:ids)")
     abstract suspend fun selectShoppingListItems(ids: List<Long>)
 
-    @Query("UPDATE bootycrate_item set selectedInShoppingList = 1 " +
-           "WHERE $onShoppingList AND $inSelectedInventories")
+    @Query("WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected) " +
+           "UPDATE bootycrate_item set selectedInShoppingList = 1 " +
+           "WHERE inventoryId IN selectedInventories AND $onShoppingList")
     abstract suspend fun selectAllShoppingListItems()
 
-    @Query("UPDATE bootycrate_item SET selectedInShoppingList = 0 WHERE $inSelectedInventories")
+    @Query("WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected) " +
+           "UPDATE bootycrate_item SET selectedInShoppingList = 0 " +
+           "WHERE inventoryId IN selectedInventories")
     abstract suspend fun clearShoppingListSelection()
 
-    @Query("""UPDATE bootycrate_item 
+    @Query("""WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected)
+              UPDATE bootycrate_item 
               SET shoppingListAmount = 1,
                   inShoppingListTrash = 0
               WHERE selectedInInventory 
               AND shoppingListAmount = -1
-              AND $inInventory AND $inSelectedInventories""")
+              AND $inInventory AND inventoryId IN selectedInventories""")
     abstract suspend fun addToShoppingListFromSelectedInventoryItems()
 
-    @Query("""UPDATE bootycrate_item
+    @Query("""WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected)
+              UPDATE bootycrate_item
               SET inShoppingListTrash = 1,
                   expandedInShoppingList = 0,
                   selectedInShoppingList = 0
-              WHERE selectedInShoppingList AND $onShoppingList AND $inSelectedInventories""")
+              WHERE selectedInShoppingList AND $onShoppingList
+              AND inventoryId IN selectedInventories""")
     abstract suspend fun deleteSelectedShoppingListItems()
 
     @Query("""UPDATE bootycrate_item SET inShoppingListTrash = 1,
@@ -174,37 +177,45 @@ import kotlinx.coroutines.flow.Flow
               WHERE id IN (:ids) AND $onShoppingList""")
     abstract suspend fun deleteShoppingListItems(ids: LongArray)
 
-    @Query("""UPDATE bootycrate_item SET shoppingListAmount = -1,
+    @Query("""WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected)
+              UPDATE bootycrate_item SET shoppingListAmount = -1,
                                          isChecked = 0,
                                          expandedInShoppingList = 0,
                                          selectedInShoppingList = 0
-              WHERE shoppingListAmount != -1 AND $inSelectedInventories""")
+              WHERE shoppingListAmount != -1 AND inventoryId IN selectedInventories""")
     abstract suspend fun deleteAllShoppingListItems()
 
-    @Query("UPDATE bootycrate_item SET inShoppingListTrash = 0 WHERE $inSelectedInventories")
+    @Query("WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected) " +
+           "UPDATE bootycrate_item SET inShoppingListTrash = 0 " +
+           "WHERE inventoryId IN selectedInventories")
     abstract suspend fun undoDeleteShoppingListItems()
 
-    @Query("UPDATE bootycrate_item " +
+    @Query("WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected) " +
+           "UPDATE bootycrate_item " +
            "SET shoppingListAmount = -1, inShoppingListTrash = 0 " +
-           "WHERE inShoppingListTrash AND $inSelectedInventories")
+           "WHERE inShoppingListTrash AND inventoryId IN selectedInventories")
     abstract suspend fun emptyShoppingListTrash()
 
     @Query("UPDATE bootycrate_item SET isChecked = :isChecked WHERE id = :id")
     abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
 
-    @Query("UPDATE bootycrate_item SET isChecked = 1 " +
-           "WHERE $onShoppingList AND $inSelectedInventories")
+    @Query("WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected) " +
+           "UPDATE bootycrate_item SET isChecked = 1 " +
+           "WHERE $onShoppingList AND inventoryId IN selectedInventories")
     abstract suspend fun checkAllShoppingListItems()
 
-    @Query("UPDATE bootycrate_item SET isChecked = 0 " +
-           "WHERE $onShoppingList AND $inSelectedInventories")
+    @Query("WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected) " +
+           "UPDATE bootycrate_item SET isChecked = 0 " +
+           "WHERE $onShoppingList AND inventoryId IN selectedInventories")
     abstract suspend fun uncheckAllShoppingListItems()
 
-    @Query("SELECT COUNT(*) FROM bootycrate_item " +
-           "WHERE isChecked AND $onShoppingList AND $inSelectedInventories")
+    @Query("SELECT COUNT(bootycrate_item.id) FROM bootycrate_item " +
+           "JOIN inventory ON bootycrate_item.inventoryId = inventory.id " +
+           "WHERE isChecked AND $onShoppingList AND inventory.isSelected")
     abstract fun getCheckedShoppingListItemsSize() : Flow<Int>
 
-    @Query("""UPDATE bootycrate_item
+    @Query("""WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected)
+              UPDATE bootycrate_item
               SET inventoryAmount = CASE WHEN $inInventory
                                     THEN inventoryAmount + shoppingListAmount
                                     ELSE -1 END,
@@ -212,7 +223,7 @@ import kotlinx.coroutines.flow.Flow
                   shoppingListAmount = -1,
                   expandedInShoppingList = 0,
                   selectedInShoppingList = 0
-              WHERE $onShoppingList AND isChecked AND $inSelectedInventories""")
+              WHERE $onShoppingList AND isChecked AND inventoryId IN selectedInventories""")
     abstract suspend fun checkout()
 
     @Query("$selectInventoryItems ORDER BY color")
@@ -244,9 +255,10 @@ import kotlinx.coroutines.flow.Flow
         }
     }
 
-    @Query("SELECT EXISTS(SELECT id FROM bootycrate_item WHERE $inInventory " +
-                         "AND name = :name AND extraInfo = :extraInfo " +
-                         "AND $inSelectedInventories)")
+    @Query("SELECT EXISTS(SELECT bootycrate_item.id FROM bootycrate_item " +
+                         "JOIN inventory ON bootycrate_item.inventoryId = inventory.id " +
+                         "WHERE $inInventory AND bootycrate_item.name = :name " +
+                         "AND extraInfo = :extraInfo AND inventory.isSelected)")
     abstract suspend fun itemWithNameAlreadyExistsInInventory(name: String, extraInfo: String): Boolean
 
     @Query("UPDATE bootycrate_item SET inventoryAmount = :amount WHERE id = :id")
@@ -263,9 +275,10 @@ import kotlinx.coroutines.flow.Flow
         if (id != null) expandInventoryItem(id)
     }
 
-    @Query("SELECT COUNT(*) FROM bootycrate_item " +
+    @Query("SELECT COUNT(bootycrate_item.id) FROM bootycrate_item " +
+           "JOIN inventory ON bootycrate_item.inventoryId = inventory.id " +
            "WHERE selectedInInventory AND $inInventory " +
-           "AND $inSelectedInventories")
+           "AND inventory.isSelected")
     abstract fun getSelectedInventoryItemCount(): Flow<Int>
 
     @Query("UPDATE bootycrate_item SET selectedInInventory = :selected WHERE id = :id")
@@ -280,26 +293,31 @@ import kotlinx.coroutines.flow.Flow
            "WHERE $inInventory AND id in (:ids)")
     abstract suspend fun selectInventoryItems(ids: List<Long>)
 
-    @Query("UPDATE bootycrate_item set selectedInInventory = 1 " +
-           "WHERE $inInventory AND $inSelectedInventories")
+    @Query("WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected) " +
+           "UPDATE bootycrate_item set selectedInInventory = 1 " +
+           "WHERE $inInventory AND inventoryId IN selectedInventories")
     abstract suspend fun selectAllInventoryItems()
 
-    @Query("UPDATE bootycrate_item SET selectedInInventory = 0 WHERE $inSelectedInventories")
+    @Query("WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected) " +
+           "UPDATE bootycrate_item SET selectedInInventory = 0 " +
+           "WHERE inventoryId IN selectedInventories")
     abstract suspend fun clearInventorySelection()
 
-    @Query("""UPDATE bootycrate_item 
+    @Query("""WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected)
+              UPDATE bootycrate_item 
               SET inventoryAmount = 0,
                   inInventoryTrash = 0
-              WHERE selectedInShoppingList 
-              AND inventoryAmount = -1
-              AND $onShoppingList AND $inSelectedInventories""")
+              WHERE selectedInShoppingList AND inventoryAmount = -1
+              AND $onShoppingList AND inventoryId IN selectedInventories""")
     abstract suspend fun addToInventoryFromSelectedShoppingListItems()
 
-    @Query("""UPDATE bootycrate_item
+    @Query("""WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected)
+              UPDATE bootycrate_item
               SET inInventoryTrash = 1,
                   expandedInInventory = 0,
                   selectedInInventory = 0
-              WHERE selectedInInventory AND $inInventory AND $inSelectedInventories""")
+              WHERE selectedInInventory AND $inInventory
+              AND inventoryId IN selectedInventories""")
     abstract suspend fun deleteSelectedInventoryItems()
 
     @Query("""UPDATE bootycrate_item SET inInventoryTrash = 1,
@@ -310,13 +328,16 @@ import kotlinx.coroutines.flow.Flow
               WHERE id IN (:ids) AND $inInventory""")
     abstract suspend fun deleteInventoryItems(ids: LongArray)
 
-    @Query("""UPDATE bootycrate_item SET inventoryAmount = -1,
+    @Query("""WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected)
+              UPDATE bootycrate_item SET inventoryAmount = -1,
                                          expandedInInventory = 0,
                                          selectedInInventory = 0
-              WHERE inventoryAmount != -1 AND $inSelectedInventories""")
+              WHERE inventoryAmount != -1 AND inventoryId IN selectedInventories""")
     abstract suspend fun deleteAllInventoryItems()
 
-    @Query("UPDATE bootycrate_item SET inInventoryTrash = 0 WHERE $inSelectedInventories")
+    @Query("WITH selectedInventories AS (SELECT id FROM inventory WHERE isSelected) " +
+           "UPDATE bootycrate_item SET inInventoryTrash = 0 " +
+           "WHERE inventoryId IN selectedInventories")
     abstract suspend fun undoDeleteInventoryItems()
 
     @Query("UPDATE bootycrate_item " +

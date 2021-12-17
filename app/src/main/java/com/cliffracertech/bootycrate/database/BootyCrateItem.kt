@@ -5,10 +5,7 @@
 package com.cliffracertech.bootycrate.database
 
 import android.content.Context
-import androidx.room.ColumnInfo
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
+import androidx.room.*
 import com.cliffracertech.bootycrate.R
 
 /** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item table. */
@@ -19,16 +16,21 @@ import com.cliffracertech.bootycrate.R
                                   onDelete=ForeignKey.CASCADE)])
 class DatabaseBootyCrateItem(
     @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name="id")                         var id: Long = 0,
-    @ColumnInfo(name="inventoryId", index = true)  var inventoryId: Long = 0,
-    @ColumnInfo(name="name")                       var name: String = "",
-    @ColumnInfo(name="extraInfo", defaultValue="") var extraInfo: String = "",
-    @ColumnInfo(name="color", defaultValue="0")    var color: Int = 0,
+    @ColumnInfo(name="id")
+    var id: Long = 0,
+    @ColumnInfo(name="inventoryId", index = true)
+    var inventoryId: Long = 0,
+    @ColumnInfo(name="name", collate = ColumnInfo.NOCASE, index = true)
+    var name: String = "",
+    @ColumnInfo(name="extraInfo", defaultValue="", collate = ColumnInfo.NOCASE)
+    var extraInfo: String = "",
+    @ColumnInfo(name="color", defaultValue="0", index = true)
+    var color: Int = 0,
 
     // ShoppingListItem fields
     @ColumnInfo(name="isChecked", defaultValue="0")
     var isChecked: Boolean = false,
-    @ColumnInfo(name="shoppingListAmount", defaultValue="-1")
+    @ColumnInfo(name="shoppingListAmount", defaultValue="-1", index = true)
     var shoppingListAmount: Int = -1,
     @ColumnInfo(name="expandedInShoppingList", defaultValue="0")
     var expandedInShoppingList: Boolean = false,
@@ -38,7 +40,7 @@ class DatabaseBootyCrateItem(
     var inShoppingListTrash: Boolean = false,
 
     // InventoryItem fields
-    @ColumnInfo(name="inventoryAmount", defaultValue="-1")
+    @ColumnInfo(name="inventoryAmount", defaultValue="-1", index = true)
     var inventoryAmount: Int = -1,
     @ColumnInfo(name="expandedInInventory", defaultValue="0")
     var expandedInInventory: Boolean = false,

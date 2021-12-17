@@ -28,7 +28,7 @@ import java.io.File
  * with the current instance obtained using the static function get.
  */
 @Database(entities = [DatabaseBootyCrateItem::class, Inventory::class,
-                      DatabaseSettings::class], version = 3)
+                      DatabaseSettings::class], version = 4)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
     abstract fun itemDao(): BootyCrateItemDao
@@ -46,7 +46,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 BootyCrateDatabase::class.java,
                 "booty-crate-db")
                 .addCallback(BootyCrateDbCallback())
-                .addMigrations(Migration1to2(), Migration2to3())
+                .addMigrations(Migration1to2(), Migration2to3(), Migration3to4())
                 .build().also { this.instance = it }
         }
 
@@ -278,6 +278,42 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             db.addEnsureAtLeastOneInventoryTrigger()
             db.addEnsureAtLeastOneSelectedInventoryTriggers()
             db.addEnforceSingleSelectInventoryTriggers()
+        }
+    }
+
+    private class Migration3to4 : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("PRAGMA foreign_keys=off")
+            db.execSQL("BEGIN TRANSACTION")
+            db.execSQL("""CREATE TABLE IF NOT EXISTS temp_table (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `inventoryId` INTEGER NOT NULL, 
+                `name` TEXT NOT NULL COLLATE NOCASE, `extraInfo` TEXT NOT NULL DEFAULT '' COLLATE NOCASE, `color` INTEGER NOT NULL DEFAULT 0,
+                `isChecked` INTEGER NOT NULL DEFAULT 0, `shoppingListAmount` INTEGER NOT NULL DEFAULT -1,
+                `expandedInShoppingList` INTEGER NOT NULL DEFAULT 0, `selectedInShoppingList` INTEGER NOT NULL DEFAULT 0,
+                `inShoppingListTrash` INTEGER NOT NULL DEFAULT 0, `inventoryAmount` INTEGER NOT NULL DEFAULT -1,
+                `expandedInInventory` INTEGER NOT NULL DEFAULT 0, `selectedInInventory` INTEGER NOT NULL DEFAULT 0,
+                `autoAddToShoppingList` INTEGER NOT NULL DEFAULT 0, `autoAddToShoppingListAmount` INTEGER NOT NULL DEFAULT 1,
+                `inInventoryTrash` INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY(`inventoryId`) REFERENCES `inventory`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)""")
+            db.execSQL("""INSERT INTO temp_table(
+                              id, inventoryId, name, extraInfo, color, isChecked, shoppingListAmount,
+                              expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
+                              inventoryAmount, expandedInInventory, selectedInInventory,
+                              autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash)
+                          SELECT id, inventoryId, name, extraInfo, color, isChecked, shoppingListAmount,
+                                 expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
+                                 inventoryAmount, expandedInInventory, selectedInInventory,
+                                 autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash
+                          FROM bootycrate_item;""")
+            db.execSQL("DROP TABLE bootycrate_item;")
+            db.execSQL("ALTER TABLE temp_table RENAME TO bootycrate_item;")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_bootycrate_item_inventoryId` ON bootycrate_item(inventoryId) ")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_bootycrate_item_color` ON bootycrate_item(color) ")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_bootycrate_item_name` ON bootycrate_item(name) ")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_bootycrate_item_shoppingListAmount` ON bootycrate_item(shoppingListAmount) ")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_bootycrate_item_inventoryAmount` ON bootycrate_item(inventoryAmount) ")
+            db.execSQL("COMMIT;")
+            db.execSQL("PRAGMA foreign_keys=on;")
         }
     }
 }
