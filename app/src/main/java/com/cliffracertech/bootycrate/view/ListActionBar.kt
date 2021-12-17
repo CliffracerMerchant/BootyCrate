@@ -166,7 +166,7 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
      *
      * Using transition rather than making UI changes manually is recommended
      * when making multiple changes at once. For example, if a fragment ends
-     * it action mode as another fragment begins its own, the title will be
+     * its action mode as another fragment begins its own, the title will be
      * briefly visible in between. Using the transition function will ensure
      * that any combination of UI states is animated between smoothly.
      */

@@ -107,7 +107,7 @@ import kotlinx.coroutines.flow.Flow
     }
 
     @Query("SELECT EXISTS(SELECT bootycrate_item.id FROM bootycrate_item " +
-                         "JOIN inventory ON bootycrate_item.id = inventory.id " +
+                         "JOIN inventory ON bootycrate_item.inventoryId = inventory.id " +
                          "WHERE inventory.isSelected AND $onShoppingList " +
                          "AND bootycrate_item.name = :name AND extraInfo = :extraInfo)")
     abstract suspend fun itemWithNameAlreadyExistsInShoppingList(name: String, extraInfo: String): Boolean
@@ -127,7 +127,7 @@ import kotlinx.coroutines.flow.Flow
     }
 
     @Query("SELECT COUNT(bootycrate_item.id) FROM bootycrate_item " +
-           "JOIN inventory ON bootycrate_item.id = inventory.id " +
+           "JOIN inventory ON bootycrate_item.inventoryId = inventory.id " +
            "WHERE inventory.isSelected AND selectedInShoppingList AND $onShoppingList ")
     abstract fun getSelectedShoppingListItemCount(): Flow<Int>
 

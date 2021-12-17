@@ -6,8 +6,10 @@ package com.cliffracertech.bootycrate.view
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Typeface
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.ViewPropertyAnimator
 import android.view.inputmethod.EditorInfo
 import android.widget.ViewFlipper
 import androidx.appcompat.widget.AppCompatEditText
@@ -108,13 +110,24 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         searchQueryView.doAfterTextChanged { text -> onSearchQueryChangedListener?.invoke(text) }
     }
 
-    fun showTitle() { if (showingFragmentTitle) return
-                      displayedChild = fragmentTitlePos
-                      SoftKeyboard.hide(this) }
+    fun showTitle() {
+        if (showingFragmentTitle) return
+        displayedChild = fragmentTitlePos
+        SoftKeyboard.hide(this)
+    }
 
-    fun showActionModeTitle() { if (showingActionModeTitle) return
-                                displayedChild = actionModeTitlePos
-                                SoftKeyboard.hide(this) }
+    fun showActionModeTitle() {
+        if (showingActionModeTitle) return
+        displayedChild = actionModeTitlePos
+        actionModeTitleView.isVisible = true
+        actionModeTitleView.alpha = 1f
+        titleCrossfade?.apply {
+            cancel()
+            actionModeTitleView.text = savedActionModeTitle
+            actionModeTitleView.typeface = savedActionModeFont
+        }
+        SoftKeyboard.hide(this)
+    }
 
     fun showSearchQuery(showSoftInput: Boolean = true) {
         if (showingSearchView) return
@@ -124,12 +137,15 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
             SoftKeyboard.show(searchQueryView)
     }
 
+    private var titleCrossfade: ViewPropertyAnimator? = null
+    private var savedActionModeTitle: String? = null
+    private var savedActionModeFont: Typeface? = null
     fun setTitle(title: CharSequence, switchTo: Boolean = false) {
         if (!showingFragmentTitle)
             fragmentTitleView.text = title
         else {
-            val oldActionModeTitle = actionModeTitle
-            val oldActionModeFont = actionModeTitleView.typeface
+            savedActionModeTitle = actionModeTitle.toString()
+            savedActionModeFont = actionModeTitleView.typeface
             actionModeTitleView.text = fragmentTitleView.text
             actionModeTitleView.typeface = fragmentTitleView.typeface
             actionModeTitleView.alpha = 1f
@@ -137,12 +153,13 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
             fragmentTitleView.alpha = 0f
             fragmentTitleView.text = title
 
-            actionModeTitleView.animate().alpha(0f).withLayer().withEndAction {
-                actionModeTitleView.isVisible = false
-                actionModeTitleView.alpha = 1f
-                actionModeTitleView.text = oldActionModeTitle
-                actionModeTitleView.typeface = oldActionModeFont
-            }.start()
+            // A reference to the animator is kept in case it needs to be canceled early.
+            titleCrossfade = actionModeTitleView.animate()
+                .alpha(0f).withLayer().withEndAction {
+                    titleCrossfade = null
+                    actionModeTitleView.text = savedActionModeTitle
+                    actionModeTitleView.typeface = savedActionModeFont
+                }.apply { start() }
             fragmentTitleView.animate().alpha(1f).withLayer().start()
         }
         if (switchTo) showTitle()

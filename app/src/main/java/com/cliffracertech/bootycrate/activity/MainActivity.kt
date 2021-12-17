@@ -61,13 +61,6 @@ open class MainActivity : MultiFragmentActivity() {
         setupOnClickListeners()
         initAnimatorConfigs()
         initGradientStyle()
-
-        // Setting android:importantForAccessibility in bottom_navigation_bar.xml for
-        // the disabled menu items seems not to work, so it must be done here instead
-//        (ui.bottomNavigationView.getIconAt(1).parent as View).
-//            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-//        (ui.bottomNavigationView.getIconAt(2).parent as View)
-//            .importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
