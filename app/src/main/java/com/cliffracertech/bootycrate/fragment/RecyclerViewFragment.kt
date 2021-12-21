@@ -19,6 +19,7 @@ import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.view.ListActionBar
+import com.cliffracertech.bootycrate.utils.setPadding
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 import java.util.*
@@ -186,18 +187,17 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             actionBar = null
             activityUi.actionBar.onSearchQueryChangedListener = null
         } else {
-            actionBar = activityUi.actionBar.also {
-                val inventoryViewModel: InventoryViewModel by activityViewModels()
-                it.ui.titleSwitcher.title = inventoryViewModel.selectedInventoryName.value
+            actionBar = activityUi.actionBar
+            val inventoryViewModel: InventoryViewModel by activityViewModels()
+            activityUi.actionBar.ui.titleSwitcher.title =
+                inventoryViewModel.selectedInventoryName.value
+            activityUi.actionBar.onSearchQueryChangedListener = { newText ->
+                viewModel.searchFilter.value = newText.toString()
             }
-            recyclerView.apply {
-                snackBarAnchor = activityUi.bottomAppBar
-                activityUi.actionBar.onSearchQueryChangedListener = { newText ->
-                    viewModel.searchFilter.value = newText.toString()
-                }
-                val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
-                setPadding(paddingLeft, paddingTop, paddingRight, bottomSheetPeekHeight)
-            }
+
+            val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
+            recyclerView.setPadding(bottom = bottomSheetPeekHeight)
+            recyclerView.snackBarAnchor = activityUi.bottomAppBar
 
             val actionModeCallback = if (viewModel.selectionIsEmpty) null
                                      else this.actionModeCallback

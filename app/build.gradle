@@ -65,11 +65,11 @@ dependencies {
     implementation "androidx.fragment:fragment-ktx:1.4.0"
     implementation 'androidx.core:core-ktx:1.7.0'
 
-    implementation "androidx.room:room-runtime:2.3.0"
-    implementation "androidx.room:room-ktx:2.3.0"
+    implementation "androidx.room:room-runtime:2.4.0"
+    implementation "androidx.room:room-ktx:2.4.0"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.appcompat:appcompat:1.4.0'
-    kapt "androidx.room:room-compiler:2.3.0"
+    kapt "androidx.room:room-compiler:2.4.0"
 
     implementation 'com.google.android.gms:play-services-oss-licenses:17.0.0'
     implementation "dev.sasikanth:colorsheet:1.0.1"
@@ -89,7 +89,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     androidTestImplementation 'androidx.test:rules:1.4.1-alpha03'
     androidTestImplementation 'androidx.test.espresso:espresso-contrib:3.5.0-alpha03'
-    androidTestImplementation 'androidx.room:room-testing:2.3.0'
+    androidTestImplementation 'androidx.room:room-testing:2.4.0'
     androidTestImplementation 'androidx.arch.core:core-testing:2.1.0'
     androidTestImplementation 'androidx.test.ext:truth:1.4.0'
     androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0'

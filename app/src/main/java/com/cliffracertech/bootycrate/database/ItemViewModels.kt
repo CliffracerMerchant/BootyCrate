@@ -126,18 +126,18 @@ class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<Shopping
         sortByChecked = prefs.getBoolean(app.getString(R.string.pref_sort_by_checked_key), false)
     }
 
-    override val items = combine(sort, searchFilter, _sortByChecked) { a, b, c  ->
-        Triple(a, b, c)
-    }.flatMapLatest {
-        dao.getShoppingList(it.first, it.third, it.second)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList()).asLiveData()
+    override val items = combine(sort, searchFilter, _sortByChecked) { sort, searchFilter, sortByChecked ->
+        dao.getShoppingList(sort, sortByChecked, searchFilter)
+    }.transformLatest { emitAll(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+        .asLiveData()
 
     override val newItemNameIsAlreadyUsed = combine(
         itemWithNameAlreadyExistsInShoppingList,
         itemWithNameAlreadyExistsInInventory
     ) { existsInShoppingList, existsInInventory ->
-        when { (existsInShoppingList) -> BootyCrateViewModel.NameIsAlreadyUsed.TrueForCurrentList
-               (existsInInventory) ->    BootyCrateViewModel.NameIsAlreadyUsed.TrueForSiblingList
+        when { (existsInShoppingList) -> NameIsAlreadyUsed.TrueForCurrentList
+               (existsInInventory) ->    NameIsAlreadyUsed.TrueForSiblingList
                else ->                   NameIsAlreadyUsed.False }
     }.asLiveData()
 
@@ -193,10 +193,10 @@ class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<Shopping
 class InventoryItemViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(app) {
 
     override val items = sort.combine(searchFilter) { sort, searchFilter ->
-        Pair(sort, searchFilter)
-    }.flatMapLatest {
-        dao.getInventoryContents(it.first, it.second)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList()).asLiveData()
+        dao.getInventoryContents(sort, searchFilter)
+    }.transformLatest { emitAll(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+        .asLiveData()
 
     override val newItemNameIsAlreadyUsed = combine(
         itemWithNameAlreadyExistsInInventory,

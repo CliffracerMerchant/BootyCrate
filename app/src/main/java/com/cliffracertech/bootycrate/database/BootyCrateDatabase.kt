@@ -13,6 +13,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.dlog
 import com.cliffracertech.bootycrate.utils.themedAlertDialogBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -75,12 +76,12 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             val tempDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName)
                 .allowMainThreadQueries()
                 .createFromFile(tempDbFile)
-                .addMigrations(Migration1to2(), Migration2to3())
+                .addMigrations(Migration1to2(), Migration2to3(), Migration3to4())
                 .build()
             val inventories = try { tempDb.inventoryDao().getAllNow() }
-                              catch(e: IllegalStateException) { emptyList() }
+                              catch(e: IllegalStateException) { dlog(e.message ?: ""); emptyList() }
             val items = try { tempDb.itemDao().getAllNow() }
-                        catch(e: IllegalStateException) { emptyList() }
+                        catch(e: IllegalStateException) { dlog(e.message ?: ""); emptyList() }
             tempDb.close()
             tempDbFile.delete()
 
@@ -93,8 +94,8 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                 val currentDb = get(context)
                 if (overwriteExistingDb) {
                     currentDb.openHelper.writableDatabase.execSQL("DROP TRIGGER `ensure_at_least_one_inventory`")
-                    currentDb.inventoryDao().deleteAll()
                     currentDb.inventoryDao().add(inventories)
+                    currentDb.inventoryDao().deleteAll()
                     currentDb.openHelper.writableDatabase.addEnsureAtLeastOneInventoryTrigger()
                     currentDb.itemDao().deleteAll()
                 } else for (inventory in inventories) {
@@ -118,14 +119,14 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         private fun SupportSQLiteDatabase.addEnsureAtLeastOneSelectedInventoryTriggers() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory_1`
                        AFTER DELETE ON inventory
-                       WHEN (SELECT COUNT(*) FROM inventory WHERE isSelected) == 0
+                       WHEN (SELECT COUNT(isSelected) FROM inventory WHERE isSelected) == 0
                        BEGIN UPDATE inventory SET isSelected = 1
                              WHERE id = (SELECT id FROM inventory LIMIT 1);
                        END;""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_inventory_2`
                        BEFORE UPDATE OF isSelected ON inventory
                        WHEN new.isSelected == 0 AND old.isSelected == 1
-                       AND (SELECT COUNT(*) FROM inventory WHERE isSelected) == 1
+                       AND (SELECT COUNT(isSelected) FROM inventory WHERE isSelected) == 1
                        BEGIN SELECT RAISE(IGNORE); END;""")
         }
         private fun SupportSQLiteDatabase.addEnforceSingleSelectInventoryTriggers() {
@@ -134,7 +135,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                        WHEN new.isSelected == 1
                        AND (SELECT multiSelectInventories FROM dbSettings LIMIT 1) == 0
                        BEGIN UPDATE inventory SET isSelected = 0
-                       WHERE id != new.id; END;""")
+                             WHERE id != new.id; END;""")
 
             execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_inventory_2`
                        AFTER UPDATE OF multiSelectInventories ON dbSettings
@@ -207,21 +208,27 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         override fun onOpen(db: SupportSQLiteDatabase) {
             super.onOpen(db)
             db.execSQL("UPDATE bootycrate_item " +
-                       "SET selectedInShoppingList = 0, expandedInShoppingList = 0, " +
-                       "selectedInInventory = 0, expandedInInventory = 0")
+                       "SET selectedInShoppingList = 0, " +
+                           "expandedInShoppingList = 0, " +
+                           "selectedInInventory = 0, " +
+                           "expandedInInventory = 0")
             db.execSQL("UPDATE bootycrate_item " +
-                       "SET shoppingListAmount = -1, inShoppingListTrash = 0 " +
+                       "SET shoppingListAmount = -1, " +
+                           "inShoppingListTrash = 0 " +
                        "WHERE inShoppingListTrash")
             db.execSQL("UPDATE bootycrate_item " +
-                       "SET inventoryAmount = -1, inInventoryTrash = 0 " +
+                       "SET inventoryAmount = -1, " +
+                           "inInventoryTrash = 0 " +
                        "WHERE inInventoryTrash")
         }
 
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
             db.execSQL("INSERT INTO dbSettings DEFAULT VALUES")
-            db.insert("inventory", 0, ContentValues().apply { put("name", firstInventoryName)
-                put("isSelected", 1) })
+            val values = ContentValues(2)
+            values.put("name", firstInventoryName)
+            values.put("isSelected", 1)
+            db.insert("inventory", 0, values)
             db.addEnsureAtLeastOneInventoryTrigger()
             db.addEnsureAtLeastOneSelectedInventoryTriggers()
             db.addEnforceSingleSelectInventoryTriggers()
@@ -235,8 +242,9 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             db.execSQL("""CREATE TABLE inventory (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                                                   `name` TEXT NOT NULL,
                                                   `isSelected` INTEGER NOT NULL DEFAULT 0)""")
-            val values = ContentValues().apply { put("name", firstInventoryName)
-                                                 put("isSelected", 1) }
+            val values = ContentValues(2)
+            values.put("name", firstInventoryName)
+            values.put("isSelected", 1)
             val insertedId = db.insert("inventory", 0, values)
 
             db.execSQL("PRAGMA foreign_keys=off")

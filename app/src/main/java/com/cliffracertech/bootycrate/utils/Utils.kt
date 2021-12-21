@@ -114,3 +114,12 @@ class MaxHeightLinearLayout(context: Context, attrs: AttributeSet) : LinearLayou
         super.onMeasure(widthMeasureSpec, maxHeightSpec)
     }
 }
+
+/** Set the View's padding, using the current values as defaults
+ * so that not every value needs to be specified. **/
+fun View.setPadding(
+    left: Int = paddingLeft,
+    top: Int = paddingTop,
+    right: Int = paddingRight,
+    bottom: Int = paddingTop
+) = setPadding(left, top, right, bottom)

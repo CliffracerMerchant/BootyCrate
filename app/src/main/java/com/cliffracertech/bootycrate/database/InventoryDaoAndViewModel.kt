@@ -137,7 +137,7 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
     val selectedInventoryName = dao.getSelectedInventories().map {
         if (it.size == 1) it.first().name
         else nameForMultiSelection
-    }.stateIn(viewModelScope, SharingStarted.Lazily, nameForMultiSelection)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
 
     fun add(name: String) = viewModelScope.launch { dao.add(name) }
 

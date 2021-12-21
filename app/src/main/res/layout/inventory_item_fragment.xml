@@ -13,7 +13,7 @@
     app:msv_emptyView="@layout/empty_recycler_view"
     app:msv_errorView="@layout/empty_recycler_view"
     app:msv_loadingView="@layout/loading_recycler_view"
-    app:msv_animateViewChanges="true"
+    app:msv_animateViewChanges="false"
     app:msv_viewState="loading" >
 
     <com.cliffracertech.bootycrate.recyclerview.InventoryItemRecyclerView
