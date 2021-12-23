@@ -28,9 +28,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
- * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
+ * A BottomNavViewActivity with a fragment interface that enables implementing fragments to use its custom UI.
  *
- * MainActivity is a MultiFragmentActivity subclass with a custom UI including
+ * MainActivity is a BottomNavViewActivity subclass with a custom UI including
  * a ListActionBar, a BottomAppBar, and a checkout button and an add button in
  * the cradle of the BottomAppBar. In order for fragments to inform MainActivity
  * which of these UI elements should be displayed when they are active, the
@@ -39,8 +39,7 @@ import kotlinx.coroutines.launch
  * not will not be able to affect the visibility of the MainActivity UI when
  * they are displayed.
  */
-@Suppress("LeakingThis")
-open class MainActivity : MultiFragmentActivity() {
+class MainActivity : BottomNavViewActivity() {
     private val inventoryViewModel: InventoryViewModel by viewModels()
 
     lateinit var ui: MainActivityBinding
@@ -65,9 +64,8 @@ open class MainActivity : MultiFragmentActivity() {
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
 
-    private var currentFragment: Fragment? = null
-    override fun onNewFragmentSelected(newFragment: Fragment) {
-        val oldFragment = currentFragment
+    override fun onNewFragmentSelected(oldFragment: Fragment?, newFragment: Fragment) {
+        val needToAnimate = oldFragment != null
         if (oldFragment != null)
             (oldFragment as? MainActivityFragment)?.onActiveStateChanged(isActive = false, ui)
         else if (newFragment is MainActivityFragment) {
@@ -80,9 +78,6 @@ open class MainActivity : MultiFragmentActivity() {
             ui.cradleLayout.isInvisible = !showsBottomAppBar
             ui.bottomAppBar.navIndicator.alpha = if (showsBottomAppBar) 1f else 0f
         }
-
-        val needToAnimate = oldFragment != null
-        this.currentFragment = newFragment
         if (newFragment !is MainActivityFragment) return
 
         if (newFragment.showsBottomAppBar()) ui.bottomNavigationDrawer.show()
@@ -176,7 +171,7 @@ open class MainActivity : MultiFragmentActivity() {
      * appropriate function instead of changing their visibility manually to
      * ensure that the appropriate hide/show animations are played. The
      * function addSecondaryFragment allows implementing fragments to add a
-     * secondary fragment (see MultiFragmentActivity documentation for an
+     * secondary fragment (see BottomNavViewActivity documentation for an
      * explanation of primary/secondary fragments) themselves.
      */
     interface MainActivityFragment {

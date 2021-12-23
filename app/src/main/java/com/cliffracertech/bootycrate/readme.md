@@ -6,7 +6,7 @@ activity contains all of the classes in the inheritance chain of the single acti
 used in the app, as well as extension functions of the MainActivityBinding UI class. 
 These classes are:
 <pre>
-MultiFragmentActivity -> MainActivity
+BottomNavViewActivity -> MainActivity
 </pre>
 
 MainActivity's UI consists of an instance of ListActionBar (a custom toolbar
