@@ -10,18 +10,23 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.CallSuper
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import com.cliffracertech.bootycrate.*
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.*
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
-import com.cliffracertech.bootycrate.view.ListActionBar
 import com.cliffracertech.bootycrate.utils.setPadding
+import com.cliffracertech.bootycrate.view.ListActionBar
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -74,10 +79,11 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
         recyclerView?.observeViewModel(this)
         viewModel.items.observe(viewLifecycleOwner) { items ->
-            val stateView = view as? MultiStateView ?: return@observe
-            stateView.viewState = when { items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
-                                         searchIsActive ->     MultiStateView.ViewState.ERROR
-                                         else ->               MultiStateView.ViewState.EMPTY }
+            (view as? MultiStateView)?.viewState = when {
+                items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
+                searchIsActive ->     MultiStateView.ViewState.ERROR
+                else ->               MultiStateView.ViewState.EMPTY
+            }
         }
 
         val isActive = this.isActiveTemp ?: return
@@ -89,6 +95,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
     override fun onDetach() {
         super.onDetach()
+        observeInventoryNameJob = null
         actionBar = null
         recyclerView?.snackBarAnchor = null
     }
@@ -173,6 +180,12 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
     private var isActiveTemp: Boolean? = null
     private var activityUiTemp: MainActivityBinding? = null
+    private var observeInventoryNameJob: Job? = null
+        set(value) {
+            if (value == null) field?.cancel()
+            field = value
+        }
+
     @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
         val recyclerView = this.recyclerView
         if (recyclerView == null) {
@@ -184,37 +197,46 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             return
         }
         if (!isActive) {
+            observeInventoryNameJob = null
             actionBar = null
             activityUi.actionBar.onSearchQueryChangedListener = null
-        } else {
-            actionBar = activityUi.actionBar
-            val inventoryViewModel: InventoryViewModel by activityViewModels()
-            activityUi.actionBar.ui.titleSwitcher.title =
-                inventoryViewModel.selectedInventoryName.value
-            activityUi.actionBar.onSearchQueryChangedListener = { newText ->
-                viewModel.searchFilter.value = newText.toString()
-            }
-
-            val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
-            recyclerView.setPadding(bottom = bottomSheetPeekHeight)
-            recyclerView.snackBarAnchor = activityUi.bottomAppBar
-
-            val actionModeCallback = if (viewModel.selectionIsEmpty) null
-                                     else this.actionModeCallback
-            val activeSearchQuery = if (viewModel.searchFilter.value.isNullOrBlank()) null
-                                    else viewModel.searchFilter.value
-            activityUi.actionBar.transition(
-                activeActionModeCallback = actionModeCallback,
-                activeSearchQuery = activeSearchQuery)
-
-            activityUi.actionBar.changeSortMenu.findItem(when (viewModel.sort.value) {
-                BootyCrateItemSort.Color -> R.id.color_option
-                BootyCrateItemSort.NameAsc -> R.id.name_ascending_option
-                BootyCrateItemSort.NameDesc -> R.id.name_descending_option
-                BootyCrateItemSort.AmountAsc -> R.id.amount_ascending_option
-                BootyCrateItemSort.AmountDesc -> R.id.amount_descending_option
-            })?.isChecked = true
+            return
         }
+
+        actionBar = activityUi.actionBar
+        activityUi.actionBar.onSearchQueryChangedListener = { newText ->
+            viewModel.searchFilter.value = newText.toString()
+        }
+
+        val inventoryViewModel: InventoryViewModel by activityViewModels()
+        observeInventoryNameJob = viewLifecycleOwner.lifecycleScope.launch {
+            inventoryViewModel.selectedInventoryName.collect {
+                if (view?.alpha == 1f && view?.isVisible == true)
+                    actionBar?.ui?.titleSwitcher?.title = it
+            }
+        }
+        actionBar?.ui?.titleSwitcher?.title =
+            inventoryViewModel.selectedInventoryName.value
+
+        val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
+        recyclerView.setPadding(bottom = bottomSheetPeekHeight)
+        recyclerView.snackBarAnchor = activityUi.bottomAppBar
+
+        val actionModeCallback = if (viewModel.selectionIsEmpty) null
+                                 else this.actionModeCallback
+        val activeSearchQuery = if (viewModel.searchFilter.value.isNullOrBlank()) null
+                                else viewModel.searchFilter.value
+        activityUi.actionBar.transition(
+            activeActionModeCallback = actionModeCallback,
+            activeSearchQuery = activeSearchQuery)
+
+        activityUi.actionBar.changeSortMenu.findItem(when (viewModel.sort.value) {
+            BootyCrateItemSort.Color -> R.id.color_option
+            BootyCrateItemSort.NameAsc -> R.id.name_ascending_option
+            BootyCrateItemSort.NameDesc -> R.id.name_descending_option
+            BootyCrateItemSort.AmountAsc -> R.id.amount_ascending_option
+            BootyCrateItemSort.AmountDesc -> R.id.amount_descending_option
+        })?.isChecked = true
     }
 
     open inner class SelectionActionModeCallback : ListActionBar.ActionModeCallback {

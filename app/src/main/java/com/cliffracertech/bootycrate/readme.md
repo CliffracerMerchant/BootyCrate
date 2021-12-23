@@ -10,28 +10,27 @@ BottomNavViewActivity -> MainActivity
 </pre>
 
 MainActivity's UI consists of an instance of ListActionBar (a custom toolbar
-implementation), an instance of BottomAppBar (another custom toolbar implementation), a
-BottomNavigationViewEx (acts as a BottomNavigationView but with better sub-view access
-for styling purposes), a checkout button, and an add button. This activity UI is shared
-between all fragments.
+implementation), an instance of BottomAppBar (another custom toolbar implementation),
+a BottomNavigationView, a checkout button, and an add button. This activity UI is
+shared between all fragments.
 
 ### fragment
-fragment contains all of the fragments used in the app. The two main content fragments' inheritance
-chain is:
+fragment contains all of the fragments used in the app. The two main content fragments'
+inheritance chain is:
 <pre>
 RecyclerViewFragment -> ShoppingListFragment
                      -> InventoryItemFragment
 </pre>
 
 ### recyclerview
-recyclerview contains all of the classes used in the inheritance chain of the recycler views used in
-the two main fragments:
+recyclerview contains all of the classes used in the inheritance chain of the recycler
+views used in the two main fragments:
 <pre>
 BootyCrateRecyclerView -> ExpandableSelectableRecyclerView -> ShoppingListRecyclerView
                                                            -> InventoryItemRecyclerView
 </pre>
-and other associated classes (e.g. item views and item animators). The recycler views' item views'
-inheritance chain is:
+and other associated classes (e.g. item views and item animators). The recycler views'
+item views' inheritance chain is:
 <pre>
 BootyCrateItemView -> ExpandableSelectableItemView -> ShoppingListItemView
                                                    -> InventoryItemView

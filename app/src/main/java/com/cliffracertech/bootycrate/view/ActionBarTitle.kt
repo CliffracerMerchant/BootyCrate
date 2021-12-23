@@ -141,6 +141,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
     private var savedActionModeTitle: String? = null
     private var savedActionModeFont: Typeface? = null
     fun setTitle(title: CharSequence, switchTo: Boolean = false) {
+        if (title == this.title) return
         if (!showingFragmentTitle)
             fragmentTitleView.text = title
         else {
