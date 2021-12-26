@@ -182,7 +182,8 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
     private var activityUiTemp: MainActivityBinding? = null
     private var observeInventoryNameJob: Job? = null
         set(value) {
-            if (value == null) field?.cancel()
+            if (value == null)
+                field?.cancel()
             field = value
         }
 
@@ -215,8 +216,6 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
                     actionBar?.ui?.titleSwitcher?.title = it
             }
         }
-        actionBar?.ui?.titleSwitcher?.title =
-            inventoryViewModel.selectedInventoryName.value
 
         val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
         recyclerView.setPadding(bottom = bottomSheetPeekHeight)
@@ -226,7 +225,9 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
                                  else this.actionModeCallback
         val activeSearchQuery = if (viewModel.searchFilter.value.isNullOrBlank()) null
                                 else viewModel.searchFilter.value
+
         activityUi.actionBar.transition(
+            title = inventoryViewModel.selectedInventoryName.value,
             activeActionModeCallback = actionModeCallback,
             activeSearchQuery = activeSearchQuery)
 

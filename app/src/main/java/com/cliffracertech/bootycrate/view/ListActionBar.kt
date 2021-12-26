@@ -172,6 +172,7 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
      */
     fun transition(
         backButtonVisible: Boolean = false,
+        title: String? = null,
         activeActionModeCallback: ActionModeCallback? = null,
         activeSearchQuery: CharSequence? = null,
         searchButtonVisible: Boolean = true,
@@ -181,6 +182,22 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
         if (activeActionModeCallback == null && activeSearchQuery == null)
             setBackButtonIsVisible(backButtonVisible)
 
+        ui.titleSwitcher.setSearchQuery(activeSearchQuery ?: "", switchTo = false)
+        if (activeActionModeCallback != null) {
+            startActionMode(activeActionModeCallback)
+            ui.searchButton.isActivated = false
+        } else {
+            actionMode?.apply {
+                finish(updateActionBarUi = false)
+                setChangeSortButtonIsVisible(true)
+                if (title != null)
+                    ui.titleSwitcher.title = title
+                if (activeSearchQuery == null)
+                    ui.titleSwitcher.showTitle()
+            }
+            setSearchQueryPrivate(activeSearchQuery, showSoftInput = false,
+                                  hideBackButtonWhenDone = false)
+        }
         if (searchButtonVisible != ui.searchButton.isVisible && activeActionModeCallback == null)
             ui.searchButton.isVisible = searchButtonVisible
 
@@ -191,24 +208,6 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
 
         if (menuButtonVisible != ui.menuButton.isVisible)
             ui.menuButton.isVisible = menuButtonVisible
-
-        ui.titleSwitcher.setSearchQuery(activeSearchQuery ?: "", switchTo = false)
-        activeActionModeCallback?.let {
-            startActionMode(it)
-            ui.searchButton.isActivated = false
-        }
-        if (activeActionModeCallback == null) {
-            actionMode?.apply {
-                finish(updateActionBarUi = false)
-                setChangeSortButtonIsVisible(true)
-                if (activeSearchQuery == null) {
-                    ui.titleSwitcher.showTitle()
-                    setChangeSortButtonIsVisible(true)
-                }
-            }
-            setSearchQueryPrivate(activeSearchQuery, showSoftInput = false,
-                                  hideBackButtonWhenDone = false)
-        }
     }
 
     private fun setSearchQueryPrivate(

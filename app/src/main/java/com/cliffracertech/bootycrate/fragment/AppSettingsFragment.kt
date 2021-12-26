@@ -63,14 +63,13 @@ class AppSettingsFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
 
     override fun showsBottomAppBar() = false
     override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-        if (isActive) {
-            activityUi.actionBar.ui.titleSwitcher.title = getString(R.string.settings_description)
+        if (isActive)
             activityUi.actionBar.transition(
+                title = getString(R.string.settings_description),
                 backButtonVisible = true,
                 searchButtonVisible = false,
                 changeSortButtonVisible = false,
                 menuButtonVisible = false)
-        }
     }
 
     private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
