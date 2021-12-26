@@ -30,6 +30,8 @@ import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
 import com.cliffracertech.bootycrate.utils.deleteInventoryDialog
 import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.inventoryNameDialog
+import com.cliffracertech.bootycrate.utils.repeatWhenStarted
+import kotlinx.coroutines.flow.collect
 import java.util.*
 
 /**
@@ -159,7 +161,9 @@ class InventorySelector(context: Context, attrs: AttributeSet?) :
 
     fun initViewModel(viewModel: InventoryViewModel, lifecycleOwner: LifecycleOwner) {
         this.viewModel = viewModel
-        viewModel.inventories.observe(lifecycleOwner) { adapter.submitList(it) }
+        lifecycleOwner.repeatWhenStarted {
+            viewModel.inventories.collect(adapter::submitList)
+        }
     }
 
     val InventoryViewHolder.item: InventorySummary get() = adapter.currentList[adapterPosition]
@@ -252,7 +256,9 @@ class SelectedInventoryPicker(context: Context, attrs: AttributeSet) :
     init { setAdapter(adapter) }
 
     fun initViewModel(viewModel: InventoryViewModel, lifecycleOwner: LifecycleOwner) =
-        viewModel.selectedInventories.observe(lifecycleOwner) { adapter.submitList(it) }
+        lifecycleOwner.repeatWhenStarted {
+            viewModel.selectedInventories.collect(adapter::submitList)
+        }
 
     val InventoryViewHolder.item: InventorySummary get() = adapter.currentList[adapterPosition]
 

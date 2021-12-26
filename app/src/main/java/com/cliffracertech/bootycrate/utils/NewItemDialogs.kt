@@ -24,6 +24,8 @@ import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.recyclerview.SelectedInventoryPicker
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /**
  * An abstract DialogFragment to create a new BootyCrateItem.
@@ -64,7 +66,6 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
 
     protected var ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
     protected lateinit var newItemView: ExpandableSelectableItemView<T>
-    protected var inventoryPicker: SelectedInventoryPicker? = null
     protected var targetInventoryId: Long? = null
         private set
 
@@ -125,33 +126,18 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        itemViewModel.newItemNameIsAlreadyUsed.observe(viewLifecycleOwner) {
-            showWarningMessage(when (it) {
-                BootyCrateViewModel.NameIsAlreadyUsed.TrueForCurrentList ->
-                    WarningMessage.ItemWithSameNameAlreadyExistsInCollection
-                BootyCrateViewModel.NameIsAlreadyUsed.TrueForSiblingList ->
-                    WarningMessage.ItemWithSameNameAlreadyExistsInOtherCollection
-                else ->//BootyCrateViewModel.NameIsAlreadyUsed.False
-                    WarningMessage.None
-            })
-        }
-
-        inventoryViewModel.selectedInventories.observe(viewLifecycleOwner) {
-            targetInventoryId = if (it.size != 1) null else it.first().id
-            if (targetInventoryId == null) {
-                if (inventoryPicker == null) {
-                    val container = ui.inventoryPickerStub.inflate()
-                    val inventoryPicker = container.findViewById<SelectedInventoryPicker>(R.id.inventoryPicker)
-                    inventoryPicker?.initViewModel(inventoryViewModel, viewLifecycleOwner)
-                    inventoryPicker?.onChosenInventoryIdChangedListener = {
-                        targetInventoryId = it
-                        if (it != null && shownWarningMessage == WarningMessage.ItemHasNoInventoryId)
-                            clearWarningMessageAndEnableButtons()
-                    }
-                    val message = container.findViewById<TextView>(R.id.inventoryPickerPrompt)
-                    message.text = inventoryPickerPrompt
-                } else inventoryPicker?.isVisible = true
-            } else inventoryPicker?.isVisible = false
+        viewLifecycleOwner.repeatWhenStarted {
+            launch { itemViewModel.newItemNameIsAlreadyUsed.collect {
+                showWarningMessage(when (it) {
+                    BootyCrateViewModel.NameIsAlreadyUsed.TrueForCurrentList ->
+                        WarningMessage.ItemWithSameNameAlreadyExistsInCollection
+                    BootyCrateViewModel.NameIsAlreadyUsed.TrueForSiblingList ->
+                        WarningMessage.ItemWithSameNameAlreadyExistsInOtherCollection
+                    else ->//BootyCrateViewModel.NameIsAlreadyUsed.False
+                        WarningMessage.None
+                })
+            }}
+            launch { updateSelectedInventoryPicker() }
         }
     }
 
@@ -222,10 +208,36 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             ui.warningMessage.visibility = View.VISIBLE
         }
     }
+
     private fun clearWarningMessageAndEnableButtons() {
         showWarningMessage(WarningMessage.None)
         addAnotherButton.isEnabled = true
         okButton.isEnabled = true
+    }
+
+    /** Initialize the targetInventoryId field with the id of the only selected
+     * inventory if there is only one selected inventory, or show the inventory
+     * picker to the user otherwise to allow them to specify which inventory /
+     * shopping list to add the item to.*/
+    private suspend fun updateSelectedInventoryPicker() {
+        val selectedInventories = inventoryViewModel.getSelectedInventoriesNow()
+        if (selectedInventories.size == 1) {
+            targetInventoryId = selectedInventories.first().id
+            return
+        }
+        val container = ui.inventoryPickerStub.inflate()
+        val inventoryPicker: SelectedInventoryPicker? =
+                container.findViewById(R.id.inventoryPicker)
+        if (inventoryPicker != null) {
+            inventoryPicker.initViewModel(inventoryViewModel, viewLifecycleOwner)
+            inventoryPicker.onChosenInventoryIdChangedListener = {
+                targetInventoryId = it
+                if (it != null && shownWarningMessage == WarningMessage.ItemHasNoInventoryId)
+                    clearWarningMessageAndEnableButtons()
+            }
+        }
+        val message = container.findViewById<TextView>(R.id.inventoryPickerPrompt)
+        message?.text = inventoryPickerPrompt
     }
 }
 

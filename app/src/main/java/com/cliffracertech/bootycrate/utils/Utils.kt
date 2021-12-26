@@ -15,8 +15,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.cliffracertech.bootycrate.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /** Return a NotificationManager system service from the context. */
 fun notificationManager(context: Context) =
@@ -123,3 +129,12 @@ fun View.setPadding(
     right: Int = paddingRight,
     bottom: Int = paddingTop
 ) = setPadding(left, top, right, bottom)
+
+/** Call the provided block each time the LifecycleOwner receiver
+ * enters Lifecycle.State.STARTED, and cancel the block when the
+ * receiver's Lifecycle.State falls below this level. **/
+fun LifecycleOwner.repeatWhenStarted(block: suspend CoroutineScope.() -> Unit) {
+    lifecycleScope.launch {
+        repeatOnLifecycle(Lifecycle.State.STARTED, block)
+    }
+}

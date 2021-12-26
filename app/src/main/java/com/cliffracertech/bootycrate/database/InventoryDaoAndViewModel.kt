@@ -6,7 +6,6 @@ package com.cliffracertech.bootycrate.database
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import androidx.room.*
 import com.cliffracertech.bootycrate.R
@@ -88,6 +87,10 @@ private const val inventoryItemCount = "(SELECT count(*) FROM bootycrate_item " 
            "FROM inventory WHERE isSelected")
     abstract fun getSelectedInventories(): Flow<List<InventorySummary>>
 
+    @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount, isSelected " +
+           "FROM inventory WHERE isSelected")
+    abstract suspend fun getSelectedInventoriesNow(): List<InventorySummary>
+
     @Query("UPDATE inventory SET isSelected = (1 - isSelected) WHERE id = :id")
     abstract suspend fun updateIsSelected(id: Long)
 
@@ -130,9 +133,13 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
     private val dbSettingsDao = BootyCrateDatabase.get(app).dbSettingsDao()
     private val nameForMultiSelection = app.getString(R.string.multiple_selected_inventories_description)
 
-    val inventories = dao.getAll().asLiveData()
+    val inventories = dao.getAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
-    val selectedInventories = dao.getSelectedInventories().asLiveData()
+    val selectedInventories = dao.getSelectedInventories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
+    suspend fun getSelectedInventoriesNow() = dao.getSelectedInventoriesNow()
 
     val selectedInventoryName = dao.getSelectedInventories().map {
         if (it.size == 1) it.first().name
