@@ -4,26 +4,13 @@
    ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
    ~ or in the file LICENSE in the project's root directory. -->
 
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="rectangle">
-            <corners android:radius="@dimen/recycler_view_item_rounded_corner_radius" />
-            <gradient android:angle="0"
-                android:startColor="?attr/recyclerViewItemSelectionGradientLeftColor"
-                android:centerColor="?attr/recyclerViewItemSelectionGradientMiddleColor"
-                android:endColor="?attr/recyclerViewItemSelectionGradientRightColor" />
-        </shape>
-    </item>
-    <item
-        android:left="@dimen/recycler_view_item_selection_border_thickness"
-        android:top="@dimen/recycler_view_item_selection_border_thickness"
-        android:right="@dimen/recycler_view_item_selection_border_thickness"
-        android:bottom="@dimen/recycler_view_item_selection_border_thickness">
-        <shape
-            android:shape="rectangle">
-            <solid android:color="?attr/cardBackgroundColor" />
-            <corners android:radius="@dimen/recycler_view_item_inner_rounded_corner_radius"/>
-        </shape>
-    </item>
-</layer-list>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <corners android:radius="@dimen/recycler_view_item_rounded_corner_radius" />
+    <gradient android:angle="0"
+        android:startColor="?attr/recyclerViewItemSelectionGradientLeftColor"
+        android:centerColor="?attr/recyclerViewItemSelectionGradientMiddleColor"
+        android:endColor="?attr/recyclerViewItemSelectionGradientRightColor" />
+</shape>
 

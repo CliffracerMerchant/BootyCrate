@@ -34,10 +34,16 @@
     <color name="lightThemeBgGradientLeft">#E8865A</color>
     <color name="lightThemeBgGradientMiddle">#FF8181</color>
     <color name="lightThemeBgGradientRight">#EF7487</color>
+    <color name="lightThemeItemSelectionGradientLeft">#EDBDA8</color>
+    <color name="lightThemeItemSelectionGradientMiddle">#F8BABB</color>
+    <color name="lightThemeItemSelectionGradientRight">#F0B4BE</color>
 
     <color name="darkThemeBgGradientLeft">#BF6844</color>
     <color name="darkThemeBgGradientMiddle">#CF5F5F</color>
     <color name="darkThemeBgGradientRight">#C15A7E</color>
+    <color name="darkThemeItemSelectionGradientLeft">#704737</color>
+    <color name="darkThemeItemSelectionGradientMiddle">#784244</color>
+    <color name="darkThemeItemSelectionGradientRight">#714054</color>
 
     <color name="lightThemeFgColor">#DDDDDD</color>
     <color name="lightThemeIndicatorColor">#AAAAAA</color>

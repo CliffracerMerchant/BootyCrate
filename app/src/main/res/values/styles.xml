@@ -37,9 +37,9 @@
         <item name="backgroundGradientRightColor">@color/lightThemeBgGradientRight</item>
         <item name="colorOnBackgroundGradient">@color/colorRecyclerViewItemLight</item>
         <item name="navIndicatorTint">@color/lightThemeIndicatorColor</item>
-        <item name="recyclerViewItemSelectionGradientLeftColor">?attr/backgroundGradientLeftColor</item>
-        <item name="recyclerViewItemSelectionGradientMiddleColor">?attr/backgroundGradientMiddleColor</item>
-        <item name="recyclerViewItemSelectionGradientRightColor">?attr/backgroundGradientRightColor</item>
+        <item name="recyclerViewItemSelectionGradientLeftColor">@color/lightThemeItemSelectionGradientLeft</item>
+        <item name="recyclerViewItemSelectionGradientMiddleColor">@color/lightThemeItemSelectionGradientMiddle</item>
+        <item name="recyclerViewItemSelectionGradientRightColor">@color/lightThemeItemSelectionGradientRight</item>
     </style>
 
     <style name="DarkTheme" parent="LightTheme">
@@ -60,6 +60,9 @@
         <item name="backgroundGradientRightColor">@color/darkThemeBgGradientRight</item>
         <item name="colorOnBackgroundGradient">@color/colorWindowBackgroundDark</item>
         <item name="navIndicatorTint">@color/darkThemeIndicatorColor</item>
+        <item name="recyclerViewItemSelectionGradientLeftColor">@color/darkThemeItemSelectionGradientLeft</item>
+        <item name="recyclerViewItemSelectionGradientMiddleColor">@color/darkThemeItemSelectionGradientMiddle</item>
+        <item name="recyclerViewItemSelectionGradientRightColor">@color/darkThemeItemSelectionGradientRight</item>
     </style>
 
     <style name="TextAppearance" parent="TextAppearance.AppCompat">
