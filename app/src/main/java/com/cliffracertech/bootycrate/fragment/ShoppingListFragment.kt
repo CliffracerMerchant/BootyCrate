@@ -18,8 +18,11 @@ import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.ShoppingListFragmentBinding
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
 import com.cliffracertech.bootycrate.utils.NewShoppingListItemDialog
+import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.view.CheckoutButton
 import com.cliffracertech.bootycrate.view.ListActionBar
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /**
  * A fragment to display and modify the user's shopping list.
@@ -47,7 +50,6 @@ import com.cliffracertech.bootycrate.view.ListActionBar
     override val actionModeCallback = ShoppingListActionModeCallback()
 
     private var checkoutButton: CheckoutButton? = null
-    private var checkoutButtonShouldBeEnabled = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -61,14 +63,12 @@ import com.cliffracertech.bootycrate.view.ListActionBar
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerView?.initViewModel(viewModel)
         super.onViewCreated(view, savedInstanceState)
-        viewModel.checkedItemsSize.observe(viewLifecycleOwner) { newSize ->
-            checkoutButton?.isEnabled = newSize != 0
-            // Sometimes onChanged is called before onActiveStateChanged is called, causing
-            // the checkout button to still be null. In this case we'll store the value
-            // and initialize the checkout button's state in onActiveStateChanged.
-            checkoutButtonShouldBeEnabled =  newSize != 0
+        viewLifecycleOwner.repeatWhenStarted {
+            launch { viewModel.items.collect(::updateBadge) }
+            launch { viewModel.checkedItemsSize.collect { newSize ->
+                checkoutButton?.isEnabled = newSize != 0
+            }}
         }
-        viewModel.items.observe(viewLifecycleOwner, ::updateBadge)
     }
 
     override fun onDestroyView() {
@@ -95,10 +95,7 @@ import com.cliffracertech.bootycrate.view.ListActionBar
     override fun showsCheckoutButton() = true
     override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
         super.onActiveStateChanged(isActive, activityUi)
-        if (checkoutButton == null) {
-            checkoutButton = activityUi.checkoutButton
-            activityUi.checkoutButton.isEnabled = checkoutButtonShouldBeEnabled
-        }
+        checkoutButton = activityUi.checkoutButton
         newItemsBadge = activityUi.shoppingListBadge
         activityUi.actionBar.optionsMenu.setGroupVisible(
             R.id.shopping_list_view_menu_group, isActive)
@@ -109,7 +106,7 @@ import com.cliffracertech.bootycrate.view.ListActionBar
             NewShoppingListItemDialog(activity)
                 .show(activity.supportFragmentManager, null)
         }
-        activityUi.checkoutButton.checkoutCallback = { viewModel.checkout() }
+        activityUi.checkoutButton.checkoutCallback = viewModel::checkout
     }
 
     private var shoppingListSize = -1

@@ -13,9 +13,11 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateItem
 import com.cliffracertech.bootycrate.database.BootyCrateViewModel
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
+import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.flow.collect
 
 /**
  * A RecyclerView for displaying the contents of a BootyCrateViewModel.
@@ -74,7 +76,7 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
 
     fun observeViewModel(owner: LifecycleOwner) {
         setAdapter(adapter)
-        viewModel.items.observe(owner) { adapter.submitList(it) }
+        owner.repeatWhenStarted { viewModel.items.collect(adapter::submitList) }
     }
 
     private var deletedItemCount: Int = 0

@@ -63,10 +63,18 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
     private var actionBar: ListActionBar? = null
     private val actionModeIsStarted get() = actionBar?.actionMode?.callback == actionModeCallback
     private val searchIsActive get() = actionBar?.activeSearchQuery != null
+    private var observeInventoryNameJob: Job? = null
+        set(value) {
+            if (value == null)
+                field?.cancel()
+            field = value
+        }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.selectedItemCount.observe(viewLifecycleOwner, ::onSelectionSizeChanged)
+        viewLifecycleOwner.repeatWhenStarted {
+            viewModel.selectedItemCount.collect(::onSelectionSizeChanged)
+        }
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         sortModePrefKey = getString(R.string.pref_sort, collectionName)
@@ -78,19 +86,15 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
         emptyTextView?.text = getString(R.string.empty_recycler_view_message, collectionName)
 
         recyclerView?.observeViewModel(this)
-        viewModel.items.observe(viewLifecycleOwner) { items ->
-            (view as? MultiStateView)?.viewState = when {
-                items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
-                searchIsActive ->     MultiStateView.ViewState.ERROR
-                else ->               MultiStateView.ViewState.EMPTY
+        viewLifecycleOwner.repeatWhenStarted {
+            viewModel.items.collect { items ->
+                (view as? MultiStateView)?.viewState = when {
+                    items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
+                    searchIsActive ->     MultiStateView.ViewState.ERROR
+                    else ->               MultiStateView.ViewState.EMPTY
+                }
             }
         }
-
-        val isActive = this.isActiveTemp ?: return
-        val activityUi = this.activityUiTemp ?: return
-        onActiveStateChanged(isActive, activityUi)
-        isActiveTemp = null
-        activityUiTemp = null
     }
 
     override fun onDetach() {
@@ -116,10 +120,10 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
      * @return whether the dialog was successfully started. */
     private fun shareList(): Boolean {
         val context = this.context ?: return false
-        val selectionIsEmpty = (viewModel.selectedItemCount.value ?: 0) == 0
+        val selectionIsEmpty = viewModel.selectedItemCount.value == 0
         val items = if (selectionIsEmpty) viewModel.items.value
-                    else viewModel.items.value?.filter { it.isSelected }
-        if (items?.isEmpty() != false) {
+                    else viewModel.items.value.filter { it.isSelected }
+        if (items.isEmpty()) {
             val anchor = recyclerView?.snackBarAnchor ?: view ?: return false
             val message = context.getString(R.string.empty_recycler_view_message, collectionName)
             Snackbar.make(context, anchor, message, Snackbar.LENGTH_LONG)
@@ -146,7 +150,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
 
     private fun deleteSelectedItems(): Boolean {
         val recyclerView = this.recyclerView ?: return false
-        val size = viewModel.selectedItemCount.value ?: 0
+        val size = viewModel.selectedItemCount.value
         viewModel.deleteSelected()
         recyclerView.showDeletedItemsSnackBar(size)
         return true
@@ -178,25 +182,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
         else                 -> false
     }
 
-    private var isActiveTemp: Boolean? = null
-    private var activityUiTemp: MainActivityBinding? = null
-    private var observeInventoryNameJob: Job? = null
-        set(value) {
-            if (value == null)
-                field?.cancel()
-            field = value
-        }
-
     @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-        val recyclerView = this.recyclerView
-        if (recyclerView == null) {
-            // If recyclerView is null, the view probably hasn't been created yet. In
-            // this case, we'll store the parameter values and call onActiveStateChanged
-            // manually with the stored parameters at the end of onViewCreated.
-            isActiveTemp = isActive
-            activityUiTemp = activityUi
-            return
-        }
         if (!isActive) {
             observeInventoryNameJob = null
             actionBar = null
@@ -217,11 +203,14 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             }
         }
 
-        val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
-        recyclerView.setPadding(bottom = bottomSheetPeekHeight)
-        recyclerView.snackBarAnchor = activityUi.bottomAppBar
+        recyclerView?.apply {
+            val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
+            if (paddingBottom != bottomSheetPeekHeight)
+                setPadding(bottom = bottomSheetPeekHeight)
+            snackBarAnchor = activityUi.bottomAppBar
+        }
 
-        val actionModeCallback = if (viewModel.selectionIsEmpty) null
+        val actionModeCallback = if (viewModel.selectedItemCount.value == 0) null
                                  else this.actionModeCallback
         val activeSearchQuery = if (viewModel.searchFilter.value.isNullOrBlank()) null
                                 else viewModel.searchFilter.value
@@ -245,7 +234,7 @@ abstract class RecyclerViewFragment<T: BootyCrateItem> :
             actionMode: ListActionBar.ActionMode,
             actionBar: ListActionBar
         ) {
-            val selectionSize = viewModel.selectedItemCount.value ?: 0
+            val selectionSize = viewModel.selectedItemCount.value
             actionMode.title = actionModeTitle(selectionSize)
         }
     }

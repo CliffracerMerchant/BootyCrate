@@ -72,7 +72,7 @@ abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
         setItemAnimator(itemAnimator)
     }
 
-    private val selectionIsEmpty get() = (viewModel.selectedItemCount.value ?: 0) == 0
+    private val selectionIsEmpty get() = (viewModel.selectedItemCount.value) == 0
     private fun toggleSelected(id: Long) = viewModel.toggleIsSelected(id)
     private fun clearSelection() = viewModel.clearSelection()
 

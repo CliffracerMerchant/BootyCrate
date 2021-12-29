@@ -5,7 +5,8 @@
 package com.cliffracertech.bootycrate.database
 
 import android.app.Application
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import kotlinx.coroutines.Job
@@ -64,7 +65,7 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
     val sort = MutableStateFlow(BootyCrateItemSort.Color)
     val searchFilter = MutableStateFlow<String?>(null)
 
-    abstract val items: LiveData<List<T>>
+    abstract val items: StateFlow<List<T>>
 
     enum class NameIsAlreadyUsed { TrueForCurrentList, TrueForSiblingList, False }
 
@@ -75,8 +76,10 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
 
     private val _itemWithNameAlreadyExistsInShoppingList = MutableStateFlow(false)
     private val _itemWithNameAlreadyExistsInInventory = MutableStateFlow(false)
-    protected val itemWithNameAlreadyExistsInShoppingList get() = _itemWithNameAlreadyExistsInShoppingList.asStateFlow()
-    protected val itemWithNameAlreadyExistsInInventory get() = _itemWithNameAlreadyExistsInInventory.asStateFlow()
+    protected val itemWithNameAlreadyExistsInShoppingList get() =
+        _itemWithNameAlreadyExistsInShoppingList.asStateFlow()
+    protected val itemWithNameAlreadyExistsInInventory get() =
+        _itemWithNameAlreadyExistsInInventory.asStateFlow()
 
     private fun onNewItemNameUpdated() {
         viewModelScope.launch {
@@ -86,7 +89,7 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
                 dao.itemWithNameAlreadyExistsInInventory(newItemName, newItemExtraInfo)
         }
     }
-    abstract val newItemNameIsAlreadyUsed: LiveData<NameIsAlreadyUsed>
+    abstract val newItemNameIsAlreadyUsed: Flow<NameIsAlreadyUsed>
 
     abstract fun deleteAll(): Job
     abstract fun emptyTrash(): Job
@@ -130,7 +133,6 @@ class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<Shopping
         dao.getShoppingList(sort, sortByChecked, searchFilter)
     }.transformLatest { emitAll(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-        .asLiveData()
 
     override val newItemNameIsAlreadyUsed = combine(
         itemWithNameAlreadyExistsInShoppingList,
@@ -154,6 +156,9 @@ class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<Shopping
 
     override fun setExpandedItem(id: Long?) =
         viewModelScope.launch { dao.setExpandedShoppingListItem(id) }
+    }
+    override val selectedItemCount = dao.getSelectedShoppingListItemCount()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
 
     override val selectedItemCount = dao.getSelectedShoppingListItemCount().asLiveData()
 
@@ -196,7 +201,6 @@ class InventoryItemViewModel(app: Application) : BootyCrateViewModel<InventoryIt
         dao.getInventoryContents(sort, searchFilter)
     }.transformLatest { emitAll(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-        .asLiveData()
 
     override val newItemNameIsAlreadyUsed = combine(
         itemWithNameAlreadyExistsInInventory,
