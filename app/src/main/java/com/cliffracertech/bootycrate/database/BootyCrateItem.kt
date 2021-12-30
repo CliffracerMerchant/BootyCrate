@@ -111,6 +111,15 @@ abstract class BootyCrateItem(
             _ColorDescriptions = context.resources.getStringArray(R.array.bootycrate_item_color_descriptions)
         }
     }
+
+    enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
+        companion object {
+            fun fromString(string: String?) =
+                    if (string == null) Color
+                    else try { valueOf(string) }
+                    catch(e: IllegalArgumentException) { Color }
+        }
+    }
 }
 
 /** A BootyCrateItem subclass that provides an implementation of toDbBootyCrateItem

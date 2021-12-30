@@ -3,8 +3,8 @@
 
 BootyCrate is an open source shopping list and simple inventory management app built using Kotlin.
 Tech-stack components include:
-- Android Architecture Components (Room, ViewModel, LiveData)
-- MVVM paradigm (though without a repository layer at the moment)
+- Android Architecture Components (Room, ViewModel)
+- MVVM paradigm (without a repository layer at the moment, due to there being only one data source)
 - Kotlin coroutines, including Flows.
 - Espresso for end to end testing
     

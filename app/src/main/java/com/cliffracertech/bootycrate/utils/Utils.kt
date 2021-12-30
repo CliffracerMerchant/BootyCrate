@@ -22,7 +22,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.cliffracertech.bootycrate.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlin.reflect.KProperty
 
 /** Return a NotificationManager system service from the context. */
 fun notificationManager(context: Context) =
@@ -122,7 +124,7 @@ class MaxHeightLinearLayout(context: Context, attrs: AttributeSet) : LinearLayou
 }
 
 /** Set the View's padding, using the current values as defaults
- * so that not every value needs to be specified. **/
+ * so that not every value needs to be specified. */
 fun View.setPadding(
     left: Int = paddingLeft,
     top: Int = paddingTop,
@@ -132,9 +134,25 @@ fun View.setPadding(
 
 /** Call the provided block each time the LifecycleOwner receiver
  * enters Lifecycle.State.STARTED, and cancel the block when the
- * receiver's Lifecycle.State falls below this level. **/
+ * receiver's Lifecycle.State falls below this level. */
 fun LifecycleOwner.repeatWhenStarted(block: suspend CoroutineScope.() -> Unit) {
     lifecycleScope.launch {
         repeatOnLifecycle(Lifecycle.State.STARTED, block)
     }
 }
+
+/** An extension function that allows a MutableStateFlow<T>
+ * to act as a delegate for an immutable value of type T. */
+operator fun <T> MutableStateFlow<T>.getValue(
+    thisRef: Any,
+    property: KProperty<*>
+) = value
+
+/** An extension function that, when used with a corresponding
+ * MutableStateFlow<T>.getValue implementation, allows a MutableStateFlow<T>
+ * to act as a delegate for a mutable variable of type T. */
+operator fun <T> MutableStateFlow<T>.setValue(
+    thisRef: Any,
+    property: KProperty<*>,
+    value: T
+) { this.value = value }

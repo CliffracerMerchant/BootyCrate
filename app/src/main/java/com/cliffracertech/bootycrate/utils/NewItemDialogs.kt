@@ -130,9 +130,9 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             launch { itemViewModel.newItemNameIsAlreadyUsed.collect {
                 showWarningMessage(when (it) {
                     BootyCrateViewModel.NameIsAlreadyUsed.TrueForCurrentList ->
-                        WarningMessage.ItemWithSameNameAlreadyExistsInCollection
+                        WarningMessage.NameAlreadyInUseInCollection
                     BootyCrateViewModel.NameIsAlreadyUsed.TrueForSiblingList ->
-                        WarningMessage.ItemWithSameNameAlreadyExistsInOtherCollection
+                        WarningMessage.NameAlreadyInUseInOtherCollection
                     else ->//BootyCrateViewModel.NameIsAlreadyUsed.False
                         WarningMessage.None
                 })
@@ -171,8 +171,8 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
     abstract fun createItemFromView(): T
 
     enum class WarningMessage {
-        ItemWithSameNameAlreadyExistsInCollection,
-        ItemWithSameNameAlreadyExistsInOtherCollection,
+        NameAlreadyInUseInCollection,
+        NameAlreadyInUseInOtherCollection,
         ItemHasNoName,
         ItemHasNoInventoryId,
         None
@@ -190,9 +190,9 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             val context = this.context ?: return
 
             ui.warningMessage.text = when (warning) {
-                WarningMessage.ItemWithSameNameAlreadyExistsInCollection ->
+                WarningMessage.NameAlreadyInUseInCollection ->
                     itemWithNameAlreadyExistsInCollectionWarningMessage
-                WarningMessage.ItemWithSameNameAlreadyExistsInOtherCollection ->
+                WarningMessage.NameAlreadyInUseInOtherCollection ->
                     itemWithNameAlreadyExistsInOtherCollectionWarningMessage
                 WarningMessage.ItemHasNoInventoryId ->
                     itemHasNoInventoryIdErrorMessage

@@ -19,15 +19,18 @@ import kotlinx.coroutines.flow.Flow
             "bootycrate_item.id, bootycrate_item.name, extraInfo, color, " +
             "shoppingListAmount as amount, expandedInShoppingList as isExpanded, " +
             "selectedInShoppingList as isSelected, $inInventory as isLinked, isChecked"
+
         private const val inventoryItemFields =
             "bootycrate_item.id, bootycrate_item.name, extraInfo, color, " +
             "inventoryAmount as amount, expandedInInventory as isExpanded, " +
             "selectedInInventory as isSelected, $onShoppingList as isLinked, " +
             "autoAddToShoppingList, autoAddToShoppingListAmount"
+
         private const val selectShoppingListItems =
             "SELECT $shoppingListItemFields FROM bootycrate_item " +
             "JOIN inventory ON bootycrate_item.inventoryId = inventory.id " +
             "WHERE $likeSearchFilter AND $onShoppingList AND inventory.isSelected"
+
         private const val selectInventoryItems =
             "SELECT $inventoryItemFields FROM bootycrate_item " +
             "JOIN inventory ON bootycrate_item.inventoryId = inventory.id " +
@@ -86,23 +89,23 @@ import kotlinx.coroutines.flow.Flow
     protected abstract fun getShoppingListSortedByAmountDescAndChecked(filter: String): Flow<List<ShoppingListItem>>
 
     fun getShoppingList(
-        sort: BootyCrateItemSort,
+        sort: BootyCrateItem.Sort,
+        searchFilter: String?,
         sortByChecked: Boolean,
-        searchFilter: String? = null
     ): Flow<List<ShoppingListItem>> {
         val filter = "%${searchFilter ?: ""}%"
         return if (!sortByChecked) when (sort) {
-            BootyCrateItemSort.Color -> getShoppingListSortedByColor(filter)
-            BootyCrateItemSort.NameAsc -> getShoppingListSortedByNameAsc(filter)
-            BootyCrateItemSort.NameDesc -> getShoppingListSortedByNameDesc(filter)
-            BootyCrateItemSort.AmountAsc -> getShoppingListSortedByAmountAsc(filter)
-            BootyCrateItemSort.AmountDesc -> getShoppingListSortedByAmountDesc(filter)
+            BootyCrateItem.Sort.Color -> getShoppingListSortedByColor(filter)
+            BootyCrateItem.Sort.NameAsc -> getShoppingListSortedByNameAsc(filter)
+            BootyCrateItem.Sort.NameDesc -> getShoppingListSortedByNameDesc(filter)
+            BootyCrateItem.Sort.AmountAsc -> getShoppingListSortedByAmountAsc(filter)
+            BootyCrateItem.Sort.AmountDesc -> getShoppingListSortedByAmountDesc(filter)
         } else when (sort) {
-            BootyCrateItemSort.Color -> getShoppingListSortedByColorAndChecked(filter)
-            BootyCrateItemSort.NameAsc -> getShoppingListSortedByNameAscAndChecked(filter)
-            BootyCrateItemSort.NameDesc -> getShoppingListSortedByNameDescAndChecked(filter)
-            BootyCrateItemSort.AmountAsc -> getShoppingListSortedByAmountAscAndChecked(filter)
-            BootyCrateItemSort.AmountDesc -> getShoppingListSortedByAmountDescAndChecked(filter)
+            BootyCrateItem.Sort.Color -> getShoppingListSortedByColorAndChecked(filter)
+            BootyCrateItem.Sort.NameAsc -> getShoppingListSortedByNameAscAndChecked(filter)
+            BootyCrateItem.Sort.NameDesc -> getShoppingListSortedByNameDescAndChecked(filter)
+            BootyCrateItem.Sort.AmountAsc -> getShoppingListSortedByAmountAscAndChecked(filter)
+            BootyCrateItem.Sort.AmountDesc -> getShoppingListSortedByAmountDescAndChecked(filter)
         }
     }
 
@@ -110,7 +113,7 @@ import kotlinx.coroutines.flow.Flow
                          "JOIN inventory ON bootycrate_item.inventoryId = inventory.id " +
                          "WHERE inventory.isSelected AND $onShoppingList " +
                          "AND bootycrate_item.name = :name AND extraInfo = :extraInfo)")
-    abstract suspend fun itemWithNameAlreadyExistsInShoppingList(name: String, extraInfo: String): Boolean
+    abstract suspend fun nameAlreadyUsedInShoppingList(name: String, extraInfo: String): Boolean
 
     @Query("UPDATE bootycrate_item SET shoppingListAmount = :amount WHERE id = :id")
     abstract suspend fun updateShoppingListAmount(id: Long, amount: Int)
@@ -242,16 +245,16 @@ import kotlinx.coroutines.flow.Flow
     protected abstract fun getInventorySortedByAmountDesc(filter: String): Flow<List<InventoryItem>>
 
     fun getInventoryContents(
-        sort: BootyCrateItemSort,
+        sort: BootyCrateItem.Sort,
         searchFilter: String? = null
     ): Flow<List<InventoryItem>> {
         val filter = "%${searchFilter ?: ""}%"
         return when (sort) {
-            BootyCrateItemSort.Color -> getInventorySortedByColor(filter)
-            BootyCrateItemSort.NameAsc -> getInventorySortedByNameAsc(filter)
-            BootyCrateItemSort.NameDesc -> getInventorySortedByNameDesc(filter)
-            BootyCrateItemSort.AmountAsc -> getInventorySortedByAmountAsc(filter)
-            BootyCrateItemSort.AmountDesc -> getInventorySortedByAmountDesc(filter)
+            BootyCrateItem.Sort.Color -> getInventorySortedByColor(filter)
+            BootyCrateItem.Sort.NameAsc -> getInventorySortedByNameAsc(filter)
+            BootyCrateItem.Sort.NameDesc -> getInventorySortedByNameDesc(filter)
+            BootyCrateItem.Sort.AmountAsc -> getInventorySortedByAmountAsc(filter)
+            BootyCrateItem.Sort.AmountDesc -> getInventorySortedByAmountDesc(filter)
         }
     }
 
@@ -259,7 +262,7 @@ import kotlinx.coroutines.flow.Flow
                          "JOIN inventory ON bootycrate_item.inventoryId = inventory.id " +
                          "WHERE $inInventory AND bootycrate_item.name = :name " +
                          "AND extraInfo = :extraInfo AND inventory.isSelected)")
-    abstract suspend fun itemWithNameAlreadyExistsInInventory(name: String, extraInfo: String): Boolean
+    abstract suspend fun nameAlreadyUsedInInventory(name: String, extraInfo: String): Boolean
 
     @Query("UPDATE bootycrate_item SET inventoryAmount = :amount WHERE id = :id")
     abstract suspend fun updateInventoryAmount(id: Long, amount: Int)

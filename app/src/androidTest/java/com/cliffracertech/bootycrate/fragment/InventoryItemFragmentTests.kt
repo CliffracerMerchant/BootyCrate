@@ -60,7 +60,7 @@ class InventoryItemFragmentTests {
     @Before fun setup() {
         activityRule.scenario.onActivity {
             val inventoryItemViewModel: InventoryItemViewModel by it.viewModels()
-            inventoryItemViewModel.sort.value = BootyCrateItemSort.Color
+            inventoryItemViewModel.sort = BootyCrateItem.Sort.Color
         }
         runBlocking {
             dao.deleteAllShoppingListItems()
