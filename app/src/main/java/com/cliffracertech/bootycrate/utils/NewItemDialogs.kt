@@ -24,19 +24,19 @@ import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
-import com.cliffracertech.bootycrate.recyclerview.InventoryPicker
+import com.cliffracertech.bootycrate.recyclerview.ItemGroupPicker
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
- * An abstract DialogFragment to create a new BootyCrateItem.
+ * An abstract DialogFragment to create a new ListItem.
  *
- * NewBootyCrateItemDialog is an abstract DialogFragment for creating new
- * BootyCrateItems. By default it fills the newItemViewContainer ui element
- * with a ExpandableSelectableItemView instance. If this needs to be overridden
- * in a subclass, call the constructor with the useDefaultLayoutParameter set
- * to false. If this is done, the subclass must initialize the newItemView
- * member before onCreateDialog, or an exception will be thrown.
+ * NewListItemDialog is an abstract DialogFragment for creating new ListItems.
+ * By default it fills the newItemViewContainer ui element with a ExpandableSelectableItemView
+ * instance. If this needs to be overridden in a subclass, call the constructor
+ * with the useDefaultLayoutParameter set to false. If this is done, the
+ * subclass must initialize the newItemView member before onCreateDialog, or an
+ * exception will be thrown.
  *
  * The abstract function createItemFromView must be overridden in subclasses
  * with an implementation that returns a T instance that reflects the
@@ -55,25 +55,25 @@ import kotlinx.coroutines.launch
  * instead. These values must be overridden in subclasses with the message that
  * should be displayed in either case.
  */
-abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
+abstract class NewListItemDialog<T: ListItem>(
     context: Context,
     useDefaultLayout: Boolean = true
 ) : DialogFragment() {
     abstract val itemViewModel: BootyCrateViewModel<T>
-    private val inventoryViewModel: InventoryViewModel by activityViewModels()
+    private val itemGroupViewModel: ItemGroupViewModel by activityViewModels()
 
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
     protected var ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
     protected lateinit var newItemView: ExpandableSelectableItemView<T>
-    protected var targetInventoryId: Long? = null
+    protected var targetGroupId: Long? = null
         private set
 
-    abstract val inventoryPickerPrompt: String
     abstract val itemWithNameAlreadyExistsInCollectionWarningMessage: String
     abstract val itemWithNameAlreadyExistsInOtherCollectionWarningMessage: String
-    abstract val itemHasNoInventoryIdErrorMessage: String
+    private val itemGroupPickerPrompt = context.getString(R.string.select_an_item_group_message)
+    private val itemHasNoGroupIdErrorMessage = context.getString(R.string.new_item_has_no_item_group_error_message)
 
     init {
         if (useDefaultLayout)
@@ -138,34 +138,32 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                         WarningMessage.None
                 })
             }}
-            updateSelectedInventoryPicker()
+            initSelectedItemGroupPicker()
         }
     }
 
-    /** Initialize the targetInventoryId field with the id of the only selected
-     * inventory if there is only one selected inventory, or show the inventory
-     * picker to the user otherwise to allow them to specify which inventory /
-     * shopping list to add the item to.*/
-    private suspend fun updateSelectedInventoryPicker() {
-        val selectedInventories = inventoryViewModel.getSelectedInventoriesNow()
-        if (selectedInventories.size == 1) {
-            targetInventoryId = selectedInventories.first().id
+    /** Initialize the targetGroupId field with the id of the only selected
+     * item group if there is only one selected group, or show the item group
+     * picker to the user otherwise to allow them to specify which item group
+     * to add the item to.*/
+    private fun initSelectedItemGroupPicker() {
+        val selectedGroups = itemGroupViewModel.selectedItemGroups
+        if (selectedGroups.size == 1) {
+            targetGroupId = selectedGroups.first().id
             return
         }
-        val container = ui.inventoryPickerStub.inflate()
-        val inventoryPicker = container.findViewById<InventoryPicker>(R.id.inventoryPicker)
-        if (inventoryPicker != null) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                inventoryViewModel.selectedInventories.collect(inventoryPicker::submitList)
-            }
-            inventoryPicker.onChosenInventoryIdChanged = {
-                targetInventoryId = it
-                if (it != null && shownWarningMessage == WarningMessage.ItemHasNoInventoryId)
+        val container = ui.itemGroupPickerStub.inflate()
+        val itemGroupPicker = container.findViewById<ItemGroupPicker>(R.id.itemGroupPicker)
+        if (itemGroupPicker != null) {
+            itemGroupPicker.submitList(selectedGroups)
+            itemGroupPicker.onChosenGroupIdChanged = {
+                targetGroupId = it
+                if (it != null && shownWarningMessage == WarningMessage.ItemHasNoGroupId)
                     clearWarningMessageAndEnableButtons()
             }
         }
-        val message = container.findViewById<TextView>(R.id.inventoryPickerPrompt)
-        message?.text = inventoryPickerPrompt
+        val message = container.findViewById<TextView>(R.id.itemGroupPickerPrompt)
+        message?.text = itemGroupPickerPrompt
     }
 
     open fun resetNewItemView(): Unit = with(newItemView) {
@@ -184,14 +182,14 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
             addAnotherButton.isEnabled = false
             okButton.isEnabled = false
             false
-        } targetInventoryId == null -> {
-            showWarningMessage(WarningMessage.ItemHasNoInventoryId)
+        } targetGroupId == null -> {
+            showWarningMessage(WarningMessage.ItemHasNoGroupId)
             addAnotherButton.isEnabled = false
             okButton.isEnabled = false
             SoftKeyboard.hide(ui.root)
             false
         } else -> {
-            itemViewModel.add(createItemFromView(), targetInventoryId!!)
+            itemViewModel.add(createItemFromView(), targetGroupId!!)
             true
         }}
 
@@ -201,7 +199,7 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
         NameAlreadyInUseInCollection,
         NameAlreadyInUseInOtherCollection,
         ItemHasNoName,
-        ItemHasNoInventoryId,
+        ItemHasNoGroupId,
         None
     }
 
@@ -221,12 +219,12 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                     itemWithNameAlreadyExistsInCollectionWarningMessage
                 WarningMessage.NameAlreadyInUseInOtherCollection ->
                     itemWithNameAlreadyExistsInOtherCollectionWarningMessage
-                WarningMessage.ItemHasNoInventoryId ->
-                    itemHasNoInventoryIdErrorMessage
+                WarningMessage.ItemHasNoGroupId ->
+                    itemHasNoGroupIdErrorMessage
                 else -> context.getString(R.string.new_item_no_name_error)
             }
             val iconResId = if (warning == WarningMessage.ItemHasNoName ||
-                warning == WarningMessage.ItemHasNoInventoryId)
+                warning == WarningMessage.ItemHasNoGroupId)
                 R.drawable.ic_baseline_error_24
             else R.drawable.ic_round_warning_24
             val icon = ContextCompat.getDrawable(context, iconResId)
@@ -247,19 +245,15 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
 
 /** Open a dialog to create a new shopping list item. */
 class NewShoppingListItemDialog(context: Context) :
-    NewBootyCrateItemDialog<ShoppingListItem>(context)
+    NewListItemDialog<ShoppingListItem>(context)
 {
     override val itemViewModel: ShoppingListItemViewModel by activityViewModels()
 
-    override val inventoryPickerPrompt =
-        context.getString(R.string.select_a_shopping_list_message)
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_shopping_list_item_duplicate_name_warning)
     override val itemWithNameAlreadyExistsInOtherCollectionWarningMessage =
         context.getString(R.string.new_shopping_list_item_will_not_be_linked_warning,
                           context.getString(R.string.add_to_shopping_list_description))
-    override val itemHasNoInventoryIdErrorMessage =
-        context.getString(R.string.new_shopping_list_item_has_no_inventory_id_error_message)
 
     init { newItemView.ui.checkBox.setInColorEditMode(true, animate = false) }
 
@@ -274,20 +268,16 @@ class NewShoppingListItemDialog(context: Context) :
 
 /** Open a dialog to create a new inventory item. */
 class NewInventoryItemDialog(context: Context) :
-    NewBootyCrateItemDialog<InventoryItem>(context, useDefaultLayout = false)
+    NewListItemDialog<InventoryItem>(context, useDefaultLayout = false)
 {
     override val itemViewModel: InventoryItemViewModel by activityViewModels()
     private val newInventoryItemView = InventoryItemView(context, null)
 
-    override val inventoryPickerPrompt =
-        context.getString(R.string.select_an_inventory_message)
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_inventory_item_duplicate_name_warning)
     override val itemWithNameAlreadyExistsInOtherCollectionWarningMessage =
         context.getString(R.string.new_inventory_item_will_not_be_linked_warning,
                           context.getString(R.string.add_to_inventory_description))
-    override val itemHasNoInventoryIdErrorMessage =
-        context.getString(R.string.new_inventory_item_has_no_inventory_id_error_message)
 
     init {
         newItemView = newInventoryItemView.apply {

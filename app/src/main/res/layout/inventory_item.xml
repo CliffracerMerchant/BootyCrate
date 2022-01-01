@@ -7,9 +7,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
     tools:layout_height="wrap_content"
+    tools:background="@drawable/list_item_selected"
     tools:style="@style/RecyclerViewItemStyle" >
 
-    <include layout="@layout/booty_crate_item" />
+    <include layout="@layout/list_item" />
 
     <include layout="@layout/inventory_item_details" />
 

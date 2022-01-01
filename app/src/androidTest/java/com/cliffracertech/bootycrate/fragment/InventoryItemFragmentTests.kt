@@ -50,8 +50,8 @@ class InventoryItemFragmentTests {
     private val dao = db.itemDao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
-    private val inventoryId = db.run { runBlocking { inventoryDao().deleteAll() }
-                                       inventoryDao().getAllNow()[0].id }
+    private val itemGroupId = db.run { runBlocking { itemGroupDao().deleteAll() }
+                                       itemGroupDao().getAllNow()[0].id }
     private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
     private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
     private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1)
@@ -60,12 +60,12 @@ class InventoryItemFragmentTests {
     @Before fun setup() {
         activityRule.scenario.onActivity {
             val inventoryItemViewModel: InventoryItemViewModel by it.viewModels()
-            inventoryItemViewModel.sort = BootyCrateItem.Sort.Color
+            inventoryItemViewModel.sort = ListItem.Sort.Color
         }
         runBlocking {
             dao.deleteAllShoppingListItems()
             dao.deleteAllInventoryItems()
-            dao.addConvertibles(inventoryId, listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
+            dao.addConvertibles(itemGroupId, listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
         onView(withId(R.id.inventoryButton)).perform(click())
     }
@@ -316,7 +316,7 @@ class InventoryItemFragmentTests {
 
     @Test fun emptyMessageDisappears() {
         emptyMessageAppears()
-        runBlocking{ dao.add(InventoryItem(name = "new item").toDbBootyCrateItem(inventoryId)) }
+        runBlocking{ dao.add(InventoryItem(name = "new item").toDbListItem(itemGroupId)) }
         Thread.sleep(30L)
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))

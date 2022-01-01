@@ -51,8 +51,8 @@ class ShoppingListFragmentTests {
     private val dao = db.itemDao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
-    private val inventoryId = db.run { runBlocking { inventoryDao().deleteAll() }
-                                       inventoryDao().getAllNow()[0].id }
+    private val inventoryId = db.run { runBlocking { itemGroupDao().deleteAll() }
+                                       itemGroupDao().getAllNow()[0].id }
     private var redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
     private var orangeItem1 = ShoppingListItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
     private var yellowItem2 = ShoppingListItem(name = "Yellow", color = 2, amount = 1)
@@ -62,7 +62,7 @@ class ShoppingListFragmentTests {
         activityRule.scenario.onActivity {
             val shoppingListItemViewModel: ShoppingListItemViewModel by it.viewModels()
             shoppingListItemViewModel.sortByChecked = false
-            shoppingListItemViewModel.sort = BootyCrateItem.Sort.Color
+            shoppingListItemViewModel.sort = ListItem.Sort.Color
             val prefs = PreferenceManager.getDefaultSharedPreferences(it)
             prefs.edit().putBoolean(it.getString(R.string.pref_sort_by_checked_key), false).apply()
         }
@@ -304,7 +304,7 @@ class ShoppingListFragmentTests {
 
     @Test fun emptyMessageDisappears() {
         emptyMessageAppears()
-        runBlocking { dao.add(ShoppingListItem(name = "new item").toDbBootyCrateItem(inventoryId)) }
+        runBlocking { dao.add(ShoppingListItem(name = "new item").toDbListItem(inventoryId)) }
         Thread.sleep(30L)
         onView(emptyRecyclerViewMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))

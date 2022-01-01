@@ -15,10 +15,10 @@ import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.InventoryViewModel
+import com.cliffracertech.bootycrate.database.ItemGroupViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
-import com.cliffracertech.bootycrate.recyclerview.InventorySelectorOptionsMenu
+import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
 import kotlinx.coroutines.flow.collect
 
@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.collect
  * they are displayed.
  */
 class MainActivity : BottomNavViewActivity() {
-    private val inventoryViewModel: InventoryViewModel by viewModels()
+    private val itemGroupViewModel: ItemGroupViewModel by viewModels()
 
     lateinit var ui: MainActivityBinding
     private var pendingCradleAnim: Animator? = null
@@ -52,11 +52,11 @@ class MainActivity : BottomNavViewActivity() {
         initGradientStyle()
 
         repeatWhenStarted {
-            inventoryViewModel.inventories.collect(ui.inventorySelector::submitList)
+            itemGroupViewModel.itemGroups.collect(ui.itemGroupSelector::submitList)
         }
-        ui.inventorySelector.onItemClick = inventoryViewModel::updateIsSelected
-        ui.inventorySelector.onItemRenameRequest = inventoryViewModel::updateName
-        ui.inventorySelector.onItemDeletionRequest = inventoryViewModel::delete
+        ui.itemGroupSelector.onItemClick = itemGroupViewModel::updateIsSelected
+        ui.itemGroupSelector.onItemRenameRequest = itemGroupViewModel::updateName
+        ui.itemGroupSelector.onItemDeletionRequest = itemGroupViewModel::delete
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
@@ -126,15 +126,15 @@ class MainActivity : BottomNavViewActivity() {
         ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
-        ui.addInventoryButton.setOnClickListener {
-            inventoryNameDialog(this, null, inventoryViewModel::add)
+        ui.addItemGroupButton.setOnClickListener {
+            itemGroupNameDialog(this, null, itemGroupViewModel::add)
         }
-        ui.inventorySelectorOptionsButton.setOnClickListener {
-            InventorySelectorOptionsMenu(
-                anchor = ui.inventorySelectorOptionsButton,
-                multiSelectInventories = inventoryViewModel.multiSelect.value,
-                onMultiSelectCheckboxClick = inventoryViewModel::toggleMultiSelect,
-                onSelectAllClick = inventoryViewModel::selectAll
+        ui.itemGroupSelectorOptionsButton.setOnClickListener {
+            ItemGroupSelectorOptionsMenu(
+                anchor = ui.itemGroupSelectorOptionsButton,
+                multiSelectInventories = itemGroupViewModel.multiSelect,
+                onMultiSelectCheckboxClick = itemGroupViewModel::toggleMultiSelect,
+                onSelectAllClick = itemGroupViewModel::selectAll
             ).show()
         }
     }

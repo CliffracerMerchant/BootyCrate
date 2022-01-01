@@ -23,34 +23,34 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.InventorySummary
-import com.cliffracertech.bootycrate.databinding.InventoryViewBinding
-import com.cliffracertech.bootycrate.utils.deleteInventoryDialog
+import com.cliffracertech.bootycrate.database.ItemGroup
+import com.cliffracertech.bootycrate.databinding.ItemGroupBinding
+import com.cliffracertech.bootycrate.utils.deleteItemGroupDialog
 import com.cliffracertech.bootycrate.utils.dpToPixels
-import com.cliffracertech.bootycrate.utils.inventoryNameDialog
+import com.cliffracertech.bootycrate.utils.itemGroupNameDialog
 import java.util.*
 
 /**
- * A view to display a list of InventorySummary instances.
+ * A view to display a list of ItemGroup instances.
  *
- * The list of InventorySummary instances that will be displayed is set through
- * the function submitList. InventoryList's adapter type uses a custom
- * DiffUtil.ItemCallback to support full and partial binding of the InventoryView
- * instances it uses to display each InventorySummary in the submitted list,
- * but does not provide any onClickListeners or callbacks for item interactions.
+ * The list of ItemGroup instances that will be displayed is set through the
+ * function submitList. ItemGroupList's adapter type uses a custom
+ * DiffUtil.ItemCallback to support full and partial binding of the ItemGroupView
+ * instances it uses to display each ItemGroup in the submitted list, but does
+ * not provide any onClickListeners or callbacks for item interactions.
  *
- * InventoryList does not set its own adapter, as it is assumed that
- * subclasses will override InventoryListAdapter with their own implementation.
+ * ItemGroupList does not set its own adapter, as it is assumed that
+ * subclasses will override ItemGroupListAdapter with their own implementation.
  * It does set its layoutManager to a vertical LinearLayoutManager (due to the
- * stretched horizontal aspect ratio of InventoryViews making another layout
+ * stretched horizontal aspect ratio of ItemGroupView's making another layout
  * type impractical), and it provides its own item spacing decoration with
  * spacing equal to to the value of the dimension R.dimen.recycler_view_item_spacing,
  * or 0 if the dimension resource is not found.
  */
-open class InventoryList(context: Context, attrs: AttributeSet?) :
+open class ItemGroupList(context: Context, attrs: AttributeSet?) :
     RecyclerView(context, attrs)
 {
-    protected open val listAdapter: InventoryListAdapter = InventoryListAdapter()
+    protected open val listAdapter: ItemGroupListAdapter = ItemGroupListAdapter()
 
     init {
         setHasFixedSize(true)
@@ -60,22 +60,22 @@ open class InventoryList(context: Context, attrs: AttributeSet?) :
         addItemDecoration(ItemSpacingDecoration(spacing))
     }
 
-    fun submitList(list: List<InventorySummary>) = listAdapter.submitList(list)
+    fun submitList(list: List<ItemGroup>) = listAdapter.submitList(list)
 
     final override fun setAdapter(adapter: Adapter<*>?) {
-        if (this.adapter == null && adapter is InventoryListAdapter)
+        if (this.adapter == null && adapter is ItemGroupListAdapter)
             super.setAdapter(adapter)
     }
 
-    /** A ListAdapter to display a list of InventorySummary instances.
+    /** A ListAdapter to display a list of ItemGroup instances.
      *
-     * InventoryListAdapter enforces the use of stable ids for its items,
-     * enforces the use of the InventoryViewHolder as its view holder type, and
+     * ItemGroupListAdapter enforces the use of stable ids for its items,
+     * enforces the use of the ItemGroupViewHolder as its view holder type, and
      * provides implementations for all of ListAdapter's abstract methods.
-     * InventoryListAdapter is open to allow for subclasses that wish to
+     * ItemGroupListAdapter is open to allow for subclasses that wish to
      * provide further customization in, e.g., onCreateViewHolder.*/
-    protected open inner class InventoryListAdapter :
-        ListAdapter<InventorySummary, InventoryViewHolder>(DiffUtilCallback())
+    protected open inner class ItemGroupListAdapter :
+        ListAdapter<ItemGroup, ItemGroupViewHolder>(DiffUtilCallback())
     {
         init { setHasStableIds(true) }
 
@@ -85,17 +85,17 @@ open class InventoryList(context: Context, attrs: AttributeSet?) :
 
         override fun getItemCount() = currentList.size
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InventoryViewHolder {
-            val view = InventoryView(context)
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ItemGroupViewHolder {
+            val view = ItemGroupView(context)
             view.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                              ViewGroup.LayoutParams.WRAP_CONTENT)
-            return InventoryViewHolder(view)
+            return ItemGroupViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: InventoryViewHolder, position: Int) =
+        override fun onBindViewHolder(holder: ItemGroupViewHolder, position: Int) =
             holder.view.update(getItem(position))
 
-        override fun onBindViewHolder(holder: InventoryViewHolder, position: Int, payloads: MutableList<Any>) {
+        override fun onBindViewHolder(holder: ItemGroupViewHolder, position: Int, payloads: MutableList<Any>) {
             if (payloads.size == 0)
                 return onBindViewHolder(holder, position)
 
@@ -115,20 +115,20 @@ open class InventoryList(context: Context, attrs: AttributeSet?) :
         }
     }
 
-    inner class InventoryViewHolder(view: InventoryView) : RecyclerView.ViewHolder(view) {
-        val view get() = itemView as InventoryView
+    inner class ItemGroupViewHolder(view: ItemGroupView) : RecyclerView.ViewHolder(view) {
+        val view get() = itemView as ItemGroupView
     }
 
     protected enum class Field { Name, ShoppingListItemCount, InventoryItemCount, IsSelected }
 
-    private class DiffUtilCallback : DiffUtil.ItemCallback<InventorySummary>() {
+    private class DiffUtilCallback : DiffUtil.ItemCallback<ItemGroup>() {
         private val listChanges = mutableMapOf<Long, EnumSet<Field>>()
         private val itemChanges = EnumSet.noneOf(Field::class.java)
 
-        override fun areItemsTheSame(oldItem: InventorySummary, newItem: InventorySummary) =
+        override fun areItemsTheSame(oldItem: ItemGroup, newItem: ItemGroup) =
             oldItem.id == newItem.id
 
-        override fun areContentsTheSame(oldItem: InventorySummary, newItem: InventorySummary) =
+        override fun areContentsTheSame(oldItem: ItemGroup, newItem: ItemGroup) =
             itemChanges.apply {
                 clear()
                 if (newItem.name != oldItem.name)
@@ -144,29 +144,29 @@ open class InventoryList(context: Context, attrs: AttributeSet?) :
                     listChanges[newItem.id] = EnumSet.copyOf(this)
             }.isEmpty()
 
-        override fun getChangePayload(oldItem: InventorySummary, newItem: InventorySummary) =
+        override fun getChangePayload(oldItem: ItemGroup, newItem: ItemGroup) =
             listChanges.remove(newItem.id)
     }
 }
 
 /**
- * An InventoryList to display and allow for editing of a list of InventorySummary instances.
+ * An ItemGroupList to display and allow for editing of a list of ItemGroup instances.
  *
- * InventorySelector displays the list of InventorySummary instances submitted
- * through InventoriesList.submitList, and provides modifiable callback members
- * that can be used to respond to item UI interaction.
+ * ItemGroupSelector displays the list of ItemGroup instances submitted through
+ * ItemGroupList.submitList, and provides modifiable callback members that can
+ * be used to respond to item UI interaction.
  *
- * InventorySelector implements a popup menu that is displayed when the user
- * taps the options button for an inventory, and provides menu items that open
- * dialogs to allow renaming or deleting of items.
+ * ItemGroupSelector implements a popup menu that is displayed when the user
+ * taps the options button for an item group, and provides menu items that open
+ * dialogs to allow renaming or deleting of item groups.
  *
- * Clicks on an inventory will trigger InventorySelector's onItemClick callback
- * if not null, while confirming the rename or delete dialogs will call
+ * Clicks on an item group will trigger ItemGroupSelector's onItemClick
+ * callback if not null, while confirming the rename or delete dialogs will call
  * onItemRenameRequest or onItemDeletionRequest, respectively, if they are not
  * null.
  */
-class InventorySelector(context: Context, attrs: AttributeSet?) :
-    InventoryList(context, attrs)
+class ItemGroupSelector(context: Context, attrs: AttributeSet?) :
+    ItemGroupList(context, attrs)
 {
     override val listAdapter = Adapter()
 
@@ -176,23 +176,23 @@ class InventorySelector(context: Context, attrs: AttributeSet?) :
 
     init { adapter = listAdapter }
 
-    val InventoryViewHolder.item: InventorySummary get() =
+    val ItemGroupViewHolder.item: ItemGroup get() =
         listAdapter.currentList[adapterPosition]
 
-    protected inner class Adapter: InventoryListAdapter() {
+    protected inner class Adapter: ItemGroupListAdapter() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             super.onCreateViewHolder(parent, viewType).apply {
                 view.setOnClickListener { onItemClick?.invoke(item.id) }
                 view.ui.optionsButton.setOnClickListener {
                     val menu = PopupMenu(context, view.ui.optionsButton)
-                    menu.inflate(R.menu.inventory_options)
+                    menu.inflate(R.menu.item_group_options)
                     menu.setOnMenuItemClickListener {
-                        if (it.itemId == R.id.renameInventoryButton)
-                            inventoryNameDialog(context, item.name) { newName ->
+                        if (it.itemId == R.id.renameItemGroupButton)
+                            itemGroupNameDialog(context, item.name) { newName ->
                                 onItemRenameRequest?.invoke(item.id, newName)
                             }
-                        else /*R.id.deleteInventoryButton*/
-                            deleteInventoryDialog(context) {
+                        else /*R.id.deleteItemGroupButton*/
+                            deleteItemGroupDialog(context) {
                                 onItemDeletionRequest?.invoke(item.id)
                             }
                         true
@@ -204,13 +204,13 @@ class InventorySelector(context: Context, attrs: AttributeSet?) :
 }
 
 /** An options menu that provides a toggle checkbox for multi-selecting
- * inventories, as well as a select all button.
+ * item groups, as well as a select all button.
  *
  * @param anchor: The view that the menu will be anchored to.
- * @param multiSelectInventories Whether or not the multi-select inventories checkbox will be checked.
- * @param onMultiSelectCheckboxClick The callback that will be invoked when the multi-select inventories checkbox is clicked.
+ * @param multiSelectInventories Whether or not the multi-select item groups checkbox will be checked.
+ * @param onMultiSelectCheckboxClick The callback that will be invoked when the multi-select item groups checkbox is clicked.
  * @param onSelectAllClick The callback that will be invoked when the select all item is clicked. */
-class InventorySelectorOptionsMenu(
+class ItemGroupSelectorOptionsMenu(
     anchor: View,
     multiSelectInventories: Boolean,
     onMultiSelectCheckboxClick: () -> Unit,
@@ -221,16 +221,16 @@ class InventorySelectorOptionsMenu(
     private val selectAllButton: MenuItem
 
     init {
-        inflate(R.menu.inventory_selector_options)
-        multiSelectCheckBox = menu.findItem(R.id.multiSelectInventoriesSwitch)
-        selectAllButton = menu.findItem(R.id.selectAllInventories)
+        inflate(R.menu.item_group_selector_options)
+        multiSelectCheckBox = menu.findItem(R.id.multiSelectGroupsSwitch)
+        selectAllButton = menu.findItem(R.id.selectAllGroups)
         multiSelectCheckBox.isChecked = multiSelectInventories
         selectAllButton.isEnabled = multiSelectInventories
 
         setOnMenuItemClickListener {
-            if (it.itemId == R.id.multiSelectInventoriesSwitch)
+            if (it.itemId == R.id.multiSelectGroupsSwitch)
                 onMultiSelectCheckboxClick()
-            if (it.itemId == R.id.selectAllInventories)
+            if (it.itemId == R.id.selectAllGroups)
                 onSelectAllClick()
             true
         }
@@ -238,47 +238,46 @@ class InventorySelectorOptionsMenu(
 }
 
 /**
- * An InventoryList that allows the user to pick a single inventory from among the list of inventories.
+ * An ItemGroupList that allows the user to pick a single item group from among a list of them.
  *
- * InventoryPicker, when provided with a list of InventorySummary instances
- * through InventoryList.submitList, will allow the user to pick from among
- * these inventories by tapping on one. The currently chosen inventory is
- * visually indicated by setting the corresponding InventoryView's isSelected
- * property to true. The id of the currently chosen inventory, or null if one
- * has not been chosen yet, can be queried with the property chosenInventoryId.
- * If the user picks a new inventory, the member onChosenInventoryIdChanged
- * will be called if it is not null.
+ * ItemGroupPicker, when provided with a list of ItemGroup instances through
+ * ItemGroupList.submitList, will allow the user to pick from among these item
+ * groups by tapping on one. The currently chosen group is visually indicated
+ * by setting the corresponding ItemGroupView's isSelected property to true.
+ * The id of the currently chosen group, or null if one has not been chosen yet,
+ * can be queried with the property chosenGroupId. If the user picks a new
+ * group, the member onChosenGroupIdChanged will be called if it is not null.
  */
-class InventoryPicker(context: Context, attrs: AttributeSet) : InventoryList(context, attrs) {
+class ItemGroupPicker(context: Context, attrs: AttributeSet) : ItemGroupList(context, attrs) {
 
     override val listAdapter = Adapter()
 
     private var chosenPosition: Int? = null
-    val chosenInventoryId get() = listAdapter.currentList.getOrNull(chosenPosition ?: -1)?.id
-    var onChosenInventoryIdChanged: ((Long?) -> Unit)? = null
+    val chosenGroupId get() = listAdapter.currentList.getOrNull(chosenPosition ?: -1)?.id
+    var onChosenGroupIdChanged: ((Long?) -> Unit)? = null
 
     init { adapter = listAdapter }
 
-    val InventoryViewHolder.item: InventorySummary get() = listAdapter.currentList[adapterPosition]
+    val ItemGroupViewHolder.item: ItemGroup get() = listAdapter.currentList[adapterPosition]
 
-    protected inner class Adapter: InventoryListAdapter() {
+    protected inner class Adapter: ItemGroupListAdapter() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             super.onCreateViewHolder(parent, viewType).apply {
                 view.ui.optionsButton.layoutParams.width = resources.dpToPixels(12f).toInt()
                 view.ui.optionsButton.isInvisible = true
                 view.setOnClickListener {
-                    if (chosenInventoryId == item.id) return@setOnClickListener
+                    if (chosenGroupId == item.id) return@setOnClickListener
 
                     val selectedViewHolder = findViewHolderForAdapterPosition(chosenPosition ?: -1)
                     selectedViewHolder?.itemView?.isSelected = false
 
                     view.isSelected = true
                     chosenPosition = adapterPosition
-                    onChosenInventoryIdChanged?.invoke(chosenInventoryId)
+                    onChosenGroupIdChanged?.invoke(chosenGroupId)
                 }
             }
 
-        override fun onBindViewHolder(holder: InventoryViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: ItemGroupViewHolder, position: Int) {
             super.onBindViewHolder(holder, position).also {
                 val isSelected = holder.adapterPosition == chosenPosition
                 holder.view.isSelected = isSelected
@@ -288,16 +287,15 @@ class InventoryPicker(context: Context, attrs: AttributeSet) : InventoryList(con
 }
 
 /**
- * A view to represent an instance of InventorySummary.
+ * A view to represent an instance of ItemGroup.
  *
- * InventoryView displays the name, the number of shopping list items, the
+ * ItemGroupView displays the name, the number of shopping list items, the
  * number of inventory items, and an options button for the instance of
- * InventorySummary it is bound to using the function update. The selected
- * state of an inventory is set using the Android framework's View's isSelected
- * property.
+ * ItemGroup it is bound to using the function update. The selected state of an
+ * item group is set using the Android framework's View's isSelected property.
  */
-class InventoryView(context: Context) : LinearLayout(context) {
-    val ui = InventoryViewBinding.inflate(LayoutInflater.from(context), this)
+class ItemGroupView(context: Context) : LinearLayout(context) {
+    val ui = ItemGroupBinding.inflate(LayoutInflater.from(context), this)
 
     init {
         val inventoryIcon = ContextCompat.getDrawable(context, R.drawable.inventory_icon)
@@ -310,13 +308,13 @@ class InventoryView(context: Context) : LinearLayout(context) {
         inventoryIcon?.bounds?.inset(iconPadding, iconPadding)
         shoppingListIcon?.bounds?.inset(iconPadding, iconPadding)
 
-        background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item)
+        background = ContextCompat.getDrawable(context, R.drawable.list_item)
     }
 
-    fun update(inventory: InventorySummary) {
-        ui.nameView.text = inventory.name
-        ui.shoppingListItemCountView.text = inventory.shoppingListItemCount.toString()
-        ui.inventoryItemCountView.text = inventory.inventoryItemCount.toString()
-        isSelected = inventory.isSelected
+    fun update(group: ItemGroup) {
+        ui.nameView.text = group.name
+        ui.shoppingListItemCountView.text = group.shoppingListItemCount.toString()
+        ui.inventoryItemCountView.text = group.inventoryItemCount.toString()
+        isSelected = group.isSelected
     }
 }

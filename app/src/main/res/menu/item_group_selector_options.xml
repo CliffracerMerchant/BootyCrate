@@ -5,9 +5,9 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/multiSelectInventoriesSwitch"
-          android:title="@string/multi_select_inventories_description"
+    <item android:id="@+id/multiSelectGroupsSwitch"
+          android:title="@string/multi_select_item_groups_description"
           android:checkable="true" />
-    <item android:id="@+id/selectAllInventories"
-          android:title="@string/select_all_inventories_description" />
+    <item android:id="@+id/selectAllGroups"
+          android:title="@string/select_all_item_groups_description" />
 </menu>

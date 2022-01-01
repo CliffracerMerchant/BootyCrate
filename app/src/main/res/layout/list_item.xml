@@ -9,7 +9,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:layout_height="wrap_content"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
-    tools:background="@drawable/recycler_view_item"
+    tools:background="@drawable/list_item"
     tools:paddingVertical="4dp" >
 
     <com.cliffracertech.bootycrate.view.TintableCheckbox
@@ -20,8 +20,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/checkBoxExtraInfoBottomBarrier"
-        tools:tint="@color/bootyCrateItemColor0"
-        style="@style/BootyCrateItemColorEdit" />
+        tools:tint="@color/listItemColor0"
+        style="@style/ListItemColorEdit" />
 
     <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
         android:id="@+id/nameEdit"
@@ -34,7 +34,7 @@
         app:layout_constraintVertical_chainStyle="packed"
         tools:text="Item Name"
         tools:minHeight="@dimen/editable_text_field_min_height"
-        style="@style/BootyCrateItemNameEdit" />
+        style="@style/ListItemNameEdit" />
 
     <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
         android:id="@+id/extraInfoEdit"
@@ -46,7 +46,7 @@
         app:layout_constraintBottom_toBottomOf="@id/checkBoxExtraInfoBottomBarrier"
         tools:text="Extra info"
         tools:minHeight="@dimen/editable_text_field_min_height"
-        style="@style/BootyCrateItemExtraInfoEdit" />
+        style="@style/ListItemExtraInfoEdit" />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/checkBoxExtraInfoBottomBarrier"
@@ -64,7 +64,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:layout_height="@dimen/editable_text_field_min_height"
         tools:valueIsFocusable="true"
-        style="@style/BootyCrateItemAmountEdit" />
+        style="@style/ListItemAmountEdit" />
 
 <!-- The amountEditSpacer, because it is the same width as the editButton, allows
      the amount edit look as though it is constrained to the start of the edit
@@ -85,7 +85,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:contentDescription="@string/edit_button_description"
-        style="@style/BootyCrateItemEditButton" />
+        style="@style/ListItemEditButton" />
 
     <!-- The link indicator is positioned in the top row of the view and has
          its translationY set so that it appears in the bottom row. This is

@@ -131,12 +131,12 @@ fun MainActivity.initGradientStyle() {
     (ui.addButton.background as GradientDrawable).colors = intArrayOf(leftColor, rightColor)
 
     // Add inventory button
-    val marginEnd = (ui.addInventoryButton.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
-    right = screenWidth - ui.inventorySelectorBackground.paddingEnd - marginEnd
-    left = right - ui.addInventoryButton.layoutParams.width
+    val marginEnd = (ui.addItemGroupButton.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
+    right = screenWidth - ui.itemGroupSelectorBackground.paddingEnd - marginEnd
+    left = right - ui.addItemGroupButton.layoutParams.width
     leftColor = bgGradientBitmap.getPixel(left, 0)
     rightColor = bgGradientBitmap.getPixel(right, 0)
-    val drawable = ui.addInventoryButton.background.mutate() as GradientDrawable
+    val drawable = ui.addItemGroupButton.background.mutate() as GradientDrawable
     drawable.colors = intArrayOf(leftColor, rightColor)
 }
 
@@ -150,14 +150,14 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
 
         appTitle.isVisible = slideOffset != 0f
         settingsButton.isVisible = slideOffset != 0f
-        inventorySelectorOptionsButton.isVisible = slideOffset != 0f
-        inventorySelector.isInvisible = slideOffset == 0f
+        itemGroupSelectorOptionsButton.isVisible = slideOffset != 0f
+        itemGroupSelector.isInvisible = slideOffset == 0f
         bottomNavigationView.isVisible = slideOffset != 1f
 
         appTitle.alpha = slide
         settingsButton.alpha = slide
-        inventorySelectorOptionsButton.alpha = slide
-        inventorySelector.alpha = slide
+        itemGroupSelectorOptionsButton.alpha = slide
+        itemGroupSelector.alpha = slide
         bottomNavigationView.alpha = 1f - slide
 
         bottomAppBar.apply {

@@ -14,48 +14,47 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.BootyCrateItem
+import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.databinding.BootyCrateItemBinding
+import com.cliffracertech.bootycrate.databinding.ListItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemDetailsBinding
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
 
 /**
- * A layout to display the data for a BootyCrateItem.
+ * A layout to display the data for a ListItem.
  *
- * BootyCrateItemView displays the data for an instance of BootyCrateItem. The
+ * BootyCrateItemView displays the data for an instance of ListItem. The
  * displayed data can be updated for a new item with the open function update.
  * The function updateContentDescriptions likewise updates the contentDescription
  * fields for child views so that they are unique for each item. Both update
  * and updateContentDescriptions are open functions and should be overridden
  * in subclasses that add new fields to the displayed items.
  *
- * By default BootyCrateItemView inflates itself with the contents of
- * R.layout.booty_crate_item.xml and initializes its BootyCrateItemBinding
- * member ui. In case this layout needs to be overridden in a subclass, the
- * BootyCrateItemView can be constructed with the parameter useDefaultLayout
- * equal to false. If useDefaultLayout is false, it will be up to the subclass
- * to inflate the desired layout and initialize the member ui with an instance
- * of a BootyCrateItemBinding. If the ui member is not initialized, a
- * kotlin.UninitializedPropertyAccessException will be thrown.
+ * By default BootyCrateItemView inflates itself with the contents of R.layout.list_item.xml
+ * and initializes its ListItemBinding member ui. In case this layout needs to
+ * be overridden in a subclass, the BootyCrateItemView can be constructed with
+ * the parameter useDefaultLayout equal to false. If useDefaultLayout is false,
+ * it will be up to the subclass to inflate the desired layout and initialize
+ * the member ui with an instance of a ListItemBinding. If the ui member is not
+ * initialized, a kotlin.UninitializedPropertyAccessException will be thrown.
  */
 @Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
-open class BootyCrateItemView<T: BootyCrateItem>(
+open class BootyCrateItemView<T: ListItem>(
     context: Context,
     useDefaultLayout: Boolean = true,
 ) : ConstraintLayout(context) {
 
-    lateinit var ui: BootyCrateItemBinding
+    lateinit var ui: ListItemBinding
 
     init {
         layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                                                  ViewGroup.LayoutParams.WRAP_CONTENT)
         if (useDefaultLayout) {
-            ui = BootyCrateItemBinding.inflate(LayoutInflater.from(context), this)
+            ui = ListItemBinding.inflate(LayoutInflater.from(context), this)
             // Initializing isVisible to false here ensures that the extraInfoEdit
             // is hidden even if the first bound item's extraInfo field is blank.
             // If the first bound item's extraInfo field is not blank, then the
@@ -71,7 +70,7 @@ open class BootyCrateItemView<T: BootyCrateItem>(
     @CallSuper open fun update(item: T) {
         ui.nameEdit.setText(item.name)
         setExtraInfoText(item.extraInfo)
-        val colorIndex = item.color.coerceIn(BootyCrateItem.Colors.indices)
+        val colorIndex = item.color.coerceIn(ListItem.Colors.indices)
         ui.checkBox.initColorIndex(colorIndex)
         ui.amountEdit.initValue(item.amount)
         updateContentDescriptions(item.name)
@@ -166,7 +165,7 @@ class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null
 
     init {
         val tempUi = InventoryItemBinding.inflate(LayoutInflater.from(context), this)
-        ui = BootyCrateItemBinding.bind(tempUi.root)
+        ui = ListItemBinding.bind(tempUi.root)
         detailsUi = InventoryItemDetailsBinding.bind(tempUi.root)
 
         ui.extraInfoEdit.isVisible = false

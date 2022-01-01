@@ -17,7 +17,7 @@ import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.*
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.BootyCrateItem
+import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
@@ -112,7 +112,7 @@ fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
 
 /** Asserts that the view is an ExpandableSelectableRecyclerView that
     contains only the specified items of type T, in the order given. */
-open class onlyShownItemsAre<T: BootyCrateItem>(vararg items: T) : ViewAssertion {
+open class onlyShownItemsAre<T: ListItem>(vararg items: T) : ViewAssertion {
     private val items = items.asList()
 
     @CallSuper

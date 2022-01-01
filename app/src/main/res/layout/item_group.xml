@@ -11,7 +11,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     tools:parentTag="LinearLayout"
-    tools:background="@drawable/recycler_view_item">
+    tools:background="@drawable/list_item">
 
     <TextView
         android:id="@+id/nameView"

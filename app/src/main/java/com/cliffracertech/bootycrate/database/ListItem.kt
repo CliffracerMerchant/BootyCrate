@@ -8,18 +8,18 @@ import android.content.Context
 import androidx.room.*
 import com.cliffracertech.bootycrate.R
 
-/** DatabaseBootyCrateItem describes the entities stored in the bootycrate_item table. */
-@Entity(tableName = "bootycrate_item",
-        foreignKeys = [ForeignKey(entity = Inventory::class,
+/** DatabaseListItem describes the entities stored in the item table. */
+@Entity(tableName = "item",
+        foreignKeys = [ForeignKey(entity = DatabaseItemGroup::class,
                                   parentColumns=["id"],
-                                  childColumns=["inventoryId"],
+                                  childColumns=["groupId"],
                                   onDelete=ForeignKey.CASCADE)])
-class DatabaseBootyCrateItem(
+class DatabaseListItem(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name="id")
     var id: Long = 0,
-    @ColumnInfo(name="inventoryId", index = true)
-    var inventoryId: Long = 0,
+    @ColumnInfo(name="groupId", index = true)
+    var groupId: Long = 0,
     @ColumnInfo(name="name", collate = ColumnInfo.NOCASE, index = true)
     var name: String = "",
     @ColumnInfo(name="extraInfo", defaultValue="", collate = ColumnInfo.NOCASE)
@@ -53,18 +53,18 @@ class DatabaseBootyCrateItem(
     @ColumnInfo(name="inInventoryTrash", defaultValue="0")
     var inInventoryTrash: Boolean = false
 ) {
-    init { color.coerceIn(BootyCrateItem.Colors.indices) }
+    init { color.coerceIn(ListItem.Colors.indices) }
 
-    /** An interface for objects to provide a way to convert themselves into a DataBaseBootyCrateItem. */
+    /** An interface for objects to provide a way to convert themselves into a DatabaseListItem. */
     interface Convertible {
-        /** Return the convertible as a DatabaseBootyCrateItem,
-         *  with its inventoryId field set to the provided id. **/
-        fun toDbBootyCrateItem(inventoryId: Long): DatabaseBootyCrateItem
+        /** Return the convertible as a DatabaseListItem,
+         *  with its itemGroupId field set to the provided id. **/
+        fun toDbListItem(groupId: Long): DatabaseListItem
     }
 
     override fun toString() ="""
 id = $id
-inventoryId = $inventoryId
+groupId = $groupId
 name = $name
 extraInfo = $extraInfo
 color = $color
@@ -81,12 +81,12 @@ autoAddToShoppingListAmount = $autoAddToShoppingListAmount
 inInventoryTrash = $inInventoryTrash"""
 }
 
-/** An abstract class that mirrors DatabaseBootyCrateItem, but only contains
+/** An abstract class that mirrors DatabaseListItem, but only contains
  * the fields necessary for a visual representation of the object. Subclasses
  * should also add any additional required fields and provide an implementation
- * of toDbBootyCrateItem that will return a DatabaseBootyCrateItem representation
- * of the object. */
-abstract class BootyCrateItem(
+ * of toDbListItem that will return a DatabaseListItem representation of the
+ * object. */
+abstract class ListItem(
     var id: Long = 0,
     var name: String,
     var extraInfo: String = "",
@@ -95,7 +95,7 @@ abstract class BootyCrateItem(
     var isExpanded: Boolean = false,
     var isSelected: Boolean = false,
     var isLinked: Boolean = false,
-) : DatabaseBootyCrateItem.Convertible {
+) : DatabaseListItem.Convertible {
 
     // For a user-facing string representation of the object
     fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
@@ -107,8 +107,8 @@ abstract class BootyCrateItem(
         private lateinit var _ColorDescriptions: Array<String>
 
         fun initColors(context: Context) {
-            _Colors = context.resources.getIntArray(R.array.bootycrate_item_colors)
-            _ColorDescriptions = context.resources.getStringArray(R.array.bootycrate_item_color_descriptions)
+            _Colors = context.resources.getIntArray(R.array.list_item_colors)
+            _ColorDescriptions = context.resources.getStringArray(R.array.list_item_color_descriptions)
         }
     }
 
@@ -122,8 +122,8 @@ abstract class BootyCrateItem(
     }
 }
 
-/** A BootyCrateItem subclass that provides an implementation of toDbBootyCrateItem
- * and adds the isChecked field to mirror the DatabaseBootyCrateItem field. */
+/** A ListItem subclass that provides an implementation of toDbListItem
+ * and adds the isChecked field to mirror the DatabaseListItem field. */
 class ShoppingListItem(
     id: Long = 0,
     name: String,
@@ -134,24 +134,24 @@ class ShoppingListItem(
     isSelected: Boolean = false,
     isLinked: Boolean = false,
     var isChecked: Boolean = false
-): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
+): ListItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
     enum class Field { Name, ExtraInfo, Color, Amount,
                        IsExpanded, IsSelected, IsLinked, IsChecked }
 
-    override fun toDbBootyCrateItem(inventoryId: Long) = DatabaseBootyCrateItem(
-        id, inventoryId, name, extraInfo, color,
+    override fun toDbListItem(groupId: Long) = DatabaseListItem(
+        id, groupId, name, extraInfo, color,
         isChecked = isChecked,
         shoppingListAmount = amount,
         expandedInShoppingList = isExpanded,
         selectedInShoppingList = isSelected)
 }
 
-/** A BootyCrateItem subclass that provides an implementation of toDbBootyCrateItem
+/** A ListItem subclass that provides an implementation of toDbListItem
  * and adds the autoAddToShoppingList and autoAddToShoppingListAmount fields to
- * mirror the DatabaseBootyCrateItem fields. */
+ * mirror the DatabaseListItem fields. */
 class InventoryItem(
     id: Long = 0,
     name: String,
@@ -163,7 +163,7 @@ class InventoryItem(
     isLinked: Boolean = false,
     var autoAddToShoppingList: Boolean = false,
     var autoAddToShoppingListAmount: Int = 1
-): BootyCrateItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
+): ListItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
 
     /** The enum class Field identifies user facing fields
      * that are potentially editable by the user. */
@@ -172,8 +172,8 @@ class InventoryItem(
                        AutoAddToShoppingList,
                        AutoAddToShoppingListAmount }
 
-    override fun toDbBootyCrateItem(inventoryId: Long) = DatabaseBootyCrateItem(
-        id, inventoryId, name, extraInfo, color,
+    override fun toDbListItem(groupId: Long) = DatabaseListItem(
+        id, groupId, name, extraInfo, color,
         inventoryAmount = amount,
         expandedInInventory = isExpanded,
         selectedInInventory = isSelected,

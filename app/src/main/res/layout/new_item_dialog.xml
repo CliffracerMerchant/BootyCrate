@@ -20,11 +20,11 @@
         tools:layout_height="110dp" />
 
     <ViewStub
-        android:id="@+id/inventoryPickerStub"
+        android:id="@+id/itemGroupPickerStub"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:layout="@layout/selected_inventory_picker" />
+        android:layout="@layout/selected_item_group_picker" />
 
     <TextView
         android:id="@+id/warningMessage"

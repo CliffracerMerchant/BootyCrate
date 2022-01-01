@@ -8,7 +8,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
-import com.cliffracertech.bootycrate.database.BootyCrateItem
+import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 
@@ -22,10 +22,11 @@ import com.cliffracertech.bootycrate.utils.SoftKeyboard
  * the use of ExpandableSelectableRecyclerView.ViewHolder.
  */
 @Suppress("LeakingThis")
-abstract class ExpandableSelectableRecyclerView<T: BootyCrateItem>(
+abstract class ExpandableSelectableRecyclerView<T: ListItem>(
     context: Context,
     attrs: AttributeSet
 ) : BootyCrateRecyclerView<T>(context, attrs) {
+
     protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
     private var needToHideSoftKeyboard = false
     private var expandCollapseAnimRunning = false

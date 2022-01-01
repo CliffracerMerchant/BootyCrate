@@ -4,13 +4,13 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <style name="BootyCrateItemColorEdit">
+    <style name="ListItemColorEdit">
         <item name="android:padding">13dp</item>
-        <item name="colorsResId">@array/bootycrate_item_colors</item>
-        <item name="colorDescriptionsResId">@array/bootycrate_item_color_descriptions</item>
+        <item name="colorsResId">@array/list_item_colors</item>
+        <item name="colorDescriptionsResId">@array/list_item_color_descriptions</item>
     </style>
 
-    <style name="BootyCrateItemNameEdit" parent="@style/NormalTextAppearance">
+    <style name="ListItemNameEdit" parent="@style/NormalTextAppearance">
         <item name="android:hint">@string/name_description</item>
         <item name="android:ellipsize">end</item>
         <item name="isEditable">false</item>
@@ -18,7 +18,7 @@
         <item name="android:gravity">center_vertical</item>
     </style>
 
-    <style name="BootyCrateItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
+    <style name="ListItemExtraInfoEdit" parent="@style/SecondaryTextAppearance">
         <item name="android:hint">@string/extra_info_description</item>
         <item name="android:textColor">@color/color_text_light_secondary</item>
         <item name="android:ellipsize">end</item>
@@ -26,12 +26,12 @@
         <item name="android:gravity">center_vertical</item>
     </style>
 
-    <style name="BootyCrateItemAmountEdit" parent="@style/TextAppearance">
+    <style name="ListItemAmountEdit" parent="@style/TextAppearance">
         <item name="android:textSize">22sp</item>
         <item name="minValue">1</item>
     </style>
 
-    <style name="BootyCrateItemEditButton">
+    <style name="ListItemEditButton">
         <item name="android:src">@drawable/edit_and_collapse_button</item>
         <item name="android:tint">?android:attr/textColorPrimary</item>
         <item name="android:padding">12dp</item>
@@ -42,7 +42,7 @@
         <item name="android:src">@drawable/ic_baseline_link_24</item>
     </style>
 
-    <style name="InventoryItemColorEdit" parent="@style/BootyCrateItemColorEdit">
+    <style name="InventoryItemColorEdit" parent="@style/ListItemColorEdit">
         <item name="android:src">@drawable/animated_circle_to_checkbox_checked_background</item>
     </style>
 
@@ -53,7 +53,7 @@
         <item name="android:textSize">14sp</item>
     </style>
 
-    <style name="InventoryItemAutoAddToShoppingListTriggerEdit" parent="@style/BootyCrateItemAmountEdit">
+    <style name="InventoryItemAutoAddToShoppingListTriggerEdit" parent="@style/ListItemAmountEdit">
         <item name="valueIsFocusable">true</item>
     </style>
 

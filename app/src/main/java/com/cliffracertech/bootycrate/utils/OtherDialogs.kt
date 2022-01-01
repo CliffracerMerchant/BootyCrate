@@ -39,21 +39,21 @@ fun themedAlertDialogBuilder(context: Context) = MaterialAlertDialogBuilder(
         .setBackgroundInsetStart(0)
         .setBackgroundInsetEnd(0)
 
-/** Show a dialog to rename an inventory, with the name initially set
- * to initialName, with a hint equal to hint, and which invokes
- * onFinish if the user taps the ok button. */
-fun inventoryNameDialog(
+/** Show a dialog to rename an item group, with the name initially set
+ * to initialName, with a hint equal to hint, and which invokes onFinish
+ * if the user taps the ok button. */
+fun itemGroupNameDialog(
     context: Context,
     initialName: String? = null,
     onFinish: ((String) -> Unit)
 ) {
     val editText = EditText(context).apply {
         setText(initialName)
-        setHint(R.string.inventory_name_hint)
+        setHint(R.string.item_group_name_hint)
         setSingleLine()
     }
     themedAlertDialogBuilder(context)
-        .setTitle(R.string.rename_inventory_popup_title)
+        .setTitle(R.string.rename_item_group_popup_title)
         .setPositiveButton(android.R.string.ok) { _, _ ->
             onFinish(editText.text.toString())
         }.setNegativeButton(android.R.string.cancel, null)
@@ -72,10 +72,10 @@ fun inventoryNameDialog(
         }.show()
 }
 
-/** Show a dialog to confirm the deletion of an inventory. */
-fun deleteInventoryDialog(context: Context, onConfirm: () -> Unit) =
+/** Show a dialog to confirm the deletion of an item group. */
+fun deleteItemGroupDialog(context: Context, onConfirm: () -> Unit) =
     themedAlertDialogBuilder(context)
-        .setMessage(R.string.delete_inventory_confirmation_message)
+        .setMessage(R.string.delete_item_group_confirmation_message)
         .setPositiveButton(android.R.string.ok) { _, _ -> onConfirm() }
         .setNegativeButton(android.R.string.cancel, null)
         .create().show()

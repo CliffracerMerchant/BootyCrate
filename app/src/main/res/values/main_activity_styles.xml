@@ -105,13 +105,13 @@
         <item name="android:contentDescription">@string/settings_description</item>
     </style>
 
-    <style name="InventorySelectorOptionsButton">
+    <style name="ItemGroupSelectorOptionsButton">
         <item name="srcCompat">@drawable/ic_more_vert_black_24dp</item>
         <item name="tint">?attr/colorOnBackgroundGradient</item>
         <item name="android:padding">12dp</item>
         <item name="android:alpha">0</item>
         <item name="android:visibility">gone</item>
-        <item name="android:contentDescription">@string/inventory_selector_options_description</item>
+        <item name="android:contentDescription">@string/item_group_selector_options_description</item>
     </style>
 
 </resources>

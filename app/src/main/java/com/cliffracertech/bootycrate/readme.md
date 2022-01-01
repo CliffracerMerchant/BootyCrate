@@ -32,8 +32,8 @@ BootyCrateRecyclerView -> ExpandableSelectableRecyclerView -> ShoppingListRecycl
 and other associated classes (e.g. item views and item animators). The recycler views'
 item views' inheritance chain is:
 <pre>
-BootyCrateItemView -> ExpandableSelectableItemView -> ShoppingListItemView
-                                                   -> InventoryItemView
+ListItemView -> ExpandableSelectableItemView -> ShoppingListItemView
+                                             -> InventoryItemView
 </pre>
 
 ### database

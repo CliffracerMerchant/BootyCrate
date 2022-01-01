@@ -7,24 +7,24 @@ package com.cliffracertech.bootycrate.database
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
-@Entity(tableName = "dbSettings")
+@Entity(tableName = "settings")
 class DatabaseSettings(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name="id")
     var id: Long = 0,
-    @ColumnInfo(name="multiSelectInventories", defaultValue="0")
-    var multiSelectInventories: Boolean = false)
+    @ColumnInfo(name="multiSelectGroups", defaultValue="0")
+    var multiSelectGroups: Boolean = false)
 
-@Dao abstract class DatabaseSettingsDao {
-    @Query("SELECT multiSelectInventories FROM dbSettings LIMIT 1")
-    abstract fun getMultiSelectInventories(): Flow<Boolean>
+@Dao abstract class SettingsDao {
+    @Query("SELECT multiSelectGroups FROM settings LIMIT 1")
+    abstract fun getMultiSelectGroups(): Flow<Boolean>
 
-    @Query("SELECT multiSelectInventories FROM dbSettings LIMIT 1")
-    abstract suspend fun getMultiSelectInventoriesNow(): Boolean
+    @Query("SELECT multiSelectGroups FROM settings LIMIT 1")
+    abstract suspend fun getMultiSelectGroupsNow(): Boolean
 
-    @Query("UPDATE dbSettings SET multiSelectInventories = :multiSelect")
-    abstract suspend fun updateMultiSelectInventories(multiSelect: Boolean)
+    @Query("UPDATE settings SET multiSelectGroups = :multiSelect")
+    abstract suspend fun updateMultiSelectGroups(multiSelect: Boolean)
 
-    @Query("UPDATE dbSettings SET multiSelectInventories = 1 - multiSelectInventories")
-    abstract suspend fun toggleMultiSelectInventories()
+    @Query("UPDATE settings SET multiSelectGroups = 1 - multiSelectGroups")
+    abstract suspend fun toggleMultiSelectGroups()
 }

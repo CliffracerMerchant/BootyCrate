@@ -16,10 +16,10 @@ import kotlinx.coroutines.launch
 
 /**
  * An abstract AndroidViewModel that provides the data for an activity or
- * fragment to display a list of BootyCrateItems.
+ * fragment to display a list of ListItems.
  *
  * BootyCrateViewModel provides two sorting options through the properties sort
- * and searchFilter. sort describes a value of the enum class BootyCrateItem.Sort,
+ * and searchFilter. sort describes a value of the enum class ListItem.Sort,
  * while searchFilter describes a string whose value the name and/or extra info
  * of items will be matched to. Changes to the value of sort or searchFilter
  * will result in the List<T> of items, exposed through the StateFlow property
@@ -41,13 +41,13 @@ import kotlinx.coroutines.launch
  *
  * Subclasses will need to override newItemNameIsAlreadyUsed with a Flow whose
  * emitted values are the correct NameIsAlreadyUsed value given the current
- * values of the StateFlow properties itemWithNameAlreadyExistsInShoppingList
- * and itemWithNameAlreadyExistsInInventory.
+ * values of the StateFlow properties nameIsAlreadyUsedInShoppingList and
+ * nameIsAlreadyUsedInInventory.
  */
-abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): AndroidViewModel(app) {
+abstract class BootyCrateViewModel<T: ListItem>(app: Application): AndroidViewModel(app) {
     protected val dao = BootyCrateDatabase.get(app).itemDao()
 
-    protected val sortFlow = MutableStateFlow(BootyCrateItem.Sort.Color)
+    protected val sortFlow = MutableStateFlow(ListItem.Sort.Color)
     var sort by sortFlow
 
     protected val searchFilterFlow = MutableStateFlow<String?>(null)
@@ -71,17 +71,17 @@ abstract class BootyCrateViewModel<T: BootyCrateItem>(app: Application): Android
     private val _newItemExtraInfo = MutableStateFlow("")
     var newItemExtraInfo by _newItemExtraInfo
 
-    protected val nameAlreadyUsedInShoppingList =
+    protected val nameIsAlreadyUsedInShoppingList =
         _newItemName.combine(_newItemExtraInfo, dao::nameAlreadyUsedInShoppingList)
-    protected val nameAlreadyUsedInInventory =
+    protected val nameIsAlreadyUsedInInventory =
         _newItemName.combine(_newItemExtraInfo, dao::nameAlreadyUsedInInventory)
 
     abstract val newItemNameIsAlreadyUsed: StateFlow<NameIsAlreadyUsed>
 
     abstract val selectedItemCount: StateFlow<Int>
 
-    fun add(item: T, inventoryId: Long) =
-        viewModelScope.launch { dao.add(item.toDbBootyCrateItem(inventoryId)) }
+    fun add(item: T, groupId: Long) =
+        viewModelScope.launch { dao.add(item.toDbListItem(groupId)) }
 
     fun updateName(id: Long, name: String) =
         viewModelScope.launch { dao.updateName(id, name) }
@@ -132,8 +132,8 @@ class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<Shopping
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     override val newItemNameIsAlreadyUsed = combine(
-        nameAlreadyUsedInShoppingList,
-        nameAlreadyUsedInInventory
+        nameIsAlreadyUsedInShoppingList,
+        nameIsAlreadyUsedInInventory
     ) { existsInShoppingList, existsInInventory ->
         when { (existsInShoppingList) -> NameIsAlreadyUsed.TrueForCurrentList
                (existsInInventory) ->    NameIsAlreadyUsed.TrueForSiblingList
@@ -208,8 +208,8 @@ class InventoryItemViewModel(app: Application) : BootyCrateViewModel<InventoryIt
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     override val newItemNameIsAlreadyUsed = combine(
-        nameAlreadyUsedInInventory,
-        nameAlreadyUsedInShoppingList
+        nameIsAlreadyUsedInInventory,
+        nameIsAlreadyUsedInShoppingList
     ) { existsInInventory, existsInShoppingList ->
         when { (existsInInventory) ->    NameIsAlreadyUsed.TrueForCurrentList
                (existsInShoppingList) -> NameIsAlreadyUsed.TrueForSiblingList

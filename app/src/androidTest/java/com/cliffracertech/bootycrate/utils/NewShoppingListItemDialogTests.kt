@@ -37,12 +37,12 @@ class NewShoppingListItemDialogTests {
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
     private val db = BootyCrateDatabase.get(context as Application)
     private val dao = db.itemDao()
-    private val inventoryId = db.run { runBlocking { inventoryDao().deleteAll() }
-                                       inventoryDao().getAllNow()[0].id }
+    private val groupId = db.run { runBlocking { itemGroupDao().deleteAll() }
+                                       itemGroupDao().getAllNow()[0].id }
 
     private val testItem = ShoppingListItem(color = 5, name = "Test Item 1",
                                             extraInfo = "Test Item 1 Extra Info",
-                                            amount = 3, inventoryId = inventoryId)
+                                            amount = 3)
 
     @Before fun setup() {
         runBlocking { dao.deleteAllShoppingListItems()
@@ -156,9 +156,9 @@ class NewShoppingListItemDialogTests {
     }
 
     @Test fun duplicateNameInOtherListWarningAppears() {
-        runBlocking { dao.add(InventoryItem(name = "Test Item 1", amount = 5,
-                                            extraInfo = "Test Item 1 Extra Info",
-                                            inventoryId = inventoryId)) }
+        val item = InventoryItem(name = "Test Item 1", amount = 5,
+                                 extraInfo = "Test Item 1 Extra Info")
+        runBlocking { dao.add(item.toDbListItem(groupId)) }
         onView(withId(R.id.addButton)).perform(click())
         onView(withId(R.id.warningMessage)).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("Test Item 1"))
@@ -186,8 +186,8 @@ class NewShoppingListItemDialogTests {
 
     @Test fun addSeveralItems() {
         appears()
-        val testItem2 = ShoppingListItem(name = "Test Item 2", extraInfo = "Test Item 2 Extra Info",
-                                         color = 7, amount = 8, inventoryId = inventoryId)
+        val testItem2 = ShoppingListItem(name = "Test Item 2", color = 7, amount = 8,
+                                         extraInfo = "Test Item 2 Extra Info")
         addTestShoppingListItems(leaveDialogOpen = false, testItem, testItem2)
         onView(withId(R.id.shoppingListRecyclerView)).check(
             onlyShownShoppingListItemsAre(testItem, testItem2))

@@ -35,12 +35,12 @@ class NewInventoryItemDialogTests {
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
     private val db = BootyCrateDatabase.get(context as Application)
     private val dao = db.itemDao()
-    private val inventoryId = db.run { runBlocking { inventoryDao().deleteAll() }
-                                       inventoryDao().getAllNow()[0].id }
+    private val groupId = db.run { runBlocking { itemGroupDao().deleteAll() }
+                                                 itemGroupDao().getAllNow()[0].id }
 
     private val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Extra Info 1",
                                          color = 5, amount = 3, autoAddToShoppingList = true,
-                                         autoAddToShoppingListAmount = 4, inventoryId = inventoryId)
+                                         autoAddToShoppingListAmount = 4)
 
     private fun amountIncreaseButton() = CoreMatchers.allOf(withId(R.id.increaseButton),
                                                             isDescendantOfA(withId(R.id.amountEdit)))
@@ -174,9 +174,9 @@ class NewInventoryItemDialogTests {
     }
 
     @Test fun duplicateNameInOtherListWarningAppears() {
-        runBlocking { dao.add(ShoppingListItem(name = "Test Item 1", amount = 5,
-                                               extraInfo = "Test Item 1 Extra Info",
-                                               inventoryId = inventoryId)) }
+        val item = ShoppingListItem(name = "Test Item 1", amount = 5,
+                                    extraInfo = "Test Item 1 Extra Info")
+        runBlocking { dao.add(item.toDbListItem(groupId)) }
         onView(withId(R.id.addButton)).perform(click())
         onView(withId(R.id.warningMessage)).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("Test Item 1"))
@@ -198,9 +198,6 @@ class NewInventoryItemDialogTests {
 
     @Test fun addItem() {
         appears()
-        val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Item 1 Extra Info",
-                                     color = 5, amount = 3, autoAddToShoppingList = true,
-                                     autoAddToShoppingListAmount = 4, inventoryId = inventoryId)
         addTestInventoryItems(leaveDialogOpen = false, testItem)
         onView(withId(R.id.inventoryItemRecyclerView))
             .check(onlyShownInventoryItemsAre(testItem))
@@ -210,7 +207,7 @@ class NewInventoryItemDialogTests {
         appears()
         val testItem2 = InventoryItem(name = "Test Item 2", extraInfo = "Test Item 2 Extra Info",
                                       color = 7, amount = 8, autoAddToShoppingList = true,
-                                      autoAddToShoppingListAmount = 2, inventoryId = inventoryId)
+                                      autoAddToShoppingListAmount = 2)
         addTestInventoryItems(leaveDialogOpen = false, testItem, testItem2)
         onView(withId(R.id.inventoryItemRecyclerView)).check(
             onlyShownInventoryItemsAre(testItem, testItem2))

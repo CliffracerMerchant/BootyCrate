@@ -5,8 +5,8 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/renameInventoryButton"
+    <item android:id="@+id/renameItemGroupButton"
         android:title="@string/rename_description" />
-    <item android:id="@+id/deleteInventoryButton"
+    <item android:id="@+id/deleteItemGroupButton"
         android:title="@string/delete_description" />
 </menu>

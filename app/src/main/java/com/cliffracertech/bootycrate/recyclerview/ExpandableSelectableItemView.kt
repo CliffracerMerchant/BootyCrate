@@ -14,7 +14,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.BootyCrateItem
+import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.add
 import com.cliffracertech.bootycrate.utils.applyConfig
@@ -26,7 +26,7 @@ import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
  * ExpandableSelectableItemView extends BootyCrateItemView by providing an
  * interface for expansion of extra details, a custom background to indicate a
  * selected state, and with an update override that will update the view to
- * reflect the selection and expansion state of the BootyCrateItem passed to it.
+ * reflect the selection and expansion state of the ListItem passed to it.
  * The selected state is set using the View property isSelected. ExpandableSelectableItemView
  * indicates its selected state by drawing a gradient outline around its edge.
  *
@@ -46,7 +46,7 @@ import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
  * runPendingAnimations.
  */
 @SuppressLint("ViewConstructor", "Recycle")
-open class ExpandableSelectableItemView<T: BootyCrateItem>(
+open class ExpandableSelectableItemView<T: ListItem>(
     context: Context,
     animatorConfig: AnimatorConfig? = null,
     useDefaultLayout: Boolean = true,
@@ -73,7 +73,7 @@ open class ExpandableSelectableItemView<T: BootyCrateItem>(
                                           pendingViewPropAnimations.clear() }
 
     init {
-        background = ContextCompat.getDrawable(context, R.drawable.recycler_view_item)
+        background = ContextCompat.getDrawable(context, R.drawable.list_item)
         clipChildren = false
         if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }

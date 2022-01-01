@@ -10,7 +10,7 @@ import android.view.View
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.*
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.BootyCrateItem
+import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.database.BootyCrateViewModel
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
@@ -48,7 +48,7 @@ import kotlinx.coroutines.flow.collect
  * customized, or to the RecyclerView itself otherwise.
  */
 @Suppress("LeakingThis")
-abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
+abstract class BootyCrateRecyclerView<T: ListItem>(
     context: Context,
     attrs: AttributeSet
 ) : RecyclerView(context, attrs) {
@@ -111,7 +111,7 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
     }
 
     /**
-     * A ViewHolder subclass that wraps an instance of BootyCrateItemView.
+     * A ViewHolder subclass that wraps an instance of ListItemView.
      *
      * BootyCrateRecyclerView.ViewHolder provides a simplified way of obtaining
      * the instance of the item that it represents through the property item, and
@@ -123,7 +123,7 @@ abstract class BootyCrateRecyclerView<T: BootyCrateItem>(
         init { view.apply {
             ui.checkBox.onColorChangedListener = { color ->
                 if (adapterPosition != -1)
-                    viewModel.updateColor(item.id, BootyCrateItem.Colors.indexOf(color))
+                    viewModel.updateColor(item.id, ListItem.Colors.indexOf(color))
             }
             ui.nameEdit.onTextChangedListener = { newName ->
                 if (adapterPosition != -1) viewModel.updateName(item.id, newName)

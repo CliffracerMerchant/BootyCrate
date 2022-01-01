@@ -6,14 +6,14 @@ package com.cliffracertech.bootycrate
 
 import android.app.Application
 import android.util.Log
-import com.cliffracertech.bootycrate.database.BootyCrateItem
+import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 
 class BootyCrateApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         SoftKeyboard.init(this)
-        BootyCrateItem.initColors(this)
+        ListItem.initColors(this)
     }
 }
 

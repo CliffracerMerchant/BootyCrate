@@ -16,14 +16,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class InventoryDatabaseTests {
+class ItemGroupDatabaseTests {
     private lateinit var db: BootyCrateDatabase
-    private lateinit var dao: InventoryDao
+    private lateinit var dao: ItemGroupDao
 
     @Before fun createDb() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         db = BootyCrateDatabase.getInMemoryDb(context)
-        dao = db.inventoryDao()
+        dao = db.itemGroupDao()
     }
 
     @After fun closeDb() = db.close()
@@ -39,9 +39,9 @@ class InventoryDatabaseTests {
         val names = listOf("Pantry", "Refrigerator", "Pantry2", "Refrigerator2")
         runBlocking {
             dao.add(names[0])
-            dao.add(Inventory(name = names[1]))
-            dao.add(listOf(Inventory(name = names[2]),
-                           Inventory(name = names[3])))
+            dao.add(DatabaseItemGroup(name = names[1]))
+            dao.add(listOf(DatabaseItemGroup(name = names[2]),
+                           DatabaseItemGroup(name = names[3])))
         }
         val itemNames = dao.getAllNow().map { it.name }
         assertThat(itemNames.size).isEqualTo(names.size + 1)
@@ -95,13 +95,13 @@ class InventoryDatabaseTests {
         assertThat(names.contains("another new name")).isTrue()
     }
 
-    @Test fun inventoriesFlow() {
-        var newInventoryId = -1L
+    @Test fun itemGroupsFlow() {
+        var newItemGroupId = -1L
         val results = dao.getAll().collectForTesting(
             timeOut = 200L,
             { },
-            { newInventoryId = runBlocking { dao.add("new inventory") }},
-            { runBlocking { db.itemDao().addConvertibles(inventoryId = newInventoryId, listOf(
+            { newItemGroupId = runBlocking { dao.add("new item group") }},
+            { runBlocking { db.itemDao().addConvertibles(itemGroupId = newItemGroupId, listOf(
                 ShoppingListItem(name = ""),
                 ShoppingListItem(name = ""),
                 InventoryItem(name = "")))
@@ -119,7 +119,7 @@ class InventoryDatabaseTests {
 
         items = results[2]
         assertThat(items).isNotNull()
-        val inventory = items.find { it.id == newInventoryId }
+        val inventory = items.find { it.id == newItemGroupId }
         assertThat(inventory).isNotNull()
         assertThat(inventory!!.inventoryItemCount).isEqualTo(1)
         assertThat(inventory.shoppingListItemCount).isEqualTo(2)
@@ -134,7 +134,7 @@ class InventoryDatabaseTests {
 
     @Test fun isSingleSelectByDefault() {
         val singleSelect = runBlocking {
-            val cursor = db.query("SELECT multiSelectInventories FROM dbSettings LIMIT 1", null)
+            val cursor = db.query("SELECT multiSelectGroups FROM settings LIMIT 1", null)
             cursor.moveToFirst()
             cursor.getInt(0) == 0
         }
@@ -156,7 +156,7 @@ class InventoryDatabaseTests {
 
     @Test fun multiSelectInventories() {
         val secondItemId = runBlocking {
-            db.dbSettingsDao().updateMultiSelectInventories(false)
+            db.settingsDao().updateMultiSelectGroups(false)
             dao.add("")
         }
         assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(2)
@@ -171,11 +171,11 @@ class InventoryDatabaseTests {
 
     @Test fun changingToSingleSelectWithMultiSelectionUnselectsAllButOne() {
         runBlocking {
-            db.dbSettingsDao().updateMultiSelectInventories(false)
+            db.settingsDao().updateMultiSelectGroups(false)
             dao.add("")
             dao.add("")
             assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(3)
-            db.dbSettingsDao().updateMultiSelectInventories(true)
+            db.settingsDao().updateMultiSelectGroups(true)
         }
         assertThat(dao.getAllNow().count { it.isSelected }).isEqualTo(1)
     }
@@ -183,7 +183,7 @@ class InventoryDatabaseTests {
     @Test fun cannotDeselectLastInventoryWhileMultiSelecting() {
         val firstItemId = dao.getAllNow()[0].id
         runBlocking {
-            db.dbSettingsDao().updateMultiSelectInventories(false)
+            db.settingsDao().updateMultiSelectGroups(false)
             val id = dao.add("")
             dao.updateIsSelected(id)
         }

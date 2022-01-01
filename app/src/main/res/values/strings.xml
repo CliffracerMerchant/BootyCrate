@@ -112,7 +112,11 @@
     <string name="update_list_reminder_message">Remember to update your shopping list / inventory.</string>
     <string name="pref_privacy_policy_key">privacy_policy</string>
     <string name="pref_privacy_policy_title">Privacy Policy</string>
-    <string name="privacy_policy_text">BootyCrate does not ask for, collect, or share any personal information. BootyCrate only stores user preferences and entered shopping list and inventory item data on the user\'s device, or in external files if the user chooses to export this data. This data is never uploaded to other computers or servers unless the user does this themselves with their exported data files.</string>
+    <string name="privacy_policy_text">BootyCrate does not ask for, collect, or share any personal
+        information. BootyCrate only stores user preferences and entered shopping list and inventory
+        item data on the user\'s device, or in external files if the user chooses to export this
+        data. This data is never uploaded to other computers or servers unless the user does this
+        themselves with their exported data files.</string>
     <string name="invalid_imported_db_error_message">The imported database was invalid or empty. Reverting to previous database instead.</string>
     <string name="error">Error</string>
 
@@ -131,19 +135,19 @@
     <string name="item_color_10_description">pink</string>
     <string name="item_color_11_description">gray</string>
 
-    <string name="add_inventory_description">Add new inventory</string>
-    <string name="inventory_name_hint">Inventory name</string>
-    <string name="rename_inventory_popup_title">Enter inventory name</string>
+    <string name="add_item_group_description">Add new item group</string>
+    <string name="item_group_name_hint">Item group name</string>
+    <string name="rename_item_group_popup_title">Enter item group name</string>
     <string name="more_options_description">More options</string>
     <string name="rename_description">Rename</string>
     <string name="delete_description">Delete</string>
-    <string name="delete_inventory_confirmation_message">Deleting an inventory will delete all items in it and on its associated shopping list, and cannot be undone. Are you sure?</string>
-    <string name="multi_select_inventories_description">Multi-select inventories</string>
-    <string name="select_all_inventories_description">Select all inventories</string>
-    <string name="multiple_selected_inventories_description">Multiple inventories</string>
-    <string name="select_a_shopping_list_message">Pick a shopping list to add the item to:</string>
-    <string name="select_an_inventory_message">Pick an inventory to add the item to:</string>
-    <string name="new_shopping_list_item_has_no_inventory_id_error_message">The item must belong to a shopping list. Select one to add it to.</string>
-    <string name="new_inventory_item_has_no_inventory_id_error_message">The item must belong to an inventory. Select one to add it to.</string>
-    <string name="inventory_selector_options_description">Inventory selector options</string>
+    <string name="delete_item_group_confirmation_message">Deleting an item group will delete all
+        items in the group\'s shopping list and inventory, and cannot be undone. Are you sure?</string>
+    <string name="multi_select_item_groups_description">Multi-select item groups</string>
+    <string name="select_all_item_groups_description">Select all item groups</string>
+    <string name="multiple_selected_item_groups_description">Multiple item groups</string>
+    <string name="select_an_item_group_message">Pick an item group to add the item to:</string>
+    <string name="new_item_has_no_item_group_error_message">
+        The item must belong to an item group. Select one to add it to.</string>
+    <string name="item_group_selector_options_description">Item group selector options</string>
 </resources>

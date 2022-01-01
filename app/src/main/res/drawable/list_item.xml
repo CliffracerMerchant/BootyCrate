@@ -10,10 +10,10 @@
 
     <item android:id="@+id/recycler_view_item_selected_background"
         android:state_selected="true"
-        android:drawable="@drawable/recycler_view_item_selected"/>
+        android:drawable="@drawable/list_item_selected"/>
 
     <item android:id="@+id/recycler_view_item_background"
-        android:drawable="@drawable/recycler_view_item_base" />
+        android:drawable="@drawable/list_item_base" />
 
 </selector>
 

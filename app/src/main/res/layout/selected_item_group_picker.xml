@@ -8,24 +8,24 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/inventoryPickerContainer"
+    android:id="@+id/itemGroupPickerContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     app:maxHeight="206dp" >
 
     <TextView
-        android:id="@+id/inventoryPickerPrompt"
+        android:id="@+id/itemGroupPickerPrompt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:text="@string/select_an_inventory_message"
+        tools:text="@string/select_an_item_group_message"
         android:layout_marginTop="10dp"
         android:layout_marginHorizontal="10dp"
         android:layout_marginBottom="8dp"
         style="@style/SecondaryTextAppearance" />
 
-    <com.cliffracertech.bootycrate.recyclerview.InventoryPicker
-        android:id="@+id/inventoryPicker"
+    <com.cliffracertech.bootycrate.recyclerview.ItemGroupPicker
+        android:id="@+id/itemGroupPicker"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxHeight="210dp" />
