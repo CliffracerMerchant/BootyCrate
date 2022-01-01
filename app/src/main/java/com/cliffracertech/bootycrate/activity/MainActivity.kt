@@ -18,11 +18,9 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
-import com.cliffracertech.bootycrate.recyclerview.InventorySelectionOptionsMenu
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.doOnStart
-import com.cliffracertech.bootycrate.utils.inventoryNameDialog
-import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.cliffracertech.bootycrate.recyclerview.InventorySelectorOptionsMenu
+import com.cliffracertech.bootycrate.utils.*
+import kotlinx.coroutines.flow.collect
 
 /**
  * A BottomNavViewActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -43,16 +41,22 @@ class MainActivity : BottomNavViewActivity() {
     private var pendingCradleAnim: Animator? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        setThemeFromAppSettings()
+        initTheme()
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
         fragmentContainerId = ui.fragmentContainer.id
         navigationView = ui.bottomNavigationView
         super.onCreate(savedInstanceState)
-        ui.inventorySelector.initViewModel(inventoryViewModel, this)
-        setupOnClickListeners()
+        initOnClickListeners()
         initAnimatorConfigs()
         initGradientStyle()
+
+        repeatWhenStarted {
+            inventoryViewModel.inventories.collect(ui.inventorySelector::submitList)
+        }
+        ui.inventorySelector.onItemClick = inventoryViewModel::updateIsSelected
+        ui.inventorySelector.onItemRenameRequest = inventoryViewModel::updateName
+        ui.inventorySelector.onItemDeletionRequest = inventoryViewModel::delete
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
@@ -92,7 +96,7 @@ class MainActivity : BottomNavViewActivity() {
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
-    private fun setThemeFromAppSettings() {
+    private fun initTheme() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val prefKey = getString(R.string.pref_light_dark_mode_key)
         val themeDefault = getString(R.string.pref_theme_sys_default_title)
@@ -109,7 +113,7 @@ class MainActivity : BottomNavViewActivity() {
     private fun fwdMenuItemClick(menuItem: MenuItem) =
         visibleFragment?.onOptionsItemSelected(menuItem) ?: false
 
-    private fun setupOnClickListeners() {
+    private fun initOnClickListeners() {
         ui.actionBar.ui.backButton.setOnClickListener {
             val fragment = visibleFragment as? MainActivityFragment
             if (fragment?.onBackPressed() != true)
@@ -123,10 +127,16 @@ class MainActivity : BottomNavViewActivity() {
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
         ui.addInventoryButton.setOnClickListener {
-            inventoryNameDialog(this, null) { inventoryViewModel.add(it) }
+            inventoryNameDialog(this, null, inventoryViewModel::add)
         }
-        InventorySelectionOptionsMenu.openOnClickOf(
-            ui.inventorySelectorOptionsButton, inventoryViewModel)
+        ui.inventorySelectorOptionsButton.setOnClickListener {
+            InventorySelectorOptionsMenu(
+                anchor = ui.inventorySelectorOptionsButton,
+                multiSelectInventories = inventoryViewModel.multiSelect.value,
+                onMultiSelectCheckboxClick = inventoryViewModel::toggleMultiSelect,
+                onSelectAllClick = inventoryViewModel::selectAll
+            ).show()
+        }
     }
 
     private fun initAnimatorConfigs() {

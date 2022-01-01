@@ -18,12 +18,13 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
-import com.cliffracertech.bootycrate.recyclerview.SelectedInventoryPicker
+import com.cliffracertech.bootycrate.recyclerview.InventoryPicker
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -137,8 +138,34 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
                         WarningMessage.None
                 })
             }}
-            launch { updateSelectedInventoryPicker() }
+            updateSelectedInventoryPicker()
         }
+    }
+
+    /** Initialize the targetInventoryId field with the id of the only selected
+     * inventory if there is only one selected inventory, or show the inventory
+     * picker to the user otherwise to allow them to specify which inventory /
+     * shopping list to add the item to.*/
+    private suspend fun updateSelectedInventoryPicker() {
+        val selectedInventories = inventoryViewModel.getSelectedInventoriesNow()
+        if (selectedInventories.size == 1) {
+            targetInventoryId = selectedInventories.first().id
+            return
+        }
+        val container = ui.inventoryPickerStub.inflate()
+        val inventoryPicker = container.findViewById<InventoryPicker>(R.id.inventoryPicker)
+        if (inventoryPicker != null) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                inventoryViewModel.selectedInventories.collect(inventoryPicker::submitList)
+            }
+            inventoryPicker.onChosenInventoryIdChanged = {
+                targetInventoryId = it
+                if (it != null && shownWarningMessage == WarningMessage.ItemHasNoInventoryId)
+                    clearWarningMessageAndEnableButtons()
+            }
+        }
+        val message = container.findViewById<TextView>(R.id.inventoryPickerPrompt)
+        message?.text = inventoryPickerPrompt
     }
 
     open fun resetNewItemView(): Unit = with(newItemView) {
@@ -213,31 +240,6 @@ abstract class NewBootyCrateItemDialog<T: BootyCrateItem>(
         showWarningMessage(WarningMessage.None)
         addAnotherButton.isEnabled = true
         okButton.isEnabled = true
-    }
-
-    /** Initialize the targetInventoryId field with the id of the only selected
-     * inventory if there is only one selected inventory, or show the inventory
-     * picker to the user otherwise to allow them to specify which inventory /
-     * shopping list to add the item to.*/
-    private suspend fun updateSelectedInventoryPicker() {
-        val selectedInventories = inventoryViewModel.getSelectedInventoriesNow()
-        if (selectedInventories.size == 1) {
-            targetInventoryId = selectedInventories.first().id
-            return
-        }
-        val container = ui.inventoryPickerStub.inflate()
-        val inventoryPicker: SelectedInventoryPicker? =
-                container.findViewById(R.id.inventoryPicker)
-        if (inventoryPicker != null) {
-            inventoryPicker.initViewModel(inventoryViewModel, viewLifecycleOwner)
-            inventoryPicker.onChosenInventoryIdChangedListener = {
-                targetInventoryId = it
-                if (it != null && shownWarningMessage == WarningMessage.ItemHasNoInventoryId)
-                    clearWarningMessageAndEnableButtons()
-            }
-        }
-        val message = container.findViewById<TextView>(R.id.inventoryPickerPrompt)
-        message?.text = inventoryPickerPrompt
     }
 }
 

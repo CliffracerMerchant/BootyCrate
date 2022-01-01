@@ -4,16 +4,8 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.database
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.room.*
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 @Entity(tableName = "dbSettings")
 class DatabaseSettings(
@@ -32,4 +24,7 @@ class DatabaseSettings(
 
     @Query("UPDATE dbSettings SET multiSelectInventories = :multiSelect")
     abstract suspend fun updateMultiSelectInventories(multiSelect: Boolean)
+
+    @Query("UPDATE dbSettings SET multiSelectInventories = 1 - multiSelectInventories")
+    abstract suspend fun toggleMultiSelectInventories()
 }

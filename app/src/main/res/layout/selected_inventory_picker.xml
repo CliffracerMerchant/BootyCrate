@@ -24,7 +24,7 @@
         android:layout_marginBottom="8dp"
         style="@style/SecondaryTextAppearance" />
 
-    <com.cliffracertech.bootycrate.recyclerview.SelectedInventoryPicker
+    <com.cliffracertech.bootycrate.recyclerview.InventoryPicker
         android:id="@+id/inventoryPicker"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

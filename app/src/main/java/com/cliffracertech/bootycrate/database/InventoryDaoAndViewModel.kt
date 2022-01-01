@@ -146,25 +146,30 @@ class InventoryViewModel(app: Application): AndroidViewModel(app) {
         else nameForMultiSelection
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
 
-    fun add(name: String) = viewModelScope.launch { dao.add(name) }
-
-    fun delete(id: Long) = viewModelScope.launch { dao.delete(id) }
-
-    fun updateName(id: Long, name: String) = viewModelScope.launch { dao.updateName(id, name) }
-
-
     val multiSelect = dbSettingsDao.getMultiSelectInventories()
-        .stateIn(viewModelScope, SharingStarted.Eagerly,
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(),
             runBlocking { dbSettingsDao.getMultiSelectInventoriesNow() })
 
-    fun toggleMultiSelect() = viewModelScope.launch {
-        dbSettingsDao.updateMultiSelectInventories(!multiSelect.value)
+    fun toggleMultiSelect() { viewModelScope.launch {
+        dbSettingsDao.toggleMultiSelectInventories()
+    }}
+    fun add(name: String) {
+        viewModelScope.launch { dao.add(name) }
+    }
+    fun delete(id: Long) {
+        viewModelScope.launch { dao.delete(id) }
+    }
+    fun updateName(id: Long, name: String) {
+        viewModelScope.launch { dao.updateName(id, name) }
     }
 
     /** Update the selection state of the inventory whose id is equal to the
      * parameter id. If the database is in single select inventory mode, this
      * will select the given inventory; it will otherwise toggle the selection. */
-    fun updateIsSelected(id: Long) = viewModelScope.launch { dao.updateIsSelected(id) }
-
-    fun selectAll() = viewModelScope.launch { dao.selectAll() }
+    fun updateIsSelected(id: Long) {
+        viewModelScope.launch { dao.updateIsSelected(id) }
+    }
+    fun selectAll() {
+        viewModelScope.launch { dao.selectAll() }
+    }
 }
