@@ -7,6 +7,7 @@ package com.cliffracertech.bootycrate.recyclerview
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
+import android.view.ViewGroup
 import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.*
 import com.cliffracertech.bootycrate.R
@@ -28,9 +29,9 @@ import kotlinx.coroutines.flow.collect
  * adapter type. To achieve this, its abstract properties diffUtilCallback,
  * adapter, and viewModel must be overridden in subclasses. diffUtilCallback
  * must be overridden with an appropriate DiffUtil.ItemCallback<T> for the
- * adapter. adapter must be overridden with a BootyCrateItemAdapter subclass
- * that implements onCreateViewHolder. viewModel must be overridden with a
- * concrete BootyCrateViewModel<T> subclass.
+ * adapter. adapter must be overridden with a BootyCrateRecyclerView.Adapter
+ * subclass that implements onCreateViewHolder. viewModel must be overridden
+ * with a concrete BootyCrateViewModel<T> subclass.
  *
  * After the viewModel property is overridden and initialized in subclasses,
  * the function observeViewModel must be called with a LifecycleOwner that
@@ -117,10 +118,11 @@ abstract class BootyCrateRecyclerView<T: ListItem>(
      * the instance of the item that it represents through the property item, and
      * connects user changes to its editable fields to view model update calls.
      */
-    open inner class ViewHolder(view: BootyCrateItemView<T>) : RecyclerView.ViewHolder(view) {
+    open inner class ViewHolder(view: ListItemView<T>) : RecyclerView.ViewHolder(view) {
         val item: T get() = adapter.currentList[adapterPosition]
 
         init { view.apply {
+            layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
             ui.checkBox.onColorChangedListener = { color ->
                 if (adapterPosition != -1)
                     viewModel.updateColor(item.id, ListItem.Colors.indexOf(color))

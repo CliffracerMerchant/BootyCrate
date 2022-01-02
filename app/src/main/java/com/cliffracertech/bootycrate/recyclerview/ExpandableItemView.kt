@@ -21,14 +21,11 @@ import com.cliffracertech.bootycrate.utils.applyConfig
 import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
 
 /**
- * A BootyCrateItemView subclass that provides an interface for a selection and expansion of the view.
+ * A ListItemView subclass that expands and collapses.
  *
- * ExpandableSelectableItemView extends BootyCrateItemView by providing an
- * interface for expansion of extra details, a custom background to indicate a
- * selected state, and with an update override that will update the view to
- * reflect the selection and expansion state of the ListItem passed to it.
- * The selected state is set using the View property isSelected. ExpandableSelectableItemView
- * indicates its selected state by drawing a gradient outline around its edge.
+ * ExpandableItemView extends ListItemView by providing an interface for
+ * expansion of extra details, and by overriding ListItem's update function to
+ * make it reflect the expansion state of the ListItem passed to it.
  *
  * The interface for item expansion consists of expand, collapse, setExpanded,
  * and toggleExpanded. If subclasses need to alter the visibility of additional
@@ -38,19 +35,19 @@ import com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit
  * set to false.
  *
  * In order to allow for easier synchronization with concurrent animations
- * outside the view, all of ExpandableSelectableItemView's internal animations
- * use the AnimatorConfig defined by the property animatorConfig. If delaying
- * the animations is also required to synchronize them with other animations,
- * the property startAnimationsImmediately can be set to false. In this case
- * the animations will be prepared and stored, and can be played by calling
+ * outside the view, all of ExpandableItemView's internal animations use the
+ * AnimatorConfig defined by the property animatorConfig. If delaying the
+ * animations is also required to synchronize them with other animations, the
+ * property startAnimationsImmediately can be set to false. In this case the
+ * animations will be prepared and stored, and can be played by calling
  * runPendingAnimations.
  */
 @SuppressLint("ViewConstructor", "Recycle")
-open class ExpandableSelectableItemView<T: ListItem>(
+open class ExpandableItemView<T: ListItem>(
     context: Context,
     animatorConfig: AnimatorConfig? = null,
     useDefaultLayout: Boolean = true,
-) : BootyCrateItemView<T>(context, useDefaultLayout),
+) : ListItemView<T>(context, useDefaultLayout),
     ExpandableItemAnimator.ExpandableRecyclerViewItem
 {
     var isExpanded = false
@@ -73,7 +70,6 @@ open class ExpandableSelectableItemView<T: ListItem>(
                                           pendingViewPropAnimations.clear() }
 
     init {
-        background = ContextCompat.getDrawable(context, R.drawable.list_item)
         clipChildren = false
         if (useDefaultLayout) {
             ui.editButton.setOnClickListener { toggleExpanded() }
@@ -84,7 +80,6 @@ open class ExpandableSelectableItemView<T: ListItem>(
     override fun update(item: T) {
         super.update(item)
         setExpanded(item.isExpanded, animate = false)
-        isSelected = item.isSelected
         isLinkedToAnotherItem = item.isLinked
         if (isExpanded)
             ui.linkIndicator.isVisible = isLinkedToAnotherItem
@@ -101,11 +96,9 @@ open class ExpandableSelectableItemView<T: ListItem>(
     /** Update the visibility of the isLinked indicator. */
     fun updateIsLinked(isLinked: Boolean, animate: Boolean = true) {
         isLinkedToAnotherItem = isLinked
-        if (isExpanded) updateIsLinkedIndicatorState(isLinked, animate, translate = false)
+        if (isExpanded)
+            updateIsLinkedIndicatorState(isLinked, animate, translate = false)
     }
-
-    fun select() { isSelected = true }
-    fun deselect() { isSelected = false }
 
     fun toggleExpanded() = setExpanded(!isExpanded)
     @CallSuper open fun onExpandedChanged(expanded: Boolean = true, animate: Boolean = true) {

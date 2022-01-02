@@ -20,7 +20,7 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
 import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.view.BottomNavigationDrawer
@@ -105,7 +105,7 @@ fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
         val vh = it.findViewHolderForAdapterPosition(i)!! as ExpandableSelectableRecyclerView<*>.ViewHolder
         val shouldBeSelected = i in indices
         assertThat(vh.item.isSelected).isEqualTo(shouldBeSelected)
-        val itemView = vh.itemView as ExpandableSelectableItemView<*>
+        val itemView = vh.itemView as ExpandableItemView<*>
         assertThat(itemView.isSelected).isEqualTo(shouldBeSelected)
     }
 }
@@ -116,7 +116,7 @@ open class onlyShownItemsAre<T: ListItem>(vararg items: T) : ViewAssertion {
     private val items = items.asList()
 
     @CallSuper
-    open fun assertItemFromViewMatchesOriginalItem(view: ExpandableSelectableItemView<T>, item: T) {
+    open fun assertItemFromViewMatchesOriginalItem(view: ExpandableItemView<T>, item: T) {
         assertThat(view.ui.nameEdit.text.toString()).isEqualTo(item.name)
         assertThat(view.ui.extraInfoEdit.text.toString()).isEqualTo(item.extraInfo)
         assertThat(view.ui.checkBox.colorIndex).isEqualTo(item.color)
@@ -131,7 +131,7 @@ open class onlyShownItemsAre<T: ListItem>(vararg items: T) : ViewAssertion {
         for (i in 0 until it.adapter.itemCount) {
             val vh = it.findViewHolderForAdapterPosition(i)
             assertThat(vh).isNotNull()
-            val itemView = vh!!.itemView as ExpandableSelectableItemView<T>
+            val itemView = vh!!.itemView as ExpandableItemView<T>
             assertThat(itemView).isNotNull()
             assertThat(assertItemFromViewMatchesOriginalItem(itemView, items[i]))
         }
@@ -144,7 +144,7 @@ class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
     onlyShownItemsAre<ShoppingListItem>(*items)
 {
     override fun assertItemFromViewMatchesOriginalItem(
-        view: ExpandableSelectableItemView<ShoppingListItem>,
+        view: ExpandableItemView<ShoppingListItem>,
         item: ShoppingListItem
     ) {
         super.assertItemFromViewMatchesOriginalItem(view, item)
@@ -158,7 +158,7 @@ class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
     onlyShownItemsAre<InventoryItem>(*items)
 {
     override fun assertItemFromViewMatchesOriginalItem(
-        view: ExpandableSelectableItemView<InventoryItem>,
+        view: ExpandableItemView<InventoryItem>,
         item: InventoryItem
     ) {
         super.assertItemFromViewMatchesOriginalItem(view, item)

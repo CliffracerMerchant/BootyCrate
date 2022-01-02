@@ -7,12 +7,11 @@ package com.cliffracertech.bootycrate.recyclerview
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.ViewGroup
 import android.view.ViewPropertyAnimator
 import androidx.annotation.CallSuper
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.database.InventoryItem
@@ -22,28 +21,28 @@ import com.cliffracertech.bootycrate.databinding.InventoryItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemDetailsBinding
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
+import com.cliffracertech.bootycrate.utils.setPadding
 
 /**
  * A layout to display the data for a ListItem.
  *
- * BootyCrateItemView displays the data for an instance of ListItem. The
- * displayed data can be updated for a new item with the open function update.
- * The function updateContentDescriptions likewise updates the contentDescription
+ * ListItemView displays the data for an instance of ListItem. The displayed
+ * data can be updated for a new item with the open function update. The
+ * function updateContentDescriptions likewise updates the contentDescription
  * fields for child views so that they are unique for each item. Both update
  * and updateContentDescriptions are open functions and should be overridden
  * in subclasses that add new fields to the displayed items.
  *
- * By default BootyCrateItemView inflates itself with the contents of R.layout.list_item.xml
+ * By default ListItemView inflates itself with the contents of R.layout.list_item.xml
  * and initializes its ListItemBinding member ui. In case this layout needs to
- * be overridden in a subclass, the BootyCrateItemView can be constructed with
- * the parameter useDefaultLayout equal to false. If useDefaultLayout is false,
- * it will be up to the subclass to inflate the desired layout and initialize
- * the member ui with an instance of a ListItemBinding. If the ui member is not
+ * be overridden in a subclass, the ListItemView can be constructed with the
+ * parameter useDefaultLayout equal to false. If useDefaultLayout is false, it
+ * will be up to the subclass to inflate the desired layout and initialize the
+ * member ui with an instance of a ListItemBinding. If the ui member is not
  * initialized, a kotlin.UninitializedPropertyAccessException will be thrown.
  */
-@Suppress("LeakingThis")
 @SuppressLint("ViewConstructor")
-open class BootyCrateItemView<T: ListItem>(
+open class ListItemView<T: ListItem>(
     context: Context,
     useDefaultLayout: Boolean = true,
 ) : ConstraintLayout(context) {
@@ -51,8 +50,6 @@ open class BootyCrateItemView<T: ListItem>(
     lateinit var ui: ListItemBinding
 
     init {
-        layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                                 ViewGroup.LayoutParams.WRAP_CONTENT)
         if (useDefaultLayout) {
             ui = ListItemBinding.inflate(LayoutInflater.from(context), this)
             // Initializing isVisible to false here ensures that the extraInfoEdit
@@ -62,9 +59,10 @@ open class BootyCrateItemView<T: ListItem>(
             ui.extraInfoEdit.isVisible = false
             ui.extraInfoEdit.alpha = 0f
         }
-
+        background = ContextCompat.getDrawable(context, R.drawable.list_item)
         val verticalPadding = resources.getDimension(R.dimen.recycler_view_item_vertical_padding)
-        setPadding(0, (verticalPadding * 2f / 3f).toInt(), 0, (verticalPadding * 4f / 3f).toInt())
+        setPadding(top = (verticalPadding * 2f / 3f).toInt(),
+                   bottom = (verticalPadding * 4f / 3f).toInt())
     }
 
     @CallSuper open fun update(item: T) {
@@ -73,6 +71,7 @@ open class BootyCrateItemView<T: ListItem>(
         val colorIndex = item.color.coerceIn(ListItem.Colors.indices)
         ui.checkBox.initColorIndex(colorIndex)
         ui.amountEdit.initValue(item.amount)
+        isSelected = item.isSelected
         updateContentDescriptions(item.name)
     }
 
@@ -86,6 +85,9 @@ open class BootyCrateItemView<T: ListItem>(
         ui.amountEditLabel.text = context.getString(R.string.item_amount_description, itemName)
         ui.extraInfoEdit.hint = context.getString(R.string.item_extra_info_description, itemName)
     }
+
+    fun select() { isSelected = true }
+    fun deselect() { isSelected = false }
 
     /** Update the text of name edit, while also updating the contentDescriptions
      * of child views to take into account the new name. */
@@ -112,19 +114,19 @@ open class BootyCrateItemView<T: ListItem>(
 
 
 /**
- * An ExpandableSelectableItemView to display the contents of a shopping list item.
+ * An ExpandableItemView to display the contents of a shopping list item.
  *
- * ShoppingListItemView is a ExpandableSelectableItemView subclass that
- * displays the data of a ShoppingListItem instance. It has an update override
- * that updates the check state of the checkbox, it overrides the setExpanded
- * function with an implementation that toggles the checkbox between its normal
- * checkbox mode and its color edit mode, and it has a convenience method
- * setStrikeThroughEnabled that will set the strike through state for both the
- * name and extra info edit at the same time.
+ * ShoppingListItemView is a ExpandableItemView subclass that displays the data
+ * of a ShoppingListItem instance. It has an update override that updates the
+ * check state of the checkbox, it overrides the setExpanded function with an
+ * implementation that toggles the checkbox between its normal checkbox mode
+ * and its color edit mode, and it has a convenience method setStrikeThroughEnabled
+ * that will set the strike through state for both the name and extra info edit
+ * at the same time.
  */
 @SuppressLint("ViewConstructor")
 class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig? = null) :
-    ExpandableSelectableItemView<ShoppingListItem>(context, animatorConfig)
+    ExpandableItemView<ShoppingListItem>(context, animatorConfig)
 {
     init { ui.checkBox.onCheckedChangedListener = ::setStrikeThroughEnabled }
 
@@ -149,16 +151,16 @@ class ShoppingListItemView(context: Context, animatorConfig: AnimatorConfig? = n
 
 
 /**
- * An ExpandableSelectableItemView to display the contents of an inventory item.
+ * An ExpandableItemView to display the contents of an inventory item.
  *
- * InventoryItemView is a ExpandableSelectableItemView subclass that displays
- * the data of an InventoryItem instance. It has an update override for the
- * extra fields that InventoryItem adds to its parent class, and has a
- * setExpanded override that also shows or hides these extra fields.
+ * InventoryItemView is a ExpandableItemView subclass that displays the data of
+ * an InventoryItem instance. It has an update override for the extra fields
+ * that InventoryItem adds to its parent class, and has a onExpandedChanged
+ * override that also shows or hides these extra fields.
  */
 @SuppressLint("ViewConstructor")
 class InventoryItemView(context: Context, animatorConfig: AnimatorConfig? = null) :
-    ExpandableSelectableItemView<InventoryItem>(context, animatorConfig, useDefaultLayout = false)
+    ExpandableItemView<InventoryItem>(context, animatorConfig, useDefaultLayout = false)
 {
     val detailsUi: InventoryItemDetailsBinding
     private var pendingDetailsAnimation: ViewPropertyAnimator? = null

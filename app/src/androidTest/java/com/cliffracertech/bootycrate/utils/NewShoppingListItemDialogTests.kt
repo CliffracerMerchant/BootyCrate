@@ -20,7 +20,7 @@ import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
@@ -71,7 +71,7 @@ class NewShoppingListItemDialogTests {
     @Test fun appears() {
         onView(withId(R.id.addButton)).perform(click())
         onView(withId(R.id.newItemViewContainer)).check(matches(isDisplayed()))
-        onView(inNewItemDialog(instanceOf(ExpandableSelectableItemView::class.java))).check(matches(isDisplayed()))
+        onView(inNewItemDialog(instanceOf(ExpandableItemView::class.java))).check(matches(isDisplayed()))
         onView(inNewItemDialog(withId(R.id.autoAddToShoppingListCheckBox))).check(doesNotExist())
         onView(withId(R.id.warningMessage)).check(matches(not(isDisplayed())))
         onView(withText(android.R.string.ok)).check(matches(isEnabled()))
@@ -85,8 +85,8 @@ class NewShoppingListItemDialogTests {
         onView(inNewItemDialog(withId(R.id.valueEdit))).check(matches(withText("1")))
         onView(inNewItemDialog(withId(R.id.linkIndicator))).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.editButton))).check(matches(not(isDisplayed())))
-        onView(inNewItemDialog(instanceOf(ExpandableSelectableItemView::class.java)))
-            .perform(doStuff<ExpandableSelectableItemView<ShoppingListItem>> {
+        onView(inNewItemDialog(instanceOf(ExpandableItemView::class.java)))
+            .perform(doStuff<ExpandableItemView<ShoppingListItem>> {
                 assertThat(it.ui.checkBox.colorIndex).isEqualTo(0)
                 assertThat(it.ui.checkBox.inColorEditMode).isTrue()
                 assertThat(it.ui.nameEdit.isEditable).isTrue()
@@ -106,8 +106,8 @@ class NewShoppingListItemDialogTests {
         onView(inNewItemDialog(withId(R.id.valueEdit))).check(matches(withText("1")))
         onView(inNewItemDialog(withId(R.id.linkIndicator))).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.editButton))).check(matches(not(isDisplayed())))
-        onView(inNewItemDialog(instanceOf(ExpandableSelectableItemView::class.java)))
-            .perform(doStuff<ExpandableSelectableItemView<ShoppingListItem>> {
+        onView(inNewItemDialog(instanceOf(ExpandableItemView::class.java)))
+            .perform(doStuff<ExpandableItemView<ShoppingListItem>> {
                 // The color edit is intended to stay the same value after the add another button
                 // is pressed, but the rest of the fields should be reset to their default values.
                 assertThat(it.ui.checkBox.colorIndex).isEqualTo(testItem.color)

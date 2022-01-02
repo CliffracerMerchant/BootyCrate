@@ -64,7 +64,7 @@ abstract class ExpandableSelectableRecyclerView<T: ListItem>(
                 val allowableMargin = itemAnimator.changeDuration / 2
                 if ((editButtonLastPressTimestamp + allowableMargin) >= now) {
                     val vh = findViewHolderForAdapterPosition(queuedEditButtonPressPos)
-                    val view = vh?.itemView as? ExpandableSelectableItemView<*>
+                    val view = vh?.itemView as? ExpandableItemView<*>
                     view?.ui?.editButton?.performClick()
                 }
                 queuedEditButtonPressPos = -1
@@ -95,7 +95,7 @@ abstract class ExpandableSelectableRecyclerView<T: ListItem>(
     }
 
     /**
-     * A ViewHolder subclass that wraps an instance of ExpandableSelectableItemView.
+     * A ViewHolder subclass that wraps an instance of ExpandableItemView.
      *
      * ExpandableSelectableRecyclerView.ViewHolder updates the onClickListeners of
      * the wrapped item view to enable the selection and expansion of the items, and
@@ -105,11 +105,11 @@ abstract class ExpandableSelectableRecyclerView<T: ListItem>(
      * focusable children, it should override hasFocusedChild to check if these
      * children are focused.
      */
-    open inner class ViewHolder(view: ExpandableSelectableItemView<T>) :
+    open inner class ViewHolder(view: ExpandableItemView<T>) :
         BootyCrateRecyclerView<T>.ViewHolder(view)
     {
         @Suppress("UNCHECKED_CAST")
-        open val view get() = itemView as ExpandableSelectableItemView<T>
+        open val view get() = itemView as ExpandableItemView<T>
 
         init {
             val onClick = OnClickListener { if (!selectionIsEmpty) toggleSelected(itemId) }

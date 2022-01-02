@@ -18,11 +18,10 @@ import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
-import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupPicker
 import kotlinx.coroutines.flow.collect
@@ -66,7 +65,7 @@ abstract class NewListItemDialog<T: ListItem>(
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
     protected var ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
-    protected lateinit var newItemView: ExpandableSelectableItemView<T>
+    protected lateinit var newItemView: ExpandableItemView<T>
     protected var targetGroupId: Long? = null
         private set
 
@@ -77,7 +76,7 @@ abstract class NewListItemDialog<T: ListItem>(
 
     init {
         if (useDefaultLayout)
-            newItemView = ExpandableSelectableItemView(context)
+            newItemView = ExpandableItemView(context)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
