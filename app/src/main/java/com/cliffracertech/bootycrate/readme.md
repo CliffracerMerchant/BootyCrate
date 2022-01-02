@@ -1,6 +1,9 @@
 # Project Structure
 The project is separated into the following packages:
 
+### database
+database contains the application's database, Room data access object, and view models.
+
 ### activity
 activity contains all of the classes in the inheritance chain of the single activity
 used in the app, as well as extension functions of the MainActivityBinding UI class. 
@@ -26,22 +29,19 @@ RecyclerViewFragment -> ShoppingListFragment
 recyclerview contains all of the classes used in the inheritance chain of the recycler
 views used in the two main fragments:
 <pre>
-BootyCrateRecyclerView -> ExpandableSelectableRecyclerView -> ShoppingListRecyclerView
-                                                           -> InventoryItemRecyclerView
+ItemListView -> ExpandableItemListView -> ShoppingListView
+                                       -> InventoryView
 </pre>
 and other associated classes (e.g. item views and item animators). The recycler views'
 item views' inheritance chain is:
 <pre>
-ListItemView -> ExpandableSelectableItemView -> ShoppingListItemView
-                                             -> InventoryItemView
+ListItemView -> ExpandableItemView -> ShoppingListItemView
+                                   -> InventoryItemView
 </pre>
-
-### database
-database contains the application's database, Room data access object, and view models.
-
-### utils
-miscellaneous utility classes, objects, and functions.
 
 ### view
 view contains all other custom views that don't fit into another package. The main
 activity's UI elements, such as the ListActionBar and BottomAppBar, are located here.
+
+### utils
+miscellaneous utility classes, objects, and functions.

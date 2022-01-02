@@ -199,7 +199,7 @@ class NewInventoryItemDialogTests {
     @Test fun addItem() {
         appears()
         addTestInventoryItems(leaveDialogOpen = false, testItem)
-        onView(withId(R.id.inventoryItemRecyclerView))
+        onView(withId(R.id.inventoryView))
             .check(onlyShownInventoryItemsAre(testItem))
     }
 
@@ -209,7 +209,7 @@ class NewInventoryItemDialogTests {
                                       color = 7, amount = 8, autoAddToShoppingList = true,
                                       autoAddToShoppingListAmount = 2)
         addTestInventoryItems(leaveDialogOpen = false, testItem, testItem2)
-        onView(withId(R.id.inventoryItemRecyclerView)).check(
+        onView(withId(R.id.inventoryView)).check(
             onlyShownInventoryItemsAre(testItem, testItem2))
     }
 }

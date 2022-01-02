@@ -9,23 +9,25 @@ import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.InventoryItemViewModel
 import java.util.*
 
 /**
- * A RecyclerView to display the data provided by an InventoryItemViewModel.
+ * A View to display a list of InventoryItem instances.
  *
- * The function initViewModel must be called with an instance of InventoryItemViewModel.
- * Failure to do so will prevent any items from appearing.
+ * The members onItemAutoAddToShoppingListCheckboxClick and
+ * onItemAutoAddToShoppingListAmountChangeRequest should be set to a non-null
+ * value to respond when either of these events occur for an item.
  */
-class InventoryItemRecyclerView(context: Context, attrs: AttributeSet) :
-    ExpandableSelectableRecyclerView<InventoryItem>(context, attrs)
+class InventoryView(context: Context, attrs: AttributeSet) :
+    ExpandableItemListView<InventoryItem>(context, attrs)
 {
     override val diffUtilCallback = DiffUtilCallback()
-    override val adapter = Adapter()
-    override lateinit var viewModel: InventoryItemViewModel
+    override val listAdapter = Adapter()
 
-    fun initViewModel(viewModel: InventoryItemViewModel) { this.viewModel = viewModel }
+    var onItemAutoAddToShoppingListCheckboxClick: ((Long) -> Unit)? = null
+    var onItemAutoAddToShoppingListAmountChangeRequest: ((Long, Int) -> Unit)? = null
+
+    init { this.adapter = listAdapter }
 
     /**
      * A RecyclerView.Adapter to display the contents of a list of inventory items.
@@ -38,7 +40,7 @@ class InventoryItemRecyclerView(context: Context, attrs: AttributeSet) :
      * it are of the type EnumSet<InventoryItem.Field>. If a payload of another
      * type is passed to it, an exception will be thrown.
      */
-    inner class Adapter : ExpandableSelectableRecyclerView<InventoryItem>.Adapter<ViewHolder>() {
+    inner class Adapter : ExpandableItemListView<InventoryItem>.Adapter<ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             ViewHolder(InventoryItemView(context, itemAnimator.animatorConfig))
@@ -83,24 +85,25 @@ class InventoryItemRecyclerView(context: Context, attrs: AttributeSet) :
     }
 
     /**
-     * A ExpandableSelectableRecyclerView.ViewHolder that wraps an instance of InventoryItemView.
+     * A ExpandableItemList.ViewHolder that wraps an instance of InventoryItemView.
      *
-     * InventoryItemRecyclerView.ViewHolder is a subclass of ExpandableSelectableRecyclerView.ViewHolder
-     * that holds an instance of InventoryItemView to display the data for an
-     * InventoryItem.
+     * InventoryView.ViewHolder is a subclass of ExpandableItemList.ViewHolder that
+     * holds an instance of InventoryItemView to display the data for an InventoryItem.
      */
     inner class ViewHolder(view: InventoryItemView) :
-        ExpandableSelectableRecyclerView<InventoryItem>.ViewHolder(view) {
+        ExpandableItemListView<InventoryItem>.ViewHolder(view) {
 
         override val view get() = itemView as InventoryItemView
 
         init {
             view.detailsUi.autoAddToShoppingListCheckBox.onCheckedChangedListener = { checked ->
-                viewModel.updateAutoAddToShoppingList(item.id, checked)
+                onItemAutoAddToShoppingListCheckboxClick?.invoke(item.id)
+//                viewModel.updateAutoAddToShoppingList(item.id, checked)
             }
             view.detailsUi.autoAddToShoppingListAmountEdit.onValueChangedListener = { value ->
-                if (adapterPosition != -1)
-                    viewModel.updateAutoAddToShoppingListAmount(item.id, value)
+                onItemAutoAddToShoppingListAmountChangeRequest?.invoke(item.id, value)
+//                if (adapterPosition != -1)
+//                    viewModel.updateAutoAddToShoppingListAmount(item.id, value)
             }
         }
     }

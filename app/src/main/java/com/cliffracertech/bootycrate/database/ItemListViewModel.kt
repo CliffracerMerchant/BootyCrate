@@ -5,12 +5,17 @@
 package com.cliffracertech.bootycrate.database
 
 import android.app.Application
+import android.view.View
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.utils.getValue
 import com.cliffracertech.bootycrate.utils.setValue
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.utils.SoftKeyboard
+import com.cliffracertech.bootycrate.utils.resolveIntAttribute
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -18,7 +23,7 @@ import kotlinx.coroutines.launch
  * An abstract AndroidViewModel that provides the data for an activity or
  * fragment to display a list of ListItems.
  *
- * BootyCrateViewModel provides two sorting options through the properties sort
+ * ItemListViewModel provides two sorting options through the properties sort
  * and searchFilter. sort describes a value of the enum class ListItem.Sort,
  * while searchFilter describes a string whose value the name and/or extra info
  * of items will be matched to. Changes to the value of sort or searchFilter
@@ -44,7 +49,7 @@ import kotlinx.coroutines.launch
  * values of the StateFlow properties nameIsAlreadyUsedInShoppingList and
  * nameIsAlreadyUsedInInventory.
  */
-abstract class BootyCrateViewModel<T: ListItem>(app: Application): AndroidViewModel(app) {
+abstract class ItemListViewModel<T: ListItem>(app: Application): AndroidViewModel(app) {
     protected val dao = BootyCrateDatabase.get(app).itemDao()
 
     protected val sortFlow = MutableStateFlow(ListItem.Sort.Color)
@@ -78,8 +83,6 @@ abstract class BootyCrateViewModel<T: ListItem>(app: Application): AndroidViewMo
 
     abstract val newItemNameIsAlreadyUsed: StateFlow<NameIsAlreadyUsed>
 
-    abstract val selectedItemCount: StateFlow<Int>
-
     fun add(item: T, groupId: Long) =
         viewModelScope.launch { dao.add(item.toDbListItem(groupId)) }
 
@@ -92,31 +95,33 @@ abstract class BootyCrateViewModel<T: ListItem>(app: Application): AndroidViewMo
     fun updateColor(id: Long, color: Int) =
         viewModelScope.launch { dao.updateColor(id, color) }
 
-    abstract fun deleteAll()
-    abstract fun emptyTrash()
-    abstract fun delete(ids: LongArray)
-    abstract fun undoDelete()
     abstract fun updateAmount(id: Long, amount: Int)
-
     abstract fun setExpandedItem(id: Long?)
+
+    abstract val selectedItemCount: StateFlow<Int>
     abstract fun updateIsSelected(id: Long, isSelected: Boolean)
     abstract fun toggleIsSelected(id: Long)
-    abstract fun deleteSelected()
     abstract fun selectAll()
     abstract fun clearSelection()
+
+    abstract fun deleteSelected(snackBarAnchor: View)
+    abstract fun delete(ids: LongArray, snackBarAnchor: View)
+    abstract fun deleteAll()
+    abstract fun emptyTrash()
+    protected abstract fun undoDelete()
 }
 
 
 
 /**
- * An implementation of BootyCrateViewModel<ShoppingListItem>.
+ * An implementation of ItemListViewModel<ShoppingListItem>.
  *
  * ShoppingListViewModel adds a new sortByChecked option, which will sort
  * ShoppingListItems by their checked state in addition to the sorting method
  * described by the sort property. It also adds functions to manipulate the
  * checked state of items, and the checkout function.
  */
-class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<ShoppingListItem>(app) {
+class ShoppingListViewModel(app: Application) : ItemListViewModel<ShoppingListItem>(app) {
 
     private val _sortByChecked = MutableStateFlow(false)
     var sortByChecked by _sortByChecked
@@ -140,48 +145,18 @@ class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<Shopping
                else ->                   NameIsAlreadyUsed.False }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NameIsAlreadyUsed.False)
 
-    override val selectedItemCount = dao.getSelectedShoppingListItemCount()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
 
-    val checkedItemsSize = dao.getCheckedShoppingListItemsSize()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
-
-    override fun deleteAll() {
-        viewModelScope.launch { dao.deleteAllShoppingListItems() }
-    }
-    override fun emptyTrash() {
-        viewModelScope.launch { dao.emptyShoppingListTrash() }
-    }
-    override fun delete(ids: LongArray) {
-        viewModelScope.launch { dao.deleteShoppingListItems(ids) }
-    }
-    override fun undoDelete() {
-        viewModelScope.launch { dao.undoDeleteShoppingListItems() }
-    }
     override fun updateAmount(id: Long, amount: Int) {
         viewModelScope.launch { dao.updateShoppingListAmount(id, amount) }
     }
     override fun setExpandedItem(id: Long?) {
         viewModelScope.launch { dao.setExpandedShoppingListItem(id) }
     }
-    override fun updateIsSelected(id: Long, isSelected: Boolean) {
-        viewModelScope.launch { dao.updateSelectedInShoppingList(id, isSelected) }
-    }
-    override fun toggleIsSelected(id: Long) {
-        viewModelScope.launch { dao.toggleSelectedInShoppingList(id) }
-    }
-    override fun deleteSelected() {
-        viewModelScope.launch { dao.deleteSelectedShoppingListItems() }
-    }
-    override fun selectAll() {
-        viewModelScope.launch { dao.selectAllShoppingListItems() }
-    }
-    override fun clearSelection() {
-        viewModelScope.launch { dao.clearShoppingListSelection() }
-    }
-    fun addFromSelectedInventoryItems() {
-        viewModelScope.launch { dao.addToShoppingListFromSelectedInventoryItems() }
-    }
+
+
+    val checkedItemsSize = dao.getCheckedShoppingListItemsSize()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
+
     fun updateIsChecked(id: Long, isChecked: Boolean) =
         viewModelScope.launch { dao.updateIsChecked(id, isChecked) }
 
@@ -194,14 +169,78 @@ class ShoppingListItemViewModel(app: Application) : BootyCrateViewModel<Shopping
     fun checkout() {
         viewModelScope.launch { dao.checkout() }
     }
+
+
+    override val selectedItemCount = dao.getSelectedShoppingListItemCount()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
+
+    override fun updateIsSelected(id: Long, isSelected: Boolean) {
+        viewModelScope.launch { dao.updateSelectedInShoppingList(id, isSelected) }
+    }
+    override fun toggleIsSelected(id: Long) {
+        viewModelScope.launch { dao.toggleSelectedInShoppingList(id) }
+    }
+    override fun selectAll() {
+        viewModelScope.launch { dao.selectAllShoppingListItems() }
+    }
+    override fun clearSelection() {
+        viewModelScope.launch { dao.clearShoppingListSelection() }
+    }
+    fun addFromSelectedInventoryItems() {
+        viewModelScope.launch { dao.addToShoppingListFromSelectedInventoryItems() }
+    }
+
+
+    override fun deleteSelected(snackBarAnchor: View) {
+        viewModelScope.launch {
+            dao.deleteSelectedShoppingListItems()
+            showDeletedItemsSnackBar(selectedItemCount.value, snackBarAnchor)
+            SoftKeyboard.hide(snackBarAnchor)
+        }
+    }
+    override fun delete(ids: LongArray, snackBarAnchor: View) {
+        viewModelScope.launch {
+            dao.deleteShoppingListItems(ids)
+            showDeletedItemsSnackBar(ids.size, snackBarAnchor)
+            SoftKeyboard.hide(snackBarAnchor)
+        }
+    }
+    override fun deleteAll() {
+        viewModelScope.launch { dao.deleteAllShoppingListItems() }
+    }
+    override fun emptyTrash() {
+        viewModelScope.launch { dao.emptyShoppingListTrash() }
+    }
+    override fun undoDelete() {
+        viewModelScope.launch { dao.undoDeleteShoppingListItems() }
+    }
+
+    private var totalDeletedItemCount: Int = 0
+    private fun showDeletedItemsSnackBar(newlyDeletedItemCount: Int, anchor: View) {
+        totalDeletedItemCount += newlyDeletedItemCount
+        val text = anchor.context.getString(R.string.delete_snackbar_text, totalDeletedItemCount)
+        Snackbar.make(anchor, text, Snackbar.LENGTH_LONG)
+            .setAnchorView(anchor)
+            .setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
+            .setActionTextColor(anchor.context.theme.resolveIntAttribute(R.attr.colorAccent))
+            .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                override fun onDismissed(a: Snackbar?, b: Int) {
+                    if (b != DISMISS_EVENT_CONSECUTIVE) {
+                        totalDeletedItemCount = 0
+                        if (b != DISMISS_EVENT_ACTION)
+                            emptyTrash()
+                    }
+                }
+            }).show()
+    }
 }
 
 
 
-/** An implementation of BootyCrateViewModel<InventoryItem> that adds functions
+/** An implementation of ItemListViewModel<InventoryItem> that adds functions
  * to manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
  * fields of items in the database. */
-class InventoryItemViewModel(app: Application) : BootyCrateViewModel<InventoryItem>(app) {
+class InventoryViewModel(app: Application) : ItemListViewModel<InventoryItem>(app) {
 
     override val items = sortFlow.combine(searchFilterFlow, dao::getInventoryContents)
         .transformLatest { emitAll(it) }
@@ -216,24 +255,21 @@ class InventoryItemViewModel(app: Application) : BootyCrateViewModel<InventoryIt
                else ->                   NameIsAlreadyUsed.False }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NameIsAlreadyUsed.False)
 
-    override fun deleteAll() {
-        viewModelScope.launch { dao.deleteAllInventoryItems() }
-    }
-    override fun emptyTrash() {
-        viewModelScope.launch { dao.emptyInventoryTrash() }
-    }
-    override fun delete(ids: LongArray) {
-        viewModelScope.launch { dao.deleteInventoryItems(ids) }
-    }
-    override fun undoDelete() {
-        viewModelScope.launch { dao.undoDeleteInventoryItems() }
-    }
+
     override fun updateAmount(id: Long, amount: Int) {
         viewModelScope.launch { dao.updateInventoryAmount(id, amount) }
     }
     override fun setExpandedItem(id: Long?) {
         viewModelScope.launch { dao.setExpandedInventoryItem(id) }
     }
+    fun updateAutoAddToShoppingList(id: Long, autoAddToShoppingList: Boolean) {
+        viewModelScope.launch { dao.updateAutoAddToShoppingList(id, autoAddToShoppingList) }
+    }
+    fun updateAutoAddToShoppingListAmount(id: Long, autoAddToShoppingListAmount: Int) {
+        viewModelScope.launch { dao.updateAutoAddToShoppingListAmount(id, autoAddToShoppingListAmount) }
+    }
+
+
     override val selectedItemCount = dao.getSelectedInventoryItemCount()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
 
@@ -243,23 +279,30 @@ class InventoryItemViewModel(app: Application) : BootyCrateViewModel<InventoryIt
     override fun toggleIsSelected(id: Long) {
         viewModelScope.launch { dao.toggleSelectedInInventory(id) }
     }
-    override fun deleteSelected() {
-        viewModelScope.launch { dao.deleteSelectedInventoryItems() }
-    }
     override fun selectAll() {
         viewModelScope.launch { dao.selectAllInventoryItems() }
     }
     override fun clearSelection() {
         viewModelScope.launch { dao.clearInventorySelection() }
     }
-
     fun addFromSelectedShoppingListItems() {
         viewModelScope.launch { dao.addToInventoryFromSelectedShoppingListItems() }
     }
-    fun updateAutoAddToShoppingList(id: Long, autoAddToShoppingList: Boolean) {
-        viewModelScope.launch { dao.updateAutoAddToShoppingList(id, autoAddToShoppingList) }
+
+
+    override fun deleteSelected(snackBarAnchor: View) {
+        viewModelScope.launch { dao.deleteSelectedInventoryItems() }
     }
-    fun updateAutoAddToShoppingListAmount(id: Long, autoAddToShoppingListAmount: Int) {
-        viewModelScope.launch { dao.updateAutoAddToShoppingListAmount(id, autoAddToShoppingListAmount) }
+    override fun delete(ids: LongArray, snackBarAnchor: View) {
+        viewModelScope.launch { dao.deleteInventoryItems(ids) }
+    }
+    override fun deleteAll() {
+        viewModelScope.launch { dao.deleteAllInventoryItems() }
+    }
+    override fun emptyTrash() {
+        viewModelScope.launch { dao.emptyInventoryTrash() }
+    }
+    override fun undoDelete() {
+        viewModelScope.launch { dao.undoDeleteInventoryItems() }
     }
 }

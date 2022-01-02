@@ -4,7 +4,7 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/emptyRecyclerViewMessage"
+    android:id="@+id/emptyListMessage"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"

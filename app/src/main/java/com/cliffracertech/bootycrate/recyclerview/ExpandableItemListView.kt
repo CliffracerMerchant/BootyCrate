@@ -6,38 +6,38 @@ package com.cliffracertech.bootycrate.recyclerview
 
 import android.content.Context
 import android.util.AttributeSet
-import android.view.View.OnClickListener
-import android.view.View.OnLongClickListener
 import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 
 /**
- * A BootyCrateRecyclerView subclass that enables multi-selection and expansion of items.
+ * An ItemListView subclass that enables item expansion.
  *
- * ExpandableSelectableRecyclerView extends BootyCrateRecyclerView by using a
- * ExpandableItemAnimator instance to visually animate changes in items'
- * expanded states. It utilizes its own custom view holder to enforce the use
- * of ExpandableSelectableItemViews, and a custom adapter that in turn enforces
- * the use of ExpandableSelectableRecyclerView.ViewHolder.
+ * ExpandableItemListView extends ItemList by using a ExpandableItemAnimator
+ * instance to visually animate changes in items' expanded states. It utilizes
+ * its own custom view holder to enforce the use of ExpandableItemViews, and a
+ * custom adapter that in turn enforces the use of ExpandableItemListView.ViewHolder.
+ * The callback onItemEditButtonClick should be set to a non-null value to
+ * respond to clicks on an item's edit button.
  */
 @Suppress("LeakingThis")
-abstract class ExpandableSelectableRecyclerView<T: ListItem>(
+abstract class ExpandableItemListView<T: ListItem>(
     context: Context,
     attrs: AttributeSet
-) : BootyCrateRecyclerView<T>(context, attrs) {
+) : ItemListView<T>(context, attrs) {
 
     protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
     private var needToHideSoftKeyboard = false
     private var expandCollapseAnimRunning = false
     private var queuedEditButtonPressPos = -1
     private var editButtonLastPressTimestamp = 0L
+    var onItemEditButtonClick: ((Long) -> Unit)? = null
 
     init {
         itemAnimator.onAnimStartedListener = { viewHolder, expanding ->
             expandCollapseAnimRunning = true
             if (!expanding) {
-                val vh = viewHolder as ExpandableSelectableRecyclerView<*>.ViewHolder
+                val vh = viewHolder as ExpandableItemListView<*>.ViewHolder
                 vh.view.hasFocus()
                 needToHideSoftKeyboard = vh.view.focusedChild != null
             }
@@ -73,15 +73,11 @@ abstract class ExpandableSelectableRecyclerView<T: ListItem>(
         setItemAnimator(itemAnimator)
     }
 
-    private val selectionIsEmpty get() = (viewModel.selectedItemCount.value) == 0
-    private fun toggleSelected(id: Long) = viewModel.toggleIsSelected(id)
-    private fun clearSelection() = viewModel.clearSelection()
-
     /** An abstract (due to not implementing onCreateViewHolder) subclass of
-     * BootyCrateRecyclerView.Adapter that enforces the use of
-     * ExpandableSelectableRecyclerView.ViewHolder. */
-    abstract inner class Adapter<VHType: ViewHolder> : BootyCrateRecyclerView<T>.Adapter<VHType>() {
-
+     * ItemListView.Adapter that enforces the use of ExpandableItemListView.ViewHolder. */
+    abstract inner class Adapter<VHType: ViewHolder> :
+        ItemListView<T>.Adapter<VHType>()
+    {
         override fun onBindViewHolder(holder: VHType, position: Int) =
             holder.view.update(holder.item)
 
@@ -97,44 +93,30 @@ abstract class ExpandableSelectableRecyclerView<T: ListItem>(
     /**
      * A ViewHolder subclass that wraps an instance of ExpandableItemView.
      *
-     * ExpandableSelectableRecyclerView.ViewHolder updates the onClickListeners of
-     * the wrapped item view to enable the selection and expansion of the items, and
-     * adds the open function hasFocusedChild. ExpandableSelectableRecyclerView uses
-     * the return value of hasFocusedChild to decide whether or not to attempt to
+     * ExpandableItemListView.ViewHolder updates the onClickListeners of the
+     * wrapped item view to enable the selection and expansion of the items, and
+     * adds the open function hasFocusedChild. ExpandableItemListView uses the
+     * return value of hasFocusedChild to decide whether or not to attempt to
      * hide the soft keyboard when an item is collapsed. If a subclass adds new
      * focusable children, it should override hasFocusedChild to check if these
      * children are focused.
      */
     open inner class ViewHolder(view: ExpandableItemView<T>) :
-        BootyCrateRecyclerView<T>.ViewHolder(view)
+        ItemListView<T>.ViewHolder(view)
     {
-        @Suppress("UNCHECKED_CAST")
         open val view get() = itemView as ExpandableItemView<T>
 
         init {
-            val onClick = OnClickListener { if (!selectionIsEmpty) toggleSelected(itemId) }
-            val onLongClick = OnLongClickListener { toggleSelected(itemId); true }
+            view.startAnimationsImmediately = false
 
-            view.apply {
-                startAnimationsImmediately = false
-                setOnClickListener(onClick)
-                ui.nameEdit.setOnClickListener(onClick)
-                ui.extraInfoEdit.setOnClickListener(onClick)
-                ui.amountEdit.ui.valueEdit.setOnClickListener(onClick)
-
-                setOnLongClickListener(onLongClick)
-                ui.nameEdit.setOnLongClickListener(onLongClick)
-                ui.extraInfoEdit.setOnLongClickListener(onLongClick)
-                ui.amountEdit.ui.valueEdit.setOnLongClickListener(onLongClick)
-
-                ui.editButton.setOnClickListener {
-                    if (!expandCollapseAnimRunning)
-                        viewModel.setExpandedItem(if (isExpanded) null
-                                                  else            item.id)
-                    else {
-                        editButtonLastPressTimestamp = System.currentTimeMillis()
-                        queuedEditButtonPressPos = adapterPosition
-                    }
+            view.ui.editButton.setOnClickListener {
+                if (!expandCollapseAnimRunning)
+                    onItemEditButtonClick?.invoke(item.id)
+//                    viewModel.setExpandedItem(if (view.isExpanded) null
+//                                              else                 item.id)
+                else {
+                    editButtonLastPressTimestamp = System.currentTimeMillis()
+                    queuedEditButtonPressPos = adapterPosition
                 }
             }
         }

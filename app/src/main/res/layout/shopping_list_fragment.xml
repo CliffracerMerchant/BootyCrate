@@ -9,16 +9,16 @@
     android:id="@+id/shoppingListFragmentView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:msv_emptyView="@layout/empty_recycler_view"
-    app:msv_errorView="@layout/empty_recycler_view"
-    app:msv_loadingView="@layout/loading_recycler_view"
+    app:msv_emptyView="@layout/empty_list"
+    app:msv_errorView="@layout/empty_list"
+    app:msv_loadingView="@layout/loading_list"
     app:msv_animateViewChanges="true"
     app:msv_viewState="loading" >
 
-    <com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
-        android:id="@+id/shoppingListRecyclerView"
+    <com.cliffracertech.bootycrate.recyclerview.ShoppingListView
+        android:id="@+id/shoppingListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        style="@style/RecyclerView" />
+        style="@style/ItemList" />
 
 </com.kennyc.view.MultiStateView>

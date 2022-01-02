@@ -11,44 +11,43 @@ import android.view.animation.AnimationUtils
 import androidx.recyclerview.widget.DiffUtil
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import java.util.*
 import kotlin.collections.set
 
 /**
- * A RecyclerView to display the data provided by a ShoppingListViewModel.
+ * A View to display a list of ShoppingListItem instances.
  *
- * The function initViewModel must be called with an instance of ShoppingListItemViewModel.
- * Failure to do so will prevent any items from appearing.
+ * The member callback onItemCheckBoxClick should be changed to a non-null
+ * value to respond to clicks on an item's checkbox.
  */
-class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
-    ExpandableSelectableRecyclerView<ShoppingListItem>(context, attrs)
+class ShoppingListView(context: Context, attrs: AttributeSet) :
+    ExpandableItemListView<ShoppingListItem>(context, attrs)
 {
     override val diffUtilCallback = DiffUtilCallback()
-    override val adapter = Adapter()
-    override lateinit var viewModel: ShoppingListItemViewModel
+    override val listAdapter = Adapter()
+
+    var onItemCheckBoxClick: ((Long) -> Unit)? = null
 
     init {
+        this.adapter = listAdapter
         itemAnimator.animatorConfig = AnimatorConfig(
             context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }
 
-    fun initViewModel(viewModel: ShoppingListItemViewModel) { this.viewModel = viewModel }
-
     /**
      * An adapter to display the contents of a list of shopping list items.
      *
-     * ShoppingListRecyclerView.Adapter is a subclass of ExpandableSelectableRecyclerView.Adapter
-     * using ShoppingListRecyclerView.ViewHolder instances to represent shopping list
+     * ShoppingListView.Adapter is a subclass of ExpandableItemListView.Adapter
+     * using ShoppingListView.ViewHolder instances to represent shopping list
      * items. Its overrides of onBindViewHolder make use of the ShoppingListItem.Field
-     * values passed by ShoppingListRecyclerView.DiffUtilCallback to support partial
-     * binding. Note that ShoppingListAdapter assumes that any change payloads passed
-     * to it are of the type EnumSet<ShoppingListItem.Field>. If a payload of another
-     * type is passed to it, an exception will be thrown.
+     * values passed by ShoppingListView.DiffUtilCallback to support partial
+     * binding. Note that ShoppingListView.Adapter assumes that any change
+     * payloads passed to it are of the type EnumSet<ShoppingListItem.Field>.
+     * If a payload of another type is passed to it, an exception will be thrown.
      */
-    inner class Adapter : ExpandableSelectableRecyclerView<ShoppingListItem>.Adapter<ViewHolder>() {
+    inner class Adapter : ExpandableItemListView<ShoppingListItem>.Adapter<ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             ViewHolder(ShoppingListItemView(context, itemAnimator.animatorConfig))
@@ -81,26 +80,31 @@ class ShoppingListRecyclerView(context: Context, attrs: AttributeSet) :
                     holder.view.isSelected = item.isSelected
                 if (changes.contains(ShoppingListItem.Field.IsLinked))
                     holder.view.updateIsLinked(item.isLinked, animate = item.isExpanded)
-                if (changes.contains(ShoppingListItem.Field.IsChecked))
+                if (changes.contains(ShoppingListItem.Field.IsChecked)) {
                     ui.checkBox.initIsChecked(item.isChecked)
+                    holder.view.setStrikeThroughEnabled(item.isChecked)
+                }
             }
         }
     }
 
     /**
-     * A ExpandableSelectableItemViewHolder that wraps an instance of ShoppingListItemView.
+     * A ExpandableItemListView.ViewHolder that wraps an instance of ShoppingListItemView.
      *
-     * ShoppingListRecyclerView.ViewHolder is a subclass of ExpandableSelectableItemViewHolder
+     * ShoppingListView.ViewHolder is a subclass of ExpandableItemListView.ViewHolder
      * that holds an instance of ShoppingListItemView to display the data for a
      * ShoppingListItem.
      */
     inner class ViewHolder(view: ShoppingListItemView) :
-        ExpandableSelectableRecyclerView<ShoppingListItem>.ViewHolder(view)
+        ExpandableItemListView<ShoppingListItem>.ViewHolder(view)
     {
+        override val view get() = itemView as ShoppingListItemView
+
         init {
             view.ui.checkBox.onCheckedChangedListener = { checked ->
-                viewModel.updateIsChecked(item.id, checked)
-                view.setStrikeThroughEnabled(checked)
+                onItemCheckBoxClick?.invoke(item.id)
+//                viewModel.updateIsChecked(item.id, checked)
+//                view.setStrikeThroughEnabled(checked)
             }
         }
     }

@@ -11,12 +11,12 @@ import androidx.annotation.Keep
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.*
-import com.cliffracertech.bootycrate.database.InventoryItemViewModel
+import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
+import com.cliffracertech.bootycrate.database.ShoppingListViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.ShoppingListFragmentBinding
-import com.cliffracertech.bootycrate.recyclerview.ShoppingListRecyclerView
+import com.cliffracertech.bootycrate.recyclerview.ShoppingListView
 import com.cliffracertech.bootycrate.utils.NewShoppingListItemDialog
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.view.CheckoutButton
@@ -27,11 +27,10 @@ import kotlinx.coroutines.launch
 /**
  * A fragment to display and modify the user's shopping list.
  *
- * ShoppingListFragment is a RecyclerViewFragment subclass to view and modify
- * the user's shopping list using an ShoppingListRecyclerView. ShoppingListFragment
- * overrides RecyclerViewFragment's abstract recyclerView property with an
- * instance of ShoppingListRecyclerView, and overrides its ActionModeCallback
- * with its own version.
+ * ShoppingListFragment is a ListViewFragment subclass to view and modify a
+ * list of ShoppingListItems using a ShoppingListView. ShoppingListFragment
+ * overrides ListViewFragment's abstract listView property with an instance of
+ * ShoppingListView, and overrides its ActionModeCallback with its own version.
  *
  * ShoppingListFragment also manages the state and function of the checkout
  * button. The checkout button is enabled when the user has checked at least
@@ -42,10 +41,10 @@ import kotlinx.coroutines.launch
  * the user does not press the button again within two seconds, it will revert
  * to its normal state.
  */
-@Keep class ShoppingListFragment : RecyclerViewFragment<ShoppingListItem>() {
-    override val viewModel: ShoppingListItemViewModel by activityViewModels()
-    private val inventoryItemViewModel: InventoryItemViewModel by activityViewModels()
-    override var recyclerView: ShoppingListRecyclerView? = null
+@Keep class ShoppingListFragment : ListViewFragment<ShoppingListItem>() {
+    override val viewModel: ShoppingListViewModel by activityViewModels()
+    private val inventoryItemViewModel: InventoryViewModel by activityViewModels()
+    override var listView: ShoppingListView? = null
     override lateinit var collectionName: String
     override val actionModeCallback = ShoppingListActionModeCallback()
 
@@ -56,16 +55,16 @@ import kotlinx.coroutines.launch
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ) = ShoppingListFragmentBinding.inflate(inflater, container, false).apply {
-        recyclerView = shoppingListRecyclerView
+        listView = shoppingListView
         collectionName = inflater.context.getString(R.string.shopping_list_item_collection_name)
     }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerView?.initViewModel(viewModel)
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.repeatWhenStarted {
             launch { viewModel.items.collect(::updateBadge) }
             launch { viewModel.checkedItemsSize.collect { newSize ->
+                dlog("Checked items size now $newSize, ${if (newSize != 0) "enabling" else "disabling"} checkout button")
                 checkoutButton?.isEnabled = newSize != 0
             }}
         }
@@ -73,7 +72,7 @@ import kotlinx.coroutines.launch
 
     override fun onDestroyView() {
         super.onDestroyView()
-        recyclerView = null
+        listView = null
     }
 
     override fun onDetach() {

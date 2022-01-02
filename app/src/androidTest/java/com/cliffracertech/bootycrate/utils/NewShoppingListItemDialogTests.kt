@@ -180,7 +180,7 @@ class NewShoppingListItemDialogTests {
     @Test fun addItem() {
         appears()
         addTestShoppingListItems(leaveDialogOpen = false, testItem)
-        onView(withId(R.id.shoppingListRecyclerView))
+        onView(withId(R.id.shoppingListView))
             .check(onlyShownShoppingListItemsAre(testItem))
     }
 
@@ -189,7 +189,7 @@ class NewShoppingListItemDialogTests {
         val testItem2 = ShoppingListItem(name = "Test Item 2", color = 7, amount = 8,
                                          extraInfo = "Test Item 2 Extra Info")
         addTestShoppingListItems(leaveDialogOpen = false, testItem, testItem2)
-        onView(withId(R.id.shoppingListRecyclerView)).check(
+        onView(withId(R.id.shoppingListView)).check(
             onlyShownShoppingListItemsAre(testItem, testItem2))
     }
 }

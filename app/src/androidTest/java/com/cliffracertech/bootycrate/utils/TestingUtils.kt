@@ -21,7 +21,7 @@ import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
-import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.view.BottomNavigationDrawer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -81,28 +81,28 @@ fun replaceValueEditText(text: String) = actionOnChildWithId(R.id.valueEdit, cli
 
 fun onPopupView(viewMatcher: Matcher<View>) = onView(viewMatcher).inRoot(isPlatformPopup())
 
-/** Assert that the view is an ExpandableSelectableRecyclerView with only one expanded item at index expandedIndex. */
+/** Assert that the view is an ExpandableItemListView with only one expanded item at index expandedIndex. */
 fun onlyExpandedIndexIs(expandedIndex: Int?) = ViewAssertion { view, e ->
     if (view == null) throw e!!
-    assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
-    val it = view as ExpandableSelectableRecyclerView<*>
+    assertThat(view).isInstanceOf(ExpandableItemListView::class.java)
+    val it = view as ExpandableItemListView<*>
     val expandedViewHeight = if (expandedIndex == null) Integer.MAX_VALUE else
         it.findViewHolderForAdapterPosition(expandedIndex)?.itemView?.height ?: throw e
-    for (i in 0 until it.adapter.itemCount) {
+    for (i in 0 until it.listAdapter.itemCount) {
         val vh = it.findViewHolderForAdapterPosition(i)
         if (i != expandedIndex) assertThat(vh?.itemView?.height).isLessThan(expandedViewHeight)
         else                    assertThat(vh?.itemView?.height).isEqualTo(expandedViewHeight)
     }
 }
 
-/** Asserts that the view is an ExpandableSelectableRecyclerView, with the items
- * at the specified indices all selected, and with no other selected items. */
+/** Asserts that the view is an ExpandableItemListView, with the items at
+ * the specified indices all selected, and with no other selected items. */
 fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
     if (view == null) throw e!!
-    assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
-    val it = view as ExpandableSelectableRecyclerView<*>
-    for (i in 0 until it.adapter.itemCount) {
-        val vh = it.findViewHolderForAdapterPosition(i)!! as ExpandableSelectableRecyclerView<*>.ViewHolder
+    assertThat(view).isInstanceOf(ExpandableItemListView::class.java)
+    val it = view as ExpandableItemListView<*>
+    for (i in 0 until it.listAdapter.itemCount) {
+        val vh = it.findViewHolderForAdapterPosition(i)!! as ExpandableItemListView<*>.ViewHolder
         val shouldBeSelected = i in indices
         assertThat(vh.item.isSelected).isEqualTo(shouldBeSelected)
         val itemView = vh.itemView as ExpandableItemView<*>
@@ -110,8 +110,8 @@ fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
     }
 }
 
-/** Asserts that the view is an ExpandableSelectableRecyclerView that
-    contains only the specified items of type T, in the order given. */
+/** Asserts that the view is an ExpandableItemListView that contains
+    only the specified items of type T, in the order given. */
 open class onlyShownItemsAre<T: ListItem>(vararg items: T) : ViewAssertion {
     private val items = items.asList()
 
@@ -125,10 +125,10 @@ open class onlyShownItemsAre<T: ListItem>(vararg items: T) : ViewAssertion {
 
     override fun check(view: View?, noViewFoundException: NoMatchingViewException?) {
         if (view == null) throw noViewFoundException!!
-        assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
-        val it = view as ExpandableSelectableRecyclerView<*>
-        assertThat(items.size).isEqualTo(it.adapter.itemCount)
-        for (i in 0 until it.adapter.itemCount) {
+        assertThat(view).isInstanceOf(ExpandableItemListView::class.java)
+        val it = view as ExpandableItemListView<*>
+        assertThat(items.size).isEqualTo(it.listAdapter.itemCount)
+        for (i in 0 until it.listAdapter.itemCount) {
             val vh = it.findViewHolderForAdapterPosition(i)
             assertThat(vh).isNotNull()
             val itemView = vh!!.itemView as ExpandableItemView<T>
@@ -138,7 +138,7 @@ open class onlyShownItemsAre<T: ListItem>(vararg items: T) : ViewAssertion {
     }
 }
 
-/** Asserts that the matching view is an ExpandableSelectableRecyclerView subclass
+/** Asserts that the matching view is an ExpandableItemListView subclass
  * that only shows the provided shopping list items, in the order given. */
 class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
     onlyShownItemsAre<ShoppingListItem>(*items)
@@ -152,8 +152,8 @@ class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
     }
 }
 
-/** Asserts that the matching view is an ExpandableSelectableRecyclerView
- * subclass that only shows the provided inventory items, in the order given. */
+/** Asserts that the matching view is an ExpandableItemListView subclass
+ * that only shows the provided inventory items, in the order given. */
 class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
     onlyShownItemsAre<InventoryItem>(*items)
 {

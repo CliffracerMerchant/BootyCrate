@@ -32,21 +32,21 @@ class NavigationTests {
 
     @Test fun startingFragmentVisibility() {
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
     }
 
     @Test fun switchingToInventoryItemFragment() {
         startingFragmentVisibility()
         onView(withId(R.id.inventoryButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(not(isCompletelyDisplayed())))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(isDisplayed()))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(isDisplayed()))
     }
 
     @Test fun switchingBackToShoppingListFragment() {
         switchingToInventoryItemFragment()
         onView(withId(R.id.shoppingListButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isCompletelyDisplayed())))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isCompletelyDisplayed())))
     }
 
     @Test fun navigatingToSettingsFragment() {
@@ -59,7 +59,7 @@ class NavigationTests {
         navigatingToSettingsFragment()
         pressBack()
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
     }
 
@@ -67,7 +67,7 @@ class NavigationTests {
         navigatingToSettingsFragment()
         onView(withId(R.id.backButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
     }
 

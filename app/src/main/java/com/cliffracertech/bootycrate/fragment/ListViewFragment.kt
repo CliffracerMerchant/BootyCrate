@@ -19,7 +19,7 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.utils.setPadding
 import com.cliffracertech.bootycrate.view.ListActionBar
@@ -31,17 +31,16 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 /**
- * A fragment to display an ExpandableSelectableRecyclerView to the user.
+ * A fragment to display an ExpandableItemListView to the user.
  *
- * RecyclerViewFragment is an abstract fragment whose main purpose is to
- * display an instance of a ExpandableSelectableRecyclerView to the user. It
- * has two abstract properties, viewModel and recyclerView, that must be
- * overridden in subclasses with concrete implementations of
- * ExpandableSelectableViewModel and ExpandableSelectableRecyclerView,
- * respectively. Because RecyclerViewFragment's implementation of onViewCreated
- * references its abstract recyclerView property, it is important that
- * subclasses override the recyclerView property and initialize it before
- * calling super.onViewCreated, or an exception will occur.
+ * ListViewFragment is an abstract fragment whose main purpose is to display an
+ * instance of a ExpandableItemListView to the user. It has two abstract
+ * properties, viewModel and listView, that must be overridden in subclasses
+ * with concrete implementations of ListViewModel and ExpandableItemListView,
+ * respectively. Because ListViewFragment's implementation of onViewCreated
+ * references its abstract listView property, it is important that subclasses
+ * override the listView property and initialize it before calling
+ * super.onViewCreated, or an exception will occur.
  *
  * The value of the open property collectionName should be overridden in
  * subclasses with a value that describes what the collection of items
@@ -52,17 +51,18 @@ import java.util.*
  * with a descendant of SelectionActionModeCallback if they wish to perform
  * work when the action mode starts or finishes.
  */
-abstract class RecyclerViewFragment<T: ListItem> :
+abstract class ListViewFragment<T: ListItem> :
     Fragment(), MainActivity.MainActivityFragment
 {
-    protected abstract val viewModel: BootyCrateViewModel<T>
-    protected abstract val recyclerView: ExpandableSelectableRecyclerView<T>?
+    protected abstract val viewModel: ItemListViewModel<T>
+    protected abstract val listView: ExpandableItemListView<T>?
     protected open val collectionName = ""
     protected open val actionModeCallback = SelectionActionModeCallback()
     private lateinit var sortModePrefKey: String
 
     private var actionBar: ListActionBar? = null
-    private val actionModeIsStarted get() = actionBar?.actionMode?.callback == actionModeCallback
+    private val actionModeIsStarted get() =
+        actionBar?.actionMode?.callback == actionModeCallback
     private val searchIsActive get() = actionBar?.activeSearchQuery != null
     private var observeInventoryNameJob: Job? = null
         set(value) {
@@ -86,9 +86,9 @@ abstract class RecyclerViewFragment<T: ListItem> :
         val emptyTextView = multiStateView?.getView(MultiStateView.ViewState.EMPTY) as? TextView
         emptyTextView?.text = getString(R.string.empty_recycler_view_message, collectionName)
 
-        recyclerView?.observeViewModel(this)
         viewLifecycleOwner.repeatWhenStarted {
             viewModel.items.collect { items ->
+                listView?.submitList(items)
                 (view as? MultiStateView)?.viewState = when {
                     items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
                     searchIsActive ->     MultiStateView.ViewState.ERROR
@@ -102,12 +102,15 @@ abstract class RecyclerViewFragment<T: ListItem> :
         super.onDetach()
         observeInventoryNameJob = null
         actionBar = null
-        recyclerView?.snackBarAnchor = null
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.delete_selected_menu_item -> deleteSelectedItems()
-        R.id.share_menu_item -> shareList()
+        R.id.delete_selected_menu_item -> {
+            val anchor = view
+            if (anchor != null)
+                viewModel.deleteSelected(snackBarAnchor = anchor)
+            anchor != null
+        } R.id.share_menu_item -> shareList()
         R.id.select_all_menu_item -> {  viewModel.selectAll(); true }
         R.id.color_option -> { saveSortingOption(ListItem.Sort.Color, item) }
         R.id.name_ascending_option -> { saveSortingOption(ListItem.Sort.NameAsc, item) }
@@ -127,7 +130,7 @@ abstract class RecyclerViewFragment<T: ListItem> :
                     else viewModel.items.value.filter { it.isSelected }
 
         if (items.isEmpty()) {
-            val anchor = recyclerView?.snackBarAnchor ?: view ?: return false
+            val anchor = view ?: return false
             val message = context.getString(R.string.empty_recycler_view_message, collectionName)
             Snackbar.make(context, anchor, message, Snackbar.LENGTH_LONG)
                 .setAnchorView(anchor).show()
@@ -151,16 +154,8 @@ abstract class RecyclerViewFragment<T: ListItem> :
         return true
     }
 
-    private fun deleteSelectedItems(): Boolean {
-        val recyclerView = this.recyclerView ?: return false
-        val size = viewModel.selectedItemCount.value
-        viewModel.deleteSelected()
-        recyclerView.showDeletedItemsSnackBar(size)
-        return true
-    }
-
-    /** Set the recyclerView's sort to @param sort, check the @param
-     * sortMenuItem, and save the sort to sharedPreferences.
+    /** Set the list view's sort to @param sort, check the @param sortMenuItem,
+     * and save the sort to sharedPreferences.
      * @return whether the option was successfully saved to preferences. */
     private fun saveSortingOption(sort: ListItem.Sort, sortMenuItem: MenuItem) : Boolean {
         viewModel.sort = sort
@@ -180,9 +175,9 @@ abstract class RecyclerViewFragment<T: ListItem> :
     }
 
     override fun onBackPressed() = when {
-        actionModeIsStarted  -> { viewModel.clearSelection(); true }
-        searchIsActive       -> { actionBar?.activeSearchQuery = null; true }
-        else                 -> false
+        actionModeIsStarted -> { viewModel.clearSelection(); true }
+        searchIsActive      -> { actionBar?.activeSearchQuery = null; true }
+        else                -> false
     }
 
     @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
@@ -206,11 +201,10 @@ abstract class RecyclerViewFragment<T: ListItem> :
             }
         }
 
-        recyclerView?.apply {
+        listView?.apply {
             val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
             if (paddingBottom != bottomSheetPeekHeight)
                 setPadding(bottom = bottomSheetPeekHeight)
-            snackBarAnchor = activityUi.bottomAppBar
         }
 
         val actionModeCallback = if (viewModel.selectedItemCount.value == 0) null

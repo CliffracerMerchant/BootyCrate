@@ -12,7 +12,7 @@
 
     <string-array name="bottom_nav_view_activity_fragments">
         <item>com.cliffracertech.bootycrate.fragment.ShoppingListFragment</item>
-        <item>com.cliffracertech.bootycrate.fragment.InventoryItemFragment</item>
+        <item>com.cliffracertech.bootycrate.fragment.InventoryFragment</item>
     </string-array>
 
     <integer-array name="list_item_colors">

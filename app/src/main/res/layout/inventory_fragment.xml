@@ -6,19 +6,19 @@
 <com.kennyc.view.MultiStateView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/inventoryItemFragmentView"
+    android:id="@+id/inventoryFragmentView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:msv_emptyView="@layout/empty_recycler_view"
-    app:msv_errorView="@layout/empty_recycler_view"
-    app:msv_loadingView="@layout/loading_recycler_view"
+    app:msv_emptyView="@layout/empty_list"
+    app:msv_errorView="@layout/empty_list"
+    app:msv_loadingView="@layout/loading_list"
     app:msv_animateViewChanges="true"
     app:msv_viewState="loading" >
 
-    <com.cliffracertech.bootycrate.recyclerview.InventoryItemRecyclerView
-        android:id="@+id/inventoryItemRecyclerView"
+    <com.cliffracertech.bootycrate.recyclerview.InventoryView
+        android:id="@+id/inventoryView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        style="@style/RecyclerView" />
+        style="@style/ItemList" />
 
 </com.kennyc.view.MultiStateView>

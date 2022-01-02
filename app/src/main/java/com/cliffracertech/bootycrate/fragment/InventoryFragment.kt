@@ -7,32 +7,31 @@ package com.cliffracertech.bootycrate.fragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
-import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.Keep
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.InventoryItemViewModel
-import com.cliffracertech.bootycrate.database.ShoppingListItemViewModel
-import com.cliffracertech.bootycrate.databinding.InventoryItemFragmentBinding
+import com.cliffracertech.bootycrate.database.InventoryViewModel
+import com.cliffracertech.bootycrate.database.ShoppingListViewModel
+import com.cliffracertech.bootycrate.databinding.InventoryFragmentBinding
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.recyclerview.InventoryItemRecyclerView
+import com.cliffracertech.bootycrate.recyclerview.InventoryView
 import com.cliffracertech.bootycrate.utils.NewInventoryItemDialog
 import com.cliffracertech.bootycrate.view.ListActionBar
 
 /**
  * A fragment to display and modify the user's inventory.
  *
- * InventoryItemFragment is a RecyclerViewFragment subclass to view and modify
- * the user's inventory using an InventoryItemRecyclerView. It implements
- * RecyclerViewFragment's abstract properties with values suitable for display
- * of an InventoryItemRecyclerView, and uses its own action mode callback.
+ * InventoryFragment is a ListViewFragment subclass to view and modify the
+ * user's inventory using an InventoryView. It implements ListViewFragment's
+ * abstract properties with values suitable for display of an InventoryView,
+ * and uses its own action mode callback.
  */
-@Keep class InventoryItemFragment: RecyclerViewFragment<InventoryItem>() {
-    override val viewModel: InventoryItemViewModel by activityViewModels()
-    private val shoppingListItemViewModel: ShoppingListItemViewModel by activityViewModels()
-    override var recyclerView: InventoryItemRecyclerView? = null
+@Keep class InventoryFragment: ListViewFragment<InventoryItem>() {
+    override val viewModel: InventoryViewModel by activityViewModels()
+    private val shoppingListItemViewModel: ShoppingListViewModel by activityViewModels()
+    override var listView: InventoryView? = null
     override lateinit var collectionName: String
     override val actionModeCallback = InventoryActionModeCallback()
 
@@ -40,19 +39,14 @@ import com.cliffracertech.bootycrate.view.ListActionBar
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ) = InventoryItemFragmentBinding.inflate(inflater, container, false).apply {
-        recyclerView = inventoryItemRecyclerView
+    ) = InventoryFragmentBinding.inflate(inflater, container, false).apply {
+        listView = inventoryView
         collectionName = inflater.context.getString(R.string.inventory_item_collection_name)
     }.root
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        recyclerView?.initViewModel(viewModel)
-        super.onViewCreated(view, savedInstanceState)
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
-        recyclerView = null
+        listView = null
     }
 
     override fun onOptionsItemSelected(item: MenuItem) =

@@ -58,7 +58,7 @@ abstract class NewListItemDialog<T: ListItem>(
     context: Context,
     useDefaultLayout: Boolean = true
 ) : DialogFragment() {
-    abstract val itemViewModel: BootyCrateViewModel<T>
+    abstract val itemViewModel: ItemListViewModel<T>
     private val itemGroupViewModel: ItemGroupViewModel by activityViewModels()
 
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
@@ -129,9 +129,9 @@ abstract class NewListItemDialog<T: ListItem>(
         viewLifecycleOwner.repeatWhenStarted {
             launch { itemViewModel.newItemNameIsAlreadyUsed.collect {
                 showWarningMessage(when (it) {
-                    BootyCrateViewModel.NameIsAlreadyUsed.TrueForCurrentList ->
+                    ItemListViewModel.NameIsAlreadyUsed.TrueForCurrentList ->
                         WarningMessage.NameAlreadyInUseInCollection
-                    BootyCrateViewModel.NameIsAlreadyUsed.TrueForSiblingList ->
+                    ItemListViewModel.NameIsAlreadyUsed.TrueForSiblingList ->
                         WarningMessage.NameAlreadyInUseInOtherCollection
                     else ->//BootyCrateViewModel.NameIsAlreadyUsed.False
                         WarningMessage.None
@@ -246,7 +246,7 @@ abstract class NewListItemDialog<T: ListItem>(
 class NewShoppingListItemDialog(context: Context) :
     NewListItemDialog<ShoppingListItem>(context)
 {
-    override val itemViewModel: ShoppingListItemViewModel by activityViewModels()
+    override val itemViewModel: ShoppingListViewModel by activityViewModels()
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_shopping_list_item_duplicate_name_warning)
@@ -269,7 +269,7 @@ class NewShoppingListItemDialog(context: Context) :
 class NewInventoryItemDialog(context: Context) :
     NewListItemDialog<InventoryItem>(context, useDefaultLayout = false)
 {
-    override val itemViewModel: InventoryItemViewModel by activityViewModels()
+    override val itemViewModel: InventoryViewModel by activityViewModels()
     private val newInventoryItemView = InventoryItemView(context, null)
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
