@@ -15,11 +15,11 @@ import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.viewmodel.ItemGroupViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.viewmodel.ItemGroupViewModel
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -54,9 +54,9 @@ class MainActivity : BottomNavViewActivity() {
         repeatWhenStarted {
             itemGroupViewModel.itemGroups.collect(ui.itemGroupSelector::submitList)
         }
-        ui.itemGroupSelector.onItemClick = itemGroupViewModel::updateIsSelected
-        ui.itemGroupSelector.onItemRenameRequest = itemGroupViewModel::updateName
-        ui.itemGroupSelector.onItemDeletionRequest = itemGroupViewModel::delete
+        ui.itemGroupSelector.onItemClick = itemGroupViewModel::onItemGroupClick
+        ui.itemGroupSelector.onItemRenameRequest = itemGroupViewModel::onConfirmItemGroupRenameDialog
+        ui.itemGroupSelector.onItemDeletionRequest = itemGroupViewModel::onConfirmDeleteItemGroupDialog
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
@@ -128,14 +128,14 @@ class MainActivity : BottomNavViewActivity() {
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
         ui.addItemGroupButton.setOnClickListener {
-            itemGroupNameDialog(this, null, itemGroupViewModel::add)
+            itemGroupNameDialog(this, null, itemGroupViewModel::onConfirmAddNewItemGroupDialog)
         }
         ui.itemGroupSelectorOptionsButton.setOnClickListener {
             ItemGroupSelectorOptionsMenu(
                 anchor = ui.itemGroupSelectorOptionsButton,
-                multiSelectInventories = itemGroupViewModel.multiSelect,
-                onMultiSelectCheckboxClick = itemGroupViewModel::toggleMultiSelect,
-                onSelectAllClick = itemGroupViewModel::selectAll
+                multiSelectItemGroups = itemGroupViewModel.multiSelectGroups,
+                onMultiSelectCheckboxClick = itemGroupViewModel::onMultiSelectCheckboxClick,
+                onSelectAllClick = itemGroupViewModel::onSelectAllGroupsClick
             ).show()
         }
     }

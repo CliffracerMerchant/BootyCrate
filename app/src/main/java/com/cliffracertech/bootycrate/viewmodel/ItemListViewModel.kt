@@ -24,8 +24,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 /**
- * An abstract AndroidViewModel that provides the data for an activity or
- * fragment to display a list of ListItems.
+ * An abstract AndroidViewModel to provide data and callbacks for a fragment
+ * that displays a list of ListItem subclasses.
  *
  * ItemListViewModel provides two sorting options through the properties sort
  * and searchFilter. sort describes a value of the enum class ListItem.Sort,
@@ -34,12 +34,10 @@ import kotlinx.coroutines.launch
  * will result in the List<T> of items, exposed through the StateFlow property
  * items, to be updated to reflect the changed sorting option or search filter.
  *
- * If the properties newItemName and newItemExtraInfo are updated with the
- * proposed name and extra info for a new item, the StateFlow property
- * newItemNameIsAlreadyUsed can be collected to tell if the name and extra info
- * combination is already in use by another item on the same list, is in use by
- * an item in a neighboring collection, or if it is not in use by either, as
- * indicated by the values of the enum class NameIsAlreadyUsed.
+ * The property selectedItemGroupName is a StateFlow<String> whose current
+ * value will be equal to the name of the selected item group if only one is
+ * selected, or a string to express that multiple item groups are selected
+ * otherwise.
  *
  * The current sorting option and search filter are exposed as StateFlows to
  * subclasses through the properties sortFlow and searchFilterFlow. Subclasses
@@ -47,14 +45,10 @@ import kotlinx.coroutines.launch
  * containing all of the items in the database that match the current sorting
  * option and search filter, as well as any additional sorting parameters that
  * they themselves add.
- *
- * Subclasses will need to override newItemNameIsAlreadyUsed with a Flow whose
- * emitted values are the correct NameIsAlreadyUsed value given the current
- * values of the StateFlow properties nameIsAlreadyUsedInShoppingList and
- * nameIsAlreadyUsedInInventory.
  */
 abstract class ItemListViewModel<T: ListItem>(app: Application): AndroidViewModel(app) {
     protected val dao = BootyCrateDatabase.get(app).itemDao()
+    private val itemGroupDao = BootyCrateDatabase.get(app).itemGroupDao()
 
     protected val sortFlow = MutableStateFlow(ListItem.Sort.Color)
     var sort by sortFlow
@@ -64,33 +58,12 @@ abstract class ItemListViewModel<T: ListItem>(app: Application): AndroidViewMode
 
     abstract val items: StateFlow<List<T>>
 
-    /** An enum whose values represent whether a given name for a new
-     * item is already in use by another item in a given list. */
-    enum class NameIsAlreadyUsed {
-        /** The name is already taken by an item in the list whose contents are being checked. */
-        TrueForCurrentList,
-        /** The name is already taken by an item in a sibling list of items, but not the current one. */
-        TrueForSiblingList,
-        /**  The name is not in use. */
-        False
-    }
+    private val nameForMultiSelection = app.getString(R.string.multiple_selected_item_groups_description)
+    val selectedItemGroupName = itemGroupDao.getSelectedGroups().map {
+        if (it.size == 1) it.first().name
+        else nameForMultiSelection
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
 
-    private val _newItemName = MutableStateFlow("")
-    var newItemName by _newItemName
-
-    private val _newItemExtraInfo = MutableStateFlow("")
-    var newItemExtraInfo by _newItemExtraInfo
-
-    protected val nameIsAlreadyUsedInShoppingList =
-        _newItemName.combine(_newItemExtraInfo, dao::nameAlreadyUsedInShoppingList)
-    protected val nameIsAlreadyUsedInInventory =
-        _newItemName.combine(_newItemExtraInfo, dao::nameAlreadyUsedInInventory)
-
-    abstract val newItemNameIsAlreadyUsed: StateFlow<NameIsAlreadyUsed>
-
-    fun onAddItemRequest(item: T, groupId: Long) {
-        viewModelScope.launch { dao.add(item.toDbListItem(groupId)) }
-    }
     fun onRenameItemRequest(id: Long, name: String) {
         viewModelScope.launch { dao.updateName(id, name) }
     }
@@ -160,8 +133,8 @@ abstract class ItemListViewModel<T: ListItem>(app: Application): AndroidViewMode
  *
  * ShoppingListViewModel adds a new sortByChecked option, which will sort
  * ShoppingListItems by their checked state in addition to the sorting method
- * described by the sort property. It also adds functions to manipulate the
- * checked state of items, and the checkout function.
+ * described by the sort property. It also adds functions to respond to clicks
+ * on the checkbox of items, and to respond to a request to checkout.
  */
 class ShoppingListViewModel(app: Application) : ItemListViewModel<ShoppingListItem>(app) {
 
@@ -177,16 +150,6 @@ class ShoppingListViewModel(app: Application) : ItemListViewModel<ShoppingListIt
         combine(sortFlow, searchFilterFlow, _sortByChecked, dao::getShoppingList)
             .transformLatest { emitAll(it) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
-    override val newItemNameIsAlreadyUsed = combine(
-        nameIsAlreadyUsedInShoppingList,
-        nameIsAlreadyUsedInInventory
-    ) { existsInShoppingList, existsInInventory ->
-        when { (existsInShoppingList) -> NameIsAlreadyUsed.TrueForCurrentList
-               (existsInInventory) ->    NameIsAlreadyUsed.TrueForSiblingList
-               else ->                   NameIsAlreadyUsed.False }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NameIsAlreadyUsed.False)
-
 
     override fun onChangeItemAmountRequest(id: Long, amount: Int) {
         viewModelScope.launch { dao.updateShoppingListAmount(id, amount) }
@@ -235,11 +198,9 @@ class ShoppingListViewModel(app: Application) : ItemListViewModel<ShoppingListIt
     override fun deleteItems(ids: Array<Long>) {
         viewModelScope.launch { dao.deleteShoppingListItems(ids) }
     }
-
     override fun deleteSelectedItems() {
         viewModelScope.launch { dao.deleteSelectedShoppingListItems() }
     }
-
     override fun emptyTrash() {
         viewModelScope.launch { dao.emptyShoppingListTrash() }
     }
@@ -258,15 +219,6 @@ class InventoryViewModel(app: Application) : ItemListViewModel<InventoryItem>(ap
     override val items = sortFlow.combine(searchFilterFlow, dao::getInventoryContents)
         .transformLatest { emitAll(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-
-    override val newItemNameIsAlreadyUsed = combine(
-        nameIsAlreadyUsedInInventory,
-        nameIsAlreadyUsedInShoppingList
-    ) { existsInInventory, existsInShoppingList ->
-        when { (existsInInventory) ->    NameIsAlreadyUsed.TrueForCurrentList
-               (existsInShoppingList) -> NameIsAlreadyUsed.TrueForSiblingList
-               else ->                   NameIsAlreadyUsed.False }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NameIsAlreadyUsed.False)
 
 
     override fun onChangeItemAmountRequest(id: Long, amount: Int) {
@@ -305,11 +257,9 @@ class InventoryViewModel(app: Application) : ItemListViewModel<InventoryItem>(ap
     override fun deleteItems(ids: Array<Long>) {
         viewModelScope.launch { dao.deleteInventoryItems(ids) }
     }
-
     override fun deleteSelectedItems() {
         viewModelScope.launch { dao.deleteSelectedInventoryItems() }
     }
-
     override fun emptyTrash() {
         viewModelScope.launch { dao.emptyInventoryTrash() }
     }

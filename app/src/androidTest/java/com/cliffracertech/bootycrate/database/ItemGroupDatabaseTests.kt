@@ -141,7 +141,7 @@ class ItemGroupDatabaseTests {
         assertThat(singleSelect).isTrue()
     }
 
-    @Test fun singleSelectInventories() {
+    @Test fun singleSelectItemGroups() {
         var firstItem = dao.getAllNow()[0]
         assertThat(firstItem.isSelected).isTrue()
         addedInventoryIsSelected()
@@ -154,7 +154,7 @@ class ItemGroupDatabaseTests {
         assertThat(secondItem.isSelected).isFalse()
     }
 
-    @Test fun multiSelectInventories() {
+    @Test fun multiSelectItemGroups() {
         val secondItemId = runBlocking {
             db.settingsDao().updateMultiSelectGroups(false)
             dao.add("")

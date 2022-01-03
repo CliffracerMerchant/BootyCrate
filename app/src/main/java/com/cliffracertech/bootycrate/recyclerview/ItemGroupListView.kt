@@ -34,12 +34,12 @@ import java.util.*
  * A view to display a list of ItemGroup instances.
  *
  * The list of ItemGroup instances that will be displayed is set through the
- * function submitList. ItemGroupList's adapter type uses a custom
+ * function submitList. ItemGroupListView's adapter type uses a custom
  * DiffUtil.ItemCallback to support full and partial binding of the ItemGroupView
  * instances it uses to display each ItemGroup in the submitted list, but does
  * not provide any onClickListeners or callbacks for item interactions.
  *
- * ItemGroupList does not set its own adapter, as it is assumed that
+ * ItemGroupListView does not set its own adapter, as it is assumed that
  * subclasses will override ItemGroupListAdapter with their own implementation.
  * It does set its layoutManager to a vertical LinearLayoutManager (due to the
  * stretched horizontal aspect ratio of ItemGroupView's making another layout
@@ -47,7 +47,7 @@ import java.util.*
  * spacing equal to to the value of the dimension R.dimen.recycler_view_item_spacing,
  * or 0 if the dimension resource is not found.
  */
-open class ItemGroupList(context: Context, attrs: AttributeSet?) :
+open class ItemGroupListView(context: Context, attrs: AttributeSet?) :
     RecyclerView(context, attrs)
 {
     protected open val listAdapter: ItemGroupListAdapter = ItemGroupListAdapter()
@@ -150,11 +150,11 @@ open class ItemGroupList(context: Context, attrs: AttributeSet?) :
 }
 
 /**
- * An ItemGroupList to display and allow for editing of a list of ItemGroup instances.
+ * An ItemGroupListView to display and allow for editing of a list of ItemGroup instances.
  *
  * ItemGroupSelector displays the list of ItemGroup instances submitted through
- * ItemGroupList.submitList, and provides modifiable callback members that can
- * be used to respond to item UI interaction.
+ * ItemGroupListView.submitList, and provides modifiable callback members that
+ * can be used to respond to item UI interaction.
  *
  * ItemGroupSelector implements a popup menu that is displayed when the user
  * taps the options button for an item group, and provides menu items that open
@@ -166,7 +166,7 @@ open class ItemGroupList(context: Context, attrs: AttributeSet?) :
  * null.
  */
 class ItemGroupSelector(context: Context, attrs: AttributeSet?) :
-    ItemGroupList(context, attrs)
+    ItemGroupListView(context, attrs)
 {
     override val listAdapter = Adapter()
 
@@ -207,12 +207,12 @@ class ItemGroupSelector(context: Context, attrs: AttributeSet?) :
  * item groups, as well as a select all button.
  *
  * @param anchor: The view that the menu will be anchored to.
- * @param multiSelectInventories Whether or not the multi-select item groups checkbox will be checked.
+ * @param multiSelectItemGroups Whether or not the multi-select item groups checkbox will be checked.
  * @param onMultiSelectCheckboxClick The callback that will be invoked when the multi-select item groups checkbox is clicked.
  * @param onSelectAllClick The callback that will be invoked when the select all item is clicked. */
 class ItemGroupSelectorOptionsMenu(
     anchor: View,
-    multiSelectInventories: Boolean,
+    multiSelectItemGroups: Boolean,
     onMultiSelectCheckboxClick: () -> Unit,
     onSelectAllClick: () -> Unit,
 ) : PopupMenu(anchor.context, anchor) {
@@ -224,8 +224,8 @@ class ItemGroupSelectorOptionsMenu(
         inflate(R.menu.item_group_selector_options)
         multiSelectCheckBox = menu.findItem(R.id.multiSelectGroupsSwitch)
         selectAllButton = menu.findItem(R.id.selectAllGroups)
-        multiSelectCheckBox.isChecked = multiSelectInventories
-        selectAllButton.isEnabled = multiSelectInventories
+        multiSelectCheckBox.isChecked = multiSelectItemGroups
+        selectAllButton.isEnabled = multiSelectItemGroups
 
         setOnMenuItemClickListener {
             if (it.itemId == R.id.multiSelectGroupsSwitch)
@@ -238,17 +238,18 @@ class ItemGroupSelectorOptionsMenu(
 }
 
 /**
- * An ItemGroupList that allows the user to pick a single item group from among a list of them.
+ * An ItemGroupListView that allows the user to pick a single item group from among a list of them.
  *
  * ItemGroupPicker, when provided with a list of ItemGroup instances through
- * ItemGroupList.submitList, will allow the user to pick from among these item
- * groups by tapping on one. The currently chosen group is visually indicated
- * by setting the corresponding ItemGroupView's isSelected property to true.
- * The id of the currently chosen group, or null if one has not been chosen yet,
- * can be queried with the property chosenGroupId. If the user picks a new
- * group, the member onChosenGroupIdChanged will be called if it is not null.
+ * ItemGroupListView.submitList, will allow the user to pick from among these
+ * item groups by tapping on one. The currently chosen group is visually
+ * indicated by setting the corresponding ItemGroupView's isSelected property
+ * to true. The id of the currently chosen group, or null if one has not been
+ * chosen yet, can be queried with the property chosenGroupId. If the user
+ * picks a new group, the member onChosenGroupIdChanged will be called if it
+ * is not null.
  */
-class ItemGroupPicker(context: Context, attrs: AttributeSet) : ItemGroupList(context, attrs) {
+class ItemGroupPicker(context: Context, attrs: AttributeSet) : ItemGroupListView(context, attrs) {
 
     override val listAdapter = Adapter()
 

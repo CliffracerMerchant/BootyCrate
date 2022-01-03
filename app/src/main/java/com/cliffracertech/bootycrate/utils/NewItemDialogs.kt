@@ -24,10 +24,7 @@ import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupPicker
-import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
-import com.cliffracertech.bootycrate.viewmodel.ItemGroupViewModel
-import com.cliffracertech.bootycrate.viewmodel.ItemListViewModel
-import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
+import com.cliffracertech.bootycrate.viewmodel.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 
@@ -62,8 +59,7 @@ abstract class NewListItemDialog<T: ListItem>(
     context: Context,
     useDefaultLayout: Boolean = true
 ) : DialogFragment() {
-    abstract val itemViewModel: ItemListViewModel<T>
-    private val itemGroupViewModel: ItemGroupViewModel by activityViewModels()
+    protected abstract val viewModel: NewItemDialogViewModel<T>
 
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
@@ -84,8 +80,8 @@ abstract class NewListItemDialog<T: ListItem>(
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        itemViewModel.newItemName = ""
-        itemViewModel.newItemExtraInfo = ""
+        viewModel.newItemName = ""
+        viewModel.newItemExtraInfo = ""
         ui.newItemViewContainer.addView(newItemView)
         newItemView.apply {
             setExpanded(true, animate = false)
@@ -93,12 +89,12 @@ abstract class NewListItemDialog<T: ListItem>(
             ui.checkBox.initColorIndex(0)
             ui.editButton.visibility = View.GONE
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
-                itemViewModel.newItemExtraInfo = text.toString()
+                viewModel.newItemExtraInfo = text.toString()
             }
             updateContentDescriptions(getString(R.string.new_item_description))
         }
         newItemView.ui.nameEdit.doOnTextChanged { text, _, _, _ ->
-            itemViewModel.newItemName = text.toString()
+            viewModel.newItemName = text.toString()
             if (shownWarningMessage == WarningMessage.ItemHasNoName && text?.isNotBlank() == true)
                 clearWarningMessageAndEnableButtons()
         }
@@ -131,13 +127,13 @@ abstract class NewListItemDialog<T: ListItem>(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.repeatWhenStarted {
-            launch { itemViewModel.newItemNameIsAlreadyUsed.collect {
+            launch { viewModel.newItemNameIsAlreadyUsed.collect {
                 showWarningMessage(when (it) {
-                    ItemListViewModel.NameIsAlreadyUsed.TrueForCurrentList ->
+                    NewItemDialogViewModel.NameIsAlreadyUsed.TrueForCurrentList ->
                         WarningMessage.NameAlreadyInUseInCollection
-                    ItemListViewModel.NameIsAlreadyUsed.TrueForSiblingList ->
+                    NewItemDialogViewModel.NameIsAlreadyUsed.TrueForSiblingList ->
                         WarningMessage.NameAlreadyInUseInOtherCollection
-                    else ->//BootyCrateViewModel.NameIsAlreadyUsed.False
+                    else ->//NewItemDialogViewModel.NameIsAlreadyUsed.False
                         WarningMessage.None
                 })
             }}
@@ -150,7 +146,7 @@ abstract class NewListItemDialog<T: ListItem>(
      * picker to the user otherwise to allow them to specify which item group
      * to add the item to.*/
     private fun initSelectedItemGroupPicker() {
-        val selectedGroups = itemGroupViewModel.selectedItemGroups
+        val selectedGroups = viewModel.selectedItemGroups
         if (selectedGroups.size == 1) {
             targetGroupId = selectedGroups.first().id
             return
@@ -194,7 +190,7 @@ abstract class NewListItemDialog<T: ListItem>(
                 SoftKeyboard.hide(ui.root)
                 false
             } else -> {
-                itemViewModel.onAddItemRequest(createItemFromView(), groupId)
+                viewModel.onAddItemRequest(createItemFromView(), groupId)
                 true
             }
         }
@@ -254,7 +250,7 @@ abstract class NewListItemDialog<T: ListItem>(
 class NewShoppingListItemDialog(context: Context) :
     NewListItemDialog<ShoppingListItem>(context)
 {
-    override val itemViewModel: ShoppingListViewModel by activityViewModels()
+    override val viewModel: NewShoppingListItemDialogViewModel by activityViewModels()
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_shopping_list_item_duplicate_name_warning)
@@ -277,7 +273,7 @@ class NewShoppingListItemDialog(context: Context) :
 class NewInventoryItemDialog(context: Context) :
     NewListItemDialog<InventoryItem>(context, useDefaultLayout = false)
 {
-    override val itemViewModel: InventoryViewModel by activityViewModels()
+    override val viewModel: NewInventoryItemDialogViewModel by activityViewModels()
     private val newInventoryItemView = InventoryItemView(context, null)
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =

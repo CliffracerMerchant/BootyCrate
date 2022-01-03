@@ -12,7 +12,6 @@ import android.widget.TextView
 import androidx.annotation.CallSuper
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
@@ -23,7 +22,6 @@ import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.utils.setPadding
 import com.cliffracertech.bootycrate.view.ListActionBar
-import com.cliffracertech.bootycrate.viewmodel.ItemGroupViewModel
 import com.cliffracertech.bootycrate.viewmodel.ItemListViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
@@ -212,10 +210,8 @@ abstract class ListViewFragment<T: ListItem> :
         activityUi.actionBar.onSearchQueryChangedListener = { newText ->
             viewModel.searchFilter = newText.toString()
         }
-
-        val itemGroupViewModel: ItemGroupViewModel by activityViewModels()
         observeInventoryNameJob = viewLifecycleOwner.lifecycleScope.launch {
-            itemGroupViewModel.selectedItemGroupName.collect {
+            viewModel.selectedItemGroupName.collect {
                 if (view?.alpha == 1f && view?.isVisible == true)
                     actionBar?.ui?.titleSwitcher?.title = it
             }
@@ -233,7 +229,7 @@ abstract class ListViewFragment<T: ListItem> :
                                 else viewModel.searchFilter
 
         activityUi.actionBar.transition(
-            title = itemGroupViewModel.selectedItemGroupName.value,
+            title = viewModel.selectedItemGroupName.value,
             activeActionModeCallback = actionModeCallback,
             activeSearchQuery = activeSearchQuery)
 
