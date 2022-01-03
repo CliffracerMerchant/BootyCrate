@@ -35,7 +35,7 @@ class NavigationTests {
         onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
     }
 
-    @Test fun switchingToInventoryItemFragment() {
+    @Test fun switchingToInventoryFragment() {
         startingFragmentVisibility()
         onView(withId(R.id.inventoryButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(not(isCompletelyDisplayed())))
@@ -43,7 +43,7 @@ class NavigationTests {
     }
 
     @Test fun switchingBackToShoppingListFragment() {
-        switchingToInventoryItemFragment()
+        switchingToInventoryFragment()
         onView(withId(R.id.shoppingListButton)).perform(click())
         onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
         onView(withId(R.id.inventoryFragmentView)).check(matches(not(isCompletelyDisplayed())))

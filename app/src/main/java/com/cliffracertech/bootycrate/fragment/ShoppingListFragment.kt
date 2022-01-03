@@ -35,11 +35,10 @@ import kotlinx.coroutines.launch
  * ShoppingListFragment also manages the state and function of the checkout
  * button. The checkout button is enabled when the user has checked at least
  * one shopping list item, and disabled when no items are checked through its
- * observation of ShoppingListRecyclerView's checkedItems member. If the
- * checkout button is clicked while it is enabled, it switches to its
- * confirmatory state to safeguard the user from checking out accidentally. If
- * the user does not press the button again within two seconds, it will revert
- * to its normal state.
+ * observation of ShoppingListView's checkedItems member. If the checkout
+ * button is clicked while it is enabled, it switches to its confirmatory state
+ * to safeguard the user from checking out accidentally. If the user does not
+ * press the button again within two seconds, it will revert to its normal state.
  */
 @Keep class ShoppingListFragment : ListViewFragment<ShoppingListItem>() {
     override val viewModel: ShoppingListViewModel by activityViewModels()
@@ -56,7 +55,9 @@ import kotlinx.coroutines.launch
         savedInstanceState: Bundle?
     ) = ShoppingListFragmentBinding.inflate(inflater, container, false).apply {
         listView = shoppingListView
-        collectionName = inflater.context.getString(R.string.shopping_list_item_collection_name)
+        shoppingListView.onItemCheckBoxClick = viewModel::toggleIsChecked
+        collectionName = inflater.context.getString(
+            R.string.shopping_list_item_collection_name)
     }.root
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -64,7 +65,6 @@ import kotlinx.coroutines.launch
         viewLifecycleOwner.repeatWhenStarted {
             launch { viewModel.items.collect(::updateBadge) }
             launch { viewModel.checkedItemsSize.collect { newSize ->
-                dlog("Checked items size now $newSize, ${if (newSize != 0) "enabling" else "disabling"} checkout button")
                 checkoutButton?.isEnabled = newSize != 0
             }}
         }

@@ -122,15 +122,20 @@ import kotlinx.coroutines.flow.Flow
     @Query("UPDATE item SET shoppingListAmount = :amount WHERE id = :id")
     abstract suspend fun updateShoppingListAmount(id: Long, amount: Int)
 
-    @Query("UPDATE item SET expandedInShoppingList = 1 WHERE id = :id")
-    protected abstract suspend fun expandShoppingListItem(id: Long)
+    @Query("SELECT id FROM item WHERE expandedInShoppingList LIMIT 1")
+    protected abstract suspend fun getExpandedShoppingListItemId(): Long?
 
     @Query("UPDATE item SET expandedInShoppingList = 0")
     abstract suspend fun clearExpandedShoppingListItem()
 
-    @Transaction open suspend fun setExpandedShoppingListItem(id: Long?) {
+    @Query("UPDATE item SET expandedInShoppingList = 1 WHERE id = :id")
+    protected abstract suspend fun expandShoppingListItem(id: Long)
+
+    @Transaction open suspend fun toggleExpandedInShoppingList(id: Long?) {
+        val expandedId = getExpandedShoppingListItemId()
         clearExpandedShoppingListItem()
-        if (id != null) expandShoppingListItem(id)
+        if (expandedId != id && id != null)
+            expandShoppingListItem(id)
     }
 
     @Query("SELECT COUNT(item.id) FROM item " +
@@ -182,7 +187,7 @@ import kotlinx.coroutines.flow.Flow
                               expandedInShoppingList = 0,
                               selectedInShoppingList = 0
               WHERE id IN (:ids) AND $onShoppingList""")
-    abstract suspend fun deleteShoppingListItems(ids: LongArray)
+    abstract suspend fun deleteShoppingListItems(ids: Array<Long>)
 
     @Query("""WITH selectedGroups AS (SELECT id FROM itemGroup WHERE isSelected)
               UPDATE item SET shoppingListAmount = -1,
@@ -203,8 +208,9 @@ import kotlinx.coroutines.flow.Flow
            "WHERE inShoppingListTrash AND groupId IN selectedGroups")
     abstract suspend fun emptyShoppingListTrash()
 
-    @Query("UPDATE item SET isChecked = :isChecked WHERE id = :id")
-    abstract suspend fun updateIsChecked(id: Long, isChecked: Boolean)
+    @Query("UPDATE item SET isChecked = 1 - isChecked WHERE id = :id")
+    abstract suspend fun toggleIsChecked(id: Long)
+
 
     @Query("WITH selectedGroups AS (SELECT id FROM itemGroup WHERE isSelected) " +
            "UPDATE item SET isChecked = 1 " +
@@ -271,15 +277,20 @@ import kotlinx.coroutines.flow.Flow
     @Query("UPDATE item SET inventoryAmount = :amount WHERE id = :id")
     abstract suspend fun updateInventoryAmount(id: Long, amount: Int)
 
-    @Query("UPDATE item SET expandedInInventory = 1 WHERE id = :id")
-    protected abstract suspend fun expandInventoryItem(id: Long)
+    @Query("SELECT id FROM item WHERE expandedInInventory LIMIT 1")
+    protected abstract suspend fun getExpandedInventoryItemId(): Long?
 
     @Query("UPDATE item SET expandedInInventory = 0")
     abstract suspend fun clearExpandedInventoryItem()
 
-    @Transaction open suspend fun setExpandedInventoryItem(id: Long?) {
+    @Query("UPDATE item SET expandedInInventory = 1 WHERE id = :id")
+    protected abstract suspend fun expandInventoryItem(id: Long)
+
+    @Transaction open suspend fun toggleExpandedInInventory(id: Long?) {
+        val expandedId = getExpandedInventoryItemId()
         clearExpandedInventoryItem()
-        if (id != null) expandInventoryItem(id)
+        if (expandedId != id && id != null)
+            expandInventoryItem(id)
     }
 
     @Query("SELECT COUNT(item.id) FROM item " +
@@ -333,7 +344,7 @@ import kotlinx.coroutines.flow.Flow
                               autoAddToShoppingList = 0,
                               autoAddToShoppingListAmount = 0
               WHERE id IN (:ids) AND $inInventory""")
-    abstract suspend fun deleteInventoryItems(ids: LongArray)
+    abstract suspend fun deleteInventoryItems(ids: Array<Long>)
 
     @Query("""WITH selectedGroups AS (SELECT id FROM itemGroup WHERE isSelected)
               UPDATE item SET inventoryAmount = -1,
@@ -352,9 +363,9 @@ import kotlinx.coroutines.flow.Flow
            "WHERE inInventoryTrash")
     abstract suspend fun emptyInventoryTrash()
 
-    @Query("""UPDATE item SET autoAddToShoppingList = :autoAddToShoppingList
+    @Query("""UPDATE item SET autoAddToShoppingList = 1 - autoAddToShoppingList
               WHERE id = :id AND $inInventory""")
-    abstract suspend fun updateAutoAddToShoppingList(id: Long, autoAddToShoppingList: Boolean)
+    abstract suspend fun toggleAutoAddToShoppingList(id: Long)
 
     @Query("""UPDATE item SET autoAddToShoppingListAmount = :autoAddToShoppingListAmount
               WHERE id = :id AND $inInventory""")

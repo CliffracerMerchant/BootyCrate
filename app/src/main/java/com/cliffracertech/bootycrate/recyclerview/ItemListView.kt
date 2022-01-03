@@ -105,20 +105,15 @@ abstract class ItemListView<T: ListItem>(
 
             ui.checkBox.onColorChangedListener = { color ->
                 onItemColorChangeRequest?.invoke(item.id, color)
-//                if (adapterPosition != -1)
-//                    viewModel.updateColor(item.id, ListItem.Colors.indexOf(color))
             }
             ui.nameEdit.onTextChangedListener = { newName ->
                 onItemRenameRequest?.invoke(item.id, newName)
-//                if (adapterPosition != -1) viewModel.updateName(item.id, newName)
             }
             ui.extraInfoEdit.onTextChangedListener = { newExtraInfo ->
                 onItemRenameRequest?.invoke(item.id, newExtraInfo)
-//                if (adapterPosition != -1) viewModel.updateExtraInfo(item.id, newExtraInfo)
             }
             ui.amountEdit.onValueChangedListener = { value ->
                 onItemAmountChangeRequest?.invoke(item.id, value)
-//                if (adapterPosition != -1) viewModel.updateAmount(item.id, value)
             }
         }}
     }

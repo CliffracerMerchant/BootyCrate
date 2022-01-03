@@ -101,10 +101,8 @@ class ShoppingListView(context: Context, attrs: AttributeSet) :
         override val view get() = itemView as ShoppingListItemView
 
         init {
-            view.ui.checkBox.onCheckedChangedListener = { checked ->
+            view.ui.checkBox.onCheckedChangedListener = { _ ->
                 onItemCheckBoxClick?.invoke(item.id)
-//                viewModel.updateIsChecked(item.id, checked)
-//                view.setStrikeThroughEnabled(checked)
             }
         }
     }

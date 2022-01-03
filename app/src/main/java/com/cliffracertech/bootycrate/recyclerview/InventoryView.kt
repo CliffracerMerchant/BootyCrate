@@ -96,14 +96,11 @@ class InventoryView(context: Context, attrs: AttributeSet) :
         override val view get() = itemView as InventoryItemView
 
         init {
-            view.detailsUi.autoAddToShoppingListCheckBox.onCheckedChangedListener = { checked ->
+            view.detailsUi.autoAddToShoppingListCheckBox.onCheckedChangedListener = { _ ->
                 onItemAutoAddToShoppingListCheckboxClick?.invoke(item.id)
-//                viewModel.updateAutoAddToShoppingList(item.id, checked)
             }
             view.detailsUi.autoAddToShoppingListAmountEdit.onValueChangedListener = { value ->
                 onItemAutoAddToShoppingListAmountChangeRequest?.invoke(item.id, value)
-//                if (adapterPosition != -1)
-//                    viewModel.updateAutoAddToShoppingListAmount(item.id, value)
             }
         }
     }

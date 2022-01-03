@@ -87,9 +87,9 @@
 
     </declare-styleable>
 
-    <attr name="recyclerViewItemSelectionGradientLeftColor"   format="color" />
-    <attr name="recyclerViewItemSelectionGradientMiddleColor" format="color" />
-    <attr name="recyclerViewItemSelectionGradientRightColor"  format="color" />
+    <attr name="listItemSelectionGradientLeftColor"   format="color" />
+    <attr name="listItemSelectionGradientMiddleColor" format="color" />
+    <attr name="listItemSelectionGradientRightColor"  format="color" />
 
     <declare-styleable name="TextFieldEdit">
         <!-- Whether the TextFieldEdit will start in an editable state. -->

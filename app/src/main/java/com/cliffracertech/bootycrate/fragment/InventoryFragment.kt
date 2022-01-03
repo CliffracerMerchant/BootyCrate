@@ -41,6 +41,10 @@ import com.cliffracertech.bootycrate.view.ListActionBar
         savedInstanceState: Bundle?
     ) = InventoryFragmentBinding.inflate(inflater, container, false).apply {
         listView = inventoryView
+        inventoryView.onItemAutoAddToShoppingListCheckboxClick =
+            viewModel::toggleAutoAddToShoppingList
+        inventoryView.onItemAutoAddToShoppingListAmountChangeRequest =
+            viewModel::updateAutoAddToShoppingListAmount
         collectionName = inflater.context.getString(R.string.inventory_item_collection_name)
     }.root
 

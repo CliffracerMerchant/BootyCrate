@@ -73,9 +73,6 @@ abstract class ListViewFragment<T: ListItem> :
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewLifecycleOwner.repeatWhenStarted {
-            viewModel.selectedItemCount.collect(::onSelectionSizeChanged)
-        }
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
         sortModePrefKey = getString(R.string.pref_sort, collectionName)
@@ -86,15 +83,32 @@ abstract class ListViewFragment<T: ListItem> :
         val emptyTextView = multiStateView?.getView(MultiStateView.ViewState.EMPTY) as? TextView
         emptyTextView?.text = getString(R.string.empty_recycler_view_message, collectionName)
 
+        val content = multiStateView?.getView(MultiStateView.ViewState.CONTENT)
+        (content as? ExpandableItemListView<*>)?.apply {
+            onItemClick = viewModel::onItemClick
+            onItemLongClick = viewModel::onItemLongClick
+            onItemColorChangeRequest = viewModel::updateColor
+            onItemRenameRequest = viewModel::updateName
+            onItemExtraInfoChangeRequest = viewModel::updateExtraInfo
+            onItemAmountChangeRequest = viewModel::updateAmount
+            onItemEditButtonClick = viewModel::onItemEditButtonClick
+            onItemSwipe = {
+                val anchor = this@ListViewFragment.view
+                if (anchor != null)
+                    viewModel.delete(it, anchor)
+            }
+        }
+
         viewLifecycleOwner.repeatWhenStarted {
-            viewModel.items.collect { items ->
+            launch { viewModel.items.collect { items ->
                 listView?.submitList(items)
                 (view as? MultiStateView)?.viewState = when {
                     items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
                     searchIsActive ->     MultiStateView.ViewState.ERROR
                     else ->               MultiStateView.ViewState.EMPTY
                 }
-            }
+            }}
+            launch { viewModel.selectedItemCount.collect(::onSelectionSizeChanged) }
         }
     }
 

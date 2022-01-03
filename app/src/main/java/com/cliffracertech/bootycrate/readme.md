@@ -22,7 +22,7 @@ fragment contains all of the fragments used in the app. The two main content fra
 inheritance chain is:
 <pre>
 RecyclerViewFragment -> ShoppingListFragment
-                     -> InventoryItemFragment
+                     -> InventoryFragment
 </pre>
 
 ### recyclerview

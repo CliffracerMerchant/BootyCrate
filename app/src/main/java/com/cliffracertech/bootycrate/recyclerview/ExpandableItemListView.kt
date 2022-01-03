@@ -112,8 +112,6 @@ abstract class ExpandableItemListView<T: ListItem>(
             view.ui.editButton.setOnClickListener {
                 if (!expandCollapseAnimRunning)
                     onItemEditButtonClick?.invoke(item.id)
-//                    viewModel.setExpandedItem(if (view.isExpanded) null
-//                                              else                 item.id)
                 else {
                     editButtonLastPressTimestamp = System.currentTimeMillis()
                     queuedEditButtonPressPos = adapterPosition
