@@ -42,9 +42,9 @@ import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
     ) = InventoryFragmentBinding.inflate(inflater, container, false).apply {
         listView = inventoryView
         inventoryView.onItemAutoAddToShoppingListCheckboxClick =
-            viewModel::toggleAutoAddToShoppingList
+            viewModel::onAutoAddToShoppingListCheckboxClick
         inventoryView.onItemAutoAddToShoppingListAmountChangeRequest =
-            viewModel::updateAutoAddToShoppingListAmount
+            viewModel::onAutoAddToShoppingListAmountUpdateRequest
         collectionName = inflater.context.getString(R.string.inventory_item_collection_name)
     }.root
 
@@ -55,8 +55,7 @@ import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
 
     override fun onOptionsItemSelected(item: MenuItem) =
         if (item.itemId == R.id.add_to_shopping_list_button) {
-            shoppingListItemViewModel.addFromSelectedInventoryItems()
-            viewModel.clearSelection()
+            shoppingListItemViewModel.onAddFromSelectedInventoryItemsRequest()
             true
         } else super.onOptionsItemSelected(item)
 

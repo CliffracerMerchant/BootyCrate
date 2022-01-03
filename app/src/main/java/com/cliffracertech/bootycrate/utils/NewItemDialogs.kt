@@ -179,22 +179,26 @@ abstract class NewListItemDialog<T: ListItem>(
         SoftKeyboard.show(ui.nameEdit)
     }
 
-    private fun addItem() = when {
-        newItemView.ui.nameEdit.text?.isBlank() == true -> {
-            showWarningMessage(WarningMessage.ItemHasNoName)
-            addAnotherButton.isEnabled = false
-            okButton.isEnabled = false
-            false
-        } targetGroupId == null -> {
-            showWarningMessage(WarningMessage.ItemHasNoGroupId)
-            addAnotherButton.isEnabled = false
-            okButton.isEnabled = false
-            SoftKeyboard.hide(ui.root)
-            false
-        } else -> {
-            itemViewModel.add(createItemFromView(), targetGroupId!!)
-            true
-        }}
+    private fun addItem(): Boolean {
+        val groupId = targetGroupId
+        return when {
+            newItemView.ui.nameEdit.text?.isBlank() == true -> {
+                showWarningMessage(WarningMessage.ItemHasNoName)
+                addAnotherButton.isEnabled = false
+                okButton.isEnabled = false
+                false
+            } groupId == null -> {
+                showWarningMessage(WarningMessage.ItemHasNoGroupId)
+                addAnotherButton.isEnabled = false
+                okButton.isEnabled = false
+                SoftKeyboard.hide(ui.root)
+                false
+            } else -> {
+                itemViewModel.onAddItemRequest(createItemFromView(), groupId)
+                true
+            }
+        }
+    }
 
     abstract fun createItemFromView(): T
 

@@ -63,6 +63,7 @@ abstract class ListViewFragment<T: ListItem> :
     private lateinit var sortModePrefKey: String
 
     private var actionBar: ListActionBar? = null
+    private var bottomAppBar: View? = null
     private val actionModeIsStarted get() =
         actionBar?.actionMode?.callback == actionModeCallback
     private val searchIsActive get() = actionBar?.activeSearchQuery != null
@@ -89,15 +90,15 @@ abstract class ListViewFragment<T: ListItem> :
         (content as? ExpandableItemListView<*>)?.apply {
             onItemClick = viewModel::onItemClick
             onItemLongClick = viewModel::onItemLongClick
-            onItemColorChangeRequest = viewModel::updateColor
-            onItemRenameRequest = viewModel::updateName
-            onItemExtraInfoChangeRequest = viewModel::updateExtraInfo
-            onItemAmountChangeRequest = viewModel::updateAmount
+            onItemColorChangeRequest = viewModel::onChangeItemColorRequest
+            onItemRenameRequest = viewModel::onRenameItemRequest
+            onItemExtraInfoChangeRequest = viewModel::onChangeItemExtraInfoRequest
+            onItemAmountChangeRequest = viewModel::onChangeItemAmountRequest
             onItemEditButtonClick = viewModel::onItemEditButtonClick
             onItemSwipe = {
-                val anchor = this@ListViewFragment.view
+                val anchor = bottomAppBar ?: this@ListViewFragment.view
                 if (anchor != null)
-                    viewModel.delete(it, anchor)
+                    viewModel.onDeletionRequest(it, anchor)
             }
         }
 
@@ -118,16 +119,17 @@ abstract class ListViewFragment<T: ListItem> :
         super.onDetach()
         observeInventoryNameJob = null
         actionBar = null
+        bottomAppBar = null
     }
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.delete_selected_menu_item -> {
-            val anchor = view
+            val anchor = bottomAppBar ?: view
             if (anchor != null)
-                viewModel.deleteSelected(snackBarAnchor = anchor)
+                viewModel.onDeleteSelectedRequest(snackBarAnchor = anchor)
             anchor != null
         } R.id.share_menu_item -> shareList()
-        R.id.select_all_menu_item -> {  viewModel.selectAll(); true }
+        R.id.select_all_menu_item -> {  viewModel.onSelectAllRequest(); true }
         R.id.color_option -> { saveSortingOption(ListItem.Sort.Color, item) }
         R.id.name_ascending_option -> { saveSortingOption(ListItem.Sort.NameAsc, item) }
         R.id.name_descending_option -> { saveSortingOption(ListItem.Sort.NameDesc, item) }
@@ -191,7 +193,7 @@ abstract class ListViewFragment<T: ListItem> :
     }
 
     override fun onBackPressed() = when {
-        actionModeIsStarted -> { viewModel.clearSelection(); true }
+        actionModeIsStarted -> { viewModel.onClearSelectionRequest(); true }
         searchIsActive      -> { actionBar?.activeSearchQuery = null; true }
         else                -> false
     }
@@ -200,11 +202,13 @@ abstract class ListViewFragment<T: ListItem> :
         if (!isActive) {
             observeInventoryNameJob = null
             actionBar = null
+            bottomAppBar = null
             activityUi.actionBar.onSearchQueryChangedListener = null
             return
         }
 
         actionBar = activityUi.actionBar
+        bottomAppBar = activityUi.bottomAppBar
         activityUi.actionBar.onSearchQueryChangedListener = { newText ->
             viewModel.searchFilter = newText.toString()
         }

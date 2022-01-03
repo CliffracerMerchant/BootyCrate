@@ -120,10 +120,11 @@ class MainActivity : BottomNavViewActivity() {
                 supportFragmentManager.popBackStack()
         }
         ui.actionBar.onDeleteButtonClickedListener = {
-            onOptionsItemSelected(ui.actionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
+            fwdMenuItemClick(ui.actionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
         }
         ui.actionBar.setOnSortOptionClickedListener(::fwdMenuItemClick)
         ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
+
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
         ui.addItemGroupButton.setOnClickListener {

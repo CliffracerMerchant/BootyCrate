@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
         savedInstanceState: Bundle?
     ) = ShoppingListFragmentBinding.inflate(inflater, container, false).apply {
         listView = shoppingListView
-        shoppingListView.onItemCheckBoxClick = viewModel::toggleIsChecked
+        shoppingListView.onItemCheckBoxClick = viewModel::onItemCheckboxClicked
         collectionName = inflater.context.getString(
             R.string.shopping_list_item_collection_name)
     }.root
@@ -83,11 +83,10 @@ import kotlinx.coroutines.launch
 
     override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         R.id.add_to_inventory_button -> {
-            inventoryItemViewModel.addFromSelectedShoppingListItems()
-            viewModel.clearSelection()
+            inventoryItemViewModel.onAddFromSelectedShoppingListItemsRequest()
             true
-        } R.id.check_all_menu_item -> { viewModel.checkAll(); true }
-        R.id.uncheck_all_menu_item -> { viewModel.uncheckAll(); true }
+        } R.id.check_all_menu_item -> { viewModel.onCheckAllRequest(); true }
+        R.id.uncheck_all_menu_item -> { viewModel.onUncheckAllRequest(); true }
         else -> super.onOptionsItemSelected(item)
     }
 
@@ -105,7 +104,7 @@ import kotlinx.coroutines.launch
             NewShoppingListItemDialog(activity)
                 .show(activity.supportFragmentManager, null)
         }
-        activityUi.checkoutButton.checkoutCallback = viewModel::checkout
+        activityUi.checkoutButton.checkoutCallback = viewModel::onCheckoutRequest
     }
 
     private var shoppingListSize = -1
