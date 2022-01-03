@@ -11,7 +11,6 @@ import android.content.Context
 import android.view.ViewPropertyAnimator
 import androidx.annotation.CallSuper
 import androidx.core.animation.doOnEnd
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.ListItem
@@ -48,7 +47,7 @@ open class ExpandableItemView<T: ListItem>(
     animatorConfig: AnimatorConfig? = null,
     useDefaultLayout: Boolean = true,
 ) : ListItemView<T>(context, useDefaultLayout),
-    ExpandableItemAnimator.ExpandableRecyclerViewItem
+    ExpandableItemAnimator.ExpandableItem
 {
     var isExpanded = false
         private set

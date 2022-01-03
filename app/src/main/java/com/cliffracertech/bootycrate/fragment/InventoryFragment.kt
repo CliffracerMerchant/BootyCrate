@@ -12,13 +12,13 @@ import androidx.annotation.Keep
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.*
 import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.InventoryViewModel
-import com.cliffracertech.bootycrate.database.ShoppingListViewModel
 import com.cliffracertech.bootycrate.databinding.InventoryFragmentBinding
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.InventoryView
 import com.cliffracertech.bootycrate.utils.NewInventoryItemDialog
 import com.cliffracertech.bootycrate.view.ListActionBar
+import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
+import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
 
 /**
  * A fragment to display and modify the user's inventory.

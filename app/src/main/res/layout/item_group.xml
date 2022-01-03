@@ -21,7 +21,7 @@
         android:gravity="center_vertical"
         android:layout_weight="1"
         tools:text="Inventory name"
-        style="@style/InventoryNameTextView" />
+        style="@style/ItemGroupNameTextView" />
 
     <TextView
         android:id="@+id/shoppingListItemCountView"
@@ -49,6 +49,6 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:contentDescription="@string/more_options_description"
-        style="@style/InventoryMoreOptionsButton" />
+        style="@style/ItemGroupMoreOptionsButton" />
 
 </merge>

@@ -21,7 +21,7 @@ import com.cliffracertech.bootycrate.utils.setHeight
  * ExpandableItemAnimator is a RecyclerView.ItemAnimator that provides an
  * override of animateChange to animate the height changes of expanding or
  * collapsing items. The recycler view that uses ExpandableItemAnimator must
- * use item views that implement the ExpandableRecyclerViewItem interface.
+ * use item views that implement the ExpandableItem interface.
  *
  * Listeners can be set for the start or end of animations through the
  * properties onAnimStartedListener and onAnimEndedListener, respectively. The
@@ -32,7 +32,7 @@ import com.cliffracertech.bootycrate.utils.setHeight
 class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimator() {
     private val pendingAnimators = mutableListOf<Animator>()
     private val pendingViewPropAnimators = mutableListOf<ViewPropertyAnimator>()
-    private val changingViews = mutableListOf<ExpandableRecyclerViewItem>()
+    private val changingViews = mutableListOf<ExpandableItem>()
 
     var onAnimStartedListener: ((RecyclerView.ViewHolder, Boolean) -> Unit)? = null
     var onAnimEndedListener: ((RecyclerView.ViewHolder, Boolean) -> Unit)? = null
@@ -62,9 +62,9 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
             return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
 
         val view = newHolder.itemView
-        if (view !is ExpandableRecyclerViewItem) throw IllegalStateException(
+        if (view !is ExpandableItem) throw IllegalStateException(
             "The item views used with ExpandableItemAnimator must " +
-            "implement ExpandableItemAnimator.ExpandableRecyclerViewItem.")
+            "implement ExpandableItemAnimator.ExpandableItem.")
 
         view.setHeight(startHeight)
         val expanding = endHeight > startHeight
@@ -105,7 +105,7 @@ class ExpandableItemAnimator(animatorConfig: AnimatorConfig) : DefaultItemAnimat
      * be prepared and stored if @param animate == true, and then later played
      * in an implementation of runPendingAnimations.
      */
-    interface ExpandableRecyclerViewItem {
+    interface ExpandableItem {
         fun expand() = setExpanded(true)
         fun collapse() = setExpanded(false)
         fun setExpanded(expanding: Boolean, animate: Boolean = true)

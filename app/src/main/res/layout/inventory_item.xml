@@ -7,8 +7,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
     tools:layout_height="wrap_content"
-    tools:background="@drawable/list_item_selected"
-    tools:style="@style/RecyclerViewItemStyle" >
+    tools:background="@drawable/list_item_selected" >
 
     <include layout="@layout/list_item" />
 

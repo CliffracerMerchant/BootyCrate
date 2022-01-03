@@ -24,8 +24,12 @@ import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupPicker
-import kotlinx.coroutines.flow.collect
+import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
+import com.cliffracertech.bootycrate.viewmodel.ItemGroupViewModel
+import com.cliffracertech.bootycrate.viewmodel.ItemListViewModel
+import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collect
 
 /**
  * An abstract DialogFragment to create a new ListItem.

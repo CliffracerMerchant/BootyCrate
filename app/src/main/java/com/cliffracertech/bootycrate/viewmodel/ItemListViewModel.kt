@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.database
+package com.cliffracertech.bootycrate.viewmodel
 
 import android.app.Application
 import android.view.View
@@ -12,6 +12,10 @@ import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.utils.getValue
 import com.cliffracertech.bootycrate.utils.setValue
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.database.BootyCrateDatabase
+import com.cliffracertech.bootycrate.database.InventoryItem
+import com.cliffracertech.bootycrate.database.ListItem
+import com.cliffracertech.bootycrate.database.ShoppingListItem
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.snackbar.BaseTransientBottomBar

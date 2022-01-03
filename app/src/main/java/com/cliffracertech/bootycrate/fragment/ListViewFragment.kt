@@ -23,6 +23,8 @@ import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.utils.setPadding
 import com.cliffracertech.bootycrate.view.ListActionBar
+import com.cliffracertech.bootycrate.viewmodel.ItemGroupViewModel
+import com.cliffracertech.bootycrate.viewmodel.ItemListViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
 import kotlinx.coroutines.Job

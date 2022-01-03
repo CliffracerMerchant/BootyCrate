@@ -80,7 +80,7 @@
         <item name="android:visibility">gone</item>
     </style>
 
-    <style name="EmptyRecyclerViewStyle" parent="@style/TitleTextAppearance">
+    <style name="EmptyListStyle" parent="@style/TitleTextAppearance">
         <item name="android:text">@string/no_search_results_message</item>
     </style>
 

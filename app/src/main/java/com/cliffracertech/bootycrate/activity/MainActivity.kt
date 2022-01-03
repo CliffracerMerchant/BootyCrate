@@ -15,7 +15,7 @@ import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.ItemGroupViewModel
+import com.cliffracertech.bootycrate.viewmodel.ItemGroupViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu

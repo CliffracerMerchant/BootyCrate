@@ -11,9 +11,7 @@ import androidx.annotation.Keep
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.*
-import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.database.ShoppingListViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.ShoppingListFragmentBinding
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListView
@@ -21,6 +19,8 @@ import com.cliffracertech.bootycrate.utils.NewShoppingListItemDialog
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.view.CheckoutButton
 import com.cliffracertech.bootycrate.view.ListActionBar
+import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
+import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
