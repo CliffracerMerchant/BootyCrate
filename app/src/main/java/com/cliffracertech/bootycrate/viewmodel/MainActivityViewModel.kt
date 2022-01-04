@@ -10,16 +10,13 @@ package com.cliffracertech.bootycrate.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-/** An AndroidViewModel for an ItemGroupSelector. */
-class ItemGroupViewModel(app: Application): AndroidViewModel(app) {
+class MainActivityViewModel(app: Application): AndroidViewModel(app) {
     private val itemGroupDao = BootyCrateDatabase.get(app).itemGroupDao()
     private val settingsDao = BootyCrateDatabase.get(app).settingsDao()
 

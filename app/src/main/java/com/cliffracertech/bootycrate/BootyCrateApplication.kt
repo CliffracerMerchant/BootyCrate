@@ -5,7 +5,9 @@
 package com.cliffracertech.bootycrate
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
+import androidx.datastore.preferences.preferencesDataStore
 import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 
@@ -16,5 +18,7 @@ class BootyCrateApplication : Application() {
         ListItem.initColors(this)
     }
 }
+
+val Context.dataStore by preferencesDataStore("preferences")
 
 fun dlog(msg: String) = Log.d("BootyCrate", msg)

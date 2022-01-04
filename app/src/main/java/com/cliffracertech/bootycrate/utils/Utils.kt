@@ -15,6 +15,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -22,7 +25,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.cliffracertech.bootycrate.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlin.reflect.KProperty
 
@@ -156,3 +159,53 @@ operator fun <T> MutableStateFlow<T>.setValue(
     property: KProperty<*>,
     value: T
 ) { this.value = value }
+
+/** Return a Flow<T> that contains the most recent value for the DataStore
+ * preference pointed to by the @param key, with a default value of @param defaultValue. */
+fun <T> DataStore<Preferences>.preferenceFlow(
+    key: Preferences.Key<T>,
+    defaultValue: T,
+) = data.map { it[key] ?: defaultValue }
+
+/** Return a MutableStateFlow<T> that contains the most recent value for the
+ * preference pointed to by the @param key, with a default value of @param
+ * defaultValue. Changes to the returned MutableStateFlow's value property
+ * will automatically be written to the receiver DataStore object. */
+fun <T> DataStore<Preferences>.mutablePreferenceFlow(
+    key: Preferences.Key<T>,
+    scope: CoroutineScope,
+    defaultValue: T,
+): MutableStateFlow<T> {
+    val flow = MutableStateFlow(defaultValue)
+    scope.launch {
+        flow.value = data.first()[key] ?: defaultValue
+    }
+    scope.launch { flow.collect { newValue ->
+        edit { it[key] = newValue }
+    }}
+    return flow
+}
+
+/** Return a MutableStateFlow<T> that contains the most recent enum value for
+ * the Int preference pointed to by the parameter key, with a default value of
+ * the parameter defaultValue. Changes to the returned MutableStateFlow's value
+ * property will automatically be written to the receiver DataStore object. The
+ * Preferences.Key<Int> should point to the preference that stores the index of
+ * the current enum value's index.*/
+inline fun <reified T: Enum<*>> DataStore<Preferences>.mutableEnumPreferenceFlow(
+    key: Preferences.Key<Int>,
+    scope: CoroutineScope,
+    defaultValue: T,
+): MutableStateFlow<T> {
+    val flow = MutableStateFlow(defaultValue)
+    scope.launch {
+        val firstIndex = data.first()[key]
+        flow.value = if (firstIndex != null)
+                         enumValues<T>()[firstIndex]
+                     else defaultValue
+    }
+    scope.launch { flow.collect { newValue ->
+        edit { it[key] = newValue.ordinal }
+    }}
+    return flow
+}

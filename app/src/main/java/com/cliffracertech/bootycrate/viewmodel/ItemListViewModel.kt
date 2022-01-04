@@ -6,18 +6,17 @@ package com.cliffracertech.bootycrate.viewmodel
 
 import android.app.Application
 import android.view.View
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.preference.PreferenceManager
-import com.cliffracertech.bootycrate.utils.getValue
-import com.cliffracertech.bootycrate.utils.setValue
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.utils.SoftKeyboard
-import com.cliffracertech.bootycrate.utils.resolveIntAttribute
+import com.cliffracertech.bootycrate.utils.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.*
@@ -44,14 +43,21 @@ import kotlinx.coroutines.launch
  * should override the abstract property items to return a Flow<List<T>>
  * containing all of the items in the database that match the current sorting
  * option and search filter, as well as any additional sorting parameters that
- * they themselves add.
+ * they themselves add. To allow multiple subclasses to each have their own
+ * sorting method stored persistently, subclasses must also pass the string key
+ * that will be used to store their sorting preference to ItemListViewModel's
+ * constructor. This string should be unique for each subclass of ItemListViewModel.
  */
-abstract class ItemListViewModel<T: ListItem>(app: Application): AndroidViewModel(app) {
+abstract class ItemListViewModel<T: ListItem>(app: Application, prefsKey: String):
+    AndroidViewModel(app)
+{
     protected val dao = BootyCrateDatabase.get(app).itemDao()
     private val itemGroupDao = BootyCrateDatabase.get(app).itemGroupDao()
 
-    protected val sortFlow = MutableStateFlow(ListItem.Sort.Color)
-    var sort by sortFlow
+    private val sortPreference = intPreferencesKey(prefsKey)
+    protected val sortFlow = app.dataStore.mutableEnumPreferenceFlow(
+        sortPreference, viewModelScope, ListItem.Sort.Color)
+    val sort = sortFlow.asStateFlow()
 
     protected val searchFilterFlow = MutableStateFlow<String?>(null)
     var searchFilter by searchFilterFlow
@@ -64,6 +70,9 @@ abstract class ItemListViewModel<T: ListItem>(app: Application): AndroidViewMode
         else nameForMultiSelection
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
 
+    fun onSortOptionSelected(sortOption: ListItem.Sort) {
+        sortFlow.value = sortOption
+    }
     fun onRenameItemRequest(id: Long, name: String) {
         viewModelScope.launch { dao.updateName(id, name) }
     }
@@ -136,8 +145,9 @@ abstract class ItemListViewModel<T: ListItem>(app: Application): AndroidViewMode
  * described by the sort property. It also adds functions to respond to clicks
  * on the checkbox of items, and to respond to a request to checkout.
  */
-class ShoppingListViewModel(app: Application) : ItemListViewModel<ShoppingListItem>(app) {
-
+class ShoppingListViewModel(app: Application) :
+    ItemListViewModel<ShoppingListItem>(app, "shopping_list_sort")
+{
     private val _sortByChecked = MutableStateFlow(false)
     var sortByChecked by _sortByChecked
 
@@ -214,8 +224,9 @@ class ShoppingListViewModel(app: Application) : ItemListViewModel<ShoppingListIt
 /** An implementation of ItemListViewModel<InventoryItem> that adds functions
  * to manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
  * fields of items in the database. */
-class InventoryViewModel(app: Application) : ItemListViewModel<InventoryItem>(app) {
-
+class InventoryViewModel(app: Application) :
+    ItemListViewModel<InventoryItem>(app, "inventory_sort")
+{
     override val items = sortFlow.combine(searchFilterFlow, dao::getInventoryContents)
         .transformLatest { emitAll(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())

@@ -19,7 +19,7 @@ import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.viewmodel.ItemGroupViewModel
+import com.cliffracertech.bootycrate.viewmodel.MainActivityViewModel
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.collect
  * they are displayed.
  */
 class MainActivity : BottomNavViewActivity() {
-    private val itemGroupViewModel: ItemGroupViewModel by viewModels()
+    private val viewModel: MainActivityViewModel by viewModels()
 
     lateinit var ui: MainActivityBinding
     private var pendingCradleAnim: Animator? = null
@@ -52,11 +52,11 @@ class MainActivity : BottomNavViewActivity() {
         initGradientStyle()
 
         repeatWhenStarted {
-            itemGroupViewModel.itemGroups.collect(ui.itemGroupSelector::submitList)
+            viewModel.itemGroups.collect(ui.itemGroupSelector::submitList)
         }
-        ui.itemGroupSelector.onItemClick = itemGroupViewModel::onItemGroupClick
-        ui.itemGroupSelector.onItemRenameRequest = itemGroupViewModel::onConfirmItemGroupRenameDialog
-        ui.itemGroupSelector.onItemDeletionRequest = itemGroupViewModel::onConfirmDeleteItemGroupDialog
+        ui.itemGroupSelector.onItemClick = viewModel::onItemGroupClick
+        ui.itemGroupSelector.onItemRenameRequest = viewModel::onConfirmItemGroupRenameDialog
+        ui.itemGroupSelector.onItemDeletionRequest = viewModel::onConfirmDeleteItemGroupDialog
     }
 
     override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
@@ -128,14 +128,14 @@ class MainActivity : BottomNavViewActivity() {
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
         ui.addItemGroupButton.setOnClickListener {
-            itemGroupNameDialog(this, null, itemGroupViewModel::onConfirmAddNewItemGroupDialog)
+            itemGroupNameDialog(this, null, viewModel::onConfirmAddNewItemGroupDialog)
         }
         ui.itemGroupSelectorOptionsButton.setOnClickListener {
             ItemGroupSelectorOptionsMenu(
                 anchor = ui.itemGroupSelectorOptionsButton,
-                multiSelectItemGroups = itemGroupViewModel.multiSelectGroups,
-                onMultiSelectCheckboxClick = itemGroupViewModel::onMultiSelectCheckboxClick,
-                onSelectAllClick = itemGroupViewModel::onSelectAllGroupsClick
+                multiSelectItemGroups = viewModel.multiSelectGroups,
+                onMultiSelectCheckboxClick = viewModel::onMultiSelectCheckboxClick,
+                onSelectAllClick = viewModel::onSelectAllGroupsClick
             ).show()
         }
     }

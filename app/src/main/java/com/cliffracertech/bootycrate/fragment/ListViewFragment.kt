@@ -13,7 +13,6 @@ import androidx.annotation.CallSuper
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.*
@@ -65,20 +64,15 @@ abstract class ListViewFragment<T: ListItem> :
     private val actionModeIsStarted get() =
         actionBar?.actionMode?.callback == actionModeCallback
     private val searchIsActive get() = actionBar?.activeSearchQuery != null
+
     private var observeInventoryNameJob: Job? = null
-        set(value) {
-            if (value == null)
-                field?.cancel()
-            field = value
-        }
+    private var observeSortJob: Job? = null
+    private fun cancelJobs() { observeInventoryNameJob?.cancel()
+                               observeSortJob?.cancel() }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-        sortModePrefKey = getString(R.string.pref_sort, collectionName)
-        val sortStr = prefs.getString(sortModePrefKey, ListItem.Sort.Color.toString())
-        viewModel.sort = ListItem.Sort.fromString(sortStr)
 
         val multiStateView = view as? MultiStateView
         val emptyTextView = multiStateView?.getView(MultiStateView.ViewState.EMPTY) as? TextView
@@ -116,6 +110,8 @@ abstract class ListViewFragment<T: ListItem> :
     override fun onDetach() {
         super.onDetach()
         observeInventoryNameJob = null
+        observeSortJob = null
+        cancelJobs()
         actionBar = null
         bottomAppBar = null
     }
@@ -126,13 +122,13 @@ abstract class ListViewFragment<T: ListItem> :
             if (anchor != null)
                 viewModel.onDeleteSelectedRequest(snackBarAnchor = anchor)
             anchor != null
-        } R.id.share_menu_item -> shareList()
-        R.id.select_all_menu_item -> {  viewModel.onSelectAllRequest(); true }
-        R.id.color_option -> { saveSortingOption(ListItem.Sort.Color, item) }
-        R.id.name_ascending_option -> { saveSortingOption(ListItem.Sort.NameAsc, item) }
-        R.id.name_descending_option -> { saveSortingOption(ListItem.Sort.NameDesc, item) }
-        R.id.amount_ascending_option -> { saveSortingOption(ListItem.Sort.AmountAsc, item) }
-        R.id.amount_descending_option -> { saveSortingOption(ListItem.Sort.AmountDesc, item) }
+        } R.id.share_menu_item ->        shareList()
+        R.id.select_all_menu_item ->     { viewModel.onSelectAllRequest(); true }
+        R.id.color_option ->             { viewModel.onSortOptionSelected(ListItem.Sort.Color); true }
+        R.id.name_ascending_option ->    { viewModel.onSortOptionSelected(ListItem.Sort.NameAsc); true }
+        R.id.name_descending_option ->   { viewModel.onSortOptionSelected(ListItem.Sort.NameDesc); true }
+        R.id.amount_ascending_option ->  { viewModel.onSortOptionSelected(ListItem.Sort.AmountAsc); true }
+        R.id.amount_descending_option -> { viewModel.onSortOptionSelected(ListItem.Sort.AmountDesc); true }
         else -> false
     }
 
@@ -146,7 +142,7 @@ abstract class ListViewFragment<T: ListItem> :
                     else viewModel.items.value.filter { it.isSelected }
 
         if (items.isEmpty()) {
-            val anchor = view ?: return false
+            val anchor = bottomAppBar ?: view ?: return false
             val message = context.getString(R.string.empty_recycler_view_message, collectionName)
             Snackbar.make(context, anchor, message, Snackbar.LENGTH_LONG)
                 .setAnchorView(anchor).show()
@@ -170,18 +166,6 @@ abstract class ListViewFragment<T: ListItem> :
         return true
     }
 
-    /** Set the list view's sort to @param sort, check the @param sortMenuItem,
-     * and save the sort to sharedPreferences.
-     * @return whether the option was successfully saved to preferences. */
-    private fun saveSortingOption(sort: ListItem.Sort, sortMenuItem: MenuItem) : Boolean {
-        viewModel.sort = sort
-        sortMenuItem.isChecked = true
-        val context = this.context ?: return false
-        PreferenceManager.getDefaultSharedPreferences(context).edit()
-            .putString(sortModePrefKey, viewModel.sort.toString()).apply()
-        return true
-    }
-
     private fun onSelectionSizeChanged(newSize: Int) {
         if (newSize > 0) {
             if (!actionModeIsStarted)
@@ -199,6 +183,8 @@ abstract class ListViewFragment<T: ListItem> :
     @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
         if (!isActive) {
             observeInventoryNameJob = null
+            observeSortJob = null
+            cancelJobs()
             actionBar = null
             bottomAppBar = null
             activityUi.actionBar.onSearchQueryChangedListener = null
@@ -214,6 +200,17 @@ abstract class ListViewFragment<T: ListItem> :
             viewModel.selectedItemGroupName.collect {
                 if (view?.alpha == 1f && view?.isVisible == true)
                     actionBar?.ui?.titleSwitcher?.title = it
+            }
+        }
+        observeSortJob = viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.sort.collect {
+                actionBar?.changeSortMenu?.findItem(when (viewModel.sort.value) {
+                    ListItem.Sort.Color -> R.id.color_option
+                    ListItem.Sort.NameAsc -> R.id.name_ascending_option
+                    ListItem.Sort.NameDesc -> R.id.name_descending_option
+                    ListItem.Sort.AmountAsc -> R.id.amount_ascending_option
+                    ListItem.Sort.AmountDesc -> R.id.amount_descending_option
+               })?.isChecked = true
             }
         }
 
@@ -232,14 +229,6 @@ abstract class ListViewFragment<T: ListItem> :
             title = viewModel.selectedItemGroupName.value,
             activeActionModeCallback = actionModeCallback,
             activeSearchQuery = activeSearchQuery)
-
-        activityUi.actionBar.changeSortMenu.findItem(when (viewModel.sort) {
-            ListItem.Sort.Color -> R.id.color_option
-            ListItem.Sort.NameAsc -> R.id.name_ascending_option
-            ListItem.Sort.NameDesc -> R.id.name_descending_option
-            ListItem.Sort.AmountAsc -> R.id.amount_ascending_option
-            ListItem.Sort.AmountDesc -> R.id.amount_descending_option
-        })?.isChecked = true
     }
 
     open inner class SelectionActionModeCallback : ListActionBar.ActionModeCallback {
