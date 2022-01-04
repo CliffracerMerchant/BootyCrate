@@ -8,10 +8,18 @@
 package com.cliffracertech.bootycrate.viewmodel
 
 import android.app.Application
+import android.view.MenuItem
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
+import com.cliffracertech.bootycrate.database.ListItem
+import com.cliffracertech.bootycrate.utils.mutableEnumPreferenceFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -24,6 +32,22 @@ class MainActivityViewModel(app: Application): AndroidViewModel(app) {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     val multiSelectGroups get() = runBlocking { settingsDao.getMultiSelectGroupsNow() }
+
+    private val sortFlow = app.dataStore.mutableEnumPreferenceFlow(
+        intPreferencesKey("item_sort"), viewModelScope, ListItem.Sort.Color)
+    val sort = sortFlow.asStateFlow()
+
+    fun onSortOptionSelected(menuItem: MenuItem): Boolean {
+        sortFlow.value = when (menuItem.itemId) {
+            R.id.color_option ->             ListItem.Sort.Color
+            R.id.name_ascending_option ->    ListItem.Sort.NameAsc
+            R.id.name_descending_option ->   ListItem.Sort.NameDesc
+            R.id.amount_ascending_option ->  ListItem.Sort.AmountAsc
+            R.id.amount_descending_option -> ListItem.Sort.AmountDesc
+            else -> ListItem.Sort.Color
+        }
+        return true
+    }
 
     fun onMultiSelectCheckboxClick() { viewModelScope.launch {
         settingsDao.toggleMultiSelectGroups()

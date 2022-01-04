@@ -182,6 +182,9 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
         if (activeActionModeCallback == null && activeSearchQuery == null)
             setBackButtonIsVisible(backButtonVisible)
 
+        if (title != null)
+            ui.titleSwitcher.title = title
+
         ui.titleSwitcher.setSearchQuery(activeSearchQuery ?: "", switchTo = false)
         if (activeActionModeCallback != null) {
             startActionMode(activeActionModeCallback)
@@ -190,8 +193,6 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
             actionMode?.apply {
                 finish(updateActionBarUi = false)
                 setChangeSortButtonIsVisible(true)
-                if (title != null)
-                    ui.titleSwitcher.title = title
                 if (activeSearchQuery == null)
                     ui.titleSwitcher.showTitle()
             }

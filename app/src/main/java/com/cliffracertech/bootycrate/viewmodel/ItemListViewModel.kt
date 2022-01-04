@@ -6,10 +6,10 @@ package com.cliffracertech.bootycrate.viewmodel
 
 import android.app.Application
 import android.view.View
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
@@ -48,16 +48,15 @@ import kotlinx.coroutines.launch
  * that will be used to store their sorting preference to ItemListViewModel's
  * constructor. This string should be unique for each subclass of ItemListViewModel.
  */
-abstract class ItemListViewModel<T: ListItem>(app: Application, prefsKey: String):
+abstract class ItemListViewModel<T: ListItem>(app: Application):
     AndroidViewModel(app)
 {
     protected val dao = BootyCrateDatabase.get(app).itemDao()
     private val itemGroupDao = BootyCrateDatabase.get(app).itemGroupDao()
 
-    private val sortPreference = intPreferencesKey(prefsKey)
-    protected val sortFlow = app.dataStore.mutableEnumPreferenceFlow(
-        sortPreference, viewModelScope, ListItem.Sort.Color)
-    val sort = sortFlow.asStateFlow()
+    protected val sort = app.dataStore.preferenceFlow(
+        intPreferencesKey("item_sort"), ListItem.Sort.Color.ordinal)
+        .map { ListItem.Sort.values().getOrElse(it) { ListItem.Sort.Color } }
 
     protected val searchFilterFlow = MutableStateFlow<String?>(null)
     var searchFilter by searchFilterFlow
@@ -70,9 +69,6 @@ abstract class ItemListViewModel<T: ListItem>(app: Application, prefsKey: String
         else nameForMultiSelection
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
 
-    fun onSortOptionSelected(sortOption: ListItem.Sort) {
-        sortFlow.value = sortOption
-    }
     fun onRenameItemRequest(id: Long, name: String) {
         viewModelScope.launch { dao.updateName(id, name) }
     }
@@ -146,20 +142,15 @@ abstract class ItemListViewModel<T: ListItem>(app: Application, prefsKey: String
  * on the checkbox of items, and to respond to a request to checkout.
  */
 class ShoppingListViewModel(app: Application) :
-    ItemListViewModel<ShoppingListItem>(app, "shopping_list_sort")
+    ItemListViewModel<ShoppingListItem>(app)
 {
-    private val _sortByChecked = MutableStateFlow(false)
-    var sortByChecked by _sortByChecked
+    private val sortByCheckedKey = booleanPreferencesKey(app.getString(R.string.pref_sort_by_checked_key))
+    private val sortByChecked = app.dataStore.preferenceFlow(
+        key = sortByCheckedKey, defaultValue = false)
 
-    init {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(app)
-        sortByChecked = prefs.getBoolean(app.getString(R.string.pref_sort_by_checked_key), false)
-    }
-
-    override val items =
-        combine(sortFlow, searchFilterFlow, _sortByChecked, dao::getShoppingList)
-            .transformLatest { emitAll(it) }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+    override val items = combine(sort, searchFilterFlow, sortByChecked, dao::getShoppingList)
+        .transformLatest { emitAll(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     override fun onChangeItemAmountRequest(id: Long, amount: Int) {
         viewModelScope.launch { dao.updateShoppingListAmount(id, amount) }
@@ -225,9 +216,9 @@ class ShoppingListViewModel(app: Application) :
  * to manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
  * fields of items in the database. */
 class InventoryViewModel(app: Application) :
-    ItemListViewModel<InventoryItem>(app, "inventory_sort")
+    ItemListViewModel<InventoryItem>(app)
 {
-    override val items = sortFlow.combine(searchFilterFlow, dao::getInventoryContents)
+    override val items = sort.combine(searchFilterFlow, dao::getInventoryContents)
         .transformLatest { emitAll(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 

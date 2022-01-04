@@ -64,12 +64,7 @@ abstract class ListViewFragment<T: ListItem> :
     private val actionModeIsStarted get() =
         actionBar?.actionMode?.callback == actionModeCallback
     private val searchIsActive get() = actionBar?.activeSearchQuery != null
-
     private var observeInventoryNameJob: Job? = null
-    private var observeSortJob: Job? = null
-    private fun cancelJobs() { observeInventoryNameJob?.cancel()
-                               observeSortJob?.cancel() }
-
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -109,9 +104,8 @@ abstract class ListViewFragment<T: ListItem> :
 
     override fun onDetach() {
         super.onDetach()
+        observeInventoryNameJob?.cancel()
         observeInventoryNameJob = null
-        observeSortJob = null
-        cancelJobs()
         actionBar = null
         bottomAppBar = null
     }
@@ -122,14 +116,9 @@ abstract class ListViewFragment<T: ListItem> :
             if (anchor != null)
                 viewModel.onDeleteSelectedRequest(snackBarAnchor = anchor)
             anchor != null
-        } R.id.share_menu_item ->        shareList()
-        R.id.select_all_menu_item ->     { viewModel.onSelectAllRequest(); true }
-        R.id.color_option ->             { viewModel.onSortOptionSelected(ListItem.Sort.Color); true }
-        R.id.name_ascending_option ->    { viewModel.onSortOptionSelected(ListItem.Sort.NameAsc); true }
-        R.id.name_descending_option ->   { viewModel.onSortOptionSelected(ListItem.Sort.NameDesc); true }
-        R.id.amount_ascending_option ->  { viewModel.onSortOptionSelected(ListItem.Sort.AmountAsc); true }
-        R.id.amount_descending_option -> { viewModel.onSortOptionSelected(ListItem.Sort.AmountDesc); true }
-        else -> false
+        } R.id.share_menu_item ->    shareList()
+        R.id.select_all_menu_item -> { viewModel.onSelectAllRequest(); true }
+        else ->                      false
     }
 
     /** Open a ShareDialog.
@@ -182,9 +171,6 @@ abstract class ListViewFragment<T: ListItem> :
 
     @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
         if (!isActive) {
-            observeInventoryNameJob = null
-            observeSortJob = null
-            cancelJobs()
             actionBar = null
             bottomAppBar = null
             activityUi.actionBar.onSearchQueryChangedListener = null
@@ -196,21 +182,10 @@ abstract class ListViewFragment<T: ListItem> :
         activityUi.actionBar.onSearchQueryChangedListener = { newText ->
             viewModel.searchFilter = newText.toString()
         }
-        observeInventoryNameJob = viewLifecycleOwner.lifecycleScope.launch {
+        observeInventoryNameJob = observeInventoryNameJob ?: viewLifecycleOwner.lifecycleScope.launch {
             viewModel.selectedItemGroupName.collect {
                 if (view?.alpha == 1f && view?.isVisible == true)
                     actionBar?.ui?.titleSwitcher?.title = it
-            }
-        }
-        observeSortJob = viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.sort.collect {
-                actionBar?.changeSortMenu?.findItem(when (viewModel.sort.value) {
-                    ListItem.Sort.Color -> R.id.color_option
-                    ListItem.Sort.NameAsc -> R.id.name_ascending_option
-                    ListItem.Sort.NameDesc -> R.id.name_descending_option
-                    ListItem.Sort.AmountAsc -> R.id.amount_ascending_option
-                    ListItem.Sort.AmountDesc -> R.id.amount_descending_option
-               })?.isChecked = true
             }
         }
 

@@ -21,6 +21,7 @@ import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.viewmodel.MainActivityViewModel
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /**
  * A BottomNavViewActivity with a fragment interface that enables implementing fragments to use its custom UI.
@@ -122,7 +123,7 @@ class MainActivity : BottomNavViewActivity() {
         ui.actionBar.onDeleteButtonClickedListener = {
             fwdMenuItemClick(ui.actionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
         }
-        ui.actionBar.setOnSortOptionClickedListener(::fwdMenuItemClick)
+        ui.actionBar.setOnSortOptionClickedListener(viewModel::onSortOptionSelected)
         ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
 
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }

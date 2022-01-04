@@ -6,12 +6,11 @@ package com.cliffracertech.bootycrate.fragment
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.fragment.app.activityViewModels
-import androidx.preference.ListPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreferenceCompat
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.preference.*
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
@@ -19,11 +18,16 @@ import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.utils.AboutAppDialog
 import com.cliffracertech.bootycrate.utils.PrivacyPolicyDialog
 import com.cliffracertech.bootycrate.utils.importDatabaseFromUriDialog
-import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
+import com.cliffracertech.bootycrate.viewmodel.AppSettingsViewModel
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /** A fragment to display the BootyCrate app settings. */
 class AppSettingsFragment : PreferenceFragmentCompat(), MainActivity.MainActivityFragment {
+
+    private val viewModel: AppSettingsViewModel by viewModels()
+    private var sortByCheckedSwitch: SwitchPreferenceCompat? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -34,16 +38,25 @@ class AppSettingsFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
                 true
             }
         }
+        sortByCheckedSwitch = findPreference(getString(R.string.pref_sort_by_checked_key))
+        sortByCheckedSwitch?.isPersistent = false
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.sortByChecked.collect {
+                sortByCheckedSwitch?.isChecked = it
+            }
+        }
     }
 
     override fun onPreferenceTreeClick(preference: Preference?): Boolean {
         when (preference?.key) {
 //            getString(R.string.pref_theme_gradient_screen) -> { }
-            getString(R.string.pref_sort_by_checked_key) -> {
-                val sortByChecked = (preference as SwitchPreferenceCompat).isChecked
-                val viewModel: ShoppingListViewModel by activityViewModels()
-                viewModel.sortByChecked = sortByChecked
-            } getString(R.string.pref_update_list_reminder_enabled_key) ->
+            getString(R.string.pref_sort_by_checked_key) ->
+                viewModel.onSortByCheckedSwitchClicked()
+            getString(R.string.pref_update_list_reminder_enabled_key) ->
                 addSecondaryFragment(UpdateListReminder.SettingsFragment())
             getString(R.string.pref_export_database_key) ->
                 getExportPath.launch(getString(R.string.exported_database_default_name))
