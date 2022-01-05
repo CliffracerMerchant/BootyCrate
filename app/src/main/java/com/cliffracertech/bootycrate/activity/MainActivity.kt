@@ -53,7 +53,11 @@ class MainActivity : BottomNavViewActivity() {
         initGradientStyle()
 
         repeatWhenStarted {
-            viewModel.itemGroups.collect(ui.itemGroupSelector::submitList)
+            launch { viewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
+            launch { viewModel.sort.collect {
+                if (it.ordinal in 0 until ui.actionBar.changeSortMenu.size())
+                    ui.actionBar.changeSortMenu.getItem(it.ordinal).isChecked = true
+            }}
         }
         ui.itemGroupSelector.onItemClick = viewModel::onItemGroupClick
         ui.itemGroupSelector.onItemRenameRequest = viewModel::onConfirmItemGroupRenameDialog

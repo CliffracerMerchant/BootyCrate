@@ -92,20 +92,23 @@ abstract class ListViewFragment<T: ListItem> :
         viewLifecycleOwner.repeatWhenStarted {
             launch { viewModel.items.collect { items ->
                 listView?.submitList(items)
-                (view as? MultiStateView)?.viewState = when {
+                (this@ListViewFragment.view as? MultiStateView)?.viewState = when {
                     items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
                     searchIsActive ->     MultiStateView.ViewState.ERROR
                     else ->               MultiStateView.ViewState.EMPTY
                 }
             }}
             launch { viewModel.selectedItemCount.collect(::onSelectionSizeChanged) }
+            launch { viewModel.selectedItemGroupName.collect {
+                val view = this@ListViewFragment.view
+                if (view?.alpha == 1f && view.isVisible)
+                    actionBar?.ui?.titleSwitcher?.title = it
+            }}
         }
     }
 
     override fun onDetach() {
         super.onDetach()
-        observeInventoryNameJob?.cancel()
-        observeInventoryNameJob = null
         actionBar = null
         bottomAppBar = null
     }
@@ -181,12 +184,6 @@ abstract class ListViewFragment<T: ListItem> :
         bottomAppBar = activityUi.bottomAppBar
         activityUi.actionBar.onSearchQueryChangedListener = { newText ->
             viewModel.searchFilter = newText.toString()
-        }
-        observeInventoryNameJob = observeInventoryNameJob ?: viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.selectedItemGroupName.collect {
-                if (view?.alpha == 1f && view?.isVisible == true)
-                    actionBar?.ui?.titleSwitcher?.title = it
-            }
         }
 
         listView?.apply {

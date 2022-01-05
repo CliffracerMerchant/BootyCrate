@@ -85,7 +85,6 @@ abstract class NewListItemDialog<T: ListItem>(
         ui.newItemViewContainer.addView(newItemView)
         newItemView.apply {
             setExpanded(true, animate = false)
-            ui.amountEditSpacer.isVisible = false
             ui.checkBox.initColorIndex(0)
             ui.editButton.visibility = View.GONE
             ui.extraInfoEdit.doOnTextChanged { text, _, _, _ ->
