@@ -36,8 +36,8 @@ import dev.sasikanth.colorsheet.ColorSheet
  * The current color is accessed through the property color. The color index
  * can be queried or changed through the property colorIndex. The colors that
  * can be chosen from are defined in the XML attribute colorsResId, and can be
- * accessed through the property colors. The property onColorChangedListener
- * can be set to invoke an action when the color is changed. The function
+ * accessed through the property colors. The property onColorIndexChangedListener
+ * can be set to invoke an action when the color index is changed. The function
  * initColorIndex will set the color index without an animation and will not
  * call the onColorChangedListener.
  *
@@ -46,11 +46,12 @@ import dev.sasikanth.colorsheet.ColorSheet
  * or checkBoxContentDescription, respectively. The XML attribute colorDescriptionsResId
  * must be set to reference a string array of at least equal length to the
  * colors array. The description of the current color will then be included
- * in TintableCheckbox accessibility description.
+ * in TintableCheckbox's accessibility description.
  *
- * TintableCheckbox assumes it is instantiated inside an instance of FragmentActivity
- * in order to show child DialogFragments. If this is not the case, the color picker
- * will not be shown when the TintableCheckbox is clicked while inColorEditMode is true.
+ * TintableCheckbox assumes it is instantiated inside an instance of
+ * FragmentActivity in order to show child DialogFragments. If this is not
+ * the case, the color picker will not be shown when the TintableCheckbox
+ * is clicked while inColorEditMode is true.
  */
 class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageButton(context, attrs) {
 
@@ -70,7 +71,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
                         set(value) = setInColorEditMode(value)
 
     var onCheckedChangedListener: ((Boolean) -> Unit)? = null
-    var onColorChangedListener: ((Int) -> Unit)? = null
+    var onColorIndexChangedListener: ((Int) -> Unit)? = null
 
     var checkBoxContentDescription: String? = null
     var editColorContentDescription: String? = null
@@ -139,7 +140,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
         val checkboxBg = (drawable as LayerDrawable).getDrawable(0)
         if (!animate) checkboxBg.setTint(color)
         else argbValueAnimator(checkboxBg::setTint, oldColor, color).start()
-        onColorChangedListener?.invoke(color)
+        onColorIndexChangedListener?.invoke(_colorIndex)
     }
 
     /** Set the check state without calling the onCheckedChangedListener. */

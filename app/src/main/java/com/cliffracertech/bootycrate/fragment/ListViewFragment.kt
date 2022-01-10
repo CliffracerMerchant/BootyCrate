@@ -6,13 +6,10 @@ package com.cliffracertech.bootycrate.fragment
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.MenuItem
 import android.view.View
 import android.widget.TextView
 import androidx.annotation.CallSuper
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.*
@@ -20,13 +17,10 @@ import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.utils.setPadding
-import com.cliffracertech.bootycrate.view.ListActionBar
 import com.cliffracertech.bootycrate.viewmodel.ItemListViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -35,7 +29,7 @@ import java.util.*
  * ListViewFragment is an abstract fragment whose main purpose is to display an
  * instance of a ExpandableItemListView to the user. It has two abstract
  * properties, viewModel and listView, that must be overridden in subclasses
- * with concrete implementations of ListViewModel and ExpandableItemListView,
+ * with concrete implementations of ItemListViewModel and ExpandableItemListView,
  * respectively. Because ListViewFragment's implementation of onViewCreated
  * references its abstract listView property, it is important that subclasses
  * override the listView property and initialize it before calling
@@ -44,11 +38,6 @@ import java.util.*
  * The value of the open property collectionName should be overridden in
  * subclasses with a value that describes what the collection of items
  * should be called in user facing strings.
- *
- * The value of the open property actionModeCallback will be used as the
- * callback when an action mode is started. Subclasses can override it with a
- * with a descendant of SelectionActionModeCallback if they wish to perform
- * work when the action mode starts or finishes.
  */
 abstract class ListViewFragment<T: ListItem> :
     Fragment(), MainActivity.MainActivityFragment
@@ -56,15 +45,7 @@ abstract class ListViewFragment<T: ListItem> :
     protected abstract val viewModel: ItemListViewModel<T>
     protected abstract val listView: ExpandableItemListView<T>?
     protected open val collectionName = ""
-    protected open val actionModeCallback = SelectionActionModeCallback()
-    private lateinit var sortModePrefKey: String
-
-    private var actionBar: ListActionBar? = null
     private var bottomAppBar: View? = null
-    private val actionModeIsStarted get() =
-        actionBar?.actionMode?.callback == actionModeCallback
-    private val searchIsActive get() = actionBar?.activeSearchQuery != null
-    private var observeInventoryNameJob: Job? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -77,51 +58,29 @@ abstract class ListViewFragment<T: ListItem> :
         (content as? ExpandableItemListView<*>)?.apply {
             onItemClick = viewModel::onItemClick
             onItemLongClick = viewModel::onItemLongClick
-            onItemColorChangeRequest = viewModel::onChangeItemColorRequest
+            onItemColorIndexChangeRequest = viewModel::onChangeItemColorIndexRequest
             onItemRenameRequest = viewModel::onRenameItemRequest
             onItemExtraInfoChangeRequest = viewModel::onChangeItemExtraInfoRequest
             onItemAmountChangeRequest = viewModel::onChangeItemAmountRequest
             onItemEditButtonClick = viewModel::onItemEditButtonClick
-            onItemSwipe = {
-                val anchor = bottomAppBar ?: this@ListViewFragment.view
-                if (anchor != null)
-                    viewModel.onDeletionRequest(it, anchor)
-            }
+            onItemSwipe = viewModel::onItemSwipe
         }
 
         viewLifecycleOwner.repeatWhenStarted {
-            launch { viewModel.items.collect { items ->
+            viewModel.items.collect { items ->
                 listView?.submitList(items)
                 (this@ListViewFragment.view as? MultiStateView)?.viewState = when {
-                    items.isNotEmpty() -> MultiStateView.ViewState.CONTENT
-                    searchIsActive ->     MultiStateView.ViewState.ERROR
-                    else ->               MultiStateView.ViewState.EMPTY
+                    items.isNotEmpty() ->             MultiStateView.ViewState.CONTENT
+                    viewModel.searchFilter != null -> MultiStateView.ViewState.ERROR
+                    else ->                           MultiStateView.ViewState.EMPTY
                 }
-            }}
-            launch { viewModel.selectedItemCount.collect(::onSelectionSizeChanged) }
-            launch { viewModel.selectedItemGroupName.collect {
-                val view = this@ListViewFragment.view
-                if (view?.alpha == 1f && view.isVisible)
-                    actionBar?.ui?.titleSwitcher?.title = it
-            }}
+            }
         }
     }
 
     override fun onDetach() {
         super.onDetach()
-        actionBar = null
         bottomAppBar = null
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.delete_selected_menu_item -> {
-            val anchor = bottomAppBar ?: view
-            if (anchor != null)
-                viewModel.onDeleteSelectedRequest(snackBarAnchor = anchor)
-            anchor != null
-        } R.id.share_menu_item ->    shareList()
-        R.id.select_all_menu_item -> { viewModel.onSelectAllRequest(); true }
-        else ->                      false
     }
 
     /** Open a ShareDialog.
@@ -158,61 +117,13 @@ abstract class ListViewFragment<T: ListItem> :
         return true
     }
 
-    private fun onSelectionSizeChanged(newSize: Int) {
-        if (newSize > 0) {
-            if (!actionModeIsStarted)
-                actionBar?.startActionMode(actionModeCallback)
-            else actionBar?.actionMode?.title = actionModeTitle(newSize)
-        } else actionBar?.actionMode?.finish()
-    }
-
-    override fun onBackPressed() = when {
-        actionModeIsStarted -> { viewModel.onClearSelectionRequest(); true }
-        searchIsActive      -> { actionBar?.activeSearchQuery = null; true }
-        else                -> false
-    }
-
     @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-        if (!isActive) {
-            actionBar = null
-            bottomAppBar = null
-            activityUi.actionBar.onSearchQueryChangedListener = null
-            return
-        }
-
-        actionBar = activityUi.actionBar
-        bottomAppBar = activityUi.bottomAppBar
-        activityUi.actionBar.onSearchQueryChangedListener = { newText ->
-            viewModel.searchFilter = newText.toString()
-        }
-
+        bottomAppBar = if (isActive) activityUi.bottomAppBar
+                       else          null
         listView?.apply {
             val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
             if (paddingBottom != bottomSheetPeekHeight)
                 setPadding(bottom = bottomSheetPeekHeight)
         }
-
-        val actionModeCallback = if (viewModel.selectedItemCount.value == 0) null
-                                 else this.actionModeCallback
-        val activeSearchQuery = if (viewModel.searchFilter.isNullOrBlank()) null
-                                else viewModel.searchFilter
-
-        activityUi.actionBar.transition(
-            title = viewModel.selectedItemGroupName.value,
-            activeActionModeCallback = actionModeCallback,
-            activeSearchQuery = activeSearchQuery)
     }
-
-    open inner class SelectionActionModeCallback : ListActionBar.ActionModeCallback {
-        @CallSuper override fun onStart(
-            actionMode: ListActionBar.ActionMode,
-            actionBar: ListActionBar
-        ) {
-            val selectionSize = viewModel.selectedItemCount.value
-            actionMode.title = actionModeTitle(selectionSize)
-        }
-    }
-
-    private fun actionModeTitle(selectionSize: Int) =
-        activity?.getString(R.string.action_mode_title, selectionSize) ?: ""
 }

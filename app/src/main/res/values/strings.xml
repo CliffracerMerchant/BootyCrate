@@ -31,7 +31,7 @@
     <string name="empty_recycler_view_message">The %1$s is empty</string>
     <string name="edit_button_description">Edit item</string>
     <string name="delete_snackbar_text">%1$d item(s) deleted</string>
-    <string name="delete_snackbar_undo_text">Undo</string>
+    <string name="undo_description">Undo</string>
     <string name="action_mode_title">%1$d item(s) selected</string>
 
     <string name="item_collection_name">items</string>

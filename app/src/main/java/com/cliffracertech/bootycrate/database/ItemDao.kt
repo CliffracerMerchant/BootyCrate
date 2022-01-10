@@ -53,8 +53,8 @@ import kotlinx.coroutines.flow.Flow
     @Query("UPDATE item SET extraInfo = :extraInfo WHERE id = :id")
     abstract suspend fun updateExtraInfo(id: Long, extraInfo: String)
 
-    @Query("UPDATE item SET color = :color WHERE id = :id")
-    abstract suspend fun updateColor(id: Long, color: Int)
+    @Query("UPDATE item SET color = :colorIndex WHERE id = :id")
+    abstract suspend fun updateColorIndex(id: Long, colorIndex: Int)
 
     @Query("SELECT * FROM item")
     abstract fun getAllNow(): List<DatabaseListItem>
@@ -186,8 +186,8 @@ import kotlinx.coroutines.flow.Flow
     @Query("""UPDATE item SET inShoppingListTrash = 1,
                               expandedInShoppingList = 0,
                               selectedInShoppingList = 0
-              WHERE id IN (:ids) AND $onShoppingList""")
-    abstract suspend fun deleteShoppingListItems(ids: Array<Long>)
+              WHERE id = :id AND $onShoppingList""")
+    abstract suspend fun deleteShoppingListItem(id: Long)
 
     @Query("""WITH selectedGroups AS (SELECT id FROM itemGroup WHERE isSelected)
               UPDATE item SET shoppingListAmount = -1,
@@ -302,9 +302,7 @@ import kotlinx.coroutines.flow.Flow
     @Query("UPDATE item SET selectedInInventory = :selected WHERE id = :id")
     abstract suspend fun updateSelectedInInventory(id: Long, selected: Boolean)
 
-    @Query("""UPDATE item SET selectedInInventory =
-                CASE WHEN selectedInInventory THEN 0 ELSE 1 END
-              WHERE id = :id""")
+    @Query("UPDATE item SET selectedInInventory = 1 - selectedInInventory WHERE id = :id")
     abstract suspend fun toggleSelectedInInventory(id: Long)
 
     @Query("UPDATE item set selectedInInventory = 1 " +
@@ -343,8 +341,8 @@ import kotlinx.coroutines.flow.Flow
                               selectedInInventory = 0,
                               autoAddToShoppingList = 0,
                               autoAddToShoppingListAmount = 0
-              WHERE id IN (:ids) AND $inInventory""")
-    abstract suspend fun deleteInventoryItems(ids: Array<Long>)
+              WHERE id = :id AND $inInventory""")
+    abstract suspend fun deleteInventoryItem(id: Long)
 
     @Query("""WITH selectedGroups AS (SELECT id FROM itemGroup WHERE isSelected)
               UPDATE item SET inventoryAmount = -1,

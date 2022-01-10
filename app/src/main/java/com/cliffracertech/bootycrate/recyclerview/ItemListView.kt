@@ -29,6 +29,8 @@ import com.cliffracertech.bootycrate.database.ListItem
  * must be overridden. diffUtilCallback must be overridden with an appropriate
  * DiffUtil.ItemCallback<T> for the adapter. listAdapter must be overridden
  * with a ItemListView.Adapter subclass that implements onCreateViewHolder.
+ * ItemListView overrides and finalizes setAdapter to enforce the use of its
+ * listAdapter property as the RecyclerView.Adapter.
  */
 @Suppress("LeakingThis")
 abstract class ItemListView<T: ListItem>(
@@ -43,7 +45,7 @@ abstract class ItemListView<T: ListItem>(
     /** Called when an item's view is long clicked. */
     var onItemLongClick: ((Long) -> Unit)? = null
     /** Called when a new color option has been chosen in the item's inner TintableCheckbox. */
-    var onItemColorChangeRequest: ((Long, Int) -> Unit)? = null
+    var onItemColorIndexChangeRequest: ((Long, Int) -> Unit)? = null
     /** Called when a new name has been requested for the item through its inner name TextFieldEdit. */
     var onItemRenameRequest: ((Long, String) -> Unit)? = null
     /** Called when a new extra info line has been requested for the item through its inner extra info TextFieldEdit. */
@@ -66,6 +68,10 @@ abstract class ItemListView<T: ListItem>(
     }
 
     fun submitList(items: List<T>) = listAdapter.submitList(items)
+
+    final override fun setAdapter(adapter: RecyclerView.Adapter<*>?) {
+        super.setAdapter(listAdapter)
+    }
 
     /** A ListAdapter derived RecyclerView.Adapter for ItemList that enforces the use of stable ids. */
     @Suppress("LeakingThis")
@@ -103,8 +109,8 @@ abstract class ItemListView<T: ListItem>(
             ui.extraInfoEdit.setOnLongClickListener(onLongClick)
             ui.amountEdit.ui.valueEdit.setOnLongClickListener(onLongClick)
 
-            ui.checkBox.onColorChangedListener = { color ->
-                onItemColorChangeRequest?.invoke(item.id, color)
+            ui.checkBox.onColorIndexChangedListener = { colorIndex ->
+                onItemColorIndexChangeRequest?.invoke(item.id, colorIndex)
             }
             ui.nameEdit.onTextChangedListener = { newName ->
                 onItemRenameRequest?.invoke(item.id, newName)

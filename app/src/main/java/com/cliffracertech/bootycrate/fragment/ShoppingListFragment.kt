@@ -18,7 +18,6 @@ import com.cliffracertech.bootycrate.recyclerview.ShoppingListView
 import com.cliffracertech.bootycrate.utils.NewShoppingListItemDialog
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.view.CheckoutButton
-import com.cliffracertech.bootycrate.view.ListActionBar
 import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
 import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
 import kotlinx.coroutines.flow.collect
@@ -30,22 +29,13 @@ import kotlinx.coroutines.launch
  * ShoppingListFragment is a ListViewFragment subclass to view and modify a
  * list of ShoppingListItems using a ShoppingListView. ShoppingListFragment
  * overrides ListViewFragment's abstract listView property with an instance of
- * ShoppingListView, and overrides its ActionModeCallback with its own version.
- *
- * ShoppingListFragment also manages the state and function of the checkout
- * button. The checkout button is enabled when the user has checked at least
- * one shopping list item, and disabled when no items are checked through its
- * observation of ShoppingListView's checkedItems member. If the checkout
- * button is clicked while it is enabled, it switches to its confirmatory state
- * to safeguard the user from checking out accidentally. If the user does not
- * press the button again within two seconds, it will revert to its normal state.
+ * ShoppingListView.
  */
 @Keep class ShoppingListFragment : ListViewFragment<ShoppingListItem>() {
     override val viewModel: ShoppingListViewModel by activityViewModels()
     private val inventoryItemViewModel: InventoryViewModel by activityViewModels()
     override var listView: ShoppingListView? = null
     override lateinit var collectionName: String
-    override val actionModeCallback = ShoppingListActionModeCallback()
 
     private var checkoutButton: CheckoutButton? = null
 
@@ -64,8 +54,8 @@ import kotlinx.coroutines.launch
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.repeatWhenStarted {
             launch { viewModel.items.collect(::updateBadge) }
-            launch { viewModel.checkedItemsSize.collect { newSize ->
-                checkoutButton?.isEnabled = newSize != 0
+            launch { viewModel.checkoutButtonIsEnabled.collect {
+                checkoutButton?.isEnabled = it
             }}
         }
     }
@@ -133,17 +123,5 @@ import kotlinx.coroutines.launch
             }
             shoppingListSize = newShoppingList.size
         }
-    }
-
-    /** An override of SelectionActionModeCallback that alters the visibility of menu items specific to shopping list items. */
-    inner class ShoppingListActionModeCallback : SelectionActionModeCallback() {
-        override fun onStart(actionMode: ListActionBar.ActionMode, actionBar: ListActionBar) {
-            super.onStart(actionMode, actionBar)
-            actionBar.optionsMenu.setGroupVisible(
-                R.id.shopping_list_view_action_mode_menu_group, true)
-        }
-
-        override fun onFinish(actionMode: ListActionBar.ActionMode, actionBar: ListActionBar) =
-            actionBar.optionsMenu.setGroupVisible(R.id.shopping_list_view_action_mode_menu_group, false)
     }
 }

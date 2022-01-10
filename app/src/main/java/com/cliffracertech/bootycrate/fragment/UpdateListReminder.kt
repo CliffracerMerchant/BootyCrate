@@ -211,13 +211,6 @@ object UpdateListReminder {
         }
 
         override fun showsBottomAppBar() = false
-        override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-            if (isActive) activityUi.actionBar.transition(
-                backButtonVisible = true,
-                searchButtonVisible = false,
-                changeSortButtonVisible = false,
-                menuButtonVisible = false)
-        }
     }
 
     /** A BroadcastReceiver that receives intents for when the device is restarted or when

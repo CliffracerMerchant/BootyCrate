@@ -14,7 +14,6 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
@@ -285,7 +284,7 @@ class NewInventoryItemDialog(context: Context) :
         newItemView = newInventoryItemView.apply {
             detailsUi.autoAddToShoppingListAmountEdit.apply { value = minValue }
             detailsUi.autoAddToShoppingListCheckBox.initColorIndex(0)
-            ui.checkBox.onColorChangedListener = {
+            ui.checkBox.onColorIndexChangedListener = {
                 detailsUi.autoAddToShoppingListCheckBox.colorIndex =
                     ui.checkBox.colorIndex
             }

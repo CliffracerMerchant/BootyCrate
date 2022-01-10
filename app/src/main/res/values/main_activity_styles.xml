@@ -8,7 +8,7 @@
         <item name="optionsMenuResId">@menu/action_bar</item>
         <item name="changeSortMenuResId">@menu/change_sort</item>
         <item name="android:background">@drawable/background_gradient</item>
-        <item name="actionBarContentsTint">?attr/colorOnBackgroundGradient</item>
+        <item name="contentsTint">?attr/colorOnBackgroundGradient</item>
     </style>
 
     <style name="ActionBarTitle">

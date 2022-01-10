@@ -5,7 +5,6 @@
 package com.cliffracertech.bootycrate.viewmodel
 
 import android.app.Application
-import android.view.View
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.AndroidViewModel
@@ -16,9 +15,11 @@ import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.InventoryItem
 import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.utils.*
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
+import com.cliffracertech.bootycrate.utils.getValue
+import com.cliffracertech.bootycrate.utils.setValue
+import com.cliffracertech.bootycrate.utils.preferenceFlow
+import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
+import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -26,48 +27,44 @@ import kotlinx.coroutines.launch
  * An abstract AndroidViewModel to provide data and callbacks for a fragment
  * that displays a list of ListItem subclasses.
  *
- * ItemListViewModel provides two sorting options through the properties sort
- * and searchFilter. sort describes a value of the enum class ListItem.Sort,
- * while searchFilter describes a string whose value the name and/or extra info
- * of items will be matched to. Changes to the value of sort or searchFilter
- * will result in the List<T> of items, exposed through the StateFlow property
- * items, to be updated to reflect the changed sorting option or search filter.
- *
- * The property selectedItemGroupName is a StateFlow<String> whose current
- * value will be equal to the name of the selected item group if only one is
- * selected, or a string to express that multiple item groups are selected
- * otherwise.
+ * ItemListViewModel listens to changes in the integer datastore value pointed
+ * to by the key item_sort, maps this value to a value of ListItem.Sort, and
+ * uses this sort value when it provides the list of ListItems. It also uses
+ * the current value of the property searchFilter to filter the returned items.
+ * As modifying the value of either of these parameters does not fall into the
+ * purview of a fragment displaying a list of items, ItemListViewModel needs to
+ * be manually informed of changes to the searchFilter, and writes to the
+ * integer datastore preference need to be performed in another entity.
  *
  * The current sorting option and search filter are exposed as StateFlows to
- * subclasses through the properties sortFlow and searchFilterFlow. Subclasses
+ * subclasses through the properties sort and searchFilterFlow. Subclasses
  * should override the abstract property items to return a Flow<List<T>>
  * containing all of the items in the database that match the current sorting
  * option and search filter, as well as any additional sorting parameters that
- * they themselves add. To allow multiple subclasses to each have their own
- * sorting method stored persistently, subclasses must also pass the string key
- * that will be used to store their sorting preference to ItemListViewModel's
- * constructor. This string should be unique for each subclass of ItemListViewModel.
+ * they themselves add.
+ *
+ * ItemListViewModel or its subclasses might need to pass messages to the user,
+ * e.g. about items being deleted. ItemListViewModel will call its properties
+ * onMessage and onDeletedItemsMessage in these instances. These properties
+ * will need to be set to functions that pass these messages to another entity
+ * that is capable of displaying messages to the user.
  */
 abstract class ItemListViewModel<T: ListItem>(app: Application):
     AndroidViewModel(app)
 {
     protected val dao = BootyCrateDatabase.get(app).itemDao()
     private val itemGroupDao = BootyCrateDatabase.get(app).itemGroupDao()
+    var onMessage: ((MessageViewModel.Message) -> Unit)? = null
+    var onDeletedItemsMessage: ((MessageViewModel.DeletedItemsMessage) -> Unit)? = null
+
+    protected val searchFilterFlow = MutableStateFlow<String?>(null)
+    var searchFilter by searchFilterFlow
 
     protected val sort = app.dataStore.preferenceFlow(
         intPreferencesKey("item_sort"), ListItem.Sort.Color.ordinal)
         .map { ListItem.Sort.values().getOrElse(it) { ListItem.Sort.Color } }
 
-    protected val searchFilterFlow = MutableStateFlow<String?>(null)
-    var searchFilter by searchFilterFlow
-
     abstract val items: StateFlow<List<T>>
-
-    private val nameForMultiSelection = app.getString(R.string.multiple_selected_item_groups_description)
-    val selectedItemGroupName = itemGroupDao.getSelectedGroups().map {
-        if (it.size == 1) it.first().name
-        else nameForMultiSelection
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
 
     fun onRenameItemRequest(id: Long, name: String) {
         viewModelScope.launch { dao.updateName(id, name) }
@@ -75,8 +72,8 @@ abstract class ItemListViewModel<T: ListItem>(app: Application):
     fun onChangeItemExtraInfoRequest(id: Long, extraInfo: String) {
         viewModelScope.launch { dao.updateExtraInfo(id, extraInfo) }
     }
-    fun onChangeItemColorRequest(id: Long, color: Int) {
-        viewModelScope.launch { dao.updateColor(id, color) }
+    fun onChangeItemColorIndexRequest(id: Long, color: Int) {
+        viewModelScope.launch { dao.updateColorIndex(id, color) }
     }
     abstract fun onChangeItemAmountRequest(id: Long, amount: Int)
 
@@ -93,42 +90,18 @@ abstract class ItemListViewModel<T: ListItem>(app: Application):
     abstract fun onSelectAllRequest()
     abstract fun onClearSelectionRequest()
 
-    fun onDeletionRequest(id: Long, snackBarAnchor: View) =
-        onDeletionRequest(arrayOf(id), snackBarAnchor)
+    fun onItemSwipe(id: Long) { viewModelScope.launch {
+        deleteItem(id)
+        val message = MessageViewModel.DeletedItemsMessage(1, ::undoDelete) {
+            if (it != DISMISS_EVENT_ACTION && it != DISMISS_EVENT_CONSECUTIVE)
+                emptyTrash()
+        }
+        onDeletedItemsMessage?.invoke(message)
+    }}
 
-    fun onDeletionRequest(ids: Array<Long>, snackBarAnchor: View) {
-        deleteItems(ids)
-        showDeletedItemsSnackBar(ids.size, snackBarAnchor)
-    }
-    fun onDeleteSelectedRequest(snackBarAnchor: View) {
-        val count = selectedItemCount.value
-        deleteSelectedItems()
-        showDeletedItemsSnackBar(count, snackBarAnchor)
-    }
-
-    protected abstract fun deleteItems(ids: Array<Long>)
-    protected abstract fun deleteSelectedItems()
+    protected abstract suspend fun deleteItem(id: Long)
     protected abstract fun emptyTrash()
     protected abstract fun undoDelete()
-
-    private var totalDeletedItemCount: Int = 0
-    protected fun showDeletedItemsSnackBar(newlyDeletedItemCount: Int, anchor: View) {
-        totalDeletedItemCount += newlyDeletedItemCount
-        val text = anchor.context.getString(R.string.delete_snackbar_text, totalDeletedItemCount)
-        Snackbar.make(anchor, text, Snackbar.LENGTH_LONG)
-            .setAnchorView(anchor)
-            .setAction(R.string.delete_snackbar_undo_text) { undoDelete() }
-            .setActionTextColor(anchor.context.theme.resolveIntAttribute(R.attr.colorAccent))
-            .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(a: Snackbar?, b: Int) {
-                    if (b != DISMISS_EVENT_CONSECUTIVE) {
-                        totalDeletedItemCount = 0
-                        if (b != DISMISS_EVENT_ACTION) emptyTrash()
-                    }
-                }
-            }).show()
-        SoftKeyboard.hide(anchor)
-    }
 }
 
 
@@ -136,10 +109,10 @@ abstract class ItemListViewModel<T: ListItem>(app: Application):
 /**
  * An implementation of ItemListViewModel<ShoppingListItem>.
  *
- * ShoppingListViewModel adds a new sortByChecked option, which will sort
- * ShoppingListItems by their checked state in addition to the sorting method
- * described by the sort property. It also adds functions to respond to clicks
- * on the checkbox of items, and to respond to a request to checkout.
+ * ShoppingListViewModel adds callbacks to respond to clicks on the checkbox of
+ * items, and to respond to a request to checkout. It also adds a StateFlow
+ * property checkoutButtonIsEnabled, the current value of which indicates the
+ * disabled/enabled state of the checkout button.
  */
 class ShoppingListViewModel(app: Application) :
     ItemListViewModel<ShoppingListItem>(app)
@@ -160,8 +133,9 @@ class ShoppingListViewModel(app: Application) :
         viewModelScope.launch { dao.toggleExpandedInShoppingList(id) }
     }
 
-    val checkedItemsSize = dao.getCheckedShoppingListItemsSize()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
+    val checkoutButtonIsEnabled = dao.getCheckedShoppingListItemsSize()
+        .map { it > 0 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
     fun onItemCheckboxClicked(id: Long) {
         viewModelScope.launch { dao.toggleIsChecked(id) }
@@ -178,7 +152,7 @@ class ShoppingListViewModel(app: Application) :
 
 
     override val selectedItemCount = dao.getSelectedShoppingListItemCount()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     override fun toggleIsSelected(id: Long) {
         viewModelScope.launch { dao.toggleSelectedInShoppingList(id) }
@@ -196,12 +170,8 @@ class ShoppingListViewModel(app: Application) :
         }
     }
 
-    override fun deleteItems(ids: Array<Long>) {
-        viewModelScope.launch { dao.deleteShoppingListItems(ids) }
-    }
-    override fun deleteSelectedItems() {
-        viewModelScope.launch { dao.deleteSelectedShoppingListItems() }
-    }
+    override suspend fun deleteItem(id: Long) = dao.deleteShoppingListItem(id)
+
     override fun emptyTrash() {
         viewModelScope.launch { dao.emptyShoppingListTrash() }
     }
@@ -238,7 +208,7 @@ class InventoryViewModel(app: Application) :
 
 
     override val selectedItemCount = dao.getSelectedInventoryItemCount()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     override fun toggleIsSelected(id: Long) {
         viewModelScope.launch { dao.toggleSelectedInInventory(id) }
@@ -256,12 +226,8 @@ class InventoryViewModel(app: Application) :
         }
     }
 
-    override fun deleteItems(ids: Array<Long>) {
-        viewModelScope.launch { dao.deleteInventoryItems(ids) }
-    }
-    override fun deleteSelectedItems() {
-        viewModelScope.launch { dao.deleteSelectedInventoryItems() }
-    }
+    override suspend fun deleteItem(id: Long) = dao.deleteInventoryItem(id)
+
     override fun emptyTrash() {
         viewModelScope.launch { dao.emptyInventoryTrash() }
     }

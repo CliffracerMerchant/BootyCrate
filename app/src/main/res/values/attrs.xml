@@ -21,7 +21,7 @@
         <!-- The resource id of the menu to be used as the contents of the options menu. -->
         <attr name="optionsMenuResId"      format="reference" />
         <!-- A tint to use for all text and icons in the action bar. -->
-        <attr name="actionBarContentsTint" format="color" />
+        <attr name="contentsTint" format="color" />
     </declare-styleable>
 
     <attr name="actionBarTitleStyle" format="reference" />

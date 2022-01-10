@@ -19,7 +19,9 @@ import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.viewmodel.MainActivityViewModel
+import com.cliffracertech.bootycrate.viewmodel.*
+import com.google.android.material.snackbar.BaseTransientBottomBar
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -37,6 +39,9 @@ import kotlinx.coroutines.launch
  */
 class MainActivity : BottomNavViewActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
+    private val shoppingListViewModel: ShoppingListViewModel by viewModels()
+    private val inventoryViewModel: InventoryViewModel by viewModels()
+    private val itemGroupSelectorViewModel: ItemGroupSelectorViewModel by viewModels()
 
     lateinit var ui: MainActivityBinding
     private var pendingCradleAnim: Animator? = null
@@ -52,19 +57,42 @@ class MainActivity : BottomNavViewActivity() {
         initAnimatorConfigs()
         initGradientStyle()
 
+        shoppingListViewModel.onMessage = { viewModel.postMessage(it) }
+        shoppingListViewModel.onDeletedItemsMessage = { viewModel.postItemsDeletedMessage(it) }
+        inventoryViewModel.onMessage = { viewModel.postMessage(it) }
+        inventoryViewModel.onDeletedItemsMessage = { viewModel.postItemsDeletedMessage(it) }
         repeatWhenStarted {
-            launch { viewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
-            launch { viewModel.sort.collect {
-                if (it.ordinal in 0 until ui.actionBar.changeSortMenu.size())
-                    ui.actionBar.changeSortMenu.getItem(it.ordinal).isChecked = true
-            }}
+            launch { viewModel.searchFilter.collect { shoppingListViewModel.searchFilter = it
+                                                      inventoryViewModel.searchFilter = it }}
+            launch { viewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
+            launch { viewModel.titleState.collect(ui.actionBar::setTitleState) }
+            launch { viewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
+            launch { viewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
+            launch { viewModel.sortIndex.collect(ui.actionBar::setChangeSortMenuSelectedIndex) }
+            launch { viewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
+            launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
+            launch { viewModel.messages.collect(::displayMessage) }
         }
-        ui.itemGroupSelector.onItemClick = viewModel::onItemGroupClick
-        ui.itemGroupSelector.onItemRenameRequest = viewModel::onConfirmItemGroupRenameDialog
-        ui.itemGroupSelector.onItemDeletionRequest = viewModel::onConfirmDeleteItemGroupDialog
+        ui.itemGroupSelector.onItemClick = itemGroupSelectorViewModel::onItemGroupClick
+        ui.itemGroupSelector.onItemRenameRequest = itemGroupSelectorViewModel::onConfirmItemGroupRenameDialog
+        ui.itemGroupSelector.onItemDeletionRequest = itemGroupSelectorViewModel::onConfirmDeleteItemGroupDialog
     }
 
-    override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
+    private fun displayMessage(message: MessageViewModel.Message) {
+        Snackbar.make(ui.root, message.text, Snackbar.LENGTH_LONG)
+            .setAnchorView(ui.bottomAppBar)
+            .setAction(message.actionText) { message.onActionClick?.invoke() }
+            .setActionTextColor(theme.resolveIntAttribute(R.attr.colorAccent))
+            .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    super.onDismissed(transientBottomBar, event)
+                    message.onDismiss?.invoke(event)
+                }
+            }).show()
+        SoftKeyboard.hide(ui.root)
+    }
+
+    override fun onBackPressed() { ui.actionBar.onBackButtonClick?.invoke() }
 
     override fun onNewFragmentSelected(oldFragment: Fragment?, newFragment: Fragment) {
         val needToAnimate = oldFragment != null
@@ -80,6 +108,7 @@ class MainActivity : BottomNavViewActivity() {
             ui.cradleLayout.isInvisible = !showsBottomAppBar
             ui.bottomAppBar.navIndicator.alpha = if (showsBottomAppBar) 1f else 0f
         }
+        viewModel.onNewFragmentSelected(newFragment)
         if (newFragment !is MainActivityFragment) return
 
         if (newFragment.showsBottomAppBar()) ui.bottomNavigationDrawer.show()
@@ -119,28 +148,27 @@ class MainActivity : BottomNavViewActivity() {
         visibleFragment?.onOptionsItemSelected(menuItem) ?: false
 
     private fun initOnClickListeners() {
-        ui.actionBar.ui.backButton.setOnClickListener {
-            val fragment = visibleFragment as? MainActivityFragment
-            if (fragment?.onBackPressed() != true)
+        ui.actionBar.onBackButtonClick = {
+            if (!viewModel.onBackPressed())
                 supportFragmentManager.popBackStack()
         }
-        ui.actionBar.onDeleteButtonClickedListener = {
-            fwdMenuItemClick(ui.actionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
-        }
-        ui.actionBar.setOnSortOptionClickedListener(viewModel::onSortOptionSelected)
-        ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
+        ui.actionBar.onSearchButtonClick = viewModel::onSearchButtonClick
+        ui.actionBar.onSearchQueryChange = viewModel::onSearchFilterChangeRequest
+        ui.actionBar.onDeleteButtonClick = viewModel::onDeleteButtonClick
+        ui.actionBar.setOnSortOptionClick { viewModel.onSortOptionSelected(it.itemId) }
+        ui.actionBar.setOnOptionsItemClick(::fwdMenuItemClick)
 
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
         ui.addItemGroupButton.setOnClickListener {
-            itemGroupNameDialog(this, null, viewModel::onConfirmAddNewItemGroupDialog)
+            itemGroupNameDialog(this, null, itemGroupSelectorViewModel::onConfirmAddNewItemGroupDialog)
         }
         ui.itemGroupSelectorOptionsButton.setOnClickListener {
             ItemGroupSelectorOptionsMenu(
                 anchor = ui.itemGroupSelectorOptionsButton,
-                multiSelectItemGroups = viewModel.multiSelectGroups,
-                onMultiSelectCheckboxClick = viewModel::onMultiSelectCheckboxClick,
-                onSelectAllClick = viewModel::onSelectAllGroupsClick
+                multiSelectItemGroups = itemGroupSelectorViewModel.multiSelectGroups,
+                onMultiSelectCheckboxClick = itemGroupSelectorViewModel::onMultiSelectCheckboxClick,
+                onSelectAllClick = itemGroupSelectorViewModel::onSelectAllGroupsClick
             ).show()
         }
     }

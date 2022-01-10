@@ -8,26 +8,26 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.*
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
+import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.utils.AboutAppDialog
 import com.cliffracertech.bootycrate.utils.PrivacyPolicyDialog
 import com.cliffracertech.bootycrate.utils.importDatabaseFromUriDialog
-import com.cliffracertech.bootycrate.viewmodel.AppSettingsViewModel
+import com.cliffracertech.bootycrate.utils.mutablePreferenceFlow
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /** A fragment to display the BootyCrate app settings. */
 class AppSettingsFragment : PreferenceFragmentCompat(), MainActivity.MainActivityFragment {
 
-    private val viewModel: AppSettingsViewModel by viewModels()
     private var sortByCheckedSwitch: SwitchPreferenceCompat? = null
+    private var sortByChecked: MutableStateFlow<Boolean>? = null
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -44,10 +44,10 @@ class AppSettingsFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.sortByChecked.collect {
-                sortByCheckedSwitch?.isChecked = it
-            }
+        context?.let {
+            val key = booleanPreferencesKey(getString(R.string.pref_sort_by_checked_key))
+            sortByChecked = it.applicationContext.dataStore.mutablePreferenceFlow(
+                key, viewLifecycleOwner.lifecycleScope, false)
         }
     }
 
@@ -55,7 +55,7 @@ class AppSettingsFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
         when (preference?.key) {
 //            getString(R.string.pref_theme_gradient_screen) -> { }
             getString(R.string.pref_sort_by_checked_key) ->
-                viewModel.onSortByCheckedSwitchClicked()
+                sortByChecked?.apply { value = !value }
             getString(R.string.pref_update_list_reminder_enabled_key) ->
                 addSecondaryFragment(UpdateListReminder.SettingsFragment())
             getString(R.string.pref_export_database_key) ->
@@ -75,15 +75,6 @@ class AppSettingsFragment : PreferenceFragmentCompat(), MainActivity.MainActivit
     }
 
     override fun showsBottomAppBar() = false
-    override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-        if (isActive)
-            activityUi.actionBar.transition(
-                title = getString(R.string.settings_description),
-                backButtonVisible = true,
-                searchButtonVisible = false,
-                changeSortButtonVisible = false,
-                menuButtonVisible = false)
-    }
 
     private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
         val context = this.context ?: return@registerForActivityResult

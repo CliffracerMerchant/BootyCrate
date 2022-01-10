@@ -65,7 +65,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
     var searchQuery: CharSequence get() = searchQueryView.text.toString()
                                   set(value) = setSearchQuery(value)
 
-    var onSearchQueryChangedListener: ((CharSequence?) -> Unit)? = null
+    var onSearchQueryChange: ((CharSequence?) -> Unit)? = null
 
     val showingFragmentTitle get() = displayedChild == fragmentTitlePos
     val showingActionModeTitle get() = displayedChild == actionModeTitlePos
@@ -107,7 +107,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         // For some reason, if saveFromParentEnabled == true the title
         // will be "restored" to a blank string across activity restarts.
         isSaveFromParentEnabled = false
-        searchQueryView.doAfterTextChanged { text -> onSearchQueryChangedListener?.invoke(text) }
+        searchQueryView.doAfterTextChanged { onSearchQueryChange?.invoke(it) }
     }
 
     fun showTitle() {
@@ -141,27 +141,28 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
     private var savedActionModeTitle: String? = null
     private var savedActionModeFont: Typeface? = null
     fun setTitle(title: CharSequence, switchTo: Boolean = false) {
-        if (title == this.title) return
-        if (!showingFragmentTitle)
-            fragmentTitleView.text = title
-        else {
-            savedActionModeTitle = actionModeTitle.toString()
-            savedActionModeFont = actionModeTitleView.typeface
-            actionModeTitleView.text = fragmentTitleView.text
-            actionModeTitleView.typeface = fragmentTitleView.typeface
-            actionModeTitleView.alpha = 1f
-            actionModeTitleView.isVisible = true
-            fragmentTitleView.alpha = 0f
-            fragmentTitleView.text = title
+        if (title != this.title) {
+            if (!showingFragmentTitle)
+                fragmentTitleView.text = title
+            else {
+                savedActionModeTitle = actionModeTitle.toString()
+                savedActionModeFont = actionModeTitleView.typeface
+                actionModeTitleView.text = fragmentTitleView.text
+                actionModeTitleView.typeface = fragmentTitleView.typeface
+                actionModeTitleView.alpha = 1f
+                actionModeTitleView.isVisible = true
+                fragmentTitleView.alpha = 0f
+                fragmentTitleView.text = title
 
-            // A reference to the animator is kept in case it needs to be canceled early.
-            titleCrossfade = actionModeTitleView.animate()
-                .alpha(0f).withLayer().withEndAction {
-                    titleCrossfade = null
-                    actionModeTitleView.text = savedActionModeTitle
-                    actionModeTitleView.typeface = savedActionModeFont
-                }.apply { start() }
-            fragmentTitleView.animate().alpha(1f).withLayer().start()
+                // A reference to the animator is kept in case it needs to be canceled early.
+                titleCrossfade = actionModeTitleView.animate()
+                    .alpha(0f).withLayer().withEndAction {
+                        titleCrossfade = null
+                        actionModeTitleView.text = savedActionModeTitle
+                        actionModeTitleView.typeface = savedActionModeFont
+                    }.apply { start() }
+                fragmentTitleView.animate().alpha(1f).withLayer().start()
+            }
         }
         if (switchTo) showTitle()
     }

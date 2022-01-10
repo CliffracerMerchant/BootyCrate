@@ -2,10 +2,13 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-kapt'
-apply plugin: 'com.google.android.gms.oss-licenses-plugin'
+
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+    id 'com.google.android.gms.oss-licenses-plugin'
+}
 
 android {
     compileSdkVersion 31
@@ -34,7 +37,7 @@ android {
             shrinkResources true
         }
     }
-    buildFeatures { viewBinding true }
+    buildFeatures.viewBinding true
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -42,11 +45,9 @@ android {
         coreLibraryDesugaringEnabled true
     }
 
-    testOptions { unitTests.includeAndroidResources = true }
+    testOptions.unitTests.includeAndroidResources = true
 
-    packagingOptions {
-        resources.excludes.add("META-INF/*")
-    }
+    packagingOptions.resources.excludes.add("META-INF/*")
 }
 
 dependencies {

@@ -144,9 +144,9 @@ fun LifecycleOwner.repeatWhenStarted(block: suspend CoroutineScope.() -> Unit) {
     }
 }
 
-/** An extension function that allows a MutableStateFlow<T>
- * to act as a delegate for an immutable value of type T. */
-operator fun <T> MutableStateFlow<T>.getValue(
+/** An extension function that allows a StateFlow<T> to
+ * act as a delegate for an immutable value of type T. */
+operator fun <T> StateFlow<T>.getValue(
     thisRef: Any,
     property: KProperty<*>
 ) = value
@@ -175,15 +175,13 @@ fun <T> DataStore<Preferences>.mutablePreferenceFlow(
     key: Preferences.Key<T>,
     scope: CoroutineScope,
     defaultValue: T,
-): MutableStateFlow<T> {
-    val flow = MutableStateFlow(defaultValue)
+) = MutableStateFlow(defaultValue).apply {
     scope.launch {
-        flow.value = data.first()[key] ?: defaultValue
+        value = data.first()[key] ?: defaultValue
+        collect { newValue ->
+            edit { it[key] = newValue }
+        }
     }
-    scope.launch { flow.collect { newValue ->
-        edit { it[key] = newValue }
-    }}
-    return flow
 }
 
 /** Return a MutableStateFlow<T> that contains the most recent enum value for
@@ -196,16 +194,12 @@ inline fun <reified T: Enum<*>> DataStore<Preferences>.mutableEnumPreferenceFlow
     key: Preferences.Key<Int>,
     scope: CoroutineScope,
     defaultValue: T,
-): MutableStateFlow<T> {
-    val flow = MutableStateFlow(defaultValue)
+) = MutableStateFlow(defaultValue).apply {
     scope.launch {
-        val firstIndex = data.first()[key]
-        flow.value = if (firstIndex != null)
-                         enumValues<T>()[firstIndex]
-                     else defaultValue
+        val firstIndex = data.first()[key] ?: defaultValue.ordinal
+        value = enumValues<T>()[firstIndex]
+        collect { newValue ->
+            edit { it[key] = newValue.ordinal }
+        }
     }
-    scope.launch { flow.collect { newValue ->
-        edit { it[key] = newValue.ordinal }
-    }}
-    return flow
 }

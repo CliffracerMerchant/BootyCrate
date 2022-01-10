@@ -16,24 +16,15 @@ import com.cliffracertech.bootycrate.databinding.InventoryFragmentBinding
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.InventoryView
 import com.cliffracertech.bootycrate.utils.NewInventoryItemDialog
-import com.cliffracertech.bootycrate.view.ListActionBar
 import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
 import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
 
-/**
- * A fragment to display and modify the user's inventory.
- *
- * InventoryFragment is a ListViewFragment subclass to view and modify the
- * user's inventory using an InventoryView. It implements ListViewFragment's
- * abstract properties with values suitable for display of an InventoryView,
- * and uses its own action mode callback.
- */
+/** A ListViewFragment to display and modify the user's inventory using an InventoryView. */
 @Keep class InventoryFragment: ListViewFragment<InventoryItem>() {
     override val viewModel: InventoryViewModel by activityViewModels()
     private val shoppingListItemViewModel: ShoppingListViewModel by activityViewModels()
     override var listView: InventoryView? = null
     override lateinit var collectionName: String
-    override val actionModeCallback = InventoryActionModeCallback()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -72,17 +63,5 @@ import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
                 .show(activity.supportFragmentManager, null)
         }
         activityUi.checkoutButton.checkoutCallback = null
-    }
-
-    /** An override of SelectionActionModeCallback that alters the
-     * visibility of menu items specific to inventory items. */
-    inner class InventoryActionModeCallback : SelectionActionModeCallback() {
-        override fun onStart(actionMode: ListActionBar.ActionMode, actionBar: ListActionBar) {
-            super.onStart(actionMode, actionBar)
-            actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, true)
-        }
-
-        override fun onFinish(actionMode: ListActionBar.ActionMode, actionBar: ListActionBar) =
-            actionBar.optionsMenu.setGroupVisible(R.id.inventory_view_action_mode_menu_group, false)
     }
 }
