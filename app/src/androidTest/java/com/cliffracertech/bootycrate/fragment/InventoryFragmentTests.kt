@@ -30,6 +30,8 @@ import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.recyclerview.InventoryView
 import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
+import com.cliffracertech.bootycrate.viewmodel.MainActivityViewModel
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.allOf
@@ -59,8 +61,8 @@ class InventoryFragmentTests {
 
     @Before fun setup() {
         activityRule.scenario.onActivity {
-            val inventoryItemViewModel: InventoryViewModel by it.viewModels()
-            inventoryItemViewModel.sort = ListItem.Sort.Color
+            val mainActivityViewModel: MainActivityViewModel by it.viewModels()
+            mainActivityViewModel.onSortOptionSelected(R.id.color_option)
         }
         runBlocking {
             dao.deleteAllShoppingListItems()
@@ -303,8 +305,8 @@ class InventoryFragmentTests {
                                                     withText(R.string.no_search_results_message))
     private fun emptyListMessage() = allOf(withId(R.id.emptyListMessage),
                                            withParent(withId(R.id.inventoryFragmentView)),
-                                           withText(context.getString(R.string.empty_recycler_view_message,
-                                                       context.getString(R.string.inventory_item_collection_name))))
+                                           withText(context.getString(R.string.empty_list_message,
+                                                    context.getString(R.string.inventory_item_collection_name))))
 
     @Test fun emptyMessageAppears() {
         runBlocking { dao.deleteAllInventoryItems() }

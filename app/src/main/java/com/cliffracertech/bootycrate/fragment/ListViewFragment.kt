@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.fragment
 
+import android.animation.LayoutTransition
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
@@ -15,12 +16,11 @@ import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
-import com.cliffracertech.bootycrate.utils.repeatWhenStarted
+import com.cliffracertech.bootycrate.utils.recollectWhenStarted
 import com.cliffracertech.bootycrate.utils.setPadding
 import com.cliffracertech.bootycrate.viewmodel.ItemListViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView
-import kotlinx.coroutines.flow.collect
 import java.util.*
 
 /**
@@ -44,15 +44,17 @@ abstract class ListViewFragment<T: ListItem> :
 {
     protected abstract val viewModel: ItemListViewModel<T>
     protected abstract val listView: ExpandableItemListView<T>?
+    private var multiStateView: MultiStateView? = null
     protected open val collectionName = ""
     private var bottomAppBar: View? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val multiStateView = view as? MultiStateView
-        val emptyTextView = multiStateView?.getView(MultiStateView.ViewState.EMPTY) as? TextView
-        emptyTextView?.text = getString(R.string.empty_recycler_view_message, collectionName)
+        multiStateView = view as? MultiStateView
+        multiStateView?.layoutTransition = LayoutTransition()
+        (multiStateView?.getView(MultiStateView.ViewState.EMPTY) as? TextView)
+            ?.text = getString(R.string.empty_list_message, collectionName)
 
         val content = multiStateView?.getView(MultiStateView.ViewState.CONTENT)
         (content as? ExpandableItemListView<*>)?.apply {
@@ -66,16 +68,26 @@ abstract class ListViewFragment<T: ListItem> :
             onItemSwipe = viewModel::onItemSwipe
         }
 
-        viewLifecycleOwner.repeatWhenStarted {
-            viewModel.items.collect { items ->
-                listView?.submitList(items)
-                (this@ListViewFragment.view as? MultiStateView)?.viewState = when {
-                    items.isNotEmpty() ->             MultiStateView.ViewState.CONTENT
-                    viewModel.searchFilter != null -> MultiStateView.ViewState.ERROR
-                    else ->                           MultiStateView.ViewState.EMPTY
+        viewLifecycleOwner.recollectWhenStarted(viewModel.uiState) {
+            val view = multiStateView ?: return@recollectWhenStarted
+            when (it) {
+                is ItemListViewModel.UiState.Loading ->
+                    view.viewState = MultiStateView.ViewState.LOADING
+                is ItemListViewModel.UiState.EmptyContent ->
+                    view.viewState = MultiStateView.ViewState.EMPTY
+                is ItemListViewModel.UiState.EmptySearchResults ->
+                    view.viewState = MultiStateView.ViewState.ERROR
+                is ItemListViewModel.UiState.Content<*> -> {
+                    listView?.submitList(it.items as List<T>)
+                    view.viewState = MultiStateView.ViewState.CONTENT
                 }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        multiStateView = null
     }
 
     override fun onDetach() {
@@ -89,12 +101,13 @@ abstract class ListViewFragment<T: ListItem> :
         val context = this.context ?: return false
         val selectionIsEmpty = viewModel.selectedItemCount.value == 0
 
-        val items = if (selectionIsEmpty) viewModel.items.value
-                    else viewModel.items.value.filter { it.isSelected }
+        val contentState = viewModel.uiState as? ItemListViewModel.UiState.Content<T>
+        val items = if (selectionIsEmpty) contentState?.items
+                    else contentState?.items?.filter { it.isSelected }
 
-        if (items.isEmpty()) {
+        if (items.isNullOrEmpty()) {
             val anchor = bottomAppBar ?: view ?: return false
-            val message = context.getString(R.string.empty_recycler_view_message, collectionName)
+            val message = context.getString(R.string.empty_list_message, collectionName)
             Snackbar.make(context, anchor, message, Snackbar.LENGTH_LONG)
                 .setAnchorView(anchor).show()
             return false

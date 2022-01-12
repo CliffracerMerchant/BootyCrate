@@ -19,6 +19,7 @@ import com.cliffracertech.bootycrate.utils.NewShoppingListItemDialog
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.view.CheckoutButton
 import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
+import com.cliffracertech.bootycrate.viewmodel.ItemListViewModel
 import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -53,7 +54,10 @@ import kotlinx.coroutines.launch
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewLifecycleOwner.repeatWhenStarted {
-            launch { viewModel.items.collect(::updateBadge) }
+            launch { viewModel.uiState.collect {
+                if (it is ItemListViewModel.UiState.Content<*>)
+                    updateBadge(it.items as List<ShoppingListItem>)
+            }}
             launch { viewModel.checkoutButtonIsEnabled.collect {
                 checkoutButton?.isEnabled = it
             }}

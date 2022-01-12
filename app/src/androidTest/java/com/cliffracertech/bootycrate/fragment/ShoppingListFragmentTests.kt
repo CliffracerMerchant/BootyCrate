@@ -9,6 +9,9 @@ import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
 import androidx.activity.viewModels
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -28,10 +31,13 @@ import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
+import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListItemView
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListView
 import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.viewmodel.MainActivityViewModel
+import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.allOf
@@ -60,11 +66,13 @@ class ShoppingListFragmentTests {
 
     @Before fun resetItems() {
         activityRule.scenario.onActivity {
-            val shoppingListItemViewModel: ShoppingListViewModel by it.viewModels()
-            shoppingListItemViewModel.sortByChecked = false
-            shoppingListItemViewModel.sort = ListItem.Sort.Color
-            val prefs = PreferenceManager.getDefaultSharedPreferences(it)
-            prefs.edit().putBoolean(it.getString(R.string.pref_sort_by_checked_key), false).apply()
+            val mainActivityViewModel: MainActivityViewModel by it.viewModels()
+            mainActivityViewModel.onSortOptionSelected(R.id.color_option)
+            val sortByCheckedKey = booleanPreferencesKey(
+                it.getString(R.string.pref_sort_by_checked_key))
+            runBlocking {
+                it.applicationContext.dataStore.edit { it[sortByCheckedKey] = false }
+            }
         }
         runBlocking {
             dao.deleteAllInventoryItems()
@@ -291,8 +299,8 @@ class ShoppingListFragmentTests {
                                                     withText(R.string.no_search_results_message))
     private fun emptyListMessage() = allOf(withId(R.id.emptyListMessage),
                                            withParent(withId(R.id.shoppingListFragmentView)),
-                                           withText(context.getString(R.string.empty_recycler_view_message,
-                                                       context.getString(R.string.shopping_list_item_collection_name))))
+                                           withText(context.getString(R.string.empty_list_message,
+                                                    context.getString(R.string.shopping_list_item_collection_name))))
 
     @Test fun emptyMessageAppears() {
         runBlocking { dao.deleteAllShoppingListItems() }

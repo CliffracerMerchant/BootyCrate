@@ -26,6 +26,7 @@ import com.cliffracertech.bootycrate.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.reflect.KProperty
 
@@ -143,6 +144,16 @@ fun LifecycleOwner.repeatWhenStarted(block: suspend CoroutineScope.() -> Unit) {
         repeatOnLifecycle(Lifecycle.State.STARTED, block)
     }
 }
+
+/** Recollect the @param flow with the provided @param action each time the
+ * receiver LifecycleOwner enters Lifecycle.State.STARTED, and cancel the
+ * flow collection when the receiver's LifecycleState falls below this level. */
+fun <T>LifecycleOwner.recollectWhenStarted(
+    flow: Flow<T>,
+    action: suspend CoroutineScope.(T) -> Unit) =
+    repeatWhenStarted {
+        flow.collect { action(it) }
+    }
 
 /** An extension function that allows a StateFlow<T> to
  * act as a delegate for an immutable value of type T. */

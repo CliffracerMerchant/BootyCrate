@@ -57,10 +57,8 @@ class MainActivity : BottomNavViewActivity() {
         initAnimatorConfigs()
         initGradientStyle()
 
-        shoppingListViewModel.onMessage = { viewModel.postMessage(it) }
-        shoppingListViewModel.onDeletedItemsMessage = { viewModel.postItemsDeletedMessage(it) }
-        inventoryViewModel.onMessage = { viewModel.postMessage(it) }
-        inventoryViewModel.onDeletedItemsMessage = { viewModel.postItemsDeletedMessage(it) }
+        shoppingListViewModel.onDeletedItemsMessage = viewModel::postItemsDeletedMessage
+        inventoryViewModel.onDeletedItemsMessage = viewModel::postItemsDeletedMessage
         repeatWhenStarted {
             launch { viewModel.searchFilter.collect { shoppingListViewModel.searchFilter = it
                                                       inventoryViewModel.searchFilter = it }}

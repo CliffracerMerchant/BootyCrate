@@ -27,6 +27,9 @@ import kotlinx.coroutines.launch
  * An abstract AndroidViewModel to provide data and callbacks for a fragment
  * that displays a list of ListItem subclasses.
  *
+ * ItemListViewModel's StateFlow property uiState's value is an instance of
+ * ItemListViewModel.UiState, and represents
+ *
  * ItemListViewModel listens to changes in the integer datastore value pointed
  * to by the key item_sort, maps this value to a value of ListItem.Sort, and
  * uses this sort value when it provides the list of ListItems. It also uses
@@ -36,25 +39,24 @@ import kotlinx.coroutines.launch
  * be manually informed of changes to the searchFilter, and writes to the
  * integer datastore preference need to be performed in another entity.
  *
+ * ItemListViewModel or its subclasses might need to pass messages to the user
+ * about items being deleted. ItemListViewModel will call its property
+ * onDeletedItemsMessage in these instances. This property will need to be set
+ * to a function that passes these messages to another entity that is capable
+ * of displaying messages to the user, e.g. with a snack bar.
+ *
  * The current sorting option and search filter are exposed as StateFlows to
  * subclasses through the properties sort and searchFilterFlow. Subclasses
  * should override the abstract property items to return a Flow<List<T>>
  * containing all of the items in the database that match the current sorting
  * option and search filter, as well as any additional sorting parameters that
  * they themselves add.
- *
- * ItemListViewModel or its subclasses might need to pass messages to the user,
- * e.g. about items being deleted. ItemListViewModel will call its properties
- * onMessage and onDeletedItemsMessage in these instances. These properties
- * will need to be set to functions that pass these messages to another entity
- * that is capable of displaying messages to the user.
  */
 abstract class ItemListViewModel<T: ListItem>(app: Application):
     AndroidViewModel(app)
 {
     protected val dao = BootyCrateDatabase.get(app).itemDao()
     private val itemGroupDao = BootyCrateDatabase.get(app).itemGroupDao()
-    var onMessage: ((MessageViewModel.Message) -> Unit)? = null
     var onDeletedItemsMessage: ((MessageViewModel.DeletedItemsMessage) -> Unit)? = null
 
     protected val searchFilterFlow = MutableStateFlow<String?>(null)
@@ -64,7 +66,23 @@ abstract class ItemListViewModel<T: ListItem>(app: Application):
         intPreferencesKey("item_sort"), ListItem.Sort.Color.ordinal)
         .map { ListItem.Sort.values().getOrElse(it) { ListItem.Sort.Color } }
 
-    abstract val items: StateFlow<List<T>>
+    /** */
+    sealed class UiState {
+        object Loading : ItemListViewModel.UiState()
+        object EmptyContent: ItemListViewModel.UiState()
+        object EmptySearchResults : ItemListViewModel.UiState()
+        class Content<T>(val items: List<T>) : UiState()
+    }
+
+    protected abstract val items: StateFlow<List<T>>
+
+    val uiState by lazy { // items has not been overridden at this point
+        items.combine(searchFilterFlow) { items, filter -> when {
+            items.isNotEmpty() -> UiState.Content(items)
+            filter != null ->     UiState.EmptySearchResults
+            else ->               UiState.EmptyContent
+        }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), UiState.Loading)
+    }
 
     fun onRenameItemRequest(id: Long, name: String) {
         viewModelScope.launch { dao.updateName(id, name) }
@@ -202,8 +220,8 @@ class InventoryViewModel(app: Application) :
     fun onAutoAddToShoppingListCheckboxClick(id: Long) {
         viewModelScope.launch { dao.toggleAutoAddToShoppingList(id) }
     }
-    fun onAutoAddToShoppingListAmountUpdateRequest(id: Long, autoAddToShoppingListAmount: Int) {
-        viewModelScope.launch { dao.updateAutoAddToShoppingListAmount(id, autoAddToShoppingListAmount) }
+    fun onAutoAddToShoppingListAmountUpdateRequest(id: Long, amount: Int) {
+        viewModelScope.launch { dao.updateAutoAddToShoppingListAmount(id, amount) }
     }
 
 
