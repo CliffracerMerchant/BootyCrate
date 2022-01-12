@@ -60,16 +60,15 @@ class MainActivity : BottomNavViewActivity() {
         shoppingListViewModel.onDeletedItemsMessage = viewModel::postItemsDeletedMessage
         inventoryViewModel.onDeletedItemsMessage = viewModel::postItemsDeletedMessage
         repeatWhenStarted {
+            launch { viewModel.messages.collect(::displayMessage) }
             launch { viewModel.searchFilter.collect { shoppingListViewModel.searchFilter = it
                                                       inventoryViewModel.searchFilter = it }}
             launch { viewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
             launch { viewModel.titleState.collect(ui.actionBar::setTitleState) }
             launch { viewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
             launch { viewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
-            launch { viewModel.sortIndex.collect(ui.actionBar::setChangeSortMenuSelectedIndex) }
             launch { viewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
             launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
-            launch { viewModel.messages.collect(::displayMessage) }
         }
         ui.itemGroupSelector.onItemClick = itemGroupSelectorViewModel::onItemGroupClick
         ui.itemGroupSelector.onItemRenameRequest = itemGroupSelectorViewModel::onConfirmItemGroupRenameDialog

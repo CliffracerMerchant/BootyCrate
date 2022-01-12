@@ -106,23 +106,16 @@ open class MessageViewModel(private val app: Application) : AndroidViewModel(app
         postItemsDeletedMessage(message.count, message.onUndo, message.onDismiss)
 }
 
-/** A class representing a title for an action bar. */
-sealed class TitleState(val title: String)
-/** A TitleState that represents the title for an active action mode. */
-class ActionModeState(actionModeTitle: String) : TitleState(actionModeTitle)
-/** A TitleState that represents the title for an active search query. */
-class SearchQueryState(searchQuery: String) : TitleState(searchQuery)
-/** A TitleState that represents the title for an active fragment / activity. */
-class RegularTitleState(title: String) : TitleState(title)
 
-/** A set of values representing the state of a combo change sorting method and delete button. */
-enum class ChangeSortButtonState {
-    /** The button is visible with a change sort icon. */
-    Visible,
-    /** The button is visible with a delete icon. */
-    MorphedToDelete,
-    /** The button is invisible. */
-    Invisible
+
+/** A class representing a title for an action bar. */
+sealed class TitleState(val title: String) {
+    /** A TitleState that represents the title for an active action mode. */
+    class ActionMode(actionModeTitle: String) : TitleState(actionModeTitle)
+    /** A TitleState that represents the title for an active search query. */
+    class SearchQuery(searchQuery: String) : TitleState(searchQuery)
+    /** A TitleState that represents the title for an active fragment / activity. */
+    class Normal(title: String) : TitleState(title)
 }
 
 /** A set of values representing the state of a combo search / close button. */
@@ -134,6 +127,17 @@ enum class SearchButtonState {
     /** The button is invisible. */
     Invisible,
 }
+
+/** A set of values representing the state of a combo change sorting method and delete button. */
+sealed class ChangeSortButtonState {
+    /** The button is visible with a change sort icon. */
+    data class Visible(val selectedIndex: Int) : ChangeSortButtonState()
+    /** The button is visible with a delete icon. */
+    object MorphedToDelete : ChangeSortButtonState()
+    /** The button is invisible. */
+    object Invisible : ChangeSortButtonState()
+}
+
 
 class MainActivityViewModel(private val app: Application) : MessageViewModel(app) {
     private val itemDao = BootyCrateDatabase.get(app).itemDao()
@@ -197,30 +201,28 @@ class MainActivityViewModel(private val app: Application) : MessageViewModel(app
 
 
 
-    fun actionModeTitle(selectedItemCount: Int) =
-        app.getString(R.string.action_mode_title, selectedItemCount)
-
     private val nameForMultiSelection = app.getString(R.string.multiple_selected_item_groups_description)
     private val selectedItemGroupName = itemGroupDao.getSelectedGroups().map {
         if (it.size == 1) it.first().name
         else nameForMultiSelection
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
 
+    private fun amTitle(selectedItemCount: Int) =
+        app.getString(R.string.action_mode_title, selectedItemCount)
+    private val settingsTitle = app.getString(R.string.settings_description)
+
     val titleState = combine(
         currentFragment,
         selectedItemCount,
         _searchFilter,
         selectedItemGroupName
-    ) { fragment, selectedItemCount, filter, selectedItemGroupName ->
-        when {
-            fragment == Fragment.AppSettings ->
-                RegularTitleState(app.getString(R.string.settings_description))
-            selectedItemCount > 0 ->
-                ActionModeState(actionModeTitle(selectedItemCount))
-            filter != null -> SearchQueryState(filter)
-            else -> RegularTitleState(selectedItemGroupName)
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), RegularTitleState(""))
+    ) { fragment, selectedItemCount, filter, selectedItemGroupName -> when {
+        fragment == Fragment.AppSettings -> TitleState.Normal(settingsTitle)
+        selectedItemCount > 0 ->            TitleState.ActionMode(amTitle(selectedItemCount))
+        filter != null ->                   TitleState.SearchQuery(filter)
+        else ->                             TitleState.Normal(selectedItemGroupName)
+    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), TitleState.Normal(""))
+
 
 
     val searchButtonState = combine(
@@ -252,20 +254,16 @@ class MainActivityViewModel(private val app: Application) : MessageViewModel(app
     private val sort = app.dataStore.mutableEnumPreferenceFlow(
         intPreferencesKey("item_sort"), viewModelScope, ListItem.Sort.Color)
 
-    val sortIndex = sort.map { it.ordinal }
-        .onEach { dlog("sortIndex emitted $it") }
-
-    val changeSortButtonState = combine(currentFragment, titleState, sort) { fragment, titleState, sort ->
-        when {
-            titleState is ActionModeState ->
-                ChangeSortButtonState.MorphedToDelete
-            fragment == Fragment.AppSettings ->
-                ChangeSortButtonState.Invisible
-            else ->
-                ChangeSortButtonState.Visible
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), ChangeSortButtonState.Visible)
-        .onEach { dlog("changeSortButtonState emitted $it") }
+    val changeSortButtonState = combine(
+        currentFragment,
+        titleState,
+        sort
+    ) { fragment, titleState, sort -> when {
+        fragment == Fragment.AppSettings ->    ChangeSortButtonState.Invisible
+        titleState is TitleState.ActionMode -> ChangeSortButtonState.MorphedToDelete
+        else ->                                ChangeSortButtonState.Visible(sort.ordinal)
+    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),
+               ChangeSortButtonState.Visible(ListItem.Sort.Color.ordinal))
 
     fun onSortOptionSelected(menuItemId: Int): Boolean {
         sort.value = when (menuItemId) {
@@ -283,31 +281,28 @@ class MainActivityViewModel(private val app: Application) : MessageViewModel(app
 
     fun onDeleteButtonClick() {
         val fragment = currentFragment.value
-        if (fragment != Fragment.AppSettings) viewModelScope.launch {
+        if (fragment != Fragment.ShoppingList && fragment != Fragment.Inventory) return
+        viewModelScope.launch {
             val itemCount = selectedItemCount.value
+
             if (fragment == Fragment.ShoppingList)
                 itemDao.deleteSelectedShoppingListItems()
-            if (fragment == Fragment.Inventory)
-                itemDao.deleteSelectedInventoryItems()
+            else itemDao.deleteSelectedInventoryItems()
+
             val onUndo = {
                 viewModelScope.launch {
                     if (fragment == Fragment.ShoppingList)
                         itemDao.undoDeleteShoppingListItems()
-                    if (fragment == Fragment.Inventory)
-                        itemDao.undoDeleteInventoryItems()
+                    else itemDao.undoDeleteInventoryItems()
                 }; Unit
             }
             val onDismiss = { dismissCode: Int ->
-                if (dismissCode != DISMISS_EVENT_ACTION &&
-                    dismissCode != DISMISS_EVENT_CONSECUTIVE)
-                {
+                if (dismissCode != DISMISS_EVENT_ACTION && dismissCode != DISMISS_EVENT_CONSECUTIVE)
                     viewModelScope.launch {
                         if (fragment == Fragment.ShoppingList)
                             itemDao.emptyShoppingListTrash()
-                        if (fragment == Fragment.Inventory)
-                            itemDao.emptyInventoryTrash()
+                        else itemDao.emptyInventoryTrash()
                     }
-                }
             }
             postItemsDeletedMessage(itemCount, onUndo, onDismiss)
         }
@@ -315,7 +310,7 @@ class MainActivityViewModel(private val app: Application) : MessageViewModel(app
 
 
 
-    val  moreOptionsButtonVisible = currentFragment.map {
+    val moreOptionsButtonVisible = currentFragment.map {
         it != Fragment.AppSettings
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), true)
         .onEach { dlog("moreOptionsButtonVisible emitted $it") }

@@ -66,12 +66,19 @@ abstract class ItemListViewModel<T: ListItem>(app: Application):
         intPreferencesKey("item_sort"), ListItem.Sort.Color.ordinal)
         .map { ListItem.Sort.values().getOrElse(it) { ListItem.Sort.Color } }
 
-    /** */
+    /** A class representing the UI state for an activity / fragment displaying a list of ListItems. */
     sealed class UiState {
+        /** The activity/fragment should display a loading indicator. */
         object Loading : ItemListViewModel.UiState()
+        /** The activity/fragment should display a message
+         * indicating that the list of items is empty. */
         object EmptyContent: ItemListViewModel.UiState()
+        /** The activity/fragment should display a message indicating that the
+         * list of items is empty due to no items matching the search filter. */
         object EmptySearchResults : ItemListViewModel.UiState()
-        class Content<T>(val items: List<T>) : UiState()
+        /** The activity/fragment should display the provided list
+         * of items provided through the state's 'items' property . */
+        data class Content<T>(val items: List<T>) : UiState()
     }
 
     protected abstract val items: StateFlow<List<T>>
@@ -187,6 +194,7 @@ class ShoppingListViewModel(app: Application) :
             dao.clearInventorySelection()
         }
     }
+
 
     override suspend fun deleteItem(id: Long) = dao.deleteShoppingListItem(id)
 

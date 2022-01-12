@@ -16,13 +16,9 @@ import androidx.core.content.res.getColorOrThrow
 import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.core.view.size
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.ListActionBarBinding
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.applyConfig
-import com.cliffracertech.bootycrate.utils.dpToPixels
-import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.viewmodel.*
 
 /**
@@ -158,12 +154,9 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
     }
 
     fun setTitleState(state: TitleState) = when(state) {
-        is ActionModeState ->
-            ui.titleSwitcher.setActionModeTitle(state.title, switchTo = true)
-        is SearchQueryState ->
-            ui.titleSwitcher.setSearchQuery(state.title, switchTo = true)
-        is RegularTitleState ->
-            ui.titleSwitcher.setTitle(state.title, switchTo = true)
+        is TitleState.ActionMode ->  ui.titleSwitcher.setActionModeTitle(state.title, switchTo = true)
+        is TitleState.SearchQuery -> ui.titleSwitcher.setSearchQuery(state.title, switchTo = true)
+        is TitleState.Normal ->      ui.titleSwitcher.setTitle(state.title, switchTo = true)
     }
 
     fun setSearchButtonState(state: SearchButtonState) {
@@ -181,11 +174,8 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
             if (isActivated) R.string.change_sorting_description
             else             R.string.delete_button_description)
         ui.changeSortButton.isVisible = state != ChangeSortButtonState.Invisible
-    }
-
-    fun setChangeSortMenuSelectedIndex(selectedIndex: Int) {
-        if (selectedIndex in 0 until changeSortMenu.size)
-        changeSortMenu.getItem(selectedIndex).isChecked = true
+        if (state is ChangeSortButtonState.Visible)
+            changeSortMenu.getItemOrNull(state.selectedIndex)?.isChecked = true
     }
 
     fun setMenuButtonVisible(visible: Boolean) {

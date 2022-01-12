@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.res.Resources
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
@@ -214,3 +215,8 @@ inline fun <reified T: Enum<*>> DataStore<Preferences>.mutableEnumPreferenceFlow
         }
     }
 }
+
+/** Get the menu item at @param index, or null if the index is out of bounds. */
+fun Menu.getItemOrNull(index: Int) =
+    try { getItem(index) }
+    catch (e: IndexOutOfBoundsException) { null }
