@@ -277,22 +277,22 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         private fun SupportSQLiteDatabase.addAutoAddToShoppingListTriggers() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_amount_update`
                        AFTER UPDATE OF inventoryAmount ON item
-                       WHEN new.autoAddToShoppingList == 1
+                       WHEN new.autoAddToShoppingList
                        AND new.inventoryAmount < new.autoAddToShoppingListAmount
                        BEGIN $updateShoppingListAmount; END""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_update`
                        AFTER UPDATE OF autoAddToShoppingList ON item
-                       WHEN new.autoAddToShoppingList == 1
+                       WHEN new.autoAddToShoppingList
                        AND new.inventoryAmount < new.autoAddToShoppingListAmount
                        BEGIN $updateShoppingListAmount; END""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_auto_add_amount_update`
                        AFTER UPDATE OF autoAddToShoppingListAmount ON item
-                       WHEN new.autoAddToShoppingList == 1
+                       WHEN new.autoAddToShoppingList
                        AND new.inventoryAmount < new.autoAddToShoppingListAmount
                        BEGIN $updateShoppingListAmount; END""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `check_auto_add_after_insertion`
                        AFTER INSERT ON item
-                       WHEN new.autoAddToShoppingList == 1
+                       WHEN new.autoAddToShoppingList
                        AND new.inventoryAmount BETWEEN 0
                        AND new.autoAddToShoppingListAmount - 1
                        BEGIN $updateShoppingListAmount; END""")

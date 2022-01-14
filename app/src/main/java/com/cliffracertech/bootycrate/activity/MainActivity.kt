@@ -9,9 +9,11 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
+import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
 import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
@@ -68,6 +70,7 @@ class MainActivity : BottomNavViewActivity() {
             launch { viewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
             launch { viewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
             launch { viewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
+            launch { viewModel.shoppingListSizeChange.collect(::updateShoppingListBadge) }
             launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
         }
         ui.itemGroupSelector.onItemClick = itemGroupSelectorViewModel::onItemGroupClick
@@ -192,6 +195,25 @@ class MainActivity : BottomNavViewActivity() {
                         pendingCradleAnim = null }
         }
     }
+
+    private var accumulatedNewItemCount = 0
+    private fun updateShoppingListBadge(shoppingListSizeChange: Int) {
+        accumulatedNewItemCount += shoppingListSizeChange
+        if (accumulatedNewItemCount == 0) return
+
+        val badgeParent = ui.shoppingListBadge.parent as? View
+        if (badgeParent?.isVisible != true) return
+
+        ui.shoppingListBadge.isVisible = true
+        ui.shoppingListBadge.alpha = 1f
+        ui.shoppingListBadge.text = getString(R.string.shopping_list_badge_text,
+                                              accumulatedNewItemCount)
+        ui.shoppingListBadge.animate().alpha(0f)
+            .setDuration(1000).setStartDelay(1500)
+            .withEndAction { accumulatedNewItemCount = 0 }
+            .withLayer().start()
+    }
+
 
     /**
      * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.

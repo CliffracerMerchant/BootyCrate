@@ -62,6 +62,11 @@ import kotlinx.coroutines.flow.Flow
     @Query("DELETE FROM item")
     abstract fun deleteAll()
 
+    @Query("""SELECT COUNT(item.id) FROM item
+              JOIN itemGroup ON item.groupId = itemGroup.id
+              WHERE $onShoppingList AND itemGroup.isSelected """)
+    abstract fun getShoppingListItemCount() : Flow<Int>
+
     @Query("$selectShoppingListItems ORDER BY color")
     protected abstract fun getShoppingListSortedByColor(filter: String): Flow<List<ShoppingListItem>>
 

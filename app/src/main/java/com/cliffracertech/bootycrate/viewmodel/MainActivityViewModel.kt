@@ -12,7 +12,6 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.database.ListItem
-import com.cliffracertech.bootycrate.dlog
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.fragment.InventoryFragment
 import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
@@ -184,7 +183,6 @@ class MainActivityViewModel(private val app: Application) : MessageViewModel(app
     ) { fragment, selectedItemCount, filter ->
         fragment == Fragment.AppSettings || filter != null || selectedItemCount != 0
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
-        .onEach { dlog("backButtonIsVisible emitted $it")}
 
     fun onBackPressed() = when {
         selectedItemCount.value > 0 -> {
@@ -313,5 +311,15 @@ class MainActivityViewModel(private val app: Application) : MessageViewModel(app
     val moreOptionsButtonVisible = currentFragment.map {
         it != Fragment.AppSettings
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), true)
-        .onEach { dlog("moreOptionsButtonVisible emitted $it") }
+
+
+
+    private var oldShoppingListSize = 0
+    val shoppingListSizeChange = itemDao.getShoppingListItemCount().map { shoppingListSize ->
+        val change = shoppingListSize - oldShoppingListSize
+        oldShoppingListSize = shoppingListSize
+        if (currentFragment.value != Fragment.Inventory)
+            0
+        else change
+    }.drop(1).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
 }
