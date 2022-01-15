@@ -102,7 +102,7 @@
     </style>
 
     <style name="SnackbarStyle" parent="Widget.MaterialComponents.Snackbar">
-        <item name="backgroundTint">?attr/cardBackgroundColor</item>
+        <item name="android:background">@drawable/popup_menu</item>
     </style>
 
     <style name="SnackbarActionTextAppearance" parent="Widget.MaterialComponents.Button.TextButton.Snackbar">
