@@ -16,5 +16,6 @@
     <!-- inner rounded corner radius should be equal to rounded corner radius minus the selection border thickness -->
     <dimen name="recycler_view_item_inner_rounded_corner_radius">21dp</dimen>
 
+    <!-- For the MaterialDayPicker library. -->
     <dimen name="day_button_size">48dp</dimen>
 </resources>

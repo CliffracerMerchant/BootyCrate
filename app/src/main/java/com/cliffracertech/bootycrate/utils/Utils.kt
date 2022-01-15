@@ -131,11 +131,11 @@ class MaxHeightLinearLayout(context: Context, attrs: AttributeSet) : LinearLayou
 /** Set the View's padding, using the current values as defaults
  * so that not every value needs to be specified. */
 fun View.setPadding(
-    left: Int = paddingLeft,
+    start: Int = paddingStart,
     top: Int = paddingTop,
-    right: Int = paddingRight,
+    end: Int = paddingEnd,
     bottom: Int = paddingTop
-) = setPadding(left, top, right, bottom)
+) = setPaddingRelative(start, top, end, bottom)
 
 /** Call the provided block each time the LifecycleOwner receiver
  * enters Lifecycle.State.STARTED, and cancel the block when the

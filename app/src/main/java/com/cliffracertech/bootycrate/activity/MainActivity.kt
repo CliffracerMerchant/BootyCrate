@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.AnimationUtils
+import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
@@ -21,6 +22,7 @@ import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.setPadding
 import com.cliffracertech.bootycrate.viewmodel.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -79,7 +81,7 @@ class MainActivity : BottomNavViewActivity() {
     }
 
     private fun displayMessage(message: MessageViewModel.Message) {
-        Snackbar.make(ui.root, message.text, Snackbar.LENGTH_LONG)
+        val snackBar = Snackbar.make(ui.root, message.text, Snackbar.LENGTH_LONG)
             .setAnchorView(ui.bottomAppBar)
             .setAction(message.actionText) { message.onActionClick?.invoke() }
             .setActionTextColor(theme.resolveIntAttribute(R.attr.colorAccent))
@@ -88,7 +90,10 @@ class MainActivity : BottomNavViewActivity() {
                     super.onDismissed(transientBottomBar, event)
                     message.onDismiss?.invoke(event)
                 }
-            }).show()
+            })
+        val textView = snackBar.view.findViewById<TextView>(R.id.snackbar_text)
+        (textView.parent as? View)?.setPadding(start = dpToPixels(10f).toInt())
+        snackBar.show()
         SoftKeyboard.hide(ui.root)
     }
 
