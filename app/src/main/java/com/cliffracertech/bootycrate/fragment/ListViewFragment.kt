@@ -48,6 +48,7 @@ abstract class ListViewFragment<T: ListItem> :
     protected open val collectionName = ""
     private var bottomAppBar: View? = null
 
+    private val emptyList = emptyList<T>()
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -68,19 +69,25 @@ abstract class ListViewFragment<T: ListItem> :
             onItemSwipe = viewModel::onItemSwipe
         }
 
-        viewLifecycleOwner.recollectWhenStarted(viewModel.uiState) {
+        viewLifecycleOwner.recollectWhenStarted(viewModel.uiState) { uiState ->
             val view = multiStateView ?: return@recollectWhenStarted
-            when (it) {
+            // The list of items is submitted even if it's empty to fix a bug
+            // where swiping the last item to delete it and then undoing the
+            // deletion results in the last item's view being stuck off the
+            // side of the screen. Submitting the empty list prevents this.
+            val items = if (uiState is ItemListViewModel.UiState.Content<*>)
+                            uiState.items as List<T>
+                        else emptyList
+            listView?.submitList(items)
+            view.viewState = when (uiState) {
                 is ItemListViewModel.UiState.Loading ->
-                    view.viewState = MultiStateView.ViewState.LOADING
+                    MultiStateView.ViewState.LOADING
                 is ItemListViewModel.UiState.EmptyContent ->
-                    view.viewState = MultiStateView.ViewState.EMPTY
+                    MultiStateView.ViewState.EMPTY
                 is ItemListViewModel.UiState.EmptySearchResults ->
-                    view.viewState = MultiStateView.ViewState.ERROR
-                is ItemListViewModel.UiState.Content<*> -> {
-                    listView?.submitList(it.items as List<T>)
-                    view.viewState = MultiStateView.ViewState.CONTENT
-                }
+                    MultiStateView.ViewState.ERROR
+                is ItemListViewModel.UiState.Content<*> ->
+                    MultiStateView.ViewState.CONTENT
             }
         }
     }
