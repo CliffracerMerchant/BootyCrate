@@ -52,6 +52,7 @@ open class IntegerEdit(context: Context, attrs: AttributeSet?) : LinearLayout(co
     var valueIsFocusable get() = ui.valueEdit.isFocusableInTouchMode
         set(value) {
             ui.valueEdit.isFocusableInTouchMode = value
+            ui.valueEdit.isCursorVisible = value
             underlineAlpha = if (value) 255 else 0
             ui.valueEdit.minWidth = if (!value) 0 else
                 resources.getDimensionPixelSize(R.dimen.integer_edit_editable_value_min_width)
@@ -97,11 +98,12 @@ open class IntegerEdit(context: Context, attrs: AttributeSet?) : LinearLayout(co
     fun decrement() = modifyValue(-stepSize)
     private fun modifyValue(stepSize: Int) { value += stepSize }
 
+    private val underlineAdjust = resources.dpToPixels(2f)
     override fun drawChild(canvas: Canvas?, child: View?, drawingTime: Long): Boolean {
         val result = super.drawChild(canvas, child, drawingTime)
         if (child !== ui.valueEdit || underlineAlpha == 0) return result
 
-        val y = ui.valueEdit.baseline + resources.dpToPixels(2f)
+        val y = ui.valueEdit.baseline + underlineAdjust
         val paintOldAlpha = ui.valueEdit.paint.alpha
         ui.valueEdit.paint.alpha = underlineAlpha
         val startX = ui.decreaseButton.x + ui.decreaseButton.width
@@ -143,12 +145,12 @@ class AnimatedIntegerEdit(context: Context, attrs: AttributeSet) : IntegerEdit(c
         animate: Boolean = true,
         startAnimationsImmediately: Boolean = true
     ): AnimInfo? {
-        if (!animate) { valueIsFocusable = focusable; return null }
-
-        ui.valueEdit.isFocusableInTouchMode = focusable
-        val underlineEndAlpha = if (focusable) 255 else 0
-
         val oldValueWidth = ui.valueEdit.width
+        valueIsFocusable = focusable
+        if (!animate) return null
+
+        underlineAlpha = if (focusable) 0 else 255
+        val underlineEndAlpha = if (focusable) 255 else 0
         ui.valueEdit.minWidth = if (!focusable) 0 else
             resources.getDimensionPixelSize(R.dimen.integer_edit_editable_value_min_width)
 

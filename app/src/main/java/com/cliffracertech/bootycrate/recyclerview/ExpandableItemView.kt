@@ -140,7 +140,7 @@ open class ExpandableItemView<T: ListItem>(
         expanding: Boolean,
         animate: Boolean
     ): AnimatedStrikeThroughTextFieldEdit.AnimInfo? {
-        val animInfo = ui.nameEdit.setEditable(
+        val animInfo = ui.nameEdit.setIsEditable(
             editable = expanding,
             animate = animate,
             startAnimationsImmediately = false
@@ -174,7 +174,7 @@ open class ExpandableItemView<T: ListItem>(
             else
                 AnimatedStrikeThroughTextFieldEdit.UnderlineAlphaUpdateMode.AfterAnimation
 
-        val animInfo = ui.extraInfoEdit.setEditable(
+        val animInfo = ui.extraInfoEdit.setIsEditable(
             editable = expanding,
             animate = animate,
             underlineAlphaUpdateMode = extraInfoUnderlineUpdateMode,

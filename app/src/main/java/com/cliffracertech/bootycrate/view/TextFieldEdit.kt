@@ -50,7 +50,7 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
 
     init {
         val a = context.obtainStyledAttributes(attrs, R.styleable.TextFieldEdit)
-        setEditable(a.getBoolean(R.styleable.TextFieldEdit_isEditable, false))
+        setIsEditable(a.getBoolean(R.styleable.TextFieldEdit_isEditable, false))
         canBeBlank = a.getBoolean(R.styleable.TextFieldEdit_canBeBlank, true)
         a.recycle()
 
@@ -81,9 +81,10 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
         if (!focused) setTextPrivate(text.toString())
     }
 
-    fun setEditable(editable: Boolean) {
+    fun setIsEditable(editable: Boolean) {
         if (editable) lastValue = text.toString()
         isFocusableInTouchMode = editable
+        isCursorVisible = editable
         /* Setting the input type here will prevent misspelling underlines from
          * being displayed when the TextFieldEdit is not in an editable state. */
         inputType = if (editable) InputType.TYPE_CLASS_TEXT
@@ -93,10 +94,11 @@ open class TextFieldEdit(context: Context, attrs: AttributeSet) :
         underlineAlpha = if (editable) 255 else 0
     }
 
-    override fun draw(canvas: Canvas?) {
-        super.draw(canvas)
+    private val underlineAdjust = resources.dpToPixels(2f)
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
         if (underlineAlpha == 0) return
-        val y = baseline + resources.dpToPixels(2f)
+        val y = baseline + underlineAdjust
         val paintOldAlpha = paint.alpha
         paint.alpha = underlineAlpha
         canvas?.drawLine(0f, y, width.toFloat(), y, paint)
@@ -149,7 +151,7 @@ open class StrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) :
 /**
  * An extension of StrikeThroughTextFieldEdit that animates changes in editable state or the length of the strike through.
  *
- * AnimatedStrikeThroughTextFieldEdit has overloads of the functions setEditable
+ * AnimatedStrikeThroughTextFieldEdit has overloads of the functions setIsEditable
  * and setStrikeThroughEnabled that also take a boolean animate parameter,
  * which when true will animate changes in the editable state or the strike
  * through length. The animations will use the value of the property animatorConfig
@@ -162,7 +164,7 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
     val hasStrikeThrough get() = strikeThroughLength ?: 0f > 0f
 
     /**
-     * Information about the internal animations played when setEditable is called.
+     * Information about the internal animations played when setIsEditable is called.
      *
      * The internal translate animation will only take into account the view's change
      * in baseline to smoothly translate the text to its new location. If the view's
@@ -202,27 +204,20 @@ class AnimatedStrikeThroughTextFieldEdit(context: Context, attrs: AttributeSet) 
      *  the state change if @param animate == true, or null otherwise. The
      *  value of the param underlineAlphaUpdateMode will determine how the
      *  underline alpha will be updated. */
-    fun setEditable(
+    fun setIsEditable(
         editable: Boolean,
         animate: Boolean = true,
         underlineAlphaUpdateMode: UnderlineAlphaUpdateMode = UnderlineAlphaUpdateMode.Animate,
         startAnimationsImmediately: Boolean = true
     ): AnimInfo? {
-        if (!animate) {
-            super.setEditable(editable)
-            return null
-        }
-        if (editable) lastValue = text.toString()
-        isFocusableInTouchMode = editable
-        inputType = if (editable) InputType.TYPE_CLASS_TEXT
-                    else          InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-
         val oldBaseline = baseline
-        minHeight = if (!editable) 0 else
-            resources.getDimensionPixelSize(R.dimen.editable_text_field_min_height)
+        setIsEditable(editable)
+        if (!animate) return null
+
         val wrapContentSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         measure(wrapContentSpec, wrapContentSpec)
         val baselineChange = baseline - oldBaseline
+        underlineAlpha = if (editable) 0 else 255
         val newUnderlineAlpha = if (editable) 255 else 0
 
         translationY -= baselineChange
