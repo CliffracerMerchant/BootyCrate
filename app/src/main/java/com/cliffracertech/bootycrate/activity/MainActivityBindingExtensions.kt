@@ -15,7 +15,8 @@ import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.GradientBuilder
+import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlin.math.abs
 
@@ -61,7 +62,7 @@ fun MainActivity.initGradientStyle() {
     ui.bottomAppBar.ui.cradleLayout.measure(wrapContent, wrapContent)
     val cradleWidth = ui.bottomAppBar.ui.cradleLayout.measuredWidth
     val cradleLeft = (screenWidth - cradleWidth) / 2f
-    ui.checkoutButton.backgroundGradient = bgGradientBuilder
+    ui.bottomAppBar.ui.checkoutButton.backgroundGradient = bgGradientBuilder
         .setX1(-cradleLeft).setX2(screenWidth - cradleLeft).buildLinearGradient()
 
     // Add button

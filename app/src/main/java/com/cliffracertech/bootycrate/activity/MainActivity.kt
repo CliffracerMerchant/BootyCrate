@@ -71,9 +71,9 @@ class MainActivity : BottomNavViewActivity() {
             launch { viewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
             launch { viewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
             launch { viewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
-            launch { viewModel.shoppingListSizeChange.collect(::updateShoppingListBadge) }
             launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
             launch { viewModel.bottomAppBarState.collect(::updateBottomAppBarState) }
+            launch { viewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
         }
     }
 
@@ -133,17 +133,19 @@ class MainActivity : BottomNavViewActivity() {
     }
 
     private fun updateBottomAppBarState(state: MainActivityViewModel.BottomAppBarState) {
-        val anim = ui.bottomAppBar.showCheckoutButton(
-            showing = state.checkoutButtonVisible,
-            animate = state.checkoutButtonVisible)
-        if (anim != null) {
-            ui.bottomNavigationDrawer.isDraggable = false
-            anim.doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
-        }
-        // The cradle animation is stored here and started in the cradle
+        // The cradle layout animation is stored here and started in the cradle
         // layout's layoutTransition's transition listener's transitionStart
         // override so that the animation is synced with the layout transition.
-        pendingCradleAnim = anim
+        pendingCradleAnim = ui.bottomAppBar.showCheckoutButton(
+            showing = state.checkoutButtonVisible,
+            animate = state.checkoutButtonVisible
+        )?.apply {
+            ui.bottomNavigationDrawer.isDraggable = false
+            doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
+        }
+
+        if (state.visible) ui.bottomNavigationDrawer.show()
+        else               ui.bottomNavigationDrawer.hide()
     }
 
     private fun initTheme() {

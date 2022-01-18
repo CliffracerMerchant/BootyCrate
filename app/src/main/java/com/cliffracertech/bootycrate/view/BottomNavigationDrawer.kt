@@ -88,22 +88,19 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
     }
 
     fun expand() {
-        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN) {
-            behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            targetState = BottomSheetBehavior.STATE_EXPANDED
-        }
+        if (isExpanded || isHidden) return
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        targetState = BottomSheetBehavior.STATE_EXPANDED
     }
 
     fun collapse() {
-        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN) {
-            behavior.state = BottomSheetBehavior.STATE_COLLAPSED
-            targetState = BottomSheetBehavior.STATE_COLLAPSED
-        }
+        if (isCollapsed || isHidden) return
+        behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        targetState = BottomSheetBehavior.STATE_COLLAPSED
     }
 
     fun hide() {
-        if (isHideable == IsHideable.No) return
-
+        if (isHidden || isHideable == IsHideable.No) return
         behavior.isHideable = true
         behavior.state = BottomSheetBehavior.STATE_HIDDEN
         targetState = BottomSheetBehavior.STATE_HIDDEN
@@ -111,6 +108,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
 
     private var unhiding = false
     fun show() {
+        if (isShown) return
         behavior.state = BottomSheetBehavior.STATE_COLLAPSED
         targetState = BottomSheetBehavior.STATE_COLLAPSED
         if (isHideable == IsHideable.OnlyByApp)
