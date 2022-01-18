@@ -4,7 +4,7 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <string name="pref_sort">%1$s_sort</string>
+    <string name="pref_item_sort_key">pref_item_sort</string>
 
     <string name="pref_category_theme_title">App theme</string>
     <string name="pref_light_dark_mode_title">Light / Dark mode</string>
@@ -13,9 +13,6 @@
     <string name="pref_theme_sys_default_title">Use system default</string>
     <string name="pref_theme_light_theme_title">Light</string>
     <string name="pref_theme_dark_theme_title">Dark</string>
-<!--    <string name="pref_theme_gradient_title">Top and bottom bar gradient</string>-->
-<!--    <string name="pref_theme_gradient_screen">theme_gradient_screen</string>-->
-<!--    <string name="pref_theme_gradient_value">theme_gradient_value</string>-->
 
     <string name="pref_sort_by_checked_title">Sort by checked</string>
     <string name="pref_sort_by_checked_summary">Move checked items to the bottom of the shopping list.</string>

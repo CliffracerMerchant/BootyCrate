@@ -39,9 +39,8 @@ import java.util.*
  * subclasses with a value that describes what the collection of items
  * should be called in user facing strings.
  */
-abstract class ListViewFragment<T: ListItem> :
-    Fragment(), MainActivity.MainActivityFragment
-{
+abstract class ListViewFragment<T: ListItem> : Fragment() {
+
     protected abstract val viewModel: ItemListViewModel<T>
     protected abstract val listView: ExpandableItemListView<T>?
     private var multiStateView: MultiStateView? = null
@@ -82,7 +81,7 @@ abstract class ListViewFragment<T: ListItem> :
             view.viewState = when (uiState) {
                 is ItemListViewModel.UiState.Loading ->
                     MultiStateView.ViewState.LOADING
-                is ItemListViewModel.UiState.EmptyContent ->
+                is ItemListViewModel.UiState.EmptyContents ->
                     MultiStateView.ViewState.EMPTY
                 is ItemListViewModel.UiState.EmptySearchResults ->
                     MultiStateView.ViewState.ERROR
@@ -108,7 +107,7 @@ abstract class ListViewFragment<T: ListItem> :
         val context = this.context ?: return false
         val selectionIsEmpty = viewModel.selectedItemCount.value == 0
 
-        val contentState = viewModel.uiState as? ItemListViewModel.UiState.Content<T>
+        val contentState = viewModel.uiState.value as? ItemListViewModel.UiState.Content<T>
         val items = if (selectionIsEmpty) contentState?.items
                     else contentState?.items?.filter { it.isSelected }
 
@@ -137,13 +136,13 @@ abstract class ListViewFragment<T: ListItem> :
         return true
     }
 
-    @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-        bottomAppBar = if (isActive) activityUi.bottomAppBar
-                       else          null
-        listView?.apply {
-            val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
-            if (paddingBottom != bottomSheetPeekHeight)
-                setPadding(bottom = bottomSheetPeekHeight)
-        }
-    }
+//    @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
+//        bottomAppBar = if (isActive) activityUi.bottomAppBar
+//                       else          null
+//        listView?.apply {
+//            val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
+//            if (paddingBottom != bottomSheetPeekHeight)
+//                setPadding(bottom = bottomSheetPeekHeight)
+//        }
+//    }
 }

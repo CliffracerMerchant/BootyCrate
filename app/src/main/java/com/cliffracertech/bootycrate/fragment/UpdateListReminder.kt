@@ -98,7 +98,7 @@ object UpdateListReminder {
      * SettingsFragment assumes that the context it is running in is an instance
      * of FragmentActivity, and will not work properly if this is not the case.
      */
-    class SettingsFragment : Fragment(), MainActivity.MainActivityFragment {
+    class SettingsFragment : Fragment() {
         private lateinit var ui: UpdateListReminderSettingsFragmentBinding
         private lateinit var currentSettings: Settings
         private lateinit var sharedPreferences: SharedPreferences
@@ -209,8 +209,6 @@ object UpdateListReminder {
             if (ui.reminderSwitch .isChecked != currentSettings.enabled)
                 ui.reminderSwitch.isChecked = currentSettings.enabled
         }
-
-        override fun showsBottomAppBar() = false
     }
 
     /** A BroadcastReceiver that receives intents for when the device is restarted or when

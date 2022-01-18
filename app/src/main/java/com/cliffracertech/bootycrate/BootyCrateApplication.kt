@@ -10,7 +10,9 @@ import android.util.Log
 import androidx.datastore.preferences.preferencesDataStore
 import com.cliffracertech.bootycrate.database.ListItem
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class BootyCrateApplication : Application() {
     override fun onCreate() {
         super.onCreate()

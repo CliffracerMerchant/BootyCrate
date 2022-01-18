@@ -4,67 +4,63 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.viewmodel
 
-import android.app.Application
+import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.dataStore
-import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ListItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.utils.getValue
-import com.cliffracertech.bootycrate.utils.setValue
+import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.utils.enumPreferenceFlow
 import com.cliffracertech.bootycrate.utils.preferenceFlow
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * An abstract AndroidViewModel to provide data and callbacks for a fragment
  * that displays a list of ListItem subclasses.
  *
- * ItemListViewModel's StateFlow property uiState's value is an instance of
- * ItemListViewModel.UiState, and represents
+ * ItemListViewModel's StateFlow property uiState's represents the latest value
+ * of ItemListViewModel.UiState, values of which represent different states of
+ * a screen displaying a list of searchable items. If uiState's latest emitted
+ * value is a UiState.Content instance, then the list of items to be displayed
+ * is contained inside the UiState instance through the property items.
  *
  * ItemListViewModel listens to changes in the integer datastore value pointed
- * to by the key item_sort, maps this value to a value of ListItem.Sort, and
- * uses this sort value when it provides the list of ListItems. It also uses
- * the current value of the property searchFilter to filter the returned items.
- * As modifying the value of either of these parameters does not fall into the
- * purview of a fragment displaying a list of items, ItemListViewModel needs to
- * be manually informed of changes to the searchFilter, and writes to the
- * integer datastore preference need to be performed in another entity.
+ * to by the value of the string resource R.string.pref_item_sort_key, maps
+ * this value to a value of ListItem.Sort, and uses this sort value when it
+ * provides the list of ListItems. It also uses the current value of an
+ * injected SearchQueryState's query property to filter the returned items. As
+ * modifying the value of either of these parameters does not fall into the
+ * purview of a fragment displaying a list of items, writes to the datastore
+ * preference and changes to the injected SearchQueryState's query property
+ * need to be performed in another entity.
  *
- * ItemListViewModel or its subclasses might need to pass messages to the user
- * about items being deleted. ItemListViewModel will call its property
- * onDeletedItemsMessage in these instances. This property will need to be set
- * to a function that passes these messages to another entity that is capable
- * of displaying messages to the user, e.g. with a snack bar.
- *
- * The current sorting option and search filter are exposed as StateFlows to
- * subclasses through the properties sort and searchFilterFlow. Subclasses
- * should override the abstract property items to return a Flow<List<T>>
- * containing all of the items in the database that match the current sorting
- * option and search filter, as well as any additional sorting parameters that
- * they themselves add.
+ * The current sorting option and search query are exposed as Flows to
+ * subclasses through the properties searchQuery and sort. Subclasses should
+ * override the abstract property items to return a Flow<List<T>> containing
+ * all of the items in the database that match the current sorting option and
+ * search query, as well as any additional sorting parameters that they
+ * themselves add.
  */
-abstract class ItemListViewModel<T: ListItem>(app: Application):
-    AndroidViewModel(app)
-{
-    protected val dao = BootyCrateDatabase.get(app).itemDao()
-    private val itemGroupDao = BootyCrateDatabase.get(app).itemGroupDao()
-    var onDeletedItemsMessage: ((MessageViewModel.DeletedItemsMessage) -> Unit)? = null
+abstract class ItemListViewModel<T: ListItem>(
+    context: Context,
+    searchQueryState: SearchQueryState,
+    private val messenger: Messenger,
+    protected val dao: ItemDao,
+    private val itemGroupDao: ItemGroupDao,
+): ViewModel() {
 
-    protected val searchFilterFlow = MutableStateFlow<String?>(null)
-    var searchFilter by searchFilterFlow
+    protected val searchQuery = searchQueryState.query.asStateFlow()
 
-    protected val sort = app.dataStore.preferenceFlow(
-        intPreferencesKey("item_sort"), ListItem.Sort.Color.ordinal)
-        .map { ListItem.Sort.values().getOrElse(it) { ListItem.Sort.Color } }
+    protected val sort = context.dataStore.enumPreferenceFlow(
+        intPreferencesKey(context.getString(R.string.pref_item_sort_key)), ListItem.Sort.Color)
 
     /** A class representing the UI state for an activity / fragment displaying a list of ListItems. */
     sealed class UiState {
@@ -72,7 +68,7 @@ abstract class ItemListViewModel<T: ListItem>(app: Application):
         object Loading : ItemListViewModel.UiState()
         /** The activity/fragment should display a message
          * indicating that the list of items is empty. */
-        object EmptyContent: ItemListViewModel.UiState()
+        object EmptyContents: ItemListViewModel.UiState()
         /** The activity/fragment should display a message indicating that the
          * list of items is empty due to no items matching the search filter. */
         object EmptySearchResults : ItemListViewModel.UiState()
@@ -84,10 +80,10 @@ abstract class ItemListViewModel<T: ListItem>(app: Application):
     protected abstract val items: StateFlow<List<T>>
 
     val uiState by lazy { // items has not been overridden at this point
-        items.combine(searchFilterFlow) { items, filter -> when {
+        items.combine(searchQuery) { items, query -> when {
             items.isNotEmpty() -> UiState.Content(items)
-            filter != null ->     UiState.EmptySearchResults
-            else ->               UiState.EmptyContent
+            query != null ->      UiState.EmptySearchResults
+            else ->               UiState.EmptyContents
         }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), UiState.Loading)
     }
 
@@ -117,11 +113,11 @@ abstract class ItemListViewModel<T: ListItem>(app: Application):
 
     fun onItemSwipe(id: Long) { viewModelScope.launch {
         deleteItem(id)
-        val message = MessageViewModel.DeletedItemsMessage(1, ::undoDelete) {
+        val message = Messenger.DeletedItemsMessage(1, ::undoDelete) {
             if (it != DISMISS_EVENT_ACTION && it != DISMISS_EVENT_CONSECUTIVE)
                 emptyTrash()
         }
-        onDeletedItemsMessage?.invoke(message)
+        messenger.postItemsDeletedMessage(message)
     }}
 
     protected abstract suspend fun deleteItem(id: Long)
@@ -135,18 +131,25 @@ abstract class ItemListViewModel<T: ListItem>(app: Application):
  * An implementation of ItemListViewModel<ShoppingListItem>.
  *
  * ShoppingListViewModel adds callbacks to respond to clicks on the checkbox of
- * items, and to respond to a request to checkout. It also adds a StateFlow
+ * items, and to respond to a request to checkout. It also reads the value of
+ * the boolean datastore preference pointed to by the key a StateFlow
  * property checkoutButtonIsEnabled, the current value of which indicates the
  * disabled/enabled state of the checkout button.
  */
-class ShoppingListViewModel(app: Application) :
-    ItemListViewModel<ShoppingListItem>(app)
-{
-    private val sortByCheckedKey = booleanPreferencesKey(app.getString(R.string.pref_sort_by_checked_key))
-    private val sortByChecked = app.dataStore.preferenceFlow(
+@HiltViewModel
+class ShoppingListViewModel @Inject constructor(
+    @ActivityContext context: Context,
+    searchQueryState: SearchQueryState,
+    messenger: Messenger,
+    dao: ItemDao,
+    itemGroupDao: ItemGroupDao,
+) : ItemListViewModel<ShoppingListItem>(context, searchQueryState, messenger, dao, itemGroupDao) {
+
+    private val sortByCheckedKey = booleanPreferencesKey(context.getString(R.string.pref_sort_by_checked_key))
+    private val sortByChecked = context.dataStore.preferenceFlow(
         key = sortByCheckedKey, defaultValue = false)
 
-    override val items = combine(sort, searchFilterFlow, sortByChecked, dao::getShoppingList)
+    override val items = combine(sort, searchQuery, sortByChecked, dao::getShoppingList)
         .transformLatest { emitAll(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
@@ -211,10 +214,16 @@ class ShoppingListViewModel(app: Application) :
 /** An implementation of ItemListViewModel<InventoryItem> that adds functions
  * to manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
  * fields of items in the database. */
-class InventoryViewModel(app: Application) :
-    ItemListViewModel<InventoryItem>(app)
-{
-    override val items = sort.combine(searchFilterFlow, dao::getInventoryContents)
+@HiltViewModel
+class InventoryViewModel @Inject constructor(
+    @ActivityContext context: Context,
+    searchQueryState: SearchQueryState,
+    messenger: Messenger,
+    dao: ItemDao,
+    itemGroupDao: ItemGroupDao,
+) : ItemListViewModel<InventoryItem>(context, searchQueryState, messenger, dao, itemGroupDao) {
+
+    override val items = sort.combine(searchQuery, dao::getInventoryContents)
         .transformLatest { emitAll(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 

@@ -13,12 +13,27 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.dlog
 import com.cliffracertech.bootycrate.utils.themedAlertDialogBuilder
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+
+@Module @InstallIn(SingletonComponent::class)
+class DatabaseModule {
+    @Provides fun provideBootyCrateDatabase(@ApplicationContext app: Context) =
+        BootyCrateDatabase.get(app)
+    @Provides fun provideInMemoryBootyCrateDb(@ApplicationContext app: Context) =
+        BootyCrateDatabase.getInMemoryDb(app)
+    @Provides fun provideItemDao(db: BootyCrateDatabase) = db.itemDao()
+    @Provides fun provideItemGroupDao(db: BootyCrateDatabase) = db.itemGroupDao()
+    @Provides fun provideSettingsDao(db: BootyCrateDatabase) = db.settingsDao()
+}
 
 /** The BootyCrate application database. BootyCrateDatabase functions as a
  * singleton, with the current instance obtained using the static function get. */
@@ -36,17 +51,14 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         private const val firstGroupName="BootyCrate"
         var instance: BootyCrateDatabase? = null
 
-        fun get(context: Context, overwriteExistingDb: Boolean = false) = run {
-            val instance = this.instance
-            if (!overwriteExistingDb && instance != null) instance
-            else Room.databaseBuilder(
+        fun get(context: Context) = instance ?:
+            Room.databaseBuilder(
                 context.applicationContext,
                 BootyCrateDatabase::class.java,
                 "booty-crate-db")
                 .addCallback(BootyCrateDbCallback())
                 .addMigrations(*allMigrations)
                 .build().also { this.instance = it }
-        }
 
         fun getInMemoryDb(context: Context) =
             Room.inMemoryDatabaseBuilder(

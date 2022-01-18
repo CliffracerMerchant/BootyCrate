@@ -164,7 +164,7 @@ operator fun <T> StateFlow<T>.getValue(
 ) = value
 
 /** An extension function that, when used with a corresponding
- * MutableStateFlow<T>.getValue implementation, allows a MutableStateFlow<T>
+ * StateFlow<T>.getValue implementation, allows a MutableStateFlow<T>
  * to act as a delegate for a mutable variable of type T. */
 operator fun <T> MutableStateFlow<T>.setValue(
     thisRef: Any,
@@ -173,16 +173,30 @@ operator fun <T> MutableStateFlow<T>.setValue(
 ) { this.value = value }
 
 /** Return a Flow<T> that contains the most recent value for the DataStore
- * preference pointed to by the @param key, with a default value of @param defaultValue. */
+ * preference pointed to by @param key, with a default value of @param
+ * defaultValue. */
 fun <T> DataStore<Preferences>.preferenceFlow(
     key: Preferences.Key<T>,
     defaultValue: T,
 ) = data.map { it[key] ?: defaultValue }
 
+/** Return a Flow<T> that contains the most recent enum value for the DataStore
+ * preference pointed to by @param key, with a default value of @param
+ * defaultValue. @param key should be an Preferences.Key<Int> value whose
+ * */
+inline fun <reified T: Enum<*>> DataStore<Preferences>.enumPreferenceFlow(
+    key: Preferences.Key<Int>,
+    defaultValue: T
+) = data.map { prefs ->
+    val index = prefs[key] ?: defaultValue.ordinal
+    enumValues<T>().getOrNull(index) ?: defaultValue
+}
+
 /** Return a MutableStateFlow<T> that contains the most recent value for the
- * preference pointed to by the @param key, with a default value of @param
- * defaultValue. Changes to the returned MutableStateFlow's value property
- * will automatically be written to the receiver DataStore object. */
+ * preference pointed to by the parameter key, with a default value equal to
+ * the parameter defaultValue. Changes to the returned MutableStateFlow's
+ * value property will automatically be written to the receiver DataStore
+ * object. */
 fun <T> DataStore<Preferences>.mutablePreferenceFlow(
     key: Preferences.Key<T>,
     scope: CoroutineScope,
