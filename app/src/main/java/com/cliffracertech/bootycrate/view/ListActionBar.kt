@@ -156,7 +156,7 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
     fun setTitleState(state: TitleState) = when(state) {
         is TitleState.ActionMode ->  ui.titleSwitcher.setActionModeTitle(state.title, switchTo = true)
         is TitleState.SearchQuery -> ui.titleSwitcher.setSearchQuery(state.title, switchTo = true)
-        is TitleState.Normal ->      ui.titleSwitcher.setTitle(state.title, switchTo = true)
+        is TitleState.NormalTitle ->      ui.titleSwitcher.setTitle(state.title, switchTo = true)
     }
 
     fun setSearchButtonState(state: SearchButtonState) {

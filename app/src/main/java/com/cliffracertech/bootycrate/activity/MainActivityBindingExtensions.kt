@@ -4,13 +4,12 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.activity
 
-import android.animation.Animator
-import android.animation.ValueAnimator
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
@@ -19,64 +18,6 @@ import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.utils.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlin.math.abs
-
-/** Return the appropriate target BottomAppBar.cradle.width value for a checkout
- * button visibility matching the value of @param showingCheckoutButton. */
-private fun MainActivityBinding.cradleWidth(showingCheckoutButton: Boolean) =
-    if (!showingCheckoutButton)
-        addButton.layoutParams.width.toFloat()
-    else {
-        val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-        cradleLayout.measure(wrapContent, wrapContent)
-        cradleLayout.measuredWidth.toFloat()
-    }
-
-private val checkoutButtonClipBounds = Rect()
-/** Show or hide the checkout button according to the value of @param
- * showing, returning the animator used if @param animate == true or
- * null otherwise, while using the values of the @param animatorConfig
- * as the animation's duration and interpolator if not null.*/
-fun MainActivityBinding.showCheckoutButton(
-    showing: Boolean,
-    animatorConfig: AnimatorConfig? = null,
-    animate: Boolean = true
-): Animator? {
-    if (!animate || checkoutButton.isVisible == showing) {
-        cradleLayout.withoutLayoutTransition { checkoutButton.isVisible = showing }
-        bottomAppBar.cradle.width = cradleWidth(showing)
-        return null
-    }
-    checkoutButton.isVisible = showing
-    val cradleNewWidth = cradleWidth(showing)
-
-    // Ideally we would only animate the cradle's width, and let the cradleLayout's
-    // layoutTransition handle the rest. Unfortunately it will only animate its own
-    // translationX if it has animateParentHierarchy set to true. Due to this
-    // causing the BottomNavigationDrawer to jump to the top of the screen whenever
-    // the layoutTransition animates (apparently a bug with BottomSheetBehavior),
-    // we have to animate the cradleLayout's translationX ourselves.
-    val cradleNewLeft = (bottomAppBar.width - cradleNewWidth) / 2
-    val cradleStartTranslationX = cradleLayout.left - cradleNewLeft
-
-    // The checkoutButton's clipBounds is set here to prevent it's right edge
-    // from sticking out underneath the addButton during the animation
-    checkoutButton.getDrawingRect(checkoutButtonClipBounds)
-    val addButtonHalfWidth = addButton.width / 2
-    bottomNavigationDrawer.isDraggable = false
-
-    return ValueAnimator.ofFloat(bottomAppBar.cradle.width, cradleNewWidth).apply {
-        applyConfig(animatorConfig)
-        addUpdateListener {
-            cradleLayout.translationX = cradleStartTranslationX * (1f - it.animatedFraction)
-            bottomAppBar.cradle.width = it.animatedValue as Float
-            bottomAppBar.invalidate()
-            checkoutButtonClipBounds.right = addButton.x.toInt() + addButtonHalfWidth
-            checkoutButton.clipBounds = checkoutButtonClipBounds
-        }
-        doOnEnd { checkoutButton.clipBounds = null
-                  bottomNavigationDrawer.isDraggable = true }
-    }
-}
 
 /**
  * Style the contents of the actionBar and bottomAppBar members to match their background gradients.
@@ -117,18 +58,19 @@ fun MainActivity.initGradientStyle() {
 
     // Checkout button
     val wrapContent = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-    ui.cradleLayout.measure(wrapContent, wrapContent)
-    val cradleWidth = ui.cradleLayout.measuredWidth
+    ui.bottomAppBar.ui.cradleLayout.measure(wrapContent, wrapContent)
+    val cradleWidth = ui.bottomAppBar.ui.cradleLayout.measuredWidth
     val cradleLeft = (screenWidth - cradleWidth) / 2f
     ui.checkoutButton.backgroundGradient = bgGradientBuilder
         .setX1(-cradleLeft).setX2(screenWidth - cradleLeft).buildLinearGradient()
 
     // Add button
     var right = cradleLeft.toInt() + cradleWidth
-    var left = right - ui.addButton.layoutParams.width
+    var left = right - ui.bottomAppBar.ui.addButton.layoutParams.width
     var leftColor = bgGradientBitmap.getPixel(left, 0)
     var rightColor = bgGradientBitmap.getPixel(right, 0)
-    (ui.addButton.background as GradientDrawable).colors = intArrayOf(leftColor, rightColor)
+    (ui.bottomAppBar.ui.addButton.background as GradientDrawable).colors =
+        intArrayOf(leftColor, rightColor)
 
     // Add inventory button
     val marginEnd = (ui.addItemGroupButton.layoutParams as ViewGroup.MarginLayoutParams).marginEnd
@@ -152,13 +94,13 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
         settingsButton.isVisible = slideOffset != 0f
         itemGroupSelectorOptionsButton.isVisible = slideOffset != 0f
         itemGroupSelector.isInvisible = slideOffset == 0f
-        bottomNavigationView.isVisible = slideOffset != 1f
+        bottomAppBar.ui.bottomNavigationView.isVisible = slideOffset != 1f
 
         appTitle.alpha = slide
         settingsButton.alpha = slide
         itemGroupSelectorOptionsButton.alpha = slide
         itemGroupSelector.alpha = slide
-        bottomNavigationView.alpha = 1f - slide
+        bottomAppBar.ui.bottomNavigationView.alpha = 1f - slide
 
         bottomAppBar.apply {
             cradle.layout?.apply {

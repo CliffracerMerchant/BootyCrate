@@ -13,8 +13,7 @@ import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.activity.viewModels
-import androidx.core.view.isInvisible
-import androidx.core.view.isVisible
+import androidx.core.animation.doOnEnd
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
@@ -55,7 +54,7 @@ class MainActivity : BottomNavViewActivity() {
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
         fragmentContainerId = ui.fragmentContainer.id
-        navigationView = ui.bottomNavigationView
+        navigationView = ui.bottomAppBar.ui.bottomNavigationView
         super.onCreate(savedInstanceState)
         initOnClickListeners()
         initAnimatorConfigs()
@@ -74,10 +73,8 @@ class MainActivity : BottomNavViewActivity() {
             launch { viewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
             launch { viewModel.shoppingListSizeChange.collect(::updateShoppingListBadge) }
             launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
+            launch { viewModel.bottomAppBarState.collect(::updateBottomAppBarState) }
         }
-        ui.itemGroupSelector.onItemClick = itemGroupSelectorViewModel::onItemGroupClick
-        ui.itemGroupSelector.onItemRenameRequest = itemGroupSelectorViewModel::onConfirmItemGroupRenameDialog
-        ui.itemGroupSelector.onItemDeletionRequest = itemGroupSelectorViewModel::onConfirmDeleteItemGroupDialog
     }
 
     private fun displayMessage(message: MessageViewModel.Message) {
@@ -135,6 +132,20 @@ class MainActivity : BottomNavViewActivity() {
         newFragment.onActiveStateChanged(isActive = true, ui)
     }
 
+    private fun updateBottomAppBarState(state: MainActivityViewModel.BottomAppBarState) {
+        val anim = ui.bottomAppBar.showCheckoutButton(
+            showing = state.checkoutButtonVisible,
+            animate = state.checkoutButtonVisible)
+        if (anim != null) {
+            ui.bottomNavigationDrawer.isDraggable = false
+            anim.doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
+        }
+        // The cradle animation is stored here and started in the cradle
+        // layout's layoutTransition's transition listener's transitionStart
+        // override so that the animation is synced with the layout transition.
+        pendingCradleAnim = anim
+    }
+
     private fun initTheme() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val prefKey = getString(R.string.pref_light_dark_mode_key)
@@ -176,6 +187,9 @@ class MainActivity : BottomNavViewActivity() {
                 onSelectAllClick = itemGroupSelectorViewModel::onSelectAllGroupsClick
             ).show()
         }
+        ui.itemGroupSelector.onItemClick = itemGroupSelectorViewModel::onItemGroupClick
+        ui.itemGroupSelector.onItemRenameRequest = itemGroupSelectorViewModel::onConfirmItemGroupRenameDialog
+        ui.itemGroupSelector.onItemDeletionRequest = itemGroupSelectorViewModel::onConfirmDeleteItemGroupDialog
     }
 
     private fun initAnimatorConfigs() {
@@ -186,73 +200,16 @@ class MainActivity : BottomNavViewActivity() {
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
         ui.actionBar.animatorConfig = transitionAnimConfig
-        ui.bottomAppBar.navIndicator.width = 2.5f * ui.bottomNavigationView.itemIconSize
-        ui.bottomAppBar.navIndicator.animatorConfig = transitionAnimConfig
-            // The nav indicator anim duration is increased to improve its visibility
-            .copy(duration = (transitionAnimConfig.duration * 1.2f).toLong())
-        ui.checkoutButton.animatorConfig = transitionAnimConfig
-        ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig).apply {
+        ui.bottomAppBar.navIndicator.width =
+            2.5f * ui.bottomAppBar.ui.bottomNavigationView.itemIconSize
+        ui.bottomAppBar.animatorConfig = transitionAnimConfig
+        ui.bottomAppBar.ui.cradleLayout.layoutTransition.apply {
             // views with bottomSheetBehaviors do not like to be animated by layout
             // transitions (it makes them jump up to the top of the screen), so we
-            // have to set animatedParentHierarchy to false to prevent this
+            // have to set animateParentHierarchy to false to prevent this
             setAnimateParentHierarchy(false)
             doOnStart { pendingCradleAnim?.start()
                         pendingCradleAnim = null }
-        }
-    }
-
-    private var accumulatedNewItemCount = 0
-    private fun updateShoppingListBadge(shoppingListSizeChange: Int) {
-        accumulatedNewItemCount += shoppingListSizeChange
-        if (accumulatedNewItemCount == 0) return
-
-        val badgeParent = ui.shoppingListBadge.parent as? View
-        if (badgeParent?.isVisible != true) return
-
-        ui.shoppingListBadge.isVisible = true
-        ui.shoppingListBadge.alpha = 1f
-        ui.shoppingListBadge.text = getString(R.string.shopping_list_badge_text,
-                                              accumulatedNewItemCount)
-        ui.shoppingListBadge.animate().alpha(0f)
-            .setDuration(1000).setStartDelay(1500)
-            .withEndAction { accumulatedNewItemCount = 0 }
-            .withLayer().start()
-    }
-
-
-    /**
-     * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
-     *
-     * MainActivityFragment can be implemented by a Fragment subclass to
-     * inform the MainActivity as to how its UI should be displayed when the
-     * fragment is in the foreground, and to provide a callback for back button
-     * (either the hardware/software bottom back button or the action bar's
-     * back button) presses. Fragments should always indicate their desired
-     * bottom app bar and checkout button states through an override of the
-     * appropriate function instead of changing their visibility manually to
-     * ensure that the appropriate hide/show animations are played. The
-     * function addSecondaryFragment allows implementing fragments to add a
-     * secondary fragment (see BottomNavViewActivity documentation for an
-     * explanation of primary/secondary fragments) themselves.
-     */
-    interface MainActivityFragment {
-        /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
-        fun showsBottomAppBar() = true
-        /** Return whether the checkout button should be visible when the implementing fragment
-         * is, or null if the implementing fragment's showsBottomAppBar returns false.*/
-        fun showsCheckoutButton(): Boolean? = null
-        /** Return whether the implementing fragment consumed the back button press. */
-        fun onBackPressed() = false
-        /** Perform any additional actions on the @param activityUi that the fragment desires,
-         * given its @param isActive state. */
-        fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) { }
-
-        fun addSecondaryFragment(fragment: Fragment) {
-            val mainActivityFragment = this as? Fragment ?: throw IllegalStateException(
-                "Implementors of MainActivityFragment must inherit from androidx.fragment.app.Fragment")
-            val mainActivity = mainActivityFragment.activity as? MainActivity ?: throw IllegalStateException(
-                "Implementors of MainActivityFragment must be hosted inside a MainActivity instance.")
-            mainActivity.addSecondaryFragment(fragment)
         }
     }
 }

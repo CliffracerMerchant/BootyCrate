@@ -24,7 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?android:attr/actionBarSize"
-        tools:name="com.cliffracertech.bootycrate.fragment.ShoppingListFragment" />
+        tools:layout="@layout/shopping_list_fragment" />
 
     <com.cliffracertech.bootycrate.view.BottomNavigationDrawer
         android:id="@+id/bottomNavigationDrawer"
@@ -33,59 +33,14 @@
         tools:translationY="-456dp"
         style="@style/BottomNavigationDrawer" >
 
-        <com.cliffracertech.bootycrate.view.BottomAppBar
+        <com.cliffracertech.bootycrate.view.BootyCrateBottomAppBar
             android:id="@+id/bottomAppBar"
             android:layout_width="match_parent"
             android:layout_height="?android:attr/actionBarSize"
             android:layout_gravity="top"
-            tools:backgroundTint="?attr/backgroundGradientLeftColor"
+            tools:background="@drawable/background_gradient"
             style="@style/BottomAppBar" >
-
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                android:id="@+id/bottomNavigationView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:background="@drawable/background_gradient"
-                style="@style/BottomNavigationView">
-
-                <TextView
-                    android:id="@+id/shoppingListBadge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="60dp"
-                    android:layout_marginTop="2dp"
-                    style="@style/ShoppingListBadge" />
-            </com.google.android.material.bottomnavigation.BottomNavigationView>
-
-            <LinearLayout
-                android:id="@+id/cradleLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:elevation="10dp"
-                android:clipChildren="false"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="-10dp" >
-
-                <com.cliffracertech.bootycrate.view.CheckoutButton
-                    android:id="@+id/checkoutButton"
-                    android:layout_width="120dp"
-                    android:layout_height="46dp"
-                    android:layout_gravity="bottom"
-                    android:layout_marginRight="-14dp"
-                    tools:ignore="RtlHardcoded"
-                    style="@style/CheckoutButton" />
-
-                <ImageView
-                    android:id="@+id/addButton"
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    android:contentDescription="@string/add_button_description"
-                    android:elevation="10dp"
-                    android:outlineProvider="none"
-                    style="@style/AddButton" />
-            </LinearLayout>
-
-        </com.cliffracertech.bootycrate.view.BottomAppBar>
+        </com.cliffracertech.bootycrate.view.BootyCrateBottomAppBar>
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/appTitle"

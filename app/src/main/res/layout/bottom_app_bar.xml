@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2021 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:layout_width="match_parent"
+    tools:layout_height="?android:attr/actionBarSize"
+    tools:layout_gravity="top"
+    tools:backgroundTint="?attr/backgroundGradientLeftColor"
+    tools:parentTag="android.widget.FrameLayout"
+    tools:menu="@menu/bottom_navigation_bar" >
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigationView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:background="@drawable/background_gradient"
+        style="@style/BottomNavigationView">
+
+        <TextView
+            android:id="@+id/shoppingListBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="60dp"
+            android:layout_marginTop="2dp"
+            tools:alpha="255"
+            tools:text="+2"
+            style="@style/ShoppingListBadge" />
+    </com.google.android.material.bottomnavigation.BottomNavigationView>
+
+    <LinearLayout
+        android:id="@+id/cradleLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="10dp"
+        android:clipChildren="false"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="-10dp" >
+
+        <com.cliffracertech.bootycrate.view.CheckoutButton
+            android:id="@+id/checkoutButton"
+            android:layout_width="120dp"
+            android:layout_height="46dp"
+            android:layout_gravity="bottom"
+            android:layout_marginRight="-14dp"
+            tools:ignore="RtlHardcoded"
+            style="@style/CheckoutButton" />
+
+        <ImageView
+            android:id="@+id/addButton"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:contentDescription="@string/add_button_description"
+            android:elevation="10dp"
+            android:outlineProvider="none"
+            style="@style/AddButton" />
+
+    </LinearLayout>
+</merge>

@@ -322,4 +322,14 @@ class MainActivityViewModel(private val app: Application) : MessageViewModel(app
             0
         else change
     }.drop(1).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
+
+
+
+    data class BottomAppBarState(val visible: Boolean, val checkoutButtonVisible: Boolean)
+
+    val bottomAppBarState = activeFragment.map {
+        BottomAppBarState(visible = !it.isAppSettings,
+                          checkoutButtonVisible = it.isShoppingList)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),
+              BottomAppBarState(visible = true, checkoutButtonVisible = true))
 }
