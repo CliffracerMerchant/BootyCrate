@@ -8,9 +8,11 @@ import android.content.Context
 import com.cliffracertech.bootycrate.R
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityRetainedComponent
-import dagger.hilt.android.qualifiers.ActivityContext
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -25,9 +27,9 @@ import javax.inject.Inject
  * of showing an X item(s) deleted message after items are deleted from a list,
  * along with an undo action.
  */
-@Module @InstallIn(ActivityRetainedComponent::class)
+@ActivityRetainedScoped
 class Messenger @Inject constructor(
-    @ActivityContext private val context: Context
+    @ApplicationContext private val context: Context
 ) {
     /**
      * A message to be displayed to the user.

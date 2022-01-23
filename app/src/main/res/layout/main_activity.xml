@@ -23,8 +23,7 @@
         android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="?android:attr/actionBarSize"
-        tools:layout="@layout/shopping_list_fragment" />
+        android:layout_marginTop="?android:attr/actionBarSize" />
 
     <com.cliffracertech.bootycrate.view.BottomNavigationDrawer
         android:id="@+id/bottomNavigationDrawer"
@@ -38,7 +37,6 @@
             android:layout_width="match_parent"
             android:layout_height="?android:attr/actionBarSize"
             android:layout_gravity="top"
-            tools:background="@drawable/background_gradient"
             style="@style/BottomAppBar" >
         </com.cliffracertech.bootycrate.view.BootyCrateBottomAppBar>
 

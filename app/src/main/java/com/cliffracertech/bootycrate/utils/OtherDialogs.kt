@@ -82,18 +82,22 @@ fun deleteItemGroupDialog(context: Context, onConfirm: () -> Unit) =
 
 /** Open a dialog to ask the user to the type of database import they want (merge
  *  existing or overwrite, and recreate the given activity if the import requires it. */
-fun importDatabaseFromUriDialog(uri: Uri, activity: FragmentActivity) {
-    themedAlertDialogBuilder(activity).
-        setMessage(R.string.import_database_question_message).
-        setNeutralButton(android.R.string.cancel) { _, _ -> }.
-        setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
-            BootyCrateDatabase.importBackup(activity, uri, overwriteExistingDb = false)
+fun importDatabaseFromUriDialog(
+    uri: Uri,
+    context: Context,
+    database: BootyCrateDatabase
+) {
+    themedAlertDialogBuilder(context)
+        .setMessage(R.string.import_database_question_message)
+        .setNeutralButton(android.R.string.cancel) { _, _ -> }
+        .setNegativeButton(R.string.import_database_question_merge_option) { _, _ ->
+            database.importBackup(context, uri, overwriteExistingDb = false)
         }.setPositiveButton(R.string.import_database_question_overwrite_option) { _, _ ->
-        themedAlertDialogBuilder(activity).
-            setMessage(R.string.import_database_overwrite_confirmation_message).
-            setNegativeButton(android.R.string.cancel) { _, _ -> }.
-            setPositiveButton(android.R.string.ok) { _, _ ->
-                BootyCrateDatabase.importBackup(activity, uri, overwriteExistingDb = true)
-            }.show()
+            themedAlertDialogBuilder(context)
+                .setMessage(R.string.import_database_overwrite_confirmation_message)
+                .setNegativeButton(android.R.string.cancel) { _, _ -> }
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    database.importBackup(context, uri, overwriteExistingDb = true)
+                }.show()
         }.show()
 }

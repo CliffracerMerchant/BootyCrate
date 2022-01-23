@@ -9,15 +9,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
-import androidx.annotation.CallSuper
 import androidx.fragment.app.Fragment
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.database.*
-import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
 import com.cliffracertech.bootycrate.utils.recollectWhenStarted
-import com.cliffracertech.bootycrate.utils.setPadding
 import com.cliffracertech.bootycrate.viewmodel.ItemListViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.kennyc.view.MultiStateView

@@ -108,7 +108,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
 
     private var unhiding = false
     fun show() {
-        if (isShown) return
+        if (isCollapsed) return
         behavior.state = BottomSheetBehavior.STATE_COLLAPSED
         targetState = BottomSheetBehavior.STATE_COLLAPSED
         if (isHideable == IsHideable.OnlyByApp)

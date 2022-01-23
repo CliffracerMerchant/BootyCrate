@@ -96,7 +96,8 @@ object UpdateListReminder {
     /** A fragment to display and alter UpdateListReminder.Settings parameters
      *
      * SettingsFragment assumes that the context it is running in is an instance
-     * of FragmentActivity, and will not work properly if this is not the case.
+     * of FragmentActivity to show child dialog fragments. These child fragments
+     * will not be displayed correctly if this is not the case.
      */
     class SettingsFragment : Fragment() {
         private lateinit var ui: UpdateListReminderSettingsFragmentBinding

@@ -19,11 +19,14 @@ import android.widget.LinearLayout
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.activity.NavViewActivity
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
@@ -151,7 +154,7 @@ fun LifecycleOwner.repeatWhenStarted(block: suspend CoroutineScope.() -> Unit) {
  * flow collection when the receiver's LifecycleState falls below this level. */
 fun <T>LifecycleOwner.recollectWhenStarted(
     flow: Flow<T>,
-    action: suspend CoroutineScope.(T) -> Unit) =
+    action: suspend (T) -> Unit) =
     repeatWhenStarted {
         flow.collect { action(it) }
     }
@@ -231,6 +234,5 @@ inline fun <reified T: Enum<*>> DataStore<Preferences>.mutableEnumPreferenceFlow
 }
 
 /** Get the menu item at @param index, or null if the index is out of bounds. */
-fun Menu.getItemOrNull(index: Int) =
-    try { getItem(index) }
-    catch (e: IndexOutOfBoundsException) { null }
+fun Menu.getItemOrNull(index: Int) = try { getItem(index) }
+                                     catch (e: IndexOutOfBoundsException) { null }

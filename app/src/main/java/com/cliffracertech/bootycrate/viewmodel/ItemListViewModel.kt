@@ -17,7 +17,7 @@ import com.cliffracertech.bootycrate.utils.preferenceFlow
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ActivityContext
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -138,7 +138,7 @@ abstract class ItemListViewModel<T: ListItem>(
  */
 @HiltViewModel
 class ShoppingListViewModel @Inject constructor(
-    @ActivityContext context: Context,
+    @ApplicationContext context: Context,
     searchQueryState: SearchQueryState,
     messenger: Messenger,
     dao: ItemDao,
@@ -216,7 +216,7 @@ class ShoppingListViewModel @Inject constructor(
  * fields of items in the database. */
 @HiltViewModel
 class InventoryViewModel @Inject constructor(
-    @ActivityContext context: Context,
+    @ApplicationContext context: Context,
     searchQueryState: SearchQueryState,
     messenger: Messenger,
     dao: ItemDao,

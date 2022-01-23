@@ -72,19 +72,18 @@ import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
         else -> super.onOptionsItemSelected(item)
     }
 
-    override fun showsCheckoutButton() = true
-    override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-        super.onActiveStateChanged(isActive, activityUi)
-        checkoutButton = activityUi.checkoutButton
-        activityUi.actionBar.optionsMenu.setGroupVisible(
-            R.id.shopping_list_view_menu_group, isActive)
-        if (!isActive) return
-
-        activityUi.addButton.setOnClickListener {
-            val activity = this.activity ?: return@setOnClickListener
-            NewShoppingListItemDialog(activity)
-                .show(activity.supportFragmentManager, null)
-        }
-        activityUi.checkoutButton.checkoutCallback = viewModel::onCheckoutRequest
-    }
+//    override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
+//        super.onActiveStateChanged(isActive, activityUi)
+//        checkoutButton = activityUi.checkoutButton
+//        activityUi.actionBar.optionsMenu.setGroupVisible(
+//            R.id.shopping_list_view_menu_group, isActive)
+//        if (!isActive) return
+//
+//        activityUi.addButton.setOnClickListener {
+//            val activity = this.activity ?: return@setOnClickListener
+//            NewShoppingListItemDialog(activity)
+//                .show(activity.supportFragmentManager, null)
+//        }
+//        activityUi.checkoutButton.checkoutCallback = viewModel::onCheckoutRequest
+//    }
 }

@@ -136,16 +136,17 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
                                  ui.backButton.layoutParams.width
     }
 
-    fun setBackButtonIsVisible(visible: Boolean, animate: Boolean = true) {
+    fun setBackButtonIsVisible(visible: Boolean) {
         if (ui.backButtonSpacer.isVisible == visible) return
         val endTransX = if (visible) 0f else backButtonHiddenTransX
 
-        if (!animate) {
+        if (!isVisible) {
             ui.backButton.isInvisible = !visible
             ui.backButton.translationX = endTransX
         } else {
             ui.backButton.isVisible = true
-            ui.backButton.animate().withLayer().applyConfig(animatorConfig)
+            ui.backButton.animate()
+                .withLayer().applyConfig(animatorConfig)
                 .translationX(endTransX).withEndAction {
                     ui.backButton.isInvisible = !visible
                 }.start()
@@ -156,16 +157,16 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
     fun setTitleState(state: TitleState) = when(state) {
         is TitleState.ActionMode ->  ui.titleSwitcher.setActionModeTitle(state.title, switchTo = true)
         is TitleState.SearchQuery -> ui.titleSwitcher.setSearchQuery(state.title, switchTo = true)
-        is TitleState.NormalTitle ->      ui.titleSwitcher.setTitle(state.title, switchTo = true)
+        is TitleState.NormalTitle -> ui.titleSwitcher.setTitle(state.title, switchTo = true)
     }
 
     fun setSearchButtonState(state: SearchButtonState) {
-        ui.searchButton.isVisible = state != SearchButtonState.Invisible
-        ui.searchButton.isActivated = state == SearchButtonState.MorphedToClose
+        ui.searchButton.isVisible = !state.isInvisible
+        ui.searchButton.isActivated = state.isMorphedToClose
     }
 
     fun setChangeSortButtonState(state: ChangeSortButtonState, animate: Boolean = true) {
-        ui.changeSortButton.isActivated = state == ChangeSortButtonState.MorphedToDelete
+        ui.changeSortButton.isActivated = state.isMorphedToDelete
         if (!animate) {
             val drawable = ui.changeSortButton.drawable as? StateListDrawable
             drawable?.jumpToCurrentState()
@@ -173,7 +174,7 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
         ui.changeSortButton.contentDescription = context.getString(
             if (isActivated) R.string.change_sorting_description
             else             R.string.delete_button_description)
-        ui.changeSortButton.isVisible = state != ChangeSortButtonState.Invisible
+        ui.changeSortButton.isVisible = !state.isInvisible
         if (state is ChangeSortButtonState.Visible)
             changeSortMenu.getItemOrNull(state.selectedIndex)?.isChecked = true
     }

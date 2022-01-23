@@ -23,20 +23,32 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import javax.inject.Qualifier
+import javax.inject.Singleton
 
 @Module @InstallIn(SingletonComponent::class)
 class DatabaseModule {
-    @Provides fun provideBootyCrateDatabase(@ApplicationContext app: Context) =
-        BootyCrateDatabase.get(app)
-    @Provides fun provideInMemoryBootyCrateDb(@ApplicationContext app: Context) =
-        BootyCrateDatabase.getInMemoryDb(app)
+    @Singleton @Provides
+    fun provideBootyCrateDatabase(@ApplicationContext app: Context) =
+        Room.databaseBuilder(app, BootyCrateDatabase::class.java, "booty-crate-db")
+            .addCallback(BootyCrateDatabase.Callback())
+            .addMigrations(*(BootyCrateDatabase.allMigrations))
+            .build()
+
     @Provides fun provideItemDao(db: BootyCrateDatabase) = db.itemDao()
     @Provides fun provideItemGroupDao(db: BootyCrateDatabase) = db.itemGroupDao()
     @Provides fun provideSettingsDao(db: BootyCrateDatabase) = db.settingsDao()
+
+    @Qualifier @Retention(AnnotationRetention.BINARY)
+    annotation class InMemoryDatabase
+
+    @InMemoryDatabase @Singleton @Provides
+    fun provideInMemoryBootyCrateDb(@ApplicationContext app: Context) =
+        Room.inMemoryDatabaseBuilder(app, BootyCrateDatabase::class.java)
+            .addCallback(BootyCrateDatabase.Callback()).build()
 }
 
-/** The BootyCrate application database. BootyCrateDatabase functions as a
- * singleton, with the current instance obtained using the static function get. */
+/** The BootyCrate application database. */
 @Database(version = 3, entities = [
     DatabaseListItem::class,
     DatabaseItemGroup::class,
@@ -47,56 +59,40 @@ abstract class BootyCrateDatabase : RoomDatabase() {
     abstract fun itemGroupDao(): ItemGroupDao
     abstract fun settingsDao(): SettingsDao
 
+    class Callback : RoomDatabase.Callback() {
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            super.onOpen(db)
+            db.execSQL("UPDATE item " +
+                    "SET selectedInShoppingList = 0, selectedInInventory = 0, " +
+                    "expandedInShoppingList = 0, expandedInInventory = 0")
+            db.execSQL("UPDATE item " +
+                    "SET shoppingListAmount = -1, " +
+                    "inShoppingListTrash = 0 " +
+                    "WHERE inShoppingListTrash")
+            db.execSQL("UPDATE item " +
+                    "SET inventoryAmount = -1, " +
+                    "inInventoryTrash = 0 " +
+                    "WHERE inInventoryTrash")
+        }
+
+        override fun onCreate(db: SupportSQLiteDatabase) {
+            super.onCreate(db)
+            db.execSQL("INSERT INTO settings DEFAULT VALUES")
+            val values = ContentValues(2)
+            values.put("name", firstGroupName)
+            values.put("isSelected", 1)
+            db.insert("itemGroup", 0, values)
+            db.addEnsureAtLeastOneGroupTrigger()
+            db.addEnsureAtLeastOneSelectedGroupTriggers()
+            db.addEnforceSingleSelectGroupsTriggers()
+            db.addAutoDeselectTrigger()
+            db.addAutoDeleteTrigger()
+            db.addAutoAddToShoppingListTriggers()
+        }
+    }
+
     companion object {
         private const val firstGroupName="BootyCrate"
-        var instance: BootyCrateDatabase? = null
-
-        fun get(context: Context) = instance ?:
-            Room.databaseBuilder(
-                context.applicationContext,
-                BootyCrateDatabase::class.java,
-                "booty-crate-db")
-                .addCallback(BootyCrateDbCallback())
-                .addMigrations(*allMigrations)
-                .build().also { this.instance = it }
-
-        fun getInMemoryDb(context: Context) =
-            Room.inMemoryDatabaseBuilder(
-                context.applicationContext,
-                BootyCrateDatabase::class.java
-            ).addCallback(BootyCrateDbCallback()).build()
-
-        private class BootyCrateDbCallback : Callback() {
-            override fun onOpen(db: SupportSQLiteDatabase) {
-                super.onOpen(db)
-                db.execSQL("UPDATE item " +
-                           "SET selectedInShoppingList = 0, selectedInInventory = 0, " +
-                           "expandedInShoppingList = 0, expandedInInventory = 0")
-                db.execSQL("UPDATE item " +
-                           "SET shoppingListAmount = -1, " +
-                           "inShoppingListTrash = 0 " +
-                           "WHERE inShoppingListTrash")
-                db.execSQL("UPDATE item " +
-                           "SET inventoryAmount = -1, " +
-                           "inInventoryTrash = 0 " +
-                           "WHERE inInventoryTrash")
-            }
-
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                super.onCreate(db)
-                db.execSQL("INSERT INTO settings DEFAULT VALUES")
-                val values = ContentValues(2)
-                values.put("name", firstGroupName)
-                values.put("isSelected", 1)
-                db.insert("itemGroup", 0, values)
-                db.addEnsureAtLeastOneGroupTrigger()
-                db.addEnsureAtLeastOneSelectedGroupTriggers()
-                db.addEnforceSingleSelectGroupsTriggers()
-                db.addAutoDeselectTrigger()
-                db.addAutoDeleteTrigger()
-                db.addAutoAddToShoppingListTriggers()
-            }
-        }
 
         private val migration1to2 get() = Migration(1, 2) { db ->
             db.execSQL("""CREATE TABLE itemGroup (
@@ -162,66 +158,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             db.addAutoDeselectTrigger()
         }
 
-        private val allMigrations get() = arrayOf(migration1to2, migration2to3)
-
-        fun backup(context: Context, backupUri: Uri) {
-            val db = get(context)
-            val databasePath = db.openHelper.readableDatabase.path
-            db.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)")
-            db.close()
-            val writer = context.contentResolver.openOutputStream(backupUri)
-            writer?.write(File(databasePath).readBytes())
-            writer?.close()
-        }
-
-        fun importBackup(context: Context, backupUri: Uri, overwriteExistingDb: Boolean) {
-            val importReader = context.contentResolver.openInputStream(backupUri) ?: return
-            // Room can only open databases in the app's database directory,
-            // making it necessary to copy the imported database here first.
-            val tempDbName = "tempDb"
-            val tempDbFile = context.getDatabasePath(tempDbName)
-            tempDbFile.writeBytes(importReader.readBytes())
-
-            val tempDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName)
-                .allowMainThreadQueries()
-                .createFromFile(tempDbFile)
-                .addMigrations(*allMigrations)
-                .build()
-            val itemGroups = try { tempDb.itemGroupDao().getAllNow() }
-                             catch(e: IllegalStateException) { emptyList() }
-            val items = try { tempDb.itemDao().getAllNow() }
-                        catch(e: IllegalStateException) { emptyList() }
-            tempDb.close()
-            tempDbFile.delete()
-
-            if (itemGroups.isEmpty() || items.isEmpty())
-                themedAlertDialogBuilder(context)
-                    .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
-                    .setMessage(R.string.invalid_imported_db_error_message)
-                    .setTitle(R.string.error).show()
-            else CoroutineScope(Dispatchers.IO).launch {
-                val currentDb = get(context)
-                if (overwriteExistingDb) {
-                    currentDb.openHelper.writableDatabase.execSQL(
-                        "DROP TRIGGER `ensure_at_least_one_group`")
-                    currentDb.itemGroupDao().add(itemGroups)
-                    currentDb.itemGroupDao().deleteAll()
-                    currentDb.openHelper.writableDatabase.addEnsureAtLeastOneGroupTrigger()
-                    currentDb.itemDao().deleteAll()
-                } else for (group in itemGroups) {
-                    val oldId = group.id
-                    group.id = 0
-                    val newId = currentDb.itemGroupDao().add(group)
-                    items.filter {
-                        it.groupId == oldId && it.id != 0L
-                    }.forEach {
-                        it.groupId = newId
-                        it.id = 0
-                    }
-                }
-                currentDb.itemDao().add(items)
-            }
-        }
+        val allMigrations get() = arrayOf(migration1to2, migration2to3)
 
         private fun SupportSQLiteDatabase.addEnsureAtLeastOneGroupTrigger() =
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_group`
@@ -324,5 +261,66 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                    THEN shoppingListAmount
                    ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount) END
                WHERE id = new.id"""
+    }
+
+    fun backup(context: Context, backupUri: Uri) {
+        val databasePath = openHelper.readableDatabase.path
+        openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)")
+        close()
+        val writer = context.contentResolver.openOutputStream(backupUri)
+        writer?.write(File(databasePath).readBytes())
+        writer?.close()
+    }
+
+    fun importBackup(
+        context: Context,
+        backupUri: Uri,
+        overwriteExistingDb: Boolean
+    ) {
+        val importReader = context.contentResolver.openInputStream(backupUri) ?: return
+        // Room can only open databases in the app's database directory,
+        // making it necessary to copy the imported database here first.
+        val tempDbName = "tempDb"
+        val tempDbFile = context.getDatabasePath(tempDbName)
+        tempDbFile.writeBytes(importReader.readBytes())
+
+        val tempDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName)
+            .allowMainThreadQueries()
+            .createFromFile(tempDbFile)
+            .addMigrations(*allMigrations)
+            .build()
+        val itemGroups = try { tempDb.itemGroupDao().getAllNow() }
+        catch(e: IllegalStateException) { emptyList() }
+        val items = try { tempDb.itemDao().getAllNow() }
+        catch(e: IllegalStateException) { emptyList() }
+        tempDb.close()
+        tempDbFile.delete()
+
+        if (itemGroups.isEmpty() || items.isEmpty())
+            themedAlertDialogBuilder(context)
+                .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
+                .setMessage(R.string.invalid_imported_db_error_message)
+                .setTitle(R.string.error).show()
+        else CoroutineScope(Dispatchers.IO).launch {
+            if (overwriteExistingDb) {
+                openHelper.writableDatabase.execSQL(
+                    "DROP TRIGGER `ensure_at_least_one_group`")
+                itemGroupDao().add(itemGroups)
+                itemGroupDao().deleteAll()
+                openHelper.writableDatabase.addEnsureAtLeastOneGroupTrigger()
+                itemDao().deleteAll()
+            } else for (group in itemGroups) {
+                val oldId = group.id
+                group.id = 0
+                val newId = itemGroupDao().add(group)
+                items.filter {
+                    it.groupId == oldId && it.id != 0L
+                }.forEach {
+                    it.groupId = newId
+                    it.id = 0
+                }
+            }
+            itemDao().add(items)
+        }
     }
 }

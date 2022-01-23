@@ -6,26 +6,23 @@ package com.cliffracertech.bootycrate.fragment
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.viewModels
 import androidx.preference.*
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.utils.AboutAppDialog
-import com.cliffracertech.bootycrate.utils.PrivacyPolicyDialog
-import com.cliffracertech.bootycrate.utils.importDatabaseFromUriDialog
-import com.cliffracertech.bootycrate.utils.mutablePreferenceFlow
+import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.viewmodel.AppSettingsViewModel
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
-import kotlinx.coroutines.flow.MutableStateFlow
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 /** A fragment to display the BootyCrate app settings. */
-class AppSettingsFragment : PreferenceFragmentCompat() {
-
+@AndroidEntryPoint
+class AppSettingsFragment: PreferenceFragmentCompat() {
+    @Inject lateinit var database: BootyCrateDatabase
     private var sortByCheckedSwitch: SwitchPreferenceCompat? = null
-    private var sortByChecked: MutableStateFlow<Boolean>? = null
+    private val viewModel: AppSettingsViewModel by viewModels()
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
@@ -38,14 +35,8 @@ class AppSettingsFragment : PreferenceFragmentCompat() {
         }
         sortByCheckedSwitch = findPreference(getString(R.string.pref_sort_by_checked_key))
         sortByCheckedSwitch?.isPersistent = false
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        context?.let {
-            val key = booleanPreferencesKey(getString(R.string.pref_sort_by_checked_key))
-            sortByChecked = it.applicationContext.dataStore.mutablePreferenceFlow(
-                key, viewLifecycleOwner.lifecycleScope, false)
+        recollectWhenStarted(viewModel.sortByChecked) {
+            sortByCheckedSwitch?.isChecked = it
         }
     }
 
@@ -53,9 +44,9 @@ class AppSettingsFragment : PreferenceFragmentCompat() {
         when (preference?.key) {
 //            getString(R.string.pref_theme_gradient_screen) -> { }
             getString(R.string.pref_sort_by_checked_key) ->
-                sortByChecked?.apply { value = !value }
-            //getString(R.string.pref_update_list_reminder_enabled_key) ->
-                //addSecondaryFragment(UpdateListReminder.SettingsFragment())
+                viewModel.onSortByCheckedClick()
+            getString(R.string.pref_update_list_reminder_enabled_key) ->
+                viewModel.onUpdateListReminderClick()
             getString(R.string.pref_export_database_key) ->
                 getExportPath.launch(getString(R.string.exported_database_default_name))
             getString(R.string.pref_import_database_key) ->
@@ -74,11 +65,11 @@ class AppSettingsFragment : PreferenceFragmentCompat() {
 
     private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
         val context = this.context ?: return@registerForActivityResult
-        if (uri != null) BootyCrateDatabase.backup(context, uri)
+        if (uri != null) database.backup(context, uri)
     }
 
     private val getImportPath = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         val activity = this.activity ?: return@registerForActivityResult
-        if (uri != null) importDatabaseFromUriDialog(uri, activity)
+        if (uri != null) importDatabaseFromUriDialog(uri, activity, database)
     }
 }

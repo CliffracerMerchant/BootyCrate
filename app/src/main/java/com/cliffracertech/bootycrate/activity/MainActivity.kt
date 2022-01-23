@@ -14,15 +14,15 @@ import android.view.animation.AnimationUtils
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.core.animation.doOnEnd
-import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.utils.setPadding
-import com.cliffracertech.bootycrate.viewmodel.*
+import com.cliffracertech.bootycrate.viewmodel.ItemGroupSelectorViewModel
+import com.cliffracertech.bootycrate.viewmodel.MainActivityViewModel
+import com.cliffracertech.bootycrate.viewmodel.Messenger
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
@@ -30,19 +30,15 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
- * A BottomNavViewActivity with a fragment interface that enables implementing fragments to use its custom UI.
+ * A NavViewActivity with a predefined UI.
  *
- * MainActivity is a BottomNavViewActivity subclass with a custom UI including
- * a ListActionBar, a BottomAppBar, and a checkout button and an add button in
- * the cradle of the BottomAppBar. In order for fragments to inform MainActivity
- * which of these UI elements should be displayed when they are active, the
- * fragment should implement MainActivity.FragmentInterface. While it is not
- * necessary for fragments to implement FragmentInterface, fragments that do
- * not will not be able to affect the visibility of the MainActivity UI when
- * they are displayed.
+ * MainActivity is a NavViewActivity subclass with a custom UI consisting of a
+ * ListActionBar and a BottomNavigationDrawer. The navigation drawer contains a
+ * BottomNavigationView and a BootyCrateBottomAppBar when it is collapsed, or
+ * an app settings button and an ItemGroupSelector when it is expanded.
  */
 @AndroidEntryPoint
-class MainActivity : BottomNavViewActivity() {
+class MainActivity : NavViewActivity() {
 
     private val viewModel: MainActivityViewModel by viewModels()
     private val itemGroupSelectorViewModel: ItemGroupSelectorViewModel by viewModels()
@@ -62,16 +58,17 @@ class MainActivity : BottomNavViewActivity() {
         initGradientStyle()
 
         repeatWhenStarted {
-            launch { viewModel.activeFragment.collect(::onNewActiveFragment) }
             launch { viewModel.messages.collect(::displaySnackbar) }
+
             launch { viewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
             launch { viewModel.titleState.collect(ui.actionBar::setTitleState) }
             launch { viewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
             launch { viewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
             launch { viewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
-            launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
+
             launch { viewModel.bottomAppBarState.collect(::updateBottomAppBarState) }
             launch { viewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
+            launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
         }
     }
 
@@ -94,22 +91,20 @@ class MainActivity : BottomNavViewActivity() {
 
     override fun onBackPressed() { ui.actionBar.onBackButtonClick?.invoke() }
 
-    private fun onNewActiveFragment(newFragment: Fragment?) {
-        ui.bottomAppBar.navIndicator.moveToItem(navigationView.selectedItemId)
-    }
-
     private fun updateBottomAppBarState(state: MainActivityViewModel.BottomAppBarState) {
         // The cradle layout animation is stored here and started in the cradle
         // layout's layoutTransition's transition listener's transitionStart
         // override so that the animation is synced with the layout transition.
         pendingCradleAnim = ui.bottomAppBar.showCheckoutButton(
             showing = state.checkoutButtonVisible,
-            animate = state.checkoutButtonVisible
+            animate = ui.bottomNavigationDrawer.isCollapsed &&
+                      ui.bottomNavigationDrawer.isLaidOut
         )?.apply {
             ui.bottomNavigationDrawer.isDraggable = false
             doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
         }
-
+        ui.bottomAppBar.navIndicator.moveToItem(menuItemId = state.selectedNavItemId,
+                                                animate = ui.bottomNavigationDrawer.isCollapsed)
         if (state.visible) ui.bottomNavigationDrawer.show()
         else               ui.bottomNavigationDrawer.hide()
     }
@@ -155,9 +150,12 @@ class MainActivity : BottomNavViewActivity() {
                 onSelectAllClick = itemGroupSelectorViewModel::onSelectAllGroupsClick
             ).show()
         }
-        ui.itemGroupSelector.onItemClick = itemGroupSelectorViewModel::onItemGroupClick
-        ui.itemGroupSelector.onItemRenameRequest = itemGroupSelectorViewModel::onConfirmItemGroupRenameDialog
-        ui.itemGroupSelector.onItemDeletionRequest = itemGroupSelectorViewModel::onConfirmDeleteItemGroupDialog
+        ui.itemGroupSelector.onItemClick =
+            itemGroupSelectorViewModel::onItemGroupClick
+        ui.itemGroupSelector.onItemRenameRequest =
+            itemGroupSelectorViewModel::onConfirmItemGroupRenameDialog
+        ui.itemGroupSelector.onItemDeletionRequest =
+            itemGroupSelectorViewModel::onConfirmDeleteItemGroupDialog
     }
 
     private fun initAnimatorConfigs() {
@@ -168,6 +166,7 @@ class MainActivity : BottomNavViewActivity() {
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
         ui.actionBar.animatorConfig = transitionAnimConfig
+
         ui.bottomAppBar.navIndicator.width =
             2.5f * ui.bottomAppBar.ui.bottomNavigationView.itemIconSize
         ui.bottomAppBar.animatorConfig = transitionAnimConfig

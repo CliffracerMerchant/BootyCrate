@@ -4,18 +4,22 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cliffracertech.bootycrate.database.BootyCrateDatabase
+import com.cliffracertech.bootycrate.database.ItemGroupDao
+import com.cliffracertech.bootycrate.database.SettingsDao
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
 
-class ItemGroupSelectorViewModel(app: Application): AndroidViewModel(app) {
-    private val itemGroupDao = BootyCrateDatabase.get(app).itemGroupDao()
-    private val settingsDao = BootyCrateDatabase.get(app).settingsDao()
+@HiltViewModel
+class ItemGroupSelectorViewModel @Inject constructor(
+    private val itemGroupDao: ItemGroupDao,
+    private val settingsDao: SettingsDao,
+): ViewModel() {
 
     val itemGroups = itemGroupDao.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())

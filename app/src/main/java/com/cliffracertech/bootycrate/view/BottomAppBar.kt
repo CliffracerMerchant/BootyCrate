@@ -24,7 +24,6 @@ import com.cliffracertech.bootycrate.databinding.BottomAppBarBinding
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
 import com.cliffracertech.bootycrate.utils.layoutTransition
-import com.cliffracertech.bootycrate.utils.withoutLayoutTransition
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.math.MathUtils.lerp
 import com.google.android.material.shape.*
@@ -186,15 +185,15 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
             private set
 
         var width = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
         var depth = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
         var contentsMargin = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
         var topCornerRadius = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
         var bottomCornerRadius = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
 
         var leftCurveStartX = 0f
             private set
@@ -266,7 +265,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
 
             // The ϴ calculation is derived from the basic trig equation y = r * sinϴ,
             // Since we are measuring theta starting from the up position, and measuring
-            // ϴ counterclockwise instead of clockwise, the equation for our use case is
+            // ϴ clockwise instead of counterclockwise, the equation for our use case is
             // y = r - r * sin(π/2 - ϴ)
             //   = r * (1 - sin(π/2 - ϴ))
             // Solving this for ϴ gives:
@@ -334,7 +333,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
      *      The gradient used when drawing the indicator. gradient will
      *      override the value of tint if gradient is not null.
      */
-    inner class NavIndicator() {
+    inner class NavIndicator {
         private val path = Path()
         private val pathMeasure = PathMeasure()
         private val paint = Paint().apply { style = Paint.Style.STROKE
@@ -361,7 +360,7 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
             navView = findViewById(navViewResId)
             cradle.layout?.doOnNextLayout {
                 invalidate()
-                doOnNextLayout() {
+                doOnNextLayout {
                     moveToItem(navView?.selectedItemId ?: -1, animate = false)
                 }
             }
@@ -479,15 +478,22 @@ class BootyCrateBottomAppBar(context: Context, attrs: AttributeSet) :
         showing: Boolean,
         animate: Boolean = true
     ): Animator? {
-        if (ui.checkoutButton.isVisible == showing) {
-            if (!animate) {
-                ui.cradleLayout.withoutLayoutTransition { ui.checkoutButton.isVisible = showing }
-                cradle.width = cradleWidth(showing)
+        if (ui.checkoutButton.isVisible == showing)
+            return null
+
+        ui.checkoutButton.isVisible = showing
+        val cradleNewWidth =
+            if (!showing)
+                ui.addButton.layoutParams.width.toFloat()
+            else {
+                val wrapContent = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+                ui.cradleLayout.measure(wrapContent, wrapContent)
+                ui.cradleLayout.measuredWidth.toFloat()
             }
+        if (!animate) {
+            cradle.width = cradleNewWidth
             return null
         }
-        ui.checkoutButton.isVisible = showing
-        val cradleNewWidth = cradleWidth(showing)
 
         // Ideally we would only animate the cradle's width, and let the cradleLayout's
         // layoutTransition handle the rest. Unfortunately it will only animate its own
@@ -515,17 +521,6 @@ class BootyCrateBottomAppBar(context: Context, attrs: AttributeSet) :
             doOnEnd { ui.checkoutButton.clipBounds = null }
         }
     }
-
-    /** Return the appropriate target cradle.width value for a checkout button
-     * visibility matching the value of @param showingCheckoutButton. */
-    private fun cradleWidth(showingCheckoutButton: Boolean) =
-        if (!showingCheckoutButton)
-            ui.addButton.layoutParams.width.toFloat()
-        else {
-            val wrapContent = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-            ui.cradleLayout.measure(wrapContent, wrapContent)
-            ui.cradleLayout.measuredWidth.toFloat()
-        }
 
     private var accumulatedNewItemCount = 0
     /** Display the shopping list added items badge with a delayed fade out

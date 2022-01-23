@@ -6,46 +6,69 @@ package com.cliffracertech.bootycrate.viewmodel
 
 import android.content.Context
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.ReadOnlyNavigationManager
 import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.ItemDao
 import com.cliffracertech.bootycrate.database.ItemGroupDao
 import com.cliffracertech.bootycrate.database.ListItem
-import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
-import com.cliffracertech.bootycrate.fragment.InventoryFragment
-import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
 import com.cliffracertech.bootycrate.utils.mutableEnumPreferenceFlow
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
-import dagger.Module
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityRetainedComponent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.*
 import javax.inject.Inject
 
-
-val Fragment?.isShoppingList get() = this is ShoppingListFragment
-val Fragment?.isInventory get() = this is InventoryFragment
-val Fragment?.isAppSettings get() = this is AppSettingsFragment
-
-
-
-@Module @InstallIn(ActivityRetainedComponent::class)
-class SearchQueryState {
+/** A state holder for a search query entry. */
+@ActivityRetainedScoped
+class SearchQueryState @Inject constructor() {
     val query = MutableStateFlow<String?>(null)
 }
 
 
+/**
+ * A state holder representing the navigation state for a MainActivity instance.
+ *
+ * MainActivityNavigationState wraps an instance of NavigationState and adds
+ * the Flow activeFragment, which represents the current visible fragment in
+ * the MainActivity instance from among the possible values of ShoppingListFragment,
+ * InventoryFragment, or another fragment which covers these two.
+ */
+@ActivityRetainedScoped
+class MainActivityNavigationState @Inject constructor(
+    state: ReadOnlyNavigationState
+) {
+    /** The currently selected nav item id in the MainActivity instance. */
+    val navViewSelectedItemId = state.navViewSelectedItemId
 
-/** A class representing a title for an action bar. */
+    /** An enum class whose values describe the possible fragments for an
+     * instance of MainActivity: a ShoppingListFragment, an InventoryFragment,
+     * or a secondary fragment that covers the primary fragment (e.g. an app
+     * settings fragment). */
+    enum class Fragment { ShoppingList, Inventory, Other;
+        val isShoppingList get() = this == ShoppingList
+        val isInventory get() = this == Inventory
+        val isOther get() = this == Other
+    }
+
+    /** The current visible fragment in the MainActivity instance. */
+    val activeFragment = combine(
+        state.navViewSelectedItemId,
+        state.backStackSize
+    ) { navItemId, backStackSize -> when {
+        backStackSize > 0 ->                    Fragment.Other
+        navItemId == R.id.shoppingListButton -> Fragment.ShoppingList
+        navItemId == R.id.inventoryButton ->    Fragment.Inventory
+        else ->                                 Fragment.Other
+    }}
+}
+
+
+/** A state holder representing a title for an action bar. */
 sealed class TitleState(val title: String) {
     /** A TitleState that represents the title for an active action mode. */
     class ActionMode(actionModeTitle: String) : TitleState(actionModeTitle)
@@ -59,7 +82,7 @@ sealed class TitleState(val title: String) {
     val isNormalTitle get() = this is NormalTitle
 }
 
-/** A set of values representing the state of a combo search / close button. */
+/** A set of values representing the state of a combo search/close button. */
 enum class SearchButtonState {
     /** The button is visible with a search icon. */
     Visible,
@@ -88,20 +111,22 @@ sealed class ChangeSortButtonState {
 }
 
 
-
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
     @ApplicationContext context: Context,
     private val itemDao: ItemDao,
     itemGroupDao: ItemGroupDao,
-    navManager: ReadOnlyNavigationManager,
+    private val navigationState: MainActivityNavigationState,
     private val messenger: Messenger,
     private val searchQueryState: SearchQueryState
 ) : ViewModel() {
 
     val messages = messenger.messages
 
-    val activeFragment = navManager.activeFragment
+    private val activeFragment = navigationState.activeFragment
+        .stateIn(viewModelScope, SharingStarted.Eagerly,
+                 MainActivityNavigationState.Fragment.ShoppingList)
+
 
     private val searchQuery = searchQueryState.query.asStateFlow()
     fun onSearchQueryChangeRequest(newQuery: CharSequence?) {
@@ -126,7 +151,7 @@ class MainActivityViewModel @Inject constructor(
         selectedItemCount,
         searchQuery
     ) { fragment, selectedItemCount, filter ->
-        fragment?.isAppSettings == true || filter != null || selectedItemCount != 0
+        fragment.isOther || filter != null || selectedItemCount != 0
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
 
     fun onBackPressed() = when {
@@ -161,10 +186,10 @@ class MainActivityViewModel @Inject constructor(
         searchQuery,
         selectedItemGroupName
     ) { fragment, selectedItemCount, query, selectedItemGroupName -> when {
-        fragment.isAppSettings -> TitleState.NormalTitle(settingsTitle)
-        selectedItemCount > 0 ->  TitleState.ActionMode(actionModeTitle(selectedItemCount))
-        query != null ->          TitleState.SearchQuery(query)
-        else ->                   TitleState.NormalTitle(selectedItemGroupName)
+        fragment.isOther ->      TitleState.NormalTitle(settingsTitle)
+        selectedItemCount > 0 -> TitleState.ActionMode(actionModeTitle(selectedItemCount))
+        query != null ->         TitleState.SearchQuery(query)
+        else ->                  TitleState.NormalTitle(selectedItemGroupName)
     }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), TitleState.NormalTitle(""))
 
 
@@ -173,12 +198,9 @@ class MainActivityViewModel @Inject constructor(
         selectedItemCount,
         searchQuery
     ) { fragment, selectedItemCount, query -> when {
-        fragment.isAppSettings || selectedItemCount > 0 ->
-            SearchButtonState.Invisible
-        query != null ->
-            SearchButtonState.MorphedToClose
-        else ->
-            SearchButtonState.Visible
+        fragment.isOther || selectedItemCount > 0 -> SearchButtonState.Invisible
+        query != null ->                             SearchButtonState.MorphedToClose
+        else ->                                      SearchButtonState.Visible
     }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SearchButtonState.Visible)
 
     fun onSearchButtonClick() {
@@ -188,14 +210,15 @@ class MainActivityViewModel @Inject constructor(
 
 
     private val sort = context.dataStore.mutableEnumPreferenceFlow(
-        intPreferencesKey(context.getString(R.string.pref_item_sort_key)), viewModelScope, ListItem.Sort.Color)
+        intPreferencesKey(context.getString(R.string.pref_item_sort_key)),
+                          viewModelScope, ListItem.Sort.Color)
 
     val changeSortButtonState = combine(
         activeFragment,
         titleState,
         sort
     ) { fragment, titleState, sort -> when {
-        fragment.isAppSettings ->  ChangeSortButtonState.Invisible
+        fragment.isOther ->        ChangeSortButtonState.Invisible
         titleState.isActionMode -> ChangeSortButtonState.MorphedToDelete
         else ->                    ChangeSortButtonState.Visible(sort.ordinal)
     }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),
@@ -231,8 +254,8 @@ class MainActivityViewModel @Inject constructor(
                     else itemDao.undoDeleteInventoryItems()
                 }; Unit
             }
-            val onDismiss = { dismissCode: Int ->
-                if (dismissCode != DISMISS_EVENT_ACTION && dismissCode != DISMISS_EVENT_CONSECUTIVE)
+            val onDismiss = { code: Int ->
+                if (code != DISMISS_EVENT_ACTION && code != DISMISS_EVENT_CONSECUTIVE)
                     viewModelScope.launch {
                         if (fragment.isShoppingList)
                             itemDao.emptyShoppingListTrash()
@@ -244,19 +267,21 @@ class MainActivityViewModel @Inject constructor(
     }
 
 
-    val moreOptionsButtonVisible = activeFragment
-        .map { !it.isAppSettings }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(),
-                 !activeFragment.value.isAppSettings)
+    val moreOptionsButtonVisible = activeFragment.map { !it.isOther }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), true)
 
 
-    data class BottomAppBarState(val visible: Boolean, val checkoutButtonVisible: Boolean)
+    data class BottomAppBarState(
+        val visible: Boolean = true,
+        val checkoutButtonVisible: Boolean = true,
+        val selectedNavItemId: Int = 0)
 
-    val bottomAppBarState = activeFragment.map {
-        BottomAppBarState(visible = !it.isAppSettings,
-                          checkoutButtonVisible = it.isShoppingList)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),
-              BottomAppBarState(visible = true, checkoutButtonVisible = true))
+    val bottomAppBarState = activeFragment.map { activeFragment ->
+        BottomAppBarState(visible = !activeFragment.isOther,
+                          checkoutButtonVisible = activeFragment.isShoppingList,
+                          selectedNavItemId = navigationState.navViewSelectedItemId.value)
+
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), BottomAppBarState())
 
 
     private var oldShoppingListSize = 0
@@ -264,6 +289,6 @@ class MainActivityViewModel @Inject constructor(
         val change = shoppingListSize - oldShoppingListSize
         oldShoppingListSize = shoppingListSize
         if (activeFragment.value.isInventory) 0
-        else                                  change
+        else change
     }.drop(1).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
 }

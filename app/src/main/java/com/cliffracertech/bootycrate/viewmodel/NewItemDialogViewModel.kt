@@ -5,18 +5,16 @@
 
 package com.cliffracertech.bootycrate.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ListItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.database.*
 import com.cliffracertech.bootycrate.utils.getValue
 import com.cliffracertech.bootycrate.utils.setValue
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
 
 /**
  * An abstract AndroidViewModel to provide data and callbacks for a dialog to add new ListItem subclasses
@@ -33,9 +31,10 @@ import kotlinx.coroutines.runBlocking
  * values of the StateFlow properties nameIsAlreadyUsedInShoppingList and
  * nameIsAlreadyUsedInInventory.
  */
-abstract class NewItemDialogViewModel<T: ListItem>(app: Application) : AndroidViewModel(app) {
-    private val itemDao = BootyCrateDatabase.get(app).itemDao()
-    private val itemGroupDao = BootyCrateDatabase.get(app).itemGroupDao()
+abstract class NewItemDialogViewModel<T: ListItem>(
+    private val itemDao: ItemDao,
+    private val itemGroupDao: ItemGroupDao
+) : ViewModel() {
 
     val selectedItemGroups get() = runBlocking { itemGroupDao.getSelectedGroupsNow() }
 
@@ -69,9 +68,12 @@ abstract class NewItemDialogViewModel<T: ListItem>(app: Application) : AndroidVi
 }
 
 /** A view model to provide data for a dialog to add new ShoppingListItems. */
-class NewShoppingListItemDialogViewModel(app: Application) :
-    NewItemDialogViewModel<ShoppingListItem>(app)
-{
+@HiltViewModel
+class NewShoppingListItemDialogViewModel @Inject constructor(
+    itemDao: ItemDao,
+    itemGroupDao: ItemGroupDao
+) : NewItemDialogViewModel<ShoppingListItem>(itemDao, itemGroupDao) {
+
     override val newItemNameIsAlreadyUsed = combine(
         nameIsAlreadyUsedInShoppingList,
         nameIsAlreadyUsedInInventory
@@ -83,9 +85,12 @@ class NewShoppingListItemDialogViewModel(app: Application) :
 }
 
 /** A view model to provide data for a dialog to add new InventoryItems. */
-class NewInventoryItemDialogViewModel(app: Application) :
-    NewItemDialogViewModel<InventoryItem>(app)
-{
+@HiltViewModel
+class NewInventoryItemDialogViewModel @Inject constructor(
+    itemDao: ItemDao,
+    itemGroupDao: ItemGroupDao
+) : NewItemDialogViewModel<InventoryItem>(itemDao, itemGroupDao) {
+
     override val newItemNameIsAlreadyUsed = combine(
         nameIsAlreadyUsedInInventory,
         nameIsAlreadyUsedInShoppingList
