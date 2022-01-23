@@ -35,7 +35,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : NavViewActivity() {
 
-    private val viewModel: MainActivityViewModel by viewModels()
+    private val viewModel: ActionBarViewModel by viewModels()
     private val bottomAppBarViewModel: BottomAppBarViewModel by viewModels()
     private val itemGroupSelectorViewModel: ItemGroupSelectorViewModel by viewModels()
     private var pendingCradleAnim: Animator? = null
@@ -62,29 +62,29 @@ class MainActivity : NavViewActivity() {
             launch { viewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
             launch { viewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
 
-            launch { viewModel.bottomAppBarState.collect(::updateBottomAppBarState) }
-            launch { viewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
+            launch { bottomAppBarViewModel.bottomAppBarState.collect(::updateBottomAppBarState) }
             launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
         }
     }
 
     override fun onBackPressed() { ui.actionBar.onBackButtonClick?.invoke() }
 
-    private fun updateBottomAppBarState(state: MainActivityViewModel.BottomAppBarState) {
+    private fun updateBottomAppBarState(uiState: BottomAppBarViewModel.UiState) {
         // The cradle layout animation is stored here and started in the cradle
         // layout's layoutTransition's transition listener's transitionStart
         // override so that the animation is synced with the layout transition.
-        pendingCradleAnim = ui.bottomAppBar.showCheckoutButton(
-            showing = state.checkoutButtonVisible,
-            animate = ui.bottomNavigationDrawer.isCollapsed &&
+        val animate = ui.bottomNavigationDrawer.isCollapsed &&
                       ui.bottomNavigationDrawer.isLaidOut
+        pendingCradleAnim = ui.bottomAppBar.showCheckoutButton(
+            showing = uiState.checkoutButtonVisible, animate = animate
         )?.apply {
             ui.bottomNavigationDrawer.isDraggable = false
             doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
         }
-        ui.bottomAppBar.navIndicator.moveToItem(menuItemId = state.selectedNavItemId,
-                                                animate = ui.bottomNavigationDrawer.isCollapsed)
-        if (state.visible) ui.bottomNavigationDrawer.show()
+        ui.bottomAppBar.navIndicator.moveToItem(uiState.selectedNavItemId, animate)
+        ui.bottomAppBar.updateShoppingListBadge(uiState.shoppingListSizeChange)
+
+        if (uiState.visible) ui.bottomNavigationDrawer.show()
         else               ui.bottomNavigationDrawer.hide()
     }
 

@@ -8,6 +8,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cliffracertech.bootycrate.BootyCrateApplication
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.ItemDao
@@ -64,7 +65,8 @@ class MainActivityNavigationState @Inject constructor(
         navItemId == R.id.shoppingListButton -> Fragment.ShoppingList
         navItemId == R.id.inventoryButton ->    Fragment.Inventory
         else ->                                 Fragment.Other
-    }}
+    }}.stateIn(BootyCrateApplication.coroutineScope,
+               SharingStarted.Eagerly, Fragment.ShoppingList)
 }
 
 
@@ -112,7 +114,7 @@ sealed class ChangeSortButtonState {
 
 
 @HiltViewModel
-class MainActivityViewModel @Inject constructor(
+class ActionBarViewModel @Inject constructor(
     @ApplicationContext context: Context,
     private val itemDao: ItemDao,
     itemGroupDao: ItemGroupDao,
@@ -120,13 +122,6 @@ class MainActivityViewModel @Inject constructor(
     private val messageHandler: MessageHandler,
     private val searchQueryState: SearchQueryState
 ) : ViewModel() {
-
-    val messages = messenger.messages
-
-    private val activeFragment = navigationState.activeFragment
-        .stateIn(viewModelScope, SharingStarted.Eagerly,
-                 MainActivityNavigationState.Fragment.ShoppingList)
-
 
     private val searchQuery = searchQueryState.query.asStateFlow()
     fun onSearchQueryChangeRequest(newQuery: CharSequence?) {
@@ -139,7 +134,7 @@ class MainActivityViewModel @Inject constructor(
     private val selectedInventoryItemCount = itemDao.getSelectedInventoryItemCount()
         .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
-    private val selectedItemCount = activeFragment.transformLatest { when {
+    private val selectedItemCount = navigationState.activeFragment.transformLatest { when {
         it.isShoppingList -> emitAll(selectedShoppingListItemCount)
         it.isInventory ->    emitAll(selectedInventoryItemCount)
         else ->              emit(0)
@@ -147,18 +142,18 @@ class MainActivityViewModel @Inject constructor(
 
 
     val backButtonIsVisible = combine(
-        activeFragment,
+        navigationState.activeFragment,
         selectedItemCount,
         searchQuery
     ) { fragment, selectedItemCount, filter ->
         fragment.isOther || filter != null || selectedItemCount != 0
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), false)
 
     fun onBackPressed() = when {
         selectedItemCount.value > 0 -> {
-            if (activeFragment.value.isShoppingList)
+            if (navigationState.activeFragment.value.isShoppingList)
                 viewModelScope.launch { itemDao.clearShoppingListSelection() }
-            if (activeFragment.value.isInventory)
+            if (navigationState.activeFragment.value.isInventory)
                 viewModelScope.launch { itemDao.clearInventorySelection() }
             true
         } searchQuery.value != null -> {
@@ -173,7 +168,7 @@ class MainActivityViewModel @Inject constructor(
     private val selectedItemGroupName = itemGroupDao.getSelectedGroups().map {
         if (it.size == 1) it.first().name
         else nameForMultiSelection
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), "")
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), "")
 
     private val actionModeTitleBase = context.getString(R.string.action_mode_title)
     private fun actionModeTitle(selectedItemCount: Int) =
@@ -181,7 +176,7 @@ class MainActivityViewModel @Inject constructor(
     private val settingsTitle = context.getString(R.string.settings_description)
 
     val titleState = combine(
-        activeFragment,
+        navigationState.activeFragment,
         selectedItemCount,
         searchQuery,
         selectedItemGroupName
@@ -194,7 +189,7 @@ class MainActivityViewModel @Inject constructor(
 
 
     val searchButtonState = combine(
-        activeFragment,
+        navigationState.activeFragment,
         selectedItemCount,
         searchQuery
     ) { fragment, selectedItemCount, query -> when {
@@ -214,7 +209,7 @@ class MainActivityViewModel @Inject constructor(
                           viewModelScope, ListItem.Sort.Color)
 
     val changeSortButtonState = combine(
-        activeFragment,
+        navigationState.activeFragment,
         titleState,
         sort
     ) { fragment, titleState, sort -> when {
@@ -238,7 +233,7 @@ class MainActivityViewModel @Inject constructor(
 
 
     fun onDeleteButtonClick() {
-        val fragment = activeFragment.value
+        val fragment = navigationState.activeFragment.value
         if (!fragment.isShoppingList && !fragment.isInventory) return
         viewModelScope.launch {
             val itemCount = selectedItemCount.value
@@ -267,28 +262,7 @@ class MainActivityViewModel @Inject constructor(
     }
 
 
-    val moreOptionsButtonVisible = activeFragment.map { !it.isOther }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), true)
-
-
-    data class BottomAppBarState(
-        val visible: Boolean = true,
-        val checkoutButtonVisible: Boolean = true,
-        val selectedNavItemId: Int = 0)
-
-    val bottomAppBarState = activeFragment.map { activeFragment ->
-        BottomAppBarState(visible = !activeFragment.isOther,
-                          checkoutButtonVisible = activeFragment.isShoppingList,
-                          selectedNavItemId = navigationState.navViewSelectedItemId.value)
-
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), BottomAppBarState())
-
-
-    private var oldShoppingListSize = 0
-    val shoppingListSizeChange = itemDao.getShoppingListItemCount().map { shoppingListSize ->
-        val change = shoppingListSize - oldShoppingListSize
-        oldShoppingListSize = shoppingListSize
-        if (activeFragment.value.isInventory) 0
-        else change
-    }.drop(1).stateIn(viewModelScope, SharingStarted.WhileSubscribed(), 0)
+    val moreOptionsButtonVisible = navigationState.activeFragment
+        .map { !it.isOther }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), true)
 }
