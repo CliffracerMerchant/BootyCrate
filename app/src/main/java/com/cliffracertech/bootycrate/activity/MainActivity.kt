@@ -9,9 +9,7 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
-import android.view.View
 import android.view.animation.AnimationUtils
-import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.core.animation.doOnEnd
 import androidx.preference.PreferenceManager
@@ -20,14 +18,11 @@ import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.viewmodel.ItemGroupSelectorViewModel
-import com.cliffracertech.bootycrate.viewmodel.MainActivityViewModel
-import com.cliffracertech.bootycrate.viewmodel.Messenger
-import com.google.android.material.snackbar.BaseTransientBottomBar
-import com.google.android.material.snackbar.Snackbar
+import com.cliffracertech.bootycrate.viewmodel.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * A NavViewActivity with a predefined UI.
@@ -41,10 +36,12 @@ import kotlinx.coroutines.launch
 class MainActivity : NavViewActivity() {
 
     private val viewModel: MainActivityViewModel by viewModels()
+    private val bottomAppBarViewModel: BottomAppBarViewModel by viewModels()
     private val itemGroupSelectorViewModel: ItemGroupSelectorViewModel by viewModels()
-
-    lateinit var ui: MainActivityBinding
     private var pendingCradleAnim: Animator? = null
+
+    @Inject lateinit var messageHandler: MessageHandler
+    lateinit var ui: MainActivityBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         initTheme()
@@ -57,9 +54,8 @@ class MainActivity : NavViewActivity() {
         initAnimatorConfigs()
         initGradientStyle()
 
+        messageHandler.messages.displayWithSnackBarAnchoredTo(ui.bottomAppBar)
         repeatWhenStarted {
-            launch { viewModel.messages.collect(::displaySnackbar) }
-
             launch { viewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
             launch { viewModel.titleState.collect(ui.actionBar::setTitleState) }
             launch { viewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
@@ -70,23 +66,6 @@ class MainActivity : NavViewActivity() {
             launch { viewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
             launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
         }
-    }
-
-    private fun displaySnackbar(message: Messenger.Message) {
-        val snackBar = Snackbar.make(ui.root, message.text, Snackbar.LENGTH_LONG)
-            .setAnchorView(ui.bottomAppBar)
-            .setAction(message.actionText) { message.onActionClick?.invoke() }
-            .setActionTextColor(theme.resolveIntAttribute(R.attr.colorAccent))
-            .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                    super.onDismissed(transientBottomBar, event)
-                    message.onDismiss?.invoke(event)
-                }
-            })
-        val textView = snackBar.view.findViewById<TextView>(R.id.snackbar_text)
-        (textView.parent as? View)?.setPadding(start = dpToPixels(10f).toInt())
-        snackBar.show()
-        SoftKeyboard.hide(ui.root)
     }
 
     override fun onBackPressed() { ui.actionBar.onBackButtonClick?.invoke() }

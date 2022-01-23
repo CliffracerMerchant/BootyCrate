@@ -5,15 +5,18 @@
 package com.cliffracertech.bootycrate.viewmodel
 
 import android.content.Context
+import android.view.View
+import android.widget.TextView
+import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.utils.*
+import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityRetainedComponent
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
@@ -21,14 +24,14 @@ import javax.inject.Inject
 /**
  * An manager of messages to be displayed to the user, e.g. through a SnackBar.
  *
- * New messages can be posted using the postMessage function. Messager users
- * can listen to the SharedFlow member messages for new messages. The function
- * postItemsDeletedMessage is provided for convenience for the common use case
- * of showing an X item(s) deleted message after items are deleted from a list,
- * along with an undo action.
+ * New messages can be posted using the postMessage function. MessageHandler
+ * users can listen to the SharedFlow member messages for new messages. The
+ * function postItemsDeletedMessage is provided for convenience for the common
+ * use case of showing an X item(s) deleted message after items are deleted
+ * from a list, along with an undo action.
  */
 @ActivityRetainedScoped
-class Messenger @Inject constructor(
+class MessageHandler @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     /**
@@ -99,4 +102,27 @@ class Messenger @Inject constructor(
 
     fun postItemsDeletedMessage(message: DeletedItemsMessage) =
         postItemsDeletedMessage(message.count, message.onUndo, message.onDismiss)
+}
+
+/** Display the Flow<MessageHandler.Message>'s emitted values using SnackBars
+ * anchored to the provided view. */
+fun Flow<MessageHandler.Message>.displayWithSnackBarAnchoredTo(anchor: View) {
+    val lifecycleOwner = anchor.findViewTreeLifecycleOwner()
+    lifecycleOwner?.recollectWhenStarted(this) { message ->
+        val snackBar = Snackbar.make(anchor, message.text, Snackbar.LENGTH_LONG)
+            .setAnchorView(anchor)
+            .setAction(message.actionText) { message.onActionClick?.invoke() }
+            .setActionTextColor(anchor.context.theme.resolveIntAttribute(R.attr.colorAccent))
+            .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    super.onDismissed(transientBottomBar, event)
+                    message.onDismiss?.invoke(event)
+                }
+            })
+        val textView = snackBar.view.findViewById<TextView>(R.id.snackbar_text)
+        val startPadding = anchor.resources.dpToPixels(10f).toInt()
+        (textView.parent as? View)?.setPadding(start = startPadding)
+        snackBar.show()
+        SoftKeyboard.hide(anchor)
+    }
 }

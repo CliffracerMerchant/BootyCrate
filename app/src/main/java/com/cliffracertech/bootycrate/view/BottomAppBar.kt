@@ -137,16 +137,16 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
                 rewind()
                 moveTo(0f, topOuterCornerRadius)
                 arcTo(centerX = topOuterCornerRadius,
-                    centerY = topOuterCornerRadius,
-                    radius = topOuterCornerRadius,
-                    startAngle = angleLeft,
-                    sweepAngle = 90f)
+                      centerY = topOuterCornerRadius,
+                      radius = topOuterCornerRadius,
+                      startAngle = angleLeft,
+                      sweepAngle = 90f)
                 cradle.addTo(this)
                 arcTo(centerX = width - topOuterCornerRadius,
-                    centerY = topOuterCornerRadius,
-                    radius = topOuterCornerRadius,
-                    startAngle = angleUp,
-                    sweepAngle = 90f)
+                      centerY = topOuterCornerRadius,
+                      radius = topOuterCornerRadius,
+                      startAngle = angleUp,
+                      sweepAngle = 90f)
                 lineTo(width.toFloat(), height.toFloat())
                 lineTo(0f, height.toFloat())
                 close()

@@ -22,7 +22,7 @@ class ItemGroupSelectorViewModel @Inject constructor(
 ): ViewModel() {
 
     val itemGroups = itemGroupDao.getAll()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
     val multiSelectGroups get() = runBlocking { settingsDao.getMultiSelectGroupsNow() }
 

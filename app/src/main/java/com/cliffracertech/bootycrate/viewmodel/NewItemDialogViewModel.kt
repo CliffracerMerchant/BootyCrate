@@ -81,7 +81,7 @@ class NewShoppingListItemDialogViewModel @Inject constructor(
         when { (existsInShoppingList) -> NameIsAlreadyUsed.TrueForCurrentList
                (existsInInventory) ->    NameIsAlreadyUsed.TrueForSiblingList
                else ->                   NameIsAlreadyUsed.False }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NameIsAlreadyUsed.False)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), NameIsAlreadyUsed.False)
 }
 
 /** A view model to provide data for a dialog to add new InventoryItems. */
@@ -98,5 +98,5 @@ class NewInventoryItemDialogViewModel @Inject constructor(
         when { (existsInInventory) ->    NameIsAlreadyUsed.TrueForCurrentList
                (existsInShoppingList) -> NameIsAlreadyUsed.TrueForSiblingList
                else ->                   NameIsAlreadyUsed.False }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), NameIsAlreadyUsed.False)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), NameIsAlreadyUsed.False)
 }

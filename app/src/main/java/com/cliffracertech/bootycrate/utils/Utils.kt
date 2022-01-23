@@ -13,24 +13,19 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Menu
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.NavViewActivity
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import kotlin.reflect.KProperty
 
@@ -104,15 +99,6 @@ val <T: View>BottomSheetBehavior<T>.isCollapsed get() = state == BottomSheetBeha
 val <T: View>BottomSheetBehavior<T>.isDragging get() = state == BottomSheetBehavior.STATE_DRAGGING
 val <T: View>BottomSheetBehavior<T>.isSettling get() = state == BottomSheetBehavior.STATE_SETTLING
 val <T: View>BottomSheetBehavior<T>.isHidden get() = state == BottomSheetBehavior.STATE_HIDDEN
-
-/** Perform the given block without the caller's LayoutTransition instance.
- * This is useful when changes need to be made instantaneously. */
-fun ViewGroup.withoutLayoutTransition(block: () -> Unit) {
-    val layoutTransitionBackup = layoutTransition
-    layoutTransition = null
-    block()
-    layoutTransition = layoutTransitionBackup
-}
 
 /** A LinearLayout that allows settings a max height with the XML attribute maxHeight. */
 class MaxHeightLinearLayout(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {

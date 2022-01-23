@@ -52,7 +52,7 @@ import javax.inject.Inject
 abstract class ItemListViewModel<T: ListItem>(
     context: Context,
     searchQueryState: SearchQueryState,
-    private val messenger: Messenger,
+    private val messageHandler: MessageHandler,
     protected val dao: ItemDao,
     private val itemGroupDao: ItemGroupDao,
 ): ViewModel() {
@@ -84,7 +84,7 @@ abstract class ItemListViewModel<T: ListItem>(
             items.isNotEmpty() -> UiState.Content(items)
             query != null ->      UiState.EmptySearchResults
             else ->               UiState.EmptyContents
-        }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), UiState.Loading)
+        }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), UiState.Loading)
     }
 
     fun onRenameItemRequest(id: Long, name: String) {
@@ -113,11 +113,11 @@ abstract class ItemListViewModel<T: ListItem>(
 
     fun onItemSwipe(id: Long) { viewModelScope.launch {
         deleteItem(id)
-        val message = Messenger.DeletedItemsMessage(1, ::undoDelete) {
+        val message = MessageHandler.DeletedItemsMessage(1, ::undoDelete) {
             if (it != DISMISS_EVENT_ACTION && it != DISMISS_EVENT_CONSECUTIVE)
                 emptyTrash()
         }
-        messenger.postItemsDeletedMessage(message)
+        messageHandler.postItemsDeletedMessage(message)
     }}
 
     protected abstract suspend fun deleteItem(id: Long)
@@ -140,10 +140,10 @@ abstract class ItemListViewModel<T: ListItem>(
 class ShoppingListViewModel @Inject constructor(
     @ApplicationContext context: Context,
     searchQueryState: SearchQueryState,
-    messenger: Messenger,
+    messageHandler: MessageHandler,
     dao: ItemDao,
     itemGroupDao: ItemGroupDao,
-) : ItemListViewModel<ShoppingListItem>(context, searchQueryState, messenger, dao, itemGroupDao) {
+) : ItemListViewModel<ShoppingListItem>(context, searchQueryState, messageHandler, dao, itemGroupDao) {
 
     private val sortByCheckedKey = booleanPreferencesKey(context.getString(R.string.pref_sort_by_checked_key))
     private val sortByChecked = context.dataStore.preferenceFlow(
@@ -151,7 +151,7 @@ class ShoppingListViewModel @Inject constructor(
 
     override val items = combine(sort, searchQuery, sortByChecked, dao::getShoppingList)
         .transformLatest { emitAll(it) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
     override fun onChangeItemAmountRequest(id: Long, amount: Int) {
         viewModelScope.launch { dao.updateShoppingListAmount(id, amount) }
@@ -163,7 +163,7 @@ class ShoppingListViewModel @Inject constructor(
 
     val checkoutButtonIsEnabled = dao.getCheckedShoppingListItemsSize()
         .map { it > 0 }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), false)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), false)
 
     fun onItemCheckboxClicked(id: Long) {
         viewModelScope.launch { dao.toggleIsChecked(id) }
@@ -218,14 +218,14 @@ class ShoppingListViewModel @Inject constructor(
 class InventoryViewModel @Inject constructor(
     @ApplicationContext context: Context,
     searchQueryState: SearchQueryState,
-    messenger: Messenger,
+    messageHandler: MessageHandler,
     dao: ItemDao,
     itemGroupDao: ItemGroupDao,
-) : ItemListViewModel<InventoryItem>(context, searchQueryState, messenger, dao, itemGroupDao) {
+) : ItemListViewModel<InventoryItem>(context, searchQueryState, messageHandler, dao, itemGroupDao) {
 
     override val items = sort.combine(searchQuery, dao::getInventoryContents)
         .transformLatest { emitAll(it) }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
 
     override fun onChangeItemAmountRequest(id: Long, amount: Int) {

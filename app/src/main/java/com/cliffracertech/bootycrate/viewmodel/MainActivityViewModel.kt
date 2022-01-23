@@ -117,7 +117,7 @@ class MainActivityViewModel @Inject constructor(
     private val itemDao: ItemDao,
     itemGroupDao: ItemGroupDao,
     private val navigationState: MainActivityNavigationState,
-    private val messenger: Messenger,
+    private val messageHandler: MessageHandler,
     private val searchQueryState: SearchQueryState
 ) : ViewModel() {
 
@@ -190,7 +190,7 @@ class MainActivityViewModel @Inject constructor(
         selectedItemCount > 0 -> TitleState.ActionMode(actionModeTitle(selectedItemCount))
         query != null ->         TitleState.SearchQuery(query)
         else ->                  TitleState.NormalTitle(selectedItemGroupName)
-    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), TitleState.NormalTitle(""))
+    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), TitleState.NormalTitle(""))
 
 
     val searchButtonState = combine(
@@ -201,7 +201,7 @@ class MainActivityViewModel @Inject constructor(
         fragment.isOther || selectedItemCount > 0 -> SearchButtonState.Invisible
         query != null ->                             SearchButtonState.MorphedToClose
         else ->                                      SearchButtonState.Visible
-    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), SearchButtonState.Visible)
+    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), SearchButtonState.Visible)
 
     fun onSearchButtonClick() {
         val newQuery = if (searchQuery.value == null) "" else null
@@ -221,7 +221,7 @@ class MainActivityViewModel @Inject constructor(
         fragment.isOther ->        ChangeSortButtonState.Invisible
         titleState.isActionMode -> ChangeSortButtonState.MorphedToDelete
         else ->                    ChangeSortButtonState.Visible(sort.ordinal)
-    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),
+    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000),
                ChangeSortButtonState.Visible(ListItem.Sort.Color.ordinal))
 
     fun onSortOptionSelected(menuItemId: Int): Boolean {
@@ -262,7 +262,7 @@ class MainActivityViewModel @Inject constructor(
                         else itemDao.emptyInventoryTrash()
                     }
             }
-            messenger.postItemsDeletedMessage(itemCount, onUndo, onDismiss)
+            messageHandler.postItemsDeletedMessage(itemCount, onUndo, onDismiss)
         }
     }
 
