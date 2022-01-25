@@ -18,30 +18,25 @@ class BottomAppBarViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val activeFragment = navigationState.activeFragment
-    private val navViewSelectedItemId = navigationState.navViewSelectedItemId
-    private var shoppingListSize = 0
-
-    private val shoppingListSizeChange = itemDao.getShoppingListItemCount()
-        .map { newShoppingListSize ->
-            val change = newShoppingListSize - shoppingListSize
-            shoppingListSize = newShoppingListSize
-            if (activeFragment.value.isShoppingList) 0
-            else change
-        }.drop(1)
+    private val selectedNavItemId = navigationState.navViewSelectedItemId
 
     data class UiState(
         val visible: Boolean = true,
         val checkoutButtonVisible: Boolean = true,
-        val selectedNavItemId: Int = 0,
-        val shoppingListSizeChange: Int = 0)
+        val selectedNavItemId: Int = 0)
 
-    val bottomAppBarState = combine(
-        activeFragment,
-        shoppingListSizeChange
-    ) { fragment, shoppingListSizeChange ->
-        UiState(visible = !fragment.isOther,
-                checkoutButtonVisible = fragment.isShoppingList,
-                selectedNavItemId = navViewSelectedItemId.value,
-                shoppingListSizeChange = shoppingListSizeChange)
+    val bottomAppBarState = activeFragment.map { activeFragment ->
+        UiState(visible = !activeFragment.isOther,
+                checkoutButtonVisible = activeFragment.isShoppingList,
+                selectedNavItemId = selectedNavItemId.value)
+
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), UiState())
+
+    private var oldShoppingListSize = 0
+    val shoppingListSizeChange = itemDao.getShoppingListItemCount().map { shoppingListSize ->
+        val change = shoppingListSize - oldShoppingListSize
+        oldShoppingListSize = shoppingListSize
+        if (activeFragment.value.isShoppingList) 0
+        else change
+    }.drop(1).shareIn(viewModelScope, SharingStarted.WhileSubscribed(3000), 0)
 }

@@ -35,7 +35,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : NavViewActivity() {
 
-    private val viewModel: ActionBarViewModel by viewModels()
+    private val actionBarViewModel: ActionBarViewModel by viewModels()
     private val bottomAppBarViewModel: BottomAppBarViewModel by viewModels()
     private val itemGroupSelectorViewModel: ItemGroupSelectorViewModel by viewModels()
     private var pendingCradleAnim: Animator? = null
@@ -56,13 +56,14 @@ class MainActivity : NavViewActivity() {
 
         messageHandler.messages.displayWithSnackBarAnchoredTo(ui.bottomAppBar)
         repeatWhenStarted {
-            launch { viewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
-            launch { viewModel.titleState.collect(ui.actionBar::setTitleState) }
-            launch { viewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
-            launch { viewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
-            launch { viewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
+            launch { actionBarViewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
+            launch { actionBarViewModel.titleState.collect(ui.actionBar::setTitleState) }
+            launch { actionBarViewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
+            launch { actionBarViewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
+            launch { actionBarViewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
 
             launch { bottomAppBarViewModel.bottomAppBarState.collect(::updateBottomAppBarState) }
+            launch { bottomAppBarViewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
             launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
         }
     }
@@ -82,7 +83,6 @@ class MainActivity : NavViewActivity() {
             doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
         }
         ui.bottomAppBar.navIndicator.moveToItem(uiState.selectedNavItemId, animate)
-        ui.bottomAppBar.updateShoppingListBadge(uiState.shoppingListSizeChange)
 
         if (uiState.visible) ui.bottomNavigationDrawer.show()
         else               ui.bottomNavigationDrawer.hide()
@@ -107,13 +107,13 @@ class MainActivity : NavViewActivity() {
 
     private fun initOnClickListeners() {
         ui.actionBar.onBackButtonClick = {
-            if (!viewModel.onBackPressed())
+            if (!actionBarViewModel.onBackPressed())
                 supportFragmentManager.popBackStack()
         }
-        ui.actionBar.onSearchButtonClick = viewModel::onSearchButtonClick
-        ui.actionBar.onSearchQueryChange = viewModel::onSearchQueryChangeRequest
-        ui.actionBar.onDeleteButtonClick = viewModel::onDeleteButtonClick
-        ui.actionBar.setOnSortOptionClick { viewModel.onSortOptionSelected(it.itemId) }
+        ui.actionBar.onSearchButtonClick = actionBarViewModel::onSearchButtonClick
+        ui.actionBar.onSearchQueryChange = actionBarViewModel::onSearchQueryChangeRequest
+        ui.actionBar.onDeleteButtonClick = actionBarViewModel::onDeleteButtonClick
+        ui.actionBar.setOnSortOptionClick { actionBarViewModel.onSortOptionSelected(it.itemId) }
         ui.actionBar.setOnOptionsItemClick(::fwdMenuItemClick)
 
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
