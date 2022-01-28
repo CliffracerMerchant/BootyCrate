@@ -68,6 +68,7 @@ open class IntegerEdit(context: Context, attrs: AttributeSet?) : LinearLayout(co
         initValue(a.getInt(R.styleable.IntegerEdit_initialValue, 0))
         stepSize = a.getInt(R.styleable.IntegerEdit_stepSize, 1)
         valueIsFocusable = a.getBoolean(R.styleable.IntegerEdit_valueIsFocusable, false)
+        a.recycle()
 
         a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.textSize))
         ui.valueEdit.setTextSize(TypedValue.COMPLEX_UNIT_PX, a.getDimension(0, 0f))

@@ -88,7 +88,8 @@ fun argbValueAnimator(
 }
 
 /** Return a delayless LayoutTransition with the given AnimatorConfig applied. */
-fun layoutTransition(config: AnimatorConfig?) = LayoutTransition().applyConfig(config).apply {
+fun layoutTransition(config: AnimatorConfig?) =
+    LayoutTransition().applyConfig(config).apply {
         setStartDelay(LayoutTransition.CHANGE_APPEARING, 0)
         setStartDelay(LayoutTransition.CHANGE_DISAPPEARING, 0)
         setStartDelay(LayoutTransition.APPEARING, 0)
@@ -101,7 +102,7 @@ fun LayoutTransition.doOnStart(onStart: () -> Unit) {
     addTransitionListener(object: LayoutTransition.TransitionListener {
         override fun startTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) =
             onStart()
-        override fun endTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) { }
+        override fun endTransition(a: LayoutTransition, b: ViewGroup, c: View, d: Int) = Unit
     })
 }
 

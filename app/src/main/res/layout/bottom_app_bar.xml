@@ -40,7 +40,7 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="-10dp" >
 
-        <com.cliffracertech.bootycrate.view.CheckoutButton
+        <com.cliffracertech.bootycrate.view.DoubleTapToConfirmButton
             android:id="@+id/checkoutButton"
             android:layout_width="120dp"
             android:layout_height="46dp"

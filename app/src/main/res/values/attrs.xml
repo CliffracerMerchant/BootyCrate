@@ -137,6 +137,11 @@
         <attr name="disabledAlpha" format="integer" />
     </declare-styleable>
 
+    <declare-styleable name="DoubleTapToConfirmButton">
+        <!-- The text to use as the confirmatory text (e.g. 'Confirm?'). -->
+        <attr name="confirmatoryText" format="string" />
+    </declare-styleable>
+
     <declare-styleable name="TintableCheckbox">
         <!-- Whether or not the TintableCheckbox is in its edit color state. -->
         <attr name="state_edit_color"       format="boolean" />
