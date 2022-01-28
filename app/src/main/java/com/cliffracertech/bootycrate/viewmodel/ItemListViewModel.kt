@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.viewmodel
 
 import android.content.Context
+import android.content.Intent
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
@@ -12,21 +13,24 @@ import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.enumPreferenceFlow
 import com.cliffracertech.bootycrate.utils.preferenceFlow
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
 
 /**
  * An abstract AndroidViewModel to provide data and callbacks for a fragment
  * that displays a list of ListItem subclasses.
  *
- * ItemListViewModel's StateFlow property uiState's represents the latest value
+ * ItemListViewModel's StateFlow property uiState represents the latest value
  * of ItemListViewModel.UiState, values of which represent different states of
  * a screen displaying a list of searchable items. If uiState's latest emitted
  * value is a UiState.Content instance, then the list of items to be displayed
@@ -57,6 +61,7 @@ abstract class ItemListViewModel<T: ListItem>(
     private val itemGroupDao: ItemGroupDao,
 ): ViewModel() {
 
+    abstract val collectionNameResId: StringResource.Id
     protected val searchQuery = searchQueryState.query.asStateFlow()
 
     protected val sort = context.dataStore.enumPreferenceFlow(
@@ -108,21 +113,48 @@ abstract class ItemListViewModel<T: ListItem>(
     fun onItemLongClick(id: Long) = toggleIsSelected(id)
 
     protected abstract fun toggleIsSelected(id: Long)
-    abstract fun onSelectAllRequest()
     abstract fun onClearSelectionRequest()
 
     fun onItemSwipe(id: Long) { viewModelScope.launch {
         deleteItem(id)
-        val message = MessageHandler.DeletedItemsMessage(1, ::undoDelete) {
+        messageHandler.postItemsDeletedMessage(1, ::undoDelete) {
             if (it != DISMISS_EVENT_ACTION && it != DISMISS_EVENT_CONSECUTIVE)
                 emptyTrash()
         }
-        messageHandler.postItemsDeletedMessage(message)
     }}
 
     protected abstract suspend fun deleteItem(id: Long)
     protected abstract fun emptyTrash()
     protected abstract fun undoDelete()
+
+    private val _chooserIntents = MutableSharedFlow<Intent>(replay = 0, extraBufferCapacity = 1,
+                                                            onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val chooserIntents = _chooserIntents.asSharedFlow()
+
+    open fun onOptionsItemClick(menuItemId: Int) = when (menuItemId) {
+        R.string.share_description -> {
+            val allItems = items.value
+            val selectionIsEmpty = selectedItemCount.value == 0
+            val items = if (selectionIsEmpty) allItems
+            else allItems.filter { it.isSelected }
+
+            if (items.isNullOrEmpty()) {
+                messageHandler.postMessage(StringResource(R.string.empty_list_message, collectionNameResId))
+            } else {
+                val message = StringJoiner("\n").apply {
+                    for (item in items)
+                        add(item.toUserFacingString())
+                }.toString()
+
+                val intent = Intent(Intent.ACTION_SEND)
+                intent.putExtra(Intent.EXTRA_TEXT, message)
+                intent.type = "text/plain"
+                _chooserIntents.tryEmit(intent)
+            }
+            true
+        }
+        else -> false
+    }
 }
 
 
@@ -145,6 +177,8 @@ class ShoppingListViewModel @Inject constructor(
     itemGroupDao: ItemGroupDao,
 ) : ItemListViewModel<ShoppingListItem>(context, searchQueryState, messageHandler, dao, itemGroupDao) {
 
+    override val collectionNameResId =
+        StringResource.Id(R.string.shopping_list_description)
     private val sortByCheckedKey = booleanPreferencesKey(context.getString(R.string.pref_sort_by_checked_key))
     private val sortByChecked = context.dataStore.preferenceFlow(
         key = sortByCheckedKey, defaultValue = false)
@@ -161,18 +195,8 @@ class ShoppingListViewModel @Inject constructor(
         viewModelScope.launch { dao.toggleExpandedInShoppingList(id) }
     }
 
-    val checkoutButtonIsEnabled = dao.getCheckedShoppingListItemsSize()
-        .map { it > 0 }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), false)
-
     fun onItemCheckboxClicked(id: Long) {
         viewModelScope.launch { dao.toggleIsChecked(id) }
-    }
-    fun onCheckAllRequest() {
-        viewModelScope.launch { dao.checkAllShoppingListItems() }
-    }
-    fun onUncheckAllRequest() {
-        viewModelScope.launch { dao.uncheckAllShoppingListItems() }
     }
     fun onCheckoutRequest() {
         viewModelScope.launch { dao.checkout() }
@@ -185,17 +209,8 @@ class ShoppingListViewModel @Inject constructor(
     override fun toggleIsSelected(id: Long) {
         viewModelScope.launch { dao.toggleSelectedInShoppingList(id) }
     }
-    override fun onSelectAllRequest() {
-        viewModelScope.launch { dao.selectAllShoppingListItems() }
-    }
     override fun onClearSelectionRequest() {
         viewModelScope.launch { dao.clearShoppingListSelection() }
-    }
-    fun onAddFromSelectedInventoryItemsRequest() {
-        viewModelScope.launch {
-            dao.addToShoppingListFromSelectedInventoryItems()
-            dao.clearInventorySelection()
-        }
     }
 
 
@@ -206,6 +221,26 @@ class ShoppingListViewModel @Inject constructor(
     }
     override fun undoDelete() {
         viewModelScope.launch { dao.undoDeleteShoppingListItems() }
+    }
+
+
+    override fun onOptionsItemClick(menuItemId: Int) = when (menuItemId) {
+        R.string.select_all_description -> {
+            viewModelScope.launch { dao.selectAllShoppingListItems() }
+            true
+        } R.string.add_to_inventory_description -> {
+            viewModelScope.launch {
+                dao.addToInventoryFromSelectedShoppingListItems()
+                dao.clearShoppingListSelection()
+            }
+            true
+         } R.string.check_all_description -> {
+            viewModelScope.launch { dao.checkAllShoppingListItems() }
+            true
+        } R.string.uncheck_all_description -> {
+            viewModelScope.launch { dao.uncheckAllShoppingListItems() }
+            true
+        } else -> super.onOptionsItemClick(menuItemId)
     }
 }
 
@@ -223,7 +258,10 @@ class InventoryViewModel @Inject constructor(
     itemGroupDao: ItemGroupDao,
 ) : ItemListViewModel<InventoryItem>(context, searchQueryState, messageHandler, dao, itemGroupDao) {
 
-    override val items = sort.combine(searchQuery, dao::getInventoryContents)
+    override val collectionNameResId =
+        StringResource.Id(R.string.inventory_description)
+
+    override val items = sort.combine(searchQuery, dao::getInventory)
         .transformLatest { emitAll(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
@@ -248,18 +286,10 @@ class InventoryViewModel @Inject constructor(
     override fun toggleIsSelected(id: Long) {
         viewModelScope.launch { dao.toggleSelectedInInventory(id) }
     }
-    override fun onSelectAllRequest() {
-        viewModelScope.launch { dao.selectAllInventoryItems() }
-    }
     override fun onClearSelectionRequest() {
         viewModelScope.launch { dao.clearInventorySelection() }
     }
-    fun onAddFromSelectedShoppingListItemsRequest() {
-        viewModelScope.launch {
-            dao.addToInventoryFromSelectedShoppingListItems()
-            dao.clearShoppingListSelection()
-        }
-    }
+
 
     override suspend fun deleteItem(id: Long) = dao.deleteInventoryItem(id)
 
@@ -268,5 +298,18 @@ class InventoryViewModel @Inject constructor(
     }
     override fun undoDelete() {
         viewModelScope.launch { dao.undoDeleteInventoryItems() }
+    }
+
+    override fun onOptionsItemClick(menuItemId: Int) = when (menuItemId) {
+        R.string.select_all_description -> {
+            viewModelScope.launch { dao.selectAllInventoryItems() }
+            true
+        } R.string.add_to_shopping_list_description-> {
+            viewModelScope.launch {
+                dao.addToShoppingListFromSelectedInventoryItems()
+                dao.clearInventorySelection()
+            }
+            true
+        } else -> super.onOptionsItemClick(menuItemId)
     }
 }

@@ -61,6 +61,7 @@ class MainActivity : NavViewActivity() {
             launch { actionBarViewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
             launch { actionBarViewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
             launch { actionBarViewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
+            launch { actionBarViewModel.optionsMenuContent.collect(ui.actionBar::setOptionsMenuContents)}
 
             launch { bottomAppBarViewModel.bottomAppBarState.collect(::updateBottomAppBarState) }
             launch { bottomAppBarViewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }

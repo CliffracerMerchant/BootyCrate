@@ -259,7 +259,7 @@ import kotlinx.coroutines.flow.Flow
     @Query("$selectInventoryItems ORDER BY inventoryAmount DESC")
     protected abstract fun getInventorySortedByAmountDesc(filter: String): Flow<List<InventoryItem>>
 
-    fun getInventoryContents(
+    fun getInventory(
         sort: ListItem.Sort,
         searchFilter: String? = null
     ): Flow<List<InventoryItem>> {

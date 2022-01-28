@@ -7,17 +7,30 @@ package com.cliffracertech.bootycrate.fragment
 import android.animation.LayoutTransition
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.Keep
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.database.InventoryItem
+import com.cliffracertech.bootycrate.database.ListItem
+import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.databinding.InventoryFragmentBinding
+import com.cliffracertech.bootycrate.databinding.ShoppingListFragmentBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
-import com.cliffracertech.bootycrate.utils.recollectWhenStarted
+import com.cliffracertech.bootycrate.recyclerview.InventoryView
+import com.cliffracertech.bootycrate.recyclerview.ShoppingListView
+import com.cliffracertech.bootycrate.utils.repeatWhenStarted
+import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
 import com.cliffracertech.bootycrate.viewmodel.ItemListViewModel
-import com.google.android.material.snackbar.Snackbar
+import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
 import com.kennyc.view.MultiStateView
-import java.util.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 /**
  * A fragment to display an ExpandableItemListView to the user.
@@ -33,7 +46,9 @@ import java.util.*
  *
  * The value of the open property collectionName should be overridden in
  * subclasses with a value that describes what the collection of items
- * should be called in user facing strings.
+ * should be called in user facing strings. This override must occur before
+ * super.onViewCreated is called in subclasses, or an UnitializedPropertyAccessException
+ * will be thrown.
  */
 abstract class ListViewFragment<T: ListItem> : Fragment() {
 
@@ -64,26 +79,33 @@ abstract class ListViewFragment<T: ListItem> : Fragment() {
             onItemSwipe = viewModel::onItemSwipe
         }
 
-        viewLifecycleOwner.recollectWhenStarted(viewModel.uiState) { uiState ->
-            val view = multiStateView ?: return@recollectWhenStarted
-            // The list of items is submitted even if it's empty to fix a bug
-            // where swiping the last item to delete it and then undoing the
-            // deletion results in the last item's view being stuck off the
-            // side of the screen. Submitting the empty list prevents this.
-            val items = if (uiState is ItemListViewModel.UiState.Content<*>)
-                            uiState.items as List<T>
-                        else emptyList
-            listView?.submitList(items)
-            view.viewState = when (uiState) {
-                is ItemListViewModel.UiState.Loading ->
-                    MultiStateView.ViewState.LOADING
-                is ItemListViewModel.UiState.EmptyContents ->
-                    MultiStateView.ViewState.EMPTY
-                is ItemListViewModel.UiState.EmptySearchResults ->
-                    MultiStateView.ViewState.ERROR
-                is ItemListViewModel.UiState.Content<*> ->
-                    MultiStateView.ViewState.CONTENT
-            }
+        viewLifecycleOwner.repeatWhenStarted {
+            launch { viewModel.chooserIntents.collect {
+                context?.startActivity(Intent.createChooser(it, null))
+            }}
+            launch { viewModel.uiState.collect(::setUiState) }
+        }
+    }
+
+    private fun setUiState(state: ItemListViewModel.UiState) {
+        val view = multiStateView ?: return
+        // The list of items is submitted even if it's empty to fix a bug
+        // where swiping the last item to delete it and then undoing the
+        // deletion results in the last item's view being stuck off the
+        // side of the screen. Submitting an empty list prevents this.
+        val items = if (state is ItemListViewModel.UiState.Content<*>)
+            state.items as List<T>
+        else emptyList
+        listView?.submitList(items)
+        view.viewState = when (state) {
+            is ItemListViewModel.UiState.Loading ->
+                MultiStateView.ViewState.LOADING
+            is ItemListViewModel.UiState.EmptyContents ->
+                MultiStateView.ViewState.EMPTY
+            is ItemListViewModel.UiState.EmptySearchResults ->
+                MultiStateView.ViewState.ERROR
+            is ItemListViewModel.UiState.Content<*> ->
+                MultiStateView.ViewState.CONTENT
         }
     }
 
@@ -97,40 +119,8 @@ abstract class ListViewFragment<T: ListItem> : Fragment() {
         bottomAppBar = null
     }
 
-    /** Open a ShareDialog.
-     * @return whether the dialog was successfully started. */
-    private fun shareList(): Boolean {
-        val context = this.context ?: return false
-        val selectionIsEmpty = viewModel.selectedItemCount.value == 0
-
-        val contentState = viewModel.uiState.value as? ItemListViewModel.UiState.Content<T>
-        val items = if (selectionIsEmpty) contentState?.items
-                    else contentState?.items?.filter { it.isSelected }
-
-        if (items.isNullOrEmpty()) {
-            val anchor = bottomAppBar ?: view ?: return false
-            val message = context.getString(R.string.empty_list_message, collectionName)
-            Snackbar.make(context, anchor, message, Snackbar.LENGTH_LONG)
-                .setAnchorView(anchor).show()
-            return false
-        }
-
-        val collectionName = collectionName.lowercase(Locale.getDefault())
-        val stringResId = if (selectionIsEmpty) R.string.share_whole_list_title
-                          else                  R.string.share_selected_items_title
-        val messageTitle = context.getString(stringResId, collectionName)
-
-        var message = ""
-        for (i in 0 until items.size - 1)
-            message += items[i].toUserFacingString() + "\n"
-        message += items.last().toUserFacingString()
-
-        val intent = Intent(Intent.ACTION_SEND)
-        intent.putExtra(Intent.EXTRA_TEXT, message)
-        intent.type = "text/plain"
-        context.startActivity(Intent.createChooser(intent, messageTitle))
-        return true
-    }
+    override fun onOptionsItemSelected(item: MenuItem) =
+        viewModel.onOptionsItemClick(item.itemId)
 
 //    @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
 //        bottomAppBar = if (isActive) activityUi.bottomAppBar
@@ -141,4 +131,59 @@ abstract class ListViewFragment<T: ListItem> : Fragment() {
 //                setPadding(bottom = bottomSheetPeekHeight)
 //        }
 //    }
+}
+
+/**
+ * A fragment to display and modify the user's shopping list.
+ *
+ * ShoppingListFragment is a ListViewFragment subclass to view and modify a
+ * list of ShoppingListItems using a ShoppingListView. ShoppingListFragment
+ * overrides ListViewFragment's abstract listView property with an instance of
+ * ShoppingListView.
+ */
+@Keep
+class ShoppingListFragment : ListViewFragment<ShoppingListItem>() {
+    override val viewModel: ShoppingListViewModel by activityViewModels()
+    override var listView: ShoppingListView? = null
+    override lateinit var collectionName: String
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ) = ShoppingListFragmentBinding.inflate(inflater, container, false).apply {
+        listView = shoppingListView
+        shoppingListView.onItemCheckBoxClick = viewModel::onItemCheckboxClicked
+        collectionName = inflater.context.getString(R.string.shopping_list_description)
+    }.root
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        listView = null
+    }
+}
+
+/** A ListViewFragment to display and modify the user's inventory using an InventoryView. */
+@Keep class InventoryFragment: ListViewFragment<InventoryItem>() {
+    override val viewModel: InventoryViewModel by activityViewModels()
+    override var listView: InventoryView? = null
+    override lateinit var collectionName: String
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ) = InventoryFragmentBinding.inflate(inflater, container, false).apply {
+        listView = inventoryView
+        inventoryView.onItemAutoAddToShoppingListCheckboxClick =
+            viewModel::onAutoAddToShoppingListCheckboxClick
+        inventoryView.onItemAutoAddToShoppingListAmountChangeRequest =
+            viewModel::onAutoAddToShoppingListAmountUpdateRequest
+        collectionName = inflater.context.getString(R.string.inventory_description)
+    }.root
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        listView = null
+    }
 }

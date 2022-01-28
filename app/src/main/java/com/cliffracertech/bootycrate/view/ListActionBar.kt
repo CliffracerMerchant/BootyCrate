@@ -8,6 +8,7 @@ import android.content.Context
 import android.graphics.drawable.StateListDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
@@ -193,5 +194,17 @@ class ListActionBar(context: Context, attrs: AttributeSet) :
         // leading to the button fading out, jumping back to 1.0 alpha and
         // fading out again... To workaround this we'll just leave the button
         // at 0 alpha.
+    }
+
+    /** Set the options menu contents using the provided list of StringResources.
+     * The id, title, and order of each MenuItem will be equal to its corresponding
+     * StringResource's stringResId property, its resolved string, and its position
+     * in the list, respectively.
+     */
+    fun setOptionsMenuContents(stringResources: List<Int>) {
+        optionsMenu.clear()
+        stringResources.forEachIndexed { index, resId ->
+            optionsMenu.add(Menu.NONE, resId, index, context.getString(resId))
+        }
     }
 }

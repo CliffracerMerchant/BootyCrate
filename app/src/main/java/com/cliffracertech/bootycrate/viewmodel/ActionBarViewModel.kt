@@ -169,8 +169,6 @@ class ActionBarViewModel @Inject constructor(
     }
 
 
-    private val nameForMultiSelection =
-        context.getString(R.string.multiple_selected_item_groups_description)
     private val selectedItemGroupName = itemGroupDao.getSelectedGroups().map {
         when (it.size) {
             0 ->    StringResource("")
@@ -270,4 +268,24 @@ class ActionBarViewModel @Inject constructor(
     val moreOptionsButtonVisible = navigationState.activeFragment
         .map { !it.isOther }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), true)
+
+
+    val optionsMenuContent = combine(
+        navigationState.activeFragment,
+        selectedShoppingListItemCount,
+        selectedInventoryItemCount
+    ) { fragment, selectedShoppingListItemCount, selectedInventoryItemCount ->
+        mutableListOf<Int>().apply {
+            if (selectedShoppingListItemCount > 0)
+                add(R.string.add_to_inventory_description)
+            if (selectedInventoryItemCount > 0)
+                add(R.string.add_to_shopping_list_description)
+            if (fragment.isShoppingList) {
+                add(R.string.check_all_description)
+                add(R.string.uncheck_all_description)
+            }
+            add(R.string.select_all_description)
+            add(R.string.share_description)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 }
