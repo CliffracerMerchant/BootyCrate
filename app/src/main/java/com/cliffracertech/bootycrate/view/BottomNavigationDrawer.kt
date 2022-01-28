@@ -70,6 +70,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
     init {
         var a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.behavior_peekHeight))
         val basePeekHeight = a.getDimensionPixelSize(0, 0)
+        a.recycle()
 
         a = context.obtainStyledAttributes(attrs, R.styleable.BottomNavigationDrawer)
         val maxPeekHeight = a.getDimensionPixelSize(R.styleable.BottomNavigationDrawer_maxPeekHeight,

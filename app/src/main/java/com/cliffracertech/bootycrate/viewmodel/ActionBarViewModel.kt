@@ -14,6 +14,7 @@ import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.database.ItemDao
 import com.cliffracertech.bootycrate.database.ItemGroupDao
 import com.cliffracertech.bootycrate.database.ListItem
+import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.mutableEnumPreferenceFlow
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
@@ -71,13 +72,18 @@ class MainActivityNavigationState @Inject constructor(
 
 
 /** A state holder representing a title for an action bar. */
-sealed class TitleState(val title: String) {
+sealed class TitleState {
     /** A TitleState that represents the title for an active action mode. */
-    class ActionMode(actionModeTitle: String) : TitleState(actionModeTitle)
+    class ActionMode(val titleRes: StringResource) : TitleState() {
+        constructor(titleResId: Int, amount: Int): this(StringResource(titleResId, amount))
+    }
     /** A TitleState that represents the title for an active search query. */
-    class SearchQuery(searchQuery: String) : TitleState(searchQuery)
+    class SearchQuery(val searchQuery: String) : TitleState()
+
     /** A TitleState that represents the title for an active fragment / activity. */
-    class NormalTitle(title: String) : TitleState(title)
+    class NormalTitle(val titleRes: StringResource) : TitleState() {
+        constructor(titleResId: Int): this(StringResource(titleResId))
+    }
 
     val isActionMode get() = this is ActionMode
     val isSearchQuery get() = this is SearchQuery
@@ -166,14 +172,12 @@ class ActionBarViewModel @Inject constructor(
     private val nameForMultiSelection =
         context.getString(R.string.multiple_selected_item_groups_description)
     private val selectedItemGroupName = itemGroupDao.getSelectedGroups().map {
-        if (it.size == 1) it.first().name
-        else nameForMultiSelection
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), "")
-
-    private val actionModeTitleBase = context.getString(R.string.action_mode_title)
-    private fun actionModeTitle(selectedItemCount: Int) =
-        String.format(actionModeTitleBase, selectedItemCount)
-    private val settingsTitle = context.getString(R.string.settings_description)
+        when (it.size) {
+            0 ->    StringResource("")
+            1 ->    StringResource(it.first().name)
+            else -> StringResource(R.string.multiple_selected_item_groups_description)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), StringResource(""))
 
     val titleState = combine(
         navigationState.activeFragment,
@@ -181,11 +185,12 @@ class ActionBarViewModel @Inject constructor(
         searchQuery,
         selectedItemGroupName
     ) { fragment, selectedItemCount, query, selectedItemGroupName -> when {
-        fragment.isOther ->      TitleState.NormalTitle(settingsTitle)
-        selectedItemCount > 0 -> TitleState.ActionMode(actionModeTitle(selectedItemCount))
+        fragment.isOther ->      TitleState.NormalTitle(R.string.settings_description)
+        selectedItemCount > 0 -> TitleState.ActionMode(R.string.action_mode_title, selectedItemCount)
         query != null ->         TitleState.SearchQuery(query)
         else ->                  TitleState.NormalTitle(selectedItemGroupName)
-    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), TitleState.NormalTitle(""))
+    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000),
+               TitleState.NormalTitle(StringResource("")))
 
 
     val searchButtonState = combine(

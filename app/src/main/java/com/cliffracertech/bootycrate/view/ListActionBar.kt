@@ -64,7 +64,7 @@ import com.cliffracertech.bootycrate.viewmodel.*
  * animations can be set through the property animatorConfig.
  */
 @Suppress("LeakingThis")
-open class ListActionBar(context: Context, attrs: AttributeSet) :
+class ListActionBar(context: Context, attrs: AttributeSet) :
     ConstraintLayout(context, attrs)
 {
     private val ui = ListActionBarBinding.inflate(LayoutInflater.from(context), this)
@@ -155,9 +155,12 @@ open class ListActionBar(context: Context, attrs: AttributeSet) :
     }
 
     fun setTitleState(state: TitleState) = when(state) {
-        is TitleState.ActionMode ->  ui.titleSwitcher.setActionModeTitle(state.title, switchTo = true)
-        is TitleState.SearchQuery -> ui.titleSwitcher.setSearchQuery(state.title, switchTo = true)
-        is TitleState.NormalTitle -> ui.titleSwitcher.setTitle(state.title, switchTo = true)
+        is TitleState.ActionMode ->
+            ui.titleSwitcher.setActionModeTitle(state.titleRes.resolve(context), switchTo = true)
+        is TitleState.SearchQuery ->
+            ui.titleSwitcher.setSearchQuery(state.searchQuery, switchTo = true)
+        is TitleState.NormalTitle ->
+            ui.titleSwitcher.setTitle(state.titleRes.resolve(context), switchTo = true)
     }
 
     fun setSearchButtonState(state: SearchButtonState) {

@@ -31,20 +31,19 @@ import javax.inject.Inject
  * from a list, along with an undo action.
  */
 @ActivityRetainedScoped
-class MessageHandler @Inject constructor(
-    @ApplicationContext private val context: Context
-) {
+class MessageHandler @Inject constructor() {
     /**
      * A message to be displayed to the user.
-     * @param text The text of the message.
-     * @param actionText The text of the message action, if any.
+     * @param stringResource A StringResource that, when resolved, will be the text of the message.
+     * @param actionStringResource A nullable StringResource that, when resolved,
+     *                             will be the text of the message action, if any.
      * @param onActionClick The callback that will be invoked if the message action is clicked.
      * @param onDismiss The callback that will be invoked when the message is dismissed. The
      * int parameter will be equal to a value of BaseTransientBottomBar.BaseCallback.DismissEvent.
      */
     data class Message(
-        val text: String,
-        val actionText: String? = null,
+        val stringResource: StringResource,
+        val actionStringResource: StringResource? = null,
         val onActionClick: (() -> Unit)? = null,
         val onDismiss: ((Int) -> Unit)? = null)
 
@@ -52,23 +51,15 @@ class MessageHandler @Inject constructor(
         extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val messages = _messages.asSharedFlow()
 
-    /** Post the message to the message queue. */
-    fun postMessage(message: Message) =  _messages.tryEmit(message)
-
     /** Post the message described by the parameters to the message queue. */
     fun postMessage(
-        text: String,
-        actionText: String? = null,
+        stringResource: StringResource,
+        actionStringResource: StringResource? = null,
         onActionClick: (() -> Unit)? = null,
         onDismiss: ((Int) -> Unit)? = null
-    ) = postMessage(Message(text, actionText, onActionClick, onDismiss))
+    ) = _messages.tryEmit(Message(stringResource, actionStringResource, onActionClick, onDismiss))
 
     private var totalDeletedItemCount: Int = 0
-
-    data class DeletedItemsMessage(
-        val count: Int,
-        val onUndo: () -> Unit,
-        val onDismiss: ((Int) -> Unit)? = null)
 
     /**
      * Post a message for the common use case of deleting items in a list while
@@ -89,19 +80,16 @@ class MessageHandler @Inject constructor(
         onDismiss: ((Int) -> Unit)? = null
     ) {
         totalDeletedItemCount += count
-        val text = context.getString(R.string.delete_snackbar_text, totalDeletedItemCount)
-        val actionText = context.getString(R.string.undo_description)
+        val stringResource = StringResource(R.string.delete_snackbar_text, totalDeletedItemCount)
+        val actionText = StringResource(R.string.undo_description)
         val onDismissPrivate = { dismissCode: Int ->
             if (dismissCode != DISMISS_EVENT_CONSECUTIVE)
                 totalDeletedItemCount = 0
             onDismiss?.invoke(dismissCode)
             Unit
         }
-        postMessage(text, actionText, onUndo, onDismissPrivate)
+        postMessage(stringResource, actionText, onUndo, onDismissPrivate)
     }
-
-    fun postItemsDeletedMessage(message: DeletedItemsMessage) =
-        postItemsDeletedMessage(message.count, message.onUndo, message.onDismiss)
 }
 
 /** Display the Flow<MessageHandler.Message>'s emitted values using SnackBars
@@ -109,9 +97,11 @@ class MessageHandler @Inject constructor(
 fun Flow<MessageHandler.Message>.displayWithSnackBarAnchoredTo(anchor: View) {
     val lifecycleOwner = anchor.findViewTreeLifecycleOwner()
     lifecycleOwner?.recollectWhenStarted(this) { message ->
-        val snackBar = Snackbar.make(anchor, message.text, Snackbar.LENGTH_LONG)
+        val text = message.stringResource.resolve(anchor.context)
+        val actionText = message.actionStringResource?.resolve(anchor.context)
+        val snackBar = Snackbar.make(anchor, text, Snackbar.LENGTH_LONG)
             .setAnchorView(anchor)
-            .setAction(message.actionText) { message.onActionClick?.invoke() }
+            .setAction(actionText) { message.onActionClick?.invoke() }
             .setActionTextColor(anchor.context.theme.resolveIntAttribute(R.attr.colorAccent))
             .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
