@@ -120,6 +120,7 @@ class MainActivity : NavViewActivity() {
 
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
+        ui.bottomAppBar.ui.checkoutButton.onConfirm = bottomAppBarViewModel::onCheckoutButtonClick
         ui.addItemGroupButton.setOnClickListener {
             itemGroupNameDialog(this, null, itemGroupSelectorViewModel::onConfirmAddNewItemGroupDialog)
         }

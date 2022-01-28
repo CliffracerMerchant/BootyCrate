@@ -9,12 +9,13 @@ import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.database.ItemDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class BottomAppBarViewModel @Inject constructor(
     navigationState: MainActivityNavigationState,
-    itemDao: ItemDao
+    private val itemDao: ItemDao
 ) : ViewModel() {
 
     private val activeFragment = navigationState.activeFragment
@@ -44,4 +45,9 @@ class BottomAppBarViewModel @Inject constructor(
         if (activeFragment.value.isShoppingList) 0
         else change
     }.drop(1).shareIn(viewModelScope, SharingStarted.WhileSubscribed(3000), 0)
+
+    fun onCheckoutButtonClick() {
+        if (activeFragment.value.isShoppingList)
+            viewModelScope.launch { itemDao.checkout() }
+    }
 }
