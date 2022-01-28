@@ -82,6 +82,7 @@ class MainActivity : NavViewActivity() {
             ui.bottomNavigationDrawer.isDraggable = false
             doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
         }
+        ui.bottomAppBar.ui.checkoutButton.isEnabled = uiState.checkoutButtonIsEnabled
         ui.bottomAppBar.navIndicator.moveToItem(uiState.selectedNavItemId, animate)
 
         if (uiState.visible) ui.bottomNavigationDrawer.show()
