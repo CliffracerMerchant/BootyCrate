@@ -83,7 +83,7 @@ sealed class TitleState {
     /** A TitleState that represents the title for an active search query. */
     class SearchQuery(val searchQuery: String) : TitleState()
 
-    /** A TitleState that represents the title for an active fragment / activity. */
+    /** A TitleState that represents the title for an active fragment/activity. */
     class NormalTitle(val titleRes: StringResource) : TitleState() {
         constructor(titleResId: Int): this(StringResource(titleResId))
     }
@@ -225,7 +225,7 @@ class ActionBarViewModel @Inject constructor(
     }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000),
                ChangeSortButtonState.Visible(ListItem.Sort.Color.ordinal))
 
-    fun onSortOptionSelected(menuItemId: Int): Boolean {
+    fun onSortOptionClick(menuItemId: Int): Boolean {
         sort.value = when (menuItemId) {
             R.id.color_option ->             ListItem.Sort.Color
             R.id.name_ascending_option ->    ListItem.Sort.NameAsc
@@ -290,5 +290,6 @@ class ActionBarViewModel @Inject constructor(
             add(R.string.select_all_description)
             add(R.string.share_description)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000),
+              listOf(R.string.select_all_description, R.string.share_description))
 }

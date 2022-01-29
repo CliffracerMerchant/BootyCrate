@@ -170,9 +170,9 @@ class ItemGroupSelector(context: Context, attrs: AttributeSet?) :
 {
     override val listAdapter = Adapter()
 
-    var onItemClick: ((Long) -> Unit)? = null
-    var onItemRenameRequest: ((Long, String) -> Unit)? = null
-    var onItemDeletionRequest: ((Long) -> Unit)? = null
+    var onItemGroupClick: ((Long) -> Unit)? = null
+    var onItemGroupRenameRequest: ((Long, String) -> Unit)? = null
+    var onItemGroupDeletionRequest: ((Long) -> Unit)? = null
 
     init { adapter = listAdapter }
 
@@ -182,18 +182,18 @@ class ItemGroupSelector(context: Context, attrs: AttributeSet?) :
     protected inner class Adapter: ItemGroupListAdapter() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
             super.onCreateViewHolder(parent, viewType).apply {
-                view.setOnClickListener { onItemClick?.invoke(item.id) }
+                view.setOnClickListener { onItemGroupClick?.invoke(item.id) }
                 view.ui.optionsButton.setOnClickListener {
                     val menu = PopupMenu(context, view.ui.optionsButton)
                     menu.inflate(R.menu.item_group_options)
                     menu.setOnMenuItemClickListener {
                         if (it.itemId == R.id.renameItemGroupButton)
                             itemGroupNameDialog(context, item.name) { newName ->
-                                onItemRenameRequest?.invoke(item.id, newName)
+                                onItemGroupRenameRequest?.invoke(item.id, newName)
                             }
                         else /*R.id.deleteItemGroupButton*/
                             deleteItemGroupDialog(context) {
-                                onItemDeletionRequest?.invoke(item.id)
+                                onItemGroupDeletionRequest?.invoke(item.id)
                             }
                         true
                     }

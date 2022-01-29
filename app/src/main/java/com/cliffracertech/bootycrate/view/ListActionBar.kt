@@ -9,7 +9,6 @@ import android.graphics.drawable.StateListDrawable
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.Menu
-import android.view.MenuItem
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -29,42 +28,50 @@ import com.cliffracertech.bootycrate.viewmodel.*
  * setSupportActionBar API in favor of its own) action bar with an interface
  * tailored towards activities or fragments that primarily show a list of items.
  * Through its binding property ui, the UI elements available are:
+ *
  *     - backButton, similar to the home as up indicator. The backButton's
- *       visibility is set through the method setBackButtonIsVisible.
+ *       visibility is set through the method setBackButtonIsVisible. Clicks on
+ *       the back button can be listened to by setting the property onBackButtonClick.
+ *
  *     - titleSwitcher, an ActionBarTitle that is used as an activity or
  *       fragment title, an action mode title, or a search query entry. The
  *       value of the theme attribute actionBarTitleStyle is used as the style
  *       for the title switcher. The state of the titleSwitcher is set with the
- *       method setTitleState with an instance of TitleState.
+ *       method setTitleState with an instance of TitleState. When the title is
+ *       in its search query mode, changes in the search query entry can be
+ *       listened to through by setting the property onSearchQueryChange.
+ *
  *     - searchButton, a button whose icon can morph between a search icon and
  *       a close icon. The state of the search button is set with the method
- *       setSearchButtonState with an instance of SearchButtonState.
+ *       setSearchButtonState with an instance of SearchButtonState. Clicks on
+ *       the search button can be listened to through the property onSearchButtonClick.
+ *
  *     - changeSortButton, a button that opens the changeSortMenu, but can also
- *       morph to a delete icon and call the property onDeleteButtonClickedListener
- *       instead. The state of the changeSortButton is set with the method
- *       setChangeSortButtonState with an instance of ChangeSortButtonState.
+ *       morph to a delete icon instead. The state of the changeSortButton is
+ *       set with the method setChangeSortButtonState with an instance of
+ *       ChangeSortButtonState. The contents of the changeSortMenu are set in
+ *       XML using the attribute R.attr.changeSortMenuResId. Changing the
+ *       contents of the changeSortMenu at runtime is not currently supported.
+ *       Change sort menu item clicks can be listened to by calling the function
+ *       setOnSortOptionClick with an appropriate PopupMenu.OnMenuItemClickListener,
+ *       while clicks on the delete button can be listened to by setting the
+ *       property onDeleteButtonClick.
+ *
  *     - menuButton, which opens the optionsMenu member. The visibility of the
- *       menuButton is set with the method set setMenuButtonVisible.
+ *       menu button is set at runtime using the function setMenuButtonVisible.
+ *       The contents of the optionsMenu is set using the XML attribute
+ *       R.attr.optionsMenuResId or at runtime using the function
+ *       setOptionsMenuContents with a list of string resource ids to use as
+ *       the titles for each menu item. In this case the item ids for the menu
+ *       items will match the ids for the string resources used for their
+ *       titles. Menu item clicks can be listened to through by calling the
+ *       function setOnOptionsItemClick with an appropriate
+ *       PopupMenu.OnMenuItemClickListener.
  *
- * Clicks on the backButton, searchButton, and the delete button (i.e. the
- * changeSort button when its state is set to ChangeSortButtonState.MorphedToDelete)
- * can be listened to through the callbacks onBackButtonClick, onSearchButtonClick,
- * and onDeleteButtonClick, respectively. Changes in the search query entry can
- * be listened to through by setting the property onSearchQueryChange.
- *
- * The contents of the changeSortMenu and the optionsMenu can be set in
- * XML with the attributes R.attr.changeSortMenuResId and R.attr.optionsMenuResId.
- * The callbacks for the menu items being clicked can be set through the
- * functions setOnSortOptionClickedListener and setOnOptionsItemClickedListener.
- * If the default Android action bar menu item callback functionality (every
- * click being routed through onOptionsItemSelected) is desired, the functions
- * can be passed a lambda that manually calls onOptionsItemSelected for the
- * activity or fragment being used.
- *
- * The duration and interpolators of the buttons' appearance/disappearance
- * animations can be set through the property animatorConfig.
+ * The duration and interpolators used for the internal animations that are
+ * played when the visibility of UI elements is changed can be set through the
+ * property animatorConfig.
  */
-@Suppress("LeakingThis")
 class ListActionBar(context: Context, attrs: AttributeSet) :
     ConstraintLayout(context, attrs)
 {
@@ -79,7 +86,7 @@ class ListActionBar(context: Context, attrs: AttributeSet) :
     private val changeSortPopupMenu = PopupMenu(context, ui.changeSortButton)
     private val optionsPopupMenu = PopupMenu(context, ui.menuButton)
     private val changeSortMenu get() = changeSortPopupMenu.menu
-    val optionsMenu get() = optionsPopupMenu.menu
+    private val optionsMenu get() = optionsPopupMenu.menu
 
     /** Called when the back button is clicked. */
     var onBackButtonClick: (() -> Unit)? = null
@@ -91,10 +98,10 @@ class ListActionBar(context: Context, attrs: AttributeSet) :
     /** Called when the delete button is clicked. */
     var onDeleteButtonClick: (() -> Unit)? = null
     /** Called when a sort option is clicked. */
-    fun setOnSortOptionClick(listener: (MenuItem) -> Boolean) =
+    fun setOnSortOptionClick(listener: PopupMenu.OnMenuItemClickListener) =
         changeSortPopupMenu.setOnMenuItemClickListener(listener)
     /** Called when an options menu item is clicked. */
-    fun setOnOptionsItemClick(listener: (MenuItem) -> Boolean) =
+    fun setOnOptionsItemClick(listener: PopupMenu.OnMenuItemClickListener) =
         optionsPopupMenu.setOnMenuItemClickListener(listener)
 
     init {

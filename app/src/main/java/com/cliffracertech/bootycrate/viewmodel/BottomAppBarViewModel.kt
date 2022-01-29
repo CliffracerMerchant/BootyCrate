@@ -35,7 +35,6 @@ class BottomAppBarViewModel @Inject constructor(
                 checkoutButtonVisible = fragment.isShoppingList,
                 checkoutButtonIsEnabled = checkedItemsSize > 0,
                 selectedNavItemId = selectedNavItemId.value)
-
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), UiState())
 
     private var oldShoppingListSize = 0
