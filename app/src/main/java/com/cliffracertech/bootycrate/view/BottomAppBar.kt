@@ -24,9 +24,9 @@ import com.cliffracertech.bootycrate.databinding.BottomAppBarBinding
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
 import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.cliffracertech.bootycrate.utils.withoutLayoutTransition
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.math.MathUtils.lerp
-import com.google.android.material.shape.*
 import kotlin.math.*
 
 /**
@@ -465,9 +465,28 @@ class BootyCrateBottomAppBar(context: Context, attrs: AttributeSet) :
     var animatorConfig: AnimatorConfig? = null
         set(value) {
             field = value
-            ui.cradleLayout.layoutTransition = layoutTransition(value)
+            ui.cradleLayout.layoutTransition.applyConfig(value)
             ui.checkoutButton.animatorConfig = value
-            navIndicator.animatorConfig = value
+
+            // The nav indicator's animation duration is lengthened a bit to make it more visible.
+            if (value == null)
+                navIndicator.animatorConfig = null
+            else navIndicator.animatorConfig = value.copy(
+                duration = value.duration * 4 / 3)
+        }
+
+    init {
+        cradle.width = cradleWidth(true)
+        ui.cradleLayout.layoutTransition = layoutTransition(null)
+    }
+
+    private fun cradleWidth(showingCheckoutButton: Boolean) =
+        if (!showingCheckoutButton)
+            ui.addButton.layoutParams.width.toFloat()
+        else {
+            val wrapContent = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+            ui.cradleLayout.measure(wrapContent, wrapContent)
+            ui.cradleLayout.measuredWidth.toFloat()
         }
 
     private val checkoutButtonClipBounds = Rect()
@@ -478,22 +497,18 @@ class BootyCrateBottomAppBar(context: Context, attrs: AttributeSet) :
         showing: Boolean,
         animate: Boolean = true
     ): Animator? {
-        if (ui.checkoutButton.isVisible == showing)
-            return null
-
-        ui.checkoutButton.isVisible = showing
-        val cradleNewWidth =
-            if (!showing)
-                ui.addButton.layoutParams.width.toFloat()
-            else {
-                val wrapContent = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-                ui.cradleLayout.measure(wrapContent, wrapContent)
-                ui.cradleLayout.measuredWidth.toFloat()
+        if (ui.checkoutButton.isVisible == showing) {
+            if (!animate) {
+                ui.cradleLayout.withoutLayoutTransition {
+                    ui.checkoutButton.isVisible = showing
+                }
+                cradle.width = cradleWidth(showing)
             }
-        if (!animate) {
-            cradle.width = cradleNewWidth
             return null
         }
+
+        ui.checkoutButton.isVisible = showing
+        val cradleNewWidth = cradleWidth(showing)
 
         // Ideally we would only animate the cradle's width, and let the cradleLayout's
         // layoutTransition handle the rest. Unfortunately it will only animate its own

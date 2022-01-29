@@ -80,6 +80,7 @@ open class DisableableGradientButton(context: Context, attrs: AttributeSet) :
     @CallSuper override fun setEnabled(enabled: Boolean) {
         if (isEnabled == enabled) return
         super.setEnabled(enabled)
+        if (!isLaidOut) return
         val anim = intValueAnimator(background::setAlpha,
                                     if (enabled) disabledAlpha else 255,
                                     if (enabled) 255 else disabledAlpha,

@@ -66,8 +66,11 @@ class MainActivityNavigationState @Inject constructor(
         navItemId == R.id.shoppingListButton -> Fragment.ShoppingList
         navItemId == R.id.inventoryButton ->    Fragment.Inventory
         else ->                                 Fragment.Other
-    }}.stateIn(BootyCrateApplication.coroutineScope,
-               SharingStarted.Eagerly, Fragment.ShoppingList)
+    // The drop(1) is to avoid the navViewSelectedItemId's initial state of -1,
+    // which leads to an activeFragment value of Fragment.Other instead of the
+    // intended initial value of Fragment.ShoppingList
+    }}.drop(1).stateIn(BootyCrateApplication.coroutineScope,
+                       SharingStarted.Eagerly, Fragment.ShoppingList)
 }
 
 
