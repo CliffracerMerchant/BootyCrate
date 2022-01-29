@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.dlog
 import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.viewmodel.NavViewActivityViewModel
 import com.google.android.material.navigation.NavigationBarView
@@ -97,7 +96,10 @@ abstract class NavViewActivity : AppCompatActivity() {
                     fragment.view?.isVisible = false
         }
         navigationView.setOnItemSelectedListener{
-            viewModel.onPrimaryNavItemClick(it.itemId)
+            if (primaryTransitionInProgress) {
+                queuedNavItemPress = it.itemId
+                navItemLastPressTimestamp = System.currentTimeMillis()
+            } else viewModel.onPrimaryNavItemClick(it.itemId)
             false
         }
         repeatWhenStarted {
@@ -117,12 +119,6 @@ abstract class NavViewActivity : AppCompatActivity() {
     private fun selectPrimaryFragmentAt(navItemId: Int) {
         if (navItemId == navigationView.selectedItemId)
             return
-        if (primaryTransitionInProgress) {
-            queuedNavItemPress = navItemId
-            navItemLastPressTimestamp = System.currentTimeMillis()
-            return
-        }
-
         val newFragment = navBarMenuItemFragmentMap[navItemId] ?: return
         val newMenuItem = navigationView.menu.findItem(navItemId)
         val oldMenuItem = navigationView.menu.findItem(navigationView.selectedItemId)

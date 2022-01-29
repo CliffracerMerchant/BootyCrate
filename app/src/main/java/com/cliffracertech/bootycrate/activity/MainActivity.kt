@@ -87,7 +87,7 @@ class MainActivity : NavViewActivity() {
         ui.bottomAppBar.navIndicator.moveToItem(uiState.selectedNavItemId, animate)
 
         if (uiState.visible) ui.bottomNavigationDrawer.show()
-        else               ui.bottomNavigationDrawer.hide()
+        else                 ui.bottomNavigationDrawer.hide()
     }
 
     private fun initTheme() {
@@ -115,7 +115,7 @@ class MainActivity : NavViewActivity() {
         ui.actionBar.onSearchButtonClick = actionBarViewModel::onSearchButtonClick
         ui.actionBar.onSearchQueryChange = actionBarViewModel::onSearchQueryChangeRequest
         ui.actionBar.onDeleteButtonClick = actionBarViewModel::onDeleteButtonClick
-        ui.actionBar.setOnSortOptionClick { actionBarViewModel.onSortOptionSelected(it.itemId) }
+        ui.actionBar.setOnSortOptionClick { actionBarViewModel.onSortOptionClick(it.itemId) }
         ui.actionBar.setOnOptionsItemClick(::fwdMenuItemClick)
 
         ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
@@ -132,11 +132,11 @@ class MainActivity : NavViewActivity() {
                 onSelectAllClick = itemGroupSelectorViewModel::onSelectAllGroupsClick
             ).show()
         }
-        ui.itemGroupSelector.onItemClick =
+        ui.itemGroupSelector.onItemGroupClick =
             itemGroupSelectorViewModel::onItemGroupClick
-        ui.itemGroupSelector.onItemRenameRequest =
+        ui.itemGroupSelector.onItemGroupRenameRequest =
             itemGroupSelectorViewModel::onConfirmItemGroupRenameDialog
-        ui.itemGroupSelector.onItemDeletionRequest =
+        ui.itemGroupSelector.onItemGroupDeletionRequest =
             itemGroupSelectorViewModel::onConfirmDeleteItemGroupDialog
     }
 
