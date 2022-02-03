@@ -95,13 +95,13 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
         settingsButton.isVisible = slideOffset != 0f
         itemGroupSelectorOptionsButton.isVisible = slideOffset != 0f
         itemGroupSelector.isInvisible = slideOffset == 0f
-        bottomAppBar.ui.bottomNavigationView.isVisible = slideOffset != 1f
+        bottomAppBar.ui.navigationView.isVisible = slideOffset != 1f
 
         appTitle.alpha = slide
         settingsButton.alpha = slide
         itemGroupSelectorOptionsButton.alpha = slide
         itemGroupSelector.alpha = slide
-        bottomAppBar.ui.bottomNavigationView.alpha = 1f - slide
+        bottomAppBar.ui.navigationView.alpha = 1f - slide
 
         bottomAppBar.apply {
             cradle.layout?.apply {

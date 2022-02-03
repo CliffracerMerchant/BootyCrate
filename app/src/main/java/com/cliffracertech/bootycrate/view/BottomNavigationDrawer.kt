@@ -177,8 +177,11 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
     }
 
     val isExpanded get() = behavior.state == BottomSheetBehavior.STATE_EXPANDED
-    val isCollapsed get() = behavior.state == BottomSheetBehavior.STATE_COLLAPSED
+    var isCollapsed get() = behavior.state == BottomSheetBehavior.STATE_COLLAPSED
+                    set(value) { if (value) collapse() else expand() }
     val isDragging get() = behavior.state == BottomSheetBehavior.STATE_DRAGGING
     val isSettling get() = behavior.state == BottomSheetBehavior.STATE_SETTLING
-    val isHidden get() = behavior.state == BottomSheetBehavior.STATE_HIDDEN
+    var isHidden get() = behavior.state == BottomSheetBehavior.STATE_HIDDEN
+                 set(value) { if (value) hide() else show() }
+
 }

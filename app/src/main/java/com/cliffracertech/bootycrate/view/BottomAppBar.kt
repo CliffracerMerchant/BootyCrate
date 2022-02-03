@@ -10,6 +10,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
@@ -447,6 +448,43 @@ open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(con
 }
 
 
+/** A Material BottomNavigationView that adds the ability to have additional
+ * OnItemSelectedListeners that return Unit instead of a boolean result,
+ * which are added through the method addOnItemSelectedListener and removed
+ * with the methods removeOnItemSelectedListener or clearOnItemSelectedListeners.
+ * These additional OnItemSelectedListeners are not called if the primary
+ * OnItemSelectedListener, which is still set using setOnItemSelectedListener,
+ * return false, and do not affect the return value of the primary OnItemSelectedListener.*/
+class BottomNavigationView(context: Context, attrs: AttributeSet) :
+    BottomNavigationView(context, attrs)
+{
+    private var primaryOnItemSelectedListener: OnItemSelectedListener? = null
+    private val itemSelectedListeners = mutableListOf<(MenuItem) -> Unit>()
+
+    init {
+        super.setOnItemSelectedListener { menuItem ->
+            val result = primaryOnItemSelectedListener
+                ?.onNavigationItemSelected(menuItem) ?: true
+            if (result)
+                itemSelectedListeners.forEach { it(menuItem) }
+            result
+        }
+    }
+
+    fun addOnItemSelectedListener(listener: ((MenuItem) -> Unit)) =
+        itemSelectedListeners.add(listener)
+
+    fun removeOnItemSelectedListener(listener: (MenuItem) -> Unit) =
+        itemSelectedListeners.remove(listener)
+
+    fun clearOnItemSelectedListeners() = itemSelectedListeners.clear()
+
+    override fun setOnItemSelectedListener(listener: OnItemSelectedListener?) {
+        primaryOnItemSelectedListener = listener
+    }
+}
+
+
 /**
  * A BottomAppBar with a custom layout containing a BottomNavigationView with
  * buttons for a ShoppingListFragment and an InventoryFragment, and a cradle
@@ -478,6 +516,9 @@ class BootyCrateBottomAppBar(context: Context, attrs: AttributeSet) :
     init {
         cradle.width = cradleWidth(true)
         ui.cradleLayout.layoutTransition = layoutTransition(null)
+        ui.navigationView.addOnItemSelectedListener {
+            navIndicator.moveToItem(menuItemId = it.itemId, animate = isLaidOut)
+        }
     }
 
     private fun cradleWidth(showingCheckoutButton: Boolean) =
@@ -497,13 +538,13 @@ class BootyCrateBottomAppBar(context: Context, attrs: AttributeSet) :
         showing: Boolean,
         animate: Boolean = true
     ): Animator? {
-        if (ui.checkoutButton.isVisible == showing) {
-            if (!animate) {
-                ui.cradleLayout.withoutLayoutTransition {
-                    ui.checkoutButton.isVisible = showing
-                }
-                cradle.width = cradleWidth(showing)
+        if (ui.checkoutButton.isVisible == showing)
+            return null
+        if (!animate) {
+            ui.cradleLayout.withoutLayoutTransition {
+                ui.checkoutButton.isVisible = showing
             }
+            cradle.width = cradleWidth(showing)
             return null
         }
 

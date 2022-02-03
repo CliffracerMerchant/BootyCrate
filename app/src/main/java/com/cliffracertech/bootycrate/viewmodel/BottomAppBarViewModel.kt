@@ -27,14 +27,12 @@ class BottomAppBarViewModel @Inject constructor(
     data class UiState(
         val visible: Boolean = true,
         val checkoutButtonVisible: Boolean = true,
-        val checkoutButtonIsEnabled: Boolean = false,
-        val selectedNavItemId: Int = 0)
+        val checkoutButtonIsEnabled: Boolean = false)
 
-    val bottomAppBarState = activeFragment.combine(checkedItemsSize) { fragment, checkedItemsSize ->
+    val uiState = activeFragment.combine(checkedItemsSize) { fragment, checkedItemsSize ->
         UiState(visible = !fragment.isOther,
                 checkoutButtonVisible = fragment.isShoppingList,
-                checkoutButtonIsEnabled = checkedItemsSize > 0,
-                selectedNavItemId = selectedNavItemId.value)
+                checkoutButtonIsEnabled = checkedItemsSize > 0)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), UiState())
 
     private var oldShoppingListSize = 0

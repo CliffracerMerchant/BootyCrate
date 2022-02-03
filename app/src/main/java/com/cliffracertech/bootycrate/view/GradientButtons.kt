@@ -75,16 +75,17 @@ open class DisableableGradientButton(context: Context, attrs: AttributeSet) :
         val a = context.obtainStyledAttributes(attrs, R.styleable.DisableableGradientButton)
         disabledAlpha = a.getInt(R.styleable.DisableableGradientButton_disabledAlpha, 0)
         a.recycle()
+        if (!isEnabled)
+            background.alpha = disabledAlpha
     }
 
     @CallSuper override fun setEnabled(enabled: Boolean) {
         if (isEnabled == enabled) return
         super.setEnabled(enabled)
-        if (!isLaidOut) return
-        val anim = intValueAnimator(background::setAlpha,
-                                    if (enabled) disabledAlpha else 255,
-                                    if (enabled) 255 else disabledAlpha,
-                                    animatorConfig)
+        val anim = intValueAnimator(setter = background::setAlpha,
+                                    from = if (enabled) disabledAlpha else 255,
+                                    to = if (enabled) 255 else disabledAlpha,
+                                    config = animatorConfig)
         anim.addUpdateListener{ background.invalidateSelf() }
         anim.start()
     }

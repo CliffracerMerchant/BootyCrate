@@ -48,7 +48,7 @@ class MainActivity : NavViewActivity() {
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
         fragmentContainerId = ui.fragmentContainer.id
-        navigationView = ui.bottomAppBar.ui.bottomNavigationView
+        navigationView = ui.bottomAppBar.ui.navigationView
         super.onCreate(savedInstanceState)
         initOnClickListeners()
         initAnimatorConfigs()
@@ -63,7 +63,7 @@ class MainActivity : NavViewActivity() {
             launch { actionBarViewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
             launch { actionBarViewModel.optionsMenuContent.collect(ui.actionBar::setOptionsMenuContents)}
 
-            launch { bottomAppBarViewModel.bottomAppBarState.collect(::updateBottomAppBarState) }
+            launch { bottomAppBarViewModel.uiState.collect(::updateBottomAppBarState) }
             launch { bottomAppBarViewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
             launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
         }
@@ -72,11 +72,11 @@ class MainActivity : NavViewActivity() {
     override fun onBackPressed() { ui.actionBar.onBackButtonClick?.invoke() }
 
     private fun updateBottomAppBarState(uiState: BottomAppBarViewModel.UiState) {
+        val animate = ui.bottomNavigationDrawer.isLaidOut &&
+                      !ui.bottomNavigationDrawer.isHidden
         // The cradle layout animation is stored here and started in the cradle
         // layout's layoutTransition's transition listener's transitionStart
         // override so that the animation is synced with the layout transition.
-        val animate = ui.bottomNavigationDrawer.isCollapsed &&
-                      ui.bottomNavigationDrawer.isLaidOut
         pendingCradleAnim = ui.bottomAppBar.showCheckoutButton(
             showing = uiState.checkoutButtonVisible, animate = animate
         )?.apply {
@@ -84,10 +84,7 @@ class MainActivity : NavViewActivity() {
             doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
         }
         ui.bottomAppBar.ui.checkoutButton.isEnabled = uiState.checkoutButtonIsEnabled
-        ui.bottomAppBar.navIndicator.moveToItem(uiState.selectedNavItemId, animate)
-
-        if (uiState.visible) ui.bottomNavigationDrawer.show()
-        else                 ui.bottomNavigationDrawer.hide()
+        ui.bottomNavigationDrawer.isHidden = !uiState.visible
     }
 
     private fun initTheme() {
@@ -150,7 +147,7 @@ class MainActivity : NavViewActivity() {
         ui.actionBar.animatorConfig = transitionAnimConfig
 
         ui.bottomAppBar.navIndicator.width =
-            2.5f * ui.bottomAppBar.ui.bottomNavigationView.itemIconSize
+            2.5f * ui.bottomAppBar.ui.navigationView.itemIconSize
         ui.bottomAppBar.animatorConfig = transitionAnimConfig
         ui.bottomAppBar.ui.cradleLayout.layoutTransition.apply {
             // views with bottomSheetBehaviors do not like to be animated by layout

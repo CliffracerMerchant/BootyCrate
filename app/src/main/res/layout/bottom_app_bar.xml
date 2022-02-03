@@ -13,8 +13,8 @@
     tools:parentTag="android.widget.FrameLayout"
     tools:menu="@menu/bottom_navigation_bar" >
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigationView"
+    <com.cliffracertech.bootycrate.view.BottomNavigationView
+        android:id="@+id/navigationView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:background="@drawable/background_gradient"
@@ -29,7 +29,7 @@
             tools:alpha="255"
             tools:text="+2"
             style="@style/ShoppingListBadge" />
-    </com.google.android.material.bottomnavigation.BottomNavigationView>
+    </com.cliffracertech.bootycrate.view.BottomNavigationView>
 
     <LinearLayout
         android:id="@+id/cradleLayout"
