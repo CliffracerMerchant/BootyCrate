@@ -4,9 +4,12 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.database.ItemDao
+import com.cliffracertech.bootycrate.utils.NewInventoryItemDialog
+import com.cliffracertech.bootycrate.utils.NewShoppingListItemDialog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -14,12 +17,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BottomAppBarViewModel @Inject constructor(
-    navigationState: MainActivityNavigationState,
+    mainActivityNavState: MainActivityNavigationState,
     private val itemDao: ItemDao
 ) : ViewModel() {
 
-    private val activeFragment = navigationState.activeFragment
-    private val selectedNavItemId = navigationState.navViewSelectedItemId
+    private val visibleScreen = mainActivityNavState.visibleScreen
 
     private val checkedItemsSize = itemDao.getCheckedShoppingListItemsSize()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), 0)
@@ -29,9 +31,9 @@ class BottomAppBarViewModel @Inject constructor(
         val checkoutButtonVisible: Boolean = true,
         val checkoutButtonIsEnabled: Boolean = false)
 
-    val uiState = activeFragment.combine(checkedItemsSize) { fragment, checkedItemsSize ->
-        UiState(visible = !fragment.isOther,
-                checkoutButtonVisible = fragment.isShoppingList,
+    val uiState = visibleScreen.combine(checkedItemsSize) { screen, checkedItemsSize ->
+        UiState(visible = !screen.isOther,
+                checkoutButtonVisible = screen.isShoppingList,
                 checkoutButtonIsEnabled = checkedItemsSize > 0)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), UiState())
 
@@ -39,12 +41,12 @@ class BottomAppBarViewModel @Inject constructor(
     val shoppingListSizeChange = itemDao.getShoppingListItemCount().map { shoppingListSize ->
         val change = shoppingListSize - oldShoppingListSize
         oldShoppingListSize = shoppingListSize
-        if (activeFragment.value.isShoppingList) 0
+        if (visibleScreen.value.isShoppingList) 0
         else change
     }.drop(1).shareIn(viewModelScope, SharingStarted.WhileSubscribed(3000), 0)
 
     fun onCheckoutButtonClick() {
-        if (activeFragment.value.isShoppingList)
+        if (visibleScreen.value.isShoppingList)
             viewModelScope.launch { itemDao.checkout() }
     }
 }

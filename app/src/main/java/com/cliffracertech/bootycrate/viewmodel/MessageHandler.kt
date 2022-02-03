@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.viewmodel
 
-import android.content.Context
 import android.view.View
 import android.widget.TextView
 import androidx.lifecycle.findViewTreeLifecycleOwner
@@ -13,7 +12,6 @@ import com.cliffracertech.bootycrate.utils.*
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import com.google.android.material.snackbar.Snackbar
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
@@ -70,7 +68,7 @@ class MessageHandler @Inject constructor() {
      * led to this call of postItemsDeletedMessage. Callers that make successive
      * calls to postItemsDeletedMessage do not need to accumulate this number
      * manually, as this is done automatically if a new call is made before the
-     * message is dismissed.
+     * previous message is dismissed.
      * @param onUndo The callback that will be invoked if the undo action is performed.
      * @param onDismiss The callback that will be invoked when the message is dismissed.
      */

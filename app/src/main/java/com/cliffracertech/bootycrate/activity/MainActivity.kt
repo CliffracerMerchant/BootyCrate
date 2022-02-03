@@ -13,6 +13,7 @@ import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
+import androidx.lifecycle.ViewModel
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
@@ -21,9 +22,21 @@ import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.viewmodel.*
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+@HiltViewModel
+class MainActivityViewModel @Inject constructor(
+    private val navigationState: MainActivityNavigationState,
+    messageHandler: MessageHandler
+) : ViewModel() {
+    val messages = messageHandler.messages
+
+    fun notifyBackStackSizeChanged(backStackSize: Int) =
+        navigationState.notifyBackStackSizeChanged(backStackSize)
+}
 
 /**
  * A NavViewActivity with a predefined UI.
@@ -36,12 +49,12 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : NavViewActivity() {
 
+    private val viewModel: MainActivityViewModel by viewModels()
     private val actionBarViewModel: ActionBarViewModel by viewModels()
     private val bottomAppBarViewModel: BottomAppBarViewModel by viewModels()
     private val itemGroupSelectorViewModel: ItemGroupSelectorViewModel by viewModels()
     private var pendingCradleAnim: Animator? = null
 
-    @Inject lateinit var messageHandler: MessageHandler
     lateinit var ui: MainActivityBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,14 +68,18 @@ class MainActivity : NavViewActivity() {
         initAnimatorConfigs()
         initGradientStyle()
 
-        messageHandler.messages.displayWithSnackBarAnchoredTo(ui.bottomAppBar)
+        supportFragmentManager.addOnBackStackChangedListener {
+            val backStackSize = supportFragmentManager.backStackEntryCount
+            viewModel.notifyBackStackSizeChanged(backStackSize)
+        }
+        viewModel.messages.displayWithSnackBarAnchoredTo(ui.bottomAppBar)
         repeatWhenStarted {
             launch { actionBarViewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
             launch { actionBarViewModel.titleState.collect(ui.actionBar::setTitleState) }
             launch { actionBarViewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
             launch { actionBarViewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
             launch { actionBarViewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
-            launch { actionBarViewModel.optionsMenuContent.collect(ui.actionBar::setOptionsMenuContents)}
+            launch { actionBarViewModel.optionsMenuContent.collect(ui.actionBar::setOptionsMenuContents) }
 
             launch { bottomAppBarViewModel.uiState.collect(::updateBottomAppBarState) }
             launch { bottomAppBarViewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
@@ -116,7 +133,9 @@ class MainActivity : NavViewActivity() {
         ui.actionBar.setOnSortOptionClick { actionBarViewModel.onSortOptionClick(it.itemId) }
         ui.actionBar.setOnOptionsItemClick(::fwdMenuItemClick)
 
-        ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
+        ui.settingsButton.setOnClickListener {
+            addSecondaryFragment(AppSettingsFragment())
+        }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
         ui.bottomAppBar.ui.checkoutButton.onConfirm = bottomAppBarViewModel::onCheckoutButtonClick
         ui.addItemGroupButton.setOnClickListener {

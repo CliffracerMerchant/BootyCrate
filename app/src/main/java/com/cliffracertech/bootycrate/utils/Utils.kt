@@ -20,11 +20,13 @@ import androidx.annotation.StringRes
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.activity.NavViewActivity
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
@@ -102,7 +104,7 @@ val <T: View>BottomSheetBehavior<T>.isDragging get() = state == BottomSheetBehav
 val <T: View>BottomSheetBehavior<T>.isSettling get() = state == BottomSheetBehavior.STATE_SETTLING
 val <T: View>BottomSheetBehavior<T>.isHidden get() = state == BottomSheetBehavior.STATE_HIDDEN
 
-/** Perform the given block without the caller's LayoutTransition instance.
+/** Perform the given block without the receiver's LayoutTransition.
  * This is useful when changes need to be made instantaneously. */
 fun ViewGroup.withoutLayoutTransition(block: () -> Unit) {
     val layoutTransitionBackup = layoutTransition
@@ -264,5 +266,23 @@ class StringResource(
             }
             context.getString(stringResId, *args.toArray())
         }
+    }
+}
+
+/** Replace the receiver fragment with the provided Fragment instance in the
+ * containing activity. This function will not do anything if the fragment
+ * is not attached to an activity or if the fragment's view's direct parent
+ * is not the fragment container for the activity. If the fragment's activity
+ * is an instance of NavViewActivity, it will execute the activity's
+ * addSecondaryFragment method instead. */
+fun Fragment.replaceSelfWith(fragment: Fragment) {
+    val activity = activity ?: return
+    if (activity is NavViewActivity)
+        activity.addSecondaryFragment(fragment)
+    else {
+        val containerId = (view?.parent as? ViewGroup)?.id ?: return
+        activity.supportFragmentManager.beginTransaction()
+            .replace(containerId, fragment)
+            .addToBackStack(null).commit()
     }
 }

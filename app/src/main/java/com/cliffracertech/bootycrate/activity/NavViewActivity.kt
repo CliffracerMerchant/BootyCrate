@@ -5,17 +5,29 @@
 package com.cliffracertech.bootycrate.activity
 
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.viewmodel.NavViewActivityViewModel
+import com.cliffracertech.bootycrate.viewmodel.MutableNavigationState
 import com.google.android.material.navigation.NavigationBarView
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.collect
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
+@HiltViewModel
+class NavViewActivityViewModel @Inject constructor(
+    private val state: MutableNavigationState
+) : ViewModel() {
+    val selectedNavItemId = state.selectedNavItemId
+
+    fun onPrimaryNavItemClick(navItemId: Int) =
+        state.notifyNavItemSelected(navItemId)
+}
 
 /**
  * An activity that, when linked up with a NavigationBarView instance, will
@@ -30,8 +42,9 @@ import kotlinx.coroutines.flow.collect
  * facilitate this, the primary fragments are never replaced, but instead will
  * have their views' visibilities set to View.GONE when not in use. Because
  * this increases memory consumption, it is not recommended to add more than a
- * few commonly used fragments. If other fragments need to be used temporarily,
- * this can be accomplished using the function addSecondaryFragment.
+ * few commonly used fragments. If other fragments need to be added on top of
+ * the primary fragments, e.g. a settings screen, this can be accomplished
+ * using the function addSecondaryFragment.
  *
  * In order for the primary fragment auto-generation to succeed, the property
  * navigationView must be initialized in a subclass before NavViewActivity's
@@ -58,10 +71,9 @@ import kotlinx.coroutines.flow.collect
  *
  * The property visibleFragment will always be equal to the topmost fragment,
  * including secondary fragments. To listen to changes in the selected
- * navigation menu item or the backstack size, obtain an instance of
- * NavigationState scoped to the instance of NavViewActivity being used and
- * collect the StateFlow properties navViewSelectedId and backStackSize,
- * respectively.
+ * navigation menu item, obtain an instance of NavigationState scoped to the
+ * instance of NavViewActivity being used and collect the StateFlow property
+ * navViewSelectedId.
  */
 abstract class NavViewActivity : AppCompatActivity() {
     private val viewModel: NavViewActivityViewModel by viewModels()
@@ -87,26 +99,16 @@ abstract class NavViewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         createOrRestoreFragments(savedInstanceState)
-        supportFragmentManager.addOnBackStackChangedListener {
-            viewModel.onBackStackSizeChanged(supportFragmentManager.backStackEntryCount)
-            // The hidden primary fragments seem to have their
-            // visibility reset at this point for some reason.
-            if (!showingPrimaryFragment)
-                for (fragment in navBarMenuItemFragmentMap.values)
-                    fragment.view?.isVisible = false
-        }
-        navigationView.setOnItemSelectedListener{
+        navigationView.setOnItemSelectedListener {
             if (primaryTransitionInProgress) {
                 queuedNavItemPress = it.itemId
                 navItemLastPressTimestamp = System.currentTimeMillis()
-            } else viewModel.onPrimaryNavItemClick(it.itemId)
-            false
-        }
-        repeatWhenStarted {
-            launch { viewModel.selectedNavViewId.collect(::selectPrimaryFragmentAt) }
-            launch { viewModel.requestedFragments.collect {
-                if (it != null) addSecondaryFragment(it)
-            }}
+                false
+            } else {
+                viewModel.onPrimaryNavItemClick(it.itemId)
+                selectPrimaryFragmentAt(it)
+                true
+            }
         }
     }
 
@@ -116,14 +118,12 @@ abstract class NavViewActivity : AppCompatActivity() {
     private var navItemLastPressTimestamp = 0L
     private var primaryTransitionInProgress = false
     /** Attempt to switch to a new primary fragment corresponding to the @param navItemId. */
-    private fun selectPrimaryFragmentAt(navItemId: Int) {
-        if (navItemId == navigationView.selectedItemId)
+    private fun selectPrimaryFragmentAt(newMenuItem: MenuItem) {
+        if (newMenuItem.itemId == navigationView.selectedItemId)
             return
-        val newFragment = navBarMenuItemFragmentMap[navItemId] ?: return
-        val newMenuItem = navigationView.menu.findItem(navItemId)
+        val newFragment = navBarMenuItemFragmentMap[newMenuItem.itemId] ?: return
         val oldMenuItem = navigationView.menu.findItem(navigationView.selectedItemId)
         val oldFragment = navBarMenuItemFragmentMap.getValue(oldMenuItem.itemId)
-        newMenuItem.isChecked = true
 
         if (!showingPrimaryFragment) {
             // If there is a secondary fragment on top of the primary fragments,
@@ -228,11 +228,11 @@ abstract class NavViewActivity : AppCompatActivity() {
     }
 
     private fun initPrimaryFragmentVisibility() {
-        if (viewModel.selectedNavViewId.value == -1) {
+        if (viewModel.selectedNavItemId.value == -1) {
             val firstItemId = navigationView.menu.getItemOrNull(0)?.itemId
             firstItemId?.let { viewModel.onPrimaryNavItemClick(it) }
         }
-        else navigationView.menu.findItem(viewModel.selectedNavViewId.value)?.isChecked = true
+        else navigationView.menu.findItem(viewModel.selectedNavItemId.value)?.isChecked = true
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
