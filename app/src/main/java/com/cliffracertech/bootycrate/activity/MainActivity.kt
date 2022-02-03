@@ -12,6 +12,7 @@ import android.view.MenuItem
 import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
 import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnStart
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
@@ -73,14 +74,14 @@ class MainActivity : NavViewActivity() {
 
     private fun updateBottomAppBarState(uiState: BottomAppBarViewModel.UiState) {
         val animate = ui.bottomNavigationDrawer.isLaidOut &&
-                      !ui.bottomNavigationDrawer.isHidden
+                      ui.bottomNavigationDrawer.isHidden != uiState.visible
         // The cradle layout animation is stored here and started in the cradle
         // layout's layoutTransition's transition listener's transitionStart
         // override so that the animation is synced with the layout transition.
         pendingCradleAnim = ui.bottomAppBar.showCheckoutButton(
             showing = uiState.checkoutButtonVisible, animate = animate
         )?.apply {
-            ui.bottomNavigationDrawer.isDraggable = false
+            doOnStart { ui.bottomNavigationDrawer.isDraggable = false }
             doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
         }
         ui.bottomAppBar.ui.checkoutButton.isEnabled = uiState.checkoutButtonIsEnabled
