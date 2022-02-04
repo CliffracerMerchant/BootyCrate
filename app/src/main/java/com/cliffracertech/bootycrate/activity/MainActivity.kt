@@ -18,6 +18,9 @@ import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
+import com.cliffracertech.bootycrate.fragment.InventoryFragment
+import com.cliffracertech.bootycrate.fragment.ListViewFragment
+import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.viewmodel.*
@@ -111,7 +114,8 @@ class MainActivity : NavViewActivity() {
         val themeDefault = getString(R.string.pref_theme_sys_default_title)
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
-        setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
+        val usingLightThemePref = prefs.getString(prefKey, themeDefault) ?: ""
+        setTheme(when (usingLightThemePref) {
             getString(R.string.pref_theme_light_theme_title) -> R.style.LightTheme
             getString(R.string.pref_theme_dark_theme_title) ->  R.style.DarkTheme
             else -> if (sysDarkThemeIsActive) R.style.DarkTheme
@@ -119,8 +123,8 @@ class MainActivity : NavViewActivity() {
         })
     }
 
-    private fun fwdMenuItemClick(menuItem: MenuItem) =
-        visibleFragment?.onOptionsItemSelected(menuItem) ?: false
+    override fun onOptionsItemSelected(item: MenuItem) =
+        visibleFragment?.onOptionsItemSelected(item) ?: false
 
     private fun initOnClickListeners() {
         ui.actionBar.onBackButtonClick = {
@@ -131,20 +135,28 @@ class MainActivity : NavViewActivity() {
         ui.actionBar.onSearchQueryChange = actionBarViewModel::onSearchQueryChangeRequest
         ui.actionBar.onDeleteButtonClick = actionBarViewModel::onDeleteButtonClick
         ui.actionBar.setOnSortOptionClick { actionBarViewModel.onSortOptionClick(it.itemId) }
-        ui.actionBar.setOnOptionsItemClick(::fwdMenuItemClick)
+        ui.actionBar.setOnOptionsItemClick(::onOptionsItemSelected)
 
         ui.settingsButton.setOnClickListener {
             addSecondaryFragment(AppSettingsFragment())
         }
         ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
-        ui.bottomAppBar.ui.checkoutButton.onConfirm = bottomAppBarViewModel::onCheckoutButtonClick
+        ui.bottomAppBar.ui.checkoutButton.onConfirm =
+            bottomAppBarViewModel::onCheckoutButtonClick
+        ui.bottomAppBar.ui.addButton.setOnClickListener {
+            when (visibleFragment) {
+                is ShoppingListFragment -> NewShoppingListItemDialog(this)
+                is InventoryFragment ->    NewInventoryItemDialog(this)
+                else ->                    null
+            }?.show(supportFragmentManager, null)
+        }
         ui.addItemGroupButton.setOnClickListener {
             itemGroupNameDialog(this, null, itemGroupSelectorViewModel::onConfirmAddNewItemGroupDialog)
         }
         ui.itemGroupSelectorOptionsButton.setOnClickListener {
             ItemGroupSelectorOptionsMenu(
                 anchor = ui.itemGroupSelectorOptionsButton,
-                multiSelectItemGroups = itemGroupSelectorViewModel.multiSelectGroups,
+                multiSelectItemGroups = itemGroupSelectorViewModel.multiSelectGroups.value,
                 onMultiSelectCheckboxClick = itemGroupSelectorViewModel::onMultiSelectCheckboxClick,
                 onSelectAllClick = itemGroupSelectorViewModel::onSelectAllGroupsClick
             ).show()

@@ -109,7 +109,7 @@ class ListActionBar(context: Context, attrs: AttributeSet) :
                                     ViewGroup.LayoutParams.WRAP_CONTENT)
         val a = context.obtainStyledAttributes(attrs, R.styleable.ListActionBar)
         val changeSortMenuResId = a.getResourceIdOrThrow(R.styleable.ListActionBar_changeSortMenuResId)
-        val optionsMenuResId = a.getResourceIdOrThrow(R.styleable.ListActionBar_optionsMenuResId)
+        val optionsMenuResId = a.getResourceId(R.styleable.ListActionBar_optionsMenuResId, -1)
         val contentsTint = try { a.getColorOrThrow(R.styleable.ListActionBar_contentsTint) }
                            catch(e: IllegalArgumentException) { null }
         a.recycle()
@@ -125,7 +125,8 @@ class ListActionBar(context: Context, attrs: AttributeSet) :
         }
 
         changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
-        optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
+        if (optionsMenuResId != -1)
+            optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
 
         layoutTransition = layoutTransition(config = null)
         ui.backButton.setOnClickListener { onBackButtonClick?.invoke() }

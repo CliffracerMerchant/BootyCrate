@@ -24,7 +24,9 @@ class ItemGroupSelectorViewModel @Inject constructor(
     val itemGroups = itemGroupDao.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), emptyList())
 
-    val multiSelectGroups get() = runBlocking { settingsDao.getMultiSelectGroupsNow() }
+    val multiSelectGroups get() = settingsDao.getMultiSelectGroups()
+        .stateIn(viewModelScope, SharingStarted.Eagerly,
+                 runBlocking { settingsDao.getMultiSelectGroupsNow() })
 
     fun onMultiSelectCheckboxClick() {
         viewModelScope.launch { settingsDao.toggleMultiSelectGroups() }
