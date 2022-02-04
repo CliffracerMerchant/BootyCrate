@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 abstract class ListViewFragment<T: ListItem> : Fragment() {
 
     protected abstract val viewModel: ItemListViewModel<T>
-    protected abstract val listView: ExpandableItemListView<T>?
+    abstract val listView: ExpandableItemListView<T>?
     private var multiStateView: MultiStateView? = null
     protected open val collectionName = ""
     private var bottomAppBar: View? = null
@@ -121,16 +121,6 @@ abstract class ListViewFragment<T: ListItem> : Fragment() {
 
     override fun onOptionsItemSelected(item: MenuItem) =
         viewModel.onOptionsItemClick(item.itemId)
-
-//    @CallSuper override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-//        bottomAppBar = if (isActive) activityUi.bottomAppBar
-//                       else          null
-//        listView?.apply {
-//            val bottomSheetPeekHeight = activityUi.bottomNavigationDrawer.peekHeight
-//            if (paddingBottom != bottomSheetPeekHeight)
-//                setPadding(bottom = bottomSheetPeekHeight)
-//        }
-//    }
 }
 
 /**
@@ -141,8 +131,7 @@ abstract class ListViewFragment<T: ListItem> : Fragment() {
  * overrides ListViewFragment's abstract listView property with an instance of
  * ShoppingListView.
  */
-@Keep
-class ShoppingListFragment : ListViewFragment<ShoppingListItem>() {
+@Keep class ShoppingListFragment : ListViewFragment<ShoppingListItem>() {
     override val viewModel: ShoppingListViewModel by activityViewModels()
     override var listView: ShoppingListView? = null
     override lateinit var collectionName: String

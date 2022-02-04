@@ -75,6 +75,15 @@ class MainActivity : NavViewActivity() {
             val backStackSize = supportFragmentManager.backStackEntryCount
             viewModel.notifyBackStackSizeChanged(backStackSize)
         }
+        supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
+            // If the bottom navigation drawer adjusts its peek height to prevent it
+            // from interfering with the system home gesture, then the shopping list
+            // and inventory views need to have their bottom paddings adjusted accordingly.
+            if (fragment is ListViewFragment<*>) {
+                val bottomSheetPeekHeight = ui.bottomNavigationDrawer.peekHeight
+                fragment.listView?.setPadding(bottom = bottomSheetPeekHeight)
+            }
+        }
         viewModel.messages.displayWithSnackBarAnchoredTo(ui.bottomAppBar)
         repeatWhenStarted {
             launch { actionBarViewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
