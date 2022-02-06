@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.dialog
 
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
@@ -33,17 +34,19 @@ import kotlinx.coroutines.flow.collect
  * An abstract DialogFragment to create a new ListItem.
  *
  * NewListItemDialog is an abstract DialogFragment for creating new ListItems.
- * By default it fills the newItemViewContainer ui element with a ExpandableSelectableItemView
- * instance. If this needs to be overridden in a subclass, call the constructor
- * with the useDefaultLayoutParameter set to false. If this is done, the
- * subclass must initialize the newItemView member before onCreateDialog, or an
- * exception will be thrown.
+ * It fills its inner FrameLayout with the value of the nullable constructor
+ * parameter newItemView. If newItemView is null, an ExpandableSelectableItemView
+ * instance will be used by default. If only one item group from among the list
+ * of all of the user's item groups is selected, the new item will be added to
+ * that item group. If more than one item group is selected, then the dialog
+ * will also show an ItemGroupPicker to allow the user to choose which item
+ * group the new item will be added to.
  *
  * The abstract function createItemFromView must be overridden in subclasses
  * with an implementation that returns a T instance that reflects the
  * information entered in the newItemView member. The open function resetNewItemView
- * should be overridden in subclasses if additional work is needed to prepare the
- * newItemView member if the user clicks the addAnotherButton.
+ * should be overridden in subclasses if additional work is needed to prepare
+ * the newItemView member if the user clicks the add another button.
  *
  * The dialog will display an error message and prevent the user from
  * proceeding if they try to add an item with no name. If the name and extra
@@ -58,27 +61,22 @@ import kotlinx.coroutines.flow.collect
  */
 abstract class NewListItemDialog<T: ListItem>(
     context: Context,
-    useDefaultLayout: Boolean = true
+    newItemView: ExpandableItemView<T>? = null,
 ) : DialogFragment() {
     protected abstract val viewModel: NewItemDialogViewModel<T>
 
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
-    protected var ui = NewItemDialogBinding.inflate(layoutInflater)
-    protected lateinit var newItemView: ExpandableItemView<T>
-    protected var targetGroupId: Long? = null
-        private set
+    @SuppressLint("UseGetLayoutInflater")
+    protected var ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
+    protected val newItemView = newItemView ?: ExpandableItemView(context)
+    private var targetGroupId: Long? = null
 
-    abstract val itemWithNameAlreadyExistsInCollectionWarningMessage: String
-    abstract val itemWithNameAlreadyExistsInOtherCollectionWarningMessage: String
     private val itemGroupPickerPrompt = context.getString(R.string.select_an_item_group_message)
     private val itemHasNoGroupIdErrorMessage = context.getString(R.string.new_item_has_no_item_group_error_message)
-
-    init {
-        if (useDefaultLayout)
-            newItemView = ExpandableItemView(context)
-    }
+    protected abstract val itemWithNameAlreadyExistsInCollectionWarningMessage: String
+    protected abstract val itemWithNameAlreadyExistsInOtherCollectionWarningMessage: String
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         viewModel.newItemName = ""
@@ -271,10 +269,9 @@ class NewShoppingListItemDialog(context: Context) :
 
 /** Open a dialog to create a new inventory item. */
 class NewInventoryItemDialog(context: Context) :
-    NewListItemDialog<InventoryItem>(context, useDefaultLayout = false)
+    NewListItemDialog<InventoryItem>(context, InventoryItemView(context))
 {
     override val viewModel: NewInventoryItemDialogViewModel by activityViewModels()
-    private val newInventoryItemView = InventoryItemView(context, null)
 
     override val itemWithNameAlreadyExistsInCollectionWarningMessage =
         context.getString(R.string.new_inventory_item_duplicate_name_warning)
@@ -282,8 +279,10 @@ class NewInventoryItemDialog(context: Context) :
         context.getString(R.string.new_inventory_item_will_not_be_linked_warning,
                           context.getString(R.string.add_to_inventory_description))
 
+    private val newInventoryItemView get() = newItemView as InventoryItemView
+
     init {
-        newItemView = newInventoryItemView.apply {
+        newInventoryItemView.apply {
             detailsUi.autoAddToShoppingListAmountEdit.apply { value = minValue }
             detailsUi.autoAddToShoppingListCheckBox.initColorIndex(0)
             ui.checkBox.onColorIndexChangedListener = {

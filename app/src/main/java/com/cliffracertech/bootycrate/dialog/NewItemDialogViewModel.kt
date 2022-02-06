@@ -49,7 +49,7 @@ abstract class NewItemDialogViewModel<T: ListItem>(
         TrueForCurrentList,
         /** The name is already taken by an item in a sibling list of items, but not the current one. */
         TrueForSiblingList,
-        /**  The name is not in use. */
+        /** The name is not in use. */
         False
     }
 
@@ -77,11 +77,11 @@ class NewShoppingListItemDialogViewModel @Inject constructor(
     override val newItemNameIsAlreadyUsed = combine(
         nameIsAlreadyUsedInShoppingList,
         nameIsAlreadyUsedInInventory
-    ) { existsInShoppingList, existsInInventory ->
-        when { (existsInShoppingList) -> NameIsAlreadyUsed.TrueForCurrentList
-               (existsInInventory) ->    NameIsAlreadyUsed.TrueForSiblingList
-               else ->                   NameIsAlreadyUsed.False }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), NameIsAlreadyUsed.False)
+    ) { existsInShoppingList, existsInInventory -> when {
+        existsInShoppingList -> NameIsAlreadyUsed.TrueForCurrentList
+        existsInInventory ->    NameIsAlreadyUsed.TrueForSiblingList
+        else ->                 NameIsAlreadyUsed.False
+    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), NameIsAlreadyUsed.False)
 }
 
 /** A view model to provide data for a dialog to add new InventoryItems. */
@@ -94,9 +94,9 @@ class NewInventoryItemDialogViewModel @Inject constructor(
     override val newItemNameIsAlreadyUsed = combine(
         nameIsAlreadyUsedInInventory,
         nameIsAlreadyUsedInShoppingList
-    ) { existsInInventory, existsInShoppingList ->
-        when { (existsInInventory) ->    NameIsAlreadyUsed.TrueForCurrentList
-               (existsInShoppingList) -> NameIsAlreadyUsed.TrueForSiblingList
-               else ->                   NameIsAlreadyUsed.False }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), NameIsAlreadyUsed.False)
+    ) { existsInInventory, existsInShoppingList -> when {
+        existsInInventory ->    NameIsAlreadyUsed.TrueForCurrentList
+        existsInShoppingList -> NameIsAlreadyUsed.TrueForSiblingList
+        else ->                 NameIsAlreadyUsed.False
+    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), NameIsAlreadyUsed.False)
 }
