@@ -23,6 +23,7 @@ import com.cliffracertech.bootycrate.databinding.InventoryFragmentBinding
 import com.cliffracertech.bootycrate.databinding.ShoppingListFragmentBinding
 import com.cliffracertech.bootycrate.recyclerview.*
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
+import com.cliffracertech.bootycrate.utils.setPadding
 import com.kennyc.view.MultiStateView
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -39,16 +40,28 @@ import kotlinx.coroutines.launch
  * override the listView property and initialize it before calling
  * super.onViewCreated, or an exception will occur.
  *
+ * Due to the fact that lists frequently need to have their bottom padding
+ * adjusted to account for ui elements that overlay them (e.g. a floating
+ * action button), the function setListBottomPadding is provided. Calling it
+ * will set the listView's bottom padding immediately if it is already created,
+ * or upon creation otherwise.
+ *
  * The value of the open property collectionName should be overridden in
  * subclasses with a value that describes what the collection of items
  * should be called in user facing strings. This override must occur before
- * super.onViewCreated is called in subclasses, or an UnitializedPropertyAccessException
+ * super.onViewCreated is called in subclasses, or an UninitializedPropertyAccessException
  * will be thrown.
  */
 abstract class ListViewFragment<T: ListItem> : Fragment() {
 
     protected abstract val viewModel: ItemListViewModel<T>
-    abstract val listView: ExpandableItemListView<T>?
+    protected abstract val listView: ExpandableItemListView<T>?
+    private var listViewBottomPadding: Int? = null
+    fun setListBottomPadding(paddingBottom: Int) {
+        listViewBottomPadding = paddingBottom
+        listView?.setPadding(bottom = paddingBottom)
+    }
+
     private var multiStateView: MultiStateView? = null
     protected open val collectionName = ""
     private var bottomAppBar: View? = null
@@ -56,6 +69,11 @@ abstract class ListViewFragment<T: ListItem> : Fragment() {
     private val emptyList = emptyList<T>()
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // We set the listViewBottomPadding value again here so that the
+        // listView's bottom padding is set to the correct value even if
+        // setListBottomPadding was called while listView was still null.
+        listViewBottomPadding?.let { setListBottomPadding(it) }
 
         multiStateView = view as? MultiStateView
         multiStateView?.layoutTransition = LayoutTransition()

@@ -11,7 +11,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
-import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.AccessibilityDelegateCompat
@@ -53,7 +53,7 @@ import dev.sasikanth.colorsheet.ColorSheet
  * the case, the color picker will not be shown when the TintableCheckbox
  * is clicked while inColorEditMode is true.
  */
-class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageButton(context, attrs) {
+class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageView(context, attrs) {
 
     private var _isChecked = false
     var isChecked get() = _isChecked

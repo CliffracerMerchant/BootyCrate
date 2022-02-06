@@ -30,7 +30,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
  * attempt to increase its peek height above the base peek height so that the
  * effective touch target size matches the peek height set in XML, up to the
  * value of the XML attribute maxPeekHeight. The peek height can also be
- * accessed and manually adjusted through the property peekHeight.
+ * accessed and manually adjusted through the property peekHeight. If the peek
+ * height is automatically adjusted this way, then the callback property
+ * onPeekHeightAutoAdjusted will be invoked if not null.
  *
  * BottomNavigationDrawer provides a new bottom sheet API in place of the one
  * provided by BottomSheetBehavior. Rather than calling setState, the state is
@@ -66,6 +68,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
 
     var peekHeight get() = behavior.peekHeight
                    set(value) { behavior.peekHeight = value }
+    var onPeekHeightAutoAdjusted: ((Int) -> Unit)? = null
 
     init {
         var a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.behavior_peekHeight))
@@ -161,6 +164,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
 
             val overlap = (collapsedBottom - gestureTop).coerceAtLeast(0)
             behavior.peekHeight = (basePeekHeight + overlap).coerceAtMost(maxPeekHeight)
+            onPeekHeightAutoAdjusted?.invoke(behavior.peekHeight)
             windowInsets
         }
     }

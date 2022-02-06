@@ -72,20 +72,12 @@ class MainActivity : NavViewActivity() {
         super.onCreate(savedInstanceState)
         initOnClickListeners()
         initAnimatorConfigs()
+        initNavDrawer()
         initGradientStyle()
 
         supportFragmentManager.addOnBackStackChangedListener {
             val backStackSize = supportFragmentManager.backStackEntryCount
             viewModel.notifyBackStackSizeChanged(backStackSize)
-        }
-        supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
-            // If the bottom navigation drawer adjusts its peek height to prevent it
-            // from interfering with the system home gesture, then the shopping list
-            // and inventory views need to have their bottom paddings adjusted accordingly.
-            if (fragment is ListViewFragment<*>) {
-                val bottomSheetPeekHeight = ui.bottomNavigationDrawer.peekHeight
-                fragment.listView?.setPadding(bottom = bottomSheetPeekHeight)
-            }
         }
         viewModel.messages.displayWithSnackBarAnchoredTo(ui.bottomAppBar)
         repeatWhenStarted {
@@ -139,6 +131,7 @@ class MainActivity : NavViewActivity() {
         visibleFragment?.onOptionsItemSelected(item) ?: false
 
     private fun initOnClickListeners() {
+        // action bar
         ui.actionBar.onBackButtonClick = {
             if (!actionBarViewModel.onBackPressed())
                 supportFragmentManager.popBackStack()
@@ -149,10 +142,7 @@ class MainActivity : NavViewActivity() {
         ui.actionBar.setOnSortOptionClick { actionBarViewModel.onSortOptionClick(it.itemId) }
         ui.actionBar.setOnOptionsItemClick(::onOptionsItemSelected)
 
-        ui.settingsButton.setOnClickListener {
-            addSecondaryFragment(AppSettingsFragment())
-        }
-        ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
+        // bottom app bar
         ui.bottomAppBar.ui.checkoutButton.onConfirm =
             bottomAppBarViewModel::onCheckoutButtonClick
         ui.bottomAppBar.ui.addButton.setOnClickListener {
@@ -161,6 +151,11 @@ class MainActivity : NavViewActivity() {
                 is InventoryFragment ->    NewInventoryItemDialog(this)
                 else ->                    null
             }?.show(supportFragmentManager, null)
+        }
+
+        // item group selector
+        ui.settingsButton.setOnClickListener {
+            addSecondaryFragment(AppSettingsFragment())
         }
         ui.addItemGroupButton.setOnClickListener {
             itemGroupNameDialog(this, null, itemGroupSelectorViewModel::onConfirmAddNewItemGroupDialog)
@@ -200,6 +195,25 @@ class MainActivity : NavViewActivity() {
             setAnimateParentHierarchy(false)
             doOnStart { pendingCradleAnim?.start()
                         pendingCradleAnim = null }
+        }
+    }
+
+    private fun initNavDrawer() {
+        ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
+        // If the bottom navigation drawer adjusts its peek height to prevent it
+        // from interfering with the system home gesture, then the shopping list
+        // and inventory views need to have their bottom paddings adjusted accordingly.
+        // The change is performed on already added fragments and future fragments
+        // so that the padding will be set regardless of whether the fragments are
+        // currently added or not.
+        ui.bottomNavigationDrawer.onPeekHeightAutoAdjusted = { padding ->
+            supportFragmentManager.fragments.forEach { fragment ->
+                (fragment as? ListViewFragment<*>)?.setListBottomPadding(padding)
+            }
+            supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
+                if (fragment is ListViewFragment<*>)
+                    fragment.setListBottomPadding(padding)
+            }
         }
     }
 }
