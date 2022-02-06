@@ -15,7 +15,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.preference.*
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.dataStore
-import com.cliffracertech.bootycrate.database.BootyCrateDatabase
+import com.cliffracertech.bootycrate.dialog.AboutAppDialog
+import com.cliffracertech.bootycrate.dialog.PrivacyPolicyDialog
+import com.cliffracertech.bootycrate.dialog.importDatabaseFromUriDialog
+import com.cliffracertech.bootycrate.model.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.utils.*
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import dagger.hilt.android.AndroidEntryPoint

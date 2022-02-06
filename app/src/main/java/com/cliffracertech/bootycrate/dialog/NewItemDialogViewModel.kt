@@ -7,7 +7,7 @@ package com.cliffracertech.bootycrate.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.model.database.*
 import com.cliffracertech.bootycrate.utils.getValue
 import com.cliffracertech.bootycrate.utils.setValue
 import dagger.hilt.android.lifecycle.HiltViewModel

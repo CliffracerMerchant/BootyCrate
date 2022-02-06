@@ -23,11 +23,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.ItemGroup
+import com.cliffracertech.bootycrate.model.database.ItemGroup
 import com.cliffracertech.bootycrate.databinding.ItemGroupBinding
-import com.cliffracertech.bootycrate.utils.deleteItemGroupDialog
+import com.cliffracertech.bootycrate.dialog.deleteItemGroupDialog
+import com.cliffracertech.bootycrate.dialog.itemGroupNameDialog
 import com.cliffracertech.bootycrate.utils.dpToPixels
-import com.cliffracertech.bootycrate.utils.itemGroupNameDialog
 import java.util.*
 
 /**
@@ -59,6 +59,12 @@ open class ItemGroupListView(context: Context, attrs: AttributeSet?) :
                       catch(e: Resources.NotFoundException) { 0 }
         addItemDecoration(ItemSpacingDecoration(spacing))
     }
+
+    final override fun setHasFixedSize(hasFixedSize: Boolean) =
+        super.setHasFixedSize(hasFixedSize)
+
+    final override fun addItemDecoration(decor: ItemDecoration) =
+        super.addItemDecoration(decor)
 
     fun submitList(list: List<ItemGroup>) = listAdapter.submitList(list)
 

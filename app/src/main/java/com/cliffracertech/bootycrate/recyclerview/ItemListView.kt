@@ -8,7 +8,7 @@ import android.content.Context
 import android.util.AttributeSet
 import androidx.recyclerview.widget.*
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.ListItem
+import com.cliffracertech.bootycrate.model.database.ListItem
 
 /**
  * A view to display a list of ListItem instances.

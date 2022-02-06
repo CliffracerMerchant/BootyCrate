@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.database
+package com.cliffracertech.bootycrate.model.database
 
 import android.content.ContentValues
 import android.content.Context
@@ -13,7 +13,7 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.utils.themedAlertDialogBuilder
+import com.cliffracertech.bootycrate.dialog.themedAlertDialogBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

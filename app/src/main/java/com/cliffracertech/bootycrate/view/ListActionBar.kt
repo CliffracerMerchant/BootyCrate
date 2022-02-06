@@ -17,9 +17,11 @@ import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.activity.ChangeSortButtonState
+import com.cliffracertech.bootycrate.activity.SearchButtonState
+import com.cliffracertech.bootycrate.activity.TitleState
 import com.cliffracertech.bootycrate.databinding.ListActionBarBinding
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.viewmodel.*
 
 /**
  * A toolbar tailored towards interacting with a list of items.

@@ -6,7 +6,7 @@ package com.cliffracertech.bootycrate.recyclerview
 
 import android.content.Context
 import android.util.AttributeSet
-import com.cliffracertech.bootycrate.database.ListItem
+import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 

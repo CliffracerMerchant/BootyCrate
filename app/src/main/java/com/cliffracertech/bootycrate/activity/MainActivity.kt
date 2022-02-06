@@ -17,13 +17,16 @@ import androidx.lifecycle.ViewModel
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
+import com.cliffracertech.bootycrate.dialog.NewInventoryItemDialog
+import com.cliffracertech.bootycrate.dialog.NewShoppingListItemDialog
+import com.cliffracertech.bootycrate.dialog.itemGroupNameDialog
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.fragment.InventoryFragment
 import com.cliffracertech.bootycrate.fragment.ListViewFragment
 import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
+import com.cliffracertech.bootycrate.model.MainActivityNavigationState
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.viewmodel.*
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect

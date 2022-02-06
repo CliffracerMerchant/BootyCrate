@@ -5,7 +5,6 @@
 package com.cliffracertech.bootycrate.activity
 
 import android.os.Bundle
-import android.view.MenuItem
 import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -13,8 +12,8 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.model.MutableNavigationState
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.viewmodel.MutableNavigationState
 import com.google.android.material.navigation.NavigationBarView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

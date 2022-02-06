@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.utils
+package com.cliffracertech.bootycrate.dialog
 
 import android.app.Dialog
 import android.content.Context
@@ -18,11 +18,13 @@ import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.model.database.*
 import com.cliffracertech.bootycrate.databinding.NewItemDialogBinding
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupPicker
+import com.cliffracertech.bootycrate.utils.SoftKeyboard
+import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.viewmodel.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
@@ -63,7 +65,7 @@ abstract class NewListItemDialog<T: ListItem>(
     private val addAnotherButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEGATIVE)
     private val okButton: Button get() = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
 
-    protected var ui = NewItemDialogBinding.inflate(LayoutInflater.from(context))
+    protected var ui = NewItemDialogBinding.inflate(layoutInflater)
     protected lateinit var newItemView: ExpandableItemView<T>
     protected var targetGroupId: Long? = null
         private set

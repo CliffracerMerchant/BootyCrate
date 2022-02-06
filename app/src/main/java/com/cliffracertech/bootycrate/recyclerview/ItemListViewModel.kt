@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.viewmodel
+package com.cliffracertech.bootycrate.recyclerview
 
 import android.content.Context
 import android.content.Intent
@@ -11,8 +11,10 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.activity.MessageHandler
 import com.cliffracertech.bootycrate.dataStore
-import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.model.SearchQueryState
+import com.cliffracertech.bootycrate.model.database.*
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.enumPreferenceFlow
 import com.cliffracertech.bootycrate.utils.preferenceFlow

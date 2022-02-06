@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.viewmodel
+package com.cliffracertech.bootycrate.activity
 
 import android.content.Context
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -10,9 +10,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.dataStore
-import com.cliffracertech.bootycrate.database.ItemDao
-import com.cliffracertech.bootycrate.database.ItemGroupDao
-import com.cliffracertech.bootycrate.database.ListItem
+import com.cliffracertech.bootycrate.model.MainActivityNavigationState
+import com.cliffracertech.bootycrate.model.SearchQueryState
+import com.cliffracertech.bootycrate.model.database.ItemDao
+import com.cliffracertech.bootycrate.model.database.ItemGroupDao
+import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.mutableEnumPreferenceFlow
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
@@ -204,8 +206,8 @@ class ActionBarViewModel @Inject constructor(
                     else itemDao.undoDeleteInventoryItems()
                 }; Unit
             }
-            val onDismiss = { code: Int ->
-                if (code != DISMISS_EVENT_ACTION && code != DISMISS_EVENT_CONSECUTIVE)
+            val onDismiss = { reason: Int ->
+                if (reason != DISMISS_EVENT_ACTION && reason != DISMISS_EVENT_CONSECUTIVE)
                     viewModelScope.launch {
                         if (screen.isShoppingList)
                             itemDao.emptyShoppingListTrash()

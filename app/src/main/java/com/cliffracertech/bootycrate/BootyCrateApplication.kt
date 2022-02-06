@@ -8,7 +8,7 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import androidx.datastore.preferences.preferencesDataStore
-import com.cliffracertech.bootycrate.database.ListItem
+import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope

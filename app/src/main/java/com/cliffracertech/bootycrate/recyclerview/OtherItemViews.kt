@@ -13,9 +13,9 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.ListItem
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.model.database.ListItem
+import com.cliffracertech.bootycrate.model.database.InventoryItem
+import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 import com.cliffracertech.bootycrate.databinding.ListItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemBinding
 import com.cliffracertech.bootycrate.databinding.InventoryItemDetailsBinding

@@ -13,7 +13,7 @@ import androidx.annotation.CallSuper
 import androidx.core.animation.doOnEnd
 import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.ListItem
+import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.add
 import com.cliffracertech.bootycrate.utils.applyConfig

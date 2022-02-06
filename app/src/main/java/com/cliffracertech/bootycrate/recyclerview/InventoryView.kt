@@ -8,7 +8,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
-import com.cliffracertech.bootycrate.database.InventoryItem
+import com.cliffracertech.bootycrate.model.database.InventoryItem
 import java.util.*
 
 /**

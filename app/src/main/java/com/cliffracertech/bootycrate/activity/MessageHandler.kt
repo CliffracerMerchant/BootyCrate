@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.viewmodel
+package com.cliffracertech.bootycrate.activity
 
 import android.view.View
 import android.widget.TextView
@@ -33,8 +33,8 @@ class MessageHandler @Inject constructor() {
     /**
      * A message to be displayed to the user.
      * @param stringResource A StringResource that, when resolved, will be the text of the message.
-     * @param actionStringResource A nullable StringResource that, when resolved,
-     *                             will be the text of the message action, if any.
+     * @param actionStringResource A nullable StringResource that, when resolved, will be the text
+     * of the message action, if any.
      * @param onActionClick The callback that will be invoked if the message action is clicked.
      * @param onDismiss The callback that will be invoked when the message is dismissed. The
      * int parameter will be equal to a value of BaseTransientBottomBar.BaseCallback.DismissEvent.

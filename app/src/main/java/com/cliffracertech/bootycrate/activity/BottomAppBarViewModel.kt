@@ -2,14 +2,12 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.viewmodel
+package com.cliffracertech.bootycrate.activity
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cliffracertech.bootycrate.database.ItemDao
-import com.cliffracertech.bootycrate.utils.NewInventoryItemDialog
-import com.cliffracertech.bootycrate.utils.NewShoppingListItemDialog
+import com.cliffracertech.bootycrate.model.MainActivityNavigationState
+import com.cliffracertech.bootycrate.model.database.ItemDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

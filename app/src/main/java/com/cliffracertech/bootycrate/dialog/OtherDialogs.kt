@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.utils
+package com.cliffracertech.bootycrate.dialog
 
 import android.content.Context
 import android.net.Uri
@@ -12,9 +12,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentActivity
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.BootyCrateDatabase
+import com.cliffracertech.bootycrate.model.database.BootyCrateDatabase
+import com.cliffracertech.bootycrate.utils.SoftKeyboard
+import com.cliffracertech.bootycrate.utils.dpToPixels
+import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 /** Open a dialog to display an about app screen. */
