@@ -106,10 +106,10 @@ abstract class NavViewActivity : AppCompatActivity() {
                 false
             } else {
                 viewModel.onPrimaryNavItemClick(it.itemId)
-                selectPrimaryFragmentAt(it)
                 true
             }
         }
+        recollectWhenStarted(viewModel.selectedNavItemId, ::selectPrimaryFragmentAt)
     }
 
     // See the documentation for checkQueuedMenuItemPress for an
@@ -118,9 +118,10 @@ abstract class NavViewActivity : AppCompatActivity() {
     private var navItemLastPressTimestamp = 0L
     private var primaryTransitionInProgress = false
     /** Attempt to switch to a new primary fragment corresponding to the @param navItemId. */
-    private fun selectPrimaryFragmentAt(newMenuItem: MenuItem) {
-        if (newMenuItem.itemId == navigationView.selectedItemId)
+    private fun selectPrimaryFragmentAt(menuItemId: Int) {
+        if (menuItemId == navigationView.selectedItemId)
             return
+        val newMenuItem = navigationView.menu.findItem(menuItemId)
         val newFragment = navBarMenuItemFragmentMap[newMenuItem.itemId] ?: return
         val oldMenuItem = navigationView.menu.findItem(navigationView.selectedItemId)
         val oldFragment = navBarMenuItemFragmentMap.getValue(oldMenuItem.itemId)
@@ -165,9 +166,9 @@ abstract class NavViewActivity : AppCompatActivity() {
             val animDuration = primaryFragmentTransitionAnimatorConfig?.duration ?: 300L
             val allowableMargin = animDuration / 2
             if ((navItemLastPressTimestamp + allowableMargin) >= now)
-                viewModel.onPrimaryNavItemClick(it)
+                navigationView.findViewById<View>(it).performClick()
         }
-        this.queuedNavItemPress = null
+        queuedNavItemPress = null
     }
 
     fun addSecondaryFragment(
@@ -233,6 +234,7 @@ abstract class NavViewActivity : AppCompatActivity() {
             firstItemId?.let { viewModel.onPrimaryNavItemClick(it) }
         }
         else navigationView.menu.findItem(viewModel.selectedNavItemId.value)?.isChecked = true
+
         navBarMenuItemFragmentMap.forEach { menuItemIdAndFragment ->
             val menuItemId = menuItemIdAndFragment.key
             val fragment = menuItemIdAndFragment.value
