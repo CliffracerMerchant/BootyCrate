@@ -5,6 +5,6 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <alpha xmlns:android="http://schemas.android.com/apk/res/android"
-    android:interpolator="@anim/default_interpolator"
+    android:interpolator="@android:anim/linear_interpolator"
     android:fromAlpha="0.0" android:toAlpha="1.0"
     android:duration="@integer/defaultAnimationDuration" />

@@ -31,7 +31,7 @@ class ShoppingListView(context: Context, attrs: AttributeSet) :
 
     init {
         this.adapter = listAdapter
-        itemAnimator.animatorConfig = AnimatorConfig(
+        animatorConfig = AnimatorConfig(
             context.resources.getInteger(R.integer.shoppingListItemAnimationDuration).toLong(),
             AnimationUtils.loadInterpolator(context, R.anim.default_interpolator))
     }
@@ -50,7 +50,7 @@ class ShoppingListView(context: Context, attrs: AttributeSet) :
     inner class Adapter : ExpandableItemListView<ShoppingListItem>.Adapter<ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            ViewHolder(ShoppingListItemView(context, itemAnimator.animatorConfig))
+            ViewHolder(ShoppingListItemView(context, animatorConfig))
 
         override fun onBindViewHolder(
             holder: ViewHolder,

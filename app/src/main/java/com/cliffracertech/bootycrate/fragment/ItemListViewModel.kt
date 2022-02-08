@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.recyclerview
+package com.cliffracertech.bootycrate.fragment
 
 import android.content.Context
 import android.content.Intent
@@ -29,14 +29,13 @@ import java.util.*
 import javax.inject.Inject
 
 /**
- * An abstract AndroidViewModel to provide data and callbacks for a fragment
- * that displays a list of ListItem subclasses.
+ * An abstract view model to provide data and callbacks for a fragment that
+ * displays a list of ListItem subclasses.
  *
- * ItemListViewModel's StateFlow property uiState represents the latest value
- * of ItemListViewModel.UiState, values of which represent different states of
- * a screen displaying a list of searchable items. If uiState's latest emitted
- * value is a UiState.Content instance, then the list of items to be displayed
- * is contained inside the UiState instance through the property items.
+ * ItemListViewModel's items property represents the latest list of items that
+ * should be displayed by implementing activities/fragments. The property
+ * emptyMessage represents a StringResource that, when resolved to a string,
+ * should be displayed to the user in place of the list of items.
  *
  * ItemListViewModel listens to changes in the integer datastore value pointed
  * to by the value of the string resource R.string.pref_item_sort_key, maps
@@ -52,8 +51,7 @@ import javax.inject.Inject
  * subclasses through the properties searchQuery and sort. Subclasses should
  * override the abstract property items to return a Flow<List<T>> containing
  * all of the items in the database that match the current sorting option and
- * search query, as well as any additional sorting parameters that they
- * themselves add.
+ * search query, as well as any additional sorting parameters that they add.
  */
 abstract class ItemListViewModel<T: ListItem>(
     context: Context,
@@ -69,29 +67,14 @@ abstract class ItemListViewModel<T: ListItem>(
     protected val sort = context.dataStore.enumPreferenceFlow(
         intPreferencesKey(context.getString(R.string.pref_item_sort_key)), ListItem.Sort.Color)
 
-    /** A class representing the UI state for an activity / fragment displaying a list of ListItems. */
-    sealed class UiState {
-        /** The activity/fragment should display a loading indicator. */
-        object Loading : ItemListViewModel.UiState()
-        /** The activity/fragment should display a message
-         * indicating that the list of items is empty. */
-        object EmptyContents: ItemListViewModel.UiState()
-        /** The activity/fragment should display a message indicating that the
-         * list of items is empty due to no items matching the search filter. */
-        object EmptySearchResults : ItemListViewModel.UiState()
-        /** The activity/fragment should display the provided list
-         * of items provided through the state's 'items' property . */
-        data class Content<T>(val items: List<T>) : UiState()
-    }
+    abstract val items: StateFlow<List<T>>
 
-    protected abstract val items: StateFlow<List<T>>
-
-    val uiState by lazy { // items has not been overridden at this point
+    val emptyMessage by lazy { // items has not been overridden at this point
         items.combine(searchQuery) { items, query -> when {
-            items.isNotEmpty() -> UiState.Content(items)
-            query != null ->      UiState.EmptySearchResults
-            else ->               UiState.EmptyContents
-        }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), UiState.Loading)
+            items.isNotEmpty() -> null
+            query != null -> StringResource(R.string.no_search_results_message)
+            else -> StringResource(R.string.empty_list_message, collectionNameResId)
+        }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), null)
     }
 
     fun onRenameItemRequest(id: Long, name: String) {

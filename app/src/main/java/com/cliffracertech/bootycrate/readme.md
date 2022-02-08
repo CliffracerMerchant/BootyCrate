@@ -25,7 +25,7 @@ and POJO representations of the items stored in the database tables.
 fragment contains all of the fragments used in the app. The two main content
 fragments' inheritance chain is:
 <pre>
-ListViewFragment -> ShoppingListFragment
+ItemListFragment -> ShoppingListFragment
                  -> InventoryFragment
 </pre>
 

@@ -3,16 +3,10 @@
    ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
    ~ or in the file LICENSE in the project's root directory. -->
 
-<com.kennyc.view.MultiStateView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/inventoryFragmentView"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:msv_emptyView="@layout/empty_list"
-    app:msv_errorView="@layout/empty_list"
-    app:msv_loadingView="@layout/loading_list"
-    app:msv_viewState="loading" >
+    android:layout_height="match_parent" >
 
     <com.cliffracertech.bootycrate.recyclerview.InventoryView
         android:id="@+id/inventoryView"
@@ -20,4 +14,30 @@
         android:layout_height="match_parent"
         style="@style/ItemList" />
 
-</com.kennyc.view.MultiStateView>
+    <TextSwitcher
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/itemListMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="0dp"
+        android:inAnimation="@anim/fade_in"
+        android:outAnimation="@anim/fade_out">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            tools:text="@string/empty_list_message"
+            style="@style/TitleTextAppearance" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            tools:text="@string/no_search_results_message"
+            style="@style/TitleTextAppearance" />
+
+    </TextSwitcher>
+
+</FrameLayout>

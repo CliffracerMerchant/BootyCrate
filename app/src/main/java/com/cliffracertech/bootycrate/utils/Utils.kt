@@ -237,15 +237,15 @@ inline fun <reified T: Enum<*>> DataStore<Preferences>.mutableEnumPreferenceFlow
 fun Menu.getItemOrNull(index: Int) = try { getItem(index) }
                                      catch (e: IndexOutOfBoundsException) { null }
 
-/** A holder of a string resource, which is resolved by calling the method
- * resolve with a Context instance. Thanks to this SO post at
+/** A holder of a string resource, which can be resolved to a string by calling
+ * the method resolve with a Context instance. Thanks to this SO post at
  * https://stackoverflow.com/a/65967451 for the idea. */
 class StringResource(
     private val string: String?,
     @StringRes val stringResId: Int = 0,
     private val args: ArrayList<Any>?
 ) {
-    data class Id(val id: Int)
+    data class Id(@StringRes val id: Int)
 
     constructor(string: String): this(string, 0, null)
     constructor(@StringRes stringResId: Int): this(null, stringResId, null)
@@ -256,8 +256,9 @@ class StringResource(
     constructor(@StringRes stringResId: Int, stringVarId: Id):
         this(null, stringResId, arrayListOf(stringVarId))
 
-    fun resolve(context: Context) = string ?: when(args) {
-        null -> context.getString(stringResId)
+    fun resolve(context: Context?) = string ?: when {
+        context == null -> ""
+        args == null -> context.getString(stringResId)
         else -> {
             for (i in args.indices) {
                 val it = args[i]

@@ -43,7 +43,7 @@ class InventoryView(context: Context, attrs: AttributeSet) :
     inner class Adapter : ExpandableItemListView<InventoryItem>.Adapter<ViewHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-            ViewHolder(InventoryItemView(context, itemAnimator.animatorConfig))
+            ViewHolder(InventoryItemView(context, animatorConfig))
 
         override fun onBindViewHolder(
             holder: ViewHolder,

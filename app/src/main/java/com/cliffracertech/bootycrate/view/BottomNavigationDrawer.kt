@@ -60,6 +60,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
     private val behavior = BottomSheetBehavior<BottomNavigationDrawer>()
     var targetState = BottomSheetBehavior.STATE_COLLAPSED
         private set
+    val state get() = behavior.state
 
     enum class IsHideable { Yes, No, OnlyByApp }
     val isHideable: IsHideable

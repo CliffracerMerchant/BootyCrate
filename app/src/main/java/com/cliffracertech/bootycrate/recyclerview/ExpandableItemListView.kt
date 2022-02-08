@@ -26,7 +26,10 @@ abstract class ExpandableItemListView<T: ListItem>(
     attrs: AttributeSet
 ) : ItemListView<T>(context, attrs) {
 
-    protected val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
+    private val itemAnimator = ExpandableItemAnimator(AnimatorConfig.appDefault(context))
+    protected var animatorConfig get() = itemAnimator.animatorConfig
+        set(value) { itemAnimator.animatorConfig = value }
+
     private var needToHideSoftKeyboard = false
     private var expandCollapseAnimRunning = false
     private var queuedEditButtonPressPos = -1

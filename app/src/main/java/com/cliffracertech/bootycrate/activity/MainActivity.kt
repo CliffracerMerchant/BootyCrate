@@ -22,11 +22,12 @@ import com.cliffracertech.bootycrate.dialog.NewShoppingListItemDialog
 import com.cliffracertech.bootycrate.dialog.itemGroupNameDialog
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.fragment.InventoryFragment
-import com.cliffracertech.bootycrate.fragment.ListViewFragment
+import com.cliffracertech.bootycrate.fragment.ItemListFragment
 import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
 import com.cliffracertech.bootycrate.model.MainActivityNavigationState
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
@@ -208,10 +209,10 @@ class MainActivity : NavViewActivity() {
         // currently added or not.
         ui.bottomNavigationDrawer.onPeekHeightAutoAdjusted = { padding ->
             supportFragmentManager.fragments.forEach { fragment ->
-                (fragment as? ListViewFragment<*>)?.setListBottomPadding(padding)
+                (fragment as? ItemListFragment<*>)?.setListBottomPadding(padding)
             }
             supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
-                if (fragment is ListViewFragment<*>)
+                if (fragment is ItemListFragment<*>)
                     fragment.setListBottomPadding(padding)
             }
         }

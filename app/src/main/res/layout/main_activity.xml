@@ -70,7 +70,7 @@
             android:layout_height="400dp"
             android:layout_gravity="bottom"
             android:layout_marginTop="?android:attr/actionBarSize"
-            android:background="@drawable/background_gradient">
+            android:background="@drawable/background_gradient" >
 
             <com.cliffracertech.bootycrate.recyclerview.ItemGroupSelector
                 android:id="@+id/itemGroupSelector"
@@ -78,7 +78,7 @@
                 android:layout_height="match_parent"
                 android:background="@drawable/item_group_selector"
                 android:paddingTop="5dp"
-                android:paddingBottom="52dp"
+                android:paddingBottom="60dp"
                 android:visibility="invisible"
                 android:alpha="0"
                 tools:visibility="visible"
