@@ -37,9 +37,15 @@ open class IntegerEdit(context: Context, attrs: AttributeSet?) : LinearLayout(co
 
     // value = value is not pointless due to value's custom getter and setter
     var minValue = 0
-        set(newMin) { field = newMin; value = value }
+        set(newMin) {
+            field = newMin
+            value = value.coerceAtLeast(newMin)
+        }
     var maxValue = 0
-        set(newMax) { field = newMax; value = value }
+        set(newMax) {
+            field = newMax
+            value = value.coerceAtMost(newMax)
+        }
     var stepSize: Int
 
     var onValueChangedListener: ((Int)->Unit)? = null

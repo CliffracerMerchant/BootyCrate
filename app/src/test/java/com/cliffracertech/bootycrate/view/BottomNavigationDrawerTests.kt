@@ -2,15 +2,15 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.view
 
 import android.content.Context
 import android.graphics.Rect
 import androidx.core.view.doOnNextLayout
 import androidx.fragment.app.FragmentActivity
 import androidx.test.core.app.ApplicationProvider
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.dpToPixels
-import com.cliffracertech.bootycrate.view.BottomNavigationDrawer
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,8 +21,6 @@ import org.robolectric.RobolectricTestRunner
 class BottomNavigationDrawerTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     private val rect = Rect()
-    //private lateinit var instance: BottomNavigationDrawer
-    //private fun waitForAnimationsToFinish() = Shadows.shadowOf(Looper.getMainLooper()).idle()
 
     private fun instance(vararg attrs: Pair<Int, String>): BottomNavigationDrawer {
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
@@ -41,6 +39,8 @@ class BottomNavigationDrawerTests {
 
     @Test fun expandedHeight() {
         instance().doOnNextLayout {
+            it.getHitRect(rect)
+            assertThat(rect.height()).isLessThan(it.height)
             (it as BottomNavigationDrawer).expand()
             it.getHitRect(rect)
             assertThat(rect.height()).isEqualTo(it.height)
@@ -71,11 +71,10 @@ class BottomNavigationDrawerTests {
         assertThat(instance.isHidden).isTrue()
 
         instance.show()
-        assertThat(instance.isHidden).isFalse()
         assertThat(instance.isCollapsed).isTrue()
     }
 
-    @Test fun isHideableValues() {
+    @Test fun isHideableNoAndOnlyByAppWorks() {
         var instance = instance(Pair(R.attr.isHideable, BottomNavigationDrawer.IsHideable.No.ordinal.toString()))
         instance.hide()
         assertThat(instance.isHidden).isFalse()

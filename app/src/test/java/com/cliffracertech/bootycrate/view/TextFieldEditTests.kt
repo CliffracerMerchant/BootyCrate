@@ -3,11 +3,11 @@
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
 
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.view
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.cliffracertech.bootycrate.view.TextFieldEdit
+import com.cliffracertech.bootycrate.R
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith

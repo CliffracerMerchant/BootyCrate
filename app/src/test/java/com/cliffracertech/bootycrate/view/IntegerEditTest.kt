@@ -2,13 +2,13 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.view
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.dpToPixels
 import com.cliffracertech.bootycrate.utils.spToPixels
-import com.cliffracertech.bootycrate.view.IntegerEdit
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -92,32 +92,30 @@ class IntegerEditTest {
     }
 
     @Test fun integerEdit_testMinMaxValues() {
-        val ie = nonDefaultValuesIntegerEdit()
-        ie.value = ie.minValue - 4
-        assertThat(ie.value).isEqualTo(ie.minValue)
-        ie.value = ie.maxValue + 10
-        assertThat(ie.value).isEqualTo(ie.maxValue)
+        nonDefaultValuesIntegerEdit().apply {
+            value = minValue - 4
+            assertThat(value).isEqualTo(minValue)
+            value = maxValue + 10
+            assertThat(value).isEqualTo(maxValue)
 
-        ie.value = ie.minValue + 1
-        ie.decrement()
-        assertThat(ie.value).isEqualTo(ie.minValue)
+            value = minValue
+            decrement()
+            assertThat(value).isEqualTo(minValue)
 
-        ie.value = ie.maxValue - 1
-        ie.increment()
-        assertThat(ie.value).isEqualTo(ie.maxValue)
+            value = maxValue
+            increment()
+            assertThat(value).isEqualTo(maxValue)
 
-        ie.value = 50
-        ie.minValue = 60
-        assertThat(ie.value).isEqualTo(ie.minValue)
+            value = 50
+            assertThat(value).isEqualTo(50)
+            minValue = 60
+            assertThat(value).isEqualTo(minValue)
 
-        ie.value = 400
-        ie.maxValue = 350
-        assertThat(ie.value).isEqualTo(ie.maxValue)
-
-        ie.value = 200
-        ie.minValue = 100
-        ie.maxValue = 300
-        assertThat(ie.value).isEqualTo(200)
+            value = 400
+            assertThat(value).isEqualTo(400)
+            maxValue = 350
+            assertThat(value).isEqualTo(maxValue)
+        }
     }
 
     @Test fun integerEdit_testValueChangedListener() {
