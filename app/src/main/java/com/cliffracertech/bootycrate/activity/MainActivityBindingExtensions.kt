@@ -11,10 +11,15 @@ import android.graphics.drawable.GradientDrawable
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.core.view.children
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.findFragment
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
+import com.cliffracertech.bootycrate.dlog
+import com.cliffracertech.bootycrate.fragment.ItemListFragment
 import com.cliffracertech.bootycrate.utils.GradientBuilder
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -23,21 +28,13 @@ import kotlin.math.abs
 /**
  * Style the contents of the actionBar and bottomAppBar members to match their background gradients.
  *
- * Unfortunately many of the desired aspects of the app's style (e.g. the menu
- * item icons being tinted to match the gradient background of the top and
- * bottom action bar) are impossible to accomplish in XML. initGradientStyle
- * performs additional operations to initialize the desired style. Its
- * foreground gradient (used to tint the text and icon drawables in the action
- * bar and bottom app bar) is made by creating a linear gradient using the
- * values of the XML attributes foregroundGradientLeftColor, foregroundGradientMiddleColor,
- * and foregroundGradientRightColor. The background gradient (smaller subsets
- * of which are used as the backgrounds for the checkout and add buttons) is
- * made from the colors backgroundGradientLeftColor, backgroundGradientMiddleColor,
- * and backgroundGradientRightColor. The gradient used for the indicator of the
- * bottom navigation bar is recommended to be the same as the foreground
- * gradient for thematic consistency, but can be changed through the properties
- * indicatorGradientLeftColor, indicatorGradientMiddleColor, and indicatorGradientRightColor
- * if needed for better visibility.
+ * Unfortunately many of the desired aspects of the app's style (e.g. the
+ * checkout button's background bing presented as a "cutout" of the bottom app
+ * bar's background gradient) are impossible to accomplish in XML. initGradientStyle
+ * performs additional operations to initialize the desired style. The background
+ * gradient (smaller subsets of which are used as the backgrounds for the checkout
+ * and add buttons) is made from the colors backgroundGradientLeftColor,
+ * backgroundGradientMiddleColor, and backgroundGradientRightColor.
  */
 fun MainActivity.initGradientStyle() {
     window.setBackgroundDrawable(ContextCompat.getDrawable(this, R.drawable.background_gradient))
@@ -84,18 +81,30 @@ fun MainActivity.initGradientStyle() {
 }
 
 fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.BottomSheetCallback() {
-    override fun onStateChanged(bottomSheet: View, newState: Int) { }
+    private val Int.isSettlingOrDragging get() = this == BottomSheetBehavior.STATE_SETTLING ||
+                                                 this == BottomSheetBehavior.STATE_DRAGGING
+    private val Int.isExpanded get() = this == BottomSheetBehavior.STATE_EXPANDED
+    private val Int.isCollapsed get() = this == BottomSheetBehavior.STATE_COLLAPSED
+    private val Int.isExpandingOrExpanded get() = isExpanded || isSettlingOrDragging
+    private val Int.isCollapsingOrCollapsed get() = isCollapsed || isSettlingOrDragging
+
+
+    override fun onStateChanged(bottomSheet: View, newState: Int) {
+        dlog("state set to $newState")
+        appTitle.isVisible = newState.isExpandingOrExpanded
+        settingsButton.isVisible = newState.isExpandingOrExpanded
+        itemGroupSelectorOptionsButton.isVisible = newState.isExpandingOrExpanded
+        itemGroupSelector.isInvisible = newState.isCollapsed
+
+        bottomAppBar.ui.cradleLayout.isVisible = newState.isCollapsingOrCollapsed
+        bottomAppBar.ui.navigationView.isVisible = newState.isCollapsingOrCollapsed
+        bottomAppBar.navIndicator.alpha = if (newState.isCollapsingOrCollapsed) 1f else 0f
+    }
 
     override fun onSlide(bottomSheet: View, slideOffset: Float) {
         if (bottomNavigationDrawer.targetState == BottomSheetBehavior.STATE_HIDDEN)
             return
         val slide = abs(slideOffset)
-
-        appTitle.isVisible = slideOffset != 0f
-        settingsButton.isVisible = slideOffset != 0f
-        itemGroupSelectorOptionsButton.isVisible = slideOffset != 0f
-        itemGroupSelector.isInvisible = slideOffset == 0f
-        bottomAppBar.ui.navigationView.isVisible = slideOffset != 1f
 
         appTitle.alpha = slide
         settingsButton.alpha = slide
@@ -104,8 +113,7 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
         bottomAppBar.ui.navigationView.alpha = 1f - slide
 
         bottomAppBar.apply {
-            cradle.layout?.apply {
-                isVisible = slideOffset != 1f
+            ui.cradleLayout.apply {
                 alpha = 1f - slide
                 scaleX = 1f - 0.1f * slide
                 scaleY = 1f - 0.1f * slide
@@ -113,6 +121,12 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
             }
             navIndicator.alpha = 1f - slide
             interpolation = 1f - slide
+        }
+
+        fragmentContainer.children.forEach {
+            val fragment = it.findFragment<Fragment>()
+            if (fragment is ItemListFragment<*>)
+                fragment.emptyListMessageView?.translationY = slide * -0.3f * it.height
         }
     }
 }

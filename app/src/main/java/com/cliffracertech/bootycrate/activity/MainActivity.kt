@@ -200,7 +200,10 @@ class MainActivity : NavViewActivity() {
     }
 
     private fun initNavDrawer() {
-        ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
+        val callback = ui.bottomSheetCallback()
+        ui.bottomNavigationDrawer.addBottomSheetCallback(callback)
+        if (!bottomAppBarViewModel.uiState.value.visible)
+            callback.onStateChanged(ui.bottomNavigationDrawer, BottomSheetBehavior.STATE_HIDDEN)
         // If the bottom navigation drawer adjusts its peek height to prevent it
         // from interfering with the system home gesture, then the shopping list
         // and inventory views need to have their bottom paddings adjusted accordingly.
