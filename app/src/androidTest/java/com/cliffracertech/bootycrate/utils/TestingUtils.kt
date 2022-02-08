@@ -17,9 +17,9 @@ import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.*
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.ListItem
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.model.database.ListItem
+import com.cliffracertech.bootycrate.model.database.InventoryItem
+import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
 import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView

@@ -2,16 +2,15 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate
+package com.cliffracertech.bootycrate.recyclerView
 
 import android.content.Context
-import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.LayerDrawable
 import android.os.Looper
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
+import com.cliffracertech.bootycrate.model.database.ShoppingListItem
+import com.cliffracertech.bootycrate.recyclerview.ShoppingListItemView
 import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -22,36 +21,33 @@ import org.robolectric.annotation.LooperMode
 
 @LooperMode(LooperMode.Mode.PAUSED)
 @RunWith(RobolectricTestRunner::class)
-class InventoryItemViewTests {
+class ShoppingListItemViewTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
-    private lateinit var instance: InventoryItemView
-    private lateinit var testItem: InventoryItem
+    private lateinit var instance: ShoppingListItemView
+    private lateinit var testItem: ShoppingListItem
     private fun waitForAnimationsToFinish() = Shadows.shadowOf(Looper.getMainLooper()).idle()
 
     @Before fun resetInstance() {
-        instance = InventoryItemView(context)
-         testItem = InventoryItem(color = 5, name = "Test item", extraInfo = "Test extra info",
-                                  amount = 8, autoAddToShoppingList = true, autoAddToShoppingListAmount = 3)
+        instance = ShoppingListItemView(context)
+        instance.layoutParams = RecyclerView.LayoutParams(RecyclerView.LayoutParams.MATCH_PARENT,
+                                                          RecyclerView.LayoutParams.WRAP_CONTENT)
+        testItem = ShoppingListItem(color = 5, name = "Test item",
+                                    extraInfo = "Test extra info", amount = 8)
     }
 
     private fun assertExpandedState(expanded: Boolean) {
-        assertThat(instance.ui.checkBox.inColorEditMode).isTrue()
+        assertThat(instance.ui.checkBox.inColorEditMode).isEqualTo(expanded)
         assertThat(instance.ui.nameEdit.isEditable).isEqualTo(expanded)
         assertThat(instance.ui.extraInfoEdit.isEditable).isEqualTo(expanded)
         assertThat(instance.ui.amountEdit.valueIsFocusable).isEqualTo(expanded)
         assertThat(instance.ui.editButton.isActivated).isEqualTo(expanded)
-        assertThat(instance.detailsUi.autoAddToShoppingListCheckBox.isVisible).isEqualTo(expanded)
-        assertThat(instance.detailsUi.autoAddToShoppingListLabel.isVisible).isEqualTo(expanded)
-        assertThat(instance.detailsUi.autoAddToShoppingListAmountEdit.isVisible).isEqualTo(expanded)
     }
 
-    private fun assertSelectedState(selected: Boolean) {
-        val background = instance.background as? LayerDrawable
-        val selectedBackground = background?.getDrawable(1) as? LayerDrawable
-        val gradientOutline = selectedBackground?.getDrawable(0) as? GradientDrawable
-        assertThat(gradientOutline?.alpha).isEqualTo(if (selected) 255 else 0)
-        assertThat(instance.isSelected).isEqualTo(selected)
+    private fun assertCheckedState(checked: Boolean) {
+        assertThat(instance.ui.checkBox.isChecked).isEqualTo(checked)
+        assertThat(instance.ui.nameEdit.hasStrikeThrough).isEqualTo(checked)
+        assertThat(instance.ui.extraInfoEdit.hasStrikeThrough).isEqualTo(checked)
     }
 
     @Test fun initialCollapsedState() {
@@ -67,13 +63,23 @@ class InventoryItemViewTests {
 
     @Test fun initialDeselectedState() {
         instance.update(testItem)
-        assertSelectedState(false)
+        assertThat(instance.isSelected).isFalse()
     }
 
     @Test fun initialSelectedState() {
         testItem.isSelected = true
         instance.update(testItem)
-        assertSelectedState(true)
+        assertThat(instance.isSelected).isTrue()
+    }
+    @Test fun initialUncheckedState() {
+        instance.update(testItem)
+        assertCheckedState(false)
+    }
+
+    @Test fun initialCheckedState() {
+        testItem.isChecked = true
+        instance.update(testItem)
+        assertCheckedState(true)
     }
 
     @Test fun initialBlankExtraInfoIsHidden() {
@@ -84,13 +90,12 @@ class InventoryItemViewTests {
 
     @Test fun valuesMatchItem() {
         instance.update(testItem)
+        assertThat(instance.ui.checkBox.isChecked).isEqualTo(testItem.isChecked)
         assertThat(instance.ui.checkBox.colorIndex).isEqualTo(testItem.color)
         assertThat(instance.ui.nameEdit.text.toString()).isEqualTo(testItem.name)
         assertThat(instance.ui.extraInfoEdit.text.toString()).isEqualTo(testItem.extraInfo)
         assertThat(instance.ui.amountEdit.value).isEqualTo(testItem.amount)
-        assertThat(instance.detailsUi.autoAddToShoppingListCheckBox.isChecked).isEqualTo(testItem.autoAddToShoppingList)
-        assertThat(instance.detailsUi.autoAddToShoppingListCheckBox.colorIndex).isEqualTo(testItem.color)
-        assertThat(instance.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(testItem.autoAddToShoppingListAmount)
+        assertThat(instance.isSelected).isEqualTo(testItem.isSelected)
     }
 
     @Test fun editButtonExpandsWhileCollapsed() {
@@ -124,17 +129,17 @@ class InventoryItemViewTests {
         assertThat(instance.ui.extraInfoEdit.isVisible).isTrue()
     }
 
-    @Test fun selecting() {
-        initialDeselectedState()
-        instance.select()
+    @Test fun checking() {
+        initialUncheckedState()
+        instance.ui.checkBox.performClick()
         waitForAnimationsToFinish()
-        assertSelectedState(true)
+        assertCheckedState(true)
     }
 
-    @Test fun deselecting() {
-        initialSelectedState()
-        instance.deselect()
+    @Test fun unchecking() {
+        initialCheckedState()
+        instance.ui.checkBox.performClick()
         waitForAnimationsToFinish()
-        assertSelectedState(false)
+        assertCheckedState(false)
     }
 }
