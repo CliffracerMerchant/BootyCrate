@@ -133,6 +133,7 @@ class MaxHeightLinearLayout(context: Context, attrs: AttributeSet) : LinearLayou
 
 /** Set the View's padding, using the current values as defaults
  * so that not every value needs to be specified. */
+@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
 fun View.setPadding(
     start: Int = paddingStart,
     top: Int = paddingTop,
@@ -185,9 +186,9 @@ fun <T> DataStore<Preferences>.preferenceFlow(
 
 /** Return a Flow<T> that contains the most recent enum value for the DataStore
  * preference pointed to by @param key, with a default value of @param
- * defaultValue. @param key should be an Preferences.Key<Int> value whose
- * */
-inline fun <reified T: Enum<*>> DataStore<Preferences>.enumPreferenceFlow(
+ * defaultValue. @param key should be an Preferences.Key<Int> instance whose
+ * value indicates the ordinal of the current enum value .*/
+inline fun <reified T: Enum<T>> DataStore<Preferences>.enumPreferenceFlow(
     key: Preferences.Key<Int>,
     defaultValue: T
 ) = data.map { prefs ->
@@ -218,8 +219,8 @@ fun <T> DataStore<Preferences>.mutablePreferenceFlow(
  * the parameter defaultValue. Changes to the returned MutableStateFlow's value
  * property will automatically be written to the receiver DataStore object. The
  * Preferences.Key<Int> should point to the preference that stores the index of
- * the current enum value's index.*/
-inline fun <reified T: Enum<*>> DataStore<Preferences>.mutableEnumPreferenceFlow(
+ * the current enum value.*/
+inline fun <reified T: Enum<T>> DataStore<Preferences>.mutableEnumPreferenceFlow(
     key: Preferences.Key<Int>,
     scope: CoroutineScope,
     defaultValue: T,
@@ -234,8 +235,9 @@ inline fun <reified T: Enum<*>> DataStore<Preferences>.mutableEnumPreferenceFlow
 }
 
 /** Get the menu item at @param index, or null if the index is out of bounds. */
-fun Menu.getItemOrNull(index: Int) = try { getItem(index) }
-                                     catch (e: IndexOutOfBoundsException) { null }
+fun Menu.getItemOrNull(index: Int) =
+    try { getItem(index) }
+    catch (e: IndexOutOfBoundsException) { null }
 
 /** A holder of a string resource, which can be resolved to a string by calling
  * the method resolve with a Context instance. Thanks to this SO post at

@@ -23,7 +23,6 @@ import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.repeatWhenStarted
 import com.cliffracertech.bootycrate.utils.setPadding
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**

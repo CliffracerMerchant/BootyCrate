@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
 
 /**
- * An manager of messages to be displayed to the user, e.g. through a SnackBar.
+ * A manager of messages to be displayed to the user, e.g. through a SnackBar.
  *
  * New messages can be posted using the postMessage function. MessageHandler
  * users can listen to the SharedFlow member messages for new messages. The

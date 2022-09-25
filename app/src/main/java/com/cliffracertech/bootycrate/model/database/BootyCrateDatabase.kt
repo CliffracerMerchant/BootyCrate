@@ -7,6 +7,7 @@ package com.cliffracertech.bootycrate.model.database
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
+import android.system.Os.close
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -63,16 +64,16 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         override fun onOpen(db: SupportSQLiteDatabase) {
             super.onOpen(db)
             db.execSQL("UPDATE item " +
-                    "SET selectedInShoppingList = 0, selectedInInventory = 0, " +
-                    "expandedInShoppingList = 0, expandedInInventory = 0")
+                       "SET selectedInShoppingList = 0, selectedInInventory = 0, " +
+                       "expandedInShoppingList = 0, expandedInInventory = 0")
             db.execSQL("UPDATE item " +
-                    "SET shoppingListAmount = -1, " +
-                    "inShoppingListTrash = 0 " +
-                    "WHERE inShoppingListTrash")
+                       "SET shoppingListAmount = -1, " +
+                       "inShoppingListTrash = 0 " +
+                       "WHERE inShoppingListTrash")
             db.execSQL("UPDATE item " +
-                    "SET inventoryAmount = -1, " +
-                    "inInventoryTrash = 0 " +
-                    "WHERE inInventoryTrash")
+                       "SET inventoryAmount = -1, " +
+                       "inInventoryTrash = 0 " +
+                       "WHERE inInventoryTrash")
         }
 
         override fun onCreate(db: SupportSQLiteDatabase) {
