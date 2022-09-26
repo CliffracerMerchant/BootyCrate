@@ -90,10 +90,10 @@ class MainActivityNavigationState @Inject constructor(
         state.selectedNavItemId,
         backStackSize
     ) { navItemId, backStackSize -> when {
-        backStackSize > 0 ->              Screen.Other
-        navItemId == R.id.shoppingList -> Screen.ShoppingList
-        navItemId == R.id.inventory ->    Screen.Inventory
-        else ->                           Screen.Other
+        backStackSize > 0 ->                    Screen.Other
+        navItemId == R.id.shoppingListButton -> Screen.ShoppingList
+        navItemId == R.id.inventoryButton ->    Screen.Inventory
+        else ->                                 Screen.Other
         // The drop(1) is to avoid the navViewSelectedItemId's initial state of -1,
         // which leads to an activeFragment value of Fragment.Other instead of the
         // intended initial value of Fragment.ShoppingList

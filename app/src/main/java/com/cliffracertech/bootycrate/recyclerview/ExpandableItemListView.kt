@@ -107,6 +107,7 @@ abstract class ExpandableItemListView<T: ListItem>(
     open inner class ViewHolder(view: ExpandableItemView<T>) :
         ItemListView<T>.ViewHolder(view)
     {
+        @Suppress("Unchecked_Cast")
         open val view get() = itemView as ExpandableItemView<T>
 
         init {

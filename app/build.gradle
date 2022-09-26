@@ -45,6 +45,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
         coreLibraryDesugaringEnabled true
     }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
 
     testOptions.unitTests.includeAndroidResources = true
 
@@ -92,7 +95,7 @@ dependencies {
     implementation "dev.sasikanth:colorsheet:1.0.1"
     implementation 'com.github.Kennyc1012:MultiStateView:2.2.0'
     implementation 'ca.antonious:materialdaypicker:0.7.4'
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.0'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.8'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'androidx.test:core-ktx:1.4.0'

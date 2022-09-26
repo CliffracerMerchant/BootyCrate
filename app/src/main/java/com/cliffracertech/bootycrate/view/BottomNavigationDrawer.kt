@@ -151,7 +151,8 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
             val realDisplayHeight =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
                     windowManager.currentWindowMetrics.bounds.height()
-                else Point().also { windowManager.defaultDisplay.getRealSize(it) }.y
+                else @Suppress("DEPRECATION")
+                    Point().also { windowManager.defaultDisplay.getRealSize(it) }.y
             val gestureTop = realDisplayHeight - systemBottomGestureHeight
 
             // displayMetrics.heightPixels seems to include the status bar height on

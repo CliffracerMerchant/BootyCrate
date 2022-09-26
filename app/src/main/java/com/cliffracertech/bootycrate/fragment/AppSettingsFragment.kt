@@ -90,7 +90,9 @@ class AppSettingsFragment: PreferenceFragmentCompat() {
         return true
     }
 
-    private val getExportPath = registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
+    private val getExportPath = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri ->
         val context = this.context ?: return@registerForActivityResult
         if (uri != null) database.backup(context, uri)
     }
