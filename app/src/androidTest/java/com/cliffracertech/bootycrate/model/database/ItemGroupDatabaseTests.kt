@@ -2,29 +2,24 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.database
+package com.cliffracertech.bootycrate.model.database
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.cliffracertech.bootycrate.utils.collectForTesting
+import com.cliffracertech.bootycrate.utils.getTestDatabase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class ItemGroupDatabaseTests {
-    private lateinit var db: BootyCrateDatabase
-    private lateinit var dao: ItemGroupDao
-
-    @Before fun createDb() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
-        db = BootyCrateDatabase.getInMemoryDb(context)
-        dao = db.itemGroupDao()
-    }
+    private val context = ApplicationProvider.getApplicationContext<Context>()
+    private val db = getTestDatabase(context)
+    private val dao = db.itemGroupDao()
 
     @After fun closeDb() = db.close()
 
@@ -101,10 +96,13 @@ class ItemGroupDatabaseTests {
             timeOut = 200L,
             { },
             { newItemGroupId = runBlocking { dao.add("new item group") }},
-            { runBlocking { db.itemDao().addConvertibles(itemGroupId = newItemGroupId, listOf(
-                ShoppingListItem(name = ""),
-                ShoppingListItem(name = ""),
-                InventoryItem(name = "")))
+            { runBlocking {
+                db.itemDao().add(
+                    itemGroupId = newItemGroupId,
+                    items = listOf(
+                        ShoppingListItem(name = ""),
+                        ShoppingListItem(name = ""),
+                        InventoryItem(name = "")))
             }})
 
         assertThat(results.size).isEqualTo(3)

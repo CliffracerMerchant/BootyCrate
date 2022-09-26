@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.fragment
 
-import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
@@ -27,11 +26,10 @@ import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
-import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.model.database.*
 import com.cliffracertech.bootycrate.recyclerview.InventoryView
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.viewmodel.InventoryViewModel
-import com.cliffracertech.bootycrate.viewmodel.MainActivityViewModel
+import com.cliffracertech.bootycrate.activity.ActionBarViewModel
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.allOf
@@ -48,26 +46,22 @@ import org.junit.runner.RunWith
 class InventoryFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val db = BootyCrateDatabase.get(context as Application)
+    private val db = getTestDatabase(context)
     private val dao = db.itemDao()
+    private val itemGroupId = db.run { itemGroupDao().getAllNow()[0].id }
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
-
-    private val itemGroupId = db.run { runBlocking { itemGroupDao().deleteAll() }
-                                       itemGroupDao().getAllNow()[0].id }
     private val redItem0 = InventoryItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
     private val orangeItem1 = InventoryItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
     private val yellowItem2 = InventoryItem(name = "Yellow", color = 2, amount = 1)
     private val grayItem11 = InventoryItem(name = "Gray", color = 11, amount = 9, autoAddToShoppingList = true)
 
-    @Before fun setup() {
+    @Before fun resetItems() {
         activityRule.scenario.onActivity {
-            val mainActivityViewModel: MainActivityViewModel by it.viewModels()
-            mainActivityViewModel.onSortOptionSelected(R.id.color_option)
+            val actionBarViewModel: ActionBarViewModel by it.viewModels()
+            actionBarViewModel.onSortOptionClick(R.id.color_option)
         }
         runBlocking {
-            dao.deleteAllShoppingListItems()
-            dao.deleteAllInventoryItems()
-            dao.addConvertibles(itemGroupId, listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
+            dao.add(itemGroupId, listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
         onView(withId(R.id.inventoryButton)).perform(click())
     }
@@ -300,13 +294,13 @@ class InventoryFragmentTests {
     @Test fun searchQuerySurvivesOrientationChangeWhileInSettings() = searchQuerySurvives(::changeOrientationWhileInSettings)
     @Test fun searchQuerySurvivesSelectionAndDeselection() = searchQuerySurvives(::deselectAllWithActionBarBackButton)
 
-    private fun emptySearchResultsMessage() = allOf(withId(R.id.emptyListMessage),
+    private fun emptySearchResultsMessage() = allOf(withId(R.id.itemListMessage),
                                                     withParent(withId(R.id.inventoryFragmentView)),
                                                     withText(R.string.no_search_results_message))
-    private fun emptyListMessage() = allOf(withId(R.id.emptyListMessage),
+    private fun emptyListMessage() = allOf(withId(R.id.itemListMessage),
                                            withParent(withId(R.id.inventoryFragmentView)),
                                            withText(context.getString(R.string.empty_list_message,
-                                                    context.getString(R.string.inventory_item_collection_name))))
+                                                    context.getString(R.string.inventory_description))))
 
     @Test fun emptyMessageAppears() {
         runBlocking { dao.deleteAllInventoryItems() }
@@ -369,7 +363,7 @@ class InventoryFragmentTests {
         val innerIntent = allOf(hasAction(Intent.ACTION_SEND),
                                 hasType("text/plain"),
                                 hasExtra(Intent.EXTRA_TEXT, intendedMessage))
-        val collectionName = context.getString(R.string.inventory_item_collection_name)
+        val collectionName = context.getString(R.string.inventory_description)
         val intendedTitle = context.getString(R.string.share_whole_list_title, collectionName)
         Intents.intended(allOf(hasAction(Intent.ACTION_CHOOSER),
                                hasExtra(Intent.EXTRA_TITLE, intendedTitle),
@@ -387,7 +381,7 @@ class InventoryFragmentTests {
         val innerIntent = allOf(hasAction(Intent.ACTION_SEND),
                                 hasType("text/plain"),
                                 hasExtra(Intent.EXTRA_TEXT, intendedMessage))
-        val collectionName = context.getString(R.string.inventory_item_collection_name)
+        val collectionName = context.getString(R.string.inventory_description)
         val intendedTitle = context.getString(R.string.share_selected_items_title, collectionName)
         Intents.intended(allOf(hasAction(Intent.ACTION_CHOOSER),
                                hasExtra(Intent.EXTRA_TITLE, intendedTitle),

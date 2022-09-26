@@ -14,11 +14,10 @@ import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
-import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
+import com.cliffracertech.bootycrate.model.database.*
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
@@ -29,28 +28,26 @@ import org.hamcrest.Matchers.allOf
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class NewInventoryItemDialogTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val db = BootyCrateDatabase.get(context as Application)
+    private val db = getTestDatabase(context as Application)
     private val dao = db.itemDao()
-    private val groupId = db.run { runBlocking { itemGroupDao().deleteAll() }
-                                                 itemGroupDao().getAllNow()[0].id }
+    private val itemGroupId = db.run { itemGroupDao().getAllNow()[0].id }
+    private val testItem = InventoryItem(
+        name = "Test Item 1", extraInfo = "Test Extra Info 1",
+        color = 5, amount = 3, autoAddToShoppingList = true,
+        autoAddToShoppingListAmount = 4)
 
-    private val testItem = InventoryItem(name = "Test Item 1", extraInfo = "Test Extra Info 1",
-                                         color = 5, amount = 3, autoAddToShoppingList = true,
-                                         autoAddToShoppingListAmount = 4)
+    private fun amountIncreaseButton() = CoreMatchers.allOf(
+        withId(R.id.increaseButton), isDescendantOfA(withId(R.id.amountEdit)))
+    private fun autoAddTriggerIncreaseButton() = CoreMatchers.allOf(
+        withId(R.id.increaseButton), isDescendantOfA(withId(R.id.autoAddToShoppingListAmountEdit)))
 
-    private fun amountIncreaseButton() = CoreMatchers.allOf(withId(R.id.increaseButton),
-                                                            isDescendantOfA(withId(R.id.amountEdit)))
-    private fun autoAddTriggerIncreaseButton() =
-        CoreMatchers.allOf(withId(R.id.increaseButton),
-                           isDescendantOfA(withId(R.id.autoAddToShoppingListAmountEdit)))
-
-    @Before fun clearItems() {
-        runBlocking { dao.deleteAllShoppingListItems()
-                      dao.deleteAllInventoryItems() }
+    @Before fun setup() {
         onView(withId(R.id.inventoryButton)).perform(click())
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
@@ -176,7 +173,7 @@ class NewInventoryItemDialogTests {
     @Test fun duplicateNameInOtherListWarningAppears() {
         val item = ShoppingListItem(name = "Test Item 1", amount = 5,
                                     extraInfo = "Test Item 1 Extra Info")
-        runBlocking { dao.add(item.toDbListItem(groupId)) }
+        runBlocking { dao.add(item.toDbListItem(itemGroupId)) }
         onView(withId(R.id.addButton)).perform(click())
         onView(withId(R.id.warningMessage)).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("Test Item 1"))

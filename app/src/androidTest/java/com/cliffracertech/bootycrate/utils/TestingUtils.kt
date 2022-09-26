@@ -4,9 +4,11 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.utils
 
+import android.content.Context
 import android.view.View
 import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
@@ -17,6 +19,7 @@ import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.*
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.model.database.BootyCrateDatabase
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.InventoryItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
@@ -27,7 +30,6 @@ import com.cliffracertech.bootycrate.view.BottomNavigationDrawer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -36,6 +38,11 @@ import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
 import java.util.concurrent.TimeoutException
+
+fun getTestDatabase(context: Context) =
+    Room.inMemoryDatabaseBuilder(
+        context, BootyCrateDatabase::class.java
+    ).addCallback(BootyCrateDatabase.Callback()).build()
 
 /** A ViewAction that allows direct operation on a view.
  * Thanks to the author of this blog post for the idea.
@@ -88,10 +95,11 @@ fun onlyExpandedIndexIs(expandedIndex: Int?) = ViewAssertion { view, e ->
     val it = view as ExpandableItemListView<*>
     val expandedViewHeight = if (expandedIndex == null) Integer.MAX_VALUE else
         it.findViewHolderForAdapterPosition(expandedIndex)?.itemView?.height ?: throw e
-    for (i in 0 until it.listAdapter.itemCount) {
+    for (i in 0 until it.listAdapter.getItemCount()) {
         val vh = it.findViewHolderForAdapterPosition(i)
-        if (i != expandedIndex) assertThat(vh?.itemView?.height).isLessThan(expandedViewHeight)
-        else                    assertThat(vh?.itemView?.height).isEqualTo(expandedViewHeight)
+        if (i != expandedIndex)
+            assertThat(vh?.itemView?.height).isLessThan(expandedViewHeight)
+        else assertThat(vh?.itemView?.height).isEqualTo(expandedViewHeight)
     }
 }
 
@@ -101,7 +109,7 @@ fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
     if (view == null) throw e!!
     assertThat(view).isInstanceOf(ExpandableItemListView::class.java)
     val it = view as ExpandableItemListView<*>
-    for (i in 0 until it.listAdapter.itemCount) {
+    for (i in 0 until it.listAdapter.getItemCount()) {
         val vh = it.findViewHolderForAdapterPosition(i)!! as ExpandableItemListView<*>.ViewHolder
         val shouldBeSelected = i in indices
         assertThat(vh.item.isSelected).isEqualTo(shouldBeSelected)
@@ -127,8 +135,8 @@ open class onlyShownItemsAre<T: ListItem>(vararg items: T) : ViewAssertion {
         if (view == null) throw noViewFoundException!!
         assertThat(view).isInstanceOf(ExpandableItemListView::class.java)
         val it = view as ExpandableItemListView<*>
-        assertThat(items.size).isEqualTo(it.listAdapter.itemCount)
-        for (i in 0 until it.listAdapter.itemCount) {
+        assertThat(items.size).isEqualTo(it.listAdapter.getItemCount())
+        for (i in 0 until it.listAdapter.getItemCount()) {
             val vh = it.findViewHolderForAdapterPosition(i)
             assertThat(vh).isNotNull()
             val itemView = vh!!.itemView as ExpandableItemView<T>
@@ -163,8 +171,10 @@ class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
     ) {
         super.assertItemFromViewMatchesOriginalItem(view, item)
         view as InventoryItemView
-        assertThat(view.detailsUi.autoAddToShoppingListCheckBox.isChecked).isEqualTo(item.autoAddToShoppingList)
-        assertThat(view.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(item.autoAddToShoppingListAmount)
+        assertThat(view.detailsUi.autoAddToShoppingListCheckBox.isChecked)
+            .isEqualTo(item.autoAddToShoppingList)
+        assertThat(view.detailsUi.autoAddToShoppingListAmountEdit.value)
+            .isEqualTo(item.autoAddToShoppingListAmount)
     }
 }
 

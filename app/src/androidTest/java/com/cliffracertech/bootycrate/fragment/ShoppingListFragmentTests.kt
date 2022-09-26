@@ -4,15 +4,12 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.fragment
 
-import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.view.KeyEvent
 import androidx.activity.viewModels
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.core.app.ApplicationProvider
@@ -26,18 +23,16 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.*
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.dataStore
-import com.cliffracertech.bootycrate.database.*
+import com.cliffracertech.bootycrate.model.database.*
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListItemView
 import com.cliffracertech.bootycrate.recyclerview.ShoppingListView
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.viewmodel.MainActivityViewModel
-import com.cliffracertech.bootycrate.viewmodel.ShoppingListViewModel
+import com.cliffracertech.bootycrate.activity.ActionBarViewModel
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.allOf
@@ -49,16 +44,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-@LargeTest
 class ShoppingListFragmentTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val db = BootyCrateDatabase.get(context as Application)
+    private val db = getTestDatabase(context)
     private val dao = db.itemDao()
     private val uiDevice: UiDevice = UiDevice.getInstance(getInstrumentation())
 
-    private val inventoryId = db.run { runBlocking { itemGroupDao().deleteAll() }
-                                       itemGroupDao().getAllNow()[0].id }
+    private val itemGroupId = db.run { itemGroupDao().getAllNow()[0].id }
     private var redItem0 = ShoppingListItem(name = "Red", extraInfo = "Extra info", color = 0, amount = 8)
     private var orangeItem1 = ShoppingListItem(name = "Orange", extraInfo = "Extra info", color = 1, amount = 2)
     private var yellowItem2 = ShoppingListItem(name = "Yellow", color = 2, amount = 1)
@@ -66,8 +59,8 @@ class ShoppingListFragmentTests {
 
     @Before fun resetItems() {
         activityRule.scenario.onActivity {
-            val mainActivityViewModel: MainActivityViewModel by it.viewModels()
-            mainActivityViewModel.onSortOptionSelected(R.id.color_option)
+            val actionBarViewModel: ActionBarViewModel by it.viewModels()
+            actionBarViewModel.onSortOptionClick(R.id.color_option)
             val sortByCheckedKey = booleanPreferencesKey(
                 it.getString(R.string.pref_sort_by_checked_key))
             runBlocking {
@@ -75,11 +68,8 @@ class ShoppingListFragmentTests {
             }
         }
         runBlocking {
-            dao.deleteAllInventoryItems()
-            dao.deleteAllShoppingListItems()
-            dao.addConvertibles(inventoryId, listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
+            dao.add(itemGroupId, listOf(redItem0, orangeItem1, yellowItem2, grayItem11))
         }
-        Thread.sleep(50L)
     }
 
     @Test fun sortByColor() {
@@ -294,13 +284,13 @@ class ShoppingListFragmentTests {
     @Test fun searchQuerySurvivesOrientationChangeWhileInSettings() = searchQuerySurvives(::changeOrientationWhileInSettings)
     @Test fun searchQuerySurvivesSelectionAndDeselection() = searchQuerySurvives(::deselectAllWithActionBarBackButton)
 
-    private fun emptySearchResultsMessage() = allOf(withId(R.id.emptyListMessage),
+    private fun emptySearchResultsMessage() = allOf(withId(R.id.itemListMessage),
                                                     withParent(withId(R.id.shoppingListFragmentView)),
                                                     withText(R.string.no_search_results_message))
-    private fun emptyListMessage() = allOf(withId(R.id.emptyListMessage),
+    private fun emptyListMessage() = allOf(withId(R.id.itemListMessage),
                                            withParent(withId(R.id.shoppingListFragmentView)),
                                            withText(context.getString(R.string.empty_list_message,
-                                                    context.getString(R.string.shopping_list_item_collection_name))))
+                                                    context.getString(R.string.shopping_list_description))))
 
     @Test fun emptyMessageAppears() {
         runBlocking { dao.deleteAllShoppingListItems() }
@@ -312,7 +302,7 @@ class ShoppingListFragmentTests {
 
     @Test fun emptyMessageDisappears() {
         emptyMessageAppears()
-        runBlocking { dao.add(ShoppingListItem(name = "new item").toDbListItem(inventoryId)) }
+        runBlocking { dao.add(ShoppingListItem(name = "new item").toDbListItem(itemGroupId)) }
         Thread.sleep(30L)
         onView(emptyListMessage()).check(matches(not(isDisplayed())))
         onView(emptySearchResultsMessage()).check(matches(not(isDisplayed())))
@@ -363,7 +353,7 @@ class ShoppingListFragmentTests {
         val innerIntent = allOf(hasAction(Intent.ACTION_SEND),
                                 hasType("text/plain"),
                                 hasExtra(Intent.EXTRA_TEXT, intendedMessage))
-        val collectionName = context.getString(R.string.shopping_list_item_collection_name)
+        val collectionName = context.getString(R.string.shopping_list_description)
         val intendedTitle = context.getString(R.string.share_whole_list_title, collectionName)
         Intents.intended(allOf(hasAction(Intent.ACTION_CHOOSER),
                                hasExtra(Intent.EXTRA_TITLE, intendedTitle),
@@ -381,7 +371,7 @@ class ShoppingListFragmentTests {
         val innerIntent = allOf(hasAction(Intent.ACTION_SEND),
                                 hasType("text/plain"),
                                 hasExtra(Intent.EXTRA_TEXT, intendedMessage))
-        val collectionName = context.getString(R.string.shopping_list_item_collection_name)
+        val collectionName = context.getString(R.string.shopping_list_description)
         val intendedTitle = context.getString(R.string.share_selected_items_title, collectionName)
         Intents.intended(allOf(hasAction(Intent.ACTION_CHOOSER),
                                hasExtra(Intent.EXTRA_TITLE, intendedTitle),
