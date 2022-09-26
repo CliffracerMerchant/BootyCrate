@@ -44,7 +44,7 @@ import kotlinx.coroutines.flow.Flow
     @Insert abstract suspend fun add(item: DatabaseListItem): Long
     @Insert abstract suspend fun add(items: List<DatabaseListItem>)
 
-    suspend fun addConvertibles(itemGroupId: Long, items: List<DatabaseListItem.Convertible>) =
+    suspend fun add(itemGroupId: Long, items: List<DatabaseListItem.Convertible>) =
         add(items.map { it.toDbListItem(itemGroupId) })
 
     @Query("UPDATE item SET name = :name WHERE id = :id")

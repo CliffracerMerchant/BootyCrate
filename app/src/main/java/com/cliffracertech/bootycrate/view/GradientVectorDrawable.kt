@@ -41,10 +41,10 @@ class GradientVectorDrawable(
     // For when pathSize is a square.
     constructor(pathSize: Float, pathData: String) : this(pathSize, pathSize, pathData)
 
-    override fun onBoundsChange(bounds: Rect?) {
+    override fun onBoundsChange(bounds: Rect) {
         path.set(originalPath)
-        matrix.setScale((bounds?.width() ?: 0) / pathWidth,
-                        (bounds?.height() ?: 0) / pathHeight)
+        matrix.setScale(bounds.width() / pathWidth,
+                        bounds.height() / pathHeight)
         path.transform(matrix)
     }
 
