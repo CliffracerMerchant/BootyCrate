@@ -107,7 +107,9 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         // For some reason, if saveFromParentEnabled == true the title
         // will be "restored" to a blank string across activity restarts.
         isSaveFromParentEnabled = false
-        searchQueryView.doAfterTextChanged { onSearchQueryChange?.invoke(it) }
+        searchQueryView.doAfterTextChanged {
+            onSearchQueryChange?.invoke(it)
+        }
     }
 
     fun showTitle() {
@@ -173,7 +175,8 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
     }
 
     fun setSearchQuery(query: CharSequence?, switchTo: Boolean = false) {
-        searchQueryView.setText(query)
+        if (searchQueryView.text != query)
+            searchQueryView.setTextKeepState(query)
         if (switchTo) showSearchQuery()
     }
 
