@@ -88,7 +88,6 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
     private val Int.isExpandingOrExpanded get() = isExpanded || isSettlingOrDragging
     private val Int.isCollapsingOrCollapsed get() = isCollapsed || isSettlingOrDragging
 
-
     override fun onStateChanged(bottomSheet: View, newState: Int) {
         dlog("state set to $newState")
         appTitle.isVisible = newState.isExpandingOrExpanded
@@ -102,6 +101,15 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
     }
 
     override fun onSlide(bottomSheet: View, slideOffset: Float) {
+        fragmentContainer.children.forEach {
+            val fragment = it.findFragment<Fragment>()
+            if (fragment is ItemListFragment<*>)
+                fragment.emptyListMessageView?.translationY =
+                    if (slideOffset <= 0f) 0f
+                    else slideOffset * -0.3f * it.height
+        }
+
+        dlog("slideOffset = $slideOffset")
         if (bottomNavigationDrawer.targetState == BottomSheetBehavior.STATE_HIDDEN)
             return
         val slide = abs(slideOffset)
@@ -121,12 +129,6 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
             }
             navIndicator.alpha = 1f - slide
             interpolation = 1f - slide
-        }
-
-        fragmentContainer.children.forEach {
-            val fragment = it.findFragment<Fragment>()
-            if (fragment is ItemListFragment<*>)
-                fragment.emptyListMessageView?.translationY = slide * -0.3f * it.height
         }
     }
 }
