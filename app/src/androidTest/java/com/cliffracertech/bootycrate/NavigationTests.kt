@@ -12,7 +12,6 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.test.filters.LargeTest
 import com.cliffracertech.bootycrate.activity.MainActivity
 import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.view.BottomAppBar
@@ -20,33 +19,31 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.common.truth.Truth.assertThat
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.core.IsNot.not
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 
 @RunWith(AndroidJUnit4::class)
-@LargeTest
 class NavigationTests {
-    @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
+    var activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Test fun startingFragmentVisibility() {
-        onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.shoppingListView)).check(matches(isDisplayed()))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
     }
 
-    @Test fun switchingToInventoryItemFragment() {
+    @Test fun switchingToInventoryFragment() {
         startingFragmentVisibility()
         onView(withId(R.id.inventoryButton)).perform(click())
-        onView(withId(R.id.shoppingListFragmentView)).check(matches(not(isCompletelyDisplayed())))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(isDisplayed()))
+        onView(withId(R.id.shoppingListView)).check(matches(not(isCompletelyDisplayed())))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(isDisplayed()))
     }
 
     @Test fun switchingBackToShoppingListFragment() {
-        switchingToInventoryItemFragment()
+        switchingToInventoryFragment()
         onView(withId(R.id.shoppingListButton)).perform(click())
-        onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isCompletelyDisplayed())))
+        onView(withId(R.id.shoppingListView)).check(matches(isDisplayed()))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isCompletelyDisplayed())))
     }
 
     @Test fun navigatingToSettingsFragment() {
@@ -58,16 +55,16 @@ class NavigationTests {
     @Test fun navigatingUpFromSettingsUsingNavigationBackButton() {
         navigatingToSettingsFragment()
         pressBack()
-        onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.shoppingListView)).check(matches(isDisplayed()))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
     }
 
     @Test fun navigatingUpFromSettingsUsingActionBarBackButton() {
         navigatingToSettingsFragment()
         onView(withId(R.id.backButton)).perform(click())
-        onView(withId(R.id.shoppingListFragmentView)).check(matches(isDisplayed()))
-        onView(withId(R.id.inventoryItemFragmentView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.shoppingListView)).check(matches(isDisplayed()))
+        onView(withId(R.id.inventoryFragmentView)).check(matches(not(isDisplayed())))
         onView(withText(R.string.pref_light_dark_mode_title)).check(doesNotExist())
     }
 
@@ -96,8 +93,8 @@ class NavigationTests {
         onView(withId(R.id.bottomNavigationDrawer)).check(matches(allOf(isDisplayed(), not(isCompletelyDisplayed()))))
         onView(withId(R.id.appTitle)).check(matches(not(isDisplayed())))
         onView(withId(R.id.settingsButton)).check(matches(not(isDisplayed())))
-        onView(withId(R.id.inventorySelector)).check(matches(allOf(hasAlpha(0f), not(isCompletelyDisplayed()))))
-        onView(withId(R.id.bottomNavigationView)).check(matches(isDisplayed()))
+        onView(withId(R.id.itemGroupSelector)).check(matches(allOf(hasAlpha(0f), not(isCompletelyDisplayed()))))
+        onView(withId(R.id.navigationView)).check(matches(isDisplayed()))
         onView(withId(R.id.bottomAppBar)).perform(doStuff<BottomAppBar> {
             assertThat(it.interpolation).isEqualTo(1f)
             assertThat(it.navIndicator.alpha).isEqualTo(1f)
@@ -111,8 +108,8 @@ class NavigationTests {
         onView(withId(R.id.bottomNavigationDrawer)).check(matches(isCompletelyDisplayed()))
         onView(withId(R.id.appTitle)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
         onView(withId(R.id.settingsButton)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
-        onView(withId(R.id.inventorySelector)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
-        onView(withId(R.id.bottomNavigationView)).check(matches(not(isDisplayed())))
+        onView(withId(R.id.itemGroupSelector)).check(matches(allOf(isCompletelyDisplayed(), hasAlpha(1f))))
+        onView(withId(R.id.navigationView)).check(matches(not(isDisplayed())))
         onView(withId(R.id.bottomAppBar)).perform(doStuff<BottomAppBar> {
             assertThat(it.interpolation).isEqualTo(0f)
             assertThat(it.navIndicator.alpha).isEqualTo(0f)

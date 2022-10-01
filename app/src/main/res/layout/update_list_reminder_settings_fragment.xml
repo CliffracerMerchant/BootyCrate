@@ -36,7 +36,7 @@
         android:layout_marginTop="20dp"
         android:minHeight="48dp"
         android:minWidth="48dp"
-        style="@style/UpdateListReminderTimeView" />
+        android:textSize="30sp" />
 
     <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/reminderRepeatCheckBox"

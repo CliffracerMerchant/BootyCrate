@@ -30,7 +30,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
  * attempt to increase its peek height above the base peek height so that the
  * effective touch target size matches the peek height set in XML, up to the
  * value of the XML attribute maxPeekHeight. The peek height can also be
- * accessed and manually adjusted through the property peekHeight.
+ * accessed and manually adjusted through the property peekHeight. If the peek
+ * height is automatically adjusted this way, then the callback property
+ * onPeekHeightAutoAdjusted will be invoked if not null.
  *
  * BottomNavigationDrawer provides a new bottom sheet API in place of the one
  * provided by BottomSheetBehavior. Rather than calling setState, the state is
@@ -58,6 +60,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
     private val behavior = BottomSheetBehavior<BottomNavigationDrawer>()
     var targetState = BottomSheetBehavior.STATE_COLLAPSED
         private set
+    val state get() = behavior.state
 
     enum class IsHideable { Yes, No, OnlyByApp }
     val isHideable: IsHideable
@@ -66,10 +69,12 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
 
     var peekHeight get() = behavior.peekHeight
                    set(value) { behavior.peekHeight = value }
+    var onPeekHeightAutoAdjusted: ((Int) -> Unit)? = null
 
     init {
         var a = context.obtainStyledAttributes(attrs, intArrayOf(R.attr.behavior_peekHeight))
         val basePeekHeight = a.getDimensionPixelSize(0, 0)
+        a.recycle()
 
         a = context.obtainStyledAttributes(attrs, R.styleable.BottomNavigationDrawer)
         val maxPeekHeight = a.getDimensionPixelSize(R.styleable.BottomNavigationDrawer_maxPeekHeight,
@@ -88,22 +93,19 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
     }
 
     fun expand() {
-        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN) {
-            behavior.state = BottomSheetBehavior.STATE_EXPANDED
-            targetState = BottomSheetBehavior.STATE_EXPANDED
-        }
+        if (isExpanded || isHidden) return
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        targetState = BottomSheetBehavior.STATE_EXPANDED
     }
 
     fun collapse() {
-        if (behavior.state != BottomSheetBehavior.STATE_HIDDEN) {
-            behavior.state = BottomSheetBehavior.STATE_COLLAPSED
-            targetState = BottomSheetBehavior.STATE_COLLAPSED
-        }
+        if (isCollapsed || isHidden) return
+        behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        targetState = BottomSheetBehavior.STATE_COLLAPSED
     }
 
     fun hide() {
-        if (isHideable == IsHideable.No) return
-
+        if (isHidden || isHideable == IsHideable.No) return
         behavior.isHideable = true
         behavior.state = BottomSheetBehavior.STATE_HIDDEN
         targetState = BottomSheetBehavior.STATE_HIDDEN
@@ -111,6 +113,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
 
     private var unhiding = false
     fun show() {
+        if (isCollapsed) return
         behavior.state = BottomSheetBehavior.STATE_COLLAPSED
         targetState = BottomSheetBehavior.STATE_COLLAPSED
         if (isHideable == IsHideable.OnlyByApp)
@@ -148,7 +151,8 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
             val realDisplayHeight =
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
                     windowManager.currentWindowMetrics.bounds.height()
-                else Point().also { windowManager.defaultDisplay.getRealSize(it) }.y
+                else @Suppress("DEPRECATION")
+                    Point().also { windowManager.defaultDisplay.getRealSize(it) }.y
             val gestureTop = realDisplayHeight - systemBottomGestureHeight
 
             // displayMetrics.heightPixels seems to include the status bar height on
@@ -162,6 +166,7 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
 
             val overlap = (collapsedBottom - gestureTop).coerceAtLeast(0)
             behavior.peekHeight = (basePeekHeight + overlap).coerceAtMost(maxPeekHeight)
+            onPeekHeightAutoAdjusted?.invoke(behavior.peekHeight)
             windowInsets
         }
     }
@@ -178,8 +183,11 @@ class BottomNavigationDrawer(context: Context, attrs: AttributeSet) : FrameLayou
     }
 
     val isExpanded get() = behavior.state == BottomSheetBehavior.STATE_EXPANDED
-    val isCollapsed get() = behavior.state == BottomSheetBehavior.STATE_COLLAPSED
+    var isCollapsed get() = behavior.state == BottomSheetBehavior.STATE_COLLAPSED
+                    set(value) { if (value) collapse() else expand() }
     val isDragging get() = behavior.state == BottomSheetBehavior.STATE_DRAGGING
     val isSettling get() = behavior.state == BottomSheetBehavior.STATE_SETTLING
-    val isHidden get() = behavior.state == BottomSheetBehavior.STATE_HIDDEN
+    var isHidden get() = behavior.state == BottomSheetBehavior.STATE_HIDDEN
+                 set(value) { if (value) hide() else show() }
+
 }

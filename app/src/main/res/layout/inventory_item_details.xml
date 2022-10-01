@@ -14,32 +14,32 @@
     <LinearLayout
         android:id="@+id/inventory_item_details_layout"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="48dp"
         android:orientation="horizontal"
         android:visibility="gone"
+        android:translationY="-48dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/extraInfoEdit"
         app:layout_constraintEnd_toStartOf="@id/editButton"
         app:layout_constraintWidth_default="wrap"
         android:layout_marginEnd="-4dp"
         app:layout_constraintHorizontal_bias="0.0"
-        tools:visibility="visible" >
+        tools:visibility="visible"
+        tools:translationY="0dp">
 
         <com.cliffracertech.bootycrate.view.TintableCheckbox
             android:id="@+id/autoAddToShoppingListCheckBox"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            tools:tint="@color/bootyCrateItemColor0"
-            style="@style/BootyCrateItemColorEdit" />
+            tools:tint="@color/listItemColor0"
+            style="@style/ListItemColorEdit" />
 
         <TextView
             android:id="@+id/autoAddToShoppingListLabel"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
-            android:layout_marginStart="-6dp"
-            android:layout_marginEnd="-8dp"
             style="@style/InventoryItemAutoAddToShoppingListCheckboxLabel" />
 
         <com.cliffracertech.bootycrate.view.IntegerEdit

@@ -2,47 +2,54 @@
 The project is separated into the following packages:
 
 ### activity
-activity contains all of the classes in the inheritance chain of the single activity
-used in the app, as well as extension functions of the MainActivityBinding UI class. 
-These classes are:
-<pre>
-MultiFragmentActivity -> MainActivity
-</pre>
+activity contains MainActivity (the application's sole activity), MainActivity's
+super-class NavViewActivity, view models used by the activity, as well as extension functions of
+the MainActivityBinding UI class.
 
-MainActivity's UI consists of an instance of RecyclerViewActionBar (a custom toolbar
-implementation), an instance of BottomAppBar (another custom toolbar implementation), a
-BottomNavigationViewEx (acts as a BottomNavigationView but with better sub-view access
-for styling purposes), a checkout button, and an add button. This activity UI is shared
-between all fragments.
+MainActivity's UI consists of an instance of ListActionBar (a custom toolbar
+implementation), and a bottom navigation drawer. When collapsed, the navigation
+drawer contains a BottomAppBar (another custom toolbar implementation), which
+itself contains a BottomNavigationView, a checkout button, and an add button.
+When expanded, the navigation drawer displays an app settings button and an
+ItemGroupSelector (a custom view to manipulate the items shown in a shopping
+list or inventory. This activity UI is shared between all fragments.
+
+### model
+model contains all entities that would be considered model level in the MVVM
+architecture. At the moment it contains navigation state holders for view models
+that require the application's navigation state, as well as the sub-package
+database. database contains the application's database, Room data access objects,
+and POJO representations of the items stored in the database tables.
 
 ### fragment
-fragment contains all of the fragments used in the app. The two main content fragments' inheritance
-chain is:
+fragment contains all of the fragments used in the app. The two main content
+fragments' inheritance chain is:
 <pre>
-RecyclerViewFragment -> ShoppingListFragment
-                     -> InventoryItemFragment
+ItemListFragment -> ShoppingListFragment
+                 -> InventoryFragment
 </pre>
 
 ### recyclerview
-recyclerview contains all of the classes used in the inheritance chain of the recycler views used in
-the two main fragments:
+recyclerview contains all of the classes used in the inheritance chain of the
+recycler views used in the two main fragments:
 <pre>
-BootyCrateRecyclerView -> ExpandableSelectableRecyclerView -> ShoppingListRecyclerView
-                                                           -> InventoryItemRecyclerView
+ItemListView -> ExpandableItemListView -> ShoppingListView
+                                       -> InventoryView
 </pre>
-and other associated classes (e.g. item views and item animators). The recycler views' item views'
-inheritance chain is:
+and other associated classes (e.g. item views and item animators). The recycler
+views' item views' inheritance chain is:
 <pre>
-BootyCrateItemView -> ExpandableSelectableItemView -> ShoppingListItemView
-                                                   -> InventoryItemView
+ListItemView -> ExpandableItemView -> ShoppingListItemView
+                                   -> InventoryItemView
 </pre>
 
-### database
-database contains the application's database, Room data access object, and view models.
+The recyclerview package also contains the recycler views used in the
+ItemGroupSelector and ItemGroupPicker, along with their parent ItemGroupListView.
+
+### view
+view contains all other custom views that don't fit into recyclerview. The main
+activity's UI elements, such as the ListActionBar and BottomAppBar, are located
+here.
 
 ### utils
 miscellaneous utility classes, objects, and functions.
-
-### view
-view contains all other custom views that don't fit into another package. The main activity's UI
-elements, such as the RecyclerViewActionBar and BottomAppBar, are located here.

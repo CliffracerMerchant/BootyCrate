@@ -11,7 +11,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
-import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.AccessibilityDelegateCompat
@@ -36,8 +36,8 @@ import dev.sasikanth.colorsheet.ColorSheet
  * The current color is accessed through the property color. The color index
  * can be queried or changed through the property colorIndex. The colors that
  * can be chosen from are defined in the XML attribute colorsResId, and can be
- * accessed through the property colors. The property onColorChangedListener
- * can be set to invoke an action when the color is changed. The function
+ * accessed through the property colors. The property onColorIndexChangedListener
+ * can be set to invoke an action when the color index is changed. The function
  * initColorIndex will set the color index without an animation and will not
  * call the onColorChangedListener.
  *
@@ -46,13 +46,14 @@ import dev.sasikanth.colorsheet.ColorSheet
  * or checkBoxContentDescription, respectively. The XML attribute colorDescriptionsResId
  * must be set to reference a string array of at least equal length to the
  * colors array. The description of the current color will then be included
- * in TintableCheckbox accessibility description.
+ * in TintableCheckbox's accessibility description.
  *
- * TintableCheckbox assumes it is instantiated inside an instance of FragmentActivity
- * in order to show child DialogFragments. If this is not the case, the color picker
- * will not be shown when the TintableCheckbox is clicked while inColorEditMode is true.
+ * TintableCheckbox assumes it is instantiated inside an instance of
+ * FragmentActivity in order to show child DialogFragments. If this is not
+ * the case, the color picker will not be shown when the TintableCheckbox
+ * is clicked while inColorEditMode is true.
  */
-class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageButton(context, attrs) {
+class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageView(context, attrs) {
 
     private var _isChecked = false
     var isChecked get() = _isChecked
@@ -70,7 +71,7 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
                         set(value) = setInColorEditMode(value)
 
     var onCheckedChangedListener: ((Boolean) -> Unit)? = null
-    var onColorChangedListener: ((Int) -> Unit)? = null
+    var onColorIndexChangedListener: ((Int) -> Unit)? = null
 
     var checkBoxContentDescription: String? = null
     var editColorContentDescription: String? = null
@@ -133,12 +134,13 @@ class TintableCheckbox(context: Context, attrs: AttributeSet) : AppCompatImageBu
     /** Set the color of the checkbox to the color defined by colors[colorIndex],
      * and call onColorChangedListener with the new color. */
     fun setColorIndex(colorIndex: Int, animate: Boolean = true) {
+        if (colorIndex == _colorIndex) return
         val oldColor = color
         _colorIndex = colorIndex.coerceIn(colors.indices)
         val checkboxBg = (drawable as LayerDrawable).getDrawable(0)
         if (!animate) checkboxBg.setTint(color)
         else argbValueAnimator(checkboxBg::setTint, oldColor, color).start()
-        onColorChangedListener?.invoke(color)
+        onColorIndexChangedListener?.invoke(_colorIndex)
     }
 
     /** Set the check state without calling the onCheckedChangedListener. */

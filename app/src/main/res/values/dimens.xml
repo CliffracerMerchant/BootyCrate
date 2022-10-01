@@ -5,16 +5,17 @@
 
 <resources>
     <dimen name="editable_text_field_min_height">48dp</dimen>
-    <dimen name="integer_edit_editable_value_min_width">58dp</dimen>
-    <dimen name="popup_rounded_corner_radius">10dp</dimen>
+    <dimen name="integer_edit_editable_value_min_width">48dp</dimen>
+    <dimen name="popup_rounded_corner_radius">16dp</dimen>
     <dimen name="dialog_rounded_corner_radius">16dp</dimen>
 
     <dimen name="recycler_view_item_vertical_padding">3dp</dimen>
     <dimen name="recycler_view_item_spacing">8dp</dimen>
-    <dimen name="recycler_view_item_rounded_corner_radius">18dp</dimen>
+    <dimen name="recycler_view_item_rounded_corner_radius">24dp</dimen>
     <dimen name="recycler_view_item_selection_border_thickness">3dp</dimen>
     <!-- inner rounded corner radius should be equal to rounded corner radius minus the selection border thickness -->
-    <dimen name="recycler_view_item_inner_rounded_corner_radius">15dp</dimen>
+    <dimen name="recycler_view_item_inner_rounded_corner_radius">21dp</dimen>
 
+    <!-- For the MaterialDayPicker library. -->
     <dimen name="day_button_size">48dp</dimen>
 </resources>

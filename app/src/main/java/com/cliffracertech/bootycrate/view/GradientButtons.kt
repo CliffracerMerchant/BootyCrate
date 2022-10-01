@@ -55,7 +55,8 @@ open class GradientButton(context: Context, attrs: AttributeSet) : AppCompatButt
 }
 
 /**
- * A GradientButton with disable/enable functionality.
+ * A GradientButton with an automatic and animated changing of
+ * its alpha property to indicate its disabled/enabled state.
  *
  * DisableableGradientButton's override of View.setEnabled will set its
  * background's alpha value to the value of the property disabledAlpha
@@ -74,56 +75,61 @@ open class DisableableGradientButton(context: Context, attrs: AttributeSet) :
         val a = context.obtainStyledAttributes(attrs, R.styleable.DisableableGradientButton)
         disabledAlpha = a.getInt(R.styleable.DisableableGradientButton_disabledAlpha, 0)
         a.recycle()
+        if (!isEnabled)
+            background.alpha = disabledAlpha
     }
 
     @CallSuper override fun setEnabled(enabled: Boolean) {
         if (isEnabled == enabled) return
         super.setEnabled(enabled)
-        val anim = intValueAnimator(background::setAlpha,
-                                    if (enabled) disabledAlpha else 255,
-                                    if (enabled) 255 else disabledAlpha,
-                                    animatorConfig)
-        anim.addUpdateListener{ invalidate() }
+        val anim = intValueAnimator(setter = background::setAlpha,
+                                    from = if (enabled) disabledAlpha else 255,
+                                    to = if (enabled) 255 else disabledAlpha,
+                                    config = animatorConfig)
+        anim.addUpdateListener{ background.invalidateSelf() }
         anim.start()
     }
 }
 
 /**
- * A button with a custom shape and a double tap to use functionality.
+ * A DisableableGradientButton with a double tap to use functionality.
  *
- * CheckoutButton is a DisableableGradientButton with extra functionality
- * that is intended to be used as the button to execute the shopping list
- * checkout function (see ShoppingListItemDao.checkout() for more informa-
- * tion). Its normal text reads checkout, but when tapped its text will
- * change to indicate to the user that it is in a confirmatory state. An
- * additional tap will then actually execute the callback set via the pro-
- * perty checkoutCallback. If the user does not tap the button again
- * before the value of R.integer.checkoutButtonConfirmationTimeout, the
- * button will reset to its normal state.
- *
- * Confirmation is requested due to the checkout function being irrevers-
- * ible, and because a double tap for users who know what they are doing
- * is faster than having to answer yes to a confirmatory alert dialog.
+ * DoubleTapToConfirmButton acts as a DisableableGradientButton that implements
+ * a double-tap to use functionality, intended for actions that are too trivial
+ * to use with a confirmatory dialog, but that still want to allow confirmation
+ * before executing an action. Its text will start as the value of the XML
+ * attribute android:text, but when tapped will change to indicate to the user
+ * that it is in a confirmatory state. An additional tap will then actually
+ * execute the callback set via the property checkoutCallback. If the user does
+ * not tap the button again before the value of R.integer.checkoutButtonConfirmationTimeout,
+ * the button will reset to its normal state.
  */
-class CheckoutButton(context: Context, attrs: AttributeSet) :
+class DoubleTapToConfirmButton(context: Context, attrs: AttributeSet) :
     DisableableGradientButton(context, attrs)
 {
-    private val normalText = context.getString(R.string.checkout_description)
-    private val confirmText = context.getString(R.string.checkout_confirm_description)
-    private var checkoutButtonLastPressTimeStamp = 0L
+    private val normalText: String
+    private val confirmText: String
+    private var lastPressTimeStamp = 0L
     private val confirmTimeout = resources.getInteger(R.integer.checkoutButtonConfirmationTimeout).toLong()
-    var checkoutCallback: (() -> Unit)? = null
+    var onConfirm: (() -> Unit)? = null
 
     init {
+        var a = context.obtainStyledAttributes(R.styleable.DoubleTapToConfirmButton)
+        confirmText = a.getString(R.styleable.DoubleTapToConfirmButton_confirmatoryText) ?: "Confirm?"
+        a.recycle()
+        a = context.obtainStyledAttributes(attrs, intArrayOf(android.R.attr.text))
+        normalText = a.getString(0) ?: ""
+        a.recycle()
         text = normalText
+
         setOnClickListener {
             val currentTime = System.currentTimeMillis()
-            if (currentTime < checkoutButtonLastPressTimeStamp + confirmTimeout) {
+            if (currentTime < lastPressTimeStamp + confirmTimeout) {
                 exitConfirmatoryState()
-                checkoutCallback?.invoke()
+                onConfirm?.invoke()
             } else {
                 text = confirmText
-                checkoutButtonLastPressTimeStamp = currentTime
+                lastPressTimeStamp = currentTime
                 handler.removeCallbacks(::exitConfirmatoryState)
                 handler.postDelayed(::exitConfirmatoryState, confirmTimeout)
             }
@@ -136,7 +142,7 @@ class CheckoutButton(context: Context, attrs: AttributeSet) :
     }
 
     private fun exitConfirmatoryState() {
-        checkoutButtonLastPressTimeStamp = 0
+        lastPressTimeStamp = 0
         text = normalText
     }
 }

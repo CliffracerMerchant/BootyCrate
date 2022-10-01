@@ -4,23 +4,30 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.view
 
+import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
+import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
+import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.getResourceIdOrThrow
 import androidx.core.view.doOnNextLayout
+import androidx.core.view.isVisible
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.databinding.BottomAppBarBinding
 import com.cliffracertech.bootycrate.utils.AnimatorConfig
 import com.cliffracertech.bootycrate.utils.applyConfig
+import com.cliffracertech.bootycrate.utils.layoutTransition
+import com.cliffracertech.bootycrate.utils.withoutLayoutTransition
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.math.MathUtils.lerp
-import com.google.android.material.shape.*
 import kotlin.math.*
 
 /**
@@ -60,7 +67,7 @@ import kotlin.math.*
  * Alternatively, the background can be set to a Shader instance using the
  * property backgroundGradient.
  */
-class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
+open class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context, attrs) {
     private val rect = Rect()
     private val drawable = PathDrawable()
     private var pathIsDirty = true
@@ -131,16 +138,16 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
                 rewind()
                 moveTo(0f, topOuterCornerRadius)
                 arcTo(centerX = topOuterCornerRadius,
-                    centerY = topOuterCornerRadius,
-                    radius = topOuterCornerRadius,
-                    startAngle = angleLeft,
-                    sweepAngle = 90f)
+                      centerY = topOuterCornerRadius,
+                      radius = topOuterCornerRadius,
+                      startAngle = angleLeft,
+                      sweepAngle = 90f)
                 cradle.addTo(this)
                 arcTo(centerX = width - topOuterCornerRadius,
-                    centerY = topOuterCornerRadius,
-                    radius = topOuterCornerRadius,
-                    startAngle = angleUp,
-                    sweepAngle = 90f)
+                      centerY = topOuterCornerRadius,
+                      radius = topOuterCornerRadius,
+                      startAngle = angleUp,
+                      sweepAngle = 90f)
                 lineTo(width.toFloat(), height.toFloat())
                 lineTo(0f, height.toFloat())
                 close()
@@ -179,15 +186,15 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             private set
 
         var width = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
         var depth = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
         var contentsMargin = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
         var topCornerRadius = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
         var bottomCornerRadius = 0f
-            set(value) { field = value; pathIsDirty = true}
+            set(value) { field = value; pathIsDirty = true }
 
         var leftCurveStartX = 0f
             private set
@@ -259,7 +266,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
 
             // The ϴ calculation is derived from the basic trig equation y = r * sinϴ,
             // Since we are measuring theta starting from the up position, and measuring
-            // ϴ counterclockwise instead of clockwise, the equation for our use case is
+            // ϴ clockwise instead of counterclockwise, the equation for our use case is
             // y = r - r * sin(π/2 - ϴ)
             //   = r * (1 - sin(π/2 - ϴ))
             // Solving this for ϴ gives:
@@ -327,7 +334,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
      *      The gradient used when drawing the indicator. gradient will
      *      override the value of tint if gradient is not null.
      */
-    inner class NavIndicator() {
+    inner class NavIndicator {
         private val path = Path()
         private val pathMeasure = PathMeasure()
         private val paint = Paint().apply { style = Paint.Style.STROKE
@@ -354,7 +361,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             navView = findViewById(navViewResId)
             cradle.layout?.doOnNextLayout {
                 invalidate()
-                doOnNextLayout() {
+                doOnNextLayout {
                     moveToItem(navView?.selectedItemId ?: -1, animate = false)
                 }
             }
@@ -364,6 +371,7 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
         /** Move the indicator to be above the item with id equal to @param
          * menuItemId, animating the change if @param animate == true. */
         fun moveToItem(menuItemId: Int, animate: Boolean = true) {
+            if (selectedMenuItemId == menuItemId) return
             navView?.findViewById<View>(menuItemId)?.let {
                 it.getGlobalVisibleRect(rect)
                 val newXPos = rect.centerX() - width / 2f
@@ -436,5 +444,159 @@ class BottomAppBar(context: Context, attrs: AttributeSet) : FrameLayout(context,
             pathMeasure.getSegment(startDistance, startDistance + width, path, true)
             invalidate()
         }
+    }
+}
+
+
+/** A Material BottomNavigationView that adds the ability to have additional
+ * OnItemSelectedListeners that return Unit instead of a boolean result,
+ * which are added through the method addOnItemSelectedListener and removed
+ * with the methods removeOnItemSelectedListener or clearOnItemSelectedListeners.
+ * These additional OnItemSelectedListeners are not called if the primary
+ * OnItemSelectedListener, which is still set using setOnItemSelectedListener,
+ * return false, and do not affect the return value of the primary OnItemSelectedListener.*/
+class BottomNavigationView(context: Context, attrs: AttributeSet) :
+    BottomNavigationView(context, attrs)
+{
+    private var primaryOnItemSelectedListener: OnItemSelectedListener? = null
+    private val itemSelectedListeners = mutableListOf<(MenuItem) -> Unit>()
+
+    init {
+        super.setOnItemSelectedListener { menuItem ->
+            val result = primaryOnItemSelectedListener
+                ?.onNavigationItemSelected(menuItem) ?: true
+            if (result)
+                itemSelectedListeners.forEach { it(menuItem) }
+            result
+        }
+    }
+
+    fun addOnItemSelectedListener(listener: ((MenuItem) -> Unit)) =
+        itemSelectedListeners.add(listener)
+
+    fun removeOnItemSelectedListener(listener: (MenuItem) -> Unit) =
+        itemSelectedListeners.remove(listener)
+
+    fun clearOnItemSelectedListeners() = itemSelectedListeners.clear()
+
+    override fun setOnItemSelectedListener(listener: OnItemSelectedListener?) {
+        primaryOnItemSelectedListener = listener
+    }
+}
+
+
+/**
+ * A BottomAppBar with a custom layout containing a BottomNavigationView with
+ * buttons for a ShoppingListFragment and an InventoryFragment, and a cradle
+ * layout that contains a checkout button and an add button.
+ *
+ * Showing or hiding the checkout button should only be performed with the
+ * function showCheckoutButton so that the bottom app bar can update its
+ * cradle's width appropriately. The shopping list badge can be displayed with
+ * the a number of new shopping list items using the function
+ * updateShoppingListBadge.
+ */
+class BootyCrateBottomAppBar(context: Context, attrs: AttributeSet) :
+    BottomAppBar(context, attrs)
+{
+    val ui = BottomAppBarBinding.inflate(LayoutInflater.from(context), this)
+    var animatorConfig: AnimatorConfig? = null
+        set(value) {
+            field = value
+            ui.cradleLayout.layoutTransition.applyConfig(value)
+            ui.checkoutButton.animatorConfig = value
+
+            // The nav indicator's animation duration is lengthened a bit to make it more visible.
+            if (value == null)
+                navIndicator.animatorConfig = null
+            else navIndicator.animatorConfig = value.copy(
+                duration = value.duration * 4 / 3)
+        }
+
+    init {
+        cradle.width = cradleWidth(true)
+        ui.cradleLayout.layoutTransition = layoutTransition(null)
+        ui.navigationView.addOnItemSelectedListener {
+            navIndicator.moveToItem(menuItemId = it.itemId, animate = isLaidOut)
+        }
+    }
+
+    private fun cradleWidth(showingCheckoutButton: Boolean) =
+        if (!showingCheckoutButton)
+            ui.addButton.layoutParams.width.toFloat()
+        else {
+            val wrapContent = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
+            ui.cradleLayout.measure(wrapContent, wrapContent)
+            ui.cradleLayout.measuredWidth.toFloat()
+        }
+
+    private val checkoutButtonClipBounds = Rect()
+    /** Show or hide the checkout button according to the value of @param
+     * showing, returning the animator used if @param animate == true or
+     * null otherwise. */
+    fun showCheckoutButton(
+        showing: Boolean,
+        animate: Boolean = true
+    ): Animator? {
+        if (ui.checkoutButton.isVisible == showing)
+            return null
+        if (!animate) {
+            ui.cradleLayout.withoutLayoutTransition {
+                ui.checkoutButton.isVisible = showing
+            }
+            cradle.width = cradleWidth(showing)
+            return null
+        }
+
+        ui.checkoutButton.isVisible = showing
+        val cradleNewWidth = cradleWidth(showing)
+
+        // Ideally we would only animate the cradle's width, and let the cradleLayout's
+        // layoutTransition handle the rest. Unfortunately it will only animate its own
+        // translationX if it has animateParentHierarchy set to true. Due to this
+        // causing the BottomNavigationDrawer to jump to the top of the screen whenever
+        // the layoutTransition animates (apparently a bug with BottomSheetBehavior),
+        // we have to animate the cradleLayout's translationX ourselves.
+        val cradleNewLeft = (width - cradleNewWidth) / 2
+        val cradleStartTranslationX = ui.cradleLayout.left - cradleNewLeft
+
+        // The checkoutButton's clipBounds is set here to prevent it's right edge
+        // from sticking out underneath the addButton during the animation
+        ui.checkoutButton.getDrawingRect(checkoutButtonClipBounds)
+        val addButtonHalfWidth = ui.addButton.width / 2
+
+        return ValueAnimator.ofFloat(cradle.width, cradleNewWidth).apply {
+            applyConfig(animatorConfig)
+            addUpdateListener {
+                ui.cradleLayout.translationX = cradleStartTranslationX * (1f - it.animatedFraction)
+                cradle.width = it.animatedValue as Float
+                checkoutButtonClipBounds.right = ui.addButton.x.toInt() + addButtonHalfWidth
+                ui.checkoutButton.clipBounds = checkoutButtonClipBounds
+                invalidate()
+            }
+            doOnEnd { ui.checkoutButton.clipBounds = null }
+        }
+    }
+
+    private var accumulatedNewItemCount = 0
+    /** Display the shopping list added items badge with a delayed fade out
+     * animation. The displayed amount will at first be equal to @param
+     * shoppingListSizeChange, but will accumulate if updateShoppingListBadge
+     * is called again before the fade out has finished. */
+    fun updateShoppingListBadge(shoppingListSizeChange: Int) {
+        accumulatedNewItemCount += shoppingListSizeChange
+        if (accumulatedNewItemCount == 0) return
+
+        val badgeParent = ui.shoppingListBadge.parent as? View
+        if (badgeParent?.isVisible != true) return
+
+        ui.shoppingListBadge.isVisible = true
+        ui.shoppingListBadge.alpha = 1f
+        ui.shoppingListBadge.text = context.getString(R.string.shopping_list_badge_text,
+                                                      accumulatedNewItemCount)
+        ui.shoppingListBadge.animate().alpha(0f)
+            .setDuration(1000).setStartDelay(1500)
+            .withEndAction { accumulatedNewItemCount = 0 }
+            .withLayer().start()
     }
 }

@@ -6,8 +6,8 @@
 <resources>
     <color name="colorWindowBackgroundLight">#F1F3F5</color>
     <color name="colorWindowBackgroundDark">#212529</color>
-    <color name="colorRecyclerViewItemLight">#DEE2E6</color>
-    <color name="colorRecyclerViewItemDark">#2F3335</color>
+    <color name="colorListItemLight">#DEE2E6</color>
+    <color name="colorListItemDark">#2F3335</color>
     <color name="colorTextLightEnabled">#ADB5BD</color>
     <color name="colorTextLightSecondary">#868E96</color>
     <color name="colorTextLightDisabled">#656A6E</color>
@@ -17,27 +17,33 @@
     <color name="colorTextLink">#58ECFF</color>
     <color name="ic_launcher_background">#353535</color>
 
-    <color name="bootyCrateItemColor0">#D65C5C</color>
-    <color name="bootyCrateItemColor1">#D6995C</color>
-    <color name="bootyCrateItemColor2">#D6D65C</color>
-    <color name="bootyCrateItemColor3">#97CF3D</color>
-    <color name="bootyCrateItemColor4">#3FBA3F</color>
-    <color name="bootyCrateItemColor5">#53E393</color>
-    <color name="bootyCrateItemColor6">#2CC4DA</color>
-    <color name="bootyCrateItemColor7">#3F7EDD</color>
-    <color name="bootyCrateItemColor8">#8359E6</color>
-    <color name="bootyCrateItemColor9">#B141DA</color>
-    <color name="bootyCrateItemColor10">#DB70A6</color>
-    <color name="bootyCrateItemColor11">#808080</color>
+    <color name="listItemColor0">#D65C5C</color>
+    <color name="listItemColor1">#D6995C</color>
+    <color name="listItemColor2">#D6D65C</color>
+    <color name="listItemColor3">#97CF3D</color>
+    <color name="listItemColor4">#3FBA3F</color>
+    <color name="listItemColor5">#53E393</color>
+    <color name="listItemColor6">#2CC4DA</color>
+    <color name="listItemColor7">#3F7EDD</color>
+    <color name="listItemColor8">#8359E6</color>
+    <color name="listItemColor9">#B141DA</color>
+    <color name="listItemColor10">#DB70A6</color>
+    <color name="listItemColor11">#808080</color>
 
 <!-- default theme -->
     <color name="lightThemeBgGradientLeft">#E8865A</color>
     <color name="lightThemeBgGradientMiddle">#FF8181</color>
     <color name="lightThemeBgGradientRight">#EF7487</color>
+    <color name="lightThemeItemSelectionGradientLeft">#EDBDA8</color>
+    <color name="lightThemeItemSelectionGradientMiddle">#F8BABB</color>
+    <color name="lightThemeItemSelectionGradientRight">#F0B4BE</color>
 
     <color name="darkThemeBgGradientLeft">#BF6844</color>
     <color name="darkThemeBgGradientMiddle">#CF5F5F</color>
     <color name="darkThemeBgGradientRight">#C15A7E</color>
+    <color name="darkThemeItemSelectionGradientLeft">#704737</color>
+    <color name="darkThemeItemSelectionGradientMiddle">#784244</color>
+    <color name="darkThemeItemSelectionGradientRight">#714054</color>
 
     <color name="lightThemeFgColor">#DDDDDD</color>
     <color name="lightThemeIndicatorColor">#AAAAAA</color>

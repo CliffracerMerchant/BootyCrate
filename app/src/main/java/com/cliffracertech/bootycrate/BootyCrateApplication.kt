@@ -5,16 +5,29 @@
 package com.cliffracertech.bootycrate
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
-import com.cliffracertech.bootycrate.database.BootyCrateItem
+import androidx.datastore.preferences.preferencesDataStore
+import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
+import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
+@HiltAndroidApp
 class BootyCrateApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         SoftKeyboard.init(this)
-        BootyCrateItem.initColors(this)
+        ListItem.initColors(this)
+    }
+
+    companion object {
+        val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     }
 }
+
+val Context.dataStore by preferencesDataStore("preferences")
 
 fun dlog(msg: String) = Log.d("BootyCrate", msg)

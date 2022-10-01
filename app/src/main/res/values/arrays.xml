@@ -10,27 +10,27 @@
         <item>@string/pref_theme_dark_theme_title</item>
     </string-array>
 
-    <string-array name="multi_fragment_activity_fragments">
+    <string-array name="bottom_nav_view_activity_fragments">
         <item>com.cliffracertech.bootycrate.fragment.ShoppingListFragment</item>
-        <item>com.cliffracertech.bootycrate.fragment.InventoryItemFragment</item>
+        <item>com.cliffracertech.bootycrate.fragment.InventoryFragment</item>
     </string-array>
 
-    <integer-array name="bootycrate_item_colors">
-        <item>@color/bootyCrateItemColor0</item>
-        <item>@color/bootyCrateItemColor1</item>
-        <item>@color/bootyCrateItemColor2</item>
-        <item>@color/bootyCrateItemColor3</item>
-        <item>@color/bootyCrateItemColor4</item>
-        <item>@color/bootyCrateItemColor5</item>
-        <item>@color/bootyCrateItemColor6</item>
-        <item>@color/bootyCrateItemColor7</item>
-        <item>@color/bootyCrateItemColor8</item>
-        <item>@color/bootyCrateItemColor9</item>
-        <item>@color/bootyCrateItemColor10</item>
-        <item>@color/bootyCrateItemColor11</item>
+    <integer-array name="list_item_colors">
+        <item>@color/listItemColor0</item>
+        <item>@color/listItemColor1</item>
+        <item>@color/listItemColor2</item>
+        <item>@color/listItemColor3</item>
+        <item>@color/listItemColor4</item>
+        <item>@color/listItemColor5</item>
+        <item>@color/listItemColor6</item>
+        <item>@color/listItemColor7</item>
+        <item>@color/listItemColor8</item>
+        <item>@color/listItemColor9</item>
+        <item>@color/listItemColor10</item>
+        <item>@color/listItemColor11</item>
     </integer-array>
 
-    <string-array name="bootycrate_item_color_descriptions">
+    <string-array name="list_item_color_descriptions">
         <item>@string/item_color_0_description</item>
         <item>@string/item_color_1_description</item>
         <item>@string/item_color_2_description</item>
@@ -49,10 +49,6 @@
         <item>?attr/backgroundGradientLeftColor</item>
         <item>?attr/backgroundGradientMiddleColor</item>
         <item>?attr/backgroundGradientRightColor</item>
-    </integer-array>
-
-    <integer-array name="color_accent">
-        <item>?attr/colorAccent</item>
     </integer-array>
 
 </resources>

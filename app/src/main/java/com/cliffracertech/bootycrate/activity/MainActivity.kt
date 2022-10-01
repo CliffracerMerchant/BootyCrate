@@ -9,117 +9,118 @@ import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
-import android.view.View
 import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
-import androidx.core.view.isInvisible
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
+import androidx.core.animation.doOnEnd
+import androidx.core.animation.doOnStart
+import androidx.lifecycle.ViewModel
 import androidx.preference.PreferenceManager
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.DatabaseSettingsViewModel
-import com.cliffracertech.bootycrate.database.InventoryViewModel
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
+import com.cliffracertech.bootycrate.dialog.NewInventoryItemDialog
+import com.cliffracertech.bootycrate.dialog.NewShoppingListItemDialog
+import com.cliffracertech.bootycrate.dialog.itemGroupNameDialog
 import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
-import com.cliffracertech.bootycrate.recyclerview.InventorySelectionOptionsMenu
-import com.cliffracertech.bootycrate.utils.AnimatorConfig
-import com.cliffracertech.bootycrate.utils.doOnStart
-import com.cliffracertech.bootycrate.utils.inventoryNameDialog
-import com.cliffracertech.bootycrate.utils.layoutTransition
-import kotlinx.coroutines.flow.collectLatest
+import com.cliffracertech.bootycrate.fragment.InventoryFragment
+import com.cliffracertech.bootycrate.fragment.ItemListFragment
+import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
+import com.cliffracertech.bootycrate.model.MainActivityNavigationState
+import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
+import com.cliffracertech.bootycrate.utils.*
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class MainActivityViewModel @Inject constructor(
+    private val navigationState: MainActivityNavigationState,
+    messageHandler: MessageHandler
+) : ViewModel() {
+    val messages = messageHandler.messages
+
+    fun notifyBackStackSizeChanged(backStackSize: Int) =
+        navigationState.notifyBackStackSizeChanged(backStackSize)
+}
 
 /**
- * A MultiFragmentActivity with a fragment interface that enables implementing fragments to use its custom UI.
+ * A NavViewActivity with a predefined UI.
  *
- * MainActivity is a MultiFragmentActivity subclass with a custom UI including
- * a RecyclerViewActionBar, a BottomAppBar, and a checkout button and an add
- * button in the cradle of the BottomAppBar. In order for fragments to inform
- * MainActivity which of these UI elements should be displayed when they are
- * active, the fragment should implement MainActivity.FragmentInterface. While
- * it is not necessary for fragments to implement FragmentInterface, fragments
- * that do not will not be able to affect the visibility of the MainActivity
- * UI when they are displayed.
+ * MainActivity is a NavViewActivity subclass with a custom UI consisting of a
+ * ListActionBar and a BottomNavigationDrawer. The navigation drawer contains a
+ * BottomNavigationView and a BootyCrateBottomAppBar when it is collapsed, or
+ * an app settings button and an ItemGroupSelector when it is expanded.
  */
-@Suppress("LeakingThis")
-open class MainActivity : MultiFragmentActivity() {
-    private val inventoryViewModel: InventoryViewModel by viewModels()
+@AndroidEntryPoint
+class MainActivity : NavViewActivity() {
 
-    lateinit var ui: MainActivityBinding
+    private val viewModel: MainActivityViewModel by viewModels()
+    private val actionBarViewModel: ActionBarViewModel by viewModels()
+    private val bottomAppBarViewModel: BottomAppBarViewModel by viewModels()
+    private val itemGroupSelectorViewModel: ItemGroupSelectorViewModel by viewModels()
     private var pendingCradleAnim: Animator? = null
 
+    lateinit var ui: MainActivityBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        setThemeFromAppSettings()
+        initTheme()
         ui = MainActivityBinding.inflate(LayoutInflater.from(this))
         setContentView(ui.root)
         fragmentContainerId = ui.fragmentContainer.id
-        navigationView = ui.bottomNavigationView
+        navigationView = ui.bottomAppBar.ui.navigationView
         super.onCreate(savedInstanceState)
-        ui.inventorySelector.initViewModel(inventoryViewModel, this)
-        lifecycleScope.launch {
-            inventoryViewModel.selectedInventoryName
-                .collectLatest { ui.actionBar.ui.titleSwitcher.title = it }
-        }
-        setupOnClickListeners()
+        initOnClickListeners()
         initAnimatorConfigs()
+        initNavDrawer()
         initGradientStyle()
 
-        // Setting android:importantForAccessibility in bottom_navigation_bar.xml for
-        // the disabled menu items seems not to work, so it must be done here instead
-        (ui.bottomNavigationView.getIconAt(1).parent as View).
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        (ui.bottomNavigationView.getIconAt(2).parent as View)
-            .importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-    }
-
-    override fun onBackPressed() { ui.actionBar.ui.backButton.performClick() }
-
-    private var currentFragment: Fragment? = null
-    override fun onNewFragmentSelected(newFragment: Fragment) {
-        val currentFragment = currentFragment
-        if (currentFragment != null)
-            (currentFragment as? MainActivityFragment)?.onActiveStateChanged(isActive = false, ui)
-        else if (newFragment is MainActivityFragment) {
-            // currentFragment being null implies an activity restart. In
-            // this case we need to set cradleLayout to visible or invisible
-            // to ensure that the bottom app bar measures its top edge path
-            // length properly, and initialize the nav indicator alpha so
-            // that it isn't visible when the bottomAppBar is hidden.
-            val showsBottomAppBar = newFragment.showsBottomAppBar()
-            ui.cradleLayout.isInvisible = !showsBottomAppBar
-            ui.bottomAppBar.navIndicator.alpha = if (showsBottomAppBar) 1f else 0f
+        supportFragmentManager.addOnBackStackChangedListener {
+            val backStackSize = supportFragmentManager.backStackEntryCount
+            viewModel.notifyBackStackSizeChanged(backStackSize)
         }
+        viewModel.messages.displayWithSnackBarAnchoredTo(ui.bottomAppBar)
+        repeatWhenStarted {
+            launch { actionBarViewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
+            launch { actionBarViewModel.titleState.collect(ui.actionBar::setTitleState) }
+            launch { actionBarViewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
+            launch { actionBarViewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
+            launch { actionBarViewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
+            launch { actionBarViewModel.optionsMenuContent.collect(ui.actionBar::setOptionsMenuContents) }
 
-        val needToAnimate = currentFragment != null
-        this.currentFragment = newFragment
-        if (newFragment !is MainActivityFragment) return
-
-        if (newFragment.showsBottomAppBar()) ui.bottomNavigationDrawer.show()
-        else                                 ui.bottomNavigationDrawer.hide()
-
-        val needToAnimateCheckoutButton = needToAnimate && !ui.bottomNavigationDrawer.isHidden
-        val showsCheckoutButton = newFragment.showsCheckoutButton()
-        if (showsCheckoutButton != null)
-            // The cradle animation is stored here and started in the cradle
-            // layout's layoutTransition's transition listener's transitionStart
-            // override so that the animation is synced with the layout transition.
-            pendingCradleAnim = ui.showCheckoutButton(
-                showing = showsCheckoutButton,
-                animatorConfig = primaryFragmentTransitionAnimatorConfig,
-                animate = needToAnimateCheckoutButton)
-
-        ui.bottomAppBar.navIndicator.moveToItem(menuItemId = navigationView.selectedItemId,
-                                                animate = needToAnimateCheckoutButton)
-        newFragment.onActiveStateChanged(isActive = true, ui)
+            launch { bottomAppBarViewModel.uiState.collect(::updateBottomAppBarState) }
+            launch { bottomAppBarViewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
+            launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
+        }
     }
 
-    private fun setThemeFromAppSettings() {
+    override fun onBackPressed() { ui.actionBar.onBackButtonClick?.invoke() }
+
+    private fun updateBottomAppBarState(uiState: BottomAppBarViewModel.UiState) {
+        val animate = ui.bottomNavigationDrawer.isLaidOut &&
+                      ui.bottomNavigationDrawer.isHidden != uiState.visible
+        // The cradle layout animation is stored here and started in the cradle
+        // layout's layoutTransition's transition listener's transitionStart
+        // override so that the animation is synced with the layout transition.
+        pendingCradleAnim = ui.bottomAppBar.showCheckoutButton(
+            showing = uiState.checkoutButtonVisible, animate = animate
+        )?.apply {
+            doOnStart { ui.bottomNavigationDrawer.isDraggable = false }
+            doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
+        }
+        ui.bottomAppBar.ui.checkoutButton.isEnabled = uiState.checkoutButtonIsEnabled
+        ui.bottomNavigationDrawer.isHidden = !uiState.visible
+    }
+
+    private fun initTheme() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val prefKey = getString(R.string.pref_light_dark_mode_key)
         val themeDefault = getString(R.string.pref_theme_sys_default_title)
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
-        setTheme(when (prefs.getString(prefKey, themeDefault) ?: "") {
+        val usingLightThemePref = prefs.getString(prefKey, themeDefault) ?: ""
+        setTheme(when (usingLightThemePref) {
             getString(R.string.pref_theme_light_theme_title) -> R.style.LightTheme
             getString(R.string.pref_theme_dark_theme_title) ->  R.style.DarkTheme
             else -> if (sysDarkThemeIsActive) R.style.DarkTheme
@@ -127,29 +128,53 @@ open class MainActivity : MultiFragmentActivity() {
         })
     }
 
-    private fun fwdMenuItemClick(menuItem: MenuItem) =
-        visibleFragment?.onOptionsItemSelected(menuItem) ?: false
+    override fun onOptionsItemSelected(item: MenuItem) =
+        visibleFragment?.onOptionsItemSelected(item) ?: false
 
-    private fun setupOnClickListeners() {
-        ui.actionBar.ui.backButton.setOnClickListener {
-            val fragment = visibleFragment as? MainActivityFragment
-            if (fragment?.onBackPressed() != true)
+    private fun initOnClickListeners() {
+        // action bar
+        ui.actionBar.onBackButtonClick = {
+            if (!actionBarViewModel.onBackPressed())
                 supportFragmentManager.popBackStack()
         }
-        ui.actionBar.onDeleteButtonClickedListener = {
-            onOptionsItemSelected(ui.actionBar.optionsMenu.findItem(R.id.delete_selected_menu_item))
-        }
-        ui.actionBar.setOnSortOptionClickedListener(::fwdMenuItemClick)
-        ui.actionBar.setOnOptionsItemClickedListener(::fwdMenuItemClick)
-        ui.settingsButton.setOnClickListener { addSecondaryFragment(AppSettingsFragment()) }
-        ui.bottomNavigationDrawer.addBottomSheetCallback(ui.bottomSheetCallback())
-        ui.addInventoryButton.setOnClickListener {
-            inventoryNameDialog(this, null) { inventoryViewModel.add(it) }
-        }
-        val dbSettingsViewModel: DatabaseSettingsViewModel by viewModels()
-        InventorySelectionOptionsMenu.openOnClickOf(ui.inventorySelectorOptionsButton,
-                                                    dbSettingsViewModel, inventoryViewModel)
+        ui.actionBar.onSearchButtonClick = actionBarViewModel::onSearchButtonClick
+        ui.actionBar.onSearchQueryChange = actionBarViewModel::onSearchQueryChangeRequest
+        ui.actionBar.onDeleteButtonClick = actionBarViewModel::onDeleteButtonClick
+        ui.actionBar.setOnSortOptionClick { actionBarViewModel.onSortOptionClick(it.itemId) }
+        ui.actionBar.setOnOptionsItemClick(::onOptionsItemSelected)
 
+        // bottom app bar
+        ui.bottomAppBar.ui.checkoutButton.onConfirm =
+            bottomAppBarViewModel::onCheckoutButtonClick
+        ui.bottomAppBar.ui.addButton.setOnClickListener {
+            when (visibleFragment) {
+                is ShoppingListFragment -> NewShoppingListItemDialog(this)
+                is InventoryFragment ->    NewInventoryItemDialog(this)
+                else ->                    null
+            }?.show(supportFragmentManager, null)
+        }
+
+        // item group selector
+        ui.settingsButton.setOnClickListener {
+            addSecondaryFragment(AppSettingsFragment())
+        }
+        ui.addItemGroupButton.setOnClickListener {
+            itemGroupNameDialog(this, null, itemGroupSelectorViewModel::onConfirmAddNewItemGroupDialog)
+        }
+        ui.itemGroupSelectorOptionsButton.setOnClickListener {
+            ItemGroupSelectorOptionsMenu(
+                anchor = ui.itemGroupSelectorOptionsButton,
+                multiSelectItemGroups = itemGroupSelectorViewModel.multiSelectGroups.value,
+                onMultiSelectCheckboxClick = itemGroupSelectorViewModel::onMultiSelectCheckboxClick,
+                onSelectAllClick = itemGroupSelectorViewModel::onSelectAllGroupsClick
+            ).show()
+        }
+        ui.itemGroupSelector.onItemGroupClick =
+            itemGroupSelectorViewModel::onItemGroupClick
+        ui.itemGroupSelector.onItemGroupRenameRequest =
+            itemGroupSelectorViewModel::onConfirmItemGroupRenameDialog
+        ui.itemGroupSelector.onItemGroupDeletionRequest =
+            itemGroupSelectorViewModel::onConfirmDeleteItemGroupDialog
     }
 
     private fun initAnimatorConfigs() {
@@ -160,54 +185,39 @@ open class MainActivity : MultiFragmentActivity() {
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
         ui.actionBar.animatorConfig = transitionAnimConfig
-        ui.bottomAppBar.navIndicator.width = 2.5f * ui.bottomNavigationView.itemIconSize
-        ui.bottomAppBar.navIndicator.animatorConfig = transitionAnimConfig
-            // The nav indicator anim duration is increased to improve its visibility
-            .copy(duration = (transitionAnimConfig.duration * 1.2f).toLong())
-        ui.checkoutButton.animatorConfig = transitionAnimConfig
-        ui.cradleLayout.layoutTransition = layoutTransition(transitionAnimConfig).apply {
+
+        ui.bottomAppBar.navIndicator.width =
+            2.5f * ui.bottomAppBar.ui.navigationView.itemIconSize
+        ui.bottomAppBar.animatorConfig = transitionAnimConfig
+        ui.bottomAppBar.ui.cradleLayout.layoutTransition.apply {
             // views with bottomSheetBehaviors do not like to be animated by layout
             // transitions (it makes them jump up to the top of the screen), so we
-            // have to set animatedParentHierarchy to false to prevent this
+            // have to set animateParentHierarchy to false to prevent this
             setAnimateParentHierarchy(false)
             doOnStart { pendingCradleAnim?.start()
                         pendingCradleAnim = null }
         }
     }
 
-    /**
-     * An interface that informs MainActivity how its Fragment implementor affects the main activity ui.
-     *
-     * MainActivityFragment can be implemented by a Fragment subclass to
-     * inform the MainActivity as to how its UI should be displayed when the
-     * fragment is in the foreground, and to provide a callback for back button
-     * (either the hardware/software bottom back button or the action bar's
-     * back button) presses. Fragments should always indicate their desired
-     * bottom app bar and checkout button states through an override of the
-     * appropriate function instead of changing their visibility manually to
-     * ensure that the appropriate hide/show animations are played. The
-     * function addSecondaryFragment allows implementing fragments to add a
-     * secondary fragment (see MultiFragmentActivity documentation for an
-     * explanation of primary/secondary fragments) themselves.
-     */
-    interface MainActivityFragment {
-        /** Return whether the bottom app bar should be visible when the implementing fragment is.*/
-        fun showsBottomAppBar() = true
-        /** Return whether the checkout button should be visible when the implementing fragment
-         * is, or null if the implementing fragment's showsBottomAppBar returns false.*/
-        fun showsCheckoutButton(): Boolean? = null
-        /** Return whether the implementing fragment consumed the back button press. */
-        fun onBackPressed() = false
-        /** Perform any additional actions on the @param activityUi that the fragment desires,
-         * given its @param isActive state. */
-        fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) { }
-
-        fun addSecondaryFragment(fragment: Fragment) {
-            val mainActivityFragment = this as? Fragment ?: throw IllegalStateException(
-                "Implementors of MainActivityFragment must inherit from androidx.fragment.app.Fragment")
-            val mainActivity = mainActivityFragment.activity as? MainActivity ?: throw IllegalStateException(
-                "Implementors of MainActivityFragment must be hosted inside a MainActivity instance.")
-            mainActivity.addSecondaryFragment(fragment)
+    private fun initNavDrawer() {
+        val callback = ui.bottomSheetCallback()
+        ui.bottomNavigationDrawer.addBottomSheetCallback(callback)
+        if (!bottomAppBarViewModel.uiState.value.visible)
+            callback.onStateChanged(ui.bottomNavigationDrawer, BottomSheetBehavior.STATE_HIDDEN)
+        // If the bottom navigation drawer adjusts its peek height to prevent it
+        // from interfering with the system home gesture, then the shopping list
+        // and inventory views need to have their bottom paddings adjusted accordingly.
+        // The change is performed on already added fragments and future fragments
+        // so that the padding will be set regardless of whether the fragments are
+        // currently added or not.
+        ui.bottomNavigationDrawer.onPeekHeightAutoAdjusted = { padding ->
+            supportFragmentManager.fragments.forEach { fragment ->
+                (fragment as? ItemListFragment<*>)?.setListBottomPadding(padding)
+            }
+            supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
+                if (fragment is ItemListFragment<*>)
+                    fragment.setListBottomPadding(padding)
+            }
         }
     }
 }

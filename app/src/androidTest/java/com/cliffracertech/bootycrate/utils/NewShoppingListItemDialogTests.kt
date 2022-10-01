@@ -15,12 +15,11 @@ import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
-import com.cliffracertech.bootycrate.database.BootyCrateDatabase
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
+import com.cliffracertech.bootycrate.model.database.*
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.*
@@ -28,25 +27,24 @@ import org.hamcrest.Matcher
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
 fun inNewItemDialog(matcher: Matcher<View>) =
     allOf(matcher, isDescendantOfA(withId(R.id.newItemViewContainer)))
 
+@RunWith(AndroidJUnit4::class)
 class NewShoppingListItemDialogTests {
     private val context = ApplicationProvider.getApplicationContext<Context>()
     @get:Rule var activityRule = ActivityScenarioRule(MainActivity::class.java)
-    private val db = BootyCrateDatabase.get(context as Application)
+    private val db = getTestDatabase(context as Application)
     private val dao = db.itemDao()
-    private val inventoryId = db.run { runBlocking { inventoryDao().deleteAll() }
-                                       inventoryDao().getAllNow()[0].id }
+    private val itemGroupId = db.run { itemGroupDao().getAllNow()[0].id }
 
     private val testItem = ShoppingListItem(color = 5, name = "Test Item 1",
                                             extraInfo = "Test Item 1 Extra Info",
-                                            amount = 3, inventoryId = inventoryId)
+                                            amount = 3)
 
     @Before fun setup() {
-        runBlocking { dao.deleteAllShoppingListItems()
-                      dao.deleteAllInventoryItems() }
         onView(withId(R.id.changeSortButton)).perform(click())
         onPopupView(withText(R.string.color_description)).perform(click())
     }
@@ -71,7 +69,7 @@ class NewShoppingListItemDialogTests {
     @Test fun appears() {
         onView(withId(R.id.addButton)).perform(click())
         onView(withId(R.id.newItemViewContainer)).check(matches(isDisplayed()))
-        onView(inNewItemDialog(instanceOf(ExpandableSelectableItemView::class.java))).check(matches(isDisplayed()))
+        onView(inNewItemDialog(instanceOf(ExpandableItemView::class.java))).check(matches(isDisplayed()))
         onView(inNewItemDialog(withId(R.id.autoAddToShoppingListCheckBox))).check(doesNotExist())
         onView(withId(R.id.warningMessage)).check(matches(not(isDisplayed())))
         onView(withText(android.R.string.ok)).check(matches(isEnabled()))
@@ -85,8 +83,8 @@ class NewShoppingListItemDialogTests {
         onView(inNewItemDialog(withId(R.id.valueEdit))).check(matches(withText("1")))
         onView(inNewItemDialog(withId(R.id.linkIndicator))).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.editButton))).check(matches(not(isDisplayed())))
-        onView(inNewItemDialog(instanceOf(ExpandableSelectableItemView::class.java)))
-            .perform(doStuff<ExpandableSelectableItemView<ShoppingListItem>> {
+        onView(inNewItemDialog(instanceOf(ExpandableItemView::class.java)))
+            .perform(doStuff<ExpandableItemView<ShoppingListItem>> {
                 assertThat(it.ui.checkBox.colorIndex).isEqualTo(0)
                 assertThat(it.ui.checkBox.inColorEditMode).isTrue()
                 assertThat(it.ui.nameEdit.isEditable).isTrue()
@@ -106,8 +104,8 @@ class NewShoppingListItemDialogTests {
         onView(inNewItemDialog(withId(R.id.valueEdit))).check(matches(withText("1")))
         onView(inNewItemDialog(withId(R.id.linkIndicator))).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.editButton))).check(matches(not(isDisplayed())))
-        onView(inNewItemDialog(instanceOf(ExpandableSelectableItemView::class.java)))
-            .perform(doStuff<ExpandableSelectableItemView<ShoppingListItem>> {
+        onView(inNewItemDialog(instanceOf(ExpandableItemView::class.java)))
+            .perform(doStuff<ExpandableItemView<ShoppingListItem>> {
                 // The color edit is intended to stay the same value after the add another button
                 // is pressed, but the rest of the fields should be reset to their default values.
                 assertThat(it.ui.checkBox.colorIndex).isEqualTo(testItem.color)
@@ -156,9 +154,9 @@ class NewShoppingListItemDialogTests {
     }
 
     @Test fun duplicateNameInOtherListWarningAppears() {
-        runBlocking { dao.add(InventoryItem(name = "Test Item 1", amount = 5,
-                                            extraInfo = "Test Item 1 Extra Info",
-                                            inventoryId = inventoryId)) }
+        val item = InventoryItem(name = "Test Item 1", amount = 5,
+                                 extraInfo = "Test Item 1 Extra Info")
+        runBlocking { dao.add(item.toDbListItem(itemGroupId)) }
         onView(withId(R.id.addButton)).perform(click())
         onView(withId(R.id.warningMessage)).check(matches(not(isDisplayed())))
         onView(inNewItemDialog(withId(R.id.nameEdit))).perform(click(), typeText("Test Item 1"))
@@ -180,16 +178,16 @@ class NewShoppingListItemDialogTests {
     @Test fun addItem() {
         appears()
         addTestShoppingListItems(leaveDialogOpen = false, testItem)
-        onView(withId(R.id.shoppingListRecyclerView))
+        onView(withId(R.id.shoppingListView))
             .check(onlyShownShoppingListItemsAre(testItem))
     }
 
     @Test fun addSeveralItems() {
         appears()
-        val testItem2 = ShoppingListItem(name = "Test Item 2", extraInfo = "Test Item 2 Extra Info",
-                                         color = 7, amount = 8, inventoryId = inventoryId)
+        val testItem2 = ShoppingListItem(name = "Test Item 2", color = 7, amount = 8,
+                                         extraInfo = "Test Item 2 Extra Info")
         addTestShoppingListItems(leaveDialogOpen = false, testItem, testItem2)
-        onView(withId(R.id.shoppingListRecyclerView)).check(
+        onView(withId(R.id.shoppingListView)).check(
             onlyShownShoppingListItemsAre(testItem, testItem2))
     }
 }

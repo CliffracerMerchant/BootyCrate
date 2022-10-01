@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2021 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="1"
+    android:viewportHeight="1"
+    android:tint="?android:attr/textColorPrimary" >
+    <path
+        android:strokeColor="@android:color/white"
+        android:strokeWidth="0.026"
+        android:pathData="M0,0.8 H 1"
+        android:strokeLineCap="round" />
+</vector>

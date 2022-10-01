@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2021 Nicholas Hochstetler
+   ~ You may not use this file except in compliance with the Apache License
+   ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
+   ~ or in the file LICENSE in the project's root directory. -->
+
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <corners android:radius="@dimen/recycler_view_item_rounded_corner_radius" />
+    <gradient android:angle="0"
+        android:startColor="?attr/listItemSelectionGradientLeftColor"
+        android:centerColor="?attr/listItemSelectionGradientMiddleColor"
+        android:endColor="?attr/listItemSelectionGradientRightColor" />
+</shape>
+

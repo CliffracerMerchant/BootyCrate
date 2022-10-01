@@ -6,19 +6,20 @@ package com.cliffracertech.bootycrate.view
 
 import android.content.Context
 import android.content.res.Resources
-import android.graphics.Paint
+import android.graphics.Typeface
 import android.text.InputType
 import android.util.AttributeSet
+import android.view.ViewPropertyAnimator
 import android.view.inputmethod.EditorInfo
 import android.widget.ViewFlipper
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
-import com.cliffracertech.bootycrate.utils.dpToPixels
 
 /**
  * A preconfigured ViewFlipper that allows animated switching between a
@@ -40,8 +41,13 @@ import com.cliffracertech.bootycrate.utils.dpToPixels
  * the search query when they are already visible on screen due to the fact
  * that they are likely to change by only one character at a time (e.g.
  * from '2 items selected' to '3 items selected' or 'Search quer' to
- * 'Search query'). It will animate changes in the app/activity/fragment
+ * 'Search query'). It will crossfade changes in the app/activity/fragment
  * title if it is visible when the change is made.
+ *
+ * searchQueryView uses an custom underline background to indicate that it is
+ * a blank field to the user. In order to ensure that this custom background
+ * uses the same text color as the search query itself, it is recommended to
+ * set the search query's text color using the function setSearchQueryTextColor.
  */
 class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(context, attrs) {
 
@@ -59,7 +65,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
     var searchQuery: CharSequence get() = searchQueryView.text.toString()
                                   set(value) = setSearchQuery(value)
 
-    var onSearchQueryChangedListener: ((CharSequence?) -> Unit)? = null
+    var onSearchQueryChange: ((CharSequence?) -> Unit)? = null
 
     val showingFragmentTitle get() = displayedChild == fragmentTitlePos
     val showingActionModeTitle get() = displayedChild == actionModeTitlePos
@@ -81,10 +87,7 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
             imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI or EditorInfo.IME_ACTION_DONE
             inputType = InputType.TYPE_CLASS_TEXT
             isFocusableInTouchMode = true
-            background = GradientVectorDrawable(1f, "M0,0.8 H 1").apply {
-                style = Paint.Style.STROKE
-                strokeWidth = resources.dpToPixels(1.25f)
-            }
+            searchQueryView.background = ContextCompat.getDrawable(context, R.drawable.search_query)
         }
         val a = context.obtainStyledAttributes(attrs, R.styleable.ActionBarTitle)
 
@@ -101,18 +104,33 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
                                        catch(e: Resources.NotFoundException) { null }
         a.recycle()
 
-        // For some reason if saveFromParentEnabled == true the title will
-        // be "restored" to a blank string across activity restarts.
+        // For some reason, if saveFromParentEnabled == true the title
+        // will be "restored" to a blank string across activity restarts.
         isSaveFromParentEnabled = false
-        searchQueryView.doAfterTextChanged { text -> onSearchQueryChangedListener?.invoke(text) }
+        searchQueryView.doAfterTextChanged {
+            onSearchQueryChange?.invoke(it)
+        }
     }
 
-    fun showTitle() { if (showingFragmentTitle) return
-                      displayedChild = fragmentTitlePos
-                      SoftKeyboard.hide(this) }
-    fun showActionModeTitle() { if (showingActionModeTitle) return
-                                displayedChild = actionModeTitlePos
-                                SoftKeyboard.hide(this) }
+    fun showTitle() {
+        if (showingFragmentTitle) return
+        displayedChild = fragmentTitlePos
+        SoftKeyboard.hide(this)
+    }
+
+    fun showActionModeTitle() {
+        if (showingActionModeTitle) return
+        displayedChild = actionModeTitlePos
+        actionModeTitleView.isVisible = true
+        actionModeTitleView.alpha = 1f
+        titleCrossfade?.apply {
+            cancel()
+            actionModeTitleView.text = savedActionModeTitle
+            actionModeTitleView.typeface = savedActionModeFont
+        }
+        SoftKeyboard.hide(this)
+    }
+
     fun showSearchQuery(showSoftInput: Boolean = true) {
         if (showingSearchView) return
         displayedChild = searchViewPos
@@ -121,26 +139,32 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
             SoftKeyboard.show(searchQueryView)
     }
 
+    private var titleCrossfade: ViewPropertyAnimator? = null
+    private var savedActionModeTitle: String? = null
+    private var savedActionModeFont: Typeface? = null
     fun setTitle(title: CharSequence, switchTo: Boolean = false) {
-        if (!showingFragmentTitle)
-            fragmentTitleView.text = title
-        else {
-            val oldActionModeTitle = actionModeTitle
-            val oldActionModeFont = actionModeTitleView.typeface
-            actionModeTitleView.text = fragmentTitleView.text
-            actionModeTitleView.typeface = fragmentTitleView.typeface
-            actionModeTitleView.alpha = 1f
-            actionModeTitleView.isVisible = true
-            fragmentTitleView.alpha = 0f
-            fragmentTitleView.text = title
-
-            actionModeTitleView.animate().alpha(0f).withLayer().withEndAction {
-                actionModeTitleView.isVisible = false
+        if (title != this.title) {
+            if (!showingFragmentTitle)
+                fragmentTitleView.text = title
+            else {
+                savedActionModeTitle = actionModeTitle.toString()
+                savedActionModeFont = actionModeTitleView.typeface
+                actionModeTitleView.text = fragmentTitleView.text
+                actionModeTitleView.typeface = fragmentTitleView.typeface
                 actionModeTitleView.alpha = 1f
-                actionModeTitleView.text = oldActionModeTitle
-                actionModeTitleView.typeface = oldActionModeFont
-            }.start()
-            fragmentTitleView.animate().alpha(1f).withLayer().start()
+                actionModeTitleView.isVisible = true
+                fragmentTitleView.alpha = 0f
+                fragmentTitleView.text = title
+
+                // A reference to the animator is kept in case it needs to be canceled early.
+                titleCrossfade = actionModeTitleView.animate()
+                    .alpha(0f).withLayer().withEndAction {
+                        titleCrossfade = null
+                        actionModeTitleView.text = savedActionModeTitle
+                        actionModeTitleView.typeface = savedActionModeFont
+                    }.apply { start() }
+                fragmentTitleView.animate().alpha(1f).withLayer().start()
+            }
         }
         if (switchTo) showTitle()
     }
@@ -151,7 +175,13 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
     }
 
     fun setSearchQuery(query: CharSequence?, switchTo: Boolean = false) {
-        searchQueryView.setText(query)
+        if (searchQueryView.text != query)
+            searchQueryView.setTextKeepState(query)
         if (switchTo) showSearchQuery()
+    }
+
+    fun setSearchQueryTextColor(color: Int) {
+        searchQueryView.setTextColor(color)
+        searchQueryView.background?.setTint(color)
     }
 }

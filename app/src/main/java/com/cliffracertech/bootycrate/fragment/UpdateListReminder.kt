@@ -96,9 +96,10 @@ object UpdateListReminder {
     /** A fragment to display and alter UpdateListReminder.Settings parameters
      *
      * SettingsFragment assumes that the context it is running in is an instance
-     * of FragmentActivity, and will not work properly if this is not the case.
+     * of FragmentActivity to show child dialog fragments. These child fragments
+     * will not be displayed correctly if this is not the case.
      */
-    class SettingsFragment : Fragment(), MainActivity.MainActivityFragment {
+    class SettingsFragment : Fragment() {
         private lateinit var ui: UpdateListReminderSettingsFragmentBinding
         private lateinit var currentSettings: Settings
         private lateinit var sharedPreferences: SharedPreferences
@@ -208,15 +209,6 @@ object UpdateListReminder {
             currentSettings.enabled = sharedPreferences.getBoolean(Settings.enabledKey, false)
             if (ui.reminderSwitch .isChecked != currentSettings.enabled)
                 ui.reminderSwitch.isChecked = currentSettings.enabled
-        }
-
-        override fun showsBottomAppBar() = false
-        override fun onActiveStateChanged(isActive: Boolean, activityUi: MainActivityBinding) {
-            if (isActive) activityUi.actionBar.transition(
-                backButtonVisible = true,
-                searchButtonVisible = false,
-                changeSortButtonVisible = false,
-                menuButtonVisible = false)
         }
     }
 

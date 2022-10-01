@@ -4,50 +4,35 @@
   ~  or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <!-- Used as the background color for recycler view items. -->
-    <attr name="recyclerViewItemColor" format="color" />
     <!-- The left color of the background gradient. -->
-    <attr name="backgroundGradientLeftColor" format="color" />
+    <attr name="backgroundGradientLeftColor"   format="color" />
     <!-- The middle color of the background gradient. -->
     <attr name="backgroundGradientMiddleColor" format="color" />
     <!-- The right color of the background gradient. -->
-    <attr name="backgroundGradientRightColor" format="color" />
-    <!-- The left color of the foreground gradient. -->
-    <attr name="foregroundGradientLeftColor" format="color" />
-    <!-- The middle color of the foreground gradient. -->
-    <attr name="foregroundGradientMiddleColor" format="color" />
-    <!-- The right color of the foreground gradient. -->
-    <attr name="foregroundGradientRightColor" format="color" />
-    <!-- The left color of the indicator gradient. -->
-    <attr name="indicatorGradientLeftColor" format="color" />
-    <!-- The middle color of the indicator gradient. -->
-    <attr name="indicatorGradientMiddleColor" format="color" />
-    <!-- The right color of the indicator gradient. -->
-    <attr name="indicatorGradientRightColor" format="color" />
+    <attr name="backgroundGradientRightColor"  format="color" />
+    <!-- The color that will be used for text on the background gradient. -->
+    <attr name="colorOnBackgroundGradient"     format="color" />
     <!-- The alpha value used for the checkout button background when it is disabled. -->
-    <attr name="checkoutButtonDisabledAlpha" format="integer" />
+    <attr name="checkoutButtonDisabledAlpha"   format="integer" />
 
-    <declare-styleable name="RecyclerViewActionBar">
+    <declare-styleable name="ListActionBar">
         <!-- The resource id of the menu to be used as the contents of the change sort menu. -->
-        <attr name="changeSortMenuResId" format="reference" />
+        <attr name="changeSortMenuResId"   format="reference" />
         <!-- The resource id of the menu to be used as the contents of the options menu. -->
-        <attr name="optionsMenuResId" format="reference" />
-    </declare-styleable>
-
-    <declare-styleable name="TintableRecyclerViewActionBar">
-        <!-- The tint that will be applied to all of the buttons and text in the action bar. -->
-        <attr name="iconAndTextTint" format="color" />
+        <attr name="optionsMenuResId"      format="reference" />
+        <!-- A tint to use for all text and icons in the action bar. -->
+        <attr name="contentsTint" format="color" />
     </declare-styleable>
 
     <attr name="actionBarTitleStyle" format="reference" />
 
     <declare-styleable name="ActionBarTitle">
         <!-- The font to use for the activity / fragment title. -->
-        <attr name="titleFont" format="reference" />
+        <attr name="titleFont"           format="reference" />
         <!-- The font to use for the action mode title. -->
         <attr name="actionModeTitleFont" format="reference" />
         <!-- The font to use for the search query entry. -->
-        <attr name="searchQueryFont" format="reference" />
+        <attr name="searchQueryFont"     format="reference" />
     </declare-styleable>
 
     <declare-styleable name="BottomNavigationDrawer">
@@ -102,9 +87,9 @@
 
     </declare-styleable>
 
-    <attr name="recyclerViewItemSelectionGradientLeftColor"   format="color" />
-    <attr name="recyclerViewItemSelectionGradientMiddleColor" format="color" />
-    <attr name="recyclerViewItemSelectionGradientRightColor"  format="color" />
+    <attr name="listItemSelectionGradientLeftColor"   format="color" />
+    <attr name="listItemSelectionGradientMiddleColor" format="color" />
+    <attr name="listItemSelectionGradientRightColor"  format="color" />
 
     <declare-styleable name="TextFieldEdit">
         <!-- Whether the TextFieldEdit will start in an editable state. -->
@@ -138,13 +123,13 @@
         <!-- The path data to use for the vector background. -->
         <attr name="backgroundPathData" format="string" />
         <!-- The path data to use for the icon. -->
-        <attr name="iconPathData" format="string" />
+        <attr name="iconPathData"       format="string" />
         <!-- The stroke width of the icon. A value of 0 will use Paint.FILL instead of Paint.STROKE. -->
-        <attr name="iconStrokeWidth" format="dimension" />
+        <attr name="iconStrokeWidth"    format="dimension" />
         <!-- The width of the canvas the background and icon path is drawn on. -->
-        <attr name="pathWidth" format="float" />
+        <attr name="pathWidth"          format="float" />
         <!-- The height of the canvas a path is drawn on. -->
-        <attr name="pathHeight" format="float" />
+        <attr name="pathHeight"         format="float" />
     </declare-styleable>
 
     <declare-styleable name="DisableableGradientButton">
@@ -152,11 +137,16 @@
         <attr name="disabledAlpha" format="integer" />
     </declare-styleable>
 
+    <declare-styleable name="DoubleTapToConfirmButton">
+        <!-- The text to use as the confirmatory text (e.g. 'Confirm?'). -->
+        <attr name="confirmatoryText" format="string" />
+    </declare-styleable>
+
     <declare-styleable name="TintableCheckbox">
         <!-- Whether or not the TintableCheckbox is in its edit color state. -->
-        <attr name="state_edit_color" format="boolean" />
+        <attr name="state_edit_color"       format="boolean" />
         <!-- The resource ID pointing to the integer array to use as the color options. -->
-        <attr name="colorsResId" format="reference" />
+        <attr name="colorsResId"            format="reference" />
         <!-- The resource ID pointing to the string array to use as descriptions for the color options. -->
         <attr name="colorDescriptionsResId" format="reference" />
     </declare-styleable>

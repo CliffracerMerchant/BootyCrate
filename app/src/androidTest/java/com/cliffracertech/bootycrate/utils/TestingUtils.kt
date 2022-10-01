@@ -4,9 +4,11 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.utils
 
+import android.content.Context
 import android.view.View
 import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.UiController
@@ -17,17 +19,17 @@ import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.*
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.database.BootyCrateItem
-import com.cliffracertech.bootycrate.database.InventoryItem
-import com.cliffracertech.bootycrate.database.ShoppingListItem
-import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableItemView
-import com.cliffracertech.bootycrate.recyclerview.ExpandableSelectableRecyclerView
+import com.cliffracertech.bootycrate.model.database.BootyCrateDatabase
+import com.cliffracertech.bootycrate.model.database.ListItem
+import com.cliffracertech.bootycrate.model.database.InventoryItem
+import com.cliffracertech.bootycrate.model.database.ShoppingListItem
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemView
+import com.cliffracertech.bootycrate.recyclerview.ExpandableItemListView
 import com.cliffracertech.bootycrate.recyclerview.InventoryItemView
 import com.cliffracertech.bootycrate.view.BottomNavigationDrawer
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -36,6 +38,11 @@ import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.TypeSafeMatcher
 import java.util.concurrent.TimeoutException
+
+fun getTestDatabase(context: Context) =
+    Room.inMemoryDatabaseBuilder(
+        context, BootyCrateDatabase::class.java
+    ).addCallback(BootyCrateDatabase.Callback()).build()
 
 /** A ViewAction that allows direct operation on a view.
  * Thanks to the author of this blog post for the idea.
@@ -81,42 +88,43 @@ fun replaceValueEditText(text: String) = actionOnChildWithId(R.id.valueEdit, cli
 
 fun onPopupView(viewMatcher: Matcher<View>) = onView(viewMatcher).inRoot(isPlatformPopup())
 
-/** Assert that the view is an ExpandableSelectableRecyclerView with only one expanded item at index expandedIndex. */
+/** Assert that the view is an ExpandableItemListView with only one expanded item at index expandedIndex. */
 fun onlyExpandedIndexIs(expandedIndex: Int?) = ViewAssertion { view, e ->
     if (view == null) throw e!!
-    assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
-    val it = view as ExpandableSelectableRecyclerView<*>
+    assertThat(view).isInstanceOf(ExpandableItemListView::class.java)
+    val it = view as ExpandableItemListView<*>
     val expandedViewHeight = if (expandedIndex == null) Integer.MAX_VALUE else
         it.findViewHolderForAdapterPosition(expandedIndex)?.itemView?.height ?: throw e
-    for (i in 0 until it.adapter.itemCount) {
+    for (i in 0 until it.listAdapter.getItemCount()) {
         val vh = it.findViewHolderForAdapterPosition(i)
-        if (i != expandedIndex) assertThat(vh?.itemView?.height).isLessThan(expandedViewHeight)
-        else                    assertThat(vh?.itemView?.height).isEqualTo(expandedViewHeight)
+        if (i != expandedIndex)
+            assertThat(vh?.itemView?.height).isLessThan(expandedViewHeight)
+        else assertThat(vh?.itemView?.height).isEqualTo(expandedViewHeight)
     }
 }
 
-/** Asserts that the view is an ExpandableSelectableRecyclerView, with the items
- * at the specified indices all selected, and with no other selected items. */
+/** Asserts that the view is an ExpandableItemListView, with the items at
+ * the specified indices all selected, and with no other selected items. */
 fun onlySelectedIndicesAre(vararg indices: Int) = ViewAssertion { view, e ->
     if (view == null) throw e!!
-    assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
-    val it = view as ExpandableSelectableRecyclerView<*>
-    for (i in 0 until it.adapter.itemCount) {
-        val vh = it.findViewHolderForAdapterPosition(i)!! as ExpandableSelectableRecyclerView<*>.ViewHolder
+    assertThat(view).isInstanceOf(ExpandableItemListView::class.java)
+    val it = view as ExpandableItemListView<*>
+    for (i in 0 until it.listAdapter.getItemCount()) {
+        val vh = it.findViewHolderForAdapterPosition(i)!! as ExpandableItemListView<*>.ViewHolder
         val shouldBeSelected = i in indices
         assertThat(vh.item.isSelected).isEqualTo(shouldBeSelected)
-        val itemView = vh.itemView as ExpandableSelectableItemView<*>
-        assertThat(itemView.isInSelectedState).isEqualTo(shouldBeSelected)
+        val itemView = vh.itemView as ExpandableItemView<*>
+        assertThat(itemView.isSelected).isEqualTo(shouldBeSelected)
     }
 }
 
-/** Asserts that the view is an ExpandableSelectableRecyclerView that
-    contains only the specified items of type T, in the order given. */
-open class onlyShownItemsAre<T: BootyCrateItem>(vararg items: T) : ViewAssertion {
+/** Asserts that the view is an ExpandableItemListView that contains
+    only the specified items of type T, in the order given. */
+open class onlyShownItemsAre<T: ListItem>(vararg items: T) : ViewAssertion {
     private val items = items.asList()
 
     @CallSuper
-    open fun assertItemFromViewMatchesOriginalItem(view: ExpandableSelectableItemView<T>, item: T) {
+    open fun assertItemFromViewMatchesOriginalItem(view: ExpandableItemView<T>, item: T) {
         assertThat(view.ui.nameEdit.text.toString()).isEqualTo(item.name)
         assertThat(view.ui.extraInfoEdit.text.toString()).isEqualTo(item.extraInfo)
         assertThat(view.ui.checkBox.colorIndex).isEqualTo(item.color)
@@ -125,26 +133,26 @@ open class onlyShownItemsAre<T: BootyCrateItem>(vararg items: T) : ViewAssertion
 
     override fun check(view: View?, noViewFoundException: NoMatchingViewException?) {
         if (view == null) throw noViewFoundException!!
-        assertThat(view).isInstanceOf(ExpandableSelectableRecyclerView::class.java)
-        val it = view as ExpandableSelectableRecyclerView<*>
-        assertThat(items.size).isEqualTo(it.adapter.itemCount)
-        for (i in 0 until it.adapter.itemCount) {
+        assertThat(view).isInstanceOf(ExpandableItemListView::class.java)
+        val it = view as ExpandableItemListView<*>
+        assertThat(items.size).isEqualTo(it.listAdapter.getItemCount())
+        for (i in 0 until it.listAdapter.getItemCount()) {
             val vh = it.findViewHolderForAdapterPosition(i)
             assertThat(vh).isNotNull()
-            val itemView = vh!!.itemView as ExpandableSelectableItemView<T>
+            val itemView = vh!!.itemView as ExpandableItemView<T>
             assertThat(itemView).isNotNull()
             assertThat(assertItemFromViewMatchesOriginalItem(itemView, items[i]))
         }
     }
 }
 
-/** Asserts that the matching view is an ExpandableSelectableRecyclerView subclass
+/** Asserts that the matching view is an ExpandableItemListView subclass
  * that only shows the provided shopping list items, in the order given. */
 class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
     onlyShownItemsAre<ShoppingListItem>(*items)
 {
     override fun assertItemFromViewMatchesOriginalItem(
-        view: ExpandableSelectableItemView<ShoppingListItem>,
+        view: ExpandableItemView<ShoppingListItem>,
         item: ShoppingListItem
     ) {
         super.assertItemFromViewMatchesOriginalItem(view, item)
@@ -152,19 +160,21 @@ class onlyShownShoppingListItemsAre(vararg items: ShoppingListItem) :
     }
 }
 
-/** Asserts that the matching view is an ExpandableSelectableRecyclerView
- * subclass that only shows the provided inventory items, in the order given. */
+/** Asserts that the matching view is an ExpandableItemListView subclass
+ * that only shows the provided inventory items, in the order given. */
 class onlyShownInventoryItemsAre(vararg items: InventoryItem) :
     onlyShownItemsAre<InventoryItem>(*items)
 {
     override fun assertItemFromViewMatchesOriginalItem(
-        view: ExpandableSelectableItemView<InventoryItem>,
+        view: ExpandableItemView<InventoryItem>,
         item: InventoryItem
     ) {
         super.assertItemFromViewMatchesOriginalItem(view, item)
         view as InventoryItemView
-        assertThat(view.detailsUi.autoAddToShoppingListCheckBox.isChecked).isEqualTo(item.autoAddToShoppingList)
-        assertThat(view.detailsUi.autoAddToShoppingListAmountEdit.value).isEqualTo(item.autoAddToShoppingListAmount)
+        assertThat(view.detailsUi.autoAddToShoppingListCheckBox.isChecked)
+            .isEqualTo(item.autoAddToShoppingList)
+        assertThat(view.detailsUi.autoAddToShoppingListAmountEdit.value)
+            .isEqualTo(item.autoAddToShoppingListAmount)
     }
 }
 
