@@ -116,7 +116,7 @@ abstract class ItemListView<T: ListItem>(
                 onItemRenameRequest?.invoke(item.id, newName)
             }
             ui.extraInfoEdit.onTextChangedListener = { newExtraInfo ->
-                onItemRenameRequest?.invoke(item.id, newExtraInfo)
+                onItemExtraInfoChangeRequest?.invoke(item.id, newExtraInfo)
             }
             ui.amountEdit.onValueChangedListener = { value ->
                 onItemAmountChangeRequest?.invoke(item.id, value)
