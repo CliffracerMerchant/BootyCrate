@@ -4,217 +4,170 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.view
 
-import android.content.Context
-import android.graphics.drawable.StateListDrawable
-import android.util.AttributeSet
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.ViewGroup
-import androidx.appcompat.widget.PopupMenu
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.content.res.getColorOrThrow
-import androidx.core.content.res.getResourceIdOrThrow
-import androidx.core.view.isInvisible
-import androidx.core.view.isVisible
+import androidx.compose.animation.*
+import androidx.compose.animation.graphics.res.animatedVectorResource
+import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
+import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.ChangeSortButtonState
-import com.cliffracertech.bootycrate.activity.SearchButtonState
-import com.cliffracertech.bootycrate.activity.TitleState
-import com.cliffracertech.bootycrate.databinding.ListActionBarBinding
-import com.cliffracertech.bootycrate.utils.*
 
 /**
- * A toolbar tailored towards interacting with a list of items.
+ * A horizontal bar that is suitable to be used as a top action bar when
+ * displaying a list of items. The bar integrates an optional back button, a
+ * navigation title / search query, an optional search button and a button to
+ * open a list of sorting options, and any other content passed in through the
+ * parameter [otherContent]. The bar will always display a back button if there
+ * is an active search query (i.e. [searchQuery] is not null), but will otherwise
+ * only display it if [showBackButtonForNavigation] is true. The title will be
+ * replaced by the search query if it is not null.
  *
- * ListActionBar acts as an entirely custom (i.e. it eschews the Android
- * setSupportActionBar API in favor of its own) action bar with an interface
- * tailored towards activities or fragments that primarily show a list of items.
- * Through its binding property ui, the UI elements available are:
- *
- *     - backButton, similar to the home as up indicator. The backButton's
- *       visibility is set through the method setBackButtonIsVisible. Clicks on
- *       the back button can be listened to by setting the property onBackButtonClick.
- *
- *     - titleSwitcher, an ActionBarTitle that is used as an activity or
- *       fragment title, an action mode title, or a search query entry. The
- *       value of the theme attribute actionBarTitleStyle is used as the style
- *       for the title switcher. The state of the titleSwitcher is set with the
- *       method setTitleState with an instance of TitleState. When the title is
- *       in its search query mode, changes in the search query entry can be
- *       listened to through by setting the property onSearchQueryChange.
- *
- *     - searchButton, a button whose icon can morph between a search icon and
- *       a close icon. The state of the search button is set with the method
- *       setSearchButtonState with an instance of SearchButtonState. Clicks on
- *       the search button can be listened to through the property onSearchButtonClick.
- *
- *     - changeSortButton, a button that opens the changeSortMenu, but can also
- *       morph to a delete icon instead. The state of the changeSortButton is
- *       set with the method setChangeSortButtonState with an instance of
- *       ChangeSortButtonState. The contents of the changeSortMenu are set in
- *       XML using the attribute R.attr.changeSortMenuResId. Changing the
- *       contents of the changeSortMenu at runtime is not currently supported.
- *       Change sort menu item clicks can be listened to by calling the function
- *       setOnSortOptionClick with an appropriate PopupMenu.OnMenuItemClickListener,
- *       while clicks on the delete button can be listened to by setting the
- *       property onDeleteButtonClick.
- *
- *     - menuButton, which opens the optionsMenu member. The visibility of the
- *       menu button is set at runtime using the function setMenuButtonVisible.
- *       The contents of the optionsMenu is set using the XML attribute
- *       R.attr.optionsMenuResId or at runtime using the function
- *       setOptionsMenuContents with a list of string resource ids to use as
- *       the titles for each menu item. In this case the item ids for the menu
- *       items will match the ids for the string resources used for their
- *       titles. Menu item clicks can be listened to through by calling the
- *       function setOnOptionsItemClick with an appropriate
- *       PopupMenu.OnMenuItemClickListener.
- *
- * The duration and interpolators used for the internal animations that are
- * played when the visibility of UI elements is changed can be set through the
- * property animatorConfig.
+ * @param showBackButtonForNavigation Whether or not the back button should be
+ *     visible due to other state held outside the action bar. If [searchQuery]
+ *     is not null, the back button will be shown regardless.
+ * @param onBackButtonClick The callback that will be invoked when the back
+ *     button is clicked while [showBackButtonForNavigation] is true. If the
+ *     back button is shown due to a non-null search query, the back button
+ *     will close the search query and [onBackButtonClick] will not be called.
+ * @param title The title that will be displayed when there is no search query.
+ * @param searchQuery The current search query that will be displayed if not null.
+ * @param onSearchQueryChanged The callback that will be invoked when the
+ *     user input should modify the value of the search query.
+ * @param showRightAlignedContent Whether or not the contents to the right
+ *     of the back button and title / search query should be shown. If false
+ *     the search button, change sort button, and any content described in
+ *     the parameter content will be invisible.
+ * @param onSearchButtonClick The callback that will be invoked when the
+ *     user clicks the search button. Typically this should set the search
+ *     query to an empty string if it is already null so that the search
+ *     query entry will appear, or set it to null if it is not null so that
+ *     the search query entry will be closed.
+ * @param sortOptions An array of all possible sorting enum values,
+ *     usually accessed with [enumValues]<T>()
+ * @param sortOptionNames An array containing the [String] values that
+ *     should represent each sorting option.
+ * @param currentSortOption A value of the type parameter that indicates
+ *     the currently selected sort option.
+ * @param otherContent A composable containing other contents that should
+ *     be placed at the end of the action bar.
  */
-class ListActionBar(context: Context, attrs: AttributeSet) :
-    ConstraintLayout(context, attrs)
-{
-    private val ui = ListActionBarBinding.inflate(LayoutInflater.from(context), this)
-    private val backButtonHiddenTransX: Float
-    var animatorConfig: AnimatorConfig? = null
-        set(value) {
-            field = value
-            layoutTransition.applyConfig(value)
+@Composable fun <T> ListActionBar(
+    showBackButtonForNavigation: Boolean = false,
+    onBackButtonClick: () -> Unit,
+    title: String,
+    searchQuery: String? = null,
+    onSearchQueryChanged: (String?) -> Unit,
+    showRightAlignedContent: Boolean = true,
+    onSearchButtonClick: () -> Unit,
+    sortOptions: Array<T>,
+    sortOptionNames: Array<String>,
+    currentSortOption: T,
+    onSortOptionClick: (T) -> Unit,
+    otherContent: @Composable () -> Unit,
+) = Row {
+    // Back button
+    AnimatedContent(
+        targetState = showBackButtonForNavigation || searchQuery != null,
+        contentAlignment = Alignment.Center,
+        transitionSpec = { slideInHorizontally { -it } with
+                           slideOutHorizontally { -it } using
+                           SizeTransform(clip = false) }
+    ) { backButtonIsVisible ->
+        if (!backButtonIsVisible)
+            Spacer(Modifier.width(24.dp))
+        else IconButton(onClick = {
+            if (searchQuery == null)
+                onBackButtonClick()
+            else onSearchQueryChanged(null)
+        }) {
+            Icon(Icons.Default.ArrowBack, stringResource(R.string.back_description))
         }
+    }
 
-    private val changeSortPopupMenu = PopupMenu(context, ui.changeSortButton)
-    private val optionsPopupMenu = PopupMenu(context, ui.menuButton)
-    private val changeSortMenu get() = changeSortPopupMenu.menu
-    private val optionsMenu get() = optionsPopupMenu.menu
+    // Title / search query
+    ActionBarTitle(
+        title,
+        Modifier.weight(1f),
+        searchQuery,
+        onSearchQueryChanged)
 
-    /** Called when the back button is clicked. */
-    var onBackButtonClick: (() -> Unit)? = null
-    /** Called when the search button is clicked. */
-    var onSearchButtonClick: (() -> Unit)? = null
-    /** Called when the search query is changed. */
-    var onSearchQueryChange get() = ui.titleSwitcher.onSearchQueryChange
-                            set(value) { ui.titleSwitcher.onSearchQueryChange = value }
-    /** Called when the delete button is clicked. */
-    var onDeleteButtonClick: (() -> Unit)? = null
-    /** Called when a sort option is clicked. */
-    fun setOnSortOptionClick(listener: PopupMenu.OnMenuItemClickListener) =
-        changeSortPopupMenu.setOnMenuItemClickListener(listener)
-    /** Called when an options menu item is clicked. */
-    fun setOnOptionsItemClick(listener: PopupMenu.OnMenuItemClickListener) =
-        optionsPopupMenu.setOnMenuItemClickListener(listener)
-
-    init {
-        layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
-                                    ViewGroup.LayoutParams.WRAP_CONTENT)
-        val a = context.obtainStyledAttributes(attrs, R.styleable.ListActionBar)
-        val changeSortMenuResId = a.getResourceIdOrThrow(R.styleable.ListActionBar_changeSortMenuResId)
-        val optionsMenuResId = a.getResourceId(R.styleable.ListActionBar_optionsMenuResId, -1)
-        val contentsTint = try { a.getColorOrThrow(R.styleable.ListActionBar_contentsTint) }
-                           catch(e: IllegalArgumentException) { null }
-        a.recycle()
-
-        contentsTint?.let {
-            ui.backButton.drawable.setTint(it)
-            ui.titleSwitcher.fragmentTitleView.setTextColor(it)
-            ui.titleSwitcher.actionModeTitleView.setTextColor(it)
-            ui.titleSwitcher.setSearchQueryTextColor(it)
-            ui.searchButton.drawable.setTint(it)
-            ui.changeSortButton.drawable.setTint(it)
-            ui.menuButton.drawable.setTint(it)
+    // Right aligned content
+    AnimatedVisibility(
+        visible = showRightAlignedContent,
+        enter = slideInHorizontally { it },
+        exit = slideOutHorizontally { it },
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Search button
+            val vector = AnimatedImageVector.animatedVectorResource(R.drawable.search_and_close)
+            val painter = rememberAnimatedVectorPainter(vector, searchQuery != null)
+            IconButton(onClick = onSearchButtonClick) {
+                Icon(painter, stringResource(R.string.search_description))
+            }
+            // Change sort button
+            var sortMenuShown by rememberSaveable { mutableStateOf(false) }
+            IconButton(onClick = { sortMenuShown = !sortMenuShown }) {
+                Icon(imageVector = Icons.Default.Sort,
+                     stringResource(R.string.change_sorting_description))
+                EnumDropDownMenu(
+                    expanded = sortMenuShown,
+                    values = sortOptions,
+                    valueNames = sortOptionNames,
+                    currentValue = currentSortOption,
+                    onValueChanged = onSortOptionClick,
+                    onDismissRequest = { sortMenuShown = false })
+            }
+            otherContent()
         }
-
-        changeSortPopupMenu.menuInflater.inflate(changeSortMenuResId, changeSortMenu)
-        if (optionsMenuResId != -1)
-            optionsPopupMenu.menuInflater.inflate(optionsMenuResId, optionsMenu)
-
-        layoutTransition = layoutTransition(config = null)
-        ui.backButton.setOnClickListener { onBackButtonClick?.invoke() }
-        ui.searchButton.setOnClickListener { onSearchButtonClick?.invoke() }
-        ui.changeSortButton.setOnClickListener {
-            if (!ui.changeSortButton.isActivated)
-                changeSortPopupMenu.show()
-            else onDeleteButtonClick?.invoke()
-        }
-        ui.menuButton.setOnClickListener { optionsPopupMenu.show() }
-
-        // The 4dp adjustment here represents the padding inherent to the back button's
-        // vector drawable. It is added to the back button's actual paddingRight value
-        // to get the apparent visual padding of the icon.
-        backButtonHiddenTransX = ui.backButton.paddingRight + context.dpToPixels(4f) -
-                                 ui.backButton.layoutParams.width
     }
+}
 
-    fun setBackButtonIsVisible(visible: Boolean) {
-        if (ui.backButtonSpacer.isVisible == visible) return
-        val endTransX = if (visible) 0f else backButtonHiddenTransX
-
-        if (!isVisible) {
-            ui.backButton.isInvisible = !visible
-            ui.backButton.translationX = endTransX
-        } else {
-            ui.backButton.isVisible = true
-            ui.backButton.animate()
-                .withLayer().applyConfig(animatorConfig)
-                .translationX(endTransX).withEndAction {
-                    ui.backButton.isInvisible = !visible
-                }.start()
-        }
-        ui.backButtonSpacer.isVisible = visible
-    }
-
-    fun setTitleState(state: TitleState) = when(state) {
-        is TitleState.ActionMode ->
-            ui.titleSwitcher.setActionModeTitle(state.titleRes.resolve(context), switchTo = true)
-        is TitleState.SearchQuery ->
-            ui.titleSwitcher.setSearchQuery(state.searchQuery, switchTo = true)
-        is TitleState.NormalTitle ->
-            ui.titleSwitcher.setTitle(state.titleRes.resolve(context), switchTo = true)
-    }
-
-    fun setSearchButtonState(state: SearchButtonState) {
-        ui.searchButton.isVisible = !state.isInvisible
-        ui.searchButton.isActivated = state.isMorphedToClose
-    }
-
-    fun setChangeSortButtonState(state: ChangeSortButtonState, animate: Boolean = true) {
-        ui.changeSortButton.isActivated = state.isMorphedToDelete
-        if (!animate) {
-            val drawable = ui.changeSortButton.drawable as? StateListDrawable
-            drawable?.jumpToCurrentState()
-        }
-        ui.changeSortButton.contentDescription = context.getString(
-            if (isActivated) R.string.change_sorting_description
-            else             R.string.delete_button_description)
-        ui.changeSortButton.isVisible = !state.isInvisible
-        if (state is ChangeSortButtonState.Visible)
-            changeSortMenu.getItemOrNull(state.selectedIndex)?.isChecked = true
-    }
-
-    fun setMenuButtonVisible(visible: Boolean) {
-        // The layout transition for some reason does not fade the menu button
-        // in and out when its visibility is set, so the fade in/out has to be
-        // done manually.
-        ui.menuButton.animate().alpha(if (visible) 1f else 0f)
-            .withLayer().applyConfig(animatorConfig).start()
-        // But the layout transition suddenly decides to work if the button's
-        // visibility is set to gone or invisible at the end of the animation,
-        // leading to the button fading out, jumping back to 1.0 alpha and
-        // fading out again... To workaround this we'll just leave the button
-        // at 0 alpha.
-    }
-
-    /** Set the options menu contents using the provided list of StringResources.
-     * The id, title, and order of each MenuItem will be equal to its corresponding
-     * StringResource's stringResId property, its resolved string, and its position
-     * in the list, respectively.
-     */
-    fun setOptionsMenuContents(stringResources: List<Int>) {
-        optionsMenu.clear()
-        stringResources.forEachIndexed { index, resId ->
-            optionsMenu.add(Menu.NONE, resId, index, context.getString(resId))
+/**
+ * A [DropdownMenu] that displays an option for each value of the enum type
+ * parameter, and a checked or unchecked radio button besides each to show
+ * the currently selected value.
+ *
+ * @param expanded Whether the dropdown menu is displayed.
+ * @param values An array of all possible values for the enum type,
+ *               usually accessed with [enumValues]<T>().
+ * @param valueNames An Array<String> containing [String] values to use
+ *                   to represent each value of the parameter enum type T.
+ * @param currentValue The currently selected enum value.
+ * @param onValueChanged The callback that will be invoked when the user taps an item.
+ * @param onDismissRequest The callback that will be invoked when the menu should
+ *                         be dismissed.
+ */
+@Composable fun <T> EnumDropDownMenu(
+    expanded: Boolean,
+    values: Array<T>,
+    valueNames: Array<String>,
+    currentValue: T,
+    onValueChanged: (T) -> Unit,
+    onDismissRequest: () -> Unit
+) = DropdownMenu(expanded, onDismissRequest) {
+    values.forEachIndexed { index, value ->
+        DropdownMenuItem({ onValueChanged(value); onDismissRequest() }) {
+            val name = valueNames.getOrNull(index) ?: "Error"
+            Text(text = name, style = MaterialTheme.typography.button)
+            Spacer(Modifier.weight(1f))
+            val vector = if (value == currentValue)
+                Icons.Default.RadioButtonChecked
+            else Icons.Default.RadioButtonUnchecked
+            Icon(vector, name, Modifier.size(36.dp).padding(8.dp))
         }
     }
 }
