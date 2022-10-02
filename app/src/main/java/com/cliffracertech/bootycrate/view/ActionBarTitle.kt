@@ -14,6 +14,29 @@ import android.view.inputmethod.EditorInfo
 import android.widget.ViewFlipper
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.LocalContentColor
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
@@ -184,4 +207,75 @@ class ActionBarTitle(context: Context, attrs: AttributeSet) : ViewFlipper(contex
         searchQueryView.setTextColor(color)
         searchQueryView.background?.setTint(color)
     }
+}
+
+@Composable fun RowScope.ActionBarTitle(
+    title: String,
+    modifier: Modifier = Modifier,
+    searchQuery: String? = null,
+    onSearchQueryChanged: (String) -> Unit,
+) {
+    Crossfade(// This outer crossfade is for when the search query appears/disappears.
+        targetState = searchQuery != null,
+        modifier = modifier,
+    ) { searchQueryIsNotNull ->
+        Row(Modifier.fillMaxHeight(), verticalAlignment = Alignment.CenterVertically) {
+            // lastSearchQuery is used so that when the search query changes from a
+            // non-null non-blank value to null, the search query will be recomposed
+            // with the value of lastSearchQuery instead of null during the search
+            // query's fade out animation. This allows the last non-null search
+            // query text to fade out with the rest of the search query (i.e. the
+            // underline) instead of abruptly disappearing.
+            var lastSearchQuery by rememberSaveable { mutableStateOf("") }
+            if (searchQueryIsNotNull) {
+                val text = searchQuery ?: lastSearchQuery
+                AutoFocusSearchQuery(text, onSearchQueryChanged)
+                @Suppress("UNUSED_VALUE")
+                if (searchQuery != null)
+                    lastSearchQuery = searchQuery
+            } else Crossfade(title) { // This inner crossfade is for when the title changes.
+                Text(it, style = MaterialTheme.typography.h5, maxLines = 1)
+            }
+        }
+    }
+}
+
+/**
+ * A search query that auto-focuses when first composed,
+ * and displays an underline as a background.
+ *
+ * @param query The current value of the search query
+ * @param onQueryChanged The callback to be invoked when user input changes the query
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable fun AutoFocusSearchQuery(
+    query: String,
+    onQueryChanged: (String) -> Unit
+) {
+    val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    BasicTextField(
+        value = query,
+        onValueChange = onQueryChanged,
+        textStyle = MaterialTheme.typography.h6
+            .copy(color = MaterialTheme.colors.onPrimary),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search, ),
+        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+        modifier = Modifier
+            .focusRequester(focusRequester)
+            .onFocusChanged {
+                if (it.isFocused) keyboardController?.show()
+            },
+        singleLine = true,
+    ) { innerTextField ->
+        Box {
+            innerTextField()
+            androidx.compose.material.Divider(
+                Modifier.align(Alignment.BottomStart),
+                LocalContentColor.current, (1.5).dp)
+        }
+    }
+    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 }
