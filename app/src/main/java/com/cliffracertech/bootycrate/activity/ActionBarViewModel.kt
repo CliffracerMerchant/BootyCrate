@@ -21,28 +21,10 @@ import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-/** A state holder representing a title for an action bar. */
-sealed class TitleState {
-    /** A TitleState that represents the title for an active action mode. */
-    class ActionMode(val titleRes: StringResource) : TitleState() {
-        constructor(titleResId: Int, amount: Int): this(StringResource(titleResId, amount))
-    }
-    /** A TitleState that represents the title for an active search query. */
-    class SearchQuery(val searchQuery: String) : TitleState()
-
-    /** A TitleState that represents the title for an active fragment/activity. */
-    class NormalTitle(val titleRes: StringResource) : TitleState() {
-        constructor(titleResId: Int): this(StringResource(titleResId))
-    }
-
-    val isActionMode get() = this is ActionMode
-    val isSearchQuery get() = this is SearchQuery
-    val isNormalTitle get() = this is NormalTitle
-}
 
 /** A set of values representing the state of a combo search/close button. */
 enum class SearchButtonState {
@@ -74,31 +56,43 @@ sealed class ChangeSortButtonState {
 
 
 @HiltViewModel
-class ActionBarViewModel @Inject constructor(
-    @ApplicationContext context: Context,
+class ActionBarViewModel(
+    context: Context,
     private val itemDao: ItemDao,
     itemGroupDao: ItemGroupDao,
     private val navigationState: MainActivityNavigationState,
     private val messageHandler: MessageHandler,
-    private val searchQueryState: SearchQueryState
+    private val searchQueryState: SearchQueryState,
+    coroutineScope: CoroutineScope?
 ) : ViewModel() {
 
-    private val searchQuery = searchQueryState.query.asStateFlow()
+    @Inject constructor(
+        @ApplicationContext
+        context: Context,
+        itemDao: ItemDao,
+        itemGroupDao: ItemGroupDao,
+        navigationState: MainActivityNavigationState,
+        messageHandler: MessageHandler,
+        searchQueryState: SearchQueryState,
+    ) : this(context, itemDao, itemGroupDao, navigationState,
+             messageHandler, searchQueryState, null)
+
+    private val scope = coroutineScope ?: viewModelScope
+    val searchQuery = searchQueryState.query.asStateFlow()
     fun onSearchQueryChangeRequest(newQuery: CharSequence?) {
         searchQueryState.query.value = newQuery?.toString()
     }
 
     private val selectedShoppingListItemCount = itemDao.getSelectedShoppingListItemCount()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
-
+        .stateIn(scope, SharingStarted.Eagerly, 0)
     private val selectedInventoryItemCount = itemDao.getSelectedInventoryItemCount()
-        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+        .stateIn(scope, SharingStarted.Eagerly, 0)
 
     private val selectedItemCount = navigationState.visibleScreen.transformLatest { when {
         it.isShoppingList -> emitAll(selectedShoppingListItemCount)
         it.isInventory ->    emitAll(selectedInventoryItemCount)
         else ->              emit(0)
-    }}.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+    }}.stateIn(scope, SharingStarted.Eagerly, 0)
 
 
     val backButtonIsVisible = combine(
@@ -107,14 +101,14 @@ class ActionBarViewModel @Inject constructor(
         searchQuery
     ) { screen, selectedItemCount, filter ->
         screen.isOther || filter != null || selectedItemCount != 0
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), false)
+    }.stateIn(scope, SharingStarted.WhileSubscribed(3000), false)
 
     fun onBackPressed() = when {
         selectedItemCount.value > 0 -> {
             if (navigationState.visibleScreen.value.isShoppingList)
-                viewModelScope.launch { itemDao.clearShoppingListSelection() }
+                scope.launch { itemDao.clearShoppingListSelection() }
             if (navigationState.visibleScreen.value.isInventory)
-                viewModelScope.launch { itemDao.clearInventorySelection() }
+                scope.launch { itemDao.clearInventorySelection() }
             true
         } searchQuery.value != null -> {
             onSearchQueryChangeRequest(null)
@@ -129,21 +123,17 @@ class ActionBarViewModel @Inject constructor(
             1 ->    StringResource(it.first().name)
             else -> StringResource(R.string.multiple_selected_item_groups_description)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), StringResource(""))
+    }.stateIn(scope, SharingStarted.WhileSubscribed(3000), StringResource(""))
 
-    val titleState = combine(
+    val title = combine(
         navigationState.visibleScreen,
         selectedItemCount,
-        searchQuery,
-        selectedItemGroupName
-    ) { screen, selectedItemCount, query, selectedItemGroupName -> when {
-        screen.isOther ->        TitleState.NormalTitle(R.string.settings_description)
-        selectedItemCount > 0 -> TitleState.ActionMode(R.string.action_mode_title, selectedItemCount)
-        query != null ->         TitleState.SearchQuery(query)
-        else ->                  TitleState.NormalTitle(selectedItemGroupName)
-    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000),
-               TitleState.NormalTitle(StringResource("")))
-
+        selectedItemGroupName,
+    ) { screen, selectedItemCount, selectedItemGroupName -> when {
+        screen.isOther ->        StringResource(R.string.settings_description)
+        selectedItemCount > 0 -> StringResource(R.string.action_mode_title, selectedItemCount)
+        else ->                  selectedItemGroupName
+    }}
 
     val searchButtonState = combine(
         navigationState.visibleScreen,
@@ -153,7 +143,7 @@ class ActionBarViewModel @Inject constructor(
         screen.isOther || selectedItemCount > 0 -> SearchButtonState.Invisible
         query != null ->                           SearchButtonState.MorphedToClose
         else ->                                    SearchButtonState.Visible
-    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), SearchButtonState.Visible)
+    }}.stateIn(scope, SharingStarted.WhileSubscribed(3000), SearchButtonState.Visible)
 
     fun onSearchButtonClick() {
         val newQuery = if (searchQuery.value == null) "" else null
@@ -163,17 +153,17 @@ class ActionBarViewModel @Inject constructor(
 
     private val sort = context.dataStore.mutableEnumPreferenceFlow(
         intPreferencesKey(context.getString(R.string.pref_item_sort_key)),
-                          viewModelScope, ListItem.Sort.Color)
+                          scope, ListItem.Sort.Color)
 
     val changeSortButtonState = combine(
         navigationState.visibleScreen,
-        titleState,
+        selectedItemCount,
         sort
-    ) { screen, titleState, sort -> when {
-        screen.isOther ->          ChangeSortButtonState.Invisible
-        titleState.isActionMode -> ChangeSortButtonState.MorphedToDelete
-        else ->                    ChangeSortButtonState.Visible(sort.ordinal)
-    }}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000),
+    ) { screen, selectedItemCount, sort -> when {
+        screen.isOther ->        ChangeSortButtonState.Invisible
+        selectedItemCount > 0 -> ChangeSortButtonState.MorphedToDelete
+        else ->                  ChangeSortButtonState.Visible(sort.ordinal)
+    }}.stateIn(scope, SharingStarted.WhileSubscribed(3000),
                ChangeSortButtonState.Visible(ListItem.Sort.Color.ordinal))
 
     fun onSortOptionClick(menuItemId: Int): Boolean {
@@ -192,7 +182,7 @@ class ActionBarViewModel @Inject constructor(
     fun onDeleteButtonClick() {
         val screen = navigationState.visibleScreen.value
         if (!screen.isShoppingList && !screen.isInventory) return
-        viewModelScope.launch {
+        scope.launch {
             val itemCount = selectedItemCount.value
 
             if (screen.isShoppingList)
@@ -200,7 +190,7 @@ class ActionBarViewModel @Inject constructor(
             else itemDao.deleteSelectedInventoryItems()
 
             val onUndo = {
-                viewModelScope.launch {
+                scope.launch {
                     if (screen.isShoppingList)
                         itemDao.undoDeleteShoppingListItems()
                     else itemDao.undoDeleteInventoryItems()
@@ -208,7 +198,7 @@ class ActionBarViewModel @Inject constructor(
             }
             val onDismiss = { reason: Int ->
                 if (reason != DISMISS_EVENT_ACTION && reason != DISMISS_EVENT_CONSECUTIVE)
-                    viewModelScope.launch {
+                    scope.launch {
                         if (screen.isShoppingList)
                             itemDao.emptyShoppingListTrash()
                         else itemDao.emptyInventoryTrash()
@@ -221,7 +211,7 @@ class ActionBarViewModel @Inject constructor(
 
     val moreOptionsButtonVisible = navigationState.visibleScreen
         .map { !it.isOther }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), true)
+        .stateIn(scope, SharingStarted.WhileSubscribed(3000), true)
 
 
     val optionsMenuContent = combine(
@@ -241,6 +231,6 @@ class ActionBarViewModel @Inject constructor(
             add(R.string.select_all_description)
             add(R.string.share_description)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000),
+    }.stateIn(scope, SharingStarted.WhileSubscribed(3000),
               listOf(R.string.select_all_description, R.string.share_description))
 }
