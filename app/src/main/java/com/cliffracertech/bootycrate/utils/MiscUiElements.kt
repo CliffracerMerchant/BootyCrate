@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.utils
 
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,26 +17,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
-/** An IconButton that uses the supplied [icon] as its icon, or its own default
- * icon with a content description equal to the provided [description] if [icon]
- * is not overridden. When clicked, the button will open a DropDownMenu with
- * the provided [content] */
-@Composable fun DropdownMenuButton(
-    modifier: Modifier = Modifier,
-    description: String? = null,
-    icon: @Composable (String?) -> Unit = {
-        Icon(Icons.Default.MoreVert, description)
-   }, content: @Composable ColumnScope.() -> Unit
-) {
-    var showingMenu by rememberSaveable { mutableStateOf(false) }
-    IconButton({ showingMenu = true }, modifier) {
-        icon(description)
-        DropdownMenu(
-            expanded = showingMenu,
-            onDismissRequest = { showingMenu = false },
-            content = content)
-    }
-}
 
 /**
  * A [DropdownMenu] that displays an option for each value of the enum type

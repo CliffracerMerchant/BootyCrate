@@ -5,10 +5,15 @@
 package com.cliffracertech.bootycrate.view
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -16,7 +21,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.ActionBarViewModel
 import com.cliffracertech.bootycrate.model.database.ListItem
-import com.cliffracertech.bootycrate.utils.DropdownMenuButton
 
 /** Compose a [ListActionBar] with state provided by an instance of [ActionBarViewModel]. */
 @Composable
@@ -46,12 +50,18 @@ fun BootyCrateActionBar(modifier: Modifier = Modifier) {
         onDeleteButtonClick = viewModel::onDeleteButtonClick
     ) {
         AnimatedVisibility(viewModel.showMoreOptionsButton) {
-            DropdownMenuButton(
-                description = stringResource(R.string.more_options_description)
-            ) {
-                viewModel.optionsMenuItems.forEach { (menuItem, stringResId) ->
-                    DropdownMenuItem({ viewModel.onOptionsMenuItemClick(menuItem) }) {
-                        Text(stringResource(stringResId))
+            var showingMenu by rememberSaveable { mutableStateOf(false) }
+            IconButton({ showingMenu = true }) {
+                Icon(Icons.Default.MoreVert, stringResource(R.string.more_options_description))
+                DropdownMenu(
+                    expanded = showingMenu,
+                    onDismissRequest = { showingMenu = false },
+                ) {
+                    viewModel.optionsMenuItems.forEach { (menuItem, stringResId) ->
+                        DropdownMenuItem(onClick = {
+                            viewModel.onOptionsMenuItemClick(menuItem)
+                            showingMenu = false
+                        }) { Text(stringResource(stringResId)) }
                     }
                 }
             }
