@@ -32,7 +32,8 @@
     <string name="edit_button_description">Edit item</string>
     <string name="delete_snackbar_text">%1$d item(s) deleted</string>
     <string name="undo_description">Undo</string>
-    <string name="action_mode_title">%1$d item(s) selected</string>
+    <string name="single_selection_description">1 item selected</string>
+    <string name="multi_selection_description">%1$d items selected</string>
 
     <string name="item_collection_name">items</string>
     <string name="name_description">Item name</string>

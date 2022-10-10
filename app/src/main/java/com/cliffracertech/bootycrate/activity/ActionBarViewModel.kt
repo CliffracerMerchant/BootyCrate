@@ -123,8 +123,10 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
     val title by derivedStateOf { when {
         currentScreen.isAppSettings ->
             StringResource(R.string.settings_description)
-        selectedItemCount > 0 ->
-            StringResource(R.string.action_mode_title, selectedItemCount)
+        selectedItemCount == 1 ->
+            StringResource(R.string.single_selection_description)
+        selectedItemCount > 1 ->
+            StringResource(R.string.multi_selection_description, selectedItemCount)
         else -> when(selectedItemGroups.size) {
             0 ->    StringResource("")
             1 ->    StringResource(selectedItemGroups.first().name)
