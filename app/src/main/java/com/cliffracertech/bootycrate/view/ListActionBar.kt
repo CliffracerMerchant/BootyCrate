@@ -39,7 +39,7 @@ import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
     Row(modifier.fillMaxWidth().background(gradient).height(56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val color = MaterialTheme.colors.onSurface
+        val color = MaterialTheme.colors.onPrimary
         CompositionLocalProvider(LocalContentColor provides color) {
             content()
         }

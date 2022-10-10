@@ -89,8 +89,14 @@ class MainActivity : NavViewActivity() {
     }
 
     override fun onBackPressed() {
-        if (!actionBarViewModel.onBackPressed())
+        if (!actionBarViewModel.onBackPressed()) {
             supportFragmentManager.popBackStack()
+            viewModel.navigateTo(when (ui.bottomAppBar.ui.navigationView.selectedItemId) {
+                R.id.shoppingListButton -> NavigationState.Screen.ShoppingList
+                R.id.inventoryButton ->    NavigationState.Screen.Inventory
+                else ->                    NavigationState.Screen.AppSettings
+            })
+        }
     }
 
     private fun updateBottomAppBarState(uiState: BottomAppBarViewModel.UiState) {
@@ -140,6 +146,7 @@ class MainActivity : NavViewActivity() {
 
         // item group selector
         ui.settingsButton.setOnClickListener {
+            viewModel.navigateTo(NavigationState.Screen.AppSettings)
             addSecondaryFragment(AppSettingsFragment())
         }
         ui.addItemGroupButton.setOnClickListener {
@@ -201,6 +208,13 @@ class MainActivity : NavViewActivity() {
                 if (fragment is ItemListFragment<*>)
                     fragment.setListBottomPadding(padding)
             }
+        }
+        ui.bottomAppBar.ui.navigationView.addOnItemSelectedListener {
+            viewModel.navigateTo(when (it.itemId) {
+                R.id.shoppingListButton -> NavigationState.Screen.ShoppingList
+                R.id.inventoryButton ->    NavigationState.Screen.Inventory
+                else ->                    NavigationState.Screen.AppSettings
+            })
         }
     }
 
