@@ -5,7 +5,6 @@
 package com.cliffracertech.bootycrate.fragment
 
 import android.content.Context
-import android.content.Intent
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
@@ -22,10 +21,8 @@ import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.*
 import javax.inject.Inject
 
 /**
@@ -111,35 +108,6 @@ abstract class ItemListViewModel<T: ListItem>(
     protected abstract suspend fun deleteItem(id: Long)
     protected abstract fun emptyTrash()
     protected abstract fun undoDelete()
-
-    private val _chooserIntents = MutableSharedFlow<Intent>(replay = 0, extraBufferCapacity = 1,
-                                                            onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val chooserIntents = _chooserIntents.asSharedFlow()
-
-    open fun onOptionsItemClick(menuItemId: Int) = when (menuItemId) {
-        R.string.share_description -> {
-            val allItems = items.value
-            val selectionIsEmpty = selectedItemCount.value == 0
-            val items = if (selectionIsEmpty) allItems
-            else allItems.filter { it.isSelected }
-
-            if (items.isNullOrEmpty()) {
-                messageHandler.postMessage(StringResource(R.string.empty_list_message, collectionNameResId))
-            } else {
-                val message = StringJoiner("\n").apply {
-                    for (item in items)
-                        add(item.toUserFacingString())
-                }.toString()
-
-                val intent = Intent(Intent.ACTION_SEND)
-                intent.putExtra(Intent.EXTRA_TEXT, message)
-                intent.type = "text/plain"
-                _chooserIntents.tryEmit(intent)
-            }
-            true
-        }
-        else -> false
-    }
 }
 
 
@@ -183,9 +151,6 @@ class ShoppingListViewModel @Inject constructor(
     fun onItemCheckboxClicked(id: Long) {
         viewModelScope.launch { dao.toggleIsChecked(id) }
     }
-    fun onCheckoutRequest() {
-        viewModelScope.launch { dao.checkout() }
-    }
 
 
     override val selectedItemCount = dao.getSelectedShoppingListItemCount()
@@ -206,26 +171,6 @@ class ShoppingListViewModel @Inject constructor(
     }
     override fun undoDelete() {
         viewModelScope.launch { dao.undoDeleteShoppingListItems() }
-    }
-
-
-    override fun onOptionsItemClick(menuItemId: Int) = when (menuItemId) {
-        R.string.select_all_description -> {
-            viewModelScope.launch { dao.selectAllShoppingListItems() }
-            true
-        } R.string.add_to_inventory_description -> {
-            viewModelScope.launch {
-                dao.addToInventoryFromSelectedShoppingListItems()
-                dao.clearShoppingListSelection()
-            }
-            true
-         } R.string.check_all_description -> {
-            viewModelScope.launch { dao.checkAllShoppingListItems() }
-            true
-        } R.string.uncheck_all_description -> {
-            viewModelScope.launch { dao.uncheckAllShoppingListItems() }
-            true
-        } else -> super.onOptionsItemClick(menuItemId)
     }
 }
 
@@ -283,18 +228,5 @@ class InventoryViewModel @Inject constructor(
     }
     override fun undoDelete() {
         viewModelScope.launch { dao.undoDeleteInventoryItems() }
-    }
-
-    override fun onOptionsItemClick(menuItemId: Int) = when (menuItemId) {
-        R.string.select_all_description -> {
-            viewModelScope.launch { dao.selectAllInventoryItems() }
-            true
-        } R.string.add_to_shopping_list_description-> {
-            viewModelScope.launch {
-                dao.addToShoppingListFromSelectedInventoryItems()
-                dao.clearInventorySelection()
-            }
-            true
-        } else -> super.onOptionsItemClick(menuItemId)
     }
 }

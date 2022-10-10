@@ -12,20 +12,20 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.model.MutableNavigationState
 import com.cliffracertech.bootycrate.utils.*
 import com.google.android.material.navigation.NavigationBarView
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
 class NavViewActivityViewModel @Inject constructor(
-    private val state: MutableNavigationState
 ) : ViewModel() {
-    val selectedNavItemId = state.selectedNavItemId
+    val selectedNavItemId = MutableStateFlow(R.id.shoppingListButton)
 
-    fun onPrimaryNavItemClick(navItemId: Int) =
-        state.notifyNavItemSelected(navItemId)
+    fun onPrimaryNavItemClick(navItemId: Int) {
+        selectedNavItemId.value = navItemId
+    }
 }
 
 /**

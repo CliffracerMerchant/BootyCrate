@@ -13,11 +13,10 @@
     android:clipChildren="false"
     tools:context=".activity.MainActivity" >
 
-    <com.cliffracertech.bootycrate.view.ListActionBar
+    <androidx.compose.ui.platform.ComposeView
         android:id="@+id/actionBar"
         android:layout_width="match_parent"
-        android:layout_height="?android:attr/actionBarSize"
-        style="@style/TopActionBar" />
+        android:layout_height="?attr/actionBarSize" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fragmentContainer"

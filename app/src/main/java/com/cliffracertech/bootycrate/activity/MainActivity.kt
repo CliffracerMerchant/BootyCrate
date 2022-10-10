@@ -24,25 +24,26 @@ import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.fragment.InventoryFragment
 import com.cliffracertech.bootycrate.fragment.ItemListFragment
 import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
-import com.cliffracertech.bootycrate.model.MainActivityNavigationState
+import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.view.BootyCrateActionBar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
-    private val navigationState: MainActivityNavigationState,
+    private val navigationState: NavigationState,
     messageHandler: MessageHandler
 ) : ViewModel() {
     val messages = messageHandler.messages
 
-    fun notifyBackStackSizeChanged(backStackSize: Int) =
-        navigationState.notifyBackStackSizeChanged(backStackSize)
+    fun navigateTo(screen: NavigationState.Screen) {
+        navigationState.visibleScreen.value = screen
+    }
 }
 
 /**
@@ -75,27 +76,20 @@ class MainActivity : NavViewActivity() {
         initAnimatorConfigs()
         initNavDrawer()
         initGradientStyle()
+        initComposeViews()
 
-        supportFragmentManager.addOnBackStackChangedListener {
-            val backStackSize = supportFragmentManager.backStackEntryCount
-            viewModel.notifyBackStackSizeChanged(backStackSize)
-        }
         viewModel.messages.displayWithSnackBarAnchoredTo(ui.bottomAppBar)
         repeatWhenStarted {
-            launch { actionBarViewModel.backButtonIsVisible.collect(ui.actionBar::setBackButtonIsVisible) }
-            launch { actionBarViewModel.titleState.collect(ui.actionBar::setTitleState) }
-            launch { actionBarViewModel.searchButtonState.collect(ui.actionBar::setSearchButtonState) }
-            launch { actionBarViewModel.changeSortButtonState.collect(ui.actionBar::setChangeSortButtonState) }
-            launch { actionBarViewModel.moreOptionsButtonVisible.collect(ui.actionBar::setMenuButtonVisible) }
-            launch { actionBarViewModel.optionsMenuContent.collect(ui.actionBar::setOptionsMenuContents) }
-
             launch { bottomAppBarViewModel.uiState.collect(::updateBottomAppBarState) }
             launch { bottomAppBarViewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
             launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
         }
     }
 
-    override fun onBackPressed() { ui.actionBar.onBackButtonClick?.invoke() }
+    override fun onBackPressed() {
+        if (!actionBarViewModel.onBackPressed())
+            supportFragmentManager.popBackStack()
+    }
 
     private fun updateBottomAppBarState(uiState: BottomAppBarViewModel.UiState) {
         val animate = ui.bottomNavigationDrawer.isLaidOut &&
@@ -132,16 +126,6 @@ class MainActivity : NavViewActivity() {
         visibleFragment?.onOptionsItemSelected(item) ?: false
 
     private fun initOnClickListeners() {
-        // action bar
-        ui.actionBar.onBackButtonClick = {
-            if (!actionBarViewModel.onBackPressed())
-                supportFragmentManager.popBackStack()
-        }
-        ui.actionBar.onSearchButtonClick = actionBarViewModel::onSearchButtonClick
-        ui.actionBar.onSearchQueryChange = actionBarViewModel::onSearchQueryChangeRequest
-        ui.actionBar.onDeleteButtonClick = actionBarViewModel::onDeleteButtonClick
-        ui.actionBar.setOnSortOptionClick { actionBarViewModel.onSortOptionClick(it.itemId) }
-        ui.actionBar.setOnOptionsItemClick(::onOptionsItemSelected)
 
         // bottom app bar
         ui.bottomAppBar.ui.checkoutButton.onConfirm =
@@ -184,7 +168,6 @@ class MainActivity : NavViewActivity() {
         primaryFragmentTransitionAnimatorConfig = transitionAnimConfig
         defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
         defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
-        ui.actionBar.animatorConfig = transitionAnimConfig
 
         ui.bottomAppBar.navIndicator.width =
             2.5f * ui.bottomAppBar.ui.navigationView.itemIconSize
@@ -219,5 +202,9 @@ class MainActivity : NavViewActivity() {
                     fragment.setListBottomPadding(padding)
             }
         }
+    }
+
+    private fun initComposeViews() {
+        ui.actionBar.setContent { BootyCrateActionBar() }
     }
 }

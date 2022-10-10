@@ -17,6 +17,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import androidx.annotation.StringRes
+import androidx.compose.runtime.*
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -214,23 +215,71 @@ fun <T> DataStore<Preferences>.mutablePreferenceFlow(
     }
 }
 
-/** Return a MutableStateFlow<T> that contains the most recent enum value for
- * the Int preference pointed to by the parameter key, with a default value of
- * the parameter defaultValue. Changes to the returned MutableStateFlow's value
- * property will automatically be written to the receiver DataStore object. The
- * Preferences.Key<Int> should point to the preference that stores the index of
- * the current enum value.*/
-inline fun <reified T: Enum<T>> DataStore<Preferences>.mutableEnumPreferenceFlow(
+
+/** Return a [State]`<T>` that contains the most recent value for the [DataStore]
+ * preference pointed to by [key], with an initial value of [initialValue]. */
+fun <T> DataStore<Preferences>.preferenceState(
+    key: Preferences.Key<T>,
+    initialValue: T,
+    scope: CoroutineScope,
+) : State<T> {
+    val state = mutableStateOf(initialValue)
+    data.map { it[key] ?: initialValue }
+        .onEach { state.value = it }
+        .launchIn(scope)
+    return state
+}
+
+/** Return a [State]`<T>` that contains the most recent value for the
+ * [DataStore] preference pointed to by [key], with a default value of
+ * [defaultValue]. awaitPreferenceState will suspend until the first value
+ * of the preference is returned. The provided default value will only be
+ * used if the receiver [DataStore] does not have a value associated with
+ * the provided key. */
+suspend fun <T> DataStore<Preferences>.awaitPreferenceState(
+    key: Preferences.Key<T>,
+    defaultValue: T,
+    scope: CoroutineScope,
+) : State<T> {
+    val flow = data.map { it[key] ?: defaultValue }
+    val state = mutableStateOf(flow.first())
+    flow.onEach { state.value = it }.launchIn(scope)
+    return state
+}
+
+/** Return a [State]`<T>` that contains the most recent enum value for the
+ * [DataStore] preference pointed to by [key], with an initial value
+ * of [initialValue]. [key] is a [Preferences.Key]`<Int>` instance whose
+ * value indicates the ordinal of the current enum value. */
+inline fun <reified T: Enum<T>> DataStore<Preferences>.enumPreferenceState(
     key: Preferences.Key<Int>,
     scope: CoroutineScope,
-    defaultValue: T,
-) = MutableStateFlow(defaultValue).apply {
-    scope.launch {
-        val firstIndex = data.first()[key] ?: defaultValue.ordinal
-        value = enumValues<T>()[firstIndex]
-        collect { newValue ->
-            edit { it[key] = newValue.ordinal }
-        }
+    initialValue: T = enumValues<T>()[0],
+): State<T> {
+    val indexState = preferenceState(key, initialValue.ordinal, scope)
+    val values = enumValues<T>()
+    return derivedStateOf {
+        values.getOrElse(indexState.value) { initialValue }
+    }
+}
+
+/** Return a [State]`<T>` that contains the most recent enum value for the
+ * [DataStore] preference pointed to by the parameter [key], with a default
+ * value of [defaultValue]. [key] is a [Preferences.Key]`<Int>` instance
+ * whose value indicates the ordinal of the current enum value.
+ * awaitEnumPreferenceState will suspend until the first value of the enum
+ * is read from the receiver [DataStore] object. The provided default value
+ * will only be used if the receiver [DataStore] does not have a value
+ * associated with the provided key. */
+suspend inline fun <reified T: Enum<T>> DataStore<Preferences>.awaitEnumPreferenceState(
+    key: Preferences.Key<Int>,
+    scope: CoroutineScope,
+    defaultValue: T = enumValues<T>()[0],
+): State<T> {
+    val indexState = awaitPreferenceState(key, defaultValue.ordinal, scope)
+    val values = enumValues<T>()
+    return derivedStateOf {
+        values.getOrElse(indexState.value) { defaultValue }
     }
 }
 

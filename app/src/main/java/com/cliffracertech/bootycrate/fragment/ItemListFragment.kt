@@ -4,10 +4,8 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.fragment
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextSwitcher
@@ -75,9 +73,6 @@ abstract class ItemListFragment<T: ListItem> : Fragment() {
         }
 
         viewLifecycleOwner.repeatWhenStarted {
-            launch { viewModel.chooserIntents.collect {
-                context?.startActivity(Intent.createChooser(it, null))
-            }}
             launch { viewModel.items.collect { listView?.submitList(it) }}
             launch { viewModel.emptyMessage.collect(::showItemsMessage) }
         }
@@ -88,9 +83,6 @@ abstract class ItemListFragment<T: ListItem> : Fragment() {
         val messageText = message?.resolve(context) ?: ""
         messageView.setText(messageText)
     }
-
-    override fun onOptionsItemSelected(item: MenuItem) =
-        viewModel.onOptionsItemClick(item.itemId)
 
     override fun onDestroyView() {
         super.onDestroyView()

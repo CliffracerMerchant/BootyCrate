@@ -113,11 +113,23 @@ abstract class ListItem(
     }
 
     enum class Sort { Color, NameAsc, NameDesc, AmountAsc, AmountDesc;
+
+        fun toString(context: Context) = when(this) {
+            Color ->      context.getString(R.string.color_description)
+            NameAsc ->    context.getString(R.string.name_ascending_description)
+            NameDesc ->   context.getString(R.string.name_descending_description)
+            AmountAsc ->  context.getString(R.string.amount_ascending_description)
+            AmountDesc -> context.getString(R.string.amount_descending_description)
+        }
+
         companion object {
+            fun stringValues(context: Context) =
+                enumValues<Sort>().map { it.toString(context) }
+
             fun fromString(string: String?) =
-                    if (string == null) Color
-                    else try { valueOf(string) }
-                    catch(e: IllegalArgumentException) { Color }
+                if (string == null) Color
+                else try { valueOf(string) }
+                catch(e: IllegalArgumentException) { Color }
         }
     }
 }

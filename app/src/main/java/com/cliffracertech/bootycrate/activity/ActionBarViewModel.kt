@@ -5,62 +5,69 @@
 package com.cliffracertech.bootycrate.activity
 
 import android.content.Context
+import android.content.Intent
+import androidx.compose.runtime.*
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.dataStore
-import com.cliffracertech.bootycrate.model.MainActivityNavigationState
+import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.SearchQueryState
 import com.cliffracertech.bootycrate.model.database.ItemDao
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.utils.StringResource
-import com.cliffracertech.bootycrate.utils.mutableEnumPreferenceFlow
+import com.cliffracertech.bootycrate.utils.enumPreferenceState
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
 
-/** A set of values representing the state of a combo search/close button. */
-enum class SearchButtonState {
-    /** The button is visible with a search icon. */
-    Visible,
-    /** The button is visible with a close icon. */
-    MorphedToClose,
-    /** The button is invisible. */
-    Invisible;
-
-    val isVisible get() = this == Visible
-    val isMorphedToClose get() = this == MorphedToClose
-    val isInvisible get() = this == Invisible
-}
 
 /** A set of values representing the state of a combo change sorting method and delete button. */
-sealed class ChangeSortButtonState {
+sealed class ChangeSortDeleteButtonState {
     /** The button is visible with a change sort icon. */
-    data class Visible(val selectedIndex: Int) : ChangeSortButtonState()
+    object ChangeSort: ChangeSortDeleteButtonState()
     /** The button is visible with a delete icon. */
-    object MorphedToDelete : ChangeSortButtonState()
+    object Delete : ChangeSortDeleteButtonState()
     /** The button is invisible. */
-    object Invisible : ChangeSortButtonState()
+    object Invisible : ChangeSortDeleteButtonState()
 
-    val isVisible get() = this is Visible
-    val isMorphedToDelete get() = this is MorphedToDelete
+    val isChangeSort get() = this is ChangeSort
+    val isDelete get() = this is Delete
     val isInvisible get() = this is Invisible
 }
 
+fun <T> Flow<T>.collectAsState(initialValue: T, scope: CoroutineScope): State<T> {
+    val state = mutableStateOf(initialValue)
+    onEach { state.value = it }.launchIn(scope)
+    return state
+}
 
-@HiltViewModel
-class ActionBarViewModel(
+fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
+    collectAsState(value, scope)
+
+/** Add the [key] [value] pair to the [EnumSet] if it does not already contain
+ * it when [condition] is true, or remove it if [condition] is false. */
+private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: V) {
+    if (condition) this[key] = value
+    else           remove(key)
+}
+
+@HiltViewModel class ActionBarViewModel(
     context: Context,
     private val itemDao: ItemDao,
     itemGroupDao: ItemGroupDao,
-    private val navigationState: MainActivityNavigationState,
+    private val navigationState: NavigationState,
     private val messageHandler: MessageHandler,
     private val searchQueryState: SearchQueryState,
     coroutineScope: CoroutineScope?
@@ -71,166 +78,222 @@ class ActionBarViewModel(
         context: Context,
         itemDao: ItemDao,
         itemGroupDao: ItemGroupDao,
-        navigationState: MainActivityNavigationState,
+        navigationState: NavigationState,
         messageHandler: MessageHandler,
         searchQueryState: SearchQueryState,
     ) : this(context, itemDao, itemGroupDao, navigationState,
              messageHandler, searchQueryState, null)
 
     private val scope = coroutineScope ?: viewModelScope
-    val searchQuery = searchQueryState.query.asStateFlow()
-    fun onSearchQueryChangeRequest(newQuery: CharSequence?) {
-        searchQueryState.query.value = newQuery?.toString()
+    private val dataStore = context.dataStore
+    private val currentScreen by navigationState.visibleScreen.collectAsState(scope)
+    val searchQuery by searchQueryState.query.collectAsState(scope)
+
+    private val selectedShoppingListItemCount by
+        itemDao.getSelectedShoppingListItemCount().collectAsState(0, scope)
+    private val selectedInventoryItemCount by
+        itemDao.getSelectedInventoryItemCount().collectAsState(0, scope)
+    private val selectedItemCount by derivedStateOf {
+        when {
+            currentScreen.isShoppingList -> selectedShoppingListItemCount
+            currentScreen.isInventory ->    selectedInventoryItemCount
+            else -> 0
+        }
     }
 
-    private val selectedShoppingListItemCount = itemDao.getSelectedShoppingListItemCount()
-        .stateIn(scope, SharingStarted.Eagerly, 0)
-    private val selectedInventoryItemCount = itemDao.getSelectedInventoryItemCount()
-        .stateIn(scope, SharingStarted.Eagerly, 0)
-
-    private val selectedItemCount = navigationState.visibleScreen.transformLatest { when {
-        it.isShoppingList -> emitAll(selectedShoppingListItemCount)
-        it.isInventory ->    emitAll(selectedInventoryItemCount)
-        else ->              emit(0)
-    }}.stateIn(scope, SharingStarted.Eagerly, 0)
-
-
-    val backButtonIsVisible = combine(
-        navigationState.visibleScreen,
-        selectedItemCount,
-        searchQuery
-    ) { screen, selectedItemCount, filter ->
-        screen.isOther || filter != null || selectedItemCount != 0
-    }.stateIn(scope, SharingStarted.WhileSubscribed(3000), false)
+    val showBackButton by derivedStateOf {
+        currentScreen.isAppSettings || searchQuery != null || selectedItemCount != 0
+    }
 
     fun onBackPressed() = when {
-        selectedItemCount.value > 0 -> {
+        selectedItemCount > 0 -> {
             if (navigationState.visibleScreen.value.isShoppingList)
                 scope.launch { itemDao.clearShoppingListSelection() }
             if (navigationState.visibleScreen.value.isInventory)
                 scope.launch { itemDao.clearInventorySelection() }
             true
-        } searchQuery.value != null -> {
+        } searchQuery != null -> {
             onSearchQueryChangeRequest(null)
             true
         } else -> false
     }
 
-
-    private val selectedItemGroupName = itemGroupDao.getSelectedGroups().map {
-        when (it.size) {
+    private val selectedItemGroups by
+        itemGroupDao.getSelectedGroups().collectAsState(emptyList(), scope)
+    val title by derivedStateOf { when {
+        currentScreen.isAppSettings ->
+            StringResource(R.string.settings_description)
+        selectedItemCount > 0 ->
+            StringResource(R.string.action_mode_title, selectedItemCount)
+        else -> when(selectedItemGroups.size) {
             0 ->    StringResource("")
-            1 ->    StringResource(it.first().name)
+            1 ->    StringResource(selectedItemGroups.first().name)
             else -> StringResource(R.string.multiple_selected_item_groups_description)
         }
-    }.stateIn(scope, SharingStarted.WhileSubscribed(3000), StringResource(""))
-
-    val title = combine(
-        navigationState.visibleScreen,
-        selectedItemCount,
-        selectedItemGroupName,
-    ) { screen, selectedItemCount, selectedItemGroupName -> when {
-        screen.isOther ->        StringResource(R.string.settings_description)
-        selectedItemCount > 0 -> StringResource(R.string.action_mode_title, selectedItemCount)
-        else ->                  selectedItemGroupName
     }}
 
-    val searchButtonState = combine(
-        navigationState.visibleScreen,
-        selectedItemCount,
-        searchQuery
-    ) { screen, selectedItemCount, query -> when {
-        screen.isOther || selectedItemCount > 0 -> SearchButtonState.Invisible
-        query != null ->                           SearchButtonState.MorphedToClose
-        else ->                                    SearchButtonState.Visible
-    }}.stateIn(scope, SharingStarted.WhileSubscribed(3000), SearchButtonState.Visible)
+
+    val showSearchButton by derivedStateOf {
+        !currentScreen.isAppSettings && selectedItemCount == 0
+    }
 
     fun onSearchButtonClick() {
-        val newQuery = if (searchQuery.value == null) "" else null
+        val newQuery = if (searchQuery == null) "" else null
         onSearchQueryChangeRequest(newQuery)
     }
 
-
-    private val sort = context.dataStore.mutableEnumPreferenceFlow(
-        intPreferencesKey(context.getString(R.string.pref_item_sort_key)),
-                          scope, ListItem.Sort.Color)
-
-    val changeSortButtonState = combine(
-        navigationState.visibleScreen,
-        selectedItemCount,
-        sort
-    ) { screen, selectedItemCount, sort -> when {
-        screen.isOther ->        ChangeSortButtonState.Invisible
-        selectedItemCount > 0 -> ChangeSortButtonState.MorphedToDelete
-        else ->                  ChangeSortButtonState.Visible(sort.ordinal)
-    }}.stateIn(scope, SharingStarted.WhileSubscribed(3000),
-               ChangeSortButtonState.Visible(ListItem.Sort.Color.ordinal))
-
-    fun onSortOptionClick(menuItemId: Int): Boolean {
-        sort.value = when (menuItemId) {
-            R.id.color_option ->             ListItem.Sort.Color
-            R.id.name_ascending_option ->    ListItem.Sort.NameAsc
-            R.id.name_descending_option ->   ListItem.Sort.NameDesc
-            R.id.amount_ascending_option ->  ListItem.Sort.AmountAsc
-            R.id.amount_descending_option -> ListItem.Sort.AmountDesc
-            else -> ListItem.Sort.Color
-        }
-        return true
+    fun onSearchQueryChangeRequest(newQuery: String?) {
+        searchQueryState.query.value = newQuery
     }
+
+
+    val sortKey = intPreferencesKey(context.getString(R.string.pref_item_sort_key))
+    val sort by dataStore.enumPreferenceState(sortKey, scope, ListItem.Sort.Color)
+    fun onSortOptionClick(sort: ListItem.Sort) {
+        scope.launch { dataStore.edit { it[sortKey] = sort.ordinal } }
+    }
+
+    val changeSortDeleteButtonState by derivedStateOf { when {
+        currentScreen.isAppSettings -> ChangeSortDeleteButtonState.Invisible
+        selectedItemCount > 0 ->       ChangeSortDeleteButtonState.Delete
+        else ->                        ChangeSortDeleteButtonState.ChangeSort
+    }}
 
 
     fun onDeleteButtonClick() {
         val screen = navigationState.visibleScreen.value
-        if (!screen.isShoppingList && !screen.isInventory) return
+        if (screen.isAppSettings) return
         scope.launch {
-            val itemCount = selectedItemCount.value
+            val itemCount = selectedItemCount
 
             if (screen.isShoppingList)
                 itemDao.deleteSelectedShoppingListItems()
             else itemDao.deleteSelectedInventoryItems()
 
-            val onUndo = {
-                scope.launch {
-                    if (screen.isShoppingList)
-                        itemDao.undoDeleteShoppingListItems()
-                    else itemDao.undoDeleteInventoryItems()
-                }; Unit
-            }
-            val onDismiss = { reason: Int ->
-                if (reason != DISMISS_EVENT_ACTION && reason != DISMISS_EVENT_CONSECUTIVE)
+            messageHandler.postItemsDeletedMessage(
+                count = itemCount,
+                onUndo = {
                     scope.launch {
                         if (screen.isShoppingList)
-                            itemDao.emptyShoppingListTrash()
-                        else itemDao.emptyInventoryTrash()
+                            itemDao.undoDeleteShoppingListItems()
+                        else itemDao.undoDeleteInventoryItems()
                     }
-            }
-            messageHandler.postItemsDeletedMessage(itemCount, onUndo, onDismiss)
+                }, onDismiss = { reason: Int ->
+                    if (reason != DISMISS_EVENT_ACTION && reason != DISMISS_EVENT_CONSECUTIVE)
+                        scope.launch {
+                            if (screen.isShoppingList)
+                                itemDao.emptyShoppingListTrash()
+                            else itemDao.emptyInventoryTrash()
+                        }
+                })
         }
     }
 
 
-    val moreOptionsButtonVisible = navigationState.visibleScreen
-        .map { !it.isOther }
-        .stateIn(scope, SharingStarted.WhileSubscribed(3000), true)
+    val showMoreOptionsButton by derivedStateOf {
+        !currentScreen.isAppSettings
+    }
+
+    enum class OptionsMenuItem {
+        AddToInventory,
+        AddToShoppingList,
+        CheckAll,
+        UncheckAll,
+        SelectAll,
+        Share
+    }
+
+    val optionsMenuItems = mutableStateMapOf(
+        OptionsMenuItem.SelectAll to R.string.select_all_description,
+        OptionsMenuItem.Share to R.string.share_description
+    ).apply {
+        navigationState.visibleScreen.onEach {
+            retainIf(it.isShoppingList,
+                          OptionsMenuItem.CheckAll,
+                          R.string.check_all_description)
+            retainIf(it.isShoppingList,
+                          OptionsMenuItem.UncheckAll,
+                          R.string.uncheck_all_description)
+        }.launchIn(scope)
+
+        itemDao.getSelectedShoppingListItemCount().onEach {
+            retainIf(it > 0,
+                OptionsMenuItem.AddToInventory,
+                R.string.add_to_inventory_description)
+        }.launchIn(scope)
+
+        itemDao.getSelectedInventoryItemCount().onEach {
+            retainIf(it > 0,
+                OptionsMenuItem.AddToShoppingList,
+                R.string.add_to_shopping_list_description)
+        }.launchIn(scope)
+    }
 
 
-    val optionsMenuContent = combine(
-        navigationState.visibleScreen,
-        selectedShoppingListItemCount,
-        selectedInventoryItemCount
-    ) { screen, selectedShoppingListItemCount, selectedInventoryItemCount ->
-        mutableListOf<Int>().apply {
-            if (selectedShoppingListItemCount > 0)
-                add(R.string.add_to_inventory_description)
-            if (selectedInventoryItemCount > 0)
-                add(R.string.add_to_shopping_list_description)
-            if (screen.isShoppingList) {
-                add(R.string.check_all_description)
-                add(R.string.uncheck_all_description)
+    private val sortByCheckedKey = booleanPreferencesKey(
+        context.getString(R.string.pref_sort_by_checked_key))
+    fun onOptionsMenuItemClick(menuItem: OptionsMenuItem) {
+
+        when(menuItem) {
+            OptionsMenuItem.AddToInventory -> {
+                scope.launch { itemDao.addToInventoryFromSelectedShoppingListItems() }
+            } OptionsMenuItem.AddToShoppingList -> {
+                scope.launch { itemDao.addToShoppingListFromSelectedInventoryItems() }
+            } OptionsMenuItem.CheckAll -> {
+                scope.launch { itemDao.checkAllShoppingListItems() }
+            } OptionsMenuItem.UncheckAll -> {
+                scope.launch { itemDao.uncheckAllShoppingListItems() }
+            } OptionsMenuItem.SelectAll -> {
+                if (currentScreen.isShoppingList)
+                    scope.launch { itemDao.selectAllShoppingListItems() }
+                if (currentScreen.isInventory)
+                    scope.launch { itemDao.selectAllInventoryItems() }
+            } OptionsMenuItem.Share -> {
+                scope.launch { share() }
             }
-            add(R.string.select_all_description)
-            add(R.string.share_description)
         }
-    }.stateIn(scope, SharingStarted.WhileSubscribed(3000),
-              listOf(R.string.select_all_description, R.string.share_description))
+    }
+
+    private suspend fun share() {
+        val allItems = when {
+            currentScreen.isShoppingList -> {
+                val sortByChecked = dataStore.data
+                    .map { it[sortByCheckedKey] }.first()
+                itemDao.getShoppingList(sort, searchQuery, sortByChecked == false).first()
+            }
+            currentScreen.isInventory ->
+                itemDao.getInventory(sort, searchQuery).first()
+            else ->
+                emptyList()
+        }
+        val selectionIsEmpty = selectedItemCount == 0
+        val items = if (selectionIsEmpty) allItems
+        else allItems.filter { it.isSelected }
+
+        if (items.isEmpty()) {
+            val collectionNameResId = when {
+                currentScreen.isShoppingList -> R.string.shopping_list_description
+                currentScreen.isInventory -> R.string.inventory_description
+                else -> 0
+            }
+            if (collectionNameResId != 0)
+                messageHandler.postMessage(StringResource(
+                    R.string.empty_list_message, collectionNameResId))
+        } else {
+            val message = StringJoiner("\n").apply {
+                for (item in items)
+                    add(item.toUserFacingString())
+            }.toString()
+            val intent = Intent(Intent.ACTION_SEND)
+            intent.putExtra(Intent.EXTRA_TEXT, message)
+            intent.type = "text/plain"
+            _intents.tryEmit(intent)
+        }
+    }
+
+    private val _intents = MutableSharedFlow<Intent>(
+        replay = 0, extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val intents = _intents.asSharedFlow()
+
 }

@@ -11,9 +11,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 
 @HiltAndroidApp
 class BootyCrateApplication : Application() {
@@ -21,10 +18,6 @@ class BootyCrateApplication : Application() {
         super.onCreate()
         SoftKeyboard.init(this)
         ListItem.initColors(this)
-    }
-
-    companion object {
-        val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     }
 }
 

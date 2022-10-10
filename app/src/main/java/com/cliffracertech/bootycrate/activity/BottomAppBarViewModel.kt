@@ -6,7 +6,7 @@ package com.cliffracertech.bootycrate.activity
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cliffracertech.bootycrate.model.MainActivityNavigationState
+import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.database.ItemDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BottomAppBarViewModel @Inject constructor(
-    mainActivityNavState: MainActivityNavigationState,
+    mainActivityNavState: NavigationState,
     private val itemDao: ItemDao
 ) : ViewModel() {
 
@@ -30,7 +30,7 @@ class BottomAppBarViewModel @Inject constructor(
         val checkoutButtonIsEnabled: Boolean = false)
 
     val uiState = visibleScreen.combine(checkedItemsSize) { screen, checkedItemsSize ->
-        UiState(visible = !screen.isOther,
+        UiState(visible = !screen.isAppSettings,
                 checkoutButtonVisible = screen.isShoppingList,
                 checkoutButtonIsEnabled = checkedItemsSize > 0)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), UiState())
