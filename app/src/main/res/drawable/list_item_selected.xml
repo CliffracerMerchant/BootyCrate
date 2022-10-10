@@ -10,7 +10,7 @@
     <corners android:radius="@dimen/recycler_view_item_rounded_corner_radius" />
     <gradient android:angle="0"
         android:startColor="?attr/listItemSelectionGradientLeftColor"
-        android:centerColor="?attr/listItemSelectionGradientMiddleColor"
         android:endColor="?attr/listItemSelectionGradientRightColor" />
+<!--    android:centerColor="?attr/listItemSelectionGradientMiddleColor"-->
 </shape>
 

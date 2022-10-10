@@ -7,6 +7,6 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <gradient
         android:startColor="?attr/backgroundGradientLeftColor"
-        android:centerColor="?attr/backgroundGradientMiddleColor"
         android:endColor="?attr/backgroundGradientRightColor" />
+<!--    android:centerColor="?attr/backgroundGradientMiddleColor"-->
 </shape>

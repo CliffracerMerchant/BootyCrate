@@ -8,22 +8,43 @@ import androidx.compose.animation.*
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.ChangeSortDeleteButtonState
 import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
+
+/** Compose a [Row] with a gradient background and vertically centered
+ * content, while providing the current theme's onPrimary color as the
+ * [LocalContentColor]. */
+@Composable fun GradientToolBar(
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit
+) {
+    val gradStart = MaterialTheme.colors.primary
+    val gradEnd = MaterialTheme.colors.secondary
+    val gradient = remember(gradStart, gradEnd) {
+        Brush.horizontalGradient(listOf(gradStart, gradEnd))
+    }
+    Row(modifier.fillMaxWidth().background(gradient).height(56.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val color = MaterialTheme.colors.onSurface
+        CompositionLocalProvider(LocalContentColor provides color) {
+            content()
+        }
+    }
+}
 
 /**
  * A horizontal bar that is suitable to be used as a top action bar when
@@ -78,7 +99,7 @@ import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
     onSortOptionClick: (T) -> Unit,
     onDeleteButtonClick: () -> Unit,
     otherContent: @Composable RowScope.() -> Unit,
-) = Row(modifier) {
+) = GradientToolBar(modifier) {
     // Back button
     AnimatedContent(
         targetState = showBackButton,
