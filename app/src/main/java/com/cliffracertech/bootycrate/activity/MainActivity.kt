@@ -26,6 +26,7 @@ import com.cliffracertech.bootycrate.fragment.ItemListFragment
 import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
+import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.view.BootyCrateActionBar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -62,6 +63,7 @@ class MainActivity : NavViewActivity() {
     private val bottomAppBarViewModel: BottomAppBarViewModel by viewModels()
     private val itemGroupSelectorViewModel: ItemGroupSelectorViewModel by viewModels()
     private var pendingCradleAnim: Animator? = null
+    private var usingDarkTheme: Boolean = false
 
     lateinit var ui: MainActivityBinding
 
@@ -111,15 +113,13 @@ class MainActivity : NavViewActivity() {
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         val prefKey = getString(R.string.pref_light_dark_mode_key)
         val themeDefault = getString(R.string.pref_theme_sys_default_title)
+        val themePref = prefs.getString(prefKey, themeDefault) ?: ""
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
-        val usingLightThemePref = prefs.getString(prefKey, themeDefault) ?: ""
-        setTheme(when (usingLightThemePref) {
-            getString(R.string.pref_theme_light_theme_title) -> R.style.LightTheme
-            getString(R.string.pref_theme_dark_theme_title) ->  R.style.DarkTheme
-            else -> if (sysDarkThemeIsActive) R.style.DarkTheme
-                    else                      R.style.LightTheme
-        })
+        usingDarkTheme = themePref == getString(R.string.pref_theme_dark_theme_title) ||
+            (themePref == getString(R.string.pref_theme_sys_default_title) && sysDarkThemeIsActive)
+        setTheme(if (usingDarkTheme) R.style.DarkTheme
+                 else                R.style.LightTheme)
     }
 
     override fun onOptionsItemSelected(item: MenuItem) =
@@ -205,6 +205,8 @@ class MainActivity : NavViewActivity() {
     }
 
     private fun initComposeViews() {
-        ui.actionBar.setContent { BootyCrateActionBar() }
+        ui.actionBar.setContent {
+            BootyCrateTheme(usingDarkTheme) { BootyCrateActionBar() }
+        }
     }
 }
