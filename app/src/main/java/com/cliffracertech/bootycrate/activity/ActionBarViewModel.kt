@@ -87,7 +87,7 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
     private val scope = coroutineScope ?: viewModelScope
     private val dataStore = context.dataStore
     private val currentScreen by navigationState.visibleScreen.collectAsState(scope)
-    val searchQuery by searchQueryState.query.collectAsState(scope)
+    private val _searchQuery by searchQueryState.query.collectAsState(scope)
 
     private val selectedShoppingListItemCount by
         itemDao.getSelectedShoppingListItemCount().collectAsState(0, scope)
@@ -102,7 +102,7 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
     }
 
     val showBackButton by derivedStateOf {
-        currentScreen.isAppSettings || searchQuery != null || selectedItemCount != 0
+        currentScreen.isAppSettings || _searchQuery != null || selectedItemCount != 0
     }
 
     fun onBackPressed() = when {
@@ -112,7 +112,7 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
             if (navigationState.visibleScreen.value.isInventory)
                 scope.launch { itemDao.clearInventorySelection() }
             true
-        } searchQuery != null -> {
+        } _searchQuery != null -> {
             onSearchQueryChangeRequest(null)
             true
         } else -> false
@@ -132,13 +132,16 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
         }
     }}
 
+    val searchQuery: String? by derivedStateOf {
+        if (selectedItemCount != 0) null else _searchQuery
+    }
 
     val showSearchButton by derivedStateOf {
         !currentScreen.isAppSettings && selectedItemCount == 0
     }
 
     fun onSearchButtonClick() {
-        val newQuery = if (searchQuery == null) "" else null
+        val newQuery = if (_searchQuery == null) "" else null
         onSearchQueryChangeRequest(newQuery)
     }
 
@@ -259,10 +262,10 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
             currentScreen.isShoppingList -> {
                 val sortByChecked = dataStore.data
                     .map { it[sortByCheckedKey] }.first()
-                itemDao.getShoppingList(sort, searchQuery, sortByChecked == false).first()
+                itemDao.getShoppingList(sort, _searchQuery, sortByChecked == false).first()
             }
             currentScreen.isInventory ->
-                itemDao.getInventory(sort, searchQuery).first()
+                itemDao.getInventory(sort, _searchQuery).first()
             else ->
                 emptyList()
         }
