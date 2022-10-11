@@ -9,11 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -42,7 +40,7 @@ import androidx.compose.ui.unit.dp
 ) = DropdownMenu(expanded, onDismissRequest) {
     values.forEachIndexed { index, value ->
         DropdownMenuItem({ onValueClick(value); onDismissRequest() }) {
-            val name = valueDescriptions.getOrNull(index) ?: "Error"
+            val name = valueDescriptions.getOrElse(index) { "" }
             Text(text = name)
             Spacer(Modifier.weight(1f))
             val vector = if (value == currentValue)
@@ -50,29 +48,5 @@ import androidx.compose.ui.unit.dp
             else Icons.Default.RadioButtonUnchecked
             Icon(vector, name, Modifier.size(36.dp).padding(8.dp))
         }
-    }
-}
-
-@Composable fun <T> EnumDropdownMenuButton(
-    modifier: Modifier = Modifier,
-    description: String? = null,
-    values: List<T>,
-    valueDescriptions: List<String>,
-    currentValue: T,
-    onValueClick: (T) -> Unit,
-    icon: @Composable (String?) -> Unit = {
-        Icon(Icons.Default.MoreVert, it)
-    }
-) {
-    var showingMenu by rememberSaveable { mutableStateOf(false) }
-    IconButton({ showingMenu = true }, modifier) {
-        icon(description)
-        EnumDropdownMenu(
-            expanded = showingMenu,
-            values = values,
-            valueDescriptions = valueDescriptions,
-            currentValue = currentValue,
-            onValueClick = onValueClick,
-            onDismissRequest = { showingMenu = false })
     }
 }

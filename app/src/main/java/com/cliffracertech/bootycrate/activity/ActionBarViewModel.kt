@@ -34,17 +34,17 @@ import javax.inject.Inject
 
 
 /** A set of values representing the state of a combo change sorting method and delete button. */
-sealed class ChangeSortDeleteButtonState {
+enum class ChangeSortDeleteButtonState {
     /** The button is visible with a change sort icon. */
-    object ChangeSort: ChangeSortDeleteButtonState()
+    ChangeSort,
     /** The button is visible with a delete icon. */
-    object Delete : ChangeSortDeleteButtonState()
+    Delete,
     /** The button is invisible. */
-    object Invisible : ChangeSortDeleteButtonState()
+    Invisible;
 
-    val isChangeSort get() = this is ChangeSort
-    val isDelete get() = this is Delete
-    val isInvisible get() = this is Invisible
+    val isChangeSort get() = this == ChangeSort
+    val isDelete get() = this == Delete
+    val isInvisible get() = this == Invisible
 }
 
 fun <T> Flow<T>.collectAsState(initialValue: T, scope: CoroutineScope): State<T> {
@@ -55,13 +55,6 @@ fun <T> Flow<T>.collectAsState(initialValue: T, scope: CoroutineScope): State<T>
 
 fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     collectAsState(value, scope)
-
-/** Add the [key] [value] pair to the [EnumSet] if it does not already contain
- * it when [condition] is true, or remove it if [condition] is false. */
-private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: V) {
-    if (condition) this[key] = value
-    else           remove(key)
-}
 
 @HiltViewModel class ActionBarViewModel(
     context: Context,
@@ -88,7 +81,6 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
     private val dataStore = context.dataStore
     private val currentScreen by navigationState.visibleScreen.collectAsState(scope)
     private val _searchQuery by searchQueryState.query.collectAsState(scope)
-
     private val selectedShoppingListItemCount by
         itemDao.getSelectedShoppingListItemCount().collectAsState(0, scope)
     private val selectedInventoryItemCount by
@@ -100,6 +92,14 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
             else -> 0
         }
     }
+    private val selectedItemGroups by
+        itemGroupDao.getSelectedGroups().collectAsState(emptyList(), scope)
+    private val sortByCheckedKey = booleanPreferencesKey(
+        context.getString(R.string.pref_sort_by_checked_key))
+    private val _intents = MutableSharedFlow<Intent>(
+        replay = 0, extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val intents = _intents.asSharedFlow()
 
     val showBackButton by derivedStateOf {
         currentScreen.isAppSettings || _searchQuery != null || selectedItemCount != 0
@@ -118,8 +118,7 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
         } else -> false
     }
 
-    private val selectedItemGroups by
-        itemGroupDao.getSelectedGroups().collectAsState(emptyList(), scope)
+
     val title by derivedStateOf { when {
         currentScreen.isAppSettings ->
             StringResource(R.string.settings_description)
@@ -152,7 +151,7 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
     }
 
 
-    val sortKey = intPreferencesKey(context.getString(R.string.pref_item_sort_key))
+    private val sortKey = intPreferencesKey(context.getString(R.string.pref_item_sort_key))
     val sort by dataStore.enumPreferenceState(sortKey, scope, ListItem.Sort.Color)
     fun onSortOptionClick(sort: ListItem.Sort) {
         scope.launch { dataStore.edit { it[sortKey] = sort.ordinal } }
@@ -166,7 +165,7 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
 
 
     fun onDeleteButtonClick() {
-        val screen = navigationState.visibleScreen.value
+        val screen = currentScreen
         if (screen.isAppSettings) return
         scope.launch {
             val itemCount = selectedItemCount
@@ -178,11 +177,9 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
             messageHandler.postItemsDeletedMessage(
                 count = itemCount,
                 onUndo = {
-                    scope.launch {
-                        if (screen.isShoppingList)
-                            itemDao.undoDeleteShoppingListItems()
-                        else itemDao.undoDeleteInventoryItems()
-                    }
+                    if (screen.isShoppingList)
+                        scope.launch { itemDao.undoDeleteShoppingListItems() }
+                    else scope.launch { itemDao.undoDeleteInventoryItems() }
                 }, onDismiss = { reason: Int ->
                     if (reason != DISMISS_EVENT_ACTION && reason != DISMISS_EVENT_CONSECUTIVE)
                         scope.launch {
@@ -199,67 +196,43 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
         !currentScreen.isAppSettings
     }
 
-    enum class OptionsMenuItem {
-        AddToInventory,
-        AddToShoppingList,
-        CheckAll,
-        UncheckAll,
-        SelectAll,
-        Share
-    }
 
-    val optionsMenuItems = mutableStateMapOf(
-        OptionsMenuItem.SelectAll to R.string.select_all_description,
-        OptionsMenuItem.Share to R.string.share_description
-    ).apply {
+    val addToInventoryActionVisible by itemDao.getSelectedShoppingListItemCount()
+        .map { it > 0 }.collectAsState(false, scope)
+    val addToShoppingListActionVisible by itemDao.getSelectedInventoryItemCount()
+        .map { it > 0 }.collectAsState(false, scope)
+    var checkAllActionVisible by mutableStateOf(true)
+        private set
+    var uncheckAllActionVisible by mutableStateOf(true)
+        private set
+    init {
         navigationState.visibleScreen.onEach {
-            retainIf(it.isShoppingList,
-                          OptionsMenuItem.CheckAll,
-                          R.string.check_all_description)
-            retainIf(it.isShoppingList,
-                          OptionsMenuItem.UncheckAll,
-                          R.string.uncheck_all_description)
-        }.launchIn(scope)
-
-        itemDao.getSelectedShoppingListItemCount().onEach {
-            retainIf(it > 0,
-                OptionsMenuItem.AddToInventory,
-                R.string.add_to_inventory_description)
-        }.launchIn(scope)
-
-        itemDao.getSelectedInventoryItemCount().onEach {
-            retainIf(it > 0,
-                OptionsMenuItem.AddToShoppingList,
-                R.string.add_to_shopping_list_description)
+            checkAllActionVisible = it.isShoppingList
+            uncheckAllActionVisible = it.isShoppingList
         }.launchIn(scope)
     }
+    val selectAllActionVisible = true
+    val shareActionVisible = true
 
-
-    private val sortByCheckedKey = booleanPreferencesKey(
-        context.getString(R.string.pref_sort_by_checked_key))
-    fun onOptionsMenuItemClick(menuItem: OptionsMenuItem) {
-
-        when(menuItem) {
-            OptionsMenuItem.AddToInventory -> {
-                scope.launch { itemDao.addToInventoryFromSelectedShoppingListItems() }
-            } OptionsMenuItem.AddToShoppingList -> {
-                scope.launch { itemDao.addToShoppingListFromSelectedInventoryItems() }
-            } OptionsMenuItem.CheckAll -> {
-                scope.launch { itemDao.checkAllShoppingListItems() }
-            } OptionsMenuItem.UncheckAll -> {
-                scope.launch { itemDao.uncheckAllShoppingListItems() }
-            } OptionsMenuItem.SelectAll -> {
-                if (currentScreen.isShoppingList)
-                    scope.launch { itemDao.selectAllShoppingListItems() }
-                if (currentScreen.isInventory)
-                    scope.launch { itemDao.selectAllInventoryItems() }
-            } OptionsMenuItem.Share -> {
-                scope.launch { share() }
-            }
-        }
+    fun onAddToInventoryClick() {
+        scope.launch { itemDao.addToInventoryFromSelectedShoppingListItems() }
     }
-
-    private suspend fun share() {
+    fun onAddToShoppingListClick() {
+        scope.launch { itemDao.addToShoppingListFromSelectedInventoryItems() }
+    }
+    fun onCheckAllClick() {
+        scope.launch { itemDao.checkAllShoppingListItems() }
+    }
+    fun onUncheckAllClick() {
+        scope.launch { itemDao.uncheckAllShoppingListItems() }
+    }
+    fun onSelectAllClick() {
+        if (currentScreen.isShoppingList)
+            scope.launch { itemDao.selectAllShoppingListItems() }
+        if (currentScreen.isInventory)
+            scope.launch { itemDao.selectAllInventoryItems() }
+    }
+    fun onShareClick() { scope.launch {
         val allItems = when {
             currentScreen.isShoppingList -> {
                 val sortByChecked = dataStore.data
@@ -294,11 +267,6 @@ private fun <K, V> MutableMap<K, V>.retainIf(condition: Boolean, key: K, value: 
             intent.type = "text/plain"
             _intents.tryEmit(intent)
         }
-    }
-
-    private val _intents = MutableSharedFlow<Intent>(
-        replay = 0, extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST)
-    val intents = _intents.asSharedFlow()
+    }}
 
 }

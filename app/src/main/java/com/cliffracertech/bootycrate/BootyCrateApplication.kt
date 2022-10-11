@@ -23,4 +23,4 @@ class BootyCrateApplication : Application() {
 
 val Context.dataStore by preferencesDataStore("preferences")
 
-fun dlog(msg: String) = Log.d("BootyCrate", msg)
+fun dlog(msg: String) = Log.d("BootyCrateTag", msg)
