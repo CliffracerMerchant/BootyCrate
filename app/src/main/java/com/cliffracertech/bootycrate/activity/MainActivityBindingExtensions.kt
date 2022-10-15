@@ -18,7 +18,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.findFragment
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.dlog
 import com.cliffracertech.bootycrate.fragment.ItemListFragment
 import com.cliffracertech.bootycrate.utils.GradientBuilder
 import com.cliffracertech.bootycrate.utils.resolveIntAttribute
@@ -89,7 +88,6 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
     private val Int.isCollapsingOrCollapsed get() = isCollapsed || isSettlingOrDragging
 
     override fun onStateChanged(bottomSheet: View, newState: Int) {
-        dlog("state set to $newState")
         appTitle.isVisible = newState.isExpandingOrExpanded
         settingsButton.isVisible = newState.isExpandingOrExpanded
         itemGroupSelectorOptionsButton.isVisible = newState.isExpandingOrExpanded
@@ -109,7 +107,6 @@ fun MainActivityBinding.bottomSheetCallback() = object: BottomSheetBehavior.Bott
                     else slideOffset * -0.3f * it.height
         }
 
-        dlog("slideOffset = $slideOffset")
         if (bottomNavigationDrawer.targetState == BottomSheetBehavior.STATE_HIDDEN)
             return
         val slide = abs(slideOffset)

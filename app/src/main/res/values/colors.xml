@@ -15,20 +15,20 @@
     <color name="colorTextDarkSecondary">#495057</color>
     <color name="colorTextDarkDisabled">#8D969E</color>
     <color name="colorTextLink">#58ECFF</color>
-    <color name="ic_launcher_background">#353535</color>
+    <color name="ic_launcher_background">#35321535</color>
 
-    <color name="listItemColor0">#D65C5C</color>
-    <color name="listItemColor1">#D6995C</color>
-    <color name="listItemColor2">#D6D65C</color>
-    <color name="listItemColor3">#97CF3D</color>
-    <color name="listItemColor4">#3FBA3F</color>
-    <color name="listItemColor5">#53E393</color>
-    <color name="listItemColor6">#2CC4DA</color>
-    <color name="listItemColor7">#3F7EDD</color>
-    <color name="listItemColor8">#8359E6</color>
-    <color name="listItemColor9">#B141DA</color>
-    <color name="listItemColor10">#DB70A6</color>
-    <color name="listItemColor11">#808080</color>
+    <color name="list_item_color_red">#D65C5C</color>
+    <color name="list_item_color_orange">#D6995C</color>
+    <color name="list_item_color_yellow">#D6D65C</color>
+    <color name="list_item_color_lime_green">#97CF3D</color>
+    <color name="list_item_color_green">#3FBA3F</color>
+    <color name="list_item_color_teal">#53E393</color>
+    <color name="list_item_color_cyan">#2CC4DA</color>
+    <color name="list_item_color_blue">#3F7EDD</color>
+    <color name="list_item_color_violet">#8359E6</color>
+    <color name="list_item_color_magenta">#B141DA</color>
+    <color name="list_item_color_pink">#DB70A6</color>
+    <color name="list_item_color_gray">#808080</color>
 
 <!-- default theme -->
     <color name="lightThemeBgGradientLeft">#E8865A</color>

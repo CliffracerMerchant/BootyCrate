@@ -68,7 +68,7 @@ open class ListItemView<T: ListItem>(
     @CallSuper open fun update(item: T) {
         ui.nameEdit.setText(item.name)
         setExtraInfoText(item.extraInfo)
-        val colorIndex = item.color.coerceIn(ListItem.Colors.indices)
+        val colorIndex = item.color.coerceIn(ListItem.Color.values().indices)
         ui.checkBox.initColorIndex(colorIndex)
         ui.amountEdit.initValue(item.amount)
         isSelected = item.isSelected

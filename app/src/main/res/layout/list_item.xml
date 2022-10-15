@@ -20,7 +20,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/checkBoxExtraInfoBottomBarrier"
-        tools:tint="@color/listItemColor0"
+        tools:tint="@color/list_item_color_red"
         style="@style/ListItemColorEdit" />
 
     <com.cliffracertech.bootycrate.view.AnimatedStrikeThroughTextFieldEdit

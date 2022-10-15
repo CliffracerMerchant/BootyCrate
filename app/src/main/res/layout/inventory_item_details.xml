@@ -31,7 +31,7 @@
             android:id="@+id/autoAddToShoppingListCheckBox"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            tools:tint="@color/listItemColor0"
+            tools:tint="@color/list_item_color_red"
             style="@style/ListItemColorEdit" />
 
         <TextView

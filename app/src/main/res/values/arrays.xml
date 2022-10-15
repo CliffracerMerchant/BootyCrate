@@ -16,33 +16,33 @@
     </string-array>
 
     <integer-array name="list_item_colors">
-        <item>@color/listItemColor0</item>
-        <item>@color/listItemColor1</item>
-        <item>@color/listItemColor2</item>
-        <item>@color/listItemColor3</item>
-        <item>@color/listItemColor4</item>
-        <item>@color/listItemColor5</item>
-        <item>@color/listItemColor6</item>
-        <item>@color/listItemColor7</item>
-        <item>@color/listItemColor8</item>
-        <item>@color/listItemColor9</item>
-        <item>@color/listItemColor10</item>
-        <item>@color/listItemColor11</item>
+        <item>@color/list_item_color_red</item>
+        <item>@color/list_item_color_orange</item>
+        <item>@color/list_item_color_yellow</item>
+        <item>@color/list_item_color_lime_green</item>
+        <item>@color/list_item_color_green</item>
+        <item>@color/list_item_color_teal</item>
+        <item>@color/list_item_color_cyan</item>
+        <item>@color/list_item_color_blue</item>
+        <item>@color/list_item_color_violet</item>
+        <item>@color/list_item_color_magenta</item>
+        <item>@color/list_item_color_pink</item>
+        <item>@color/list_item_color_gray</item>
     </integer-array>
 
     <string-array name="list_item_color_descriptions">
-        <item>@string/item_color_0_description</item>
-        <item>@string/item_color_1_description</item>
-        <item>@string/item_color_2_description</item>
-        <item>@string/item_color_3_description</item>
-        <item>@string/item_color_4_description</item>
-        <item>@string/item_color_5_description</item>
-        <item>@string/item_color_6_description</item>
-        <item>@string/item_color_7_description</item>
-        <item>@string/item_color_8_description</item>
-        <item>@string/item_color_9_description</item>
-        <item>@string/item_color_10_description</item>
-        <item>@string/item_color_11_description</item>
+        <item>@string/item_color_red_description</item>
+        <item>@string/item_color_orange_description</item>
+        <item>@string/item_color_yellow_description</item>
+        <item>@string/item_color_lime_green_description</item>
+        <item>@string/item_color_green_description</item>
+        <item>@string/item_color_teal_description</item>
+        <item>@string/item_color_cyan_description</item>
+        <item>@string/item_color_blue_description</item>
+        <item>@string/item_color_violet_description</item>
+        <item>@string/item_color_magenta_description</item>
+        <item>@string/item_color_pink_description</item>
+        <item>@string/item_color_gray_description</item>
     </string-array>
 
     <integer-array name="background_gradient">

@@ -5,6 +5,9 @@
 package com.cliffracertech.bootycrate.model.database
 
 import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.room.*
 import com.cliffracertech.bootycrate.R
 
@@ -53,7 +56,7 @@ class DatabaseListItem(
     @ColumnInfo(name="inInventoryTrash", defaultValue="0")
     var inInventoryTrash: Boolean = false
 ) {
-    init { color.coerceIn(ListItem.Colors.indices) }
+    init { color.coerceIn(ListItem.Color.values().indices) }
 
     /** An interface for objects to provide a way to convert themselves into a DatabaseListItem. */
     interface Convertible {
@@ -81,11 +84,12 @@ autoAddToShoppingListAmount = $autoAddToShoppingListAmount
 inInventoryTrash = $inInventoryTrash"""
 }
 
-/** An abstract class that mirrors DatabaseListItem, but only contains
- * the fields necessary for a visual representation of the object. Subclasses
- * should also add any additional required fields and provide an implementation
- * of toDbListItem that will return a DatabaseListItem representation of the
- * object. */
+/**
+ * An abstract class that mirrors DatabaseListItem, but only contains the fields
+ * necessary for a visual representation of the object. Subclasses should also
+ * add any additional required fields and provide an implementation of
+ * toDbListItem that will return a DatabaseListItem representation of the object.
+ */
 abstract class ListItem(
     var id: Long = 0,
     var name: String,
@@ -100,15 +104,49 @@ abstract class ListItem(
     // For a user-facing string representation of the object
     fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
-    companion object {
-        val Colors: List<Int> get() = _Colors.asList()
-        val ColorDescriptions: List<String> get() = _ColorDescriptions.asList()
-        private lateinit var _Colors: IntArray
-        private lateinit var _ColorDescriptions: Array<String>
+    enum class Color {
+        Red, Orange, Yellow, LimeGreen, Green, Teal,
+        Cyan, Blue, Violet, Magenta, Pink, Gray;
 
-        fun initColors(context: Context) {
-            _Colors = context.resources.getIntArray(R.array.list_item_colors)
-            _ColorDescriptions = context.resources.getStringArray(R.array.list_item_color_descriptions)
+        companion object {
+            @Composable fun descriptions(): List<String> {
+                val context = LocalContext.current
+                return remember {
+                    values().map { context.getString(it.descriptionResId) }
+                }
+            }
+            @Composable fun asComposeColors() =
+                remember { values().map { it.toComposeColor() } }
+        }
+
+        val descriptionResId get() = when(this) {
+            Red -> R.string.item_color_red_description
+            Orange -> R.string.item_color_orange_description
+            Yellow -> R.string.item_color_yellow_description
+            LimeGreen -> R.string.item_color_lime_green_description
+            Green -> R.string.item_color_green_description
+            Teal -> R.string.item_color_teal_description
+            Cyan -> R.string.item_color_cyan_description
+            Blue -> R.string.item_color_blue_description
+            Violet -> R.string.item_color_violet_description
+            Magenta -> R.string.item_color_magenta_description
+            Pink -> R.string.item_color_pink_description
+            Gray -> R.string.item_color_gray_description
+        }
+
+        fun toComposeColor(): androidx.compose.ui.graphics.Color = when(this) {
+            Red -> androidx.compose.ui.graphics.Color(214, 92, 92)
+            Orange -> androidx.compose.ui.graphics.Color(214, 153, 92)
+            Yellow -> androidx.compose.ui.graphics.Color(214, 214, 92)
+            LimeGreen -> androidx.compose.ui.graphics.Color(151, 207, 61)
+            Green -> androidx.compose.ui.graphics.Color(63, 186, 63)
+            Teal -> androidx.compose.ui.graphics.Color(83, 227, 147)
+            Cyan -> androidx.compose.ui.graphics.Color(44, 196, 218)
+            Blue -> androidx.compose.ui.graphics.Color(63, 126, 221)
+            Violet -> androidx.compose.ui.graphics.Color(131, 89, 230)
+            Magenta -> androidx.compose.ui.graphics.Color(177, 65, 218)
+            Pink -> androidx.compose.ui.graphics.Color(219, 112, 166)
+            Gray -> androidx.compose.ui.graphics.Color(128, 128, 128)
         }
     }
 
