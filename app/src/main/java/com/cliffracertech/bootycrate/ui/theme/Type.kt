@@ -10,11 +10,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 val Typography = Typography(
-    h5 = TextStyle(
-        fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
-        letterSpacing = 0.sp),
-    h6 = TextStyle(
+    body1 = TextStyle(
         fontWeight = FontWeight.Normal,
         fontSize = 18.sp,
+        letterSpacing = 0.5.sp),
+    subtitle1 = TextStyle(
+        fontWeight = FontWeight.Normal,
+        fontSize = 15.sp,
         letterSpacing = 0.15.sp))

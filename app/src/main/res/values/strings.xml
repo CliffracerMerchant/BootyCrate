@@ -63,8 +63,8 @@
     <string name="checkbox_unchecked_description">unchecked</string>
     <string name="checkbox_checked_description">checked</string>
     <string name="edit_item_color_description">Edit %1$s color,  button</string>
-    <string name="item_amount_decrease_description">Decrease %1$s amount</string>
-    <string name="item_amount_increase_description">Increase %1$s amount</string>
+    <string name="item_amount_decrease_description">Decrease %1$s amount by 1</string>
+    <string name="item_amount_increase_description">Increase %1$s amount by 1</string>
     <string name="item_amount_description">%1$s amount</string>
     <string name="item_is_linked_description">%1$s is linked</string>
     <string name="edit_item_description">Edit %1$s</string>
@@ -123,18 +123,18 @@
 
     <string name="color_picker_close_description">Close color picker</string>
     <string name="color_picker_option_description">%1$s option</string>
-    <string name="item_color_0_description">red</string>
-    <string name="item_color_1_description">orange</string>
-    <string name="item_color_2_description">yellow</string>
-    <string name="item_color_3_description">lime green</string>
-    <string name="item_color_4_description">green</string>
-    <string name="item_color_5_description">teal</string>
-    <string name="item_color_6_description">cyan</string>
-    <string name="item_color_7_description">blue</string>
-    <string name="item_color_8_description">purple</string>
-    <string name="item_color_9_description">magenta</string>
-    <string name="item_color_10_description">pink</string>
-    <string name="item_color_11_description">gray</string>
+    <string name="item_color_red_description">red</string>
+    <string name="item_color_orange_description">orange</string>
+    <string name="item_color_yellow_description">yellow</string>
+    <string name="item_color_lime_green_description">lime green</string>
+    <string name="item_color_green_description">green</string>
+    <string name="item_color_teal_description">teal</string>
+    <string name="item_color_cyan_description">cyan</string>
+    <string name="item_color_blue_description">blue</string>
+    <string name="item_color_violet_description">purple</string>
+    <string name="item_color_magenta_description">magenta</string>
+    <string name="item_color_pink_description">pink</string>
+    <string name="item_color_gray_description">gray</string>
 
     <string name="add_item_group_description">Add new item group</string>
     <string name="item_group_name_hint">Item group name</string>
