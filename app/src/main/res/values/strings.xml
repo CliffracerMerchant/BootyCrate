@@ -62,7 +62,7 @@
     <string name="item_checkbox_description">%1$s checkbox</string>
     <string name="checkbox_unchecked_description">unchecked</string>
     <string name="checkbox_checked_description">checked</string>
-    <string name="edit_item_color_description">Edit %1$s color,  button</string>
+    <string name="edit_item_color_description">Edit %1$s color</string>
     <string name="item_amount_decrease_description">Decrease %1$s amount by 1</string>
     <string name="item_amount_increase_description">Increase %1$s amount by 1</string>
     <string name="item_amount_description">%1$s amount</string>

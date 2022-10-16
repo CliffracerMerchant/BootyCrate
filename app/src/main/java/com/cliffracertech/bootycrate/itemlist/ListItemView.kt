@@ -4,24 +4,24 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.itemlist
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
 import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,9 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.SubcomposeLayout
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.Role.Companion.Checkbox
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -73,9 +73,11 @@ fun Modifier.minTouchTargetSize() =
     itemName: String,
     tint: Color,
     modifier: Modifier = Modifier,
-) = Box(modifier.minTouchTargetSize().padding(12.dp)
-                .clickable(role = Checkbox, onClick = onClick, onClickLabel =
-                    stringResource(R.string.item_checkbox_description, itemName))
+) = Box(modifier
+    .minTouchTargetSize()
+    .padding(12.dp)
+    .clickable(role = Checkbox, onClick = onClick, onClickLabel =
+        stringResource(R.string.item_checkbox_description, itemName))
 ) {
     AnimatedCheckboxBackground(checked, tint)
     AnimatedCheckmark(checked)
@@ -98,7 +100,8 @@ fun Modifier.minTouchTargetSize() =
         textStyle = textStyle,
         singleLine = true)
 }) { _, minHeight ->
-    Box(modifier.animateContentSize().height(maxOf(minHeight, (if (readOnly) 0 else 48).dp))) {
+    val height = maxOf(minHeight, (if (readOnly) 0 else 48).dp)
+    Box(modifier.animateContentSize().height(height)) {
         BasicTextField(
             value = text,
             onValueChange = onTextChange,
@@ -262,60 +265,75 @@ fun listItemCallback(
     isEditable: Boolean,
     callback: ListItemCallback,
     modifier: Modifier = Modifier,
-    startContent: @Composable () -> Unit,
-) = Surface(
-    modifier = modifier,
-    shape = MaterialTheme.shapes.large
-) {
-    val expansionTransition = updateTransition(isEditable, "item expand/collapse")
+    colorIndicator: @Composable (showColorPicker: () -> Unit) -> Unit,
+) = Surface(modifier.animateContentSize(), MaterialTheme.shapes.large) {
+    val colors = ListItem.Color.asComposeColors()
+    val color = remember(item.color) {
+        colors.getOrElse(item.color) { Color.Red }
+    }
+    var showColorPicker by remember { mutableStateOf(false) }
 
-    Row(modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val colors = ListItem.Color.asComposeColors()
-        val color = remember(item.color) {
-            colors.getOrElse(item.color) { Color.Red }
-        }
-        startContent()
-        Column(Modifier.weight(1f)) {
-            TextFieldEdit(
-                text = item.name,
-                onTextChange = callback::onRenameRequest,
-                tint = color,
-                readOnly = !isEditable,
-                textStyle = MaterialTheme.typography.body1)
-            TextFieldEdit(
-                text = item.extraInfo,
-                onTextChange = callback::onExtraInfoChangeRequest,
-                tint = color,
-                readOnly = !isEditable,
-                textStyle = MaterialTheme.typography.subtitle1)
-        }
-        Box(Modifier.animateContentSize()) {
-            val amountEditEndPadding by
-                expansionTransition.animateDp(label = "amountEditSlideAnimation") { isEditable ->
+    AnimatedContent(
+        targetState = showColorPicker,
+        modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
+        transitionSpec = { scaleIn(initialScale = 0.9f) + fadeIn() with
+                           scaleOut(targetScale = 0.9f) + fadeOut() }
+    ) { showingColorPicker ->
+        if (showingColorPicker) ColorPicker(
+            currentColor = color,
+            colors = colors,
+            colorDescriptions = ListItem.Color.descriptions(),
+            onColorClick = { index, _ ->
+                val listItemColor = ListItem.Color.values().getOrElse(index) { ListItem.Color.Red }
+                callback.onColorChangeRequest(listItemColor)
+                showColorPicker = false
+            })
+        else Row(verticalAlignment = Alignment.CenterVertically) {
+            val expansionTransition = updateTransition(isEditable, "item expand/collapse")
+            colorIndicator { showColorPicker = true }
+            Column(Modifier.weight(1f)) {
+                TextFieldEdit(
+                    text = item.name,
+                    onTextChange = callback::onRenameRequest,
+                    tint = color,
+                    readOnly = !isEditable,
+                    textStyle = MaterialTheme.typography.body1)
+                TextFieldEdit(
+                    text = item.extraInfo,
+                    onTextChange = callback::onExtraInfoChangeRequest,
+                    tint = color,
+                    readOnly = !isEditable,
+                    textStyle = MaterialTheme.typography.subtitle1)
+            }
+            Box(Modifier.animateContentSize()) {
+                val amountEditEndPadding by
+                expansionTransition.animateDp(label = "amountEditSlideAnim") { isEditable ->
                     if (isEditable) 0.dp else 48.dp
                 }
-            val editButtonTopPadding by
-                expansionTransition.animateDp(label = "editButtonSlideAnimation") { isEditable ->
+                val editButtonTopPadding by
+                expansionTransition.animateDp(label = "editButtonSlideAnim") { isEditable ->
                     if (isEditable) 48.dp else 0.dp
                 }
-            AmountEdit(
-                amount = item.amount,
-                isEditableByKeyboard = isEditable,
-                tint = color,
-                onAmountChangeRequest = callback::onAmountChangeRequest,
-                amountDescription = item.name,
-                modifier = Modifier.padding(end = amountEditEndPadding))
-            IconButton(
-                onClick = callback::onEditButtonClick,
-                modifier = Modifier.padding(top = editButtonTopPadding).align(Alignment.TopEnd)
-            ) {
-                val vector = AnimatedImageVector.animatedVectorResource(R.drawable.animated_edit_to_collapse)
-                val painter = rememberAnimatedVectorPainter(vector, isEditable)
-                val desc = if (isEditable) stringResource(R.string.collapse_item_description, item.name)
-                           else            stringResource(R.string.edit_item_description, item.name)
-                Icon(painter, desc)
+                AmountEdit(
+                    amount = item.amount,
+                    isEditableByKeyboard = isEditable,
+                    tint = color,
+                    onAmountChangeRequest = callback::onAmountChangeRequest,
+                    amountDescription = item.name,
+                    modifier = Modifier.padding(end = amountEditEndPadding))
+                IconButton(
+                    onClick = callback::onEditButtonClick,
+                    modifier = Modifier.padding(top = editButtonTopPadding)
+                                       .align(Alignment.TopEnd)
+                ) {
+                    val vector = AnimatedImageVector.animatedVectorResource(
+                            R.drawable.animated_edit_to_collapse)
+                    val painter = rememberAnimatedVectorPainter(vector, isEditable)
+                    val desc = stringResource(
+                        if (isEditable) R.string.collapse_item_description
+                        else            R.string.edit_item_description, item.name)
+                    Icon(painter, desc)
+                }
             }
         }
     }
@@ -335,12 +353,53 @@ fun listItemCallback(
         onAmountChangeRequest = { amount = it },
         onEditButtonClick = { isEditable = !isEditable })
     }
-    ListItemView(
-        item = item,
-        isEditable = isEditable,
-        callback = callback,
-    ) {
-        Box(Modifier.size(48.dp).padding(10.dp).background(
-                ListItem.Color.values()[item.color].toComposeColor(), CircleShape))
+    ListItemView(item, isEditable, callback) { showColorPicker ->
+        Box(Modifier
+            .size(48.dp).padding(10.dp)
+            .clickable(onClick = showColorPicker)
+            .background(ListItem.Color.values()[item.color].toComposeColor(), CircleShape))
+    }
+}
+
+@Composable fun ColorIndicator(
+    currentColor: Color,
+    objectDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) = Box(modifier
+    .minTouchTargetSize()
+    .padding(10.dp)
+    .background(currentColor, CircleShape)
+    .clickable(
+        role = Role.Button,
+        onClick = onClick,
+        onClickLabel = stringResource(R.string.edit_item_color_description, objectDescription)))
+
+@Composable fun ColorPicker(
+    currentColor: Color,
+    colors: List<Color>,
+    colorDescriptions: List<String>,
+    modifier: Modifier = Modifier,
+    onColorClick: (Int, Color) -> Unit,
+) = LazyVerticalGrid(
+    columns = GridCells.Adaptive(minSize = 48.dp),
+    modifier = modifier,//.circularReveal(visible),
+    contentPadding = PaddingValues(vertical = 8.dp, horizontal = 2.dp),
+    verticalArrangement = Arrangement.SpaceEvenly,
+    horizontalArrangement = Arrangement.SpaceEvenly,
+) {
+    itemsIndexed(items = colors, contentType = { _, _ -> true }) { index, color ->
+        Box(Modifier
+            .minTouchTargetSize()
+            .padding(10.dp)
+            .background(color, CircleShape)
+            .clickable(
+                role = Role.Button,
+                onClick = { onColorClick(index, color) },
+                onClickLabel = stringResource(R.string.edit_item_color_description, colorDescriptions[index]))
+        ) {
+            if (color == currentColor)
+                Icon(Icons.Default.Check, null, Modifier.offset(x = 1.dp, y = 2.dp))
+        }
     }
 }
