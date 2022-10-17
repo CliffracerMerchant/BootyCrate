@@ -116,7 +116,7 @@ fun shoppingListItemCallback(
 ) = object: ShoppingListItemCallback {
     override fun onClick() = onClick()
     override fun onLongClick() = onLongClick()
-    override fun onColorChangeRequest(color: ListItem.Color) = onColorChangeRequest(color)
+    override fun onColorChangeRequest(newColor: ListItem.Color) = onColorChangeRequest(newColor)
     override fun onRenameRequest(newName: String) = onRenameRequest(newName)
     override fun onExtraInfoChangeRequest(newExtraInfo: String) = onExtraInfoChangeRequest(newExtraInfo)
     override fun onAmountChangeRequest(newAmount: Int) = onAmountChangeRequest(newAmount)

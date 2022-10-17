@@ -18,12 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ListItem
-import com.cliffracertech.bootycrate.model.database.ShoppingListItem
-import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 
 fun Modifier.minTouchTargetSize() =
     this.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
@@ -35,8 +32,8 @@ interface ListItemCallback {
     /** The callback that will be invoked when the item is long clicked. */
     fun onLongClick()
     /** The callback that will be invoked when the item's
-     * color has been requested to be changed to [color]. */
-    fun onColorChangeRequest(color: ListItem.Color)
+     * color has been requested to be changed to [newColor]. */
+    fun onColorChangeRequest(newColor: ListItem.Color)
     /** The callback that will be invoked when the item's
      * name has been requested to be changed to [newName]*/
     fun onRenameRequest(newName: String)
@@ -46,28 +43,8 @@ interface ListItemCallback {
     /**  The callback that will be invoked when the item's amount
      * has been requested to be changed to [newAmount]*/
     fun onAmountChangeRequest(newAmount: Int)
-    /** The callback that will be invoked when the item's edit is clicked. */
+    /** The callback that will be invoked when the item's edit button is clicked. */
     fun onEditButtonClick()
-}
-
-/** Return a [ListItemCallback] implementation using the provided lambdas as
-* the implementations for the [ListItemCallback] methods of the same name. */
-fun listItemCallback(
-    onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {},
-    onColorChangeRequest: (ListItem.Color) -> Unit = {},
-    onRenameRequest: (String) -> Unit = {},
-    onExtraInfoChangeRequest: (String) -> Unit = {},
-    onAmountChangeRequest: (Int) -> Unit = {},
-    onEditButtonClick: () -> Unit = {}
-) = object : ListItemCallback {
-    override fun onClick() = onClick()
-    override fun onLongClick() = onLongClick()
-    override fun onColorChangeRequest(color: ListItem.Color) = onColorChangeRequest(color)
-    override fun onRenameRequest(newName: String) = onRenameRequest(newName)
-    override fun onExtraInfoChangeRequest(newExtraInfo: String) = onExtraInfoChangeRequest(newExtraInfo)
-    override fun onAmountChangeRequest(newAmount: Int) = onAmountChangeRequest(newAmount)
-    override fun onEditButtonClick() = onEditButtonClick()
 }
 
 /**
@@ -179,29 +156,4 @@ fun listItemCallback(
             otherContent(expansionTransition)
         }
     }
-}
-
-@Preview @Composable fun ListItemViewPreview() = BootyCrateTheme {
-    var name by remember { mutableStateOf("Test item") }
-    var extraInfo by remember { mutableStateOf("Test extra info") }
-    var colorIndex by remember { mutableStateOf(ListItem.Color.Orange.ordinal) }
-    var amount by remember { mutableStateOf(5) }
-    var isEditable by remember { mutableStateOf(false) }
-    val item by derivedStateOf { ShoppingListItem(1, name, extraInfo, colorIndex, amount) }
-    val callback = remember { listItemCallback(
-        onColorChangeRequest = { colorIndex = it.ordinal },
-        onRenameRequest = { name = it },
-        onExtraInfoChangeRequest = { extraInfo = it },
-        onAmountChangeRequest = { amount = it },
-        onEditButtonClick = { isEditable = !isEditable })
-    }
-    ListItemView(
-        item, isEditable, callback,
-        colorIndicator = { showColorPicker ->
-            val colors = ListItem.Color.asComposeColors()
-            ColorIndicator(
-                color = colors[item.color],
-                clickLabel = "",
-                onClick = showColorPicker)
-        }) { }
 }
