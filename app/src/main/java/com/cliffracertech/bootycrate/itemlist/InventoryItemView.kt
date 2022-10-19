@@ -110,24 +110,25 @@ fun inventoryItemCallback(
 * interactions to e.g. change the [InventoryItem]'s state.
 *
 * @param item The [InventoryItem] instance whose data is being displayed
-* @param isEditable Whether or not the view will display itself in its expanded
-*     state intended for editing the [InventoryItem]'s state. When [isEditable]
-*     is true, the name, extra info, and amount of the item will expand if
-*     necessary to meet minimum touch target sizes, and the auto add to
-*     shopping list checkbox and amount edit will be displayed. The
-*     [InventoryItem]'s amount's decrease / increase buttons will still invoke
-*     their callbacks even when isEditable is false.
-* @param callback The InventoryItemCallback whose method implementations
+* @param isEditableProvider A lambda that returns Whether or not the view
+*     will display itself in its expanded state intended for editing the
+*     [InventoryItem]'s state. When [isEditableProvider] returns true, the
+*     name, extra info, and amount of the item will expand if necessary to
+*     meet minimum touch target sizes, and the auto add to shopping list
+*     checkbox and amount edit will be displayed. The [InventoryItem]'s
+*     amount's decrease / increase buttons will still invoke their
+*     callbacks even when isEditable is false.
+*     am callback The InventoryItemCallback whose method implementations
 *     will be used as the callbacks for user interactions
 * @param modifier The [Modifier] that will be used for the root layout
 */
 @Composable fun InventoryItemView (
     item: InventoryItem,
-    isEditable: Boolean,
+    isEditableProvider: () -> Boolean,
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
 ) = ListItemView(
-    item, isEditable, callback,
+    item, isEditableProvider, callback,
     colorIndicator = { showColorPicker ->
         val colors = ListItem.Color.asComposeColors()
         ColorIndicator(
@@ -141,6 +142,7 @@ fun inventoryItemCallback(
     val color = remember(item.color) {
         colors.getOrElse(item.color) { Color.Red }
     }
+    val isEditable = isEditableProvider()
     AnimatedVisibility(isEditable) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             AnimatedCheckbox(
@@ -187,7 +189,7 @@ fun InventoryItemViewPreview() = BootyCrateTheme {
         onAutoAddToShoppingListCheckboxClick = { autoAddToShoppingList = !autoAddToShoppingList },
         onAutoAddToShoppingListAmountChangeRequest = { autoAddToShoppingListAmount = it })
     }
-    InventoryItemView(item, isEditable, callback)
+    InventoryItemView(item, { isEditable }, callback)
 }
 
 

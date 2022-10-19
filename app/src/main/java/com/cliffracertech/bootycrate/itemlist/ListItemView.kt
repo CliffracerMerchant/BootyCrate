@@ -52,12 +52,12 @@ interface ListItemCallback {
 * e.g. change the [ListItem]'s state.
 *
 * @param item The [ListItem] instance whose properties are being displayed
-* @param isEditable Whether or not the view will display itself in its expanded
-*     state intended for editing the [ListItem]'s state. When [isEditable] is
-*     true, the name, extra info, and amount of the item will expand if
-*     necessary to meet minimum touch target sizes. The [ListItem]'s amount's
-*     decrease / increase buttons will still invoke their callbacks even when
-*     isEditable is false.
+* @param isEditableProvider A lambda that returns Whether or not the view will
+*     display itself in its expanded state intended for editing the [ListItem]'s
+*     state. When [isEditableProvider] returns true, the name, extra info, and
+*     amount of the item will expand if necessary to meet minimum touch target
+*     sizes. The [ListItem]'s amount's decrease / increase buttons will still
+*     invoke their callbacks even when isEditable is false.
 * @param callback The ListItemCallback whose method implementations
 *     will be used as the callbacks for user interactions
 * @param colorIndicator A composable lambda whose contents will be used as the
@@ -73,7 +73,7 @@ interface ListItemCallback {
 */
 @Composable fun ListItemView(
     item: ListItem,
-    isEditable: Boolean,
+    isEditableProvider: () -> Boolean,
     callback: ListItemCallback,
     colorIndicator: @Composable (showColorPicker: () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
@@ -96,11 +96,13 @@ interface ListItemCallback {
             colors = colors,
             colorDescriptions = ListItem.Color.descriptions(),
             onColorClick = { index, _ ->
-                val listItemColor = ListItem.Color.values().getOrElse(index) { ListItem.Color.Red }
+                val listItemColor = ListItem.Color.values()
+                    .getOrElse(index) { ListItem.Color.Red }
                 callback.onColorChangeRequest(listItemColor)
                 showColorPicker = false
             })
         else Column {
+            val isEditable = isEditableProvider()
             val expansionTransition = updateTransition(isEditable, "item expand/collapse")
 
             Row(verticalAlignment = Alignment.CenterVertically) {
