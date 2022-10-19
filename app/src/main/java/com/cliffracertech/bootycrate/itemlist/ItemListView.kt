@@ -16,53 +16,50 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.model.database.ListItem
+import kotlinx.collections.immutable.ImmutableList
 
 /** An interface containing callbacks for interactions with [ItemListView]'s
 * [ListItemView]s. The Long parameter in each method indicates the id of the
 * [ListItem] that was interacted with. */
 interface ItemListCallback {
-    /** The callback that will be invoked when the item is clicked. */
-    fun onClick(id: Long)
-    /** The callback that will be invoked when the item is long clicked. */
-    fun onLongClick(id: Long)
-    /** The callback that will be invoked when the item is swiped left or right. */
-    fun onSwipe(id: Long)
-    /** The callback that will be invoked when the item's
+    /** The callback that will be invoked when an item is clicked. */
+    fun onItemClick(id: Long)
+    /** The callback that will be invoked when an item is long clicked. */
+    fun onItemLongClick(id: Long)
+    /** The callback that will be invoked when an item is swiped left or right. */
+    fun onItemSwipe(id: Long)
+    /** The callback that will be invoked when an item's
      * color has been requested to be changed to [newColor]. */
-    fun onColorChangeRequest(id: Long, newColor: ListItem.Color)
-    /** The callback that will be invoked when the item's
+    fun onItemColorChangeRequest(id: Long, newColor: ListItem.Color)
+    /** The callback that will be invoked when an item's
      * name has been requested to be changed to [newName]*/
-    fun onRenameRequest(id: Long, newName: String)
-    /** The callback that will be invoked when the item's extraInfo
+    fun onItemRenameRequest(id: Long, newName: String)
+    /** The callback that will be invoked when an item's extraInfo
      * has been requested to be changed to [newExtraInfo]*/
-    fun onExtraInfoChangeRequest(id: Long, newExtraInfo: String)
-    /**  The callback that will be invoked when the item's amount
+    fun onItemExtraInfoChangeRequest(id: Long, newExtraInfo: String)
+    /** The callback that will be invoked when an item's amount
      * has been requested to be changed to [newAmount]*/
-    fun onAmountChangeRequest(id: Long, newAmount: Int)
-    /** The callback that will be invoked when the item's edit button is clicked. */
-    fun onEditButtonClick(id: Long)
+    fun onItemAmountChangeRequest(id: Long, newAmount: Int)
+    /** The callback that will be invoked when an item's edit button is clicked. */
+    fun onItemEditButtonClick(id: Long)
 }
 
 /**
-* A [LazyColumn] to display a list of [ListItem]s or a sub-class.
+* A list of [ListItemView]s.
 *
 * @param itemList The list of [ListItem]s to display
-* @param callback An [ItemListCallback] that describes callbacks
-*                 to use for interactions with the item views
 * @param modifier The [Modifier] that will be used for the root layout
 * @param state The [LazyListState] to use for the internal [LazyColumn]
 * @param contentPadding The [PaddingValues] instance to use for the [LazyColumn]'s content
 * @param itemContent A lambda that contains the content for each item
-*                    given the [ListItem] instance it is representing
-*                    and a callback to use for item interactions.
+*                    given the [ListItem] instance it is representing.
 */
 @Composable fun <T: ListItem> ItemListView(
-    itemList: List<T>,
-    callback: ItemListCallback,
+    itemList: ImmutableList<T>,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(),
-    itemContent: @Composable LazyItemScope.(item: T, callback: ItemListCallback) -> Unit
+    itemContent: @Composable LazyItemScope.(item: T) -> Unit
 ) = LazyColumn(
     modifier = modifier,
     state = state,
@@ -70,7 +67,8 @@ interface ItemListCallback {
     verticalArrangement = Arrangement.spacedBy(8.dp),
     horizontalAlignment = Alignment.CenterHorizontally
 ) {
-    items(itemList, key = { it.id }, contentType = {}) {
-        itemContent(it, callback)
-    }
+    items(items = itemList,
+          key = { it.id },
+          contentType = {},
+          itemContent = itemContent)
 }
