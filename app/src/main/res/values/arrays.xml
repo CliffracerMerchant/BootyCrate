@@ -5,7 +5,7 @@
 
 <resources>
     <string-array name="light_dark_theme_preference_entries">
-        <item>@string/pref_theme_sys_default_title</item>
+        <item>@string/pref_theme_match_system_title</item>
         <item>@string/pref_theme_light_theme_title</item>
         <item>@string/pref_theme_dark_theme_title</item>
     </string-array>

@@ -13,12 +13,14 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.SearchQueryState
 import com.cliffracertech.bootycrate.model.database.ItemDao
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ListItem
+import com.cliffracertech.bootycrate.settings.BootyCrate_pref_key_itemSort
+import com.cliffracertech.bootycrate.settings.BootyCrate_pref_key_sortByChecked
+import com.cliffracertech.bootycrate.settings.dataStore
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.enumPreferenceState
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
@@ -94,8 +96,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     }
     private val selectedItemGroups by
         itemGroupDao.getSelectedGroups().collectAsState(emptyList(), scope)
-    private val sortByCheckedKey = booleanPreferencesKey(
-        context.getString(R.string.pref_sort_by_checked_key))
+    private val sortByCheckedKey = booleanPreferencesKey(BootyCrate_pref_key_sortByChecked)
     private val _intents = MutableSharedFlow<Intent>(
         replay = 0, extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -151,7 +152,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     }
 
 
-    private val sortKey = intPreferencesKey(context.getString(R.string.pref_item_sort_key))
+    private val sortKey = intPreferencesKey(BootyCrate_pref_key_itemSort)
     val sort by dataStore.enumPreferenceState(sortKey, scope, ListItem.Sort.Color)
     fun onSortOptionClick(sort: ListItem.Sort) {
         scope.launch { dataStore.edit { it[sortKey] = sort.ordinal } }

@@ -4,36 +4,23 @@
    ~ or in the file LICENSE in the project's root directory. -->
 
 <resources>
-    <string name="pref_item_sort_key">pref_item_sort</string>
+    <string name="pref_category_display_title">Display</string>
+    <string name="pref_light_dark_mode_title">App theme</string>
 
-    <string name="pref_category_theme_title">App theme</string>
-    <string name="pref_light_dark_mode_title">Light / Dark mode</string>
-    <string name="pref_light_dark_mode_key">dark_theme_active</string>
-
-    <string name="pref_theme_sys_default_title">Use system default</string>
+    <string name="pref_theme_match_system_title">Match system</string>
     <string name="pref_theme_light_theme_title">Light</string>
     <string name="pref_theme_dark_theme_title">Dark</string>
 
     <string name="pref_sort_by_checked_title">Sort by checked</string>
     <string name="pref_sort_by_checked_summary">Move checked items to the bottom of the shopping list.</string>
-    <string name="pref_sort_by_checked_key">sort_by_checked</string>
 
     <string name="pref_category_utility_title">Utility</string>
     <string name="pref_update_list_reminder_title">Update shopping list / inventory reminder</string>
-    <string name="pref_update_list_reminder_enabled_key">update_list_reminder</string>
-    <string name="pref_update_list_reminder_hour_key">update_list_reminder_hour</string>
-    <string name="pref_update_list_reminder_minute_key">update_list_reminder_minute</string>
-    <string name="pref_update_list_reminder_repeat_enabled_key">update_list_reminder_repeat_enabled</string>
-    <string name="pref_update_list_reminder_repeat_days_key">update_list_reminder_repeat_days</string>
 
     <string name="pref_import_database_title">Import database</string>
-    <string name="pref_import_database_key">import_database</string>
     <string name="pref_export_database_title">Export database</string>
-    <string name="pref_export_database_key">export_database</string>
 
     <string name="pref_category_about_title">About</string>
     <string name="pref_about_app_title">About BootyCrate</string>
-    <string name="pref_about_app_key">about_app</string>
     <string name="pref_open_source_libraries_used_title">Open source libraries used</string>
-    <string name="pref_open_source_libraries_used_key">open_source_libraries_used</string>
 </resources>

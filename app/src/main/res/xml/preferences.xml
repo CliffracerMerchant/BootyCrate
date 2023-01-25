@@ -8,7 +8,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:iconSpaceReserved="false" >
 
-    <PreferenceCategory android:title="@string/pref_category_theme_title"
+    <PreferenceCategory android:title="@string/pref_category_display_title"
         android:layout="@layout/preference_category" >
 
         <ListPreference

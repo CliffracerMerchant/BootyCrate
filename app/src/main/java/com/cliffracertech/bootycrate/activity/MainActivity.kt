@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.activity
 
 import android.animation.Animator
+import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,38 +14,70 @@ import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
-import androidx.preference.PreferenceManager
+import androidx.lifecycle.viewModelScope
+import com.cliffracertech.bootycrate.BuildConfig
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.dialog.NewInventoryItemDialog
 import com.cliffracertech.bootycrate.dialog.NewShoppingListItemDialog
 import com.cliffracertech.bootycrate.dialog.itemGroupNameDialog
-import com.cliffracertech.bootycrate.fragment.AppSettingsFragment
 import com.cliffracertech.bootycrate.fragment.InventoryFragment
 import com.cliffracertech.bootycrate.fragment.ItemListFragment
 import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
+import com.cliffracertech.bootycrate.settings.AppTheme
+import com.cliffracertech.bootycrate.settings.BootyCrate_pref_key_appTheme
+import com.cliffracertech.bootycrate.settings.BootyCrate_pref_key_lastLaunchVersionCode
+import com.cliffracertech.bootycrate.settings.dataStore
+import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.*
 import com.cliffracertech.bootycrate.view.BootyCrateActionBar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
 @HiltViewModel
-class MainActivityViewModel @Inject constructor(
+class MainActivityViewModel(
+    context: Context,
     private val navigationState: NavigationState,
-    messageHandler: MessageHandler
-) : ViewModel() {
+    messageHandler: MessageHandler,
+    coroutineScope: CoroutineScope?
+): ViewModel() {
+    @Inject constructor(
+        @ApplicationContext context: Context,
+        navigationState: NavigationState,
+        messageHandler: MessageHandler,
+    ): this(context, navigationState, messageHandler, null)
+
+    private val scope = coroutineScope ?: viewModelScope
+    private val dataStore = context.dataStore
+    private val lastLaunchVersionCodeKey = intPreferencesKey(BootyCrate_pref_key_lastLaunchVersionCode)
+    private val appThemeKey = intPreferencesKey(BootyCrate_pref_key_appTheme)
     val messages = messageHandler.messages
 
     fun navigateTo(screen: NavigationState.Screen) {
         navigationState.visibleScreen.value = screen
     }
+
+    // The app theme preference value must be obtained before the UI is rendered to
+    // prevent the screen from flickering due to the theme changing really quickly.
+    val appTheme = dataStore.enumPreferenceFlow(appThemeKey, AppTheme.MatchSystem)
+
+    suspend fun getLastLaunchVersionCode() =
+        dataStore.data.first()[lastLaunchVersionCodeKey] ?: 9
+
+    fun updateLastLaunchVersionCode() =
+        dataStore.edit(BuildConfig.VERSION_CODE, lastLaunchVersionCodeKey, scope)
 }
 
 /**
@@ -116,14 +149,15 @@ class MainActivity : NavViewActivity() {
     }
 
     private fun initTheme() {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
-        val prefKey = getString(R.string.pref_light_dark_mode_key)
-        val themeDefault = getString(R.string.pref_theme_sys_default_title)
-        val themePref = prefs.getString(prefKey, themeDefault) ?: ""
+        // The app theme preference value must be obtained before the UI is
+        // rendered to prevent the screen from flickering due to the theme
+        // changing very quickly if the chosen theme is different from the
+        // default value.
+        val themePref = runBlocking { viewModel.appTheme.first() }
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
         usingDarkTheme = themePref == getString(R.string.pref_theme_dark_theme_title) ||
-            (themePref == getString(R.string.pref_theme_sys_default_title) && sysDarkThemeIsActive)
+            (themePref == getString(R.string.pref_theme_match_system_title) && sysDarkThemeIsActive)
         setTheme(if (usingDarkTheme) R.style.DarkTheme
                  else                R.style.LightTheme)
     }
@@ -146,8 +180,8 @@ class MainActivity : NavViewActivity() {
 
         // item group selector
         ui.settingsButton.setOnClickListener {
-            viewModel.navigateTo(NavigationState.Screen.AppSettings)
-            addSecondaryFragment(AppSettingsFragment())
+//            viewModel.navigateTo(NavigationState.Screen.AppSettings)
+//            addSecondaryFragment(AppSettingsFragment())
         }
         ui.addItemGroupButton.setOnClickListener {
             itemGroupNameDialog(this, null, itemGroupSelectorViewModel::onConfirmAddNewItemGroupDialog)
@@ -222,5 +256,9 @@ class MainActivity : NavViewActivity() {
         ui.actionBar.setContent {
             BootyCrateTheme(usingDarkTheme) { BootyCrateActionBar() }
         }
+    }
+
+    private fun checkForNeededMigrations() {
+        val
     }
 }

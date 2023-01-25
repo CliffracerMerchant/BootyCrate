@@ -54,6 +54,23 @@ object UpdateListReminder {
         var repeatDays: List<MaterialDayPicker.Weekday> = emptyList()
     ) {
         companion object {
+            /** A boolean value that represents whether or not the update list reminder is enabled. */
+            const val BootyCrate_pref_key_updateListReminderEnabled = "update_list_reminder_enabled"
+
+            /** An integer value that represents the hour of the day that
+            * the update list reminder will be sent if it is enabled. */
+            const val BootyCrate_pref_key_updateListReminderHour = "update_list_reminder_hour"
+
+            /** An integer value that represents the minute of the hour that
+            * the update list reminder will be sent if it is enabled. */
+            const val BootyCrate_pref_key_updateListReminderMinute = "update_list_reminder_minute"
+
+            /** A boolean value that represents whether or not the update list reminder repeat is enabled. */
+            const val BootyCrate_pref_key_updateListReminderRepeatEnabled = "update_list_reminder_repeat_enabled"
+
+            /** A boolean value that represents whether or not the update list reminder is enabled. */
+            const val BootyCrate_pref_key_updateListReminderRepeatDays = "update_list_reminder_repeat_days"
+
             const val enabledKey = "UpdateListReminder_enabled"
             const val hourKey = "UpdateListReminder_hour"
             const val minuteKey = "UpdateListReminder_minute"

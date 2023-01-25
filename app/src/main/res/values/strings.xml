@@ -86,8 +86,8 @@
     <string name="exported_database_default_name">BootyCrateDatabase.sqlite</string>
 
     <string name="about_app_body">
-        Copyright 2021 Nicholas Hochstetler. \nBootyCrate is an open-source shopping list and
-        inventory management app, licensed under the terms of the Apache License, version 2.0.
+        BootyCrate is an open-source shopping list and inventory management app. The
+        source code is available under the terms of the Apache License, version 2.0.
         View the source code at: https://github.com/NicholasHochstetler/BootyCrate</string>
     <string name="new_shopping_list_item_duplicate_name_warning">Another item on the shopping list with the same name already exists.</string>
     <string name="new_inventory_item_duplicate_name_warning">Another item in the inventory with the same name already exists.</string>
