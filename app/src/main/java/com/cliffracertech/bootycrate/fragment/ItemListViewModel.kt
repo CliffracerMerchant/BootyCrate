@@ -4,23 +4,23 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.fragment
 
-import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MessageHandler
-import com.cliffracertech.bootycrate.dataStore
 import com.cliffracertech.bootycrate.model.SearchQueryState
 import com.cliffracertech.bootycrate.model.database.*
+import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.enumPreferenceFlow
 import com.cliffracertech.bootycrate.utils.preferenceFlow
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -51,7 +51,7 @@ import javax.inject.Inject
  * search query, as well as any additional sorting parameters that they add.
  */
 abstract class ItemListViewModel<T: ListItem>(
-    context: Context,
+    dataStore: DataStore<Preferences>,
     searchQueryState: SearchQueryState,
     private val messageHandler: MessageHandler,
     protected val dao: ItemDao,
@@ -61,8 +61,8 @@ abstract class ItemListViewModel<T: ListItem>(
     abstract val collectionNameResId: StringResource.Id
     protected val searchQuery = searchQueryState.query.asStateFlow()
 
-    protected val sort = context.dataStore.enumPreferenceFlow(
-        intPreferencesKey(context.getString(R.string.pref_item_sort_key)), ListItem.Sort.Color)
+    protected val sort = dataStore.enumPreferenceFlow(
+        intPreferencesKey(PrefKeys.itemSort), ListItem.Sort.Color)
 
     abstract val items: StateFlow<List<T>>
 
@@ -123,17 +123,18 @@ abstract class ItemListViewModel<T: ListItem>(
  */
 @HiltViewModel
 class ShoppingListViewModel @Inject constructor(
-    @ApplicationContext context: Context,
+    dataStore: DataStore<Preferences>,
     searchQueryState: SearchQueryState,
     messageHandler: MessageHandler,
     dao: ItemDao,
     itemGroupDao: ItemGroupDao,
-) : ItemListViewModel<ShoppingListItem>(context, searchQueryState, messageHandler, dao, itemGroupDao) {
-
+) : ItemListViewModel<ShoppingListItem>(
+    dataStore, searchQueryState, messageHandler, dao, itemGroupDao
+) {
     override val collectionNameResId =
         StringResource.Id(R.string.shopping_list_description)
-    private val sortByCheckedKey = booleanPreferencesKey(context.getString(R.string.pref_sort_by_checked_key))
-    private val sortByChecked = context.dataStore.preferenceFlow(
+    private val sortByCheckedKey = booleanPreferencesKey(PrefKeys.sortByChecked)
+    private val sortByChecked = dataStore.preferenceFlow(
         key = sortByCheckedKey, defaultValue = false)
 
     override val items = combine(sort, searchQuery, sortByChecked, dao::getShoppingList)
@@ -181,13 +182,14 @@ class ShoppingListViewModel @Inject constructor(
  * fields of items in the database. */
 @HiltViewModel
 class InventoryViewModel @Inject constructor(
-    @ApplicationContext context: Context,
+    dataStore: DataStore<Preferences>,
     searchQueryState: SearchQueryState,
     messageHandler: MessageHandler,
     dao: ItemDao,
     itemGroupDao: ItemGroupDao,
-) : ItemListViewModel<InventoryItem>(context, searchQueryState, messageHandler, dao, itemGroupDao) {
-
+) : ItemListViewModel<InventoryItem>(
+    dataStore, searchQueryState, messageHandler, dao, itemGroupDao
+) {
     override val collectionNameResId =
         StringResource.Id(R.string.inventory_description)
 

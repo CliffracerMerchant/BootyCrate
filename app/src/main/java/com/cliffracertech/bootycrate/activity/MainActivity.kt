@@ -5,7 +5,6 @@
 package com.cliffracertech.bootycrate.activity
 
 import android.animation.Animator
-import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -14,6 +13,8 @@ import android.view.animation.AnimationUtils
 import androidx.activity.viewModels
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,7 +31,6 @@ import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.settings.AppTheme
 import com.cliffracertech.bootycrate.settings.PrefKeys
-import com.cliffracertech.bootycrate.settings.dataStore
 import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.*
@@ -38,7 +38,6 @@ import com.cliffracertech.bootycrate.view.BootyCrateActionBar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -47,19 +46,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainActivityViewModel(
-    context: Context,
+    private val dataStore: DataStore<Preferences>,
     private val navigationState: NavigationState,
     messageHandler: MessageHandler,
     coroutineScope: CoroutineScope?
 ): ViewModel() {
     @Inject constructor(
-        @ApplicationContext context: Context,
+        dataStore: DataStore<Preferences>,
         navigationState: NavigationState,
         messageHandler: MessageHandler,
-    ): this(context, navigationState, messageHandler, null)
+    ): this(dataStore, navigationState, messageHandler, null)
 
     private val scope = coroutineScope ?: viewModelScope
-    private val dataStore = context.dataStore
     private val lastLaunchVersionCodeKey = intPreferencesKey(PrefKeys.lastLaunchVersionCode)
     private val appThemeKey = intPreferencesKey(PrefKeys.appTheme)
     val messages = messageHandler.messages
@@ -76,7 +74,7 @@ class MainActivityViewModel(
         dataStore.data.first()[lastLaunchVersionCodeKey] ?: 9
 
     fun updateLastLaunchVersionCode() =
-        dataStore.edit(BuildConfig.VERSION_CODE, lastLaunchVersionCodeKey, scope)
+        dataStore.edit(lastLaunchVersionCodeKey, BuildConfig.VERSION_CODE, scope)
 }
 
 /**

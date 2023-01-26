@@ -4,11 +4,11 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.activity
 
-import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.*
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,14 +18,13 @@ import com.cliffracertech.bootycrate.model.SearchQueryState
 import com.cliffracertech.bootycrate.model.database.ItemDao
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ListItem
+import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.settings.PrefKeys
-import com.cliffracertech.bootycrate.settings.dataStore
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.enumPreferenceState
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.*
@@ -58,7 +57,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     collectAsState(value, scope)
 
 @HiltViewModel class ActionBarViewModel(
-    context: Context,
+    private val dataStore: DataStore<Preferences>,
     private val itemDao: ItemDao,
     itemGroupDao: ItemGroupDao,
     private val navigationState: NavigationState,
@@ -68,18 +67,16 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
 ) : ViewModel() {
 
     @Inject constructor(
-        @ApplicationContext
-        context: Context,
+        dataStore: DataStore<Preferences>,
         itemDao: ItemDao,
         itemGroupDao: ItemGroupDao,
         navigationState: NavigationState,
         messageHandler: MessageHandler,
         searchQueryState: SearchQueryState,
-    ) : this(context, itemDao, itemGroupDao, navigationState,
+    ) : this(dataStore, itemDao, itemGroupDao, navigationState,
              messageHandler, searchQueryState, null)
 
     private val scope = coroutineScope ?: viewModelScope
-    private val dataStore = context.dataStore
     private val currentScreen by navigationState.visibleScreen.collectAsState(scope)
     private val _searchQuery by searchQueryState.query.collectAsState(scope)
     private val selectedShoppingListItemCount by
@@ -153,9 +150,8 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
 
     private val sortKey = intPreferencesKey(PrefKeys.itemSort)
     val sort by dataStore.enumPreferenceState(sortKey, scope, ListItem.Sort.Color)
-    fun onSortOptionClick(sort: ListItem.Sort) {
-        scope.launch { dataStore.edit { it[sortKey] = sort.ordinal } }
-    }
+    fun onSortOptionClick(sort: ListItem.Sort) =
+        dataStore.edit(sortKey, sort.ordinal, scope)
 
     val changeSortDeleteButtonState by derivedStateOf { when {
         currentScreen.isAppSettings -> ChangeSortDeleteButtonState.Invisible

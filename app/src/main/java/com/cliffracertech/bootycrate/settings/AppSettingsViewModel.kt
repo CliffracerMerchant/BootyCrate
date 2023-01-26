@@ -17,26 +17,33 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cliffracertech.bootycrate.BuildConfig
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ListItem
-import com.cliffracertech.bootycrate.utils.awaitEnumPreferenceState
 import com.cliffracertech.bootycrate.utils.enumPreferenceState
 import com.cliffracertech.bootycrate.utils.preferenceState
-import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.Module
+import dagger.Provides
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.InstallIn
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
+import javax.inject.Singleton
 
 val Context.dataStore by preferencesDataStore("preferences")
 
+@Module @InstallIn(SingletonComponent::class)
+class DataStoreModule {
+    @Singleton @Provides
+        fun provideDataStore(@ApplicationContext app: Context) = app.dataStore
+}
+
 /** Edit the DataStore preference pointed to by [key] to the new [value] in [scope]. */
 fun <T> DataStore<Preferences>.edit(
-    value: T,
     key: Preferences.Key<T>,
+    value: T,
     scope: CoroutineScope,
 ) {
     scope.launch { edit { it[key] = value } }
@@ -82,17 +89,14 @@ enum class AppTheme { MatchSystem, Light, Dark;
 }
 
 @HiltViewModel class AppSettingsViewModel(
-    context: Context,
+    private val dataStore: DataStore<Preferences>,
     coroutineScope: CoroutineScope?,
 ): ViewModel() {
     @Inject constructor(
-        @ApplicationContext context: Context
-    ) : this(context, null)
+        dataStore: DataStore<Preferences>
+    ) : this(dataStore, null)
 
     private val scope = coroutineScope ?: viewModelScope
-    private val dataStore = context.dataStore
-
-
     private val appThemeKey = intPreferencesKey(PrefKeys.appTheme)
     private val sortByCheckedKey = booleanPreferencesKey(PrefKeys.sortByChecked)
 
@@ -106,7 +110,7 @@ enum class AppTheme { MatchSystem, Light, Dark;
     val sortByChecked by dataStore.preferenceState(sortByCheckedKey, false, scope)
 
     fun onSortByCheckedClick() =
-        dataStore.edit(!sortByChecked, sortByCheckedKey, scope)
+        dataStore.edit(sortByCheckedKey, !sortByChecked, scope)
 
 //    private val getExportPath = registerForActivityResult(
 //        ActivityResultContracts.CreateDocument("application/octet-stream")
