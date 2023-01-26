@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.activity
+package com.cliffracertech.bootycrate.actionbar
 
 import android.content.Intent
 import androidx.compose.runtime.*
@@ -13,6 +13,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.activity.MessageHandler
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.SearchQueryState
 import com.cliffracertech.bootycrate.model.database.ItemDao
@@ -21,6 +22,7 @@ import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.utils.StringResource
+import com.cliffracertech.bootycrate.utils.collectAsState
 import com.cliffracertech.bootycrate.utils.enumPreferenceState
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
@@ -47,15 +49,6 @@ enum class ChangeSortDeleteButtonState {
     val isInvisible get() = this == Invisible
 }
 
-fun <T> Flow<T>.collectAsState(initialValue: T, scope: CoroutineScope): State<T> {
-    val state = mutableStateOf(initialValue)
-    onEach { state.value = it }.launchIn(scope)
-    return state
-}
-
-fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
-    collectAsState(value, scope)
-
 @HiltViewModel class ActionBarViewModel(
     private val dataStore: DataStore<Preferences>,
     private val itemDao: ItemDao,
@@ -78,7 +71,6 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
 
     private val scope = coroutineScope ?: viewModelScope
     private val currentScreen by navigationState.visibleScreen.collectAsState(scope)
-    private val _searchQuery by searchQueryState.queryFlow.collectAsState(scope)
     private val selectedShoppingListItemCount by
         itemDao.getSelectedShoppingListItemCount().collectAsState(0, scope)
     private val selectedInventoryItemCount by
@@ -99,7 +91,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     val intents = _intents.asSharedFlow()
 
     val showBackButton by derivedStateOf {
-        currentScreen.isAppSettings || _searchQuery != null || selectedItemCount != 0
+        currentScreen.isAppSettings || searchQueryState.query != null || selectedItemCount != 0
     }
 
     fun onBackPressed() = when {
@@ -109,7 +101,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
             if (navigationState.visibleScreen.value.isInventory)
                 scope.launch { itemDao.clearInventorySelection() }
             true
-        } _searchQuery != null -> {
+        } searchQueryState.query != null -> {
             onSearchQueryChangeRequest(null)
             true
         } else -> false
@@ -131,7 +123,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     }}
 
     val searchQuery: String? by derivedStateOf {
-        if (selectedItemCount != 0) null else _searchQuery
+        if (selectedItemCount != 0) null else searchQueryState.query
     }
 
     val showSearchButton by derivedStateOf {
@@ -139,12 +131,12 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     }
 
     fun onSearchButtonClick() {
-        val newQuery = if (_searchQuery == null) "" else null
+        val newQuery = if (searchQueryState.query == null) "" else null
         onSearchQueryChangeRequest(newQuery)
     }
 
     fun onSearchQueryChangeRequest(newQuery: String?) {
-        searchQueryState.queryFlow.value = newQuery
+        searchQueryState.query = newQuery
     }
 
 
@@ -233,10 +225,10 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
             currentScreen.isShoppingList -> {
                 val sortByChecked = dataStore.data
                     .map { it[sortByCheckedKey] }.first()
-                itemDao.getShoppingList(sort, _searchQuery, sortByChecked == false).first()
+                itemDao.getShoppingList(sort, searchQueryState.query, sortByChecked == false).first()
             }
             currentScreen.isInventory ->
-                itemDao.getInventory(sort, _searchQuery).first()
+                itemDao.getInventory(sort, searchQueryState.query).first()
             else ->
                 emptyList()
         }

@@ -161,6 +161,15 @@ fun <T>LifecycleOwner.recollectWhenStarted(
         flow.collect { action(it) }
     }
 
+fun <T> Flow<T>.collectAsState(initialValue: T, scope: CoroutineScope): State<T> {
+    val state = mutableStateOf(initialValue)
+    onEach { state.value = it }.launchIn(scope)
+    return state
+}
+
+fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
+    collectAsState(value, scope)
+
 /** An extension function that allows a StateFlow<T> to
  * act as a delegate for an immutable value of type T. */
 operator fun <T> StateFlow<T>.getValue(

@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.view
+package com.cliffracertech.bootycrate.actionbar
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.*
@@ -19,7 +19,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.ActionBarViewModel
 import com.cliffracertech.bootycrate.model.database.ListItem
 
 /** Compose a [ListActionBar] with state provided by an instance of [ActionBarViewModel]. */

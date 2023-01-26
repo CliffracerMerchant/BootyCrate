@@ -2,7 +2,7 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.view
+package com.cliffracertech.bootycrate.actionbar
 
 import androidx.compose.animation.*
 import androidx.compose.animation.graphics.res.animatedVectorResource
@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.ChangeSortDeleteButtonState
 import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
 
 /** Compose a [Row] with a gradient background and vertically centered

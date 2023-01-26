@@ -2,12 +2,11 @@
  * You may not use this file except in compliance with the Apache License
  * Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
  * or in the file LICENSE in the project's root directory. */
-package com.cliffracertech.bootycrate.view
+package com.cliffracertech.bootycrate.actionbar
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -38,7 +37,7 @@ import androidx.compose.ui.unit.dp
  * [title]. When the value inside the text field is changed, the callback
  * [onSearchQueryChanged] will be invoked.
  */
-@Composable fun RowScope.ActionBarTitle(
+@Composable fun ActionBarTitle(
     title: String,
     modifier: Modifier = Modifier,
     searchQuery: String? = null,

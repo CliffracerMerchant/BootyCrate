@@ -33,5 +33,4 @@ class NavigationState @Inject constructor() {
 @ActivityRetainedScoped
 class SearchQueryState @Inject constructor() {
     var query by mutableStateOf<String?>(null)
-    val queryFlow = MutableStateFlow<String?>(null)
 }
