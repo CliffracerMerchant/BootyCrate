@@ -4,6 +4,9 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.model
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -29,5 +32,6 @@ class NavigationState @Inject constructor() {
 
 @ActivityRetainedScoped
 class SearchQueryState @Inject constructor() {
-    val query = MutableStateFlow<String?>(null)
+    var query by mutableStateOf<String?>(null)
+    val queryFlow = MutableStateFlow<String?>(null)
 }

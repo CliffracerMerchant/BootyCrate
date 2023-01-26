@@ -78,7 +78,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
 
     private val scope = coroutineScope ?: viewModelScope
     private val currentScreen by navigationState.visibleScreen.collectAsState(scope)
-    private val _searchQuery by searchQueryState.query.collectAsState(scope)
+    private val _searchQuery by searchQueryState.queryFlow.collectAsState(scope)
     private val selectedShoppingListItemCount by
         itemDao.getSelectedShoppingListItemCount().collectAsState(0, scope)
     private val selectedInventoryItemCount by
@@ -144,7 +144,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     }
 
     fun onSearchQueryChangeRequest(newQuery: String?) {
-        searchQueryState.query.value = newQuery
+        searchQueryState.queryFlow.value = newQuery
     }
 
 
