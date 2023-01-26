@@ -8,71 +8,71 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:iconSpaceReserved="false" >
 
-    <PreferenceCategory android:title="@string/pref_category_display_title"
-        android:layout="@layout/preference_category" >
+<!--    <PreferenceCategory android:title="@string/pref_category_display_title"-->
+<!--        android:layout="@layout/preference_category" >-->
 
-        <ListPreference
-            android:layout="@layout/preference"
-            android:key="@string/pref_light_dark_mode_key"
-            android:title="@string/pref_light_dark_mode_title"
-            android:entries="@array/light_dark_theme_preference_entries"
-            android:entryValues="@array/light_dark_theme_preference_entries"
-            android:persistent="true"/>
+<!--        <ListPreference-->
+<!--            android:layout="@layout/preference"-->
+<!--            android:key="@string/pref_light_dark_mode_key"-->
+<!--            android:title="@string/pref_light_dark_mode_title"-->
+<!--            android:entries="@array/light_dark_theme_preference_entries"-->
+<!--            android:entryValues="@array/light_dark_theme_preference_entries"-->
+<!--            android:persistent="true"/>-->
+<!--&lt;!&ndash;        <Preference&ndash;&gt;-->
+<!--&lt;!&ndash;            android:key="@string/pref_theme_gradient_screen"&ndash;&gt;-->
+<!--&lt;!&ndash;            android:title="@string/theme_gradient_description" />&ndash;&gt;-->
+<!--    </PreferenceCategory>-->
+
+<!--    <PreferenceCategory-->
+<!--        android:title="@string/shopping_list_navigation_item_name"-->
+<!--        android:layout="@layout/preference_category"-->
+<!--        app:allowDividerAbove="false" >-->
+
+<!--        <SwitchPreferenceCompat-->
+<!--            android:layout="@layout/preference"-->
+<!--            android:title="@string/pref_sort_by_checked_title"-->
+<!--            android:summary="@string/pref_sort_by_checked_summary"-->
+<!--            android:key="@string/pref_sort_by_checked_key" />-->
+
+<!--    </PreferenceCategory>-->
+
+<!--    <PreferenceCategory-->
+<!--        android:title="@string/pref_category_utility_title"-->
+<!--        android:layout="@layout/preference_category"-->
+<!--        app:allowDividerAbove="false" >-->
+
 <!--        <Preference-->
-<!--            android:key="@string/pref_theme_gradient_screen"-->
-<!--            android:title="@string/theme_gradient_description" />-->
-    </PreferenceCategory>
+<!--            android:layout="@layout/preference"-->
+<!--            android:key="@string/pref_update_list_reminder_enabled_key"-->
+<!--            android:title="@string/pref_update_list_reminder_title" />-->
+<!--        <Preference-->
+<!--            android:layout="@layout/preference"-->
+<!--            android:key="@string/pref_export_database_key"-->
+<!--            android:title="@string/pref_export_database_title" />-->
+<!--        <Preference-->
+<!--            android:layout="@layout/preference"-->
+<!--            android:key="@string/pref_import_database_key"-->
+<!--            android:title="@string/pref_import_database_title" />-->
+<!--    </PreferenceCategory>-->
 
-    <PreferenceCategory
-        android:title="@string/shopping_list_navigation_item_name"
-        android:layout="@layout/preference_category"
-        app:allowDividerAbove="false" >
+<!--    <PreferenceCategory-->
+<!--        android:title="@string/pref_category_about_title"-->
+<!--        android:layout="@layout/preference_category"-->
+<!--        app:allowDividerAbove="false" >-->
 
-        <SwitchPreferenceCompat
-            android:layout="@layout/preference"
-            android:title="@string/pref_sort_by_checked_title"
-            android:summary="@string/pref_sort_by_checked_summary"
-            android:key="@string/pref_sort_by_checked_key" />
+<!--        <Preference-->
+<!--            android:layout="@layout/preference"-->
+<!--            android:key="@string/pref_about_app_key"-->
+<!--            android:title="@string/pref_about_app_title" />-->
+<!--        <Preference-->
+<!--            android:layout="@layout/preference"-->
+<!--            android:key="@string/pref_privacy_policy_key"-->
+<!--            android:title="@string/pref_privacy_policy_title" />-->
+<!--        <Preference-->
+<!--            android:layout="@layout/preference"-->
+<!--            android:key="@string/pref_open_source_libraries_used_key"-->
+<!--            android:title="@string/pref_open_source_libraries_used_title" />-->
 
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:title="@string/pref_category_utility_title"
-        android:layout="@layout/preference_category"
-        app:allowDividerAbove="false" >
-
-        <Preference
-            android:layout="@layout/preference"
-            android:key="@string/pref_update_list_reminder_enabled_key"
-            android:title="@string/pref_update_list_reminder_title" />
-        <Preference
-            android:layout="@layout/preference"
-            android:key="@string/pref_export_database_key"
-            android:title="@string/pref_export_database_title" />
-        <Preference
-            android:layout="@layout/preference"
-            android:key="@string/pref_import_database_key"
-            android:title="@string/pref_import_database_title" />
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:title="@string/pref_category_about_title"
-        android:layout="@layout/preference_category"
-        app:allowDividerAbove="false" >
-
-        <Preference
-            android:layout="@layout/preference"
-            android:key="@string/pref_about_app_key"
-            android:title="@string/pref_about_app_title" />
-        <Preference
-            android:layout="@layout/preference"
-            android:key="@string/pref_privacy_policy_key"
-            android:title="@string/pref_privacy_policy_title" />
-        <Preference
-            android:layout="@layout/preference"
-            android:key="@string/pref_open_source_libraries_used_key"
-            android:title="@string/pref_open_source_libraries_used_title" />
-
-    </PreferenceCategory>
+<!--    </PreferenceCategory>-->
 
 </PreferenceScreen>

@@ -29,8 +29,7 @@ import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.settings.AppTheme
-import com.cliffracertech.bootycrate.settings.BootyCrate_pref_key_appTheme
-import com.cliffracertech.bootycrate.settings.BootyCrate_pref_key_lastLaunchVersionCode
+import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.settings.dataStore
 import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
@@ -61,8 +60,8 @@ class MainActivityViewModel(
 
     private val scope = coroutineScope ?: viewModelScope
     private val dataStore = context.dataStore
-    private val lastLaunchVersionCodeKey = intPreferencesKey(BootyCrate_pref_key_lastLaunchVersionCode)
-    private val appThemeKey = intPreferencesKey(BootyCrate_pref_key_appTheme)
+    private val lastLaunchVersionCodeKey = intPreferencesKey(PrefKeys.lastLaunchVersionCode)
+    private val appThemeKey = intPreferencesKey(PrefKeys.appTheme)
     val messages = messageHandler.messages
 
     fun navigateTo(screen: NavigationState.Screen) {
@@ -156,8 +155,8 @@ class MainActivity : NavViewActivity() {
         val themePref = runBlocking { viewModel.appTheme.first() }
         val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
             (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
-        usingDarkTheme = themePref == getString(R.string.pref_theme_dark_theme_title) ||
-            (themePref == getString(R.string.pref_theme_match_system_title) && sysDarkThemeIsActive)
+        usingDarkTheme = themePref == AppTheme.Dark ||
+            (themePref == AppTheme.MatchSystem && sysDarkThemeIsActive)
         setTheme(if (usingDarkTheme) R.style.DarkTheme
                  else                R.style.LightTheme)
     }
@@ -258,7 +257,7 @@ class MainActivity : NavViewActivity() {
         }
     }
 
-    private fun checkForNeededMigrations() {
-        val
-    }
+//    private fun checkForNeededMigrations() {
+//        val
+//    }
 }

@@ -42,6 +42,25 @@ import java.util.*
 /** An object containing functions and classes relating the the update list reminder. */
 object UpdateListReminder {
 
+    object PrefKeys {
+        /** A boolean value that represents whether or not the update list reminder is enabled. */
+        const val updateListReminderEnabled = "update_list_reminder_enabled"
+
+        /** An integer value that represents the hour of the day that
+        * the update list reminder will be sent if it is enabled. */
+        const val updateListReminderHour = "update_list_reminder_hour"
+
+        /** An integer value that represents the minute of the hour that
+        * the update list reminder will be sent if it is enabled. */
+        const val updateListReminderMinute = "update_list_reminder_minute"
+
+        /** A boolean value that represents whether or not the update list reminder repeat is enabled. */
+        const val updateListReminderRepeatEnabled = "update_list_reminder_repeat_enabled"
+
+        /** A boolean value that represents whether or not the update list reminder is enabled. */
+        const val updateListReminderRepeatDays = "update_list_reminder_repeat_days"
+    }
+
     /** A data class that contains members indicating the user's settings for the update list reminder. */
     data class Settings(
         /** Whether or not the update list reminder is enabled */
@@ -54,23 +73,6 @@ object UpdateListReminder {
         var repeatDays: List<MaterialDayPicker.Weekday> = emptyList()
     ) {
         companion object {
-            /** A boolean value that represents whether or not the update list reminder is enabled. */
-            const val BootyCrate_pref_key_updateListReminderEnabled = "update_list_reminder_enabled"
-
-            /** An integer value that represents the hour of the day that
-            * the update list reminder will be sent if it is enabled. */
-            const val BootyCrate_pref_key_updateListReminderHour = "update_list_reminder_hour"
-
-            /** An integer value that represents the minute of the hour that
-            * the update list reminder will be sent if it is enabled. */
-            const val BootyCrate_pref_key_updateListReminderMinute = "update_list_reminder_minute"
-
-            /** A boolean value that represents whether or not the update list reminder repeat is enabled. */
-            const val BootyCrate_pref_key_updateListReminderRepeatEnabled = "update_list_reminder_repeat_enabled"
-
-            /** A boolean value that represents whether or not the update list reminder is enabled. */
-            const val BootyCrate_pref_key_updateListReminderRepeatDays = "update_list_reminder_repeat_days"
-
             const val enabledKey = "UpdateListReminder_enabled"
             const val hourKey = "UpdateListReminder_hour"
             const val minuteKey = "UpdateListReminder_minute"

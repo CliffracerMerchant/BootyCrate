@@ -18,8 +18,7 @@ import com.cliffracertech.bootycrate.model.SearchQueryState
 import com.cliffracertech.bootycrate.model.database.ItemDao
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ListItem
-import com.cliffracertech.bootycrate.settings.BootyCrate_pref_key_itemSort
-import com.cliffracertech.bootycrate.settings.BootyCrate_pref_key_sortByChecked
+import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.settings.dataStore
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.enumPreferenceState
@@ -96,7 +95,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     }
     private val selectedItemGroups by
         itemGroupDao.getSelectedGroups().collectAsState(emptyList(), scope)
-    private val sortByCheckedKey = booleanPreferencesKey(BootyCrate_pref_key_sortByChecked)
+    private val sortByCheckedKey = booleanPreferencesKey(PrefKeys.sortByChecked)
     private val _intents = MutableSharedFlow<Intent>(
         replay = 0, extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -152,7 +151,7 @@ fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
     }
 
 
-    private val sortKey = intPreferencesKey(BootyCrate_pref_key_itemSort)
+    private val sortKey = intPreferencesKey(PrefKeys.itemSort)
     val sort by dataStore.enumPreferenceState(sortKey, scope, ListItem.Sort.Color)
     fun onSortOptionClick(sort: ListItem.Sort) {
         scope.launch { dataStore.edit { it[sortKey] = sort.ordinal } }

@@ -51,20 +51,22 @@ fun <T: Enum<T>> DataStore<Preferences>.edit(
     scope.launch { edit { it[key] = enumValue.ordinal } }
 }
 
-/** An integer value that represents the version code of the app during its last launch. */
-const val BootyCrate_pref_key_lastLaunchVersionCode = "last_launch_version_code"
+object PrefKeys {
+    /** An integer value that represents the version code of the app during its last launch. */
+    const val lastLaunchVersionCode = "last_launch_version_code"
 
-/** An integer value that represents the ordinal of the desired
-* [AppTheme] enum value to use as the application's light/dark theme. */
-const val BootyCrate_pref_key_appTheme = "app_theme"
+    /** An integer value that represents the ordinal of the desired
+    * [AppTheme] enum value to use as the application's light/dark theme. */
+    const val appTheme = "app_theme"
 
-/** A boolean value that represents whether or not shopping list items
-* will be sorted by their checked state after the primary sorting method. */
-const val BootyCrate_pref_key_sortByChecked = "sort_by_checked"
+    /** A boolean value that represents whether or not shopping list items
+    * will be sorted by their checked state after the primary sorting method. */
+    const val sortByChecked = "sort_by_checked"
 
-/** An integer value that represents the ordinal of the desired
-* [ListItem.Sort] enum value to use to as the item sorting method. */
-const val BootyCrate_pref_key_itemSort = "item_sort"
+    /** An integer value that represents the ordinal of the desired
+    * [ListItem.Sort] enum value to use to as the item sorting method. */
+    const val itemSort = "item_sort"
+}
 
 enum class AppTheme { MatchSystem, Light, Dark;
     companion object {
@@ -91,8 +93,8 @@ enum class AppTheme { MatchSystem, Light, Dark;
     private val dataStore = context.dataStore
 
 
-    private val appThemeKey = intPreferencesKey(BootyCrate_pref_key_appTheme)
-    private val sortByCheckedKey = booleanPreferencesKey(BootyCrate_pref_key_sortByChecked)
+    private val appThemeKey = intPreferencesKey(PrefKeys.appTheme)
+    private val sortByCheckedKey = booleanPreferencesKey(PrefKeys.sortByChecked)
 
     val appTheme by dataStore.enumPreferenceState(appThemeKey, scope, AppTheme.MatchSystem)
 
