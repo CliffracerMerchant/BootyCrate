@@ -20,6 +20,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.BuildConfig
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.actionbar.ActionBarViewModel
+import com.cliffracertech.bootycrate.actionbar.BootyCrateActionBar
 import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.dialog.NewInventoryItemDialog
 import com.cliffracertech.bootycrate.dialog.NewShoppingListItemDialog
@@ -34,7 +36,6 @@ import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.*
-import com.cliffracertech.bootycrate.view.BootyCrateActionBar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
