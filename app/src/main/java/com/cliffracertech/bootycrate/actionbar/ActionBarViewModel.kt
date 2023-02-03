@@ -70,7 +70,7 @@ enum class ChangeSortDeleteButtonState {
              messageHandler, searchQueryState, null)
 
     private val scope = coroutineScope ?: viewModelScope
-    private val currentScreen by navigationState.visibleScreen.collectAsState(scope)
+    private val currentScreen get() = navigationState.visibleScreen
     private val selectedShoppingListItemCount by
         itemDao.getSelectedShoppingListItemCount().collectAsState(0, scope)
     private val selectedInventoryItemCount by
@@ -91,14 +91,16 @@ enum class ChangeSortDeleteButtonState {
     val intents = _intents.asSharedFlow()
 
     val showBackButton by derivedStateOf {
-        currentScreen.isAppSettings || searchQueryState.query != null || selectedItemCount != 0
+        currentScreen.isAppSettings ||
+        searchQueryState.query != null ||
+        selectedItemCount != 0
     }
 
     fun onBackPressed() = when {
         selectedItemCount > 0 -> {
-            if (navigationState.visibleScreen.value.isShoppingList)
+            if (currentScreen.isShoppingList)
                 scope.launch { itemDao.clearShoppingListSelection() }
-            if (navigationState.visibleScreen.value.isInventory)
+            if (currentScreen.isInventory)
                 scope.launch { itemDao.clearInventorySelection() }
             true
         } searchQueryState.query != null -> {
@@ -194,7 +196,7 @@ enum class ChangeSortDeleteButtonState {
     var uncheckAllActionVisible by mutableStateOf(true)
         private set
     init {
-        navigationState.visibleScreen.onEach {
+        navigationState.visibleScreenFlow.onEach {
             checkAllActionVisible = it.isShoppingList
             uncheckAllActionVisible = it.isShoppingList
         }.launchIn(scope)

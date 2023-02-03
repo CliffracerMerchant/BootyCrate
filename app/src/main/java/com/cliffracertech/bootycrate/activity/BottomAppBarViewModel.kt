@@ -15,11 +15,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class BottomAppBarViewModel @Inject constructor(
-    mainActivityNavState: NavigationState,
+    private val navState: NavigationState,
     private val itemDao: ItemDao
 ) : ViewModel() {
-
-    private val visibleScreen = mainActivityNavState.visibleScreen
 
     private val checkedItemsSize = itemDao.getCheckedShoppingListItemsSize()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(3000), 0)
@@ -29,7 +27,7 @@ class BottomAppBarViewModel @Inject constructor(
         val checkoutButtonVisible: Boolean = true,
         val checkoutButtonIsEnabled: Boolean = false)
 
-    val uiState = visibleScreen.combine(checkedItemsSize) { screen, checkedItemsSize ->
+    val uiState = navState.visibleScreenFlow.combine(checkedItemsSize) { screen, checkedItemsSize ->
         UiState(visible = !screen.isAppSettings,
                 checkoutButtonVisible = screen.isShoppingList,
                 checkoutButtonIsEnabled = checkedItemsSize > 0)
@@ -39,12 +37,12 @@ class BottomAppBarViewModel @Inject constructor(
     val shoppingListSizeChange = itemDao.getShoppingListItemCount().map { shoppingListSize ->
         val change = shoppingListSize - oldShoppingListSize
         oldShoppingListSize = shoppingListSize
-        if (visibleScreen.value.isShoppingList) 0
+        if (navState.visibleScreen.isShoppingList) 0
         else change
     }.drop(1).shareIn(viewModelScope, SharingStarted.WhileSubscribed(3000), 0)
 
     fun onCheckoutButtonClick() {
-        if (visibleScreen.value.isShoppingList)
+        if (navState.visibleScreen.isShoppingList)
             viewModelScope.launch { itemDao.checkout() }
     }
 }

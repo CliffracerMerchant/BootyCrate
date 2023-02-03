@@ -64,7 +64,7 @@ class MainActivityViewModel(
     val messages = messageHandler.messages
 
     fun navigateTo(screen: NavigationState.Screen) {
-        navigationState.visibleScreen.value = screen
+        navigationState.navigateTo(screen)
     }
 
     // The app theme preference value must be obtained before the UI is rendered to

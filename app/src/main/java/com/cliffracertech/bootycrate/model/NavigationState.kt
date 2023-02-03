@@ -7,19 +7,20 @@ package com.cliffracertech.bootycrate.model
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import dagger.hilt.android.scopes.ActivityRetainedScoped
-import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 /**
- * A state holder that contains the application's navigation state in
- * its [MutableStateFlow] member [visibleScreen].
+ * A state holder that contains the application's navigation state (described
+ * as a value of [Screen]) in its member [visibleScreen]. A new destination
+ * can be set via the method [navigateTo].
  */
 @ActivityRetainedScoped
 class NavigationState @Inject constructor() {
-    /** An enum class whose values describe the possible navigation destinations
-     * for an instance of MainActivity: the shopping list, the inventory, or the
-     * app settings screen. */
+    /** An enum whose values describe the possible navigation destinations
+     * for an instance of MainActivity: the shopping list, the inventory,
+     * or the app settings screen. */
     enum class Screen { ShoppingList, Inventory, AppSettings;
         val isShoppingList get() = this == ShoppingList
         val isInventory get() = this == Inventory
@@ -27,7 +28,12 @@ class NavigationState @Inject constructor() {
     }
 
     /** The current visible [Screen] in the MainActivity instance. */
-    val visibleScreen = MutableStateFlow(Screen.ShoppingList)
+    var visibleScreen by mutableStateOf(Screen.ShoppingList)
+    val visibleScreenFlow = snapshotFlow { visibleScreen }
+
+    fun navigateTo(screen: Screen) {
+        visibleScreen = screen
+    }
 }
 
 @ActivityRetainedScoped
