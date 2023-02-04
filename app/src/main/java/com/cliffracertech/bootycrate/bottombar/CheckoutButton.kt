@@ -90,10 +90,9 @@ import kotlinx.coroutines.delay
         }
 }
 
-@Preview @Composable fun CheckoutButtonPreview(
-
-) {
+@Preview @Composable fun CheckoutButtonPreview() {
     var enabled by remember { mutableStateOf(true) }
+
     Row(Modifier.padding(8.dp),
         Arrangement.spacedBy(8.dp),
         Alignment.CenterVertically
