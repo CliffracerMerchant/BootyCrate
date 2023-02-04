@@ -32,8 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -43,52 +41,30 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
+import com.cliffracertech.bootycrate.utils.clippedGradientBackground
 import kotlin.math.roundToInt
-
-/** An add button that uses the value of the [Brush]
- * parameter [backgroundBrush] as its background. */
-@Composable fun BrushedAddButton(
-    backgroundBrush: Brush,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) = Box(
-    modifier = modifier
-        .size(56.dp).clip(CircleShape)
-        .background(backgroundBrush, CircleShape)
-        .clickable(
-            onClickLabel = stringResource(R.string.add_button_description),
-            role = Role.Button,
-            onClick = onClick),
-    contentAlignment = Alignment.Center
-) {
-    Icon(Icons.Default.Add, stringResource(R.string.add_button_description))
-}
-
 
 @Composable fun BootyCrateAddButton(
     backgroundGradientWidth: Dp,
     modifier: Modifier = Modifier,
+) = Box(
+    modifier = modifier
+        .size(56.dp).clip(CircleShape)
+        .clippedGradientBackground(
+            Orientation.Horizontal,
+            CircleShape,
+            backgroundGradientWidth)
+        .clickable(
+            onClickLabel = stringResource(
+                R.string.add_button_description),
+            role = Role.Button,
+            onClick = {}),
+    contentAlignment = Alignment.Center
 ) {
-    val density = LocalDensity.current
-    val gradientStartColor = MaterialTheme.colors.primary
-    val gradientEndColor = MaterialTheme.colors.secondary
-
-    var layoutStartX by remember { mutableStateOf(0f) }
-
-    val backgroundBrush = remember(backgroundGradientWidth, layoutStartX) {
-        val gradientWidthPx = with (density) { backgroundGradientWidth.toPx() }
-        Brush.horizontalGradient(
-            listOf(gradientStartColor, gradientEndColor),
-            startX = -layoutStartX,
-            endX = gradientWidthPx - layoutStartX)
-    }
-
-    BrushedAddButton(
-        backgroundBrush = backgroundBrush,
-        modifier = modifier.onPlaced {
-            layoutStartX = it.positionInRoot().x
-        }, onClick = {})
+    Icon(Icons.Default.Add,
+         stringResource(R.string.add_button_description))
 }
+
 
 @Preview @Composable fun BootyCrateAddButtonPreview() =
     BootyCrateTheme {
