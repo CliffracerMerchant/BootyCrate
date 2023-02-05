@@ -8,9 +8,6 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.graphics.res.animatedVectorResource
-import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
-import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -45,6 +42,15 @@ interface ListItemCallback {
     fun onAmountChangeRequest(newAmount: Int)
     /** The callback that will be invoked when the item's edit button is clicked. */
     fun onEditButtonClick()
+    /** Whether or not the edit button should be shown */
+    val showEditButton: Boolean
+    /** A method that will return whether or not the item view will display
+     * itself in its expanded state intended for editing the [ListItem]'s state.
+     * When getIsEditable returns true, the name, extra info, and amount of the
+     * item will expand if necessary to meet minimum touch target sizes. The
+     * [ListItem]'s amount's decrease / increase buttons will still invoke their
+     * callbacks even when isEditable is false. */
+    fun getIsEditable(): Boolean
 }
 
 /**
@@ -52,32 +58,25 @@ interface ListItemCallback {
 * e.g. change the [ListItem]'s state.
 *
 * @param item The [ListItem] instance whose properties are being displayed
-* @param isEditableProvider A lambda that returns Whether or not the view will
-*     display itself in its expanded state intended for editing the [ListItem]'s
-*     state. When [isEditableProvider] returns true, the name, extra info, and
-*     amount of the item will expand if necessary to meet minimum touch target
-*     sizes. The [ListItem]'s amount's decrease / increase buttons will still
-*     invoke their callbacks even when isEditable is false.
-* @param callback The ListItemCallback whose method implementations
+* @param callback The [ListItemCallback] whose method implementations
 *     will be used as the callbacks for user interactions
+* @param modifier The [Modifier] that will be used for the root layout
 * @param colorIndicator A composable lambda whose contents will be used as the
 *     start aligned color indicator for the list item. As the content's on
 *     click should usually open the color picker, a lambda that will show the
 *     [ListItemView]'s color picker when invoked is provided.
-* @param modifier The Modifier that will be used for the root layout
 * @param otherContent A composable lambda whose contents will be displayed
-*     beneath the other content. The Transition<Boolean> that is used when the
+*     beneath the other content. The [Transition]`<Boolean>` that is used when the
 *     view animates after [isEditable] changes is provided in case the added
 *     content needs to synchronize its appearance/disappearance with the rest
 *     of the view.
 */
 @Composable fun ListItemView(
     item: ListItem,
-    isEditableProvider: () -> Boolean,
     callback: ListItemCallback,
-    colorIndicator: @Composable (showColorPicker: () -> Unit) -> Unit,
     modifier: Modifier = Modifier,
-    otherContent: @Composable ColumnScope.(transition: Transition<Boolean>) -> Unit,
+    colorIndicator: @Composable (showColorPicker: () -> Unit) -> Unit,
+    otherContent: @Composable ColumnScope.(transition: Transition<Boolean>) -> Unit = {},
 ) = Surface(modifier.animateContentSize(), MaterialTheme.shapes.large) {
     val colors = ListItem.Color.asComposeColors()
     val color = remember(item.color) {
@@ -102,7 +101,7 @@ interface ListItemCallback {
                 showColorPicker = false
             })
         else Column {
-            val isEditable = isEditableProvider()
+            val isEditable = callback.getIsEditable()
             val expansionTransition = updateTransition(isEditable, "item expand/collapse")
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -126,32 +125,28 @@ interface ListItemCallback {
                     expansionTransition.animateDp(label = "amountEditSlideAnim") { isEditable ->
                         if (isEditable) 0.dp else 48.dp
                     }
-                    val editButtonTopPadding by
-                    expansionTransition.animateDp(label = "editButtonSlideAnim") { isEditable ->
-                        if (isEditable) 48.dp else 0.dp
-                    }
                     AmountEdit(
                         amount = item.amount,
                         isEditableByKeyboard = isEditable,
                         tint = color,
                         onAmountChangeRequest = callback::onAmountChangeRequest,
-                        amountDecreaseDescription = stringResource(
+                        decreaseDescription = stringResource(
                             R.string.item_amount_decrease_description, item.name),
-                        amountIncreaseDescription = stringResource(
+                        increaseDescription = stringResource(
                             R.string.item_amount_increase_description, item.name),
                         modifier = Modifier.padding(end = amountEditEndPadding))
-                    IconButton(
-                        onClick = callback::onEditButtonClick,
-                        modifier = Modifier.padding(top = editButtonTopPadding)
-                                           .align(Alignment.TopEnd)
-                    ) {
-                        val vector = AnimatedImageVector.animatedVectorResource(
-                                R.drawable.animated_edit_to_collapse)
-                        val painter = rememberAnimatedVectorPainter(vector, isEditable)
-                        val desc = stringResource(
-                            if (isEditable) R.string.collapse_item_description
-                            else            R.string.edit_item_description, item.name)
-                        Icon(painter, desc)
+
+                    if (callback.showEditButton) {
+                        val editButtonTopPadding by
+                        expansionTransition.animateDp(label = "editButtonSlideAnim") { isEditable ->
+                            if (isEditable) 48.dp else 0.dp
+                        }
+                        AnimatedEditToCloseButton(
+                            onClick = callback::onEditButtonClick,
+                            modifier = Modifier.padding(top = editButtonTopPadding)
+                                .align(Alignment.TopEnd),
+                            isEditable = isEditable,
+                            itemName = item.name)
                     }
                 }
             }

@@ -101,6 +101,7 @@ import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 
 /** An interface containing callbacks for ShoppingListItem related interactions. */
 interface ShoppingListItemCallback : ListItemCallback {
+    /** The callback that will be invoked when the item view's checkbox is clicked */
     fun onCheckboxClick()
 }
 
@@ -115,6 +116,8 @@ fun shoppingListItemCallback(
     onExtraInfoChangeRequest: (String) -> Unit = {},
     onAmountChangeRequest: (Int) -> Unit = {},
     onEditButtonClick: () -> Unit = {},
+    showEditButton: Boolean = true,
+    isEditableProvider: () -> Boolean = { true },
     onCheckboxClick: () -> Unit = {}
 ) = object: ShoppingListItemCallback {
     override fun onClick() = onClick()
@@ -124,6 +127,8 @@ fun shoppingListItemCallback(
     override fun onExtraInfoChangeRequest(newExtraInfo: String) = onExtraInfoChangeRequest(newExtraInfo)
     override fun onAmountChangeRequest(newAmount: Int) = onAmountChangeRequest(newAmount)
     override fun onEditButtonClick() = onEditButtonClick()
+    override val showEditButton = showEditButton
+    override fun getIsEditable() = isEditableProvider()
     override fun onCheckboxClick() = onCheckboxClick()
 }
 
@@ -132,33 +137,20 @@ fun shoppingListItemCallback(
 * interactions to e.g. change the [ShoppingListItem]'s state.
 *
 * @param item The [ShoppingListItem] instance whose data is being displayed
-* @param isEditableProvider A lambda that returns Whether or not the view
-*     will display itself in its expanded state intended for editing the
-*     [ShoppingListItem]'s state. When [isEditableProvider] returns true,
-*     the name, extra info, and amount of the item will expand if necessary
-*     to meet minimum touch target sizes, and the checkbox will morph to a
-*     color indicator that opens the color picker when clicked. The
-*     [ShoppingListItem]'s amount's decrease / increase buttons and the
-*     checkbox will still invoke their callbacks even when isEditable is false.
 * @param callback The ShoppingListItemCallback whose method implementations
 *     will be used as the callbacks for user interactions
 * @param modifier The [Modifier] that will be used for the root layout
 */
 @Composable fun ShoppingListItemView(
     item: ShoppingListItem,
-    isEditableProvider: () -> Boolean,
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ListItemView(
-    item = item,
-    isEditableProvider = isEditableProvider,
-    callback = callback,
-    modifier = modifier,
-    otherContent = {},
+    item, callback, modifier,
     colorIndicator = { showColorPicker ->
         val colors = ListItem.Color.asComposeColors()
-        val showCheckboxProvider = remember(isEditableProvider) {
-            { !isEditableProvider() }
+        val showCheckboxProvider = remember(callback) {
+            { !callback.getIsEditable() }
         }
         CheckboxAndColorIndicator(
             showCheckboxProvider = showCheckboxProvider,
@@ -190,7 +182,8 @@ fun ShoppingListItemViewPreview() = BootyCrateTheme {
         onExtraInfoChangeRequest = { extraInfo = it },
         onAmountChangeRequest = { amount = it },
         onEditButtonClick = { isEditable = !isEditable },
+        isEditableProvider = { isEditable },
         onCheckboxClick = { isChecked = !isChecked })
     }
-    ShoppingListItemView(item, { isEditable }, callback)
+    ShoppingListItemView(item, callback)
 }

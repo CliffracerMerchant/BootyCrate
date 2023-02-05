@@ -76,12 +76,16 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 
 /** An interface containing callbacks for InventoryItem related interactions. */
 interface InventoryItemCallback : ListItemCallback {
+    /** The callback that will be invoked when the item view's auto add to
+     * shopping list checkbox is clicked */
     fun onAutoAddToShoppingListCheckboxClick()
+    /** The callback that will be invoked when the item view's auto add to
+     * shopping list amount has been requested to change to the provider amount*/
     fun onAutoAddToShoppingListAmountChangeRequest(newAmount: Int)
 }
 
 /** Return a [InventoryItemCallback] implementation using the provided lambdas
-* as the implementations for the [InventoryItemCallback] methods of the same name. */
+* as the implementations for the [InventoryItemCallback] methods of the same name */
 fun inventoryItemCallback(
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
@@ -90,6 +94,8 @@ fun inventoryItemCallback(
     onExtraInfoChangeRequest: (String) -> Unit = {},
     onAmountChangeRequest: (Int) -> Unit = {},
     onEditButtonClick: () -> Unit = {},
+    showEditButton: Boolean = true,
+    isEditableProvider: () -> Boolean = { true },
     onAutoAddToShoppingListCheckboxClick: () -> Unit = {},
     onAutoAddToShoppingListAmountChangeRequest: (Int) -> Unit = {}
 ) = object: InventoryItemCallback {
@@ -100,6 +106,8 @@ fun inventoryItemCallback(
     override fun onExtraInfoChangeRequest(newExtraInfo: String) = onExtraInfoChangeRequest(newExtraInfo)
     override fun onAmountChangeRequest(newAmount: Int) = onAmountChangeRequest(newAmount)
     override fun onEditButtonClick() = onEditButtonClick()
+    override val showEditButton = showEditButton
+    override fun getIsEditable() = isEditableProvider()
     override fun onAutoAddToShoppingListCheckboxClick() = onAutoAddToShoppingListCheckboxClick()
     override fun onAutoAddToShoppingListAmountChangeRequest(newAmount: Int) =
         onAutoAddToShoppingListAmountChangeRequest(newAmount)
@@ -110,25 +118,16 @@ fun inventoryItemCallback(
 * interactions to e.g. change the [InventoryItem]'s state.
 *
 * @param item The [InventoryItem] instance whose data is being displayed
-* @param isEditableProvider A lambda that returns Whether or not the view
-*     will display itself in its expanded state intended for editing the
-*     [InventoryItem]'s state. When [isEditableProvider] returns true, the
-*     name, extra info, and amount of the item will expand if necessary to
-*     meet minimum touch target sizes, and the auto add to shopping list
-*     checkbox and amount edit will be displayed. The [InventoryItem]'s
-*     amount's decrease / increase buttons will still invoke their
-*     callbacks even when isEditable is false.
-*     am callback The InventoryItemCallback whose method implementations
+* @param callback The [InventoryItemCallback] whose method implementations
 *     will be used as the callbacks for user interactions
 * @param modifier The [Modifier] that will be used for the root layout
 */
 @Composable fun InventoryItemView (
     item: InventoryItem,
-    isEditableProvider: () -> Boolean,
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
 ) = ListItemView(
-    item, isEditableProvider, callback,
+    item, callback, modifier,
     colorIndicator = { showColorPicker ->
         val colors = ListItem.Color.asComposeColors()
         ColorIndicator(
@@ -136,14 +135,13 @@ fun inventoryItemCallback(
             clickLabel = stringResource(
                 R.string.edit_item_color_description, item.name),
             onClick = showColorPicker)
-    }, modifier,
+    }
 ) {
     val colors = ListItem.Color.asComposeColors()
     val color = remember(item.color) {
         colors.getOrElse(item.color) { Color.Red }
     }
-    val isEditable = isEditableProvider()
-    AnimatedVisibility(isEditable) {
+    AnimatedVisibility(callback.getIsEditable()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             AnimatedCheckbox(
                 checked = item.autoAddToShoppingList,
@@ -157,9 +155,9 @@ fun inventoryItemCallback(
                 amount = item.autoAddToShoppingListAmount,
                 isEditableByKeyboard = true,
                 tint = color,
-                amountDecreaseDescription = stringResource(
+                decreaseDescription = stringResource(
                     R.string.item_auto_add_to_shopping_list_amount_decrease_description, item.name),
-                amountIncreaseDescription = stringResource(
+                increaseDescription = stringResource(
                     R.string.item_auto_add_to_shopping_list_amount_increase_description, item.name),
                 onAmountChangeRequest = callback::onAutoAddToShoppingListAmountChangeRequest)
         }
@@ -186,10 +184,11 @@ fun InventoryItemViewPreview() = BootyCrateTheme {
         onExtraInfoChangeRequest = { extraInfo = it },
         onAmountChangeRequest = { amount = it },
         onEditButtonClick = { isEditable = !isEditable },
+        isEditableProvider = { isEditable },
         onAutoAddToShoppingListCheckboxClick = { autoAddToShoppingList = !autoAddToShoppingList },
         onAutoAddToShoppingListAmountChangeRequest = { autoAddToShoppingListAmount = it })
     }
-    InventoryItemView(item, { isEditable }, callback)
+    InventoryItemView(item, callback)
 }
 
 

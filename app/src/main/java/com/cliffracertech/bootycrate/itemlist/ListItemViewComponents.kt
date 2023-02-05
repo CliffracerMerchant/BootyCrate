@@ -8,6 +8,9 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.graphics.res.animatedVectorResource
+import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
+import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -117,20 +120,19 @@ import kotlin.math.ceil
 
 /**
 * An editor for an Int [amount] that displays decrease and increase buttons on
-* either side of the [amount], and allows direct keyboard editing of the value
-* when [isEditableByKeyboard] is true. [amountDecreaseDescription] and
-* [amountIncreaseDescription] will be used as the content descriptions for the
-* decrease and increase buttons, respectively, while [tint] will be used to
-* tint the text cursor when the [amount] is being edited via they keyboard.
-* An attempt to change the amount either by keyboard or the buttons will cause
-* [onAmountChangeRequest] to be invoked.
+* either side of the amount, and allows direct keyboard editing of the value
+* when [isEditableByKeyboard] is true. [decreaseDescription] and [increaseDescription]
+* will be used as the content descriptions for the decrease and increase buttons,
+* respectively, while [tint] will be used to tint the text cursor when the amount
+* is being edited via the keyboard. An attempt to change the amount either by
+* keyboard or the buttons will cause [onAmountChangeRequest] to be invoked.
 */
 @Composable fun AmountEdit(
     amount: Int,
     isEditableByKeyboard: Boolean,
     tint: Color,
-    amountDecreaseDescription: String,
-    amountIncreaseDescription: String,
+    decreaseDescription: String,
+    increaseDescription: String,
     onAmountChangeRequest: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) = MeasureUnconstrainedViewSize(measurable = {
@@ -150,14 +152,14 @@ import kotlin.math.ceil
             onClick = { onAmountChangeRequest(amount - 1) },
             modifier = Modifier.align(Alignment.CenterStart),
         ) {
-            Icon(painterResource(R.drawable.minus_icon), amountDecreaseDescription)
+            Icon(painterResource(R.drawable.minus_icon), decreaseDescription)
         }
 
         IconButton(
             onClick = { onAmountChangeRequest(amount + 1) },
             modifier = Modifier.align(Alignment.CenterEnd),
         ) {
-            Icon(painterResource(R.drawable.plus_icon), amountIncreaseDescription)
+            Icon(painterResource(R.drawable.plus_icon), increaseDescription)
         }
 
         BasicTextField(
@@ -195,8 +197,8 @@ fun AmountEditPreview() = BootyCrateTheme {
             amount = amount,
             tint = Color.Red,
             isEditableByKeyboard = isEditable,
-            amountDecreaseDescription = "",
-            amountIncreaseDescription = "",
+            decreaseDescription = "",
+            increaseDescription = "",
             onAmountChangeRequest = { amount = it },
             modifier = Modifier.background(MaterialTheme.colors.surface,
                                            MaterialTheme.shapes.small))
@@ -204,6 +206,37 @@ fun AmountEditPreview() = BootyCrateTheme {
             Icon(Icons.Default.Edit, "")
         }
     }
+}
+
+/**
+ * An icon button that animates between edit and collapse icons.
+ *
+ * @param onClick The callback that will be invoked when the button is clicked
+ * @param isEditable A method that will return whether or not the item the
+ *     button is being used for is editable. When isEditable returns true,
+ *     the collapse icon will be shown. When is returns false, the edit icon
+ *     will be shown.
+ * @param modifier The [Modifier] to use for the button
+ * @param itemName The name of the item whose editable state is manipulated
+ *     by the button. This is used for the on click labels for the button
+ *     for accessibility purposes.
+ */
+@Composable fun AnimatedEditToCloseButton(
+    onClick: () -> Unit,
+    isEditable: Boolean,
+    modifier: Modifier = Modifier,
+    itemName: String,
+) = IconButton(
+    onClick = onClick,
+    modifier = modifier,
+) {
+    val vector = AnimatedImageVector.animatedVectorResource(
+        R.drawable.animated_edit_to_collapse)
+    val painter = rememberAnimatedVectorPainter(vector, isEditable)
+    val desc = stringResource(
+        if (isEditable) R.string.collapse_item_description
+        else            R.string.edit_item_description, itemName)
+    Icon(painter, desc)
 }
 
 /**
