@@ -34,9 +34,22 @@ class NavigationState @Inject constructor() {
     fun navigateTo(screen: Screen) {
         visibleScreen = screen
     }
+
+    /** Handle a back button press. The return value indicates
+     * whether or not the back button press was handled. */
+//    fun onBackButtonPress(): Boolean {
+//        if (visibleScreen.isAppSettings)
+//
+//    }
 }
 
 @ActivityRetainedScoped
 class SearchQueryState @Inject constructor() {
     var query by mutableStateOf<String?>(null)
+}
+
+@ActivityRetainedScoped
+class NewItemDialogVisibilityState @Inject constructor() {
+    var showingNewShoppingListItemDialog by mutableStateOf(false)
+    var showingNewInventoryItemDialog by mutableStateOf(false)
 }
