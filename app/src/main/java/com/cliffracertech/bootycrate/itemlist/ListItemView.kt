@@ -54,44 +54,48 @@ interface ListItemCallback {
 }
 
 /**
-* A visual display of a [ListItem] that also allows user interactions to
-* e.g. change the [ListItem]'s state.
-*
-* @param item The [ListItem] instance whose properties are being displayed
-* @param callback The [ListItemCallback] whose method implementations
-*     will be used as the callbacks for user interactions
-* @param modifier The [Modifier] that will be used for the root layout
-* @param colorIndicator A composable lambda whose contents will be used as the
-*     start aligned color indicator for the list item. As the content's on
-*     click should usually open the color picker, a lambda that will show the
-*     [ListItemView]'s color picker when invoked is provided.
-* @param otherContent A composable lambda whose contents will be displayed
-*     beneath the other content. The [Transition]`<Boolean>` that is used when the
-*     view animates after [isEditable] changes is provided in case the added
-*     content needs to synchronize its appearance/disappearance with the rest
-*     of the view.
-*/
+ * A visual display of a [ListItem] that also allows user interactions to
+ * e.g. change the [ListItem]'s state.
+ *
+ * @param colorOrdinal The [ListItem.Color] ordinal of the displayed item
+ * @param name The name of the displayed item
+ * @param extraInfo The extra info of the displayed item
+ * @param amount The amount of the displayed item
+ * @param callback The [ListItemCallback] whose method implementations
+ *     will be used as the callbacks for user interactions
+ * @param modifier The [Modifier] that will be used for the root layout
+ * @param colorIndicator A composable lambda whose contents will be used as the
+ *     start aligned color indicator for the list item. As the content's on
+ *     click should usually open the color picker, a lambda that will show the
+ *     [ListItemView]'s color picker when invoked is provided.
+ * @param otherContent A composable lambda whose contents will be displayed
+ *     beneath the other content. The [Transition]`<Boolean>` that is used when the
+ *     view animates after [isEditable] changes is provided in case the added
+ *     content needs to synchronize its appearance/disappearance with the rest
+ *     of the view.
+ */
 @Composable fun ListItemView(
-    item: ListItem,
+    colorOrdinal: Int,
+    name: String,
+    extraInfo: String,
+    amount: Int,
     callback: ListItemCallback,
     modifier: Modifier = Modifier,
     colorIndicator: @Composable (showColorPicker: () -> Unit) -> Unit,
     otherContent: @Composable ColumnScope.(transition: Transition<Boolean>) -> Unit = {},
 ) = Surface(modifier.animateContentSize(), MaterialTheme.shapes.large) {
     val colors = ListItem.Color.asComposeColors()
-    val color = remember(item.color) {
-        colors.getOrElse(item.color) { Color.Red }
-    }
+    val composeColor = colors.getOrElse(colorOrdinal) { Color.Red }
     var showColorPicker by remember { mutableStateOf(false) }
 
     AnimatedContent(
         targetState = showColorPicker,
         modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
         transitionSpec = { scaleIn(initialScale = 0.9f) + fadeIn() with
-                           scaleOut(targetScale = 0.9f) + fadeOut() }
+                scaleOut(targetScale = 0.9f) + fadeOut() }
     ) { showingColorPicker ->
         if (showingColorPicker) ColorPicker(
-            currentColor = color,
+            currentColor = composeColor,
             colors = colors,
             colorDescriptions = ListItem.Color.descriptions(),
             onColorClick = { index, _ ->
@@ -108,15 +112,15 @@ interface ListItemCallback {
                 colorIndicator { showColorPicker = true }
                 Column(Modifier.weight(1f)) {
                     TextFieldEdit(
-                        text = item.name,
+                        text = name,
                         onTextChange = callback::onRenameRequest,
-                        tint = color,
+                        tint = composeColor,
                         readOnly = !isEditable,
                         textStyle = MaterialTheme.typography.body1)
                     TextFieldEdit(
-                        text = item.extraInfo,
+                        text = extraInfo,
                         onTextChange = callback::onExtraInfoChangeRequest,
-                        tint = color,
+                        tint = composeColor,
                         readOnly = !isEditable,
                         textStyle = MaterialTheme.typography.subtitle1)
                 }
@@ -126,14 +130,14 @@ interface ListItemCallback {
                         if (isEditable) 0.dp else 48.dp
                     }
                     AmountEdit(
-                        amount = item.amount,
+                        amount = amount,
                         isEditableByKeyboard = isEditable,
-                        tint = color,
+                        tint = composeColor,
                         onAmountChangeRequest = callback::onAmountChangeRequest,
                         decreaseDescription = stringResource(
-                            R.string.item_amount_decrease_description, item.name),
+                            R.string.item_amount_decrease_description, name),
                         increaseDescription = stringResource(
-                            R.string.item_amount_increase_description, item.name),
+                            R.string.item_amount_increase_description, name),
                         modifier = Modifier.padding(end = amountEditEndPadding))
 
                     if (callback.showEditButton) {
@@ -146,7 +150,7 @@ interface ListItemCallback {
                             modifier = Modifier.padding(top = editButtonTopPadding)
                                 .align(Alignment.TopEnd),
                             isEditable = isEditable,
-                            itemName = item.name)
+                            itemName = name)
                     }
                 }
             }

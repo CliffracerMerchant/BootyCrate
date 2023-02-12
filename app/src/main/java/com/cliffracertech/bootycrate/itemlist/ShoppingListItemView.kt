@@ -136,17 +136,26 @@ fun shoppingListItemCallback(
 * A visual display of an [ShoppingListItem] that also allows user
 * interactions to e.g. change the [ShoppingListItem]'s state.
 *
-* @param item The [ShoppingListItem] instance whose data is being displayed
+* @param colorOrdinal The [ListItem.Color] ordinal of the displayed item
+* @param name The name of the displayed item
+* @param extraInfo The extra info of the displayed item
+* @param amount The amount of the displayed item
+* @param isChecked Whether or not the item is currently checked
 * @param callback The ShoppingListItemCallback whose method implementations
 *     will be used as the callbacks for user interactions
 * @param modifier The [Modifier] that will be used for the root layout
 */
 @Composable fun ShoppingListItemView(
-    item: ShoppingListItem,
+    colorOrdinal: Int,
+    name: String,
+    extraInfo: String,
+    amount: Int,
+    isChecked: Boolean,
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ListItemView(
-    item, callback, modifier,
+    colorOrdinal, name, extraInfo,
+    amount, callback, modifier,
     colorIndicator = { showColorPicker ->
         val colors = ListItem.Color.asComposeColors()
         val showCheckboxProvider = remember(callback) {
@@ -154,16 +163,33 @@ fun shoppingListItemCallback(
         }
         CheckboxAndColorIndicator(
             showCheckboxProvider = showCheckboxProvider,
-            tint = colors[item.color],
-            checked = item.isChecked,
+            tint = colors[colorOrdinal],
+            checked = isChecked,
             checkboxClickLabel = stringResource(
-                R.string.item_checkbox_description, item.name),
+                R.string.item_checkbox_description, name),
             onCheckboxClick = callback::onCheckboxClick,
             colorIndicatorClickLabel = stringResource(
-                R.string.edit_item_color_description, item.name),
+                R.string.edit_item_color_description, name),
             onColorIndicatorClick = showColorPicker,
             modifier = modifier)
     })
+
+/**
+ * A visual display of an [ShoppingListItem] that also allows user
+ * interactions to e.g. change the [ShoppingListItem]'s state.
+ *
+ * @param item The [ShoppingListItem] instance whose data is being displayed
+ * @param callback The ShoppingListItemCallback whose method implementations
+ *     will be used as the callbacks for user interactions
+ * @param modifier The [Modifier] that will be used for the root layout
+ */
+@Composable fun ShoppingListItemView(
+    item: ShoppingListItem,
+    callback: ShoppingListItemCallback,
+    modifier: Modifier = Modifier
+) = ShoppingListItemView(
+    item.color, item.name, item.extraInfo,
+    item.amount, item.isChecked, callback, modifier)
 
 @Preview @Composable
 fun ShoppingListItemViewPreview() = BootyCrateTheme {
