@@ -39,32 +39,75 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.model.NavigationState
+import com.cliffracertech.bootycrate.model.NewItemDialogVisibilityState
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.clippedGradientBackground
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlin.math.roundToInt
+
+@HiltViewModel
+class AddButtonViewModel @Inject constructor(
+    private val navState: NavigationState,
+    private val dialogVisibilityState: NewItemDialogVisibilityState
+): ViewModel() {
+
+    val showingNewShoppingListItemDialog by
+        dialogVisibilityState::showingNewShoppingListItemDialog
+    val showingNewInventoryItemDialog by
+        dialogVisibilityState::showingNewInventoryItemDialog
+
+    fun onClick() {
+        if (navState.visibleScreen.isShoppingList)
+            dialogVisibilityState.showingNewShoppingListItemDialog = true
+        if (navState.visibleScreen.isInventory)
+            dialogVisibilityState.showingNewInventoryItemDialog = true
+    }
+}
 
 @Composable fun BootyCrateAddButton(
     backgroundGradientWidth: Dp,
     modifier: Modifier = Modifier,
-) = Box(
-    modifier = modifier
-        .size(56.dp).clip(CircleShape)
-        .clippedGradientBackground(
-            Orientation.Horizontal,
-            CircleShape,
-            backgroundGradientWidth)
-        .clickable(
-            onClickLabel = stringResource(
-                R.string.add_button_description),
-            role = Role.Button,
-            onClick = {}),
-    contentAlignment = Alignment.Center
 ) {
-    Icon(Icons.Default.Add,
-         stringResource(R.string.add_button_description))
-}
+    val viewModel: AddButtonViewModel = viewModel()
 
+    Box(modifier = modifier
+            .size(56.dp).clip(CircleShape)
+            .clippedGradientBackground(
+                Orientation.Horizontal,
+                CircleShape,
+                backgroundGradientWidth)
+            .clickable(
+                onClickLabel = stringResource(
+                    R.string.add_button_description),
+                role = Role.Button,
+                onClick = viewModel::onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(Icons.Default.Add,
+             stringResource(R.string.add_button_description))
+    }
+
+    if (viewModel.showingNewShoppingListItemDialog) {
+        val newShoppingListItemDialogVM: NewShoppingListItemDialogViewModel by viewModel()
+        NewShoppingListItemDialog(
+            onDismissRequest = newShoppingListItemDialogVM::onDismissRequest,
+            onAddAnotherClick = newShoppingListItemDialogVM::onAddAnotherClick,
+            onOkClick = newShoppingListItemDialogVM::onOkClick)
+    }
+
+    if (viewModel.showingNewInventoryItemDialog) {
+        val newInventoryItemDialogVM: NewInventoryItemDialogViewModel by viewModel()
+        NewInventoryItemDialog(
+            onDismissRequest = newInventoryItemDialogVM::onDismissRequest,
+            onAddAnotherClick = newInventoryItemDialogVM::onAddAnotherClick,
+            onOkClick = newInventoryItemDialogVM::onOkClick)
+    }
+}
 
 @Preview @Composable fun BootyCrateAddButtonPreview() =
     BootyCrateTheme {
@@ -90,5 +133,4 @@ import kotlin.math.roundToInt
                 contentAlignment = Alignment.Center
             ) { Text("Slide to change button offset") }
         }
-
     }
