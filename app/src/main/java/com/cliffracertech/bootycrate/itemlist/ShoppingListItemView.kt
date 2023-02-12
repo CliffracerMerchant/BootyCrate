@@ -133,7 +133,7 @@ fun shoppingListItemCallback(
 }
 
 /**
-* A visual display of an [ShoppingListItem] that also allows user
+* A visual display of a [ShoppingListItem] that also allows user
 * interactions to e.g. change the [ShoppingListItem]'s state.
 *
 * @param colorOrdinal The [ListItem.Color] ordinal of the displayed item
@@ -175,7 +175,7 @@ fun shoppingListItemCallback(
     })
 
 /**
- * A visual display of an [ShoppingListItem] that also allows user
+ * A visual display of a [ShoppingListItem] that also allows user
  * interactions to e.g. change the [ShoppingListItem]'s state.
  *
  * @param item The [ShoppingListItem] instance whose data is being displayed

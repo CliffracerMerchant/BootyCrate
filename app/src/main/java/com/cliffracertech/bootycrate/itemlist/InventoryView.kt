@@ -43,7 +43,7 @@ interface InventoryCallback : ItemListCallback {
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(),
-) = ItemListView<InventoryItem>(
+) = ItemListView(
     itemList = itemList,
     modifier = modifier,
     state = state,
@@ -58,14 +58,12 @@ interface InventoryCallback : ItemListCallback {
             onExtraInfoChangeRequest = { callback.onItemExtraInfoChangeRequest(item.id, it) },
             onAmountChangeRequest = { callback.onItemAmountChangeRequest(item.id, it) },
             onEditButtonClick = { callback.onItemEditButtonClick(item.id) },
+            isEditableProvider = { itemIsExpandedProvider(item.id) },
             onAutoAddToShoppingListCheckboxClick = {
                 callback.onItemAutoAddToShoppingListCheckboxClick(item.id)
             }, onAutoAddToShoppingListAmountChangeRequest = {
                 callback.onItemAutoAddToShoppingListAmountChangeRequest(item.id, it)
             })
     }
-    InventoryItemView(
-        item = item,
-        isEditableProvider = { itemIsExpandedProvider(item.id) },
-        callback = itemCallback)
+    InventoryItemView(item, itemCallback)
 }

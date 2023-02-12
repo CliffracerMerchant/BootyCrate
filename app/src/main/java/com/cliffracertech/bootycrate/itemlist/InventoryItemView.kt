@@ -114,6 +114,70 @@ fun inventoryItemCallback(
 }
 
 /**
+ * A visual display of an [InventoryItem] that also allows user
+ * interactions to e.g. change the [InventoryItem]'s state.
+ *
+ * @param colorOrdinal The [ListItem.Color] ordinal of the displayed item
+ * @param name The name of the displayed item
+ * @param extraInfo The extra info of the displayed item
+ * @param amount The amount of the displayed item
+ * @param autoAddToShoppingList Whether or not auto add to shopping
+ *     list is enabled for the item
+ * @param autoAddToShoppingListAmount The auto add to shopping list
+ *     threshold amount for the item
+ * @param callback The [InventoryItemCallback] whose method implementations
+ *     will be used as the callbacks for user interactions
+ * @param modifier The [Modifier] that will be used for the root layout
+ */
+@Composable fun InventoryItemView(
+    colorOrdinal: Int,
+    name: String,
+    extraInfo: String,
+    amount: Int,
+    autoAddToShoppingList: Boolean,
+    autoAddToShoppingListAmount: Int,
+    callback: InventoryItemCallback,
+    modifier: Modifier = Modifier
+) = ListItemView(
+    colorOrdinal, name, extraInfo,
+    amount, callback, modifier,
+    colorIndicator = { showColorPicker ->
+        val colors = ListItem.Color.asComposeColors()
+        ColorIndicator(
+            color = colors[colorOrdinal],
+            clickLabel = stringResource(
+                R.string.edit_item_color_description, name),
+            onClick = showColorPicker)
+    }
+) {
+    val colors = ListItem.Color.asComposeColors()
+    val color = remember(colorOrdinal) {
+        colors.getOrElse(colorOrdinal) { Color.Red }
+    }
+    AnimatedVisibility(callback.getIsEditable()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AnimatedCheckbox(
+                checked = autoAddToShoppingList,
+                onClick = callback::onAutoAddToShoppingListCheckboxClick,
+                onClickLabel = stringResource(
+                    R.string.item_auto_add_to_shopping_list_checkbox_description, name),
+                tint = color)
+            Text(stringResource(R.string.auto_add_to_shopping_list_checkbox_text),
+                style = MaterialTheme.typography.subtitle1)
+            AmountEdit(
+                amount = autoAddToShoppingListAmount,
+                isEditableByKeyboard = true,
+                tint = color,
+                decreaseDescription = stringResource(
+                    R.string.item_auto_add_to_shopping_list_amount_decrease_description, name),
+                increaseDescription = stringResource(
+                    R.string.item_auto_add_to_shopping_list_amount_increase_description, name),
+                onAmountChangeRequest = callback::onAutoAddToShoppingListAmountChangeRequest)
+        }
+    }
+}
+
+/**
 * A visual display of an [InventoryItem] that also allows user
 * interactions to e.g. change the [InventoryItem]'s state.
 *
@@ -122,47 +186,16 @@ fun inventoryItemCallback(
 *     will be used as the callbacks for user interactions
 * @param modifier The [Modifier] that will be used for the root layout
 */
-@Composable fun InventoryItemView (
+@Composable fun InventoryItemView(
     item: InventoryItem,
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
-) = ListItemView(
-    item, callback, modifier,
-    colorIndicator = { showColorPicker ->
-        val colors = ListItem.Color.asComposeColors()
-        ColorIndicator(
-            color = colors[item.color],
-            clickLabel = stringResource(
-                R.string.edit_item_color_description, item.name),
-            onClick = showColorPicker)
-    }
-) {
-    val colors = ListItem.Color.asComposeColors()
-    val color = remember(item.color) {
-        colors.getOrElse(item.color) { Color.Red }
-    }
-    AnimatedVisibility(callback.getIsEditable()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            AnimatedCheckbox(
-                checked = item.autoAddToShoppingList,
-                onClick = callback::onAutoAddToShoppingListCheckboxClick,
-                onClickLabel = stringResource(
-                    R.string.item_auto_add_to_shopping_list_checkbox_description, item.name),
-                tint = color)
-            Text(stringResource(R.string.auto_add_to_shopping_list_checkbox_text),
-                 style = MaterialTheme.typography.subtitle1)
-            AmountEdit(
-                amount = item.autoAddToShoppingListAmount,
-                isEditableByKeyboard = true,
-                tint = color,
-                decreaseDescription = stringResource(
-                    R.string.item_auto_add_to_shopping_list_amount_decrease_description, item.name),
-                increaseDescription = stringResource(
-                    R.string.item_auto_add_to_shopping_list_amount_increase_description, item.name),
-                onAmountChangeRequest = callback::onAutoAddToShoppingListAmountChangeRequest)
-        }
-    }
-}
+) = InventoryItemView(
+    item.color, item.name,
+    item.extraInfo, item.amount,
+    item.autoAddToShoppingList,
+    item.autoAddToShoppingListAmount,
+    callback, modifier)
 
 @Preview @Composable
 fun InventoryItemViewPreview() = BootyCrateTheme {

@@ -39,7 +39,7 @@ interface ShoppingListCallback : ItemListCallback {
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(),
-) = ItemListView<ShoppingListItem>(
+) = ItemListView(
     itemList = itemList,
     modifier = modifier,
     state = state,
@@ -54,10 +54,8 @@ interface ShoppingListCallback : ItemListCallback {
             onExtraInfoChangeRequest = { callback.onItemExtraInfoChangeRequest(item.id, it) },
             onAmountChangeRequest = { callback.onItemAmountChangeRequest(item.id, it) },
             onEditButtonClick = { callback.onItemEditButtonClick(item.id) },
+            isEditableProvider = { itemIsExpandedProvider(item.id) },
             onCheckboxClick = { callback.onItemCheckboxClick(item.id) })
     }
-    ShoppingListItemView(
-        item = item,
-        isEditableProvider = { itemIsExpandedProvider(item.id) },
-        callback = itemCallback)
+    ShoppingListItemView(item, itemCallback)
 }
