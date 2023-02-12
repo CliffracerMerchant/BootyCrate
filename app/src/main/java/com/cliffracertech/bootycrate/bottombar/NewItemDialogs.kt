@@ -11,7 +11,6 @@ import androidx.compose.material.AlertDialog
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,10 +29,21 @@ import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 
 /**
+ * A dialog to add new [ListItem] subclasses.
  *
+ * @param onDismissRequest The callback that will be invoked when
+ *     the user requests that the dialog be dismissed
+ * @param confirmButtonsEnabled Whether or not the add another
+ *     and ok buttons should be enabled
+ * @param onAddAnotherClick The callback that will be invoked when
+ *     the add another button is clicked
+ * @param onOkClick The callback that will be invoked when the ok button is clicked
+ * @param modifier The [Modifier] to use for the dialog
+ * @param newItemView A composable lambda that contains the new item view
  */
 @Composable fun NewItemDialog(
     onDismissRequest: () -> Unit,
+    confirmButtonsEnabled: Boolean,
     onAddAnotherClick: () -> Unit,
     onOkClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -50,39 +60,41 @@ import com.cliffracertech.bootycrate.model.database.ShoppingListItem
             // itemGroupPicker
         }},
         buttons = { Row {
+            // Cancel button
             TextButton(onDismissRequest) {
                 Text(stringResource(android.R.string.cancel))
             }
             Spacer(Modifier.weight(1f))
-            TextButton(onAddAnotherClick) {
-                Text(stringResource(R.string.add_another_item_button_description))
-            }
-            TextButton(onOkClick) {
-                Text(stringResource(android.R.string.ok))
-            }
+            // Add another button
+            TextButton(
+                onClick = onAddAnotherClick,
+                enabled = confirmButtonsEnabled
+            ) { Text(stringResource(R.string.add_another_item_button_description)) }
+            // Ok button
+            TextButton(
+                onClick = onOkClick,
+                enabled = confirmButtonsEnabled,
+            ) { Text(stringResource(android.R.string.ok)) }
         }},
         //properties = DialogProperties(usePlatformDefaultWidth = false)
     )
 }
 
+/** A [NewItemDialog] that contains a [ShoppingListItemView] to allow the user
+ * to create new [ShoppingListItem]s. See [NewItemDialog] for parameter descriptions. */
 @Composable fun NewShoppingListItemDialog(
     onDismissRequest: () -> Unit,
+    confirmButtonsEnabled: Boolean,
     onAddAnotherClick: () -> Unit,
     onOkClick: () -> Unit,
     modifier: Modifier = Modifier,
-) = NewItemDialog(onDismissRequest, onAddAnotherClick, onOkClick, modifier) {
-
+) = NewItemDialog(
+    onDismissRequest, confirmButtonsEnabled,
+    onAddAnotherClick, onOkClick, modifier
+) {
     val viewModel: NewShoppingListItemDialogViewModel = viewModel()
     var color by rememberSaveable { mutableStateOf(ListItem.Color.values().first())}
     var amount by rememberSaveable { mutableStateOf(1) }
-
-    val newItem by remember { derivedStateOf {
-        ShoppingListItem(
-            name = viewModel.itemName,
-            extraInfo = viewModel.itemExtraInfo,
-            color = color.ordinal,
-            amount = amount)
-    }}
 
     val callback = remember {
         shoppingListItemCallback(
@@ -93,42 +105,49 @@ import com.cliffracertech.bootycrate.model.database.ShoppingListItem
             showEditButton = false)
     }
 
-    ShoppingListItemView(newItem, callback)
+    ShoppingListItemView(
+        viewModel.itemColorIndex,
+        viewModel.itemName,
+        viewModel.itemExtraInfo,
+        viewModel.itemAmount,
+        viewModel.itemIsChecked,
+        callback)
 }
 
+/** A [NewItemDialog] that contains an [InventoryItemView] to allow the user to
+ * create new [InventoryItem]s. See [NewItemDialog] for parameter descriptions. */
 @Composable fun NewInventoryItemDialog(
     onDismissRequest: () -> Unit,
+    confirmButtonsEnabled: Boolean,
     onAddAnotherClick: () -> Unit,
     onOkClick: () -> Unit,
     modifier: Modifier = Modifier,
-) = NewItemDialog(onDismissRequest, onAddAnotherClick, onOkClick, modifier) {
-
+) = NewItemDialog(
+    onDismissRequest, confirmButtonsEnabled,
+    onAddAnotherClick, onOkClick, modifier
+) {
     val viewModel: NewInventoryItemDialogViewModel = viewModel()
-    var color by rememberSaveable { mutableStateOf(ListItem.Color.values().first())}
-    var amount by rememberSaveable { mutableStateOf(1) }
-    var autoAddToShoppingList by rememberSaveable { mutableStateOf(false) }
-    var autoAddToShoppingListAmount by rememberSaveable { mutableStateOf(1) }
-
-    val newItem by remember { derivedStateOf {
-        InventoryItem(
-            name = viewModel.itemName,
-            extraInfo = viewModel.itemExtraInfo,
-            color = color.ordinal,
-            amount = amount,
-            autoAddToShoppingList = autoAddToShoppingList,
-            autoAddToShoppingListAmount = autoAddToShoppingListAmount)
-    }}
 
     val callback = remember {
         inventoryItemCallback(
-            onColorChangeRequest = { color = it },
+            onColorChangeRequest = { viewModel.itemColorIndex = it.ordinal },
             onRenameRequest = { viewModel.itemName = it },
             onExtraInfoChangeRequest = { viewModel.itemExtraInfo = it },
-            onAmountChangeRequest = { amount = it },
+            onAmountChangeRequest = { viewModel.itemAmount = it },
             showEditButton = false,
-            onAutoAddToShoppingListCheckboxClick = { autoAddToShoppingList = !autoAddToShoppingList },
-            onAutoAddToShoppingListAmountChangeRequest = { autoAddToShoppingListAmount = it })
+            onAutoAddToShoppingListCheckboxClick = {
+                viewModel.itemAutoAddToShoppingList = !viewModel.itemAutoAddToShoppingList
+            }, onAutoAddToShoppingListAmountChangeRequest = {
+                viewModel.itemAutoAddToShoppingListAmount = it
+            })
     }
 
-    InventoryItemView(newItem, callback)
+    InventoryItemView(
+        viewModel.itemColorIndex,
+        viewModel.itemName,
+        viewModel.itemExtraInfo,
+        viewModel.itemAmount,
+        viewModel.itemAutoAddToShoppingList,
+        viewModel.itemAutoAddToShoppingListAmount,
+        callback)
 }
