@@ -23,6 +23,7 @@ import com.cliffracertech.bootycrate.model.database.ListItemGroupValidator
 import com.cliffracertech.bootycrate.model.database.ListItemNameValidator
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItemNameValidator
+import com.cliffracertech.bootycrate.model.database.Validator
 import com.cliffracertech.bootycrate.utils.collectAsState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
@@ -85,7 +86,8 @@ abstract class NewItemDialogViewModel<T: ListItem>(
             nameValidator.message,
         ) { itemGroupIdMessage, nameMessage ->
             listOfNotNull(itemGroupIdMessage, nameMessage)
-        }.collectAsState(emptyList(), scope)
+        }.map { it.toImmutableList() }
+        .collectAsState(emptyList<Validator.Message>().toImmutableList(), scope)
 
     /** Return an instance of T given the values of [itemGroupId], [name],
      * [extraInfo], the members [itemColorIndex] and [itemAmount], as well as
