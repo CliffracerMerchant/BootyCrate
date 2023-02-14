@@ -25,7 +25,11 @@ import javax.inject.Inject
 class NavigationState @Inject constructor() {
 
     /** A navigation destination for the app. */
-    sealed class Screen
+    sealed class Screen {
+        val isShoppingList get() = this is RootScreen.ShoppingList
+        val isInventory get() = this is RootScreen.Inventory
+        val isAppSettings get() = this is AdditionalScreen.AppSettings
+    }
 
     /** RootScreen's values describe the possible root [Screen]s for the
      * app, i.e. the possible [Screen]s when the back stack is empty. */
@@ -40,7 +44,8 @@ class NavigationState @Inject constructor() {
         object AppSettings : AdditionalScreen()
     }
 
-    private var rootScreen by mutableStateOf<RootScreen>(RootScreen.ShoppingList)
+    var rootScreen by mutableStateOf<RootScreen>(RootScreen.ShoppingList)
+        private set
     private val additionalScreenStack = mutableStateListOf<AdditionalScreen>()
 
     /** The current visible [Screen] in the MainActivity instance. */
