@@ -14,8 +14,11 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.toSize
 import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.asin
@@ -167,7 +170,11 @@ data class TopEdgeWithCutout(
     val topOuterCornerRadiusPx = with (density) { topOuterCornerRadius.toPx() }
     private val barContentPositions = mutableStateMapOf<Any, Rect>()
     fun resetElementPositions() = barContentPositions.clear()
-    fun updateElementPosition(id: Any, pos: Rect) = barContentPositions::set
+    fun updateElementPosition(id: Any, coords: LayoutCoordinates) {
+        val rect = Rect(coords.positionInParent(),
+                        coords.size.toSize())
+        barContentPositions.set(id, rect)
+    }
 
     fun addTopEdgeTo(path: Path, canvasWidth: Float) {
         path.arcTo(

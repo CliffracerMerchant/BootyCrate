@@ -27,25 +27,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
 import com.cliffracertech.bootycrate.itemlist.minTouchTargetSize
 import kotlin.math.roundToInt
 
-enum class BottomAppBarWithCutoutPart { BarContent, CutoutContent }
+private enum class BottomAppBarWithCutoutPart { BarContent, CutoutContent }
 private val path = Path()
 
 @Composable fun BottomAppBarWithCutout(
@@ -54,7 +52,7 @@ private val path = Path()
     topEdge: TopEdgeWithCutout,
     barContents: @Composable (
             cutoutWidth: Dp,
-            onElementLayout: (Any, Rect) -> Unit)
+            onElementLayout: (Any, LayoutCoordinates) -> Unit)
         -> Unit,
 ) {
     val density = LocalDensity.current
@@ -190,9 +188,7 @@ private val path = Path()
                 TextButton(
                     onClick = { indicatorTarget = navDestination1key },
                     modifier = Modifier.onPlaced {
-                        onElementLayout(navDestination1key,
-                                        Rect(it.positionInParent(),
-                                             it.size.toSize()))
+                        onElementLayout(navDestination1key, it)
                     }, colors = ButtonDefaults.buttonColors(
                         backgroundColor = Color.Transparent,
                         contentColor = MaterialTheme.colors.secondary),
@@ -202,9 +198,7 @@ private val path = Path()
                         button2visible = !button2visible
                         indicatorTarget = navDestination2key
                     }, modifier = Modifier.onPlaced {
-                        onElementLayout(navDestination2key,
-                                        Rect(it.positionInParent(),
-                                             it.size.toSize()))
+                        onElementLayout(navDestination2key, it)
                     }, colors = ButtonDefaults.buttonColors(
                         backgroundColor = Color.Transparent,
                         contentColor = MaterialTheme.colors.primary),
