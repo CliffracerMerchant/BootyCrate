@@ -7,9 +7,12 @@ package com.cliffracertech.bootycrate.model
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.SnapshotStateMap
+import com.cliffracertech.bootycrate.model.NavigationState.*
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import javax.inject.Inject
 
@@ -85,6 +88,20 @@ class NavigationState @Inject constructor() {
 @ActivityRetainedScoped
 class SearchQueryState @Inject constructor() {
     var query by mutableStateOf<String?>(null)
+}
+
+// SelectionState is not ActivityRetainedScoped because we want to allow
+// multiple instances (one for the shopping list and one for the inventory).
+class SelectionState @Inject constructor() {
+    val selectedIds: SnapshotStateMap<Long, Unit> = mutableStateMapOf()
+
+    fun toggle(id: Long) {
+        if (selectedIds[id] != null)
+            selectedIds[id] = Unit
+        else selectedIds.remove(id)
+    }
+
+    fun clear() = selectedIds.clear()
 }
 
 @ActivityRetainedScoped
