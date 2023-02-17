@@ -6,6 +6,8 @@ package com.cliffracertech.bootycrate.itemlist
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// TODO: Update docs
 /**
  * An abstract view model to provide data and callbacks for a fragment that
  * displays a list of ListItem subclasses.
@@ -78,6 +81,9 @@ abstract class ItemListViewModel<T: ListItem>(
 
     val selectedItemIds get() = selection.selectedIds
 
+    var expandedItemId by mutableStateOf<Long?>(null)
+        private set
+
     val emptyMessage by derivedStateOf { when {
         items?.isEmpty() == true ->
             StringResource(R.string.empty_list_message, collectionNameResId)
@@ -97,7 +103,9 @@ abstract class ItemListViewModel<T: ListItem>(
     }
     abstract fun onChangeItemAmountRequest(id: Long, amount: Int)
 
-    abstract fun onItemEditButtonClick(id: Long)
+    fun onItemEditButtonClick(id: Long) {
+        expandedItemId = if (expandedItemId == id) null else id
+    }
 
     fun onItemClick(id: Long) {
         if (selection.selectedIds.isNotEmpty())
@@ -122,7 +130,7 @@ abstract class ItemListViewModel<T: ListItem>(
 }
 
 
-
+// TODO: Update docs
 /**
  * An implementation of ItemListViewModel<ShoppingListItem>.
  *
@@ -166,10 +174,6 @@ abstract class ItemListViewModel<T: ListItem>(
         scope.launch { dao.updateShoppingListAmount(id, amount) }
     }
 
-    override fun onItemEditButtonClick(id: Long) {
-        scope.launch { dao.toggleExpandedInShoppingList(id) }
-    }
-
     fun onItemCheckboxClick(id: Long) {
         scope.launch { dao.toggleIsChecked(id) }
     }
@@ -186,7 +190,7 @@ abstract class ItemListViewModel<T: ListItem>(
 }
 
 
-
+// TODO: Update docs
 /** An implementation of ItemListViewModel<InventoryItem> that adds functions
  * to manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
  * fields of items in the database. */
@@ -221,9 +225,7 @@ abstract class ItemListViewModel<T: ListItem>(
     override fun onChangeItemAmountRequest(id: Long, amount: Int) {
         scope.launch { dao.updateInventoryAmount(id, amount) }
     }
-    override fun onItemEditButtonClick(id: Long) {
-        scope.launch { dao.toggleExpandedInInventory(id) }
-    }
+
     fun onAutoAddToShoppingListCheckboxClick(id: Long) {
         scope.launch { dao.toggleAutoAddToShoppingList(id) }
     }
