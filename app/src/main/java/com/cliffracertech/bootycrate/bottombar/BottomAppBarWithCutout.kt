@@ -50,6 +50,7 @@ private val path = Path()
     modifier: Modifier = Modifier,
     backgroundBrush: Brush,
     topEdge: TopEdgeWithCutout,
+    indicatorTarget: Any?,
     barContents: @Composable (
             cutoutWidth: Dp,
             onElementLayout: (Any, LayoutCoordinates) -> Unit)
@@ -57,14 +58,14 @@ private val path = Path()
 ) {
     val density = LocalDensity.current
     var canvasWidth by remember { mutableStateOf(0f) }
-    val indicatorStartDistance by animateFloatAsState(
-        topEdge.findIndicatorStartDistance(canvasWidth))
+    val indicatorStartLength by animateFloatAsState(
+        topEdge.findIndicatorStartLength(indicatorTarget, canvasWidth))
 
     SubcomposeLayout(modifier
         .fillMaxWidth()
         .drawBehind {
             path.reset()
-            topEdge.addTopEdgeTo(path, size.width)
+            topEdge.addTo(path, size.width)
             path.lineTo(size.width, size.height)
             path.lineTo(0f, size.height)
             path.close()
@@ -72,30 +73,30 @@ private val path = Path()
         }.drawWithContent {
             drawContent()
             canvasWidth = size.width
-            topEdge.drawIndicator(
+            topEdge.indicator.draw(
                 scope = this, topEdgePath = path,
-                startDistance = indicatorStartDistance)
+                edgeStartLength = indicatorStartLength)
         }
     ) { constraints ->
         val cutoutContents = subcompose(BottomAppBarWithCutoutPart.CutoutContent) {
             topEdge.cutout.contents()
         }.first().measure(constraints)
 
-        val barContents = subcompose(BottomAppBarWithCutoutPart.BarContent) {
+        val barContentsPlaceable = subcompose(BottomAppBarWithCutoutPart.BarContent) {
             val cutoutWidthDp = with (density) { cutoutContents.width.toDp() }
             topEdge.resetElementPositions()
             barContents(cutoutWidthDp, topEdge::updateElementPosition)
         }.first().measure(constraints)
 
         val cutoutOffset = IntOffset(
-            x = (constraints.maxWidth - cutoutContents.width) / 2,
+            x = (//constraints.maxWidth - cutoutContents.width) / 2,
                     //TODO: Find out why cutoutContents.width is wrong value
-//                 constraints.maxWidth - (56 + 56 + 4).dp.roundToPx()) / 2,
+                 constraints.maxWidth - (56 + 56 + 4).dp.roundToPx()) / 2,
             y = -topEdge.cutout.contentVerticalOverflowPx.roundToInt())
 
         layout(constraints.maxWidth, constraints.maxHeight) {
             cutoutContents.place(cutoutOffset)
-            barContents.place(IntOffset.Zero)
+            barContentsPlaceable.place(IntOffset.Zero)
         }
     }
 }
@@ -133,7 +134,7 @@ private val path = Path()
                 contentHeight = 56.dp,
                 topCornerRadius = 25.dp,
                 bottomCornerRadius = 33.dp,
-                margin = 6.dp,
+                contentMargin = 6.dp,
                 widthProvider = { cutoutWidth },
                 interpolationProvider = { interpolation },
                 contents = {
@@ -162,8 +163,7 @@ private val path = Path()
                 density = density,
                 width = 48.dp,
                 thickness = 8.dp,
-                color = Color.Gray,
-                targetProvider = { indicatorTarget }),
+                color = Color.Gray),
             topOuterCornerRadius = 25.dp)
     }
     val cutoutContentOverflow = topEdgeWithCutout.cutout.contentVerticalOverflow
@@ -178,6 +178,7 @@ private val path = Path()
                 .height(56.dp),
             backgroundBrush = brush,
             topEdge = topEdgeWithCutout,
+            indicatorTarget = indicatorTarget
         ) { _, onElementLayout ->
             Row(modifier = Modifier
                     .fillMaxWidth()

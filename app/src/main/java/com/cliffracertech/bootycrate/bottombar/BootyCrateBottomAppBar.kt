@@ -72,47 +72,48 @@ import com.cliffracertech.bootycrate.model.NavigationState
     }
 
     val cutoutWidth by animateDpAsState(
+        //TODO: Add width method to CutoutContent
         if (!viewModel.checkoutButtonIsVisible) 56.dp
         // Checkout button width + add button width + negative margin between them
         else 120.dp + 56.dp - 14.dp)
 
+    val topEdge = remember {
+        TopEdgeWithCutout(
+            density = density,
+            cutout = TopCutout(
+                density = density,
+                depth = 54f.dp,
+                contentHeight = 56.dp,
+                topCornerRadius = 25.dp,
+                bottomCornerRadius = 33.dp,
+                contentMargin = 6.dp,
+                widthProvider = { cutoutWidth },
+                interpolationProvider = interpolationProvider,
+                contents = { CutoutContent(
+                    modifier = Modifier.onPlaced {
+                        cutoutLayoutCoordinates = Rect(
+                            offset = it.positionInParent(),
+                            size = it.size.toSize())
+                    }, backgroundGradientWidth = this@BoxWithConstraints.maxWidth,
+                    checkoutButtonIsVisible = viewModel.checkoutButtonIsVisible,
+                    checkoutButtonIsEnabled = viewModel.checkoutButtonIsEnabled,
+                    onCheckoutConfirm = viewModel::onCheckoutButtonConfirm,
+                    onAddButtonClick = viewModel::onAddButtonClick,
+                    interpolationProvider = interpolationProvider
+                )}),
+            indicator = TopEdgeWithCutout.Indicator(
+                density = density,
+                width = 48.dp,
+                thickness = 8.dp,
+                color = Color.Gray),
+            topOuterCornerRadius = 25.dp)
+    }
+
     BottomAppBarWithCutout(
         modifier = modifier,
         backgroundBrush = backgroundBrush,
-        topEdge = remember {
-            TopEdgeWithCutout(
-                density,
-                cutout = TopCutout(
-                    density = density,
-                    depth = 54f.dp,
-                    contentHeight = 56.dp,
-                    topCornerRadius = 25.dp,
-                    bottomCornerRadius = 33.dp,
-                    margin = 6.dp,
-                    widthProvider = { cutoutWidth },
-                    interpolationProvider = interpolationProvider,
-                    contents = {
-                        CutoutContent(
-                            modifier = Modifier.onPlaced {
-                                cutoutLayoutCoordinates = Rect(
-                                    offset = it.positionInParent(),
-                                    size = it.size.toSize())
-                            }, backgroundGradientWidth = this@BoxWithConstraints.maxWidth,
-                            checkoutButtonIsVisible = viewModel.checkoutButtonIsVisible,
-                            checkoutButtonIsEnabled = viewModel.checkoutButtonIsEnabled,
-                            onCheckoutConfirm = viewModel::onCheckoutButtonConfirm,
-                            onAddButtonClick = viewModel::onAddButtonClick,
-                            interpolationProvider = interpolationProvider)
-                    }
-                ),
-                indicator = TopEdgeWithCutout.Indicator(
-                    density = density,
-                    width = 48.dp,
-                    thickness = 8.dp,
-                    color = Color.Gray,
-                    targetProvider = { viewModel.selectedRootScreen }),
-                topOuterCornerRadius = 25.dp)
-        },
+        indicatorTarget = viewModel.selectedRootScreen,
+        topEdge = topEdge,
     ) { _, onLayout ->
         Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
             val shoppingList = NavigationState.RootScreen.ShoppingList

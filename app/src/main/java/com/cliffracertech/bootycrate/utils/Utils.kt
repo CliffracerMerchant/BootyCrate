@@ -18,6 +18,8 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import androidx.annotation.StringRes
 import androidx.compose.runtime.*
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -76,6 +78,11 @@ fun Resources.spToPixels(sp: Float) =
 fun Context.dpToPixels(dp: Float) = resources.dpToPixels(dp)
 /** Return the provided sp amount in terms of pixels. */
 fun Context.spToPixels(sp: Float) = resources.spToPixels(sp)
+
+/** Return the [Dp] amount converted to pixels, using the provided [density]. */
+fun Dp.toPx(density: Density): Float = with(density, ::toPx)
+/** Return the [Dp] amount rounded to the nearest pixel, using the provided [density]. */
+fun Dp.roundToPx(density: Density): Int = with(density, ::roundToPx)
 
 private val typedValue = TypedValue()
 /** Resolve the current theme's value for the provided int attribute. */
