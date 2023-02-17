@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MessageHandler
 import com.cliffracertech.bootycrate.model.SearchQueryState
+import com.cliffracertech.bootycrate.model.SelectionState
 import com.cliffracertech.bootycrate.model.database.*
 import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.utils.StringResource
@@ -62,6 +63,7 @@ abstract class ItemListViewModel<T: ListItem>(
     private val messageHandler: MessageHandler,
     protected val dao: ItemDao,
     private val itemGroupDao: ItemGroupDao,
+    private val selection: SelectionState,
     coroutineScope: CoroutineScope?
 ): ViewModel() {
 
@@ -72,16 +74,17 @@ abstract class ItemListViewModel<T: ListItem>(
     protected val sort by dataStore.enumPreferenceState(
         intPreferencesKey(PrefKeys.itemSort), scope, ListItem.Sort.Color)
 
-    abstract val items: ImmutableList<T>
+    abstract val items: ImmutableList<T>?
 
-    val emptyMessage by derivedStateOf {
-    //    lazy { // items has not been overridden at this point
-        when {
-            items.isNotEmpty() -> null
-            searchQuery != null -> StringResource(R.string.no_search_results_message)
-            else -> StringResource(R.string.empty_list_message, collectionNameResId)
-        }
-    }
+    val selectedItemIds get() = selection.selectedIds
+
+    val emptyMessage by derivedStateOf { when {
+        items?.isEmpty() == true ->
+            StringResource(R.string.empty_list_message, collectionNameResId)
+        searchQuery != null && items != null ->
+            StringResource(R.string.no_search_results_message)
+        else -> null
+    }}
 
     fun onRenameItemRequest(id: Long, name: String) {
         scope.launch { dao.updateName(id, name) }
@@ -96,18 +99,14 @@ abstract class ItemListViewModel<T: ListItem>(
 
     abstract fun onItemEditButtonClick(id: Long)
 
-    abstract val selectedItemCount: Int
-
     fun onItemClick(id: Long) {
-        if (selectedItemCount > 0)
-            toggleIsSelected(id)
+        if (selection.selectedIds.isNotEmpty())
+            selection.toggle(id)
     }
 
-    fun onItemLongClick(id: Long) = toggleIsSelected(id)
+    fun onItemLongClick(id: Long) = selection.toggle(id)
 
-    protected abstract fun toggleIsSelected(id: Long)
-
-    abstract fun onClearSelectionRequest()
+    fun onClearSelectionRequest() = selection.clear()
 
     fun onItemSwipe(id: Long) { scope.launch {
         deleteItem(id)
@@ -133,16 +132,17 @@ abstract class ItemListViewModel<T: ListItem>(
  * property checkoutButtonIsEnabled, the current value of which indicates the
  * disabled/enabled state of the checkout button.
  */
-@HiltViewModel
-class ShoppingListViewModel(
+@HiltViewModel class ShoppingListViewModel(
     dataStore: DataStore<Preferences>,
     searchQueryState: SearchQueryState,
     messageHandler: MessageHandler,
     dao: ItemDao,
     itemGroupDao: ItemGroupDao,
+    selection: SelectionState,
     coroutineScope: CoroutineScope?
 ) : ItemListViewModel<ShoppingListItem>(
-    dataStore, searchQueryState, messageHandler, dao, itemGroupDao, coroutineScope
+    dataStore, searchQueryState, messageHandler,
+    dao, itemGroupDao, selection, coroutineScope
 ) {
     @Inject constructor(
         dataStore: DataStore<Preferences>,
@@ -150,7 +150,9 @@ class ShoppingListViewModel(
         messageHandler: MessageHandler,
         dao: ItemDao,
         itemGroupDao: ItemGroupDao,
-    ) : this(dataStore, searchQueryState, messageHandler, dao, itemGroupDao, null)
+        selection: SelectionState,
+    ) : this(dataStore, searchQueryState, messageHandler,
+             dao, itemGroupDao, selection, null)
 
     override val collectionNameResId = StringResource.Id(R.string.shopping_list_description)
     private val sortByCheckedKey = booleanPreferencesKey(PrefKeys.sortByChecked)
@@ -168,19 +170,8 @@ class ShoppingListViewModel(
         scope.launch { dao.toggleExpandedInShoppingList(id) }
     }
 
-    fun onItemCheckboxClicked(id: Long) {
+    fun onItemCheckboxClick(id: Long) {
         scope.launch { dao.toggleIsChecked(id) }
-    }
-
-
-    override val selectedItemCount by dao.getSelectedShoppingListItemCount()
-        .collectAsState(0, scope)
-
-    override fun toggleIsSelected(id: Long) {
-        scope.launch { dao.toggleSelectedInShoppingList(id) }
-    }
-    override fun onClearSelectionRequest() {
-        scope.launch { dao.clearShoppingListSelection() }
     }
 
 
@@ -199,16 +190,17 @@ class ShoppingListViewModel(
 /** An implementation of ItemListViewModel<InventoryItem> that adds functions
  * to manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
  * fields of items in the database. */
-@HiltViewModel
-class InventoryViewModel(
+@HiltViewModel class InventoryViewModel(
     dataStore: DataStore<Preferences>,
     searchQueryState: SearchQueryState,
     messageHandler: MessageHandler,
     dao: ItemDao,
     itemGroupDao: ItemGroupDao,
+    selection: SelectionState,
     coroutineScope: CoroutineScope?
 ) : ItemListViewModel<InventoryItem>(
-    dataStore, searchQueryState, messageHandler, dao, itemGroupDao, coroutineScope
+    dataStore, searchQueryState, messageHandler,
+    dao, itemGroupDao, selection, coroutineScope
 ) {
     @Inject constructor(
         dataStore: DataStore<Preferences>,
@@ -216,7 +208,9 @@ class InventoryViewModel(
         messageHandler: MessageHandler,
         dao: ItemDao,
         itemGroupDao: ItemGroupDao,
-    ) : this(dataStore, searchQueryState, messageHandler, dao, itemGroupDao, null)
+        selection: SelectionState,
+    ) : this(dataStore, searchQueryState, messageHandler,
+             dao, itemGroupDao, selection, null)
 
     override val collectionNameResId = StringResource.Id(R.string.inventory_description)
 
@@ -235,17 +229,6 @@ class InventoryViewModel(
     }
     fun onAutoAddToShoppingListAmountUpdateRequest(id: Long, amount: Int) {
         scope.launch { dao.updateAutoAddToShoppingListAmount(id, amount) }
-    }
-
-
-    override val selectedItemCount by dao.getSelectedInventoryItemCount()
-        .collectAsState(0, scope)
-
-    override fun toggleIsSelected(id: Long) {
-        scope.launch { dao.toggleSelectedInInventory(id) }
-    }
-    override fun onClearSelectionRequest() {
-        scope.launch { dao.clearInventorySelection() }
     }
 
 
