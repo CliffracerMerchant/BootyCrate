@@ -72,10 +72,8 @@ import com.cliffracertech.bootycrate.model.NavigationState
     }
 
     val cutoutWidth by animateDpAsState(
-        //TODO: Add width method to CutoutContent
-        if (!viewModel.checkoutButtonIsVisible) 56.dp
-        // Checkout button width + add button width + negative margin between them
-        else 120.dp + 56.dp - 14.dp)
+        targetValue = cutoutContentWidth(
+            showingCheckoutButton = viewModel.checkoutButtonIsVisible))
 
     val topEdge = remember {
         TopEdgeWithCutout(

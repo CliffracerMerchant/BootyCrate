@@ -65,7 +65,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
-fun checkoutButtonShape(density: Density) =
+private fun checkoutButtonShape(density: Density) =
     GenericShape { size, _ ->
         val pathData = "M108,0 h-88 A 20 20 0 0 0 0,20 A 28 28 0 0 0 28,48 h90 A 32,32 0 0 1 108,0 Z"
         PathParser().parsePathString(pathData).toPath(this)
@@ -75,6 +75,15 @@ fun checkoutButtonShape(density: Density) =
         asAndroidPath().transform(matrix)
     }
 
+private const val checkoutButtonWidthDp = 120
+
+/** A button with a custom shape used to checkout.
+ *
+ * CheckoutButton will move to a confirmatory state, indicated by a change in
+ * text, when it is pressed. If the button is pressed again before [timeOutMillis]
+ * elapses, then [onConfirm] will be invoked. Otherwise, the button will drop
+ * back out of its confirmatory state. The provided [backgroundBrush] will be
+ * used inside the button's custom shape. */
 @Composable fun CheckoutButton(
     enabled: Boolean,
     modifier: Modifier = Modifier,
@@ -94,7 +103,7 @@ fun checkoutButtonShape(density: Density) =
         targetValue = if (enabled) 1f else 0.3f)
 
     Box(modifier = modifier
-        .size(120.dp, 48.dp)
+        .size(checkoutButtonWidthDp.dp, 48.dp)
         .graphicsLayer { this.alpha = alpha }
         .background(backgroundBrush, shape)
         .clip(shape)
@@ -137,6 +146,11 @@ fun checkoutButtonShape(density: Density) =
     }
 }
 
+/** A circular button that appears similarly to a floating action button with
+ * an add icon. When the width and colors of a background horizontal gradient
+ * are provided via [backgroundGradientWidth] and [backgroundGradientColors],
+ * the button will update its background brush so that it matches the colors
+ * of the background horizontal gradient. */
 @Composable fun AddButton(
     modifier: Modifier = Modifier,
     backgroundGradientWidth: Dp,
@@ -189,16 +203,40 @@ fun checkoutButtonShape(density: Density) =
     }
 }
 
+/** Return the [Dp] width of a [CutoutContent], depending on
+ * whether or not the checkout button is currently visible. */
+fun cutoutContentWidth(showingCheckoutButton: Boolean) =
+    if (!showingCheckoutButton) 56.dp
+    // Checkout button width + add button width + negative margin between them
+    else checkoutButtonWidthDp.dp + 56.dp - 14.dp
+
+/**
+ * The content of the [BootyCrateBottomAppBar]'s top cutout.
+ *
+ * @param modifier The [Modifier] to use for the content
+ * @param backgroundGradientWidth The width of the bottom app bar's background gradient
+ * @param backgroundGradientColors The colors used for the bottom app bar's background gradient
+ * @param checkoutButtonIsVisible Whether or not the checkout button should be visible or hidden
+ * @param checkoutButtonIsEnabled Whether or not the checkout button should be enabled, if it is not hidden
+ * @param checkoutButtonTimeOutMillis The timeout value for the inner [CheckoutButton]
+ * @param onCheckoutConfirm The callback that will be invoked when the
+ *     inner [CheckoutButton] is tapped again within it timeout period
+ * @param onAddButtonClick The callback that will be invoked when the add button is clicked
+ * @param interpolationProvider A method that will return the interpolation
+ *     value, in the range [0f, 1f], to use for the cutout content. A returned
+ *     value of 0f will make the content disappear, while a value of 1f will
+ *     make it normally visible.
+ */
 @Composable fun CutoutContent(
     modifier: Modifier = Modifier,
     backgroundGradientWidth: Dp,
     backgroundGradientColors: ImmutableList<Color> = listOf(
-        MaterialTheme.colors.primary,
-        MaterialTheme.colors.secondary
-    ).toImmutableList(),
+            MaterialTheme.colors.primary,
+            MaterialTheme.colors.secondary
+        ).toImmutableList(),
     checkoutButtonIsVisible: Boolean,
     checkoutButtonIsEnabled: Boolean,
-    timeOutMillis: Long = 2000L,
+    checkoutButtonTimeOutMillis: Long = 2000L,
     onCheckoutConfirm: () -> Unit,
     onAddButtonClick: () -> Unit,
     interpolationProvider: () -> Float,
@@ -231,7 +269,7 @@ fun checkoutButtonShape(density: Density) =
             CheckoutButton(
                 enabled = checkoutButtonIsEnabled,
                 backgroundBrush = checkoutButtonBrush,
-                timeOutMillis = timeOutMillis,
+                timeOutMillis = checkoutButtonTimeOutMillis,
                 onConfirm = onCheckoutConfirm)
         }
         AddButton(
