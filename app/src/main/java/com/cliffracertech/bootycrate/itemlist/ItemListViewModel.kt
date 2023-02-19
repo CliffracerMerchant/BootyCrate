@@ -34,31 +34,23 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-// TODO: Update docs
 /**
- * An abstract view model to provide data and callbacks for a fragment that
- * displays a list of ListItem subclasses.
+ * An abstract view model to provide data and callbacks for a screen
+ * that displays a list of ListItem subclasses.
  *
- * ItemListViewModel's items property represents the latest list of items that
- * should be displayed by implementing activities/fragments. The property
- * emptyMessage represents a StringResource that, when resolved to a string,
- * should be displayed to the user in place of the list of items.
- *
- * ItemListViewModel listens to changes in the integer datastore value pointed
- * to by the value of the string resource R.string.pref_item_sort_key, maps
- * this value to a value of ListItem.Sort, and uses this sort value when it
- * provides the list of ListItems. It also uses the current value of an
- * injected SearchQueryState's query property to filter the returned items. As
- * modifying the value of either of these parameters does not fall into the
- * purview of a fragment displaying a list of items, writes to the datastore
- * preference and changes to the injected SearchQueryState's query property
- * need to be performed in another entity.
- *
- * The current sorting option and search query are exposed as Flows to
- * subclasses through the properties searchQuery and sort. Subclasses should
- * override the abstract property items to return a Flow<List<T>> containing
- * all of the items in the database that match the current sorting option and
- * search query, as well as any additional sorting parameters that they add.
+ * The property [uiState] contains the current [UiState] instance that
+ * describes the data that should be displayed. UI interactions with
+ * individual items should be connected to the methods [onItemRenameRequest],
+ * [onItemExtraInfoChangeRequest], [onItemColorChangeRequest],
+ * [onItemAmountChangeRequest], [onItemEditButtonClick], [onItemClick],
+ * [onItemLongClick], and [onItemSwipe].
+
+ * The current sorting option and search query are exposed to subclasses
+ * through the properties [searchQuery] and [sort]. Subclasses should override
+ * the abstract property [items] to to be equal to an ImmutableList<T>?
+ * containing all of the items in the database that match the current sorting
+ * option and search query, as well as any additional sorting parameters that
+ * they add. [items] can be null if the list of items is still loading.
  */
 abstract class ItemListViewModel<T: ListItem>(
     dataStore: DataStore<Preferences>,
@@ -72,36 +64,55 @@ abstract class ItemListViewModel<T: ListItem>(
 
     protected val scope = coroutineScope ?: viewModelScope
     abstract val collectionNameResId: StringResource.Id
-    protected val searchQuery = searchQueryState.query
+    protected val searchQuery by searchQueryState::query
 
     protected val sort by dataStore.enumPreferenceState(
         intPreferencesKey(PrefKeys.itemSort), scope, ListItem.Sort.Color)
 
-    abstract val items: ImmutableList<T>?
+    protected abstract val items: ImmutableList<T>?
+    private val selectedItemIds get() = selection.selectedIds.keys
+    private var expandedItemId by mutableStateOf<Long?>(null)
 
-    val selectedItemIds get() = selection.selectedIds
+    /** The possible types of content for a screen showing a list of
+     * [ListItem]s. These types are [Message], [Loading], and [Items]. */
+    sealed class UiState {
+        /** The list of items is still being loaded */
+        object Loading : UiState()
+        /** A message regarding the list of items should be displayed instead */
+        class Message(val text: StringResource) : UiState()
+        /** The list of items along with the set of selected item
+         * ids and the id, if any, of the item that is expanded */
+        class Items<T>(
+            val list: ImmutableList<T>,
+            val selectedItemIds: Set<Long>,
+            val expandedItemId: Long?,
+        ) : UiState()
+    }
 
-    var expandedItemId by mutableStateOf<Long?>(null)
-        private set
+    val uiState by derivedStateOf {
+        val items = this.items
+        when {
+            items == null -> UiState.Loading
+            items.isEmpty() -> {
+                val message = if (searchQuery != null)
+                                  StringResource(R.string.no_search_results_message)
+                              else StringResource(R.string.empty_list_message, collectionNameResId)
+                UiState.Message(message)
+            }
+            else -> UiState.Items(items, selectedItemIds, expandedItemId)
+        }
+    }
 
-    val emptyMessage by derivedStateOf { when {
-        items?.isEmpty() == true ->
-            StringResource(R.string.empty_list_message, collectionNameResId)
-        searchQuery != null && items != null ->
-            StringResource(R.string.no_search_results_message)
-        else -> null
-    }}
-
-    fun onRenameItemRequest(id: Long, name: String) {
+    fun onItemRenameRequest(id: Long, name: String) {
         scope.launch { dao.updateName(id, name) }
     }
-    fun onChangeItemExtraInfoRequest(id: Long, extraInfo: String) {
+    fun onItemExtraInfoChangeRequest(id: Long, extraInfo: String) {
         scope.launch { dao.updateExtraInfo(id, extraInfo) }
     }
-    fun onChangeItemColorIndexRequest(id: Long, color: Int) {
-        scope.launch { dao.updateColorIndex(id, color) }
+    fun onItemColorChangeRequest(id: Long, color: ListItem.Color) {
+        scope.launch { dao.updateColorIndex(id, color.ordinal) }
     }
-    abstract fun onChangeItemAmountRequest(id: Long, amount: Int)
+    abstract fun onItemAmountChangeRequest(id: Long, amount: Int)
 
     fun onItemEditButtonClick(id: Long) {
         expandedItemId = if (expandedItemId == id) null else id
@@ -113,8 +124,6 @@ abstract class ItemListViewModel<T: ListItem>(
     }
 
     fun onItemLongClick(id: Long) = selection.toggle(id)
-
-    fun onClearSelectionRequest() = selection.clear()
 
     fun onItemSwipe(id: Long) { scope.launch {
         deleteItem(id)
@@ -130,15 +139,9 @@ abstract class ItemListViewModel<T: ListItem>(
 }
 
 
-// TODO: Update docs
 /**
- * An implementation of ItemListViewModel<ShoppingListItem>.
- *
- * ShoppingListViewModel adds callbacks to respond to clicks on the checkbox of
- * items, and to respond to a request to checkout. It also reads the value of
- * the boolean datastore preference pointed to by the key a StateFlow
- * property checkoutButtonIsEnabled, the current value of which indicates the
- * disabled/enabled state of the checkout button.
+ * An implementation of ItemListViewModel<ShoppingListItem> that adds the
+ * callback [onItemCheckboxClick] to use as a callback for item checkbox clicks.
  */
 @HiltViewModel class ShoppingListViewModel(
     dataStore: DataStore<Preferences>,
@@ -168,16 +171,15 @@ abstract class ItemListViewModel<T: ListItem>(
 
     override val items by dao.getShoppingList(sort, searchQuery, sortByChecked)
         .map { it.toImmutableList() }
-        .collectAsState(emptyList<ShoppingListItem>().toImmutableList(), scope)
+        .collectAsState(null, scope)
 
-    override fun onChangeItemAmountRequest(id: Long, amount: Int) {
+    override fun onItemAmountChangeRequest(id: Long, amount: Int) {
         scope.launch { dao.updateShoppingListAmount(id, amount) }
     }
 
     fun onItemCheckboxClick(id: Long) {
         scope.launch { dao.toggleIsChecked(id) }
     }
-
 
     override suspend fun deleteItem(id: Long) = dao.deleteShoppingListItem(id)
 
@@ -190,10 +192,9 @@ abstract class ItemListViewModel<T: ListItem>(
 }
 
 
-// TODO: Update docs
-/** An implementation of ItemListViewModel<InventoryItem> that adds functions
- * to manipulate the autoAddToShoppingList and autoAddToShoppingListAmount
- * fields of items in the database. */
+/** An implementation of ItemListViewModel<InventoryItem> that adds the methods
+ * [onAutoAddToShoppingListCheckboxClick] and [onAutoAddToShoppingListAmountChangeRequest]
+ * to use as callbacks for item interactions. */
 @HiltViewModel class InventoryViewModel(
     dataStore: DataStore<Preferences>,
     searchQueryState: SearchQueryState,
@@ -220,16 +221,16 @@ abstract class ItemListViewModel<T: ListItem>(
 
     override val items by dao.getInventory(sort, searchQuery)
         .map { it.toImmutableList() }
-        .collectAsState(emptyList<InventoryItem>().toImmutableList(), scope)
+        .collectAsState(null, scope)
 
-    override fun onChangeItemAmountRequest(id: Long, amount: Int) {
+    override fun onItemAmountChangeRequest(id: Long, amount: Int) {
         scope.launch { dao.updateInventoryAmount(id, amount) }
     }
 
     fun onAutoAddToShoppingListCheckboxClick(id: Long) {
         scope.launch { dao.toggleAutoAddToShoppingList(id) }
     }
-    fun onAutoAddToShoppingListAmountUpdateRequest(id: Long, amount: Int) {
+    fun onAutoAddToShoppingListAmountChangeRequest(id: Long, amount: Int) {
         scope.launch { dao.updateAutoAddToShoppingListAmount(id, amount) }
     }
 
