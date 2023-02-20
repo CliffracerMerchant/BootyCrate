@@ -7,9 +7,12 @@ package com.cliffracertech.bootycrate.model.database
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.room.*
 import com.cliffracertech.bootycrate.R
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 /** DatabaseListItem describes the entities stored in the item table. */
 @Entity(tableName = "item",
@@ -56,7 +59,7 @@ class DatabaseListItem(
     @ColumnInfo(name="inInventoryTrash", defaultValue="0")
     var inInventoryTrash: Boolean = false
 ) {
-    init { color.coerceIn(ListItem.Color.values().indices) }
+    init { color = color.coerceIn(ListItem.ColorGroup.values().indices) }
 
     /** An interface for objects to provide a way to convert themselves into a DatabaseListItem. */
     interface Convertible {
@@ -101,52 +104,61 @@ abstract class ListItem(
     var isLinked: Boolean = false,
 ) : DatabaseListItem.Convertible {
 
-    // For a user-facing string representation of the object
+    /** Return a [String] that describes the name, extra info, and amount of an item. */
     fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
-    enum class Color {
+    /** The possible categories that can be used to group items for convenience. */
+    enum class ColorGroup {
         Red, Orange, Yellow, LimeGreen, Green, Teal,
         Cyan, Blue, Violet, Magenta, Pink, Gray;
 
+        /** Return the graphical [Color] that the [ColorGroup] uses to identify itself. */
+        fun toColor() = when (this) {
+            Red ->       Color(214, 92, 92)
+            Orange ->    Color(214, 153, 92)
+            Yellow ->    Color(214, 214, 92)
+            LimeGreen -> Color(151, 207, 61)
+            Green ->     Color(63, 186, 63)
+            Teal ->      Color(83, 227, 147)
+            Cyan ->      Color(44, 196, 218)
+            Blue ->      Color(63, 126, 221)
+            Violet ->    Color(131, 89, 230)
+            Magenta ->   Color(177, 65, 218)
+            Pink ->      Color(219, 112, 166)
+            Gray ->      Color(128, 128, 128)
+        }
+
+        /** Return the resource id of the string that describes the color category. */
+        fun toStringResId() = when (this) {
+            Red ->       R.string.item_color_red_description
+            Orange ->    R.string.item_color_orange_description
+            Yellow ->    R.string.item_color_yellow_description
+            LimeGreen -> R.string.item_color_lime_green_description
+            Green ->     R.string.item_color_green_description
+            Teal ->      R.string.item_color_teal_description
+            Cyan ->      R.string.item_color_cyan_description
+            Blue ->      R.string.item_color_blue_description
+            Violet ->    R.string.item_color_violet_description
+            Magenta ->   R.string.item_color_magenta_description
+            Pink ->      R.string.item_color_pink_description
+            Gray ->      R.string.item_color_gray_description
+        }
+
         companion object {
-            @Composable fun descriptions(): List<String> {
+            /** Return a list containing the descriptions of each [ColorGroup]. */
+            @Composable fun descriptions(): ImmutableList<String> {
                 val context = LocalContext.current
                 return remember {
-                    values().map { context.getString(it.descriptionResId) }
+                    values().map { context.getString(it.toStringResId()) }
+                            .toImmutableList()
                 }
             }
-            @Composable fun asComposeColors() =
-                remember { values().map { it.toComposeColor() } }
-        }
 
-        val descriptionResId get() = when(this) {
-            Red -> R.string.item_color_red_description
-            Orange -> R.string.item_color_orange_description
-            Yellow -> R.string.item_color_yellow_description
-            LimeGreen -> R.string.item_color_lime_green_description
-            Green -> R.string.item_color_green_description
-            Teal -> R.string.item_color_teal_description
-            Cyan -> R.string.item_color_cyan_description
-            Blue -> R.string.item_color_blue_description
-            Violet -> R.string.item_color_violet_description
-            Magenta -> R.string.item_color_magenta_description
-            Pink -> R.string.item_color_pink_description
-            Gray -> R.string.item_color_gray_description
-        }
-
-        fun toComposeColor(): androidx.compose.ui.graphics.Color = when(this) {
-            Red -> androidx.compose.ui.graphics.Color(214, 92, 92)
-            Orange -> androidx.compose.ui.graphics.Color(214, 153, 92)
-            Yellow -> androidx.compose.ui.graphics.Color(214, 214, 92)
-            LimeGreen -> androidx.compose.ui.graphics.Color(151, 207, 61)
-            Green -> androidx.compose.ui.graphics.Color(63, 186, 63)
-            Teal -> androidx.compose.ui.graphics.Color(83, 227, 147)
-            Cyan -> androidx.compose.ui.graphics.Color(44, 196, 218)
-            Blue -> androidx.compose.ui.graphics.Color(63, 126, 221)
-            Violet -> androidx.compose.ui.graphics.Color(131, 89, 230)
-            Magenta -> androidx.compose.ui.graphics.Color(177, 65, 218)
-            Pink -> androidx.compose.ui.graphics.Color(219, 112, 166)
-            Gray -> androidx.compose.ui.graphics.Color(128, 128, 128)
+            /** Return all of the color categories as the [Color]s that identify them. */
+            @Composable fun colors() = remember {
+                values().map(ColorGroup::toColor)
+                        .toImmutableList()
+            }
         }
     }
 

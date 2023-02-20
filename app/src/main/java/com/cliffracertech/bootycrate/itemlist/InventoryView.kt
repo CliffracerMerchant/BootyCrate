@@ -11,12 +11,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import com.cliffracertech.bootycrate.model.database.InventoryItem
-import kotlinx.collections.immutable.ImmutableList
 
 /** An interface containing callbacks for interactions with [InventoryView]'s
-* [InventoryItemView]s. The Long parameter in each method indicates the id of
-* the [InventoryItem] that was interacted with. */
+ * [InventoryItemView]s. The Long parameter in each method indicates the id of
+ * the [InventoryItem] that was interacted with. */
 interface InventoryCallback : ItemListCallback {
     /** The callback that will be invoked when an item's
     * auto-add to shopping list checkbox is clicked */
@@ -27,43 +27,51 @@ interface InventoryCallback : ItemListCallback {
 }
 
 /**
-* An interactable list of [InventoryItemView]s.
-*
-* @param itemList The list of [InventoryItem]s to display
-* @param callback An [InventoryCallback] that describes callbacks
-*                 to use for interactions with the item views
-* @param modifier The [Modifier] that will be used for the root layout
-* @param state The [LazyListState] to use for the internal [LazyColumn]
-* @param contentPadding The [PaddingValues] instance to use for the [LazyColumn]'s content
-*/
+ * An interactable list of [InventoryItemView]s.
+ *
+ * @param inventoryState The [ItemListState]`<InventoryItem>` instance that
+ *     contains the [InventoryItem]s to display as well as the selection and
+ *     item expansion state
+ * @param callback An [InventoryCallback] that describes callbacks
+ *                 to use for interactions with the item views
+ * @param selectionBrush The [Brush] that will be shown at half
+ *     opacity over the normal item background when an item is selected
+ * @param modifier The [Modifier] that will be used for the root layout
+ * @param lazyListState The [LazyListState] to use for the internal [LazyColumn]
+ * @param contentPadding The [PaddingValues] instance to use for the [LazyColumn]'s content
+ */
 @Composable fun InventoryView(
-    itemList: ImmutableList<InventoryItem>,
+    inventoryState: ItemListState<InventoryItem>,
     callback: InventoryCallback,
-    itemIsExpandedProvider: (Long) -> Boolean,
+    selectionBrush: Brush,
     modifier: Modifier = Modifier,
-    state: LazyListState = rememberLazyListState(),
+    lazyListState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(),
 ) = ItemListView(
-    itemList = itemList,
+    itemListState = inventoryState,
     modifier = modifier,
-    state = state,
+    lazyListState = lazyListState,
     contentPadding = contentPadding,
 ) { item ->
-    val itemCallback = remember(item.id, callback) {
+    val itemCallback = remember(callback) {
         inventoryItemCallback(
             onClick = { callback.onItemClick(item.id) },
             onLongClick = { callback.onItemLongClick(item.id) },
-            onColorChangeRequest = { callback.onItemColorChangeRequest(item.id, it) },
+            onColorGroupChangeRequest = { callback.onItemColorGroupChangeRequest(item.id, it) },
             onRenameRequest = { callback.onItemRenameRequest(item.id, it) },
             onExtraInfoChangeRequest = { callback.onItemExtraInfoChangeRequest(item.id, it) },
             onAmountChangeRequest = { callback.onItemAmountChangeRequest(item.id, it) },
             onEditButtonClick = { callback.onItemEditButtonClick(item.id) },
-            isEditableProvider = { itemIsExpandedProvider(item.id) },
             onAutoAddToShoppingListCheckboxClick = {
                 callback.onItemAutoAddToShoppingListCheckboxClick(item.id)
             }, onAutoAddToShoppingListAmountChangeRequest = {
                 callback.onItemAutoAddToShoppingListAmountChangeRequest(item.id, it)
             })
     }
-    InventoryItemView(item, itemCallback)
+    InventoryItemView(
+        item = item,
+        isSelected = inventoryState.selectedItemIds.contains(item.id),
+        selectionBrush = selectionBrush,
+        isEditable = inventoryState.expandedItemId == item.id,
+        callback = itemCallback)
 }

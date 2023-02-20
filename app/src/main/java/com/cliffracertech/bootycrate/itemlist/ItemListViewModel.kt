@@ -28,7 +28,9 @@ import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -41,7 +43,7 @@ import javax.inject.Inject
  * The property [uiState] contains the current [UiState] instance that
  * describes the data that should be displayed. UI interactions with
  * individual items should be connected to the methods [onItemRenameRequest],
- * [onItemExtraInfoChangeRequest], [onItemColorChangeRequest],
+ * [onItemExtraInfoChangeRequest], [onItemColorGroupChangeRequest],
  * [onItemAmountChangeRequest], [onItemEditButtonClick], [onItemClick],
  * [onItemLongClick], and [onItemSwipe].
 
@@ -82,11 +84,11 @@ abstract class ItemListViewModel<T: ListItem>(
         class Message(val text: StringResource) : UiState()
         /** The list of items along with the set of selected item
          * ids and the id, if any, of the item that is expanded */
-        class Items<T>(
-            val list: ImmutableList<T>,
-            val selectedItemIds: Set<Long>,
-            val expandedItemId: Long?,
-        ) : UiState()
+        class Items<T: ListItem>(
+            override val itemList: ImmutableList<T>,
+            override val selectedItemIds: ImmutableSet<Long>,
+            override val expandedItemId: Long?,
+        ) : UiState(), ItemListState<T>
     }
 
     val uiState by derivedStateOf {
@@ -99,7 +101,7 @@ abstract class ItemListViewModel<T: ListItem>(
                               else StringResource(R.string.empty_list_message, collectionNameResId)
                 UiState.Message(message)
             }
-            else -> UiState.Items(items, selectedItemIds, expandedItemId)
+            else -> UiState.Items(items, selectedItemIds.toImmutableSet(), expandedItemId)
         }
     }
 
@@ -109,8 +111,8 @@ abstract class ItemListViewModel<T: ListItem>(
     fun onItemExtraInfoChangeRequest(id: Long, extraInfo: String) {
         scope.launch { dao.updateExtraInfo(id, extraInfo) }
     }
-    fun onItemColorChangeRequest(id: Long, color: ListItem.Color) {
-        scope.launch { dao.updateColorIndex(id, color.ordinal) }
+    fun onItemColorGroupChangeRequest(id: Long, colorGroup: ListItem.ColorGroup) {
+        scope.launch { dao.updateColorIndex(id, colorGroup.ordinal) }
     }
     abstract fun onItemAmountChangeRequest(id: Long, amount: Int)
 

@@ -13,13 +13,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -111,24 +112,23 @@ interface ShoppingListItemCallback : ListItemCallback {
 fun shoppingListItemCallback(
     onClick: () -> Unit = {},
     onLongClick: () -> Unit = {},
-    onColorChangeRequest: (ListItem.Color) -> Unit = {},
+    onColorGroupChangeRequest: (ListItem.ColorGroup) -> Unit = {},
     onRenameRequest: (String) -> Unit = {},
     onExtraInfoChangeRequest: (String) -> Unit = {},
     onAmountChangeRequest: (Int) -> Unit = {},
     onEditButtonClick: () -> Unit = {},
     showEditButton: Boolean = true,
-    isEditableProvider: () -> Boolean = { true },
     onCheckboxClick: () -> Unit = {}
 ) = object: ShoppingListItemCallback {
     override fun onClick() = onClick()
     override fun onLongClick() = onLongClick()
-    override fun onColorChangeRequest(newColor: ListItem.Color) = onColorChangeRequest(newColor)
+    override fun onColorGroupChangeRequest(newColorGroup: ListItem.ColorGroup) =
+        onColorGroupChangeRequest(newColorGroup)
     override fun onRenameRequest(newName: String) = onRenameRequest(newName)
     override fun onExtraInfoChangeRequest(newExtraInfo: String) = onExtraInfoChangeRequest(newExtraInfo)
     override fun onAmountChangeRequest(newAmount: Int) = onAmountChangeRequest(newAmount)
     override fun onEditButtonClick() = onEditButtonClick()
     override val showEditButton = showEditButton
-    override fun getIsEditable() = isEditableProvider()
     override fun onCheckboxClick() = onCheckboxClick()
 }
 
@@ -136,7 +136,10 @@ fun shoppingListItemCallback(
 * A visual display of a [ShoppingListItem] that also allows user
 * interactions to e.g. change the [ShoppingListItem]'s state.
 *
-* @param colorOrdinal The [ListItem.Color] ordinal of the displayed item
+* @param isSelected Whether or not the item is selected
+* @param selectionBrush The [Brush] that will be shown at half
+*     opacity over the normal background when isSelected is true
+* @param isEditable Whether or not the item will present itself in its editable state
 * @param name The name of the displayed item
 * @param extraInfo The extra info of the displayed item
 * @param amount The amount of the displayed item
@@ -146,7 +149,10 @@ fun shoppingListItemCallback(
 * @param modifier The [Modifier] that will be used for the root layout
 */
 @Composable fun ShoppingListItemView(
-    colorOrdinal: Int,
+    isSelected: Boolean,
+    selectionBrush: Brush,
+    isEditable: Boolean,
+    colorGroupOrdinal: Int,
     name: String,
     extraInfo: String,
     amount: Int,
@@ -154,16 +160,15 @@ fun shoppingListItemCallback(
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ListItemView(
-    colorOrdinal, name, extraInfo,
+    isSelected, selectionBrush, isEditable,
+    colorGroupOrdinal, name, extraInfo,
     amount, callback, modifier,
     colorIndicator = { showColorPicker ->
-        val colors = ListItem.Color.asComposeColors()
-        val showCheckboxProvider = remember(callback) {
-            { !callback.getIsEditable() }
-        }
+        val colors = ListItem.ColorGroup.colors()
+        val color = colors.getOrElse(colorGroupOrdinal) { colors.first() }
         CheckboxAndColorIndicator(
-            showCheckboxProvider = showCheckboxProvider,
-            tint = colors[colorOrdinal],
+            showCheckboxProvider = { isEditable },
+            tint = color,
             checked = isChecked,
             checkboxClickLabel = stringResource(
                 R.string.item_checkbox_description, name),
@@ -179,37 +184,48 @@ fun shoppingListItemCallback(
  * interactions to e.g. change the [ShoppingListItem]'s state.
  *
  * @param item The [ShoppingListItem] instance whose data is being displayed
+ * @param isSelected Whether or not the item is selected
+ * @param selectionBrush The [Brush] that will be shown at half
+ *     opacity over the normal background when isSelected is true
+ * @param isEditable Whether or not the item will present itself in its editable state
  * @param callback The ShoppingListItemCallback whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
  */
 @Composable fun ShoppingListItemView(
     item: ShoppingListItem,
+    isSelected: Boolean,
+    selectionBrush: Brush,
+    isEditable: Boolean,
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ShoppingListItemView(
+    isSelected, selectionBrush, isEditable,
     item.color, item.name, item.extraInfo,
     item.amount, item.isChecked, callback, modifier)
 
 @Preview @Composable
 fun ShoppingListItemViewPreview() = BootyCrateTheme {
+    var isSelected by remember { mutableStateOf(false) }
+    val color1 = MaterialTheme.colors.primary
+    val color2 = MaterialTheme.colors.secondary
+    val brush = remember { Brush.horizontalGradient(listOf(color1, color2)) }
+    var isEditable by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf("Test item") }
     var extraInfo by remember { mutableStateOf("Test extra info") }
-    var colorIndex by remember { mutableStateOf(ListItem.Color.Orange.ordinal) }
+    var colorGroupIndex by remember { mutableStateOf(0) }
     var amount by remember { mutableStateOf(5) }
-    var isEditable by remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(false) }
-    val item by derivedStateOf {
-        ShoppingListItem(1, name, extraInfo, colorIndex, amount, isChecked = isChecked)
-    }
     val callback = remember { shoppingListItemCallback(
-        onColorChangeRequest = { colorIndex = it.ordinal },
+        onLongClick = { isSelected = !isSelected },
+        onColorGroupChangeRequest = { colorGroupIndex = it.ordinal },
         onRenameRequest = { name = it },
         onExtraInfoChangeRequest = { extraInfo = it },
         onAmountChangeRequest = { amount = it },
         onEditButtonClick = { isEditable = !isEditable },
-        isEditableProvider = { isEditable },
         onCheckboxClick = { isChecked = !isChecked })
     }
-    ShoppingListItemView(item, callback)
+    ShoppingListItemView(isSelected, brush, isEditable,
+                         colorGroupIndex, name, extraInfo,
+                         amount, isChecked, callback)
 }

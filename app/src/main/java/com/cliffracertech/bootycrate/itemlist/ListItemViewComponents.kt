@@ -290,11 +290,30 @@ fun AmountEditPreview() = BootyCrateTheme {
     }
 }
 
+/** A [ColorPicker] geared towards picking a [ListItem.ColorGroup] for a [ListItem]. */
+@Composable fun ListItemColorGroupPicker(
+    modifier: Modifier = Modifier,
+    currentColorGroupOrdinal: Int,
+    onColorGroupClick: (ListItem.ColorGroup) -> Unit
+) {
+    val colors = ListItem.ColorGroup.colors()
+    ColorPicker(
+        modifier = modifier,
+        currentColor = colors[currentColorGroupOrdinal],
+        colors = colors,
+        colorDescriptions = ListItem.ColorGroup.descriptions(),
+        onColorClick = { index, _ ->
+            val groups = ListItem.ColorGroup.values()
+            val colorGroup = groups.getOrElse(index) { groups.first() }
+            onColorGroupClick(colorGroup)
+        })
+}
+
 @Preview @Composable
 fun ColorPickerPreview() = BootyCrateTheme {
-    val colors = ListItem.Color.asComposeColors()
+    val colors = ListItem.ColorGroup.colors()
     var currentColor by remember { mutableStateOf(colors.first()) }
-    val descriptions = ListItem.Color.descriptions()
+    val descriptions = ListItem.ColorGroup.descriptions()
     Surface(shape = MaterialTheme.shapes.large) {
         ColorPicker(
             currentColor = currentColor,

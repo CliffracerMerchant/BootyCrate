@@ -17,6 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.model.database.ListItem
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+
+interface ItemListState<T: ListItem> {
+    val itemList: ImmutableList<T>
+    val selectedItemIds: ImmutableSet<Long>
+    val expandedItemId: Long?
+}
 
 /** An interface containing callbacks for interactions with [ItemListView]'s
 * [ListItemView]s. The Long parameter in each method indicates the id of the
@@ -28,9 +35,9 @@ interface ItemListCallback {
     fun onItemLongClick(id: Long)
     /** The callback that will be invoked when an item is swiped left or right. */
     fun onItemSwipe(id: Long)
-    /** The callback that will be invoked when an item's
-     * color has been requested to be changed to [newColor]. */
-    fun onItemColorChangeRequest(id: Long, newColor: ListItem.Color)
+    /** The callback that will be invoked when an item's color
+     * group has been requested to be changed to [newColorGroup]. */
+    fun onItemColorGroupChangeRequest(id: Long, newColorGroup: ListItem.ColorGroup)
     /** The callback that will be invoked when an item's
      * name has been requested to be changed to [newName]*/
     fun onItemRenameRequest(id: Long, newName: String)
@@ -45,30 +52,30 @@ interface ItemListCallback {
 }
 
 /**
-* A list of [ListItemView]s.
-*
-* @param itemList The list of [ListItem]s to display
-* @param modifier The [Modifier] that will be used for the root layout
-* @param state The [LazyListState] to use for the internal [LazyColumn]
-* @param contentPadding The [PaddingValues] instance to use for the [LazyColumn]'s content
-* @param itemContent A lambda that contains the content for each item
-*                    given the [ListItem] instance it is representing.
-*/
+ * A list of [ListItemView]s.
+ *
+ * @param itemListState The [ItemListViewModel.UiState.Items] instance that contains
+ *     the [T] instances to display as well as the selection and item expansion state
+ * @param modifier The [Modifier] that will be used for the root layout
+ * @param lazyListState The [LazyListState] to use for the internal [LazyColumn]
+ * @param contentPadding The [PaddingValues] instance to use for the [LazyColumn]'s content
+ * @param itemContent A lambda that contains the content for each item
+ *                    given the [ListItem] instance it is representing.
+ */
 @Composable fun <T: ListItem> ItemListView(
-    itemList: ImmutableList<T>,
+    itemListState: ItemListState<T>,
     modifier: Modifier = Modifier,
-    state: LazyListState = rememberLazyListState(),
+    lazyListState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(),
     itemContent: @Composable LazyItemScope.(item: T) -> Unit
 ) = LazyColumn(
     modifier = modifier,
-    state = state,
+    state = lazyListState,
     contentPadding = contentPadding,
     verticalArrangement = Arrangement.spacedBy(8.dp),
     horizontalAlignment = Alignment.CenterHorizontally
 ) {
-    items(items = itemList,
+    items(items = itemListState.itemList,
           key = { it.id },
-          contentType = {},
           itemContent = itemContent)
 }
