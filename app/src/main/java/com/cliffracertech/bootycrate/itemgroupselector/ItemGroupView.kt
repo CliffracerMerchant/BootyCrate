@@ -33,7 +33,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,10 +95,11 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 )
 
 @Composable fun ItemGroupView(
+    itemGroup: ItemGroup,
     isSelected: Boolean,
     selectionBrush: Brush,
-    itemGroup: ItemGroup,
-    onDeleteRequest: () -> Unit,
+    onRenameClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) = Surface(
     modifier = modifier.height(48.dp).fillMaxWidth(),
@@ -128,7 +128,6 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
                 R.string.item_group_inventory_size_description, itemGroup.name))
 
         var showingOptionsMenu by remember { mutableStateOf(false) }
-        var showingConfirmDeleteDialog by rememberSaveable { mutableStateOf(false) }
 
         IconButton(onClick = { showingOptionsMenu = true }) {
             Icon(Icons.Default.MoreVert, stringResource(
@@ -138,17 +137,20 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
                 expanded = showingOptionsMenu,
                 onDismissRequest = { showingOptionsMenu = false },
             ) {
-                DropdownMenuItem({ showingConfirmDeleteDialog = true}) {
-                    Text(stringResource(R.string.delete_description))
+                DropdownMenuItem(onRenameClick) {
+                    Text(stringResource(R.string.rename_item_group_description))
+                }
+                DropdownMenuItem(onDeleteClick) {
+                    Text(stringResource(R.string.delete_item_group_description))
                 }
             }
         }
 
-        if (showingConfirmDeleteDialog)
-            ConfirmDialog(
-                message = stringResource(R.string.confirm_delete_item_group_message),
-                onDismissRequest = { showingConfirmDeleteDialog = false },
-                onConfirm = onDeleteRequest)
+//        if (showingConfirmDeleteDialog)
+//            ConfirmDialog(
+//                message = stringResource(R.string.confirm_delete_item_group_message),
+//                onDismissRequest = { showingConfirmDeleteDialog = false },
+//                onConfirm = onDeleteRequest)
     }
 }
 
@@ -166,7 +168,8 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
         isSelected = isSelected,
         selectionBrush = brush,
         itemGroup = itemGroup,
-        onDeleteRequest = {},
+        onRenameClick = {},
+        onDeleteClick = {},
         modifier = Modifier.clickable { isSelected = !isSelected })
 }
 
