@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.model.database.ItemGroup
 import kotlinx.collections.immutable.ImmutableList
 
+
+
 /**
  * A view of a list of [ItemGroup]s.
  *
@@ -29,6 +31,7 @@ import kotlinx.collections.immutable.ImmutableList
  */
 @Composable fun ItemGroupListView(
     itemGroups: ImmutableList<ItemGroup>,
+    onItemGroupClick: (ItemGroup) -> Unit,
     onItemGroupRenameClick: (ItemGroup) -> Unit,
     onItemGroupDeleteClick: (ItemGroup) -> Unit,
     modifier: Modifier = Modifier,
@@ -47,6 +50,7 @@ import kotlinx.collections.immutable.ImmutableList
                 itemGroup = it,
                 isSelected = false,
                 selectionBrush = selectionBrush,
+                onClick = { onItemGroupClick(it) },
                 onRenameClick = { onItemGroupRenameClick(it) },
                 onDeleteClick = { onItemGroupDeleteClick(it) })
         }})

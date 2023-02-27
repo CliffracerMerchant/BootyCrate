@@ -98,11 +98,15 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
     itemGroup: ItemGroup,
     isSelected: Boolean,
     selectionBrush: Brush,
+    onClick: () -> Unit,
     onRenameClick: () -> Unit,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) = Surface(
-    modifier = modifier.height(48.dp).fillMaxWidth(),
+    modifier = modifier
+        .height(48.dp)
+        .fillMaxWidth()
+        .clickable(onClick = onClick),
     shape = MaterialTheme.shapes.large
 ) {
     val selectionBackgroundAlpha by
@@ -170,7 +174,7 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
         itemGroup = itemGroup,
         onRenameClick = {},
         onDeleteClick = {},
-        modifier = Modifier.clickable { isSelected = !isSelected })
+        onClick = { isSelected = !isSelected })
 }
 
 @Preview @Composable fun LightItemGroupViewPreview() = ItemGroupViewPreview(false)
