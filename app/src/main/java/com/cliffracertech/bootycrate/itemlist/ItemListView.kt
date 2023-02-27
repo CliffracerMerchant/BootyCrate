@@ -29,25 +29,25 @@ interface ItemListState<T: ListItem> {
 * [ListItemView]s. The Long parameter in each method indicates the id of the
 * [ListItem] that was interacted with. */
 interface ItemListCallback {
-    /** The callback that will be invoked when an item is clicked. */
+    /** The callback that will be invoked when an item is clicked */
     fun onItemClick(id: Long)
-    /** The callback that will be invoked when an item is long clicked. */
+    /** The callback that will be invoked when an item is long clicked */
     fun onItemLongClick(id: Long)
-    /** The callback that will be invoked when an item is swiped left or right. */
+    /** The callback that will be invoked when an item is swiped left or right */
     fun onItemSwipe(id: Long)
-    /** The callback that will be invoked when an item's color
-     * group has been requested to be changed to [newColorGroup]. */
-    fun onItemColorGroupChangeRequest(id: Long, newColorGroup: ListItem.ColorGroup)
+    /** The callback that will be invoked when the given [colorGroup]
+     * has been clicked in an item 's color group selector */
+    fun onItemColorGroupClick(id: Long, colorGroup: ListItem.ColorGroup)
     /** The callback that will be invoked when an item's
-     * name has been requested to be changed to [newName]*/
+     * name has been requested to be changed to [newName] */
     fun onItemRenameRequest(id: Long, newName: String)
     /** The callback that will be invoked when an item's extraInfo
-     * has been requested to be changed to [newExtraInfo]*/
+     * has been requested to be changed to [newExtraInfo] */
     fun onItemExtraInfoChangeRequest(id: Long, newExtraInfo: String)
     /** The callback that will be invoked when an item's amount
-     * has been requested to be changed to [newAmount]*/
+     * has been requested to be changed to [newAmount] */
     fun onItemAmountChangeRequest(id: Long, newAmount: Int)
-    /** The callback that will be invoked when an item's edit button is clicked. */
+    /** The callback that will be invoked when an item's edit button is clicked */
     fun onItemEditButtonClick(id: Long)
 }
 
@@ -60,7 +60,7 @@ interface ItemListCallback {
  * @param lazyListState The [LazyListState] to use for the internal [LazyColumn]
  * @param contentPadding The [PaddingValues] instance to use for the [LazyColumn]'s content
  * @param itemContent A lambda that contains the content for each item
- *                    given the [ListItem] instance it is representing.
+ *                    given the [ListItem] instance it is representing
  */
 @Composable fun <T: ListItem> ItemListView(
     itemListState: ItemListState<T>,

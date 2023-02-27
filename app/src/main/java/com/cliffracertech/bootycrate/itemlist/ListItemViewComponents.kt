@@ -293,13 +293,13 @@ fun AmountEditPreview() = BootyCrateTheme {
 /** A [ColorPicker] geared towards picking a [ListItem.ColorGroup] for a [ListItem]. */
 @Composable fun ListItemColorGroupPicker(
     modifier: Modifier = Modifier,
-    currentColorGroupOrdinal: Int,
+    currentColorGroup: ListItem.ColorGroup,
     onColorGroupClick: (ListItem.ColorGroup) -> Unit
 ) {
     val colors = ListItem.ColorGroup.colors()
     ColorPicker(
         modifier = modifier,
-        currentColor = colors[currentColorGroupOrdinal],
+        currentColor = colors[currentColorGroup.ordinal],
         colors = colors,
         colorDescriptions = ListItem.ColorGroup.descriptions(),
         onColorClick = { index, _ ->

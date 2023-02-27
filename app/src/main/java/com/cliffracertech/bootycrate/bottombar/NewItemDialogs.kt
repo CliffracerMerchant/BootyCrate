@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -113,14 +114,17 @@ import kotlinx.collections.immutable.ImmutableList
         onAddAnotherClick, onOkClick, messages, modifier
     ) {
         ShoppingListItemView(
-            viewModel.itemColorIndex,
+            viewModel.itemColorGroup,
             viewModel.itemName,
             viewModel.itemExtraInfo,
             viewModel.itemAmount,
             viewModel.itemIsChecked,
+            isSelected = false,
+            selectionBrush = Brush.horizontalGradient(listOf(Color.Transparent)),
+            isEditable = true,
             callback = remember {
                 shoppingListItemCallback(
-                    onColorChangeRequest = { viewModel.itemColorIndex = it.ordinal },
+                    onColorGroupClick = { viewModel.itemColorGroup = it },
                     onRenameRequest = { viewModel.itemName = it },
                     onExtraInfoChangeRequest = { viewModel.itemExtraInfo = it },
                     onAmountChangeRequest = { viewModel.itemAmount = it },
@@ -145,15 +149,18 @@ import kotlinx.collections.immutable.ImmutableList
         onAddAnotherClick, onOkClick, messages, modifier
     ) {
         InventoryItemView(
-            viewModel.itemColorIndex,
+            viewModel.itemColorGroup,
             viewModel.itemName,
             viewModel.itemExtraInfo,
             viewModel.itemAmount,
             viewModel.itemAutoAddToShoppingList,
             viewModel.itemAutoAddToShoppingListAmount,
+            isSelected = false,
+            selectionBrush = Brush.horizontalGradient(listOf(Color.Transparent)),
+            isEditable = true,
             callback = remember {
                 inventoryItemCallback(
-                    onColorChangeRequest = { viewModel.itemColorIndex = it.ordinal },
+                    onColorGroupClick = { viewModel.itemColorGroup = it },
                     onRenameRequest = { viewModel.itemName = it },
                     onExtraInfoChangeRequest = { viewModel.itemExtraInfo = it },
                     onAmountChangeRequest = { viewModel.itemAmount = it },

@@ -31,9 +31,9 @@ interface ListItemCallback {
     fun onClick()
     /** The callback that will be invoked when the item is long clicked. */
     fun onLongClick()
-    /** The callback that will be invoked when the item's color
-     * group has been requested to be changed to [newColorGroup]. */
-    fun onColorGroupChangeRequest(newColorGroup: ListItem.ColorGroup)
+    /** The callback that will be invoked when the given [colorGroup]
+     * has been clicked in the item's color group selector */
+    fun onColorGroupClick(colorGroup: ListItem.ColorGroup)
     /** The callback that will be invoked when the item's
      * name has been requested to be changed to [newName]*/
     fun onRenameRequest(newName: String)
@@ -53,13 +53,14 @@ interface ListItemCallback {
  * A visual display of a [ListItem] that also allows user interactions to
  * e.g. change the [ListItem]'s state.
  *
+ * @param colorGroup The [ListItem.ColorGroup] that the item belongs to
+ * @param name The name of the displayed item
+ * @param extraInfo The extra info of the displayed item
+ * @param amount The amount of the displayed item
  * @param isSelected Whether or not the item is selected
  * @param selectionBrush The [Brush] that will be shown at half
  *     opacity over the normal background when isSelected is true
  * @param isEditable Whether or not the item will present itself in its editable state
- * @param name The name of the displayed item
- * @param extraInfo The extra info of the displayed item
- * @param amount The amount of the displayed item
  * @param callback The [ListItemCallback] whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
@@ -74,95 +75,95 @@ interface ListItemCallback {
  *     of the view.
  */
 @Composable fun ListItemView(
-    isSelected: Boolean,
-    selectionBrush: Brush,
-    isEditable: Boolean,
-    colorGroupOrdinal: Int,
+    colorGroup: ListItem.ColorGroup,
     name: String,
     extraInfo: String,
     amount: Int,
+    isSelected: Boolean,
+    selectionBrush: Brush,
+    isEditable: Boolean,
     callback: ListItemCallback,
     modifier: Modifier = Modifier,
     colorIndicator: @Composable (showColorPicker: () -> Unit) -> Unit,
     otherContent: @Composable ColumnScope.(transition: Transition<Boolean>) -> Unit = {},
+) = Surface(
+    modifier = modifier.animateContentSize(),
+    shape = MaterialTheme.shapes.large
 ) {
-    Surface(modifier.animateContentSize(), MaterialTheme.shapes.large) {
+    val selectionBackgroundAlpha by
+        animateFloatAsState(if (isSelected) 0.5f else 0f)
+    Box(Modifier
+        .fillMaxSize()
+        .alpha(selectionBackgroundAlpha)
+        .background(selectionBrush, MaterialTheme.shapes.large))
 
-        val selectionBackgroundAlpha by
-            animateFloatAsState(if (isSelected) 0.5f else 0f)
-        Box(Modifier
-            .fillMaxSize()
-            .alpha(selectionBackgroundAlpha)
-            .background(selectionBrush, MaterialTheme.shapes.large))
+    var showColorPicker by remember { mutableStateOf(false) }
+    val colors = ListItem.ColorGroup.colors()
+    val color = remember(colorGroup) {
+        colors.getOrElse(colorGroup.ordinal) { colors.first() }
+    }
 
-        var showColorPicker by remember { mutableStateOf(false) }
-        val colors = ListItem.ColorGroup.colors()
-        val color = remember(colorGroupOrdinal) {
-            colors.getOrElse(colorGroupOrdinal) { colors.first() }
-        }
-
-        AnimatedContent(
-            targetState = showColorPicker,
-            modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
-            transitionSpec = { scaleIn(initialScale = 0.9f) + fadeIn() with
-                    scaleOut(targetScale = 0.9f) + fadeOut() }
-        ) { showingColorPicker ->
-            if (showingColorPicker)
-                ListItemColorGroupPicker(Modifier, colorGroupOrdinal) {
-                    callback.onColorGroupChangeRequest(it)
-                    showColorPicker = false
-                }
-            else Column {
-                val expansionTransition = updateTransition(isEditable, "item expand/collapse")
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    colorIndicator { showColorPicker = true }
-                    Column(Modifier.weight(1f)) {
-                        TextFieldEdit(
-                            text = name,
-                            onTextChange = callback::onRenameRequest,
-                            tint = color,
-                            readOnly = !isEditable,
-                            textStyle = MaterialTheme.typography.body1)
-                        TextFieldEdit(
-                            text = extraInfo,
-                            onTextChange = callback::onExtraInfoChangeRequest,
-                            tint = color,
-                            readOnly = !isEditable,
-                            textStyle = MaterialTheme.typography.subtitle1)
-                    }
-                    Box(Modifier.animateContentSize()) {
-                        val amountEditEndPadding by
-                            expansionTransition.animateDp(label = "amountEditSlideAnim") { isEditable ->
-                                if (isEditable || !callback.showEditButton) 0.dp else 48.dp
-                            }
-                        AmountEdit(
-                            amount = amount,
-                            isEditableByKeyboard = isEditable,
-                            tint = color,
-                            onAmountChangeRequest = callback::onAmountChangeRequest,
-                            decreaseDescription = stringResource(
-                                R.string.item_amount_decrease_description, name),
-                            increaseDescription = stringResource(
-                                R.string.item_amount_increase_description, name),
-                            modifier = Modifier.padding(end = amountEditEndPadding))
-
-                        if (callback.showEditButton) {
-                            val editButtonTopPadding by
-                            expansionTransition.animateDp(label = "editButtonSlideAnim") { isEditable ->
-                                if (isEditable) 48.dp else 0.dp
-                            }
-                            AnimatedEditToCloseButton(
-                                onClick = callback::onEditButtonClick,
-                                modifier = Modifier.padding(top = editButtonTopPadding)
-                                    .align(Alignment.TopEnd),
-                                isEditable = isEditable,
-                                itemName = name)
-                        }
-                    }
-                }
-                otherContent(expansionTransition)
+    AnimatedContent(
+        targetState = showColorPicker,
+        modifier = Modifier.padding(vertical = 8.dp, horizontal = 2.dp),
+        transitionSpec = { scaleIn(initialScale = 0.9f) + fadeIn() with
+                scaleOut(targetScale = 0.9f) + fadeOut() }
+    ) { showingColorPicker ->
+        if (showingColorPicker)
+            ListItemColorGroupPicker(Modifier, colorGroup) {
+                callback.onColorGroupClick(it)
+                showColorPicker = false
             }
+        else Column {
+            val expansionTransition = updateTransition(isEditable, "item expand/collapse")
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                colorIndicator { showColorPicker = true }
+                Column(Modifier.weight(1f)) {
+                    TextFieldEdit(
+                        text = name,
+                        onTextChange = callback::onRenameRequest,
+                        tint = color,
+                        readOnly = !isEditable,
+                        textStyle = MaterialTheme.typography.body1)
+                    TextFieldEdit(
+                        text = extraInfo,
+                        onTextChange = callback::onExtraInfoChangeRequest,
+                        tint = color,
+                        readOnly = !isEditable,
+                        textStyle = MaterialTheme.typography.subtitle1)
+                }
+                Box(Modifier.animateContentSize()) {
+                    val amountEditEndPadding by
+                        expansionTransition.animateDp(label = "amountEditSlideAnim") { isEditable ->
+                            if (isEditable || !callback.showEditButton) 0.dp else 48.dp
+                        }
+                    AmountEdit(
+                        amount = amount,
+                        isEditableByKeyboard = isEditable,
+                        tint = color,
+                        onAmountChangeRequest = callback::onAmountChangeRequest,
+                        decreaseDescription = stringResource(
+                            R.string.item_amount_decrease_description, name),
+                        increaseDescription = stringResource(
+                            R.string.item_amount_increase_description, name),
+                        modifier = Modifier.padding(end = amountEditEndPadding))
+
+                    if (callback.showEditButton) {
+                        val editButtonTopPadding by
+                        expansionTransition.animateDp(label = "editButtonSlideAnim") { isEditable ->
+                            if (isEditable) 48.dp else 0.dp
+                        }
+                        AnimatedEditToCloseButton(
+                            onClick = callback::onEditButtonClick,
+                            modifier = Modifier.padding(top = editButtonTopPadding)
+                                .align(Alignment.TopEnd),
+                            isEditable = isEditable,
+                            itemName = name)
+                    }
+                }
+            }
+            otherContent(expansionTransition)
         }
     }
 }

@@ -57,7 +57,7 @@ interface InventoryCallback : ItemListCallback {
         inventoryItemCallback(
             onClick = { callback.onItemClick(item.id) },
             onLongClick = { callback.onItemLongClick(item.id) },
-            onColorGroupChangeRequest = { callback.onItemColorGroupChangeRequest(item.id, it) },
+            onColorGroupClick = { callback.onItemColorGroupClick(item.id, it) },
             onRenameRequest = { callback.onItemRenameRequest(item.id, it) },
             onExtraInfoChangeRequest = { callback.onItemExtraInfoChangeRequest(item.id, it) },
             onAmountChangeRequest = { callback.onItemAmountChangeRequest(item.id, it) },

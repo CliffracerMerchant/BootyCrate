@@ -37,7 +37,7 @@ import javax.inject.Inject
  * An abstract [ViewModel] to provide state and callbacks for a dialog to add
  * new [ListItem] subclasses.
  *
- * The properties [itemColorIndex], [itemName], [itemExtraInfo], and [itemAmount]
+ * The properties [itemColorGroup], [itemName], [itemExtraInfo], and [itemAmount]
  * should be updated with the proposed values for the new [ListItem]. The read-
  * only property [itemGroupId] describes the [ItemGroup.id] of the [ItemGroup]
  * that the new item will be added to. In the event that there is only, this
@@ -67,7 +67,7 @@ abstract class NewItemDialogViewModel<T: ListItem>(
     private val itemGroupIdValidator = ListItemGroupValidator(itemGroupDao, scope)
 
     val itemGroupId by itemGroupIdValidator::value
-    var itemColorIndex by mutableStateOf(0)
+    var itemColorGroup by mutableStateOf(ListItem.ColorGroup.values().first())
     var itemName by nameValidator::name
     var itemExtraInfo by nameValidator::extraInfo
     var itemAmount by mutableStateOf(1)
@@ -90,7 +90,7 @@ abstract class NewItemDialogViewModel<T: ListItem>(
         .collectAsState(emptyList<Validator.Message>().toImmutableList(), scope)
 
     /** Return an instance of T given the values of [itemGroupId], [name],
-     * [extraInfo], the members [itemColorIndex] and [itemAmount], as well as
+     * [extraInfo], the members [itemColorGroup] and [itemAmount], as well as
      * any additional item state properties that subclasses add. Due to the
      * fact that the item's name, extra info, and [ItemGroup] id must be
      * validated, it is important to use the provided values rather than the
@@ -176,7 +176,7 @@ class NewShoppingListItemDialogViewModel(
     ) = ShoppingListItem(
         name = name,
         extraInfo = extraInfo,
-        color = itemColorIndex,
+        color = itemColorGroup.ordinal,
         amount = itemAmount,
         isChecked = itemIsChecked
     ).toDbListItem(itemGroupId)
@@ -219,7 +219,7 @@ class NewInventoryItemDialogViewModel(
     ) = InventoryItem(
         name = name,
         extraInfo = extraInfo,
-        color = itemColorIndex,
+        color = itemColorGroup.ordinal,
         amount = itemAmount,
         autoAddToShoppingList = itemAutoAddToShoppingList,
         autoAddToShoppingListAmount = itemAutoAddToShoppingListAmount

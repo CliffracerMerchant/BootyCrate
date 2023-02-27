@@ -61,8 +61,8 @@ import com.cliffracertech.bootycrate.model.database.ListItem
             override fun onItemClick(id: Long) = vm.onItemClick(id)
             override fun onItemLongClick(id: Long) = vm.onItemLongClick(id)
             override fun onItemSwipe(id: Long) = vm.onItemSwipe(id)
-            override fun onItemColorGroupChangeRequest(id: Long, newColorGroup: ListItem.ColorGroup) =
-                vm.onItemColorGroupChangeRequest(id, newColorGroup)
+            override fun onItemColorGroupClick(id: Long, colorGroup: ListItem.ColorGroup) =
+                vm.onItemColorGroupChangeRequest(id, colorGroup)
             override fun onItemRenameRequest(id: Long, newName: String) =
                 vm.onItemRenameRequest(id, newName)
             override fun onItemExtraInfoChangeRequest(id: Long, newExtraInfo: String) =
@@ -102,8 +102,8 @@ import com.cliffracertech.bootycrate.model.database.ListItem
             override fun onItemClick(id: Long) = vm.onItemClick(id)
             override fun onItemLongClick(id: Long) = vm.onItemLongClick(id)
             override fun onItemSwipe(id: Long) = vm.onItemSwipe(id)
-            override fun onItemColorGroupChangeRequest(id: Long, newColorGroup: ListItem.ColorGroup) =
-                vm.onItemColorGroupChangeRequest(id, newColorGroup)
+            override fun onItemColorGroupClick(id: Long, colorGroup: ListItem.ColorGroup) =
+                vm.onItemColorGroupChangeRequest(id, colorGroup)
             override fun onItemRenameRequest(id: Long, newName: String) =
                 vm.onItemRenameRequest(id, newName)
             override fun onItemExtraInfoChangeRequest(id: Long, newExtraInfo: String) =
