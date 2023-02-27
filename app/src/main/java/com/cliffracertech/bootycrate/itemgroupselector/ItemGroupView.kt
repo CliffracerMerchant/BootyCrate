@@ -37,7 +37,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -48,7 +47,17 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ItemGroup
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 
-@Composable fun AmountIndicator(
+/**
+ * A display of an amount of something, with an accompanying
+ * icon to describe the amount.
+ *
+ * @param painter The [Painter] to use for the icon
+ * @param amount The amount that will be displayed
+ * @param contentDescription A [String] that describes the amount
+ *      that is being displayed, e.g. shopping list item count
+ * @param modifier The [Modifier] to use for the layout
+ */
+@Composable private fun AmountIndicator(
     painter: Painter,
     amount: Int,
     contentDescription: String,
@@ -60,14 +69,6 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
          Modifier.size(18.dp))
     Text(text = amount.toString())
 }
-
-@Composable fun AmountIndicator(
-    icon: ImageVector,
-    amount: Int,
-    contentDescription: String,
-    modifier: Modifier = Modifier,
-) = AmountIndicator(rememberVectorPainter(icon),
-                    amount, contentDescription, modifier)
 
 @Composable fun ItemGroupView(
     isSelected: Boolean,
@@ -91,7 +92,7 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
         Text(text = itemGroup.name,
              Modifier.padding(start = 16.dp).weight(1f))
         AmountIndicator(
-            icon = Icons.Default.ShoppingCart,
+            painter = rememberVectorPainter(Icons.Default.ShoppingCart),
             amount = itemGroup.shoppingListItemCount,
             contentDescription = "shopping list item count")
         Spacer(Modifier.width(8.dp))
