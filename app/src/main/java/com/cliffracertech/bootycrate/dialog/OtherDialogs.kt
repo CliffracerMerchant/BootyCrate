@@ -77,7 +77,7 @@ fun itemGroupNameDialog(
 /** Show a dialog to confirm the deletion of an item group. */
 fun deleteItemGroupDialog(context: Context, onConfirm: () -> Unit) =
     themedAlertDialogBuilder(context)
-        .setMessage(R.string.delete_item_group_confirmation_message)
+        .setMessage(R.string.confirm_delete_item_group_message)
         .setPositiveButton(android.R.string.ok) { _, _ -> onConfirm() }
         .setNegativeButton(android.R.string.cancel, null)
         .create().show()

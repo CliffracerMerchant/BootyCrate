@@ -142,7 +142,7 @@
     <string name="more_options_description">More options</string>
     <string name="rename_description">Rename</string>
     <string name="delete_description">Delete</string>
-    <string name="delete_item_group_confirmation_message">Deleting an item group will delete all
+    <string name="confirm_delete_item_group_message">Deleting an item group will delete all
         items in the group\'s shopping list and inventory, and cannot be undone. Are you sure?</string>
     <string name="multi_select_item_groups_description">Multi-select item groups</string>
     <string name="select_all_item_groups_description">Select all item groups</string>
