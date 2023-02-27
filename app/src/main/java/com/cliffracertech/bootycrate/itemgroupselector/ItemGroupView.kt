@@ -112,25 +112,27 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
         .alpha(selectionBackgroundAlpha)
         .background(selectionBrush, MaterialTheme.shapes.large))
 
-    // TODO: Add string resources
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(text = itemGroup.name,
              Modifier.padding(start = 16.dp).weight(1f))
         AmountIndicator(
             painter = rememberVectorPainter(Icons.Default.ShoppingCart),
             amount = itemGroup.shoppingListItemCount,
-            contentDescription = "shopping list item count")
+            contentDescription = stringResource(
+                R.string.item_group_shopping_list_size_description, itemGroup.name))
         Spacer(Modifier.width(8.dp))
         AmountIndicator(
             painter = painterResource(R.drawable.inventory_icon),
             amount = itemGroup.shoppingListItemCount,
-            contentDescription = "shopping list item count")
+            contentDescription = stringResource(
+                R.string.item_group_inventory_size_description, itemGroup.name))
 
         var showingOptionsMenu by remember { mutableStateOf(false) }
         var showingConfirmDeleteDialog by rememberSaveable { mutableStateOf(false) }
 
         IconButton(onClick = { showingOptionsMenu = true }) {
-            Icon(Icons.Default.MoreVert, "more options for item group ${itemGroup.name}")
+            Icon(Icons.Default.MoreVert, stringResource(
+                R.string.item_group_options_description, itemGroup.name))
 
             DropdownMenu(
                 expanded = showingOptionsMenu,
