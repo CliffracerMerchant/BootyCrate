@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.itemgroupselector
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,6 +46,7 @@ import kotlinx.collections.immutable.ImmutableList
     LazyColumn(
         modifier = modifier,
         contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         content = { items(itemGroups) {
             ItemGroupView(
                 itemGroup = it,

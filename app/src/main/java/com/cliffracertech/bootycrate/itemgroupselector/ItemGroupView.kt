@@ -6,7 +6,6 @@ package com.cliffracertech.bootycrate.itemgroupselector
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -103,11 +102,9 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) = Surface(
-    modifier = modifier
-        .height(48.dp)
-        .fillMaxWidth()
-        .clickable(onClick = onClick),
-    shape = MaterialTheme.shapes.large
+    modifier = modifier.fillMaxWidth().height(48.dp),
+    shape = MaterialTheme.shapes.large,
+    onClick = onClick
 ) {
     val selectionBackgroundAlpha by
         animateFloatAsState(if (isSelected) 0.5f else 0f)
@@ -142,10 +139,10 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
                 onDismissRequest = { showingOptionsMenu = false },
             ) {
                 DropdownMenuItem(onRenameClick) {
-                    Text(stringResource(R.string.rename_item_group_description))
+                    Text(stringResource(R.string.rename_item_group_description, itemGroup.name))
                 }
                 DropdownMenuItem(onDeleteClick) {
-                    Text(stringResource(R.string.delete_item_group_description))
+                    Text(stringResource(R.string.delete_item_group_description, itemGroup.name))
                 }
             }
         }
