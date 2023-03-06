@@ -17,8 +17,6 @@ import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.model.database.ItemGroup
 import kotlinx.collections.immutable.ImmutableList
 
-
-
 /**
  * A view of a list of [ItemGroup]s.
  *

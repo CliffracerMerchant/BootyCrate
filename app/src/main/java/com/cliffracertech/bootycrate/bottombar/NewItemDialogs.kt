@@ -4,32 +4,18 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.bottombar
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.AlertDialog
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.itemlist.InventoryItemView
@@ -40,6 +26,7 @@ import com.cliffracertech.bootycrate.model.database.InventoryItem
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 import com.cliffracertech.bootycrate.model.database.Validator
+import com.cliffracertech.bootycrate.ui.ValidatorMessageList
 import kotlinx.collections.immutable.ImmutableList
 
 /**
@@ -171,33 +158,5 @@ import kotlinx.collections.immutable.ImmutableList
                         viewModel.itemAutoAddToShoppingListAmount = it
                     })
             })
-    }
-}
-
-@Composable fun ValidatorMessageList(
-    messages: ImmutableList<Validator.Message>,
-    modifier: Modifier = Modifier
-) {
-    val messageHeight = 48.dp
-    val context = LocalContext.current
-    LazyColumn(modifier.animateContentSize()) {
-        items(messages) {
-            Row(Modifier.fillMaxWidth().height(messageHeight),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val vector = when {
-                    it.isInformational -> Icons.Default.Info
-                    it.isWarning ->       Icons.Default.Warning
-                    else ->/*it.isError*/ Icons.Default.Error
-                }
-                val tint = when {
-                    it.isInformational -> Color.Blue
-                    it.isWarning ->       Color.Yellow
-                    else ->/*it.isError*/ MaterialTheme.colors.error
-                }
-                Icon(vector, null, tint = tint)
-                Text(it.stringResource.resolve(context))
-            }
-        }
     }
 }
