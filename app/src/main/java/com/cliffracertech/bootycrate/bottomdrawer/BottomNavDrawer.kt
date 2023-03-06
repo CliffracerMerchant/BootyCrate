@@ -4,17 +4,41 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.bottomdrawer
 
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.bottombar.BootyCrateBottomAppBar
+import com.cliffracertech.bootycrate.itemgroupselector.ItemGroupSelector
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.database.ItemGroup
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ItemGroupNameValidator
 import com.cliffracertech.bootycrate.model.database.SettingsDao
 import com.cliffracertech.bootycrate.utils.collectAsState
+import com.cliffracertech.bootycrate.utils.toPx
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -136,6 +160,63 @@ import javax.inject.Inject
                 ?: return@launch
             itemGroupDao.add(validatedName)
             onNewItemGroupDialogCancel()
+        }
+    }
+}
+
+enum class DrawerState { Hidden, Collapsed, Expanded;
+    val isHidden get() = this == Hidden
+    val isCollapsed get() = this == Collapsed
+    val isExpanded get() = this == Expanded
+}
+
+@Composable fun BootyCrateBottomNavDrawer(
+    modifier: Modifier = Modifier,
+) {
+    val vm: BottomAppDrawerViewModel = viewModel()
+    val swipeableState = rememberSwipeableState(DrawerState.Collapsed)
+    val density = LocalDensity.current
+    val peekHeight = remember(density) { 56.dp.toPx(density) }
+    val expandedHeight = remember(density) { 456.dp.toPx(density) }
+    val anchors = remember { mapOf(
+        -expandedHeight to DrawerState.Expanded,
+        0f              to DrawerState.Collapsed,
+        peekHeight      to DrawerState.Hidden,
+    )}
+
+    Column(modifier = modifier
+        .height(456.dp)
+        .fillMaxWidth()
+        .offset(y = 400.dp)
+        .swipeable(
+            state = swipeableState,
+            anchors = anchors,
+            orientation = Orientation.Vertical)
+        .graphicsLayer { translationY = swipeableState.offset.value }
+    ) {
+        val expansionProgressProvider = remember {{
+            (-swipeableState.offset.value / expandedHeight).coerceIn(0f, 1f)
+        }}
+
+        Box(Modifier.height(56.dp).fillMaxWidth()) {
+            BootyCrateBottomAppBar(
+                interpolationProvider = remember {{ 1f - expansionProgressProvider() }},
+                modifier = Modifier.graphicsLayer { alpha = 1f - expansionProgressProvider() })
+            ItemGroupSelector(
+                title = stringResource(R.string.app_name),
+                onSelectAllClick = vm::onSelectAllClick,
+                multiSelectGroups = vm.multiSelectItemGroups,
+                onMultiSelectClick = vm::onMultiSelectItemGroupsCheckboxClick,
+                itemGroups = vm.itemGroups,
+                onItemGroupClick = vm::onItemGroupClick,
+                onItemGroupRenameClick = vm::onItemGroupRenameClick,
+                onItemGroupDeleteClick = vm::onItemGroupDeleteClick,
+                onAddButtonClick = vm::onAddButtonClick,
+                otherTopBarContent = {
+                    IconButton(vm::onSettingsButtonClick) {
+                        Icon(Icons.Default.Settings, null)
+                    }
+                })
         }
     }
 }
