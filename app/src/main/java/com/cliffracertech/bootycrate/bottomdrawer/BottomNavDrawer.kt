@@ -7,11 +7,17 @@ package com.cliffracertech.bootycrate.bottomdrawer
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.rememberSwipeableState
@@ -23,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -37,6 +44,8 @@ import com.cliffracertech.bootycrate.model.database.ItemGroup
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ItemGroupNameValidator
 import com.cliffracertech.bootycrate.model.database.SettingsDao
+import com.cliffracertech.bootycrate.model.database.Validator
+import com.cliffracertech.bootycrate.ui.SingleValidatorMessage
 import com.cliffracertech.bootycrate.utils.collectAsState
 import com.cliffracertech.bootycrate.utils.toPx
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -220,3 +229,74 @@ enum class DrawerState { Hidden, Collapsed, Expanded;
         }
     }
 }
+
+@Composable fun CancelOkButtonRow(
+    modifier: Modifier = Modifier,
+    okButtonEnabled: Boolean = true,
+    onCancelClick: () -> Unit,
+    onOkClick: () -> Unit,
+) = Row(modifier) {
+    Spacer(Modifier.weight(1f))
+    TextButton(onClick = onCancelClick) {
+        Text(stringResource(android.R.string.cancel))
+    }
+    TextButton(
+        onClick = onOkClick,
+        enabled = okButtonEnabled
+    ) {
+        Text(stringResource(android.R.string.ok))
+    }
+}
+
+/**
+ * A naming dialog for an [ItemGroup].
+ *
+ * @param modifier The [Modifier] to use for the root layout
+ * @param currentName The current name of the [ItemGroup] whose name
+ *     is being set. The title of the dialog will change according to
+ *     whether this value starts as a blank string.
+ * @param onCurrentNameChange The callback that will be invoked when
+ *     the current name is changed
+ * @param message A nullable [Validator.Message] that provides information about
+ *     the current value of [currentName] (e.g. that it is invalid) if necessary
+ * @param onDismissRequest The callback that will be invoked when the user tries
+ *     to dismiss the dialog via the cancel button, the back button/gesture, or
+ *     a click outside the dialog
+ * @param onConfirm The callback that will be invoked when the user clicks the ok button
+ */
+@Composable private fun ItemGroupNameDialog(
+    modifier: Modifier = Modifier,
+    currentName: String,
+    onCurrentNameChange: (String) -> Unit,
+    message: Validator.Message?,
+    onDismissRequest: () -> Unit,
+    onConfirm: () -> Unit,
+) = AlertDialog(
+    modifier = modifier,
+    onDismissRequest = onDismissRequest,
+    title = {
+        val context = LocalContext.current
+        val title = remember {
+            if (currentName.isBlank())
+                context.getString(R.string.add_item_group_dialog_title)
+            else context.getString(R.string.rename_item_group_dialog_title, currentName)
+        }
+        Text(title)
+    }, text = {
+        Column {
+            TextField(
+                onValueChange = onCurrentNameChange,
+                value = currentName,
+                modifier = Modifier.fillMaxWidth(),
+//                    .padding(horizontal = 16.dp),
+                isError = message is Validator.Message.Error,
+                singleLine = true)
+            SingleValidatorMessage(message)
+        }
+    }, buttons = {
+        CancelOkButtonRow(
+            okButtonEnabled = message is Validator.Message.Error,
+            onCancelClick = onDismissRequest,
+            onOkClick = onConfirm)
+    },
+)

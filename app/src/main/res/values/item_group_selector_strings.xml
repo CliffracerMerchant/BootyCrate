@@ -10,10 +10,6 @@
     <string name="select_all_item_groups_description">Select all item groups</string>
     <string name="multiple_selected_item_groups_description">Multiple item groups</string>
 
-    <string name="add_item_group_description">Add new item group</string>
-    <string name="item_group_name_hint">Item group name</string>
-    <string name="rename_item_group_popup_title">Enter item group name</string>
-
     <string name="item_group_shopping_list_size_description">%1$s shopping list size</string>
     <string name="item_group_inventory_size_description">%1$s inventory size</string>
 
@@ -23,8 +19,16 @@
     <string name="rename_description">Rename</string>
     <string name="delete_description">Delete</string>
 
+    <string name="rename_item_group_popup_title">Enter item group name</string>
+    <string name="rename_item_group_dialog_title">Renaming %1$s</string>
+
     <string name="confirm_delete_item_group_message">
         Deleting an item group will delete all items in the group\'s shopping
         list and inventory, and cannot be undone. Are you sure?</string>
+
+    <string name="add_item_group_description">Add new item group</string>
+    <string name="add_item_group_button_description">Add new item group</string>
+    <string name="item_group_name_hint">Item group name</string>
+    <string name="add_item_group_dialog_title">Enter item group name</string>
 
 </resources>

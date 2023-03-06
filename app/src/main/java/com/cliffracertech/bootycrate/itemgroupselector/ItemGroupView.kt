@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.AlertDialog
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Icon
@@ -24,7 +23,6 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -70,28 +68,6 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
          Modifier.size(18.dp))
     Text(text = amount.toString())
 }
-
-@Composable fun ConfirmDialog(
-    modifier: Modifier = Modifier,
-    title: String? = null,
-    message: String,
-    onDismissRequest: () -> Unit,
-    onConfirm: () -> Unit,
-) = AlertDialog(
-    modifier = modifier,
-    onDismissRequest = onDismissRequest,
-    title = title?.let {{ Text(it) }},
-    text = { Text(message) },
-    buttons = { Row {
-        Spacer(Modifier.weight(1f))
-        TextButton(onClick = onDismissRequest) {
-            Text(stringResource(android.R.string.cancel))
-        }
-        TextButton(onClick = onConfirm) {
-            Text(stringResource(android.R.string.ok))
-        }
-    }}
-)
 
 @Composable fun ItemGroupView(
     itemGroup: ItemGroup,
@@ -146,12 +122,6 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
                 }
             }
         }
-
-//        if (showingConfirmDeleteDialog)
-//            ConfirmDialog(
-//                message = stringResource(R.string.confirm_delete_item_group_message),
-//                onDismissRequest = { showingConfirmDeleteDialog = false },
-//                onConfirm = onDeleteRequest)
     }
 }
 
