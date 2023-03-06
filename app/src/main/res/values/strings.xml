@@ -140,4 +140,8 @@
     <string name="select_an_item_group_message">Pick an item group to add the item to:</string>
     <string name="new_item_has_no_item_group_error_message">
         The item must belong to an item group</string>
+
+    <string name="item_group_blank_name_error_message">The item group must have a name</string>
+    <string name="item_group_already_exists_error_message">
+        Another item group with the same name already exists</string>
 </resources>

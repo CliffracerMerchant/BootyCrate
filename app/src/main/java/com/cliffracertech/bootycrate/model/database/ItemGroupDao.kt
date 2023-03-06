@@ -94,4 +94,7 @@ private const val inventoryItemCount = "(SELECT count(*) FROM item " +
 
     @Query("DELETE FROM itemGroup")
     abstract suspend fun deleteAll()
+
+    @Query("SELECT EXISTS(SELECT name FROM itemGroup WHERE name = :name)")
+    abstract suspend fun nameAlreadyUsed(name: String): Boolean
 }

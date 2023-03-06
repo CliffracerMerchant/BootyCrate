@@ -140,8 +140,8 @@ class ShoppingListItemNameValidator(dao: ItemDao) :
         value: Pair<String, String>
     ) = super.messageFor(value) ?: when {
         nameAlreadyUsedInShoppingList(value) -> nameAlreadyUsedMessage
-        nameAlreadyUsedInInventory(value) -> nameAlreadyUsedInOtherListMessage
-        else -> null
+        nameAlreadyUsedInInventory(value) ->    nameAlreadyUsedInOtherListMessage
+        else ->                                 null
     }
 }
 
@@ -156,9 +156,9 @@ class InventoryItemNameValidator(dao: ItemDao) :
     override suspend fun messageFor(
         value: Pair<String, String>
     ) = super.messageFor(value) ?: when {
-        nameAlreadyUsedInInventory(value) -> nameAlreadyUsedMessage
+        nameAlreadyUsedInInventory(value) ->    nameAlreadyUsedMessage
         nameAlreadyUsedInShoppingList(value) -> nameAlreadyUsedInOtherListMessage
-        else -> null
+        else ->                                 null
     }
 }
 
@@ -191,5 +191,20 @@ class ListItemGroupValidator(
         !dao.getSelectedGroups().first().contains(value) ->
             noItemGroupErrorMessage
         else -> null
+    }
+}
+
+class ItemGroupNameValidator(private val dao: ItemGroupDao) : Validator<String>("") {
+
+    private val blankNameErrorMessage = Message.Error(
+        StringResource(R.string.item_group_blank_name_error_message))
+    private val nameAlreadyUsedErrorMessage = Message.Error(
+        StringResource(R.string.item_group_already_exists_error_message))
+
+    override suspend fun messageFor(value: String): Message? = when {
+        !valueHasBeenChanged -> null
+        value.isBlank() ->            blankNameErrorMessage
+        dao.nameAlreadyUsed(value) -> nameAlreadyUsedErrorMessage
+        else ->                       null
     }
 }
