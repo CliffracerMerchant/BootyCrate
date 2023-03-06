@@ -59,7 +59,7 @@ import kotlinx.collections.immutable.ImmutableList
 
 /** A display of a single nullable [Validator.Message], with appearance and/or
  * disappearance animations for when the message changes or becomes null. */
-@Composable fun SingleValidatorMessage(
+@Composable fun AnimatedValidatorMessage(
     message: Validator.Message?,
     modifier: Modifier = Modifier
 ) {
