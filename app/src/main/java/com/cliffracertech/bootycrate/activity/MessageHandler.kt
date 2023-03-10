@@ -4,8 +4,14 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.activity
 
+import android.content.Context
 import android.view.View
 import android.widget.TextView
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.SnackbarHostState
+import androidx.compose.material.SnackbarResult
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.utils.*
@@ -42,8 +48,34 @@ class MessageHandler @Inject constructor() {
     data class Message(
         val stringResource: StringResource,
         val actionStringResource: StringResource? = null,
+        val duration: SnackbarDuration = SnackbarDuration.Short,
         val onActionClick: (() -> Unit)? = null,
-        val onDismiss: ((Int) -> Unit)? = null)
+        val onDismiss: ((Int) -> Unit)? = null
+    ) {
+        /** Show the message to the user in the form of a snackbar, using
+         * the provided [Context] and [SnackbarHostState] instances. The
+         * [BaseTransientBottomBar.BaseCallback.DismissEvent] value provided
+         * to the [onDismiss] callback will always be DISMISS_EVENT_SWIPE
+         * when using this method. */
+        suspend fun showAsSnackbar(
+            context: Context,
+            snackbarHostState: SnackbarHostState
+        ) {
+            val result = snackbarHostState.showSnackbar(
+                message = stringResource.resolve(context),
+                actionLabel = actionStringResource?.resolve(context)
+                    ?: context.getString(R.string.dismiss_description).uppercase(),
+                duration = duration)
+            when (result) {
+                SnackbarResult.ActionPerformed -> onActionClick?.invoke()
+                // SnackBarHostState does not allow us to know the type of dismiss,
+                // so we'll use DISMISS_EVENT_SWIPE (the first value) for everything.
+                SnackbarResult.Dismissed -> onDismiss?.invoke(
+                    BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_SWIPE)
+                else -> {}
+            }
+        }
+    }
 
     private val _messages = MutableSharedFlow<Message>(
         extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -53,9 +85,12 @@ class MessageHandler @Inject constructor() {
     fun postMessage(
         stringResource: StringResource,
         actionStringResource: StringResource? = null,
+        duration: SnackbarDuration = SnackbarDuration.Short,
         onActionClick: (() -> Unit)? = null,
         onDismiss: ((Int) -> Unit)? = null
-    ) = _messages.tryEmit(Message(stringResource, actionStringResource, onActionClick, onDismiss))
+    ) = _messages.tryEmit(Message(
+            stringResource, actionStringResource,
+            duration, onActionClick, onDismiss))
 
     private var totalDeletedItemCount: Int = 0
 
@@ -78,15 +113,41 @@ class MessageHandler @Inject constructor() {
         onDismiss: ((Int) -> Unit)? = null
     ) {
         totalDeletedItemCount += count
-        val stringResource = StringResource(R.string.delete_snackbar_text, totalDeletedItemCount)
-        val actionText = StringResource(R.string.undo_description)
-        val onDismissPrivate = { dismissCode: Int ->
+        postMessage(
+            stringResource = StringResource(R.string.delete_snackbar_text,
+                                            totalDeletedItemCount),
+            actionStringResource = StringResource(R.string.undo_description),
+            duration = SnackbarDuration.Short,
+            onActionClick = onUndo
+        ) { dismissCode ->
             if (dismissCode != DISMISS_EVENT_CONSECUTIVE)
                 totalDeletedItemCount = 0
             onDismiss?.invoke(dismissCode)
-            Unit
         }
-        postMessage(stringResource, actionText, onUndo, onDismissPrivate)
+    }
+}
+
+/** MessageDisplayer will show [MessageHandler.Message]s emitted
+ * in [messages] as a snackbar when added to the composition. */
+@Composable fun MessageDisplayer(
+    context: Context,
+    snackbarHostState: SnackbarHostState,
+    messages: Flow<MessageHandler.Message>
+) = LaunchedEffect(Unit) {
+    messages.collect { message ->
+        val result = snackbarHostState.showSnackbar(
+            message = message.stringResource.resolve(context),
+            actionLabel = message.actionStringResource?.resolve(context)
+                ?: context.getString(R.string.dismiss_description).uppercase(),
+            duration = message.duration)
+        when (result) {
+            SnackbarResult.ActionPerformed -> message.onActionClick?.invoke()
+            // SnackBarHostState does not allow us to know the type of dismiss,
+            // so we'll use DISMISS_EVENT_SWIPE (the first value) for everything.
+            SnackbarResult.Dismissed -> message.onDismiss?.invoke(
+                BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_SWIPE)
+            else -> {}
+        }
     }
 }
 
