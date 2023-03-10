@@ -55,10 +55,13 @@ import com.cliffracertech.bootycrate.model.NavigationState
 }
 
 /** An instance of [BottomAppBarWithCutout] with state provided by an instance
- * of [BottomAppBarViewModel]. */
+ * of [BottomAppBarViewModel]. The [contentModifier] parameter can be used to
+ * define the [Modifier] used for the inner content of the bar, rather than the
+ * [Modifier] for the entire bar. */
 @Composable fun BootyCrateBottomAppBar(
     interpolationProvider: () -> Float,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentModifier: Modifier = Modifier
 ) = BoxWithConstraints {
     val viewModel: BottomAppBarViewModel = viewModel()
     val density = LocalDensity.current
@@ -113,7 +116,7 @@ import com.cliffracertech.bootycrate.model.NavigationState
         indicatorTarget = viewModel.selectedRootScreen,
         topEdge = topEdge,
     ) { _, onLayout ->
-        Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+        Row(contentModifier.fillMaxWidth(), Arrangement.SpaceBetween) {
             val shoppingList = NavigationState.RootScreen.ShoppingList
             NavBarItem(
                 title = stringResource(R.string.shopping_list_description),

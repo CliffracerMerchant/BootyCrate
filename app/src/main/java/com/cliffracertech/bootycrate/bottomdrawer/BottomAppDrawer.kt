@@ -62,13 +62,13 @@ class BottomDrawerState(
     val peekHeightPx = peekHeight.toPx(density)
 
     @Composable fun swipeableState(
-        initialState: DrawerState = DrawerState.Collapsed
+        initialState: DrawerState = Collapsed
     ) = rememberSwipeableState(initialState)
 
     val anchors = mapOf(
-        peekHeightPx to DrawerState.Hidden,
-        0f           to DrawerState.Collapsed,
-        -(expandedHeightPx - peekHeightPx) to DrawerState.Expanded)
+        peekHeightPx                       to Hidden,
+        0f                                 to Collapsed,
+        -(expandedHeightPx - peekHeightPx) to Expanded)
 }
 
 /**
@@ -87,7 +87,7 @@ class BottomDrawerState(
 @Composable fun BottomAppDrawer(
     state: BottomDrawerState,
     modifier: Modifier = Modifier,
-    initialDrawerState: DrawerState = DrawerState.Collapsed,
+    initialDrawerState: DrawerState = Collapsed,
     content: @Composable BoxScope.(
             expansionProgressProvider: () -> Float,
             targetState: DrawerState
@@ -113,9 +113,7 @@ class BottomDrawerState(
 }
 
 /** A BottomAppDrawer with state provided by an instance of [BottomAppDrawerViewModel]. */
-@Composable fun BootyCrateBottomNavDrawer(
-    modifier: Modifier = Modifier,
-) {
+@Composable fun BootyCrateBottomAppDrawer(modifier: Modifier = Modifier) {
     val vm: BottomAppDrawerViewModel = viewModel()
     val density = LocalDensity.current
     val drawerState = remember {
@@ -130,7 +128,9 @@ class BottomDrawerState(
     ) { expansionProgressProvider, targetState ->
         BootyCrateBottomAppBar(
             interpolationProvider = remember {{ 1f - expansionProgressProvider() }},
-            modifier = Modifier.graphicsLayer { alpha = 1f - expansionProgressProvider() })
+            contentModifier = Modifier
+                .height(drawerState.peekHeight)
+                .graphicsLayer { alpha = 1f - expansionProgressProvider() })
         ItemGroupSelector(
             title = stringResource(R.string.app_name),
             onSelectAllClick = vm::onSelectAllClick,
@@ -141,7 +141,10 @@ class BottomDrawerState(
             onItemGroupRenameClick = vm::onItemGroupRenameClick,
             onItemGroupDeleteClick = vm::onItemGroupDeleteClick,
             onAddButtonClick = vm::onAddButtonClick,
-            otherTopBarContent = {
+            modifier = Modifier.graphicsLayer {
+                if (targetState != Hidden)
+                    alpha = expansionProgressProvider()
+            }, otherTopBarContent = {
                 IconButton(vm::onSettingsButtonClick) {
                     Icon(Icons.Default.Settings, null)
                 }
