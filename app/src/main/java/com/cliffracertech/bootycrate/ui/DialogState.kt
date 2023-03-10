@@ -16,7 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.cliffracertech.bootycrate.model.database.Validator
+import com.cliffracertech.bootycrate.utils.StringResource
+import com.cliffracertech.bootycrate.utils.Text
 
+/** A dialog button row with a cancel and an ok button at its end. */
 @Composable fun CancelOkButtonRow(
     modifier: Modifier = Modifier,
     okButtonEnabled: Boolean = true,
@@ -35,34 +38,45 @@ import com.cliffracertech.bootycrate.model.database.Validator
     }
 }
 
+/** ConfirmatoryDialogState's subclasses represent the possible
+ * states for a confirmatory dialog: [NotShowing] and [Showing]. */
+sealed class ConfirmatoryDialogState {
+    /** The dialog is not being shown. */
+    object NotShowing: ConfirmatoryDialogState()
+
+    /** The dialog is being shown. [onCancel] and [onConfirm] describe
+     * the callbacks that should be invoked when the cancel and confirm
+     * buttons of the confirmatory dialog are clicked. [message] and the
+     * optional [title] are [StringResource]s that become the body text
+     * and title of the dialog when resolved. */
+    class Showing(
+        val message: StringResource,
+        val onCancel: () -> Unit,
+        val onConfirm: () -> Unit,
+        val title: StringResource? = null,
+    ) : ConfirmatoryDialogState()
+}
+
 /**
  * A simple confirmatory dialog with cancel and ok buttons.
  *
+ * @param state The [ConfirmatoryDialogState.Showing] instance
+ *     that contains the dialog's state and callbacks
  * @param modifier The [Modifier] to use for the root layout
- * @param title A nullable [String] that will be used as the title of
- *     the dialog. The title will not be displayed if this is null.
- * @param message The [String] message to be displayed
- * @param onDismissRequest The callback that will be invoked if the
- *     user tries to dismiss the dialog via the cancel button, the
- *     back button/gesture, or by clicking outside the dialog
  */
 @Composable fun ConfirmDialog(
+    state: ConfirmatoryDialogState.Showing,
     modifier: Modifier = Modifier,
-    title: String? = null,
-    message: String,
-    onDismissRequest: () -> Unit,
-    onConfirm: () -> Unit,
 ) = AlertDialog(
     modifier = modifier,
-    onDismissRequest = onDismissRequest,
-    title = title?.let {{ Text(it) }},
-    text = { Text(message) },
+    onDismissRequest = state.onCancel,
+    title = state.title?.let {{ Text(it) }},
+    text = { Text(state.message) },
     buttons = {
         CancelOkButtonRow(
-            onCancelClick = onDismissRequest,
-            onOkClick = onConfirm)
-    }
-)
+            onCancelClick = state.onCancel,
+            onOkClick = state.onConfirm)
+    })
 
 /**
  * The state for a naming/renaming dialog, which will be either [NotShowing]
@@ -88,6 +102,8 @@ sealed class NameDialogState {
      *     tries to dismiss the rename dialog
      * @param onConfirm The callback that will be invoked when the user
      *     tries to confirm the currently input name
+     * @param title A [StringResource] that becomes the title of the
+     *     dialog, if any, when resolved
      */
     class Showing(
         val currentNameProvider: () -> String,
@@ -95,19 +111,18 @@ sealed class NameDialogState {
         val onNameChange: (String) -> Unit,
         val onCancel: () -> Unit,
         val onConfirm: () -> Unit,
+        val title: StringResource? = null,
     ): NameDialogState()
 }
 
 /**
  * A dialog with a text field to name items.
  *
- * @param title The dialog's title
  * @param state A [NameDialogState.Showing] instance that contains
  *     state providers and callbacks for dialog interactions
  * @param modifier The [Modifier] to use for the root layout
  */
 @Composable fun NameDialog(
-    title: String,
     state: NameDialogState.Showing,
     modifier: Modifier = Modifier,
 ) {
@@ -117,7 +132,7 @@ sealed class NameDialogState {
     AlertDialog(
         modifier = modifier,
         onDismissRequest = state.onCancel,
-        title = { Text(title) },
+        title = state.title?.let {{ Text(it) }},
         text = { Column {
             TextField(
                 onValueChange = state.onNameChange,
