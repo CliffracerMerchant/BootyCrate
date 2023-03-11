@@ -150,24 +150,29 @@ class AddItemGroupButtonHandlerImpl(
     }
 }
 
-@HiltViewModel
-class BottomAppDrawerViewModel @Inject constructor(
+@HiltViewModel class BottomAppDrawerViewModel(
     private val navState: NavigationState,
     private val itemGroupDao: ItemGroupDao,
     private val settingsDao: SettingsDao,
-    private val coroutineScope: CoroutineScope =
-        CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val coroutineScope: CoroutineScope
 ) : ViewModel(),
     RenameItemGroupButtonHandler by RenameItemGroupButtonHandlerImpl(itemGroupDao, coroutineScope),
     DeleteItemGroupButtonHandler by DeleteItemGroupButtonHandlerImpl(itemGroupDao, coroutineScope),
     AddItemGroupButtonHandler by AddItemGroupButtonHandlerImpl(itemGroupDao, coroutineScope)
 {
+    @Inject constructor(
+        navState: NavigationState,
+        itemGroupDao: ItemGroupDao,
+        settingsDao: SettingsDao,
+    ) : this(navState, itemGroupDao, settingsDao,
+             CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
+
     override fun onCleared() {
         coroutineScope.cancel()
     }
 
     fun onSettingsButtonClick() {
-        navState.addToStack(NavigationState.AdditionalScreen.AppSettings)
+        navState.addToStack(NavigationState.AdditionalScreenType.AppSettings)
     }
 
     val multiSelectItemGroups by settingsDao
