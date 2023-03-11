@@ -4,44 +4,57 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.activity
 
-import android.animation.Animator
-import android.content.res.Configuration
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.MenuItem
-import android.view.animation.AnimationUtils
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.core.animation.doOnEnd
-import androidx.core.animation.doOnStart
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideOut
+import androidx.compose.animation.with
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Scaffold
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionContext
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.IntOffset
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.BuildConfig
-import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.actionbar.ActionBarViewModel
 import com.cliffracertech.bootycrate.actionbar.BootyCrateActionBar
-import com.cliffracertech.bootycrate.databinding.MainActivityBinding
-import com.cliffracertech.bootycrate.dialog.NewInventoryItemDialog
-import com.cliffracertech.bootycrate.dialog.NewShoppingListItemDialog
-import com.cliffracertech.bootycrate.dialog.itemGroupNameDialog
-import com.cliffracertech.bootycrate.fragment.InventoryFragment
-import com.cliffracertech.bootycrate.fragment.ItemListFragment
-import com.cliffracertech.bootycrate.fragment.ShoppingListFragment
+import com.cliffracertech.bootycrate.bottomdrawer.BootyCrateBottomAppDrawer
+import com.cliffracertech.bootycrate.itemlist.InventoryScreen
+import com.cliffracertech.bootycrate.itemlist.ShoppingListScreen
 import com.cliffracertech.bootycrate.model.NavigationState
-import com.cliffracertech.bootycrate.recyclerview.ItemGroupSelectorOptionsMenu
 import com.cliffracertech.bootycrate.settings.AppTheme
 import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.*
-import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.accompanist.insets.navigationBarsHeight
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 
@@ -63,19 +76,24 @@ class MainActivityViewModel(
     private val appThemeKey = intPreferencesKey(PrefKeys.appTheme)
     val messages = messageHandler.messages
 
-    fun navigateTo(screen: NavigationState.Screen) {
-        navigationState.navigateTo(screen)
+    // The app theme preference value must be obtained before the UI
+    // is rendered to prevent the screen from flickering due to the
+    // theme changing really quickly.
+    val appTheme by runBlocking {
+        dataStore.awaitEnumPreferenceState<AppTheme>(appThemeKey, scope)
     }
 
-    // The app theme preference value must be obtained before the UI is rendered to
-    // prevent the screen from flickering due to the theme changing really quickly.
-    val appTheme = dataStore.enumPreferenceFlow(appThemeKey, AppTheme.MatchSystem)
+    val visibleScreen by navigationState::visibleScreen
 
     suspend fun getLastLaunchVersionCode() =
         dataStore.data.first()[lastLaunchVersionCodeKey] ?: 9
 
     fun updateLastLaunchVersionCode() =
         dataStore.edit(lastLaunchVersionCodeKey, BuildConfig.VERSION_CODE, scope)
+
+
+    /** Try to handle a back button press, returning whether or not the press was handled. */
+    fun onBackPressed(): Boolean = navigationState.popStack()
 }
 
 /**
@@ -87,172 +105,85 @@ class MainActivityViewModel(
  * an app settings button and an ItemGroupSelector when it is expanded.
  */
 @AndroidEntryPoint
-class MainActivity : NavViewActivity() {
-
+class MainActivity : ComponentActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
-    private val actionBarViewModel: ActionBarViewModel by viewModels()
-    private val bottomAppBarViewModel: BottomAppBarViewModel by viewModels()
-    private val itemGroupSelectorViewModel: ItemGroupSelectorViewModel by viewModels()
-    private var pendingCradleAnim: Animator? = null
-    private var usingDarkTheme: Boolean = false
-
-    lateinit var ui: MainActivityBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        initTheme()
-        ui = MainActivityBinding.inflate(LayoutInflater.from(this))
-        setContentView(ui.root)
-        fragmentContainerId = ui.fragmentContainer.id
-        navigationView = ui.bottomAppBar.ui.navigationView
         super.onCreate(savedInstanceState)
-        initOnClickListeners()
-        initAnimatorConfigs()
-        initNavDrawer()
-        initGradientStyle()
-        initComposeViews()
-
-        viewModel.messages.displayWithSnackBarAnchoredTo(ui.bottomAppBar)
-        repeatWhenStarted {
-            launch { bottomAppBarViewModel.uiState.collect(::updateBottomAppBarState) }
-            launch { bottomAppBarViewModel.shoppingListSizeChange.collect(ui.bottomAppBar::updateShoppingListBadge) }
-            launch { itemGroupSelectorViewModel.itemGroups.collect(ui.itemGroupSelector::submitList) }
+        setThemedContent {
+            val scaffoldState = rememberScaffoldState()
+            MessageDisplayer(this, scaffoldState.snackbarHostState, viewModel.messages)
+            Scaffold(
+                scaffoldState = scaffoldState,
+                topBar = {
+                    BootyCrateActionBar(onUnhandledBackButtonClick = ::onBackPressed)
+                }, bottomBar = {
+                    // TODO: See if this spacer is necessary
+                    Spacer(Modifier.navigationBarsHeight().fillMaxWidth())
+                },
+            ) { padding ->
+                Box(Modifier.padding(padding)) {
+                    MainContent(
+                        visibleScreen = viewModel.visibleScreen,
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = padding)
+                    BootyCrateBottomAppDrawer(Modifier.align(Alignment.BottomStart))
+                }
+            }
         }
     }
 
     override fun onBackPressed() {
-        if (!actionBarViewModel.onBackPressed()) {
-            supportFragmentManager.popBackStack()
-            viewModel.navigateTo(when (ui.bottomAppBar.ui.navigationView.selectedItemId) {
-                R.id.shoppingListButton -> NavigationState.Screen.ShoppingList
-                R.id.inventoryButton ->    NavigationState.Screen.Inventory
-                else ->                    NavigationState.Screen.AppSettings
-            })
-        }
+        if (!viewModel.onBackPressed())
+            super.onBackPressed()
     }
 
-    private fun updateBottomAppBarState(uiState: BottomAppBarViewModel.UiState) {
-        val animate = ui.bottomNavigationDrawer.isLaidOut &&
-                      ui.bottomNavigationDrawer.isHidden != uiState.visible
-        // The cradle layout animation is stored here and started in the cradle
-        // layout's layoutTransition's transition listener's transitionStart
-        // override so that the animation is synced with the layout transition.
-        pendingCradleAnim = ui.bottomAppBar.showCheckoutButton(
-            showing = uiState.checkoutButtonVisible, animate = animate
-        )?.apply {
-            doOnStart { ui.bottomNavigationDrawer.isDraggable = false }
-            doOnEnd { ui.bottomNavigationDrawer.isDraggable = true }
-        }
-        ui.bottomAppBar.ui.checkoutButton.isEnabled = uiState.checkoutButtonIsEnabled
-        ui.bottomNavigationDrawer.isHidden = !uiState.visible
+    private fun setThemedContent(
+        parent: CompositionContext? = null,
+        content: @Composable () -> Unit
+    ) = setContent(parent) {
+        val themePref = viewModel.appTheme
+        val useDarkTheme = themePref == AppTheme.Dark ||
+            (themePref == AppTheme.MatchSystem && isSystemInDarkTheme())
+        BootyCrateTheme(useDarkTheme) { content() }
     }
 
-    private fun initTheme() {
-        // The app theme preference value must be obtained before the UI is
-        // rendered to prevent the screen from flickering due to the theme
-        // changing very quickly if the chosen theme is different from the
-        // default value.
-        val themePref = runBlocking { viewModel.appTheme.first() }
-        val sysDarkThemeIsActive = Configuration.UI_MODE_NIGHT_YES ==
-            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK)
-        usingDarkTheme = themePref == AppTheme.Dark ||
-            (themePref == AppTheme.MatchSystem && sysDarkThemeIsActive)
-        setTheme(if (usingDarkTheme) R.style.DarkTheme
-                 else                R.style.LightTheme)
-    }
+    @Composable fun MainContent(
+        visibleScreen: NavigationState.Screen,
+        modifier: Modifier = Modifier,
+        contentPadding: PaddingValues,
+    ) {
+        var lastScreen by remember { mutableStateOf(visibleScreen) }
+        val lastScreenValue = lastScreen
+        lastScreen = visibleScreen
 
-    override fun onOptionsItemSelected(item: MenuItem) =
-        visibleFragment?.onOptionsItemSelected(item) ?: false
-
-    private fun initOnClickListeners() {
-
-        // bottom app bar
-        ui.bottomAppBar.ui.checkoutButton.onConfirm =
-            bottomAppBarViewModel::onCheckoutButtonClick
-        ui.bottomAppBar.ui.addButton.setOnClickListener {
-            when (visibleFragment) {
-                is ShoppingListFragment -> NewShoppingListItemDialog(this)
-                is InventoryFragment ->    NewInventoryItemDialog(this)
-                else ->                    null
-            }?.show(supportFragmentManager, null)
-        }
-
-        // item group selector
-        ui.settingsButton.setOnClickListener {
-//            viewModel.navigateTo(NavigationState.Screen.AppSettings)
-//            addSecondaryFragment(AppSettingsFragment())
-        }
-        ui.addItemGroupButton.setOnClickListener {
-            itemGroupNameDialog(this, null, itemGroupSelectorViewModel::onConfirmAddNewItemGroupDialog)
-        }
-        ui.itemGroupSelectorOptionsButton.setOnClickListener {
-            ItemGroupSelectorOptionsMenu(
-                anchor = ui.itemGroupSelectorOptionsButton,
-                multiSelectItemGroups = itemGroupSelectorViewModel.multiSelectGroups.value,
-                onMultiSelectCheckboxClick = itemGroupSelectorViewModel::onMultiSelectCheckboxClick,
-                onSelectAllClick = itemGroupSelectorViewModel::onSelectAllGroupsClick
-            ).show()
-        }
-        ui.itemGroupSelector.onItemGroupClick =
-            itemGroupSelectorViewModel::onItemGroupClick
-        ui.itemGroupSelector.onItemGroupRenameRequest =
-            itemGroupSelectorViewModel::onConfirmItemGroupRenameDialog
-        ui.itemGroupSelector.onItemGroupDeletionRequest =
-            itemGroupSelectorViewModel::onConfirmDeleteItemGroupDialog
-    }
-
-    private fun initAnimatorConfigs() {
-        val transitionAnimConfig = AnimatorConfig(
-            resources.getInteger(R.integer.primaryFragmentTransitionDuration).toLong(),
-            AnimationUtils.loadInterpolator(this, R.anim.default_interpolator))
-        primaryFragmentTransitionAnimatorConfig = transitionAnimConfig
-        defaultSecondaryFragmentEnterAnimResId = R.animator.fragment_close_enter
-        defaultSecondaryFragmentExitAnimResId = R.animator.fragment_close_exit
-
-        ui.bottomAppBar.navIndicator.width =
-            2.5f * ui.bottomAppBar.ui.navigationView.itemIconSize
-        ui.bottomAppBar.animatorConfig = transitionAnimConfig
-        ui.bottomAppBar.ui.cradleLayout.layoutTransition.apply {
-            // views with bottomSheetBehaviors do not like to be animated by layout
-            // transitions (it makes them jump up to the top of the screen), so we
-            // have to set animateParentHierarchy to false to prevent this
-            setAnimateParentHierarchy(false)
-            doOnStart { pendingCradleAnim?.start()
-                        pendingCradleAnim = null }
-        }
-    }
-
-    private fun initNavDrawer() {
-        val callback = ui.bottomSheetCallback()
-        ui.bottomNavigationDrawer.addBottomSheetCallback(callback)
-        if (!bottomAppBarViewModel.uiState.value.visible)
-            callback.onStateChanged(ui.bottomNavigationDrawer, BottomSheetBehavior.STATE_HIDDEN)
-        // If the bottom navigation drawer adjusts its peek height to prevent it
-        // from interfering with the system home gesture, then the shopping list
-        // and inventory views need to have their bottom paddings adjusted accordingly.
-        // The change is performed on already added fragments and future fragments
-        // so that the padding will be set regardless of whether the fragments are
-        // currently added or not.
-        ui.bottomNavigationDrawer.onPeekHeightAutoAdjusted = { padding ->
-            supportFragmentManager.fragments.forEach { fragment ->
-                (fragment as? ItemListFragment<*>)?.setListBottomPadding(padding)
+        AnimatedContent(
+            targetState = visibleScreen,
+            modifier = modifier,
+            transitionSpec = {
+                if (visibleScreen is NavigationState.RootScreen &&
+                    lastScreenValue is NavigationState.RootScreen
+                ) {
+                    val leftToRight = visibleScreen.leftToRightIndex >
+                                      lastScreenValue.leftToRightIndex
+                    slideIn { IntOffset(if (leftToRight) it.width else -it.width, 0) } + fadeIn() with
+                    slideOut { IntOffset(if (leftToRight) -it.width else it.width, 0) } + fadeOut()
+                } else {
+                    val addingToStack = visibleScreen.stackIndex > lastScreen.stackIndex
+                    val enteringInitialScale = if (addingToStack) 1.1f else 0.9f
+                    val exitingTargetScale = if (addingToStack) 0.9f else 1.1f
+                    (scaleIn(initialScale = enteringInitialScale) + fadeIn() with
+                     scaleOut(targetScale = exitingTargetScale) + fadeOut()).apply {
+                        targetContentZIndex = if (addingToStack) 1f else -1f
+                    }
+                }
             }
-            supportFragmentManager.addFragmentOnAttachListener { _, fragment ->
-                if (fragment is ItemListFragment<*>)
-                    fragment.setListBottomPadding(padding)
+        ) {
+            when {
+                it.isShoppingList -> ShoppingListScreen(contentPadding)
+                it.isInventory ->    InventoryScreen(contentPadding)
+                it.isAppSettings -> {}
             }
-        }
-        ui.bottomAppBar.ui.navigationView.addOnItemSelectedListener {
-            viewModel.navigateTo(when (it.itemId) {
-                R.id.shoppingListButton -> NavigationState.Screen.ShoppingList
-                R.id.inventoryButton ->    NavigationState.Screen.Inventory
-                else ->                    NavigationState.Screen.AppSettings
-            })
-        }
-    }
-
-    private fun initComposeViews() {
-        ui.actionBar.setContent {
-            BootyCrateTheme(usingDarkTheme) { BootyCrateActionBar() }
         }
     }
 

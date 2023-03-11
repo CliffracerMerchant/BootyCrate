@@ -11,6 +11,7 @@
     <string name="settings_description">BootyCrate settings</string>
     <string name="search_description">Search</string>
     <string name="back_description">Back</string>
+    <string name="dismiss_description">Dismiss</string>
     <string name="search_query_description">Search query</string>
     <string name="change_sorting_description">Change sorting</string>
     <string name="name_ascending_description">Name ascending</string>
