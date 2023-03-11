@@ -28,24 +28,40 @@ import javax.inject.Inject
 class NavigationState @Inject constructor() {
 
     /** A navigation destination for the app. */
-    sealed class Screen {
+    sealed class Screen(val stackIndex: Int) {
+        val isRootScreen get() = this is RootScreen
+        val isAdditionalScreen get() = this is AdditionalScreen
         val isShoppingList get() = this is RootScreen.ShoppingList
         val isInventory get() = this is RootScreen.Inventory
-        val isAppSettings get() = this is AdditionalScreen.AppSettings
+        val isAppSettings get() = this is AdditionalScreen && this.type.isAppSettings
     }
 
     /** RootScreen's values describe the possible root [Screen]s for the
-     * app, i.e. the possible [Screen]s when the back stack is empty. */
-    sealed class RootScreen: Screen() {
-        object ShoppingList : RootScreen()
-        object Inventory : RootScreen()
+     * app, i.e. the possible [Screen]s when the back stack is empty. The
+     * [leftToRightIndex] is the left to right ordering of the screen among
+     * all [RootScreen]s, and can be used to determine the appropriate
+     * transition animation to play. */
+    sealed class RootScreen(
+        val leftToRightIndex: Int
+    ): Screen(stackIndex = 0) {
+        object ShoppingList : RootScreen(0)
+        object Inventory : RootScreen(1)
     }
 
-    /** AdditionalScreen's value describe the additional [Screen]s
-     * that can appear on top of one of the [RootScreen]s.*/
-    sealed class AdditionalScreen: Screen() {
-        object AppSettings : AdditionalScreen()
+    /** AdditionalScreenType's values describe the types of additional
+     * [Screen]s that can appear on top of one of the [RootScreen]s.*/
+    enum class AdditionalScreenType { AppSettings;
+        val isAppSettings get() = this == AppSettings
     }
+
+    /** AdditionalScreen describes a given Screen that can appear over
+     * one of the [RootScreen]s. The type of screen is described by the
+     * value of [type]. [Screen]'s property [stackIndex] can be used in
+     * determining the appropriate transition animation to play. */
+    class AdditionalScreen(
+        val type: AdditionalScreenType,
+        stackIndex: Int,
+    ): Screen(stackIndex)
 
     var rootScreen by mutableStateOf<RootScreen>(RootScreen.ShoppingList)
         private set
@@ -69,9 +85,10 @@ class NavigationState @Inject constructor() {
 
     /** Add a new [AdditionalScreen] to the back stack. This is a no-op if the
      * top-most [AdditionalScreen] on the back stack is the same as [screen]. */
-    fun addToStack(screen: AdditionalScreen) {
-        if (additionalScreenStack.last() != screen)
-            additionalScreenStack.add(screen)
+    fun addToStack(screenType: AdditionalScreenType) {
+        if (additionalScreenStack.last().type != screenType)
+            additionalScreenStack.add(
+                AdditionalScreen(screenType, additionalScreenStack.size + 1))
     }
 
     /** Pop the top element off of the back stack. The return
