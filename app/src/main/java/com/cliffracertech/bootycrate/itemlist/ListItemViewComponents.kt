@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -29,6 +30,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.SubcomposeLayout
@@ -241,6 +243,7 @@ fun AmountEditPreview() = BootyCrateTheme {
 
 /**
 * A grid arrangement of color options to choose from.
+ *
 * @param modifier The [Modifier] that will be used for the picker
 * @param currentColor The [Color] in [colors] that will be
 *     identified as the currently picked color by a checkmark
@@ -258,29 +261,31 @@ fun AmountEditPreview() = BootyCrateTheme {
     colorDescriptions: List<String>,
     onColorClick: (Int, Color) -> Unit,
 ) = BoxWithConstraints {
-    val maxColorsPerRow = (maxWidth / 48.dp).toInt()
+    val maxColorsPerRow = ((maxWidth - 4.dp) / 48.dp).toInt()
     val rows = ceil(colors.size.toFloat() / maxColorsPerRow).toInt()
     val columns = colors.size / rows
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
-        modifier = modifier,
-        contentPadding = PaddingValues(vertical = 8.dp, horizontal = 2.dp),
+        modifier = modifier.height(48.dp * rows + 4.dp),
+        contentPadding = PaddingValues(2.dp),
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalArrangement = Arrangement.SpaceEvenly,
+        userScrollEnabled = false
     ) {
         require(colors.size == colorDescriptions.size)
-        itemsIndexed(items = colors, contentType = { _, _ -> true }) { index, color ->
-            val label = stringResource(R.string.edit_item_color_description,
+        itemsIndexed(colors) { index, color ->
+            val label = stringResource(R.string.color_picker_option_description,
                                        colorDescriptions[index])
             Box(Modifier
                 .requiredSize(48.dp)
-                .padding(10.dp)
-                .background(color, CircleShape)
+                .clip(RoundedCornerShape(12.dp))
                 .clickable(
                     role = Role.Button,
                     onClick = { onColorClick(index, color) },
                     onClickLabel = label)
+                .padding(10.dp)
+                .background(color, CircleShape)
             ) {
                 if (color == currentColor)
                     // The check mark's offset makes it appear more centered
