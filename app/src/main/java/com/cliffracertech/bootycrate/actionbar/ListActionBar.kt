@@ -35,7 +35,11 @@ import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
     val gradient = remember(gradStart, gradEnd) {
         Brush.horizontalGradient(listOf(gradStart, gradEnd))
     }
-    Row(modifier.fillMaxWidth().background(gradient).height(56.dp),
+    Row(modifier = modifier
+            .fillMaxWidth()
+            .background(gradient)
+            .statusBarsPadding()
+            .height(56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         val color = MaterialTheme.colors.onPrimary

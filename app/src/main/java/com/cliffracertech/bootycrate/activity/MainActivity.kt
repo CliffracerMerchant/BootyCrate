@@ -27,13 +27,16 @@ import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionContext
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
+import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -50,7 +53,9 @@ import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.*
+import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.insets.navigationBarsHeight
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -142,10 +147,22 @@ class MainActivity : ComponentActivity() {
         parent: CompositionContext? = null,
         content: @Composable () -> Unit
     ) = setContent(parent) {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         val themePref = viewModel.appTheme
         val useDarkTheme = themePref == AppTheme.Dark ||
             (themePref == AppTheme.MatchSystem && isSystemInDarkTheme())
-        BootyCrateTheme(useDarkTheme) { content() }
+
+        val uiController = rememberSystemUiController()
+        LaunchedEffect(useDarkTheme) {
+            // For some reason the status bar icons get reset
+            // to a light color when the theme is changed, so
+            // this effect needs to run after every theme change.
+            uiController.setStatusBarColor(Color.Transparent, true)
+            uiController.setNavigationBarColor(Color.Transparent, !useDarkTheme)
+        }
+        BootyCrateTheme(useDarkTheme) {
+            ProvideWindowInsets { content() }
+        }
     }
 
     @Composable fun MainContent(
