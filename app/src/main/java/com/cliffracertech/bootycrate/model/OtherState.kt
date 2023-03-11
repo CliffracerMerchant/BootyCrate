@@ -83,10 +83,11 @@ class NavigationState @Inject constructor() {
             rootScreen = screen
     }
 
-    /** Add a new [AdditionalScreen] to the back stack. This is a no-op if the
-     * top-most [AdditionalScreen] on the back stack is the same as [screen]. */
+    /** Add a new [AdditionalScreen] to the back stack. This is a no-op
+     * if the top-most [AdditionalScreen] on the back stack's is the same
+     * [AdditionalScreenType] as [screenType]. */
     fun addToStack(screenType: AdditionalScreenType) {
-        if (additionalScreenStack.last().type != screenType)
+        if (additionalScreenStack.lastOrNull()?.type != screenType)
             additionalScreenStack.add(
                 AdditionalScreen(screenType, additionalScreenStack.size + 1))
     }
