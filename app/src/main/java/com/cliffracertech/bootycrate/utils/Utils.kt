@@ -79,9 +79,9 @@ fun Context.dpToPixels(dp: Float) = resources.dpToPixels(dp)
 fun Context.spToPixels(sp: Float) = resources.spToPixels(sp)
 
 /** Return the [Dp] amount converted to pixels, using the provided [density]. */
-fun Dp.toPx(density: Density): Float = with(density, ::toPx)
+fun Dp.toPx(density: Density): Float = with(density) { toPx() }
 /** Return the [Dp] amount rounded to the nearest pixel, using the provided [density]. */
-fun Dp.roundToPx(density: Density): Int = with(density, ::roundToPx)
+fun Dp.roundToPx(density: Density): Int = with(density) { roundToPx() }
 
 private val typedValue = TypedValue()
 /** Resolve the current theme's value for the provided int attribute. */
