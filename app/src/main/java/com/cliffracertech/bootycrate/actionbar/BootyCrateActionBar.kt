@@ -22,7 +22,10 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ListItem
 
 /** Compose a [ListActionBar] with state provided by an instance of [ActionBarViewModel]. */
-@Composable fun BootyCrateActionBar(modifier: Modifier = Modifier) {
+@Composable fun BootyCrateActionBar(
+    modifier: Modifier = Modifier,
+    onUnhandledBackButtonClick: () -> Unit,
+) {
     val context = LocalContext.current
     val viewModel: ActionBarViewModel = viewModel()
     val sortOptions = remember { enumValues<ListItem.Sort>().asList() }
@@ -34,8 +37,10 @@ import com.cliffracertech.bootycrate.model.database.ListItem
     ListActionBar(
         modifier = modifier,
         showBackButton = viewModel.showBackButton,
-        onBackButtonClick = viewModel::onBackPressed,
-        title = title,
+        onBackButtonClick = {
+            if (!viewModel.onBackPressed())
+                onUnhandledBackButtonClick()
+        }, title = title,
         searchQuery = viewModel.searchQuery,
         onSearchQueryChanged = viewModel::onSearchQueryChangeRequest,
         showSearchButton = viewModel.showSearchButton,
