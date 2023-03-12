@@ -62,7 +62,7 @@ import androidx.compose.ui.unit.dp
                 if (searchQuery != null)
                     lastSearchQuery = searchQuery
             } else Crossfade(title) { // This inner cross fade is for when the title changes.
-                Text(it, style = MaterialTheme.typography.h5, maxLines = 1)
+                Text(it, style = MaterialTheme.typography.h6, maxLines = 1)
             }
         }
     }
