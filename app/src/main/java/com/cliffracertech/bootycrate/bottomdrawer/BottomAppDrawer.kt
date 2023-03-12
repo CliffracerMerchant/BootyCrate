@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
@@ -47,11 +46,9 @@ enum class DrawerState { Hidden, Collapsed, Expanded;
 /**
  * A state holder that contains parameters for a bottom-aligned drawer. The
  * properties [expandedHeight] and [peekHeight] describe the height of the
- * drawer when it is fully expanded and collapsed, respectively. The method
- * [swipeableState] can be invoked in a [Composable] context to obtain a
- * [SwipeableState]`<DrawerState>`. This can be used alongside the drawer's
- * anchor points provided through the [anchors] property to create a
- * swipeable bottom drawer through the [Modifier.swipeable] method.
+ * drawer when it is fully expanded and collapsed, respectively. The [anchors]
+ * property can be used to create a swipeable bottom drawer through the
+ * [Modifier.swipeable] method.
  */
 class BottomDrawerState(
     density: Density,
@@ -61,14 +58,10 @@ class BottomDrawerState(
     val expandedHeightPx = expandedHeight.toPx(density)
     val peekHeightPx = peekHeight.toPx(density)
 
-    @Composable fun swipeableState(
-        initialState: DrawerState = Collapsed
-    ) = rememberSwipeableState(initialState)
-
     val anchors = mapOf(
-        peekHeightPx                       to Hidden,
-        0f                                 to Collapsed,
-        -(expandedHeightPx - peekHeightPx) to Expanded)
+        0f                              to Expanded,
+        expandedHeightPx - peekHeightPx to Collapsed,
+        expandedHeightPx                to Hidden)
 }
 
 /**
@@ -93,21 +86,21 @@ class BottomDrawerState(
             targetState: DrawerState
         ) -> Unit
 ) {
-    val swipeableState = state.swipeableState(initialDrawerState)
+    val swipeableState = rememberSwipeableState(initialDrawerState)
 
     Box(modifier = modifier
         .height(state.expandedHeight)
         .fillMaxWidth()
-        .offset(y = state.expandedHeight - state.peekHeight)
+        .graphicsLayer { translationY = swipeableState.offset.value }
         .swipeable(
             state = swipeableState,
             anchors = state.anchors,
             orientation = Orientation.Vertical)
-        .graphicsLayer { translationY = swipeableState.offset.value }
     ) {
-        val expansionProgressProvider = remember {{
-            (-swipeableState.offset.value / state.expandedHeightPx).coerceIn(0f, 1f)
-        }}
+        val expansionProgressProvider = {
+            val collapsedOffset = state.expandedHeightPx - state.peekHeightPx
+            (1f - swipeableState.offset.value / collapsedOffset).coerceAtLeast(0f)
+        }
         content(expansionProgressProvider, swipeableState.targetValue)
     }
 }
@@ -128,7 +121,7 @@ class BottomDrawerState(
     val drawerState = remember(density, additionalPeekHeight) {
         BottomDrawerState(
             density = density,
-            expandedHeight = 456.dp,
+            expandedHeight = 456.dp + additionalPeekHeight,
             peekHeight = 56.dp + additionalPeekHeight)
     }
     BottomAppDrawer(
@@ -136,10 +129,10 @@ class BottomDrawerState(
         modifier = modifier,
     ) { expansionProgressProvider, targetState ->
         val expansionProgress = expansionProgressProvider()
-        if (expansionProgress < 1f)
-            BootyCrateBottomAppBar(
-                interpolationProvider = remember {{ 1f - expansionProgressProvider() }},
-                contentModifier = Modifier.height(drawerState.peekHeight))
+
+        BootyCrateBottomAppBar(
+            interpolationProvider = remember {{ 1f - expansionProgressProvider() }},
+            contentModifier = Modifier.height(drawerState.peekHeight))
 
         if (expansionProgress > 0f)
             ItemGroupSelector(
