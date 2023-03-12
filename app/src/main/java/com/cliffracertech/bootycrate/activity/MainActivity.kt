@@ -156,12 +156,17 @@ class MainActivity : ComponentActivity() {
             (themePref == AppTheme.MatchSystem && isSystemInDarkTheme())
 
         val uiController = rememberSystemUiController()
+        // For some reason the status bar icons get reset
+        // to a light color when the theme is changed, so
+        // this effect needs to run after every theme change.
         LaunchedEffect(useDarkTheme) {
-            // For some reason the status bar icons get reset
-            // to a light color when the theme is changed, so
-            // this effect needs to run after every theme change.
-            uiController.setStatusBarColor(Color.Transparent, true)
-            uiController.setNavigationBarColor(Color.Transparent, !useDarkTheme)
+            uiController.setStatusBarColor(
+                color = Color.Transparent,
+                darkIcons = true)
+            uiController.setNavigationBarColor(
+                color = Color.Transparent,
+                darkIcons = true,
+                navigationBarContrastEnforced = false)
         }
         BootyCrateTheme(useDarkTheme) { content() }
     }
