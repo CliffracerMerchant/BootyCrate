@@ -112,15 +112,24 @@ class BottomDrawerState(
     }
 }
 
-/** A BottomAppDrawer with state provided by an instance of [BottomAppDrawerViewModel]. */
-@Composable fun BootyCrateBottomAppDrawer(modifier: Modifier = Modifier) {
+/**
+ * A BottomAppDrawer with state provided by an instance of [BottomAppDrawerViewModel].
+ *
+ * @param modifier The [Modifier] that will apply to the entire drawer
+ * @param additionalPeekHeight A [Dp] value that will be added to the default
+ *     56.dp peek height of the drawer. This value can be used to adjust for
+ *     the height of the bottom navigation bar, if any.
+ */
+@Composable fun BootyCrateBottomAppDrawer(
+    modifier: Modifier = Modifier,
+    additionalPeekHeight: Dp = 0.dp) {
     val vm: BottomAppDrawerViewModel = viewModel()
     val density = LocalDensity.current
-    val drawerState = remember {
+    val drawerState = remember(density, additionalPeekHeight) {
         BottomDrawerState(
             density = density,
             expandedHeight = 456.dp,
-            peekHeight = 56.dp)
+            peekHeight = 56.dp + additionalPeekHeight)
     }
     BottomAppDrawer(
         state = drawerState,

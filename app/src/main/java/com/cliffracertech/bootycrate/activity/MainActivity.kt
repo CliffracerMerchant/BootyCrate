@@ -19,9 +19,10 @@ import androidx.compose.animation.with
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
@@ -35,7 +36,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -52,9 +55,7 @@ import com.cliffracertech.bootycrate.settings.AppTheme
 import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
-import com.cliffracertech.bootycrate.utils.*
-import com.google.accompanist.insets.ProvideWindowInsets
-import com.google.accompanist.insets.navigationBarsHeight
+import com.cliffracertech.bootycrate.utils.awaitEnumPreferenceState
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -122,17 +123,19 @@ class MainActivity : ComponentActivity() {
                 scaffoldState = scaffoldState,
                 topBar = {
                     BootyCrateActionBar(onUnhandledBackButtonClick = ::onBackPressed)
-                }, bottomBar = {
-                    // TODO: See if this spacer is necessary
-                    Spacer(Modifier.navigationBarsHeight().fillMaxWidth())
                 },
             ) { padding ->
-                Box(Modifier.padding(padding)) {
+                Box(Modifier.fillMaxSize()) {
                     MainContent(
                         visibleScreen = viewModel.visibleScreen,
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = padding)
-                    BootyCrateBottomAppDrawer(Modifier.align(Alignment.BottomStart))
+                        modifier = Modifier.padding(padding),
+                        contentPadding = PaddingValues(start = 8.dp, top = 8.dp,
+                                                       end = 8.dp, bottom = 64.dp))
+                    BootyCrateBottomAppDrawer(
+                        modifier = Modifier.align(Alignment.BottomStart),
+                        additionalPeekHeight = WindowInsets.navigationBars
+                            .asPaddingValues(LocalDensity.current)
+                            .calculateBottomPadding())
                 }
             }
         }
@@ -160,9 +163,7 @@ class MainActivity : ComponentActivity() {
             uiController.setStatusBarColor(Color.Transparent, true)
             uiController.setNavigationBarColor(Color.Transparent, !useDarkTheme)
         }
-        BootyCrateTheme(useDarkTheme) {
-            ProvideWindowInsets { content() }
-        }
+        BootyCrateTheme(useDarkTheme) { content() }
     }
 
     @Composable fun MainContent(
