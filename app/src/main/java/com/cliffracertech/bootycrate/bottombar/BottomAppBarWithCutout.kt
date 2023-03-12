@@ -57,7 +57,6 @@ private val path = Path()
             onElementLayout: (Any, LayoutCoordinates) -> Unit)
         -> Unit,
 ) {
-    val density = LocalDensity.current
     var canvasWidth by remember { mutableStateOf(0f) }
     val indicatorStartLength by animateFloatAsState(
         topEdge.findIndicatorStartLength(indicatorTarget, canvasWidth))
@@ -84,8 +83,7 @@ private val path = Path()
         }.first().measure(constraints)
 
         val barContentsPlaceable = subcompose(BottomAppBarWithCutoutPart.BarContent) {
-            val cutoutWidthDp = with (density) { cutoutContents.width.toDp() }
-            topEdge.resetElementPositions()
+            val cutoutWidthDp = cutoutContents.width.toDp()
             barContents(cutoutWidthDp, topEdge::updateElementPosition)
         }.first().measure(constraints)
 
