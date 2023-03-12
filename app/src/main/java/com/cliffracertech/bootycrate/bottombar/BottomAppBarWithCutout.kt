@@ -48,6 +48,7 @@ private val path = Path()
 
 @Composable fun BottomAppBarWithCutout(
     modifier: Modifier = Modifier,
+    contentAlphaProvider: () -> Float,
     backgroundBrush: Brush,
     topEdge: TopEdgeWithCutout,
     indicatorTarget: Any?,
@@ -96,7 +97,9 @@ private val path = Path()
 
         layout(constraints.maxWidth, constraints.maxHeight) {
             cutoutContents.place(cutoutOffset)
-            barContentsPlaceable.place(IntOffset.Zero)
+            barContentsPlaceable.placeWithLayer(IntOffset.Zero) {
+                alpha = contentAlphaProvider()
+            }
         }
     }
 }
@@ -176,6 +179,7 @@ private val path = Path()
             modifier = Modifier
                 .padding(top = cutoutContentOverflow)
                 .height(56.dp),
+            contentAlphaProvider = { interpolation },
             backgroundBrush = brush,
             topEdge = topEdgeWithCutout,
             indicatorTarget = indicatorTarget

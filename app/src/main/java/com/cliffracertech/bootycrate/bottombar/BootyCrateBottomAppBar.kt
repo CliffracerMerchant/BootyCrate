@@ -65,15 +65,13 @@ import com.cliffracertech.bootycrate.model.NavigationState
 ) = BoxWithConstraints {
     val viewModel: BottomAppBarViewModel = viewModel()
     val density = LocalDensity.current
-    val gradientStartColor = MaterialTheme.colors.primaryVariant
-    val gradientEndColor = MaterialTheme.colors.secondaryVariant
-    val gradientColors = remember { listOf(gradientStartColor, gradientEndColor) }
-
-    var cutoutLayoutCoordinates by remember { mutableStateOf(Rect.Zero) }
+    val gradientStartColor = MaterialTheme.colors.primary
+    val gradientEndColor = MaterialTheme.colors.secondary
     val backgroundBrush = remember {
-        Brush.horizontalGradient(gradientColors)
+        Brush.horizontalGradient(listOf(gradientStartColor, gradientEndColor))
     }
 
+    var cutoutLayoutCoordinates by remember { mutableStateOf(Rect.Zero) }
     val cutoutWidth by animateDpAsState(
         targetValue = cutoutContentWidth(
             showingCheckoutButton = viewModel.checkoutButtonIsVisible))
@@ -112,6 +110,7 @@ import com.cliffracertech.bootycrate.model.NavigationState
 
     BottomAppBarWithCutout(
         modifier = modifier,
+        contentAlphaProvider = interpolationProvider,
         backgroundBrush = backgroundBrush,
         indicatorTarget = viewModel.selectedRootScreen,
         topEdge = topEdge,

@@ -135,29 +135,31 @@ class BottomDrawerState(
         state = drawerState,
         modifier = modifier,
     ) { expansionProgressProvider, targetState ->
-        BootyCrateBottomAppBar(
-            interpolationProvider = remember {{ 1f - expansionProgressProvider() }},
-            contentModifier = Modifier
-                .height(drawerState.peekHeight)
-                .graphicsLayer { alpha = 1f - expansionProgressProvider() })
-        ItemGroupSelector(
-            title = stringResource(R.string.app_name),
-            onSelectAllClick = vm::onSelectAllClick,
-            multiSelectGroups = vm.multiSelectItemGroups,
-            onMultiSelectClick = vm::onMultiSelectItemGroupsCheckboxClick,
-            itemGroups = vm.itemGroups,
-            onItemGroupClick = vm::onItemGroupClick,
-            onItemGroupRenameClick = vm::onItemGroupRenameClick,
-            onItemGroupDeleteClick = vm::onItemGroupDeleteClick,
-            onAddButtonClick = vm::onAddButtonClick,
-            modifier = Modifier.graphicsLayer {
-                if (targetState != Hidden)
-                    alpha = expansionProgressProvider()
-            }, otherTopBarContent = {
-                IconButton(vm::onSettingsButtonClick) {
-                    Icon(Icons.Default.Settings, null)
-                }
-            })
+        val expansionProgress = expansionProgressProvider()
+        if (expansionProgress < 1f)
+            BootyCrateBottomAppBar(
+                interpolationProvider = remember {{ 1f - expansionProgressProvider() }},
+                contentModifier = Modifier.height(drawerState.peekHeight))
+
+        if (expansionProgress > 0f)
+            ItemGroupSelector(
+                title = stringResource(R.string.app_name),
+                onSelectAllClick = vm::onSelectAllClick,
+                multiSelectGroups = vm.multiSelectItemGroups,
+                onMultiSelectClick = vm::onMultiSelectItemGroupsCheckboxClick,
+                itemGroups = vm.itemGroups,
+                onItemGroupClick = vm::onItemGroupClick,
+                onItemGroupRenameClick = vm::onItemGroupRenameClick,
+                onItemGroupDeleteClick = vm::onItemGroupDeleteClick,
+                onAddButtonClick = vm::onAddButtonClick,
+                modifier = Modifier.graphicsLayer {
+                    if (targetState != Hidden)
+                        alpha = expansionProgressProvider()
+                }, otherTopBarContent = {
+                    IconButton(vm::onSettingsButtonClick) {
+                        Icon(Icons.Default.Settings, null)
+                    }
+                })
     }
 
     if (vm.renameItemGroupDialogState is NameDialogState.Showing)
