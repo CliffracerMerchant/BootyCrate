@@ -131,8 +131,7 @@ class BottomDrawerState(
         val expansionProgress = expansionProgressProvider()
 
         BootyCrateBottomAppBar(
-            interpolationProvider = remember {{ 1f - expansionProgressProvider() }},
-            contentModifier = Modifier.height(drawerState.peekHeight))
+            interpolationProvider = remember {{ 1f - expansionProgressProvider() }})
 
         if (expansionProgress > 0f)
             ItemGroupSelector(

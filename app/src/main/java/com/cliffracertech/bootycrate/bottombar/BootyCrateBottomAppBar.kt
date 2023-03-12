@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -50,18 +53,15 @@ import com.cliffracertech.bootycrate.model.NavigationState
         onClick = onClick),
     horizontalAlignment = Alignment.CenterHorizontally
 ) {
-    Icon(iconPainter, title)
-    Text(title)
+    Icon(iconPainter, title, Modifier.size(24.dp))
+    Text(title, style = MaterialTheme.typography.caption)
 }
 
-/** An instance of [BottomAppBarWithCutout] with state provided by an instance
- * of [BottomAppBarViewModel]. The [contentModifier] parameter can be used to
- * define the [Modifier] used for the inner content of the bar, rather than the
- * [Modifier] for the entire bar. */
+/** An instance of [BottomAppBarWithCutout] with state
+ * provided by an instance of [BottomAppBarViewModel]. */
 @Composable fun BootyCrateBottomAppBar(
     interpolationProvider: () -> Float,
     modifier: Modifier = Modifier,
-    contentModifier: Modifier = Modifier
 ) = BoxWithConstraints {
     val viewModel: BottomAppBarViewModel = viewModel()
     val density = LocalDensity.current
@@ -115,17 +115,23 @@ import com.cliffracertech.bootycrate.model.NavigationState
         indicatorTarget = viewModel.selectedRootScreen,
         topEdge = topEdge,
     ) { _, onLayout ->
-        Row(contentModifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+        Row(modifier = Modifier
+                .height(56.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             val shoppingList = NavigationState.RootScreen.ShoppingList
             NavBarItem(
-                title = stringResource(R.string.shopping_list_description),
+                title = stringResource(R.string.shopping_list_navigation_item_name),
                 iconPainter = painterResource(R.drawable.shopping_cart_icon),
                 modifier = Modifier.onPlaced { onLayout(shoppingList, it) }
             ) { viewModel.onNavBarItemClick(shoppingList)}
 
             val inventory = NavigationState.RootScreen.Inventory
             NavBarItem(
-                title = stringResource(R.string.inventory_description),
+                title = stringResource(R.string.inventory_navigation_item_name),
                 iconPainter = painterResource(R.drawable.inventory_icon),
                 modifier = Modifier.onPlaced { onLayout(inventory, it) }
             ) { viewModel.onNavBarItemClick(inventory)}
