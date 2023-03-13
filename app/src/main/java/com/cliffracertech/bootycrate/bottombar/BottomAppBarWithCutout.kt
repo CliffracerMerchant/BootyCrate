@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.bottombar
 
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -59,7 +60,8 @@ private val path = Path()
 ) {
     var canvasWidth by remember { mutableStateOf(0f) }
     val indicatorStartLength by animateFloatAsState(
-        topEdge.findIndicatorStartLength(indicatorTarget, canvasWidth))
+        targetValue = topEdge.findIndicatorStartLength(indicatorTarget, canvasWidth),
+        animationSpec = spring(stiffness = Spring.StiffnessLow))
 
     SubcomposeLayout(modifier
         .fillMaxWidth()
@@ -80,22 +82,21 @@ private val path = Path()
     ) { constraints ->
         val cutoutContents = subcompose(BottomAppBarWithCutoutPart.CutoutContent) {
             topEdge.cutout.contents()
-        }.first().measure(constraints)
+        }.firstOrNull()?.measure(constraints.copy(minWidth = 0))
+        val cutoutContentsWidth = cutoutContents?.width ?: 0
 
         val barContentsPlaceable = subcompose(BottomAppBarWithCutoutPart.BarContent) {
-            val cutoutWidthDp = cutoutContents.width.toDp()
+            val cutoutWidthDp = cutoutContentsWidth.toDp()
             barContents(cutoutWidthDp, topEdge::updateElementPosition)
-        }.first().measure(constraints)
+        }.firstOrNull()?.measure(constraints)
 
         val cutoutOffset = IntOffset(
-            x = (//constraints.maxWidth - cutoutContents.width) / 2,
-                    //TODO: Find out why cutoutContents.width is wrong value
-                 constraints.maxWidth - (56 + 56 + 4).dp.roundToPx()) / 2,
+            x = (constraints.maxWidth - cutoutContentsWidth) / 2,
             y = -topEdge.cutout.contentVerticalOverflowPx.roundToInt())
 
         layout(constraints.maxWidth, constraints.maxHeight) {
-            cutoutContents.place(cutoutOffset)
-            barContentsPlaceable.placeWithLayer(IntOffset.Zero) {
+            cutoutContents?.place(cutoutOffset)
+            barContentsPlaceable?.placeWithLayer(IntOffset.Zero) {
                 alpha = contentAlphaProvider()
             }
         }

@@ -254,16 +254,17 @@ fun cutoutContentWidth(showingCheckoutButton: Boolean) =
     }
 
     Row(modifier = modifier
-        .onPlaced {
-            coords = Rect(it.positionInParent(), it.size.toSize())
-        }.graphicsLayer {
-            val interp = interpolationProvider()
-            alpha = interp
-            scaleX = 0.8f + 0.2f * interp
-            scaleY = 0.8f + 0.2f * interp
-            translationY = 48.dp.toPx() * (interp - 1f)
-        },
-        horizontalArrangement = Arrangement.spacedBy((-14).dp)
+            .onPlaced {
+                coords = Rect(it.positionInParent(), it.size.toSize())
+            }.graphicsLayer {
+                val interp = interpolationProvider()
+                alpha = interp
+                scaleX = 0.8f + 0.2f * interp
+                scaleY = 0.8f + 0.2f * interp
+                translationY = 48.dp.toPx() * (interp - 1f)
+            },
+        horizontalArrangement = Arrangement.spacedBy((-14).dp),
+        verticalAlignment = Alignment.Bottom
     ) {
         AnimatedVisibility(checkoutButtonIsVisible) {
             CheckoutButton(
