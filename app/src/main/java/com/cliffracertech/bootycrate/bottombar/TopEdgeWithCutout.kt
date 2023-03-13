@@ -227,10 +227,6 @@ data class TopEdgeWithCutout(
     val topOuterCornerRadiusPx = topOuterCornerRadius.toPx(density)
     private val barContentPositions = mutableStateMapOf<Any, Rect>()
 
-    /** Reset the recorded positions of elements inside the shape
-     * that is using the [TopEdgeWithCutout] for its top edge. */
-    fun resetElementPositions() = barContentPositions.clear()
-
     /** Record the [coordinates] of an element inside the shape that is
      * using the [TopEdgeWithCutout] for its top edge. [id] will be used
      * as a key to identify each element. This is used in conjunction
@@ -297,6 +293,7 @@ data class TopEdgeWithCutout(
             edgeStartLength: Float
         ) {
             pathMeasure.setPath(topEdgePath, forceClosed = false)
+            path.reset()
             pathMeasure.getSegment(
                 edgeStartLength,
                 edgeStartLength + widthPx,
