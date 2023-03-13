@@ -37,7 +37,6 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -53,10 +52,7 @@ private val path = Path()
     backgroundBrush: Brush,
     topEdge: TopEdgeWithCutout,
     indicatorTarget: Any?,
-    barContents: @Composable (
-            cutoutWidth: Dp,
-            onElementLayout: (Any, LayoutCoordinates) -> Unit)
-        -> Unit,
+    barContents: @Composable (onElementLayout: (Any, LayoutCoordinates) -> Unit) -> Unit,
 ) {
     var canvasWidth by remember { mutableStateOf(0f) }
     val indicatorStartLength by animateFloatAsState(
@@ -83,15 +79,13 @@ private val path = Path()
         val cutoutContents = subcompose(BottomAppBarWithCutoutPart.CutoutContent) {
             topEdge.cutout.contents()
         }.firstOrNull()?.measure(constraints.copy(minWidth = 0))
-        val cutoutContentsWidth = cutoutContents?.width ?: 0
 
         val barContentsPlaceable = subcompose(BottomAppBarWithCutoutPart.BarContent) {
-            val cutoutWidthDp = cutoutContentsWidth.toDp()
-            barContents(cutoutWidthDp, topEdge::updateElementPosition)
+            barContents(topEdge::updateElementPosition)
         }.firstOrNull()?.measure(constraints)
 
         val cutoutOffset = IntOffset(
-            x = (constraints.maxWidth - cutoutContentsWidth) / 2,
+            x = (constraints.maxWidth - (cutoutContents?.width ?: 0)) / 2,
             y = -topEdge.cutout.contentVerticalOverflowPx.roundToInt())
 
         layout(constraints.maxWidth, constraints.maxHeight) {
@@ -182,7 +176,7 @@ private val path = Path()
             backgroundBrush = brush,
             topEdge = topEdgeWithCutout,
             indicatorTarget = indicatorTarget
-        ) { _, onElementLayout ->
+        ) { onElementLayout ->
             Row(modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp),

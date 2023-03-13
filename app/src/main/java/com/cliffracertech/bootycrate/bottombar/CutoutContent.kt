@@ -112,7 +112,7 @@ private const val checkoutButtonWidthDp = 120
                 inConfirmatoryState = false
                 onConfirm()
             } else inConfirmatoryState = true
-        }.padding(end = 22.dp),
+        }.padding(end = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         val text = stringResource(

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -38,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.itemlist.minTouchTargetSize
 import com.cliffracertech.bootycrate.model.NavigationState
 
 @Composable fun NavBarItem(
@@ -46,14 +46,17 @@ import com.cliffracertech.bootycrate.model.NavigationState
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) = Column(
-    modifier = modifier.clickable(
-        enabled = true,
-        onClickLabel = title,
-        role = Role.Button,
-        onClick = onClick),
+    modifier = modifier
+        .minTouchTargetSize()
+        .clickable(
+            enabled = true,
+            onClickLabel = title,
+            role = Role.Button,
+            onClick = onClick),
+    verticalArrangement = Arrangement.Center,
     horizontalAlignment = Alignment.CenterHorizontally
 ) {
-    Icon(iconPainter, title, Modifier.size(24.dp))
+    Icon(iconPainter, title, Modifier.size(22.dp))
     Text(title, style = MaterialTheme.typography.caption)
 }
 
@@ -81,28 +84,29 @@ import com.cliffracertech.bootycrate.model.NavigationState
             density = density,
             cutout = TopCutout(
                 density = density,
-                depth = 54f.dp,
+                depth = 53.dp,
                 contentHeight = 56.dp,
                 topCornerRadius = 25.dp,
                 bottomCornerRadius = 33.dp,
-                contentMargin = 6.dp,
+                contentMargin = 5.dp,
                 widthProvider = { cutoutWidth },
                 interpolationProvider = interpolationProvider,
-                contents = { CutoutContent(
-                    modifier = Modifier.onPlaced {
-                        cutoutLayoutCoordinates = Rect(
-                            offset = it.positionInParent(),
-                            size = it.size.toSize())
-                    }, backgroundGradientWidth = this@BoxWithConstraints.maxWidth,
-                    checkoutButtonIsVisible = viewModel.checkoutButtonIsVisible,
-                    checkoutButtonIsEnabled = viewModel.checkoutButtonIsEnabled,
-                    onCheckoutConfirm = viewModel::onCheckoutButtonConfirm,
-                    onAddButtonClick = viewModel::onAddButtonClick,
-                    interpolationProvider = interpolationProvider
-                )}),
+                contents = {
+                    CutoutContent(
+                        modifier = Modifier.onPlaced {
+                            cutoutLayoutCoordinates = Rect(
+                                offset = it.positionInParent(),
+                                size = it.size.toSize())
+                        }, backgroundGradientWidth = this@BoxWithConstraints.maxWidth,
+                        checkoutButtonIsVisible = viewModel.checkoutButtonIsVisible,
+                        checkoutButtonIsEnabled = viewModel.checkoutButtonIsEnabled,
+                        onCheckoutConfirm = viewModel::onCheckoutButtonConfirm,
+                        onAddButtonClick = viewModel::onAddButtonClick,
+                        interpolationProvider = interpolationProvider)
+                }),
             indicator = TopEdgeWithCutout.Indicator(
                 density = density,
-                width = 48.dp,
+                width = 60.dp,
                 thickness = 8.dp,
                 color = Color.Gray),
             topOuterCornerRadius = 25.dp)
@@ -114,26 +118,32 @@ import com.cliffracertech.bootycrate.model.NavigationState
         backgroundBrush = backgroundBrush,
         indicatorTarget = viewModel.selectedRootScreen,
         topEdge = topEdge,
-    ) { _, onLayout ->
-        Row(modifier = Modifier
-                .height(56.dp)
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+    ) { onLayout ->
+        Row(modifier = Modifier.fillMaxWidth().height(56.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val fullWidth = this@BoxWithConstraints.maxWidth
+            val cutoutMaxWidth = cutoutContentWidth(showingCheckoutButton = true)
+            val marginAdjustment = topEdge.cutout.contentMargin * 2
+            val navItemWidth = (fullWidth - cutoutMaxWidth - marginAdjustment) / 2
+
             val shoppingList = NavigationState.RootScreen.ShoppingList
             NavBarItem(
                 title = stringResource(R.string.shopping_list_navigation_item_name),
                 iconPainter = painterResource(R.drawable.shopping_cart_icon),
-                modifier = Modifier.onPlaced { onLayout(shoppingList, it) }
+                modifier = Modifier
+                    .size(navItemWidth, 56.dp)
+                    .onPlaced { onLayout(shoppingList, it) }
             ) { viewModel.onNavBarItemClick(shoppingList)}
 
             val inventory = NavigationState.RootScreen.Inventory
             NavBarItem(
                 title = stringResource(R.string.inventory_navigation_item_name),
                 iconPainter = painterResource(R.drawable.inventory_icon),
-                modifier = Modifier.onPlaced { onLayout(inventory, it) }
+                modifier = Modifier
+                    .size(navItemWidth, 56.dp)
+                    .onPlaced { onLayout(inventory, it) }
             ) { viewModel.onNavBarItemClick(inventory)}
         }
     }
