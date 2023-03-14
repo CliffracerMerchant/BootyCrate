@@ -4,8 +4,8 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.bottombar
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -58,12 +58,20 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import androidx.core.graphics.scaleMatrix
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.springStiffness
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.clippedGradientBackground
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
+
+private const val checkoutButtonWidthDp = 120
+private const val checkoutButtonHeightDp = 48
+private const val checkoutAddButtonOverlapDp = 14
+private const val addButtonSizeDp = 56
+private const val addButtonTranslationXDp =
+    -0.5f * (checkoutButtonWidthDp - checkoutAddButtonOverlapDp)
 
 private fun checkoutButtonShape(density: Density) =
     GenericShape { size, _ ->
@@ -74,8 +82,6 @@ private fun checkoutButtonShape(density: Density) =
         val matrix = scaleMatrix(density.density, density.density)
         asAndroidPath().transform(matrix)
     }
-
-private const val checkoutButtonWidthDp = 120
 
 /** A button with a custom shape used to checkout.
  *
@@ -100,10 +106,10 @@ private const val checkoutButtonWidthDp = 120
         mutableStateOf(false)
     }
     val alpha by animateFloatAsState(
-        targetValue = if (enabled) 1f else 0.3f)
+        targetValue = if (enabled) 1f else 0.4f)
 
     Box(modifier = modifier
-        .size(checkoutButtonWidthDp.dp, 48.dp)
+        .size(checkoutButtonWidthDp.dp, checkoutButtonHeightDp.dp)
         .graphicsLayer { this.alpha = alpha }
         .background(backgroundBrush, shape)
         .clip(shape)
@@ -206,9 +212,9 @@ private const val checkoutButtonWidthDp = 120
 /** Return the [Dp] width of a [CutoutContent], depending on
  * whether or not the checkout button is currently visible. */
 fun cutoutContentWidth(showingCheckoutButton: Boolean) =
-    if (!showingCheckoutButton) 56.dp
+    if (!showingCheckoutButton) addButtonSizeDp.dp
     // Checkout button width + add button width + negative margin between them
-    else checkoutButtonWidthDp.dp + 56.dp - 14.dp
+    else checkoutButtonWidthDp.dp + addButtonSizeDp.dp - checkoutAddButtonOverlapDp.dp
 
 /**
  * The content of the [BootyCrateBottomAppBar]'s top cutout.
@@ -266,15 +272,26 @@ fun cutoutContentWidth(showingCheckoutButton: Boolean) =
         horizontalArrangement = Arrangement.spacedBy((-14).dp),
         verticalAlignment = Alignment.Bottom
     ) {
-        AnimatedVisibility(checkoutButtonIsVisible) {
+        val checkoutButtonAppearanceProgress by animateFloatAsState(
+            targetValue = if (checkoutButtonIsVisible) 1f else 0f,
+            animationSpec = spring(stiffness = springStiffness))
+
+        if (checkoutButtonAppearanceProgress > 0f)
             CheckoutButton(
                 enabled = checkoutButtonIsEnabled,
-                backgroundBrush = checkoutButtonBrush,
+                modifier = Modifier.graphicsLayer {
+
+                    alpha = checkoutButtonAppearanceProgress
+                }, backgroundBrush = checkoutButtonBrush,
                 timeOutMillis = checkoutButtonTimeOutMillis,
                 onConfirm = onCheckoutConfirm)
-        }
+
         AddButton(
-            backgroundGradientWidth = backgroundGradientWidth,
+            modifier = Modifier.graphicsLayer {
+                translationX = if (checkoutButtonAppearanceProgress == 0f) 0f
+                               else addButtonTranslationXDp.dp.toPx() *
+                                   (1f - checkoutButtonAppearanceProgress)
+            }, backgroundGradientWidth = backgroundGradientWidth,
             backgroundGradientColors = backgroundGradientColors,
             onClick = onAddButtonClick)
     }

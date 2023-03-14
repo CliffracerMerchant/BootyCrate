@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.bottombar
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -23,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -39,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.itemlist.minTouchTargetSize
 import com.cliffracertech.bootycrate.model.NavigationState
+import com.cliffracertech.bootycrate.springStiffness
 
 @Composable fun NavBarItem(
     title: String,
@@ -76,8 +80,8 @@ import com.cliffracertech.bootycrate.model.NavigationState
 
     var cutoutLayoutCoordinates by remember { mutableStateOf(Rect.Zero) }
     val cutoutWidth by animateDpAsState(
-        targetValue = cutoutContentWidth(
-            showingCheckoutButton = viewModel.checkoutButtonIsVisible))
+        targetValue = cutoutContentWidth(viewModel.checkoutButtonIsVisible),
+        animationSpec = spring(stiffness = springStiffness))
 
     val topEdge = remember {
         TopEdgeWithCutout(
@@ -134,6 +138,8 @@ import com.cliffracertech.bootycrate.model.NavigationState
                 iconPainter = painterResource(R.drawable.shopping_cart_icon),
                 modifier = Modifier
                     .size(navItemWidth, 56.dp)
+                    .clip(RoundedCornerShape(topStart = topEdge.topOuterCornerRadius,
+                                             topEnd = topEdge.cutout.topCornerRadius))
                     .onPlaced { onLayout(shoppingList, it) }
             ) { viewModel.onNavBarItemClick(shoppingList)}
 
@@ -143,6 +149,8 @@ import com.cliffracertech.bootycrate.model.NavigationState
                 iconPainter = painterResource(R.drawable.inventory_icon),
                 modifier = Modifier
                     .size(navItemWidth, 56.dp)
+                    .clip(RoundedCornerShape(topStart = topEdge.cutout.topCornerRadius,
+                                             topEnd = topEdge.topOuterCornerRadius))
                     .onPlaced { onLayout(inventory, it) }
             ) { viewModel.onNavBarItemClick(inventory)}
         }

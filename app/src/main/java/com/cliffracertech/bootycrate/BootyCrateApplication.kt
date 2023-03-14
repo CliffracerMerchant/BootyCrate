@@ -5,9 +5,6 @@
 package com.cliffracertech.bootycrate
 
 import android.app.Application
-import android.content.Context
-import android.util.Log
-import androidx.datastore.preferences.preferencesDataStore
 import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import dagger.hilt.android.HiltAndroidApp
 
@@ -19,4 +16,4 @@ class BootyCrateApplication : Application() {
     }
 }
 
-fun dlog(msg: String) = Log.d("BootyCrateTag", msg)
+const val springStiffness = 700f

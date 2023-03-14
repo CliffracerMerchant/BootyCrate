@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.bottombar
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -41,6 +40,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.cliffracertech.bootycrate.itemlist.minTouchTargetSize
+import com.cliffracertech.bootycrate.springStiffness
 import kotlin.math.roundToInt
 
 private enum class BottomAppBarWithCutoutPart { BarContent, CutoutContent }
@@ -57,7 +57,7 @@ private val path = Path()
     var canvasWidth by remember { mutableStateOf(0f) }
     val indicatorStartLength by animateFloatAsState(
         targetValue = topEdge.findIndicatorStartLength(indicatorTarget, canvasWidth),
-        animationSpec = spring(stiffness = Spring.StiffnessLow))
+        animationSpec = spring(stiffness = springStiffness / 3))
 
     SubcomposeLayout(modifier
         .fillMaxWidth()
