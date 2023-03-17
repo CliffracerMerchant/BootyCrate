@@ -19,6 +19,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,12 +49,13 @@ import com.cliffracertech.bootycrate.springStiffness
     title: String,
     iconPainter: Painter,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onClick: () -> Unit
 ) = Column(
     modifier = modifier
         .minTouchTargetSize()
         .clickable(
-            enabled = true,
+            enabled = enabled,
             onClickLabel = title,
             role = Role.Button,
             onClick = onClick),
@@ -131,6 +133,7 @@ import com.cliffracertech.bootycrate.springStiffness
             val cutoutMaxWidth = cutoutContentWidth(showingCheckoutButton = true)
             val marginAdjustment = topEdge.cutout.contentMargin * 2
             val navItemWidth = (fullWidth - cutoutMaxWidth - marginAdjustment) / 2
+            val navItemsEnabled by remember { derivedStateOf { interpolationProvider() == 1f }}
 
             val shoppingList = NavigationState.RootScreen.ShoppingList
             NavBarItem(
@@ -140,7 +143,8 @@ import com.cliffracertech.bootycrate.springStiffness
                     .size(navItemWidth, 56.dp)
                     .clip(RoundedCornerShape(topStart = topEdge.topOuterCornerRadius,
                                              topEnd = topEdge.cutout.topCornerRadius))
-                    .onPlaced { onLayout(shoppingList, it) }
+                    .onPlaced { onLayout(shoppingList, it) },
+                enabled = navItemsEnabled,
             ) { viewModel.onNavBarItemClick(shoppingList)}
 
             val inventory = NavigationState.RootScreen.Inventory
@@ -151,7 +155,8 @@ import com.cliffracertech.bootycrate.springStiffness
                     .size(navItemWidth, 56.dp)
                     .clip(RoundedCornerShape(topStart = topEdge.cutout.topCornerRadius,
                                              topEnd = topEdge.topOuterCornerRadius))
-                    .onPlaced { onLayout(inventory, it) }
+                    .onPlaced { onLayout(inventory, it) },
+                enabled = navItemsEnabled,
             ) { viewModel.onNavBarItemClick(inventory)}
         }
     }
