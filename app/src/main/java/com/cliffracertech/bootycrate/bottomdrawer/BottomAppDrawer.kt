@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.bottomdrawer
 
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -11,11 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.ResistanceConfig
+import androidx.compose.material.SwipeableState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.rememberSwipeableState
 import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
@@ -29,11 +35,13 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.bottombar.BootyCrateBottomAppBar
 import com.cliffracertech.bootycrate.bottomdrawer.DrawerState.*
 import com.cliffracertech.bootycrate.itemgroupselector.ItemGroupSelector
+import com.cliffracertech.bootycrate.springStiffness
 import com.cliffracertech.bootycrate.ui.ConfirmDialog
 import com.cliffracertech.bootycrate.ui.ConfirmatoryDialogState
 import com.cliffracertech.bootycrate.ui.NameDialog
 import com.cliffracertech.bootycrate.ui.NameDialogState
 import com.cliffracertech.bootycrate.utils.toPx
+import kotlin.math.abs
 
 /** [DrawerState]'s values [Hidden], [Collapsed], and [Expanded]
  * describe the possible states for a collapsible, hideable, drawer. */
@@ -44,33 +52,33 @@ enum class DrawerState { Hidden, Collapsed, Expanded;
 }
 
 /**
- * A state holder that contains parameters for a bottom-aligned drawer. The
- * properties [expandedHeight] and [peekHeight] describe the height of the
- * drawer when it is fully expanded and collapsed, respectively. The [anchors]
- * property can be used to create a swipeable bottom drawer through the
- * [Modifier.swipeable] method.
+ * An immutable state holder that contains parameters for a top or bottom-
+ * aligned drawer. The properties [expandedHeight] and [peekHeight] describe
+ * the height of the drawer when it is fully expanded and collapsed,
+ * respectively. The [anchors] property can be used to create a swipeable
+ * bottom drawer through the [Modifier.swipeable] method.
  */
-class BottomDrawerState(
+class DrawerSizes(
     density: Density,
     val expandedHeight: Dp,
     val peekHeight: Dp,
 ) {
     val expandedHeightPx = expandedHeight.toPx(density)
     val peekHeightPx = peekHeight.toPx(density)
+    val heightChangePx = expandedHeightPx - peekHeightPx
 
     val anchors = mapOf(
-        0f                              to Expanded,
-        expandedHeightPx - peekHeightPx to Collapsed,
-        expandedHeightPx                to Hidden)
+        0f               to Expanded,
+        heightChangePx   to Collapsed,
+        expandedHeightPx to Hidden)
 }
 
 /**
  * A swipeable bottom app drawer that can be hidden, collapsed, or expanded.
  *
- * @param state The [BottomDrawerState] that describes the drawer
+ * @param sizes The [DrawerSizes] that describes the drawer
  * @param modifier The [Modifier] to use for the root layout
- * @param initialDrawerState The [DrawerState] value that defines
- *     the initial hidden/collapsed/expanded state of the drawer
+ * @param swipeableState A [SwipeableState]`<DrawerState>` instance
  * @param content The content of the drawer. To help you define what
  *     content to show, a getter that returns the expansion progress
  *     (a value in the range of 0f to indicate the collapsed/hidden
@@ -78,30 +86,30 @@ class BottomDrawerState(
  *     well as the current target [DrawerState] value are provided.
  */
 @Composable fun BottomAppDrawer(
-    state: BottomDrawerState,
+    sizes: DrawerSizes,
     modifier: Modifier = Modifier,
-    initialDrawerState: DrawerState = Collapsed,
-    content: @Composable BoxScope.(
-            expansionProgressProvider: () -> Float,
-            targetState: DrawerState
-        ) -> Unit
+    swipeableState: SwipeableState<DrawerState> =
+        rememberSwipeableState(Collapsed),
+    content: @Composable BoxScope.(expansionProgressProvider: () -> Float) -> Unit,
+) = Box(modifier = modifier
+    .height(sizes.expandedHeight)
+    .fillMaxWidth()
+    .graphicsLayer {
+        translationY = swipeableState.offset.value
+    }.swipeable(
+        state = swipeableState,
+        anchors = sizes.anchors,
+        orientation = Orientation.Vertical,
+        resistance = ResistanceConfig(
+            basis = sizes.heightChangePx / 2f,
+            factorAtMin = Float.MAX_VALUE,
+            factorAtMax = Float.MAX_VALUE))
 ) {
-    val swipeableState = rememberSwipeableState(initialDrawerState)
-
-    Box(modifier = modifier
-        .height(state.expandedHeight)
-        .fillMaxWidth()
-        .graphicsLayer { translationY = swipeableState.offset.value }
-        .swipeable(
-            state = swipeableState,
-            anchors = state.anchors,
-            orientation = Orientation.Vertical)
-    ) {
-        val expansionProgressProvider = {
-            val collapsedOffset = state.expandedHeightPx - state.peekHeightPx
-            (1f - swipeableState.offset.value / collapsedOffset).coerceAtLeast(0f)
-        }
-        content(expansionProgressProvider, swipeableState.targetValue)
+    content { // expansionProgressProvider = {
+        if (swipeableState.offset.value <= sizes.heightChangePx)
+            (1f - swipeableState.offset.value / sizes.heightChangePx)
+        else ((sizes.heightChangePx - swipeableState.offset.value) /
+                sizes.peekHeightPx).coerceAtLeast(-1f)
     }
 }
 
@@ -118,22 +126,37 @@ class BottomDrawerState(
     additionalPeekHeight: Dp = 0.dp) {
     val vm: BottomAppDrawerViewModel = viewModel()
     val density = LocalDensity.current
-    val drawerState = remember(density, additionalPeekHeight) {
-        BottomDrawerState(
+    val drawerSizes = remember(density, additionalPeekHeight) {
+        DrawerSizes(
             density = density,
             expandedHeight = 456.dp + additionalPeekHeight,
             peekHeight = 56.dp + additionalPeekHeight)
     }
+    val swipeableState = rememberSwipeableState(
+        initialValue = Collapsed,
+        animationSpec = spring(stiffness = springStiffness),
+        confirmStateChange = { !it.isHidden || vm.drawerIsHidden })
+
+    LaunchedEffect(vm.drawerIsHidden) {
+        swipeableState.animateTo(
+            if (vm.drawerIsHidden) Hidden
+            else                   Collapsed)
+    }
+
     BottomAppDrawer(
-        state = drawerState,
+        sizes = drawerSizes,
         modifier = modifier,
-    ) { expansionProgressProvider, targetState ->
-        val expansionProgress = expansionProgressProvider()
+        swipeableState = swipeableState,
+    ) { expansionProgressProvider ->
+        BootyCrateBottomAppBar(interpolationProvider = {
+            if (vm.drawerIsHidden) 0f
+            else 1f - abs(expansionProgressProvider())
+        })
 
-        BootyCrateBottomAppBar(
-            interpolationProvider = remember {{ 1f - expansionProgressProvider() }})
-
-        if (expansionProgress > 0f)
+        val itemGroupSelectorVisible by remember { derivedStateOf {
+            expansionProgressProvider() > 0f
+        }}
+        if (itemGroupSelectorVisible)
             ItemGroupSelector(
                 title = stringResource(R.string.app_name),
                 onSelectAllClick = vm::onSelectAllClick,
@@ -145,7 +168,7 @@ class BottomDrawerState(
                 onItemGroupDeleteClick = vm::onItemGroupDeleteClick,
                 onAddButtonClick = vm::onAddButtonClick,
                 modifier = Modifier.graphicsLayer {
-                    if (targetState != Hidden)
+                    if (swipeableState.targetValue != Hidden)
                         alpha = expansionProgressProvider()
                 }, otherTopBarContent = {
                     IconButton(vm::onSettingsButtonClick) {

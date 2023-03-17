@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.bottomdrawer
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -169,6 +170,10 @@ class AddItemGroupButtonHandlerImpl(
 
     override fun onCleared() {
         coroutineScope.cancel()
+    }
+
+    val drawerIsHidden by derivedStateOf {
+        !navState.visibleScreen.isRootScreen
     }
 
     fun onSettingsButtonClick() {
