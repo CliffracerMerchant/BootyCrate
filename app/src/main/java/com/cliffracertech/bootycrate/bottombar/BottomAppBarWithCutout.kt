@@ -73,6 +73,7 @@ private val path = Path()
             canvasWidth = size.width
             topEdge.indicator.draw(
                 scope = this, topEdgePath = path,
+                alpha = contentAlphaProvider(),
                 edgeStartLength = indicatorStartLength)
         }
     ) { constraints ->

@@ -290,6 +290,7 @@ data class TopEdgeWithCutout(
         fun draw(
             scope: DrawScope,
             topEdgePath: Path,
+            alpha: Float,
             edgeStartLength: Float
         ) {
             pathMeasure.setPath(topEdgePath, forceClosed = false)
@@ -299,7 +300,7 @@ data class TopEdgeWithCutout(
                 edgeStartLength + widthPx,
                 destination = path,
                 startWithMoveTo = true)
-            scope.drawPath(path, color, style = pathStroke)
+            scope.drawPath(path, color, alpha, style = pathStroke)
         }
     }
 
