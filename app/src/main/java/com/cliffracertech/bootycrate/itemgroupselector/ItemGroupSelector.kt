@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Checkbox
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.FloatingActionButton
@@ -22,6 +21,7 @@ import androidx.compose.material.FloatingActionButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Switch
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -74,10 +74,9 @@ import kotlinx.collections.immutable.toImmutableList
                 showingOptionsMenu = false
             }) {
                 Text(stringResource(R.string.multi_select_item_groups_description))
-                Checkbox(checked = multiSelectGroups,
-                    onCheckedChange = null,
-                    modifier = Modifier.padding(
-                        start = 8.dp, top = 8.dp, bottom = 8.dp))
+                Switch(checked = multiSelectGroups,
+                       onCheckedChange = null,
+                       modifier = Modifier.padding(start = 8.dp))
             }
             DropdownMenuItem({
                 onSelectAllClick()
