@@ -172,7 +172,7 @@ class AddItemGroupButtonHandlerImpl(
         coroutineScope.cancel()
     }
 
-    val drawerIsHidden by derivedStateOf {
+    val isHidden by derivedStateOf {
         !navState.visibleScreen.isRootScreen
     }
 

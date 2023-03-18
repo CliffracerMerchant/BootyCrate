@@ -165,10 +165,10 @@ class DrawerSizes(
         initialValue = Collapsed,
         animationSpec = spring(stiffness = springStiffness))
 
-    LaunchedEffect(vm.drawerIsHidden) {
+    LaunchedEffect(vm.isHidden) {
         swipeableState.animateTo(
-            if (vm.drawerIsHidden) Hidden
-            else                   Collapsed)
+            if (vm.isHidden) Hidden
+            else             Collapsed)
     }
 
     BottomAppDrawer(
@@ -178,7 +178,7 @@ class DrawerSizes(
         swipeableState = swipeableState,
     ) { expansionProgressProvider ->
         BootyCrateBottomAppBar(interpolationProvider = {
-            if (vm.drawerIsHidden) 0f
+            if (vm.isHidden) 0f
             else 1f - abs(expansionProgressProvider())
         })
 
@@ -199,7 +199,8 @@ class DrawerSizes(
                 modifier = Modifier.graphicsLayer {
                     if (swipeableState.targetValue != Hidden)
                         alpha = expansionProgressProvider()
-                }, otherTopBarContent = {
+                }, bottomContentPadding = additionalPeekHeight + 8.dp,
+                otherTopBarContent = {
                     IconButton(vm::onSettingsButtonClick) {
                         Icon(Icons.Default.Settings, null)
                     }

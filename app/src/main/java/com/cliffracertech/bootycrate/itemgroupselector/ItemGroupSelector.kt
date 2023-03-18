@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Checkbox
 import androidx.compose.material.DropdownMenu
 import androidx.compose.material.DropdownMenuItem
@@ -37,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ItemGroup
@@ -112,45 +114,49 @@ import kotlinx.collections.immutable.toImmutableList
     onItemGroupDeleteClick: (ItemGroup) -> Unit,
     onAddButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
+    bottomContentPadding: Dp = 8.dp,
     otherTopBarContent: @Composable () -> Unit,
-) {
-    Column(
-        modifier
+) = Column(modifier) {
+    ItemGroupSelectorTopBar(
+        title = title,
+        onSelectAllClick = onSelectAllClick,
+        multiSelectGroups = multiSelectGroups,
+        onMultiSelectClick = onMultiSelectClick,
+        otherContent = otherTopBarContent)
+    Box(Modifier
+        .fillMaxWidth()
+        .weight(1f)
+        .padding(horizontal = 8.dp)
+        .background(
+            color = MaterialTheme.colors.background,
+            shape = RoundedCornerShape(
+                // 32.dp for the top corners is derived from the 24.dp corner
+                // radius of the inner ItemGroupViews plus the 8.dp item content
+                // padding. This causes the top ItemGroupView's corners to be
+                // concentric with the background's top corners.
+                topStart = 32.dp, topEnd = 32.dp,
+                bottomStart = 0.dp, bottomEnd = 0.dp))
     ) {
-        ItemGroupSelectorTopBar(
-            title = title,
-            onSelectAllClick = onSelectAllClick,
-            multiSelectGroups = multiSelectGroups,
-            onMultiSelectClick = onMultiSelectClick,
-            otherContent = otherTopBarContent)
-        Box(Modifier
-            .fillMaxWidth()
-            .weight(1f)
-            .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
-            .background(MaterialTheme.colors.background,
-                        MaterialTheme.shapes.medium)
+        ItemGroupListView(
+            itemGroups = itemGroups,
+            onItemGroupClick = onItemGroupClick,
+            onItemGroupRenameClick = onItemGroupRenameClick,
+            onItemGroupDeleteClick = onItemGroupDeleteClick,
+            contentPadding = PaddingValues(
+                start = 8.dp, end = 8.dp, top = 8.dp,
+                bottom = bottomContentPadding))
+        FloatingActionButton(
+            onClick = onAddButtonClick,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 8.dp, bottom = bottomContentPadding),
+            backgroundColor = MaterialTheme.colors.secondary,
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 12.dp,
+                pressedElevation = 6.dp)
         ) {
-            ItemGroupListView(
-                itemGroups = itemGroups,
-                onItemGroupClick = onItemGroupClick,
-                onItemGroupRenameClick = onItemGroupRenameClick,
-                onItemGroupDeleteClick = onItemGroupDeleteClick,
-                contentPadding = PaddingValues(
-                    start = 8.dp, end = 8.dp,
-                    top = 8.dp, bottom = 64.dp))
-            FloatingActionButton(
-                onClick = onAddButtonClick,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 8.dp, bottom = 8.dp),
-                backgroundColor = MaterialTheme.colors.secondary,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 12.dp,
-                    pressedElevation = 6.dp)
-            ) {
-                Icon(Icons.Default.Add, stringResource(
-                    R.string.add_item_group_description))
-            }
+            Icon(Icons.Default.Add, stringResource(
+                R.string.add_item_group_description))
         }
     }
 }
@@ -163,7 +169,9 @@ import kotlinx.collections.immutable.toImmutableList
     val brush = remember { Brush.horizontalGradient(listOf(startColor, endColor)) }
     Box(Modifier
         .size(456.dp)
-        .background(brush, MaterialTheme.shapes.large),
+        .background(brush, RoundedCornerShape(
+            topStart = 24.dp, topEnd = 24.dp,
+            bottomStart = 0.dp, bottomEnd = 0.dp)),
     ) {
         val itemGroups = remember {
             List(5) { ItemGroup(
