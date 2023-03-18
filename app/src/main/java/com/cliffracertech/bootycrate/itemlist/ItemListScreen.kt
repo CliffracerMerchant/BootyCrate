@@ -78,6 +78,7 @@ import com.cliffracertech.bootycrate.model.database.ListItem
             shoppingListState = itemListState,
             callback = listViewCallback,
             selectionBrush = selectionBrush,
+            modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding)
     }
 }
@@ -122,6 +123,7 @@ import com.cliffracertech.bootycrate.model.database.ListItem
             inventoryState = itemListState,
             callback = listViewCallback,
             selectionBrush = selectionBrush,
+            modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding)
     }
 }
