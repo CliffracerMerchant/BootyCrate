@@ -46,11 +46,11 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
     onClick: () -> Unit,
 ) = Box(modifier
     .minTouchTargetSize()
-    .padding(13.dp)
-    .background(color, CircleShape)
     .clickable(onClickLabel = clickLabel,
                role = Role.Button,
-               onClick = onClick))
+               onClick = onClick)
+    .padding(13.dp)
+    .background(color, CircleShape))
 
 /** A [tint]ed checkbox that animates when its [checked] state changes, invokes
  * [onClick] when clicked and uses [onClickLabel] to describe its click action. */
@@ -62,8 +62,8 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
     modifier: Modifier = Modifier,
 ) = Box(modifier
     .minTouchTargetSize()
-    .padding(12.dp)
     .clickable(true, onClickLabel, Role.Checkbox, onClick)
+    .padding(12.dp)
 ) {
     val vector = AnimatedImageVector.animatedVectorResource(
         R.drawable.animated_checkbox_unchecked_to_checked_background)

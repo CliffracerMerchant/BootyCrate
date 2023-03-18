@@ -69,7 +69,6 @@ import com.cliffracertech.bootycrate.model.database.ShoppingListItem
     val showCheckbox = showCheckboxProvider()
     Box(modifier
         .minTouchTargetSize()
-        .padding(13.dp)
         .then(if (showCheckbox) Modifier.clickable(
                   role = Role.Checkbox,
                   onClickLabel = checkboxClickLabel,
@@ -78,6 +77,7 @@ import com.cliffracertech.bootycrate.model.database.ShoppingListItem
                   role = Role.Button,
                   onClickLabel = colorIndicatorClickLabel,
                   onClick = onColorIndicatorClick))
+        .padding(13.dp)
     ) {
         val uncheckedToCheckedBg = AnimatedImageVector.animatedVectorResource(
             R.drawable.animated_checkbox_unchecked_to_checked_background)
