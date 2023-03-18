@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.itemgroupselector
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -71,7 +72,6 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 
 @Composable fun ItemGroupView(
     itemGroup: ItemGroup,
-    isSelected: Boolean,
     selectionBrush: Brush,
     onClick: () -> Unit,
     onRenameClick: () -> Unit,
@@ -83,7 +83,9 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
     onClick = onClick
 ) {
     val selectionBackgroundAlpha by
-        animateFloatAsState(if (isSelected) 0.5f else 0f)
+        animateFloatAsState(
+            targetValue = if (itemGroup.isSelected) 0.5f else 0f,
+            animationSpec = tween(durationMillis = 300))
     Box(Modifier
         .fillMaxSize()
         .alpha(selectionBackgroundAlpha)
@@ -126,7 +128,6 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 }
 
 @Composable fun ItemGroupViewPreview(darkTheme: Boolean) = BootyCrateTheme(darkTheme) {
-    var isSelected by remember { mutableStateOf(false) }
     val color1 = MaterialTheme.colors.primary
     val color2 = MaterialTheme.colors.secondary
     val brush = remember { Brush.horizontalGradient(listOf(color1, color2)) }
@@ -136,12 +137,11 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
                   inventoryItemCount = 12)
     }
     ItemGroupView(
-        isSelected = isSelected,
         selectionBrush = brush,
         itemGroup = itemGroup,
         onRenameClick = {},
         onDeleteClick = {},
-        onClick = { isSelected = !isSelected })
+        onClick = {})
 }
 
 @Preview @Composable fun LightItemGroupViewPreview() = ItemGroupViewPreview(false)

@@ -48,7 +48,6 @@ import kotlinx.collections.immutable.ImmutableList
         content = { items(itemGroups) {
             ItemGroupView(
                 itemGroup = it,
-                isSelected = false,
                 selectionBrush = selectionBrush,
                 onClick = { onItemGroupClick(it) },
                 onRenameClick = { onItemGroupRenameClick(it) },
