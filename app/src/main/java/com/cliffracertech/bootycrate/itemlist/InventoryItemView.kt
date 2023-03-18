@@ -46,7 +46,7 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
     onClick: () -> Unit,
 ) = Box(modifier
     .minTouchTargetSize()
-    .padding(10.dp)
+    .padding(13.dp)
     .background(color, CircleShape)
     .clickable(onClickLabel = clickLabel,
                role = Role.Button,

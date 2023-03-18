@@ -67,16 +67,18 @@ import com.cliffracertech.bootycrate.model.database.ShoppingListItem
     modifier: Modifier = Modifier,
 ) {
     val showCheckbox = showCheckboxProvider()
-    val boxModifier = remember(modifier, showCheckbox) {
-        modifier.minTouchTargetSize().padding(10.dp).clickable(
-            role = if (showCheckbox) Role.Checkbox
-                   else              Role.Button,
-            onClickLabel = if (!showCheckbox) colorIndicatorClickLabel
-                           else               checkboxClickLabel,
-            onClick = if (showCheckbox) onCheckboxClick
-                      else              onColorIndicatorClick)
-    }
-    Box(boxModifier) {
+    Box(modifier
+        .minTouchTargetSize()
+        .padding(13.dp)
+        .then(if (showCheckbox) Modifier.clickable(
+                  role = Role.Checkbox,
+                  onClickLabel = checkboxClickLabel,
+                  onClick = onCheckboxClick)
+              else Modifier.clickable(
+                  role = Role.Button,
+                  onClickLabel = colorIndicatorClickLabel,
+                  onClick = onColorIndicatorClick))
+    ) {
         val uncheckedToCheckedBg = AnimatedImageVector.animatedVectorResource(
             R.drawable.animated_checkbox_unchecked_to_checked_background)
         val uncheckedToCircle = AnimatedImageVector.animatedVectorResource(
@@ -167,7 +169,7 @@ fun shoppingListItemCallback(
         val colors = ListItem.ColorGroup.colors()
         val color = colors.getOrElse(colorGroup.ordinal) { colors.first() }
         CheckboxAndColorIndicator(
-            showCheckboxProvider = { isEditable },
+            showCheckboxProvider = { !isEditable },
             tint = color,
             checked = isChecked,
             checkboxClickLabel = stringResource(
