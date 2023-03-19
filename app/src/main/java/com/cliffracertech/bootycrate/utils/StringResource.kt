@@ -21,37 +21,43 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 /** A holder of a string resource that can be resolved to a [String]
  * by calling the method [resolve] with a [Context] instance. */
-class StringResource(
+class StringResource private constructor(
+    @StringRes
+    private val stringResId: Int,
     private val string: String?,
-    @StringRes val stringResId: Int = 0,
-    private val args: ArrayList<Any>?
+    private val args: ImmutableList<Any>?
 ) {
     data class Id(@StringRes val id: Int)
 
-    constructor(string: String): this(string, 0, null)
-    constructor(@StringRes stringResId: Int): this(null, stringResId, null)
+    constructor(string: String):
+        this(0, string, null)
+    constructor(@StringRes stringResId: Int):
+        this(stringResId, null, null)
     constructor(@StringRes stringResId: Int, stringVar: String):
-            this(null, stringResId, arrayListOf(stringVar))
+        this(stringResId, null, arrayListOf(stringVar).toImmutableList())
     constructor(@StringRes stringResId: Int, intVar: Int):
-            this(null, stringResId, arrayListOf(intVar))
+        this(stringResId, null, arrayListOf(intVar).toImmutableList())
     constructor(@StringRes stringResId: Int, stringVarId: Id):
-            this(null, stringResId, arrayListOf(stringVarId))
+        this(stringResId, null, arrayListOf(stringVarId).toImmutableList())
+    constructor(@StringRes stringResId: Int, args: ArrayList<Any>):
+        this(stringResId, null, args.toImmutableList())
 
-    fun resolve(context: Context?) = string ?: when {
-        context == null -> ""
-        args == null -> context.getString(stringResId)
-        else -> {
-            for (i in args.indices) {
-                val it = args[i]
-                if (it is Id)
-                    args[i] = context.getString(it.id)
+    fun resolve(context: Context) =
+        string ?: when(args) {
+            null -> context.getString(stringResId)
+            else -> {
+                val resolvedArgs = args.map {
+                        if (it !is Id) it
+                        else context.getString(it.id)
+                    }.toTypedArray()
+                context.getString(stringResId, *resolvedArgs)
             }
-            context.getString(stringResId, *args.toArray())
         }
-    }
 }
 
 /** Acts the same as a [Text], except that the text is
