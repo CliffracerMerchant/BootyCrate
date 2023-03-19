@@ -5,19 +5,15 @@
 package com.cliffracertech.bootycrate.activity
 
 import android.content.Context
-import android.view.View
-import android.widget.TextView
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.utils.*
+import com.cliffracertech.bootycrate.utils.StringResource
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
-import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
@@ -50,32 +46,7 @@ class MessageHandler @Inject constructor() {
         val actionStringResource: StringResource? = null,
         val duration: SnackbarDuration = SnackbarDuration.Short,
         val onActionClick: (() -> Unit)? = null,
-        val onDismiss: ((Int) -> Unit)? = null
-    ) {
-        /** Show the message to the user in the form of a snackbar, using
-         * the provided [Context] and [SnackbarHostState] instances. The
-         * [BaseTransientBottomBar.BaseCallback.DismissEvent] value provided
-         * to the [onDismiss] callback will always be DISMISS_EVENT_SWIPE
-         * when using this method. */
-        suspend fun showAsSnackbar(
-            context: Context,
-            snackbarHostState: SnackbarHostState
-        ) {
-            val result = snackbarHostState.showSnackbar(
-                message = stringResource.resolve(context),
-                actionLabel = actionStringResource?.resolve(context)
-                    ?: context.getString(R.string.dismiss_description).uppercase(),
-                duration = duration)
-            when (result) {
-                SnackbarResult.ActionPerformed -> onActionClick?.invoke()
-                // SnackBarHostState does not allow us to know the type of dismiss,
-                // so we'll use DISMISS_EVENT_SWIPE (the first value) for everything.
-                SnackbarResult.Dismissed -> onDismiss?.invoke(
-                    BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_SWIPE)
-                else -> {}
-            }
-        }
-    }
+        val onDismiss: ((Int) -> Unit)? = null)
 
     private val _messages = MutableSharedFlow<Message>(
         extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -148,30 +119,5 @@ class MessageHandler @Inject constructor() {
                 BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_SWIPE)
             else -> {}
         }
-    }
-}
-
-/** Display the Flow<MessageHandler.Message>'s emitted values using SnackBars
- * anchored to the provided view. */
-fun Flow<MessageHandler.Message>.displayWithSnackBarAnchoredTo(anchor: View) {
-    val lifecycleOwner = anchor.findViewTreeLifecycleOwner()
-    lifecycleOwner?.recollectWhenStarted(this) { message ->
-        val text = message.stringResource.resolve(anchor.context)
-        val actionText = message.actionStringResource?.resolve(anchor.context)
-        val snackBar = Snackbar.make(anchor, text, Snackbar.LENGTH_LONG)
-            .setAnchorView(anchor)
-            .setAction(actionText) { message.onActionClick?.invoke() }
-            .setActionTextColor(anchor.context.theme.resolveIntAttribute(R.attr.colorAccent))
-            .addCallback(object: BaseTransientBottomBar.BaseCallback<Snackbar>() {
-                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                    super.onDismissed(transientBottomBar, event)
-                    message.onDismiss?.invoke(event)
-                }
-            })
-        val textView = snackBar.view.findViewById<TextView>(R.id.snackbar_text)
-        val startPadding = anchor.resources.dpToPixels(10f).toInt()
-        (textView.parent as? View)?.setPadding(start = startPadding)
-        snackBar.show()
-        SoftKeyboard.hide(anchor)
     }
 }

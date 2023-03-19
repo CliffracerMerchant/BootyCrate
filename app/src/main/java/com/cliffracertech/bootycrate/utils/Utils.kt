@@ -4,35 +4,21 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.utils
 
-import android.app.Activity
 import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.Context
 import android.content.res.Resources
 import android.util.AttributeSet
 import android.util.TypedValue
-import android.view.Menu
-import android.view.View
-import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import androidx.compose.runtime.*
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.activity.NavViewActivity
-import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import kotlin.reflect.KProperty
 
 /** Return a NotificationManager system service from the context. */
@@ -41,29 +27,6 @@ fun notificationManager(context: Context) =
 /** Return an AlarmManager system service from the context. */
 fun alarmManager(context: Context) =
         context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager
-
-/** An object that, once initialized by calling init with an instance of Context,
- * can be used to either hide or show the soft input given a view instance using
- * the functions hide and show, and showWithDelay. */
-object SoftKeyboard {
-    private lateinit var imm: InputMethodManager
-    fun init(context: Context) {
-        imm = context.getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
-    }
-    fun hide(view: View) = imm.hideSoftInputFromWindow(view.windowToken, 0)
-    fun show(view: View) = imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
-    /** Show the soft input after a given delay. which is useful when the soft input
-     * should appear alongside a popup alert dialog (for some reason, requesting the
-     * soft input to show at the same time as the dialog does not work). */
-    fun showWithDelay(view: View, delay: Long = 50L) {
-        view.handler.postDelayed({
-            view.requestFocus()
-            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
-        }, delay)
-    }
-}
-
-fun View.setHeight(height: Int) { bottom = top + height }
 
 /** Return the provided dp amount in terms of pixels. */
 fun Resources.dpToPixels(dp: Float) =
@@ -81,45 +44,6 @@ fun Context.spToPixels(sp: Float) = resources.spToPixels(sp)
 /** Return the [Dp] amount converted to pixels, using the provided [density]. */
 fun Dp.toPx(density: Density): Float = with(density) { toPx() }
 /** Return the [Dp] amount rounded to the nearest pixel, using the provided [density]. */
-fun Dp.roundToPx(density: Density): Int = with(density) { roundToPx() }
-
-private val typedValue = TypedValue()
-/** Resolve the current theme's value for the provided int attribute. */
-fun Resources.Theme.resolveIntAttribute(attr: Int): Int {
-    resolveAttribute(attr, typedValue, true)
-    return typedValue.data
-}
-
-/** Return the IntArray pointed to by @param arrayResId, resolving theme attributes if necessary. */
-fun Context.getIntArray(arrayResId: Int): IntArray {
-    val ta = resources.obtainTypedArray(arrayResId)
-    val array = IntArray(ta.length()) {
-        if (ta.peekValue(it).type == TypedValue.TYPE_ATTRIBUTE)
-            theme.resolveIntAttribute(ta.peekValue(it).data)
-        else ta.getColor(it, 0)
-    }
-    ta.recycle()
-    return array
-}
-
-/** Add the nullable element to the list if it is not null, or do nothing otherwise. */
-fun <T> MutableList<T>.add(element: T?) { if (element != null) add(element) }
-
-val <T: View>BottomSheetBehavior<T>.isExpanded get() = state == BottomSheetBehavior.STATE_EXPANDED
-val <T: View>BottomSheetBehavior<T>.isCollapsed get() = state == BottomSheetBehavior.STATE_COLLAPSED
-val <T: View>BottomSheetBehavior<T>.isDragging get() = state == BottomSheetBehavior.STATE_DRAGGING
-val <T: View>BottomSheetBehavior<T>.isSettling get() = state == BottomSheetBehavior.STATE_SETTLING
-val <T: View>BottomSheetBehavior<T>.isHidden get() = state == BottomSheetBehavior.STATE_HIDDEN
-
-/** Perform the given block without the receiver's LayoutTransition.
- * This is useful when changes need to be made instantaneously. */
-fun ViewGroup.withoutLayoutTransition(block: () -> Unit) {
-    val layoutTransitionBackup = layoutTransition
-    layoutTransition = null
-    block()
-    layoutTransition = layoutTransitionBackup
-}
-
 
 /** A LinearLayout that allows settings a max height with the XML attribute maxHeight. */
 class MaxHeightLinearLayout(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
@@ -138,43 +62,11 @@ class MaxHeightLinearLayout(context: Context, attrs: AttributeSet) : LinearLayou
     }
 }
 
-/** Set the View's padding, using the current values as defaults
- * so that not every value needs to be specified. */
-@Suppress("EXTENSION_SHADOWED_BY_MEMBER")
-fun View.setPadding(
-    start: Int = paddingStart,
-    top: Int = paddingTop,
-    end: Int = paddingEnd,
-    bottom: Int = paddingTop
-) = setPaddingRelative(start, top, end, bottom)
-
-/** Call the provided block each time the LifecycleOwner receiver
- * enters Lifecycle.State.STARTED, and cancel the block when the
- * receiver's Lifecycle.State falls below this level. */
-fun LifecycleOwner.repeatWhenStarted(block: suspend CoroutineScope.() -> Unit) {
-    lifecycleScope.launch {
-        repeatOnLifecycle(Lifecycle.State.STARTED, block)
-    }
-}
-
-/** Recollect the @param flow with the provided @param action each time the
- * receiver LifecycleOwner enters Lifecycle.State.STARTED, and cancel the
- * flow collection when the receiver's LifecycleState falls below this level. */
-fun <T>LifecycleOwner.recollectWhenStarted(
-    flow: Flow<T>,
-    action: suspend (T) -> Unit) =
-    repeatWhenStarted {
-        flow.collect { action(it) }
-    }
-
 fun <T> Flow<T>.collectAsState(initialValue: T, scope: CoroutineScope): State<T> {
     val state = mutableStateOf(initialValue)
     onEach { state.value = it }.launchIn(scope)
     return state
 }
-
-fun <T> StateFlow<T>.collectAsState(scope: CoroutineScope): State<T> =
-    collectAsState(value, scope)
 
 /** An extension function that allows a StateFlow<T> to
  * act as a delegate for an immutable value of type T. */
@@ -211,25 +103,6 @@ inline fun <reified T: Enum<T>> DataStore<Preferences>.enumPreferenceFlow(
     val index = prefs[key] ?: defaultValue.ordinal
     enumValues<T>().getOrNull(index) ?: defaultValue
 }
-
-/** Return a MutableStateFlow<T> that contains the most recent value for the
- * preference pointed to by the parameter key, with a default value equal to
- * the parameter defaultValue. Changes to the returned MutableStateFlow's
- * value property will automatically be written to the receiver DataStore
- * object. */
-fun <T> DataStore<Preferences>.mutablePreferenceFlow(
-    key: Preferences.Key<T>,
-    scope: CoroutineScope,
-    defaultValue: T,
-) = MutableStateFlow(defaultValue).apply {
-    scope.launch {
-        value = data.first()[key] ?: defaultValue
-        collect { newValue ->
-            edit { it[key] = newValue }
-        }
-    }
-}
-
 
 /** Return a [State]`<T>` that contains the most recent value for the [DataStore]
  * preference pointed to by [key], with an initial value of [initialValue]. */
@@ -271,10 +144,10 @@ inline fun <reified T: Enum<T>> DataStore<Preferences>.enumPreferenceState(
     scope: CoroutineScope,
     initialValue: T = enumValues<T>()[0],
 ): State<T> {
-    val indexState = preferenceState(key, initialValue.ordinal, scope)
+    val indexState by preferenceState(key, initialValue.ordinal, scope)
     val values = enumValues<T>()
     return derivedStateOf {
-        values.getOrElse(indexState.value) { initialValue }
+        values.getOrElse(indexState) { initialValue }
     }
 }
 
@@ -295,28 +168,5 @@ suspend inline fun <reified T: Enum<T>> DataStore<Preferences>.awaitEnumPreferen
     val values = enumValues<T>()
     return derivedStateOf {
         values.getOrElse(indexState.value) { defaultValue }
-    }
-}
-
-/** Get the menu item at @param index, or null if the index is out of bounds. */
-fun Menu.getItemOrNull(index: Int) =
-    try { getItem(index) }
-    catch (e: IndexOutOfBoundsException) { null }
-
-/** Replace the receiver fragment with the provided Fragment instance in the
- * containing activity. This function will not do anything if the fragment
- * is not attached to an activity or if the fragment's view's direct parent
- * is not the fragment container for the activity. If the fragment's activity
- * is an instance of NavViewActivity, it will execute the activity's
- * addSecondaryFragment method instead. */
-fun Fragment.replaceSelfWith(fragment: Fragment) {
-    val activity = activity ?: return
-    if (activity is NavViewActivity)
-        activity.addSecondaryFragment(fragment)
-    else {
-        val containerId = (view?.parent as? ViewGroup)?.id ?: return
-        activity.supportFragmentManager.beginTransaction()
-            .replace(containerId, fragment)
-            .addToBackStack(null).commit()
     }
 }
