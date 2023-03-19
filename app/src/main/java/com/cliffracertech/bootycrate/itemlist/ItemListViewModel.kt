@@ -8,6 +8,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -16,20 +17,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MessageHandler
+import com.cliffracertech.bootycrate.itemlist.ItemListViewModel.UiState
+import com.cliffracertech.bootycrate.itemlist.ItemListViewModel.UiState.*
 import com.cliffracertech.bootycrate.model.SearchQueryState
 import com.cliffracertech.bootycrate.model.SelectionState
 import com.cliffracertech.bootycrate.model.database.*
 import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.collectAsState
-import com.cliffracertech.bootycrate.utils.enumPreferenceState
-import com.cliffracertech.bootycrate.utils.preferenceState
+import com.cliffracertech.bootycrate.utils.enumPreferenceFlow
+import com.cliffracertech.bootycrate.utils.preferenceFlow
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
@@ -66,10 +68,11 @@ abstract class ItemListViewModel<T: ListItem>(
 
     protected val scope = coroutineScope ?: viewModelScope
     abstract val collectionNameResId: StringResource.Id
-    protected val searchQuery by searchQueryState::query
+    private val searchQuery by searchQueryState::query
+    protected val searchQueryFlow = snapshotFlow { searchQuery }
 
-    protected val sort by dataStore.enumPreferenceState(
-        intPreferencesKey(PrefKeys.itemSort), scope, ListItem.Sort.Color)
+    protected val sort = dataStore.enumPreferenceFlow(
+        intPreferencesKey(PrefKeys.itemSort), ListItem.Sort.Color)
 
     protected abstract val items: ImmutableList<T>?
     private val selectedItemIds get() = selection.selectedIds.keys
@@ -94,14 +97,12 @@ abstract class ItemListViewModel<T: ListItem>(
     val uiState by derivedStateOf {
         val items = this.items
         when {
-            items == null -> UiState.Loading
-            items.isEmpty() -> {
-                val message = if (searchQuery != null)
-                                  StringResource(R.string.no_search_results_message)
-                              else StringResource(R.string.empty_list_message, collectionNameResId)
-                UiState.Message(message)
-            }
-            else -> UiState.Items(items, selectedItemIds.toImmutableSet(), expandedItemId)
+            items == null -> Loading
+            items.isEmpty() -> Message(
+                if (searchQuery != null)
+                    StringResource(R.string.no_search_results_message)
+                else StringResource(R.string.empty_list_message, collectionNameResId))
+            else -> Items(items, selectedItemIds.toImmutableSet(), expandedItemId)
         }
     }
 
@@ -169,11 +170,12 @@ abstract class ItemListViewModel<T: ListItem>(
 
     override val collectionNameResId = StringResource.Id(R.string.shopping_list_description)
     private val sortByCheckedKey = booleanPreferencesKey(PrefKeys.sortByChecked)
-    private val sortByChecked by dataStore.preferenceState(sortByCheckedKey, false, scope)
+    private val sortByChecked = dataStore.preferenceFlow(sortByCheckedKey, false)
 
-    override val items by dao.getShoppingList(sort, searchQuery, sortByChecked)
-        .map { it.toImmutableList() }
-        .collectAsState(null, scope)
+    override val items by
+        combine(sort, searchQueryFlow, sortByChecked, dao::getShoppingList)
+            .transformLatest { emitAll(it) }
+            .collectAsState(null, scope)
 
     override fun onItemAmountChangeRequest(id: Long, amount: Int) {
         scope.launch { dao.updateShoppingListAmount(id, amount) }
@@ -221,8 +223,8 @@ abstract class ItemListViewModel<T: ListItem>(
 
     override val collectionNameResId = StringResource.Id(R.string.inventory_description)
 
-    override val items by dao.getInventory(sort, searchQuery)
-        .map { it.toImmutableList() }
+    override val items by combine(sort, searchQueryFlow, dao::getInventory)
+        .transformLatest { emitAll(it) }
         .collectAsState(null, scope)
 
     override fun onItemAmountChangeRequest(id: Long, amount: Int) {

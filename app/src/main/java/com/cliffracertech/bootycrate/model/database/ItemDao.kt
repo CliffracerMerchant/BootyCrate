@@ -5,7 +5,10 @@
 package com.cliffracertech.bootycrate.model.database
 
 import androidx.room.*
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 /** A Room DAO that provides methods to manipulate a database of ListItems. */
 @Dao abstract class ItemDao {
@@ -101,21 +104,22 @@ import kotlinx.coroutines.flow.Flow
         sort: ListItem.Sort,
         searchFilter: String?,
         sortByChecked: Boolean,
-    ): Flow<List<ShoppingListItem>> {
+    ): Flow<ImmutableList<ShoppingListItem>> {
         val filter = "%${searchFilter ?: ""}%"
-        return if (!sortByChecked) when (sort) {
-            ListItem.Sort.Color -> getShoppingListSortedByColor(filter)
-            ListItem.Sort.NameAsc -> getShoppingListSortedByNameAsc(filter)
-            ListItem.Sort.NameDesc -> getShoppingListSortedByNameDesc(filter)
-            ListItem.Sort.AmountAsc -> getShoppingListSortedByAmountAsc(filter)
-            ListItem.Sort.AmountDesc -> getShoppingListSortedByAmountDesc(filter)
-        } else when (sort) {
-            ListItem.Sort.Color -> getShoppingListSortedByColorAndChecked(filter)
-            ListItem.Sort.NameAsc -> getShoppingListSortedByNameAscAndChecked(filter)
-            ListItem.Sort.NameDesc -> getShoppingListSortedByNameDescAndChecked(filter)
-            ListItem.Sort.AmountAsc -> getShoppingListSortedByAmountAscAndChecked(filter)
-            ListItem.Sort.AmountDesc -> getShoppingListSortedByAmountDescAndChecked(filter)
-        }
+        return if (sortByChecked) when (sort) {
+                ListItem.Sort.Color -> getShoppingListSortedByColorAndChecked(filter)
+                ListItem.Sort.NameAsc -> getShoppingListSortedByNameAscAndChecked(filter)
+                ListItem.Sort.NameDesc -> getShoppingListSortedByNameDescAndChecked(filter)
+                ListItem.Sort.AmountAsc -> getShoppingListSortedByAmountAscAndChecked(filter)
+                ListItem.Sort.AmountDesc -> getShoppingListSortedByAmountDescAndChecked(filter)
+            }.map(List<ShoppingListItem>::toImmutableList)
+        else when (sort) {
+                ListItem.Sort.Color -> getShoppingListSortedByColor(filter)
+                ListItem.Sort.NameAsc -> getShoppingListSortedByNameAsc(filter)
+                ListItem.Sort.NameDesc -> getShoppingListSortedByNameDesc(filter)
+                ListItem.Sort.AmountAsc -> getShoppingListSortedByAmountAsc(filter)
+                ListItem.Sort.AmountDesc -> getShoppingListSortedByAmountDesc(filter)
+            }.map(List<ShoppingListItem>::toImmutableList)
     }
 
     @Query("SELECT EXISTS(SELECT item.id FROM item " +
@@ -262,7 +266,7 @@ import kotlinx.coroutines.flow.Flow
     fun getInventory(
         sort: ListItem.Sort,
         searchFilter: String? = null
-    ): Flow<List<InventoryItem>> {
+    ): Flow<ImmutableList<InventoryItem>> {
         val filter = "%${searchFilter ?: ""}%"
         return when (sort) {
             ListItem.Sort.Color -> getInventorySortedByColor(filter)
@@ -270,7 +274,7 @@ import kotlinx.coroutines.flow.Flow
             ListItem.Sort.NameDesc -> getInventorySortedByNameDesc(filter)
             ListItem.Sort.AmountAsc -> getInventorySortedByAmountAsc(filter)
             ListItem.Sort.AmountDesc -> getInventorySortedByAmountDesc(filter)
-        }
+        }.map(List<InventoryItem>::toImmutableList)
     }
 
     @Query("SELECT EXISTS(SELECT item.id FROM item " +
