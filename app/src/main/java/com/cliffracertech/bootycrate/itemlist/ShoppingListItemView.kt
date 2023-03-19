@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -69,6 +70,7 @@ import com.cliffracertech.bootycrate.model.database.ShoppingListItem
     val showCheckbox = showCheckboxProvider()
     Box(modifier
         .minTouchTargetSize()
+        .clip(MaterialTheme.shapes.small)
         .then(if (showCheckbox) Modifier.clickable(
                   role = Role.Checkbox,
                   onClickLabel = checkboxClickLabel,
