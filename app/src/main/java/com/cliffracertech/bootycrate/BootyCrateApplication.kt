@@ -5,15 +5,11 @@
 package com.cliffracertech.bootycrate
 
 import android.app.Application
-import com.cliffracertech.bootycrate.utils.SoftKeyboard
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class BootyCrateApplication : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        SoftKeyboard.init(this)
-    }
+
 }
 
 const val springStiffness = 700f

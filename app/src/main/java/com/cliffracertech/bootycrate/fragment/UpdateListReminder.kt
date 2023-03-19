@@ -25,7 +25,6 @@ import androidx.preference.PreferenceManager
 import ca.antonious.materialdaypicker.MaterialDayPicker
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.activity.MainActivity
-import com.cliffracertech.bootycrate.databinding.MainActivityBinding
 import com.cliffracertech.bootycrate.databinding.UpdateListReminderSettingsFragmentBinding
 import com.cliffracertech.bootycrate.utils.alarmManager
 import com.cliffracertech.bootycrate.utils.dpToPixels

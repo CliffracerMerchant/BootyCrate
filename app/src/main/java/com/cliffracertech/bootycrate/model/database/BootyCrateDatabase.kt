@@ -7,14 +7,11 @@ package com.cliffracertech.bootycrate.model.database
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
-import android.system.Os.close
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.dialog.themedAlertDialogBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -298,10 +295,11 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         tempDbFile.delete()
 
         if (itemGroups.isEmpty() || items.isEmpty())
-            themedAlertDialogBuilder(context)
-                .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
-                .setMessage(R.string.invalid_imported_db_error_message)
-                .setTitle(R.string.error).show()
+            return
+//            themedAlertDialogBuilder(context)
+//                .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
+//                .setMessage(R.string.invalid_imported_db_error_message)
+//                .setTitle(R.string.error).show()
         else CoroutineScope(Dispatchers.IO).launch {
             if (overwriteExistingDb) {
                 openHelper.writableDatabase.execSQL(

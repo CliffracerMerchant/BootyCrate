@@ -24,10 +24,10 @@
         android:layout_marginBottom="8dp"
         style="@style/SecondaryTextAppearance" />
 
-    <com.cliffracertech.bootycrate.recyclerview.ItemGroupPicker
-        android:id="@+id/itemGroupPicker"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:maxHeight="210dp" />
+<!--    <com.cliffracertech.bootycrate.recyclerview.ItemGroupPicker-->
+<!--        android:id="@+id/itemGroupPicker"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:maxHeight="210dp" />-->
 
 </com.cliffracertech.bootycrate.utils.MaxHeightLinearLayout>
