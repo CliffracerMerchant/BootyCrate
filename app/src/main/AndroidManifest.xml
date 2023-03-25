@@ -4,8 +4,7 @@
    ~ Version 2.0, obtainable at http://www.apache.org/licenses/LICENSE-2.0
    ~ or in the file LICENSE in the project's root directory. -->
 
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.cliffracertech.bootycrate">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
@@ -21,7 +20,6 @@
 
         <activity
             android:name="com.cliffracertech.bootycrate.activity.MainActivity"
-            android:label="@string/app_name"
             android:windowSoftInputMode="adjustPan"
             android:launchMode="standard"
             android:screenOrientation="portrait"
