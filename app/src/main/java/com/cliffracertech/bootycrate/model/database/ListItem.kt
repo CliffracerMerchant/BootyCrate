@@ -16,93 +16,79 @@ import kotlinx.collections.immutable.toImmutableList
 
 /** DatabaseListItem describes the entities stored in the item table. */
 @Entity(tableName = "item",
-        foreignKeys = [ForeignKey(entity = DatabaseItemGroup::class,
-                                  parentColumns=["id"],
-                                  childColumns=["groupId"],
-                                  onDelete=ForeignKey.CASCADE)])
+        foreignKeys = [ForeignKey(
+            entity = DatabaseItemGroup::class,
+            parentColumns=["name"],
+            childColumns=["groupName"],
+            onDelete=ForeignKey.CASCADE)])
 class DatabaseListItem(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name="id")
-    var id: Long = 0,
-    @ColumnInfo(name="groupId", index = true)
-    var groupId: Long = 0,
+    val id: Long = 0,
+    @ColumnInfo(name="groupName", index = true)
+    val groupName: String,
     @ColumnInfo(name="name", collate = ColumnInfo.NOCASE, index = true)
-    var name: String = "",
+    val name: String = "",
     @ColumnInfo(name="extraInfo", defaultValue="", collate = ColumnInfo.NOCASE)
-    var extraInfo: String = "",
-    @ColumnInfo(name="color", defaultValue="0", index = true)
-    var color: Int = 0,
+    val extraInfo: String = "",
+    @ColumnInfo(name="colorGroup", defaultValue="0", index = true)
+    val colorGroup: ListItem.ColorGroup = ListItem.ColorGroup.values().first(),
 
     // ShoppingListItem fields
     @ColumnInfo(name="isChecked", defaultValue="0")
-    var isChecked: Boolean = false,
+    val isChecked: Boolean = false,
     @ColumnInfo(name="shoppingListAmount", defaultValue="-1", index = true)
-    var shoppingListAmount: Int = -1,
-    @ColumnInfo(name="expandedInShoppingList", defaultValue="0")
-    var expandedInShoppingList: Boolean = false,
-    @ColumnInfo(name="selectedInShoppingList", defaultValue="0")
-    var selectedInShoppingList: Boolean = false,
+    val shoppingListAmount: Int = -1,
     @ColumnInfo(name="inShoppingListTrash", defaultValue="0")
-    var inShoppingListTrash: Boolean = false,
+    val inShoppingListTrash: Boolean = false,
 
     // InventoryItem fields
     @ColumnInfo(name="inventoryAmount", defaultValue="-1", index = true)
-    var inventoryAmount: Int = -1,
-    @ColumnInfo(name="expandedInInventory", defaultValue="0")
-    var expandedInInventory: Boolean = false,
-    @ColumnInfo(name="selectedInInventory", defaultValue="0")
-    var selectedInInventory: Boolean = false,
+    val inventoryAmount: Int = -1,
     @ColumnInfo(name="autoAddToShoppingList", defaultValue="0")
-    var autoAddToShoppingList: Boolean = false,
+    val autoAddToShoppingList: Boolean = false,
     @ColumnInfo(name="autoAddToShoppingListAmount", defaultValue="1")
-    var autoAddToShoppingListAmount: Int = 1,
+    val autoAddToShoppingListAmount: Int = 1,
     @ColumnInfo(name="inInventoryTrash", defaultValue="0")
-    var inInventoryTrash: Boolean = false
+    val inInventoryTrash: Boolean = false
 ) {
-    init { color = color.coerceIn(ListItem.ColorGroup.values().indices) }
-
-    /** An interface for objects to provide a way to convert themselves into a DatabaseListItem. */
-    interface Convertible {
-        /** Return the convertible as a DatabaseListItem,
-         *  with its itemGroupId field set to the provided id. **/
-        fun toDbListItem(groupId: Long): DatabaseListItem
-    }
 
     override fun toString() ="""
-id = $id
-groupId = $groupId
-name = $name
-extraInfo = $extraInfo
-color = $color
-checked = $isChecked
-shoppingListAmount = $shoppingListAmount
-expandedInShoppingList = $expandedInShoppingList
-selectedInShoppingList = $selectedInShoppingList
-inShoppingListTrash = $inShoppingListTrash
-inventoryAmount = $inventoryAmount
-expandedInInventory = $expandedInInventory
-selectedInInventory = $selectedInInventory
-autoAddToShoppingList = $autoAddToShoppingList
-autoAddToShoppingListAmount = $autoAddToShoppingListAmount
-inInventoryTrash = $inInventoryTrash"""
+        id = $id
+        groupName = $groupName
+        name = $name
+        extraInfo = $extraInfo
+        colorGroup = $colorGroup
+        checked = $isChecked
+        shoppingListAmount = $shoppingListAmount
+        inShoppingListTrash = $inShoppingListTrash
+        inventoryAmount = $inventoryAmount
+        autoAddToShoppingList = $autoAddToShoppingList
+        autoAddToShoppingListAmount = $autoAddToShoppingListAmount
+        inInventoryTrash = $inInventoryTrash
+    """.trimIndent()
+
+    class Converters {
+        @TypeConverter fun toColorGroup(index: Int) =
+            ListItem.ColorGroup.values().getOrElse(index) {
+                ListItem.ColorGroup.values().first()
+            }
+        @TypeConverter fun fromColorGroup(colorGroup: ListItem.ColorGroup) =
+            colorGroup.ordinal
+    }
+
 }
 
-/**
- * An abstract class that mirrors DatabaseListItem, but only contains the fields
- * necessary for a visual representation of the object. Subclasses should also
- * add any additional required fields and provide an implementation of
- * toDbListItem that will return a DatabaseListItem representation of the object.
- */
+/** An abstract class that mirrors DatabaseListItem, but only contains
+ * the fields necessary for a visual representation of the object. */
 abstract class ListItem(
-    var id: Long = 0,
-    var name: String,
-    var extraInfo: String = "",
-    var color: Int = 0,
-    var amount: Int = 1,
-    var isExpanded: Boolean = false,
-    var isSelected: Boolean = false,
-    var isLinked: Boolean = false,
-) : DatabaseListItem.Convertible {
+    val id: Long = 0,
+    val name: String,
+    val extraInfo: String = "",
+    val colorGroup: ColorGroup = ColorGroup.values().first(),
+    val amount: Int = 1,
+    val isLinked: Boolean = false,
+) {
 
     /** Return a [String] that describes the name, extra info, and amount of an item. */
     fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
@@ -175,11 +161,6 @@ abstract class ListItem(
         companion object {
             fun stringValues(context: Context) =
                 enumValues<Sort>().map { it.toString(context) }
-
-            fun fromString(string: String?) =
-                if (string == null) Color
-                else try { valueOf(string) }
-                catch(e: IllegalArgumentException) { Color }
         }
     }
 }
@@ -190,25 +171,16 @@ class ShoppingListItem(
     id: Long = 0,
     name: String,
     extraInfo: String = "",
-    color: Int = 0,
+    colorGroup: ColorGroup = ColorGroup.values().first(),
     amount: Int = 1,
-    isExpanded: Boolean = false,
-    isSelected: Boolean = false,
     isLinked: Boolean = false,
-    var isChecked: Boolean = false
-): ListItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
+    val isChecked: Boolean = false
+): ListItem(id, name, extraInfo, colorGroup, amount, isLinked) {
 
-    /** The enum class Field identifies user facing fields
-     * that are potentially editable by the user. */
-    enum class Field { Name, ExtraInfo, Color, Amount,
-                       IsExpanded, IsSelected, IsLinked, IsChecked }
-
-    override fun toDbListItem(groupId: Long) = DatabaseListItem(
-        id, groupId, name, extraInfo, color,
+    fun toDbListItem(groupName: String) = DatabaseListItem(
+        id, groupName, name, extraInfo, colorGroup,
         isChecked = isChecked,
-        shoppingListAmount = amount,
-        expandedInShoppingList = isExpanded,
-        selectedInShoppingList = isSelected)
+        shoppingListAmount = amount)
 }
 
 /** A ListItem subclass that provides an implementation of toDbListItem
@@ -218,27 +190,16 @@ class InventoryItem(
     id: Long = 0,
     name: String,
     extraInfo: String = "",
-    color: Int = 0,
+    colorGroup: ColorGroup = ColorGroup.values().first(),
     amount: Int = 0,
-    isExpanded: Boolean = false,
-    isSelected: Boolean = false,
     isLinked: Boolean = false,
-    var autoAddToShoppingList: Boolean = false,
-    var autoAddToShoppingListAmount: Int = 1
-): ListItem(id, name, extraInfo, color, amount, isExpanded, isSelected, isLinked) {
+    val autoAddToShoppingList: Boolean = false,
+    val autoAddToShoppingListAmount: Int = 1
+): ListItem(id, name, extraInfo, colorGroup, amount, isLinked) {
 
-    /** The enum class Field identifies user facing fields
-     * that are potentially editable by the user. */
-    enum class Field { Name, ExtraInfo, Color, Amount,
-                       IsExpanded, IsSelected, IsLinked,
-                       AutoAddToShoppingList,
-                       AutoAddToShoppingListAmount }
-
-    override fun toDbListItem(groupId: Long) = DatabaseListItem(
-        id, groupId, name, extraInfo, color,
+    fun toDbListItem(groupName: String) = DatabaseListItem(
+        id, groupName, name, extraInfo, colorGroup,
         inventoryAmount = amount,
-        expandedInInventory = isExpanded,
-        selectedInInventory = isSelected,
         autoAddToShoppingList = autoAddToShoppingList,
         autoAddToShoppingListAmount = autoAddToShoppingListAmount)
 }

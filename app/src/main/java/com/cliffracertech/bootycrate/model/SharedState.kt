@@ -10,11 +10,16 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import com.cliffracertech.bootycrate.model.NavigationState.*
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ActivityRetainedComponent
 import dagger.hilt.android.scopes.ActivityRetainedScoped
+import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
+import javax.inject.Qualifier
 
 /**
  * A state holder that contains the application's navigation state (described
@@ -73,7 +78,6 @@ class NavigationState @Inject constructor() {
             additionalScreenStack.last()
         else rootScreen
     }
-    val visibleScreenFlow = snapshotFlow { visibleScreen }
 
     /** Choose a new [RootScreen] for the app. This is a no-op if the back
      * stack is not empty (i.e. if [visibleScreen] is a value of [AdditionalScreen]
@@ -103,23 +107,48 @@ class NavigationState @Inject constructor() {
     }
 }
 
-@ActivityRetainedScoped
-class SearchQueryState @Inject constructor() {
-    var query by mutableStateOf<String?>(null)
-}
-
 // SelectionState is not ActivityRetainedScoped because we want to allow
 // multiple instances (one for the shopping list and one for the inventory).
 class SelectionState @Inject constructor() {
-    val selectedIds: SnapshotStateMap<Long, Unit> = mutableStateMapOf()
+    private val _ids: SnapshotStateMap<Long, Unit> = mutableStateMapOf()
+    val ids: Set<Long> by _ids::keys
+
+    val size get() = ids.size
+    val isEmpty get() = size == 0
+
+    operator fun contains(id: Long) = id in _ids
 
     fun toggle(id: Long) {
-        if (selectedIds[id] != null)
-            selectedIds[id] = Unit
-        else selectedIds.remove(id)
+        if (_ids[id] != null)
+            _ids[id] = Unit
+        else _ids.remove(id)
     }
 
-    fun clear() = selectedIds.clear()
+    fun addAll(ids: List<Long>) =
+        _ids.putAll(ids.map { it to Unit })
+
+    fun clear() = _ids.clear()
+}
+
+@Module @InstallIn(ActivityRetainedComponent::class)
+class SharedState {
+    @Qualifier @Retention(AnnotationRetention.BINARY)
+    annotation class ShoppingListSelection
+
+    @Qualifier @Retention(AnnotationRetention.BINARY)
+    annotation class InventorySelection
+
+    @ShoppingListSelection @Provides
+    fun provideShoppingListSelection() = SelectionState()
+
+    @InventorySelection @Provides
+    fun provideInventorySelection() = SelectionState()
+
+    @Qualifier @Retention(AnnotationRetention.BINARY)
+    annotation class SearchQuery
+
+    @SearchQuery @ActivityRetainedScoped @Provides
+    fun provideSearchQueryState() = MutableStateFlow<String?>(null)
 }
 
 @ActivityRetainedScoped

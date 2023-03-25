@@ -42,7 +42,7 @@ import com.cliffracertech.bootycrate.model.database.ShoppingListItem
     Icon(painter = if (checked) uncheckedToCheckedPainter
                    else         checkedToUncheckedPainter,
          contentDescription = null,
-         modifier = Modifier.offset(1.dp, 2.dp))
+         modifier = Modifier.offset(2.dp, 2.dp))
 }
 
 /**
@@ -204,8 +204,8 @@ fun shoppingListItemCallback(
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ShoppingListItemView(
-    ListItem.ColorGroup.values()[item.color],
-    item.name, item.extraInfo, item.amount, item.isChecked,
+    item.colorGroup, item.name, item.extraInfo,
+    item.amount, item.isChecked,
     isSelected, selectionBrush, isEditable,
     callback, modifier)
 

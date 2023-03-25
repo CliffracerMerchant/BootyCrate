@@ -7,55 +7,39 @@ package com.cliffracertech.bootycrate.model.database
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
-/** A database representation of a group of ListItems. **/
+/** A database representation of a group of [ListItem]s. **/
 @Entity(tableName = "itemGroup")
 open class DatabaseItemGroup(
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name="id")
-    var id: Long = 0,
+    @PrimaryKey
     @ColumnInfo(name="name")
-    var name: String,
+    val name: String,
     @ColumnInfo(name="isSelected", defaultValue="0")
-    var isSelected: Boolean = false,
-)
+    val isSelected: Boolean = false)
 
-/** A subclass of DatabaseItemGroup that also contains the shopping list item
- * and inventory item counts for the item group. Because these are calculated
- * with an SQL selection, these extra values do not need to be stored in the
- * database. */
+/** A subclass of [DatabaseItemGroup] that also contains the
+ * [ShoppingListItem] and [InventoryItem] counts for the [ItemGroup]. */
 class ItemGroup(
-    id: Long = 0,
     name: String,
-    var shoppingListItemCount: Int,
-    var inventoryItemCount: Int,
-) : DatabaseItemGroup(id, name) {
-    override fun equals(other: Any?) = when (other) {
-        null -> false
-        !is ItemGroup -> false
-        else -> id == other.id && name == other.name &&
-                shoppingListItemCount == other.shoppingListItemCount &&
-                inventoryItemCount == other.inventoryItemCount &&
-                isSelected == other.isSelected
-    }
+    val shoppingListItemCount: Int,
+    val inventoryItemCount: Int,
+    isSelected: Boolean = false,
+) : DatabaseItemGroup(name, isSelected) {
 
     override fun toString() = """
-id = $id
-name = $name
-shoppingListItemCount = $shoppingListItemCount
-inventoryItemCount = $inventoryItemCount
-isSelected = $isSelected
-"""
-
-    override fun hashCode() = shoppingListItemCount * 31 + inventoryItemCount
+        name = $name
+        isSelected = $isSelected
+        shoppingListItemCount = $shoppingListItemCount
+        inventoryItemCount = $inventoryItemCount
+    """.trimIndent()
 }
 
 private const val shoppingListItemCount = "(SELECT count(*) FROM item " +
-                                          "WHERE item.groupId = itemGroup.id " +
+                                          "WHERE item.groupName = itemGroup.name " +
                                           "AND item.shoppingListAmount != -1 " +
                                           "AND NOT item.inShoppingListTrash) " +
                                           "AS shoppingListItemCount"
 private const val inventoryItemCount = "(SELECT count(*) FROM item " +
-                                       "WHERE item.groupId = itemGroup.id " +
+                                       "WHERE item.groupName = itemGroup.name " +
                                        "AND item.inventoryAmount != -1 " +
                                        "AND NOT item.inInventoryTrash) " +
                                        "AS inventoryItemCount"
@@ -66,31 +50,29 @@ private const val inventoryItemCount = "(SELECT count(*) FROM item " +
     @Query("INSERT INTO itemGroup (name, isSelected) VALUES (:name, 1)")
     abstract suspend fun add(name: String): Long
 
-    @Query("UPDATE itemGroup SET name = :name WHERE id = :id")
-    abstract suspend fun updateName(id: Long, name: String)
+    @Query("UPDATE itemGroup SET name = :name WHERE name = :oldName")
+    abstract suspend fun setName(oldName: String, name: String)
 
-    @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount, isSelected FROM itemGroup")
+    @Query("SELECT name, $shoppingListItemCount, " +
+                  "$inventoryItemCount, isSelected " +
+           "FROM itemGroup")
     abstract fun getAll() : Flow<List<ItemGroup>>
 
     @Query("SELECT * FROM itemGroup")
     abstract fun getAllNow() : List<DatabaseItemGroup>
 
-    @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount, isSelected " +
+    @Query("SELECT name, $shoppingListItemCount, $inventoryItemCount, isSelected " +
            "FROM itemGroup WHERE isSelected")
     abstract fun getSelectedGroups(): Flow<List<ItemGroup>>
 
-    @Query("SELECT id, name, $shoppingListItemCount, $inventoryItemCount, isSelected " +
-           "FROM itemGroup WHERE isSelected")
-    abstract suspend fun getSelectedGroupsNow(): List<ItemGroup>
-
-    @Query("UPDATE itemGroup SET isSelected = (1 - isSelected) WHERE id = :id")
-    abstract suspend fun updateIsSelected(id: Long)
+    @Query("UPDATE itemGroup SET isSelected = (1 - isSelected) WHERE name = :name")
+    abstract suspend fun toggleIsSelected(name: String)
 
     @Query("UPDATE itemGroup SET isSelected = 1")
     abstract suspend fun selectAll()
 
-    @Query("DELETE FROM itemGroup WHERE id = :id")
-    abstract suspend fun delete(id: Long)
+    @Query("DELETE FROM itemGroup WHERE name = :name")
+    abstract suspend fun delete(name: String)
 
     @Query("DELETE FROM itemGroup")
     abstract suspend fun deleteAll()

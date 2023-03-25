@@ -76,6 +76,6 @@ interface ItemListCallback {
     horizontalAlignment = Alignment.CenterHorizontally
 ) {
     items(items = itemListState.itemList,
-          key = { it.id },
+          key = ListItem::id::get,
           itemContent = itemContent)
 }

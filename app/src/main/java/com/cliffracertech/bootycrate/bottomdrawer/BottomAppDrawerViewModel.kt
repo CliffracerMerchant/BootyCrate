@@ -8,8 +8,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.ViewModel
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.database.ItemGroup
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
@@ -22,9 +22,6 @@ import com.cliffracertech.bootycrate.utils.collectAsState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -40,7 +37,6 @@ class RenameItemGroupButtonHandlerImpl(
 ) : RenameItemGroupButtonHandler {
     private val validator = ItemGroupNameValidator(dao)
     private val validatorMessage by validator.message.collectAsState(null, coroutineScope)
-    private var renameDialogTargetId by mutableStateOf<Long?>(null)
 
     private fun hideRenameDialog() {
         renameItemGroupDialogState = NameDialogState.NotShowing
@@ -57,10 +53,8 @@ class RenameItemGroupButtonHandlerImpl(
         onConfirm = {
             coroutineScope.launch {
                 val validatedName = validator.validate()
-                val id = renameDialogTargetId
-                if (validatedName == null || id == null)
-                    return@launch
-                dao.updateName(id, validatedName)
+                    ?: return@launch
+                dao.setName(originalName, validatedName)
                 hideRenameDialog()
             }
         }, title = StringResource(
@@ -72,7 +66,6 @@ class RenameItemGroupButtonHandlerImpl(
 
     override fun onItemGroupRenameClick(itemGroup: ItemGroup) {
         renameItemGroupDialogState = dialogShowingState(originalName = itemGroup.name)
-        renameDialogTargetId = itemGroup.id
     }
 }
 
@@ -85,19 +78,19 @@ class DeleteItemGroupButtonHandlerImpl(
     private val dao: ItemGroupDao,
     coroutineScope: CoroutineScope,
 ) : DeleteItemGroupButtonHandler {
-    private var targetId by mutableStateOf<Long?>(null)
+    private var target by mutableStateOf<ItemGroup?>(null)
 
     private fun hideDialog() {
         deleteItemGroupDialogState = ConfirmatoryDialogState.NotShowing
-        targetId = null
+        target = null
     }
 
     private val dialogShowingState = ConfirmatoryDialogState.Showing(
         message = StringResource(R.string.confirm_delete_item_group_message),
         onCancel = ::hideDialog,
         onConfirm = {
-            targetId?.let { id ->
-                coroutineScope.launch { dao.delete(id) }
+            target?.name?.let {
+                coroutineScope.launch { dao.delete(it) }
                 hideDialog()
             }
         })
@@ -107,7 +100,7 @@ class DeleteItemGroupButtonHandlerImpl(
         private set
 
     override fun onItemGroupDeleteClick(itemGroup: ItemGroup) {
-        targetId = itemGroup.id
+        target = itemGroup
         deleteItemGroupDialogState = dialogShowingState
     }
 }
@@ -155,8 +148,8 @@ class AddItemGroupButtonHandlerImpl(
     private val navState: NavigationState,
     private val itemGroupDao: ItemGroupDao,
     private val settingsDao: SettingsDao,
-    private val coroutineScope: CoroutineScope
-) : ViewModel(),
+    coroutineScope: CoroutineScope
+) : ViewModel(coroutineScope),
     RenameItemGroupButtonHandler by RenameItemGroupButtonHandlerImpl(itemGroupDao, coroutineScope),
     DeleteItemGroupButtonHandler by DeleteItemGroupButtonHandlerImpl(itemGroupDao, coroutineScope),
     AddItemGroupButtonHandler by AddItemGroupButtonHandlerImpl(itemGroupDao, coroutineScope)
@@ -165,12 +158,7 @@ class AddItemGroupButtonHandlerImpl(
         navState: NavigationState,
         itemGroupDao: ItemGroupDao,
         settingsDao: SettingsDao,
-    ) : this(navState, itemGroupDao, settingsDao,
-             CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
-
-    override fun onCleared() {
-        coroutineScope.cancel()
-    }
+    ) : this(navState, itemGroupDao, settingsDao, viewModelScope())
 
     val isHidden by derivedStateOf {
         !navState.visibleScreen.isRootScreen
@@ -203,7 +191,7 @@ class AddItemGroupButtonHandlerImpl(
 
     fun onItemGroupClick(itemGroup: ItemGroup) {
         coroutineScope.launch {
-            itemGroupDao.updateIsSelected(itemGroup.id)
+            itemGroupDao.toggleIsSelected(itemGroup.name)
         }
     }
 }

@@ -10,10 +10,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.NewItemDialogVisibilityState
-import com.cliffracertech.bootycrate.model.database.ItemDao
+import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
 import com.cliffracertech.bootycrate.utils.collectAsState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
@@ -41,15 +42,15 @@ import javax.inject.Inject
 @HiltViewModel class BottomAppBarViewModel(
     private val navState: NavigationState,
     private val dialogVisibilityState: NewItemDialogVisibilityState,
-    private val itemDao: ItemDao,
+    private val shoppingListDao: ShoppingListItemDao,
     coroutineScope: CoroutineScope?
 ) : ViewModel() {
 
     @Inject constructor(
         navigationState: NavigationState,
         dialogVisibilityState: NewItemDialogVisibilityState,
-        itemDao: ItemDao,
-    ) : this(navigationState, dialogVisibilityState, itemDao, null)
+        shoppingListDao: ShoppingListItemDao,
+    ) : this(navigationState, dialogVisibilityState, shoppingListDao, null)
 
     private val scope = coroutineScope ?: viewModelScope
 
@@ -57,8 +58,8 @@ import javax.inject.Inject
      * hover above to indicate that it is the active one. */
     val selectedRootScreen by navState::rootScreen
 
-    private val checkedItemsSize by itemDao
-        .getCheckedShoppingListItemsSize()
+    private val checkedItemsSize by shoppingListDao
+        .getVisibleCheckedItemCount()
         .collectAsState(0, scope)
 
     val checkoutButtonIsVisible by derivedStateOf {
@@ -75,7 +76,7 @@ import javax.inject.Inject
      * temporarily (e.g. with a badge over the shopping list nav
      * item that fades out) when new amounts are emitted. */
     val shoppingListSizeChanges =
-        itemDao.getShoppingListItemCount().map { shoppingListSize ->
+        shoppingListDao.getVisibleItemCount().map { shoppingListSize ->
             val change = shoppingListSize - oldShoppingListSize
             oldShoppingListSize = shoppingListSize
             if (selectedRootScreen.isShoppingList) 0
@@ -84,7 +85,7 @@ import javax.inject.Inject
 
     fun onCheckoutButtonConfirm() {
         if (selectedRootScreen.isShoppingList)
-            scope.launch { itemDao.checkout() }
+            scope.launch { shoppingListDao.checkoutVisibleItems() }
     }
 
     val newShoppingListItemDialogIsVisible by

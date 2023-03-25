@@ -175,9 +175,10 @@ import kotlinx.collections.immutable.toImmutableList
         val itemGroups = remember {
             List(5) { ItemGroup(
                 name = "Item Group $it",
+                isSelected = it == 0,
                 shoppingListItemCount = it,
-                inventoryItemCount = 5 - it
-            )}.toMutableStateList()
+                inventoryItemCount = 5 - it)
+            }.toMutableStateList()
         }
         var multiSelectGroups by remember { mutableStateOf(false) }
 
@@ -185,18 +186,46 @@ import kotlinx.collections.immutable.toImmutableList
             title = "ItemGroupSelector",
             onSelectAllClick = {
                 multiSelectGroups = true
-                itemGroups.forEach { it.isSelected = true }
+                itemGroups.replaceAll {
+                    ItemGroup(
+                        it.name,
+                        it.shoppingListItemCount,
+                        it.inventoryItemCount,
+                        isSelected = true)
+                }
             }, multiSelectGroups = multiSelectGroups,
             onMultiSelectClick = { multiSelectGroups = !multiSelectGroups },
             itemGroups = itemGroups.toImmutableList(),
             onItemGroupClick = { itemGroup ->
                 when {
-                    !multiSelectGroups -> itemGroups.forEach {
-                        it.isSelected = it == itemGroup
+                    !multiSelectGroups -> {
+                        itemGroups.replaceAll {
+                            ItemGroup(
+                                it.name,
+                                it.shoppingListItemCount,
+                                it.inventoryItemCount,
+                                isSelected = it == itemGroup)
+                        }
                     } !itemGroup.isSelected -> {
-                        itemGroup.isSelected = true
-                    } itemGroups.find { it.isSelected && it != itemGroup } != null ->
-                        itemGroup.isSelected = false
+                        itemGroups.replaceAll {
+                            ItemGroup(
+                                it.name,
+                                it.shoppingListItemCount,
+                                it.inventoryItemCount,
+                                isSelected = it.isSelected || it == itemGroup)
+                        }
+                    } else -> {
+                        val otherSelectedItem = itemGroups
+                            .find { it.isSelected && it != itemGroup }
+                        if (otherSelectedItem != null)
+                            itemGroups.replaceAll {
+                                ItemGroup(
+                                    it.name,
+                                    it.shoppingListItemCount,
+                                    it.inventoryItemCount,
+                                    isSelected = it.isSelected && it != itemGroup)
+                            }
+                    }
                 }
             },
             onItemGroupRenameClick = {},
@@ -207,8 +236,7 @@ import kotlinx.collections.immutable.toImmutableList
                 itemGroups.add(ItemGroup(
                     name = "Item Group $number",
                     shoppingListItemCount = number,
-                    inventoryItemCount = number + 1
-                ))
+                    inventoryItemCount = number + 1))
             }, otherTopBarContent = {
                 IconButton({}) {
                     Icon(Icons.Default.Settings, null)

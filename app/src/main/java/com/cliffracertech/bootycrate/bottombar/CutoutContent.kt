@@ -74,7 +74,7 @@ private const val addButtonTranslationXDp =
     -0.5f * (checkoutButtonWidthDp - checkoutAddButtonOverlapDp)
 
 private fun checkoutButtonShape(density: Density) =
-    GenericShape { size, _ ->
+    GenericShape { _, _ ->
         val pathData = "M108,0 h-88 A 20 20 0 0 0 0,20 A 28 28 0 0 0 28,48 h90 A 32,32 0 0 1 108,0 Z"
         PathParser().parsePathString(pathData).toPath(this)
         // The coordinates used in the path data are intended to be in dp, so

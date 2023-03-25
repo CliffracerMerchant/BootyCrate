@@ -10,6 +10,7 @@ import android.net.Uri
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import dagger.Module
@@ -33,7 +34,8 @@ class DatabaseModule {
             .addMigrations(*(BootyCrateDatabase.allMigrations))
             .build()
 
-    @Provides fun provideItemDao(db: BootyCrateDatabase) = db.itemDao()
+    @Provides fun provideShoppingListItemDao(db: BootyCrateDatabase) = db.shoppingListItemDao()
+    @Provides fun provideInventoryItemDao(db: BootyCrateDatabase) = db.inventoryItemDao()
     @Provides fun provideItemGroupDao(db: BootyCrateDatabase) = db.itemGroupDao()
     @Provides fun provideSettingsDao(db: BootyCrateDatabase) = db.settingsDao()
 
@@ -47,22 +49,22 @@ class DatabaseModule {
 }
 
 /** The BootyCrate application database. */
-@Database(version = 3, entities = [
+@Database(version = 4, entities = [
     DatabaseListItem::class,
     DatabaseItemGroup::class,
     DatabaseSettings::class])
+@TypeConverters(DatabaseListItem.Converters::class)
 abstract class BootyCrateDatabase : RoomDatabase() {
 
-    abstract fun itemDao(): ItemDao
+    protected abstract fun itemDao(): ListItemDao
+    abstract fun shoppingListItemDao(): ShoppingListItemDao
+    abstract fun inventoryItemDao(): InventoryItemDao
     abstract fun itemGroupDao(): ItemGroupDao
     abstract fun settingsDao(): SettingsDao
 
     class Callback : RoomDatabase.Callback() {
         override fun onOpen(db: SupportSQLiteDatabase) {
             super.onOpen(db)
-            db.execSQL("UPDATE item " +
-                       "SET selectedInShoppingList = 0, selectedInInventory = 0, " +
-                       "expandedInShoppingList = 0, expandedInInventory = 0")
             db.execSQL("UPDATE item " +
                        "SET shoppingListAmount = -1, " +
                        "inShoppingListTrash = 0 " +
@@ -80,12 +82,8 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             values.put("name", firstGroupName)
             values.put("isSelected", 1)
             db.insert("itemGroup", 0, values)
-            db.addEnsureAtLeastOneGroupTrigger()
-            db.addEnsureAtLeastOneSelectedGroupTriggers()
-            db.addEnforceSingleSelectGroupsTriggers()
-            db.addAutoDeselectTrigger()
-            db.addAutoDeleteTrigger()
-            db.addAutoAddToShoppingListTriggers()
+            db.addAllItemGroupTriggers()
+            db.addAllItemTriggers()
         }
     }
 
@@ -105,58 +103,105 @@ abstract class BootyCrateDatabase : RoomDatabase() {
             db.execSQL("PRAGMA foreign_keys=off")
             db.execSQL("BEGIN TRANSACTION")
             db.execSQL("""CREATE TABLE IF NOT EXISTS temp_table (
-            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            `groupId` INTEGER NOT NULL, 
-            `name` TEXT NOT NULL,
-            `extraInfo` TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
-            `color` INTEGER NOT NULL DEFAULT 0,
-            `isChecked` INTEGER NOT NULL DEFAULT 0,
-            `shoppingListAmount` INTEGER NOT NULL DEFAULT -1,
-            `expandedInShoppingList` INTEGER NOT NULL DEFAULT 0,
-            `selectedInShoppingList` INTEGER NOT NULL DEFAULT 0,
-            `inShoppingListTrash` INTEGER NOT NULL DEFAULT 0,
-            `inventoryAmount` INTEGER NOT NULL DEFAULT -1,
-            `expandedInInventory` INTEGER NOT NULL DEFAULT 0,
-            `selectedInInventory` INTEGER NOT NULL DEFAULT 0,
-            `autoAddToShoppingList` INTEGER NOT NULL DEFAULT 0,
-            `autoAddToShoppingListAmount` INTEGER NOT NULL DEFAULT 1,
-            `inInventoryTrash` INTEGER NOT NULL DEFAULT 0,
-            FOREIGN KEY(`groupId`) REFERENCES `itemGroup`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )""")
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `groupId` INTEGER NOT NULL, 
+                    `name` TEXT NOT NULL,
+                    `extraInfo` TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
+                    `color` INTEGER NOT NULL DEFAULT 0,
+                    `isChecked` INTEGER NOT NULL DEFAULT 0,
+                    `shoppingListAmount` INTEGER NOT NULL DEFAULT -1,
+                    `expandedInShoppingList` INTEGER NOT NULL DEFAULT 0,
+                    `selectedInShoppingList` INTEGER NOT NULL DEFAULT 0,
+                    `inShoppingListTrash` INTEGER NOT NULL DEFAULT 0,
+                    `inventoryAmount` INTEGER NOT NULL DEFAULT -1,
+                    `expandedInInventory` INTEGER NOT NULL DEFAULT 0,
+                    `selectedInInventory` INTEGER NOT NULL DEFAULT 0,
+                    `autoAddToShoppingList` INTEGER NOT NULL DEFAULT 0,
+                    `autoAddToShoppingListAmount` INTEGER NOT NULL DEFAULT 1,
+                    `inInventoryTrash` INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY(`groupId`) REFERENCES `itemGroup`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )""")
             db.execSQL("""INSERT INTO temp_table(
-                          id, groupId, name, extraInfo, color, isChecked, shoppingListAmount,
-                          expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
-                          inventoryAmount, expandedInInventory, selectedInInventory,
-                          autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash)
-                      SELECT id, $insertedId, name, extraInfo, color, isChecked, shoppingListAmount,
-                             expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
-                             inventoryAmount, expandedInInventory, selectedInInventory,
-                             autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash
-                      FROM bootycrate_item;""")
+                              id, groupId, name, extraInfo, color, isChecked, shoppingListAmount,
+                              expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
+                              inventoryAmount, expandedInInventory, selectedInInventory,
+                              autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash)
+                          SELECT id, $insertedId, name, extraInfo, color, isChecked, shoppingListAmount,
+                                 expandedInShoppingList, selectedInShoppingList, inShoppingListTrash,
+                                 inventoryAmount, expandedInInventory, selectedInInventory,
+                                 autoAddToShoppingList, autoAddToShoppingListAmount, inInventoryTrash
+                          FROM bootycrate_item;""")
             db.execSQL("DROP TABLE bootycrate_item;")
             db.execSQL("ALTER TABLE temp_table RENAME TO item;")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_groupId` ON item(groupId) ")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_color` ON item(color) ")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_name` ON item(name) ")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_shoppingListAmount` ON item(shoppingListAmount) ")
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_inventoryAmount` ON item(inventoryAmount) ")
-            db.addAutoDeleteTrigger()
-            db.addAutoAddToShoppingListTriggers()
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_groupId` ON item(groupId)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_color` ON item(color)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_name` ON item(name)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_shoppingListAmount` ON item(shoppingListAmount)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_inventoryAmount` ON item(inventoryAmount)")
+            db.addAllItemTriggers()
             db.execSQL("COMMIT;")
             db.execSQL("PRAGMA foreign_keys=on;")
         }
 
         private val migration2to3 get() = Migration(2, 3) { db ->
             db.execSQL("""CREATE TABLE IF NOT EXISTS settings (
-            `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            `multiSelectGroups` INTEGER NOT NULL DEFAULT 0)""")
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `multiSelectGroups` INTEGER NOT NULL DEFAULT 0)""")
             db.execSQL("INSERT INTO settings DEFAULT VALUES")
-            db.addEnsureAtLeastOneGroupTrigger()
-            db.addEnsureAtLeastOneSelectedGroupTriggers()
-            db.addEnforceSingleSelectGroupsTriggers()
+            db.addAllItemGroupTriggers()
             db.addAutoDeselectTrigger()
         }
 
-        val allMigrations get() = arrayOf(migration1to2, migration2to3)
+        private val migration3to4 get() = Migration(3, 4) { db ->
+            db.execSQL("PRAGMA foreign_keys=off")
+            db.execSQL("BEGIN TRANSACTION")
+
+            db.execSQL("""CREATE TABLE IF NOT EXISTS item_temp (
+                    `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    `groupName` TEXT NOT NULL, 
+                    `name` TEXT NOT NULL,
+                    `extraInfo` TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
+                    `colorGroup` INTEGER NOT NULL DEFAULT 0,
+                    `isChecked` INTEGER NOT NULL DEFAULT 0,
+                    `shoppingListAmount` INTEGER NOT NULL DEFAULT -1,
+                    `inShoppingListTrash` INTEGER NOT NULL DEFAULT 0,
+                    `inventoryAmount` INTEGER NOT NULL DEFAULT -1,
+                    `autoAddToShoppingList` INTEGER NOT NULL DEFAULT 0,
+                    `autoAddToShoppingListAmount` INTEGER NOT NULL DEFAULT 1,
+                    `inInventoryTrash` INTEGER NOT NULL DEFAULT 0,
+                FOREIGN KEY(`groupName`) REFERENCES `itemGroup`(`name`) ON UPDATE NO ACTION ON DELETE CASCADE )""")
+            db.execSQL("""INSERT INTO item_temp(
+                          id, groupName, name, extraInfo, colorGroup,
+                          isChecked, shoppingListAmount, inShoppingListTrash,
+                          inventoryAmount, autoAddToShoppingList,
+                          autoAddToShoppingListAmount, inInventoryTrash)
+                          SELECT item.id, itemGroup.name, item.name, extraInfo, color,
+                                 isChecked, shoppingListAmount, inShoppingListTrash,
+                                 inventoryAmount, autoAddToShoppingList,
+                                 autoAddToShoppingListAmount, inInventoryTrash
+                          FROM item JOIN itemGroup ON item.groupId = itemGroup.id;""")
+            db.execSQL("DROP TABLE item;")
+            db.execSQL("ALTER TABLE item_temp RENAME TO item;")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_groupName` ON item(groupName)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_colorGroup` ON item(colorGroup)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_name` ON item(name)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_shoppingListAmount` ON item(shoppingListAmount)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_item_inventoryAmount` ON item(inventoryAmount)")
+            db.addAllItemTriggers()
+
+            db.execSQL("""CREATE TABLE IF NOT EXISTS temp_itemGroup (
+                `name` TEXT PRIMARY KEY NOT NULL,
+                `isSelected` INTEGER NOT NULL DEFAULT 0)""")
+            db.execSQL("INSERT INTO temp_itemGroup(name, isSelected) " +
+                    "SELECT name, isSelected FROM itemGroup")
+            db.execSQL("DROP TABLE itemGroup;")
+            db.execSQL("ALTER TABLE temp_itemGroup RENAME TO itemGroup;")
+            db.addAllItemGroupTriggers()
+
+            db.execSQL("COMMIT;")
+            db.execSQL("PRAGMA foreign_keys=on;")
+        }
+
+        val allMigrations get() = arrayOf(migration1to2, migration2to3, migration3to4)
 
         private fun SupportSQLiteDatabase.addEnsureAtLeastOneGroupTrigger() =
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_group`
@@ -201,6 +246,12 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                              WHERE itemGroup.id != (SELECT id FROM itemGroup
                                                     WHERE isSelected LIMIT 1);
                        END;""")
+        }
+
+        private fun SupportSQLiteDatabase.addAllItemGroupTriggers() = apply {
+            addEnsureAtLeastOneGroupTrigger()
+            addEnsureAtLeastOneSelectedGroupTriggers()
+            addEnforceSingleSelectGroupsTriggers()
         }
 
         private fun SupportSQLiteDatabase.addAutoDeselectTrigger() = execSQL("""
@@ -259,15 +310,24 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                    THEN shoppingListAmount
                    ELSE (SELECT new.autoAddToShoppingListAmount - new.inventoryAmount) END
                WHERE id = new.id"""
+
+        private fun SupportSQLiteDatabase.addAllItemTriggers() = apply {
+            // The auto deselect items triggers is no longer used as of db version 4
+            addAutoDeleteTrigger()
+            addAutoAddToShoppingListTriggers()
+        }
     }
 
+    //TODO: Add typed exceptions
     fun backup(context: Context, backupUri: Uri) {
-        val databasePath = openHelper.readableDatabase.path
+        val databasePath = openHelper.readableDatabase.path ?:
+            throw Exception("The database file could not be opened for reading")
         openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)")
         close()
-        val writer = context.contentResolver.openOutputStream(backupUri)
-        writer?.write(File(databasePath).readBytes())
-        writer?.close()
+        val writer = context.contentResolver.openOutputStream(backupUri) ?:
+            throw Exception("The backup uri ${backupUri.path} could not be opened for writing")
+        writer.write(File(databasePath).readBytes())
+        writer.close()
     }
 
     fun importBackup(
@@ -275,51 +335,56 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         backupUri: Uri,
         overwriteExistingDb: Boolean
     ) {
-        val importReader = context.contentResolver.openInputStream(backupUri) ?: return
-        // Room can only open databases in the app's database directory,
-        // making it necessary to copy the imported database here first.
         val tempDbName = "tempDb"
-        val tempDbFile = context.getDatabasePath(tempDbName)
-        tempDbFile.writeBytes(importReader.readBytes())
-
-        val tempDb = Room.databaseBuilder(context, BootyCrateDatabase::class.java, tempDbName)
-            .allowMainThreadQueries()
+        val inputStream = context.contentResolver.openInputStream(backupUri) ?:
+            throw Exception("The backup uri ${backupUri.path} could not be opened for reading")
+        val tempDbFile = inputStream.use { input ->
+            // Room can only open databases in the app's database directory,
+            // making it necessary to copy the imported database here first.
+            context.getDatabasePath(tempDbName).apply {
+                writeBytes(input.readBytes())
+            }
+        }
+        val importedDb = Room.databaseBuilder(
+                context, BootyCrateDatabase::class.java, tempDbName
+            ).allowMainThreadQueries()
             .createFromFile(tempDbFile)
             .addMigrations(*allMigrations)
             .build()
-        val itemGroups = try { tempDb.itemGroupDao().getAllNow() }
-        catch(e: IllegalStateException) { emptyList() }
-        val items = try { tempDb.itemDao().getAllNow() }
-        catch(e: IllegalStateException) { emptyList() }
-        tempDb.close()
+        val importedItemGroups = try { importedDb.itemGroupDao().getAllNow() }
+                                 catch(e: IllegalStateException) { emptyList() }
+        val importedItems = try { importedDb.itemDao().getAllNow() }
+                            catch(e: IllegalStateException) { emptyList() }
+        importedDb.close()
         tempDbFile.delete()
 
-        if (itemGroups.isEmpty() || items.isEmpty())
-            return
+        if (importedItemGroups.isEmpty() || importedItems.isEmpty())
+            throw Exception("The imported database was empty")
 //            themedAlertDialogBuilder(context)
 //                .setPositiveButton(android.R.string.ok) { dialog, _ -> dialog.dismiss() }
 //                .setMessage(R.string.invalid_imported_db_error_message)
 //                .setTitle(R.string.error).show()
-        else CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             if (overwriteExistingDb) {
                 openHelper.writableDatabase.execSQL(
                     "DROP TRIGGER `ensure_at_least_one_group`")
-                itemGroupDao().add(itemGroups)
                 itemGroupDao().deleteAll()
+                itemGroupDao().add(importedItemGroups)
                 openHelper.writableDatabase.addEnsureAtLeastOneGroupTrigger()
                 itemDao().deleteAll()
-            } else for (group in itemGroups) {
-                val oldId = group.id
-                group.id = 0
-                val newId = itemGroupDao().add(group)
-                items.filter {
-                    it.groupId == oldId && it.id != 0L
-                }.forEach {
-                    it.groupId = newId
-                    it.id = 0
-                }
+            } else {
+                // Because the name field is the primary key for the itemGroup table,
+                // we need to skip adding any imported item groups whose name is already
+                // used in the existing database. Items in the imported database that
+                // were in the duplicate name item group will automatically be a part
+                // of the existing db's same named item group.
+                val existingGroupNames = itemGroupDao()
+                    .getAllNow().map { it.name }
+                val filteredNames = importedItemGroups
+                    .filter { it.name !in existingGroupNames }
+                itemGroupDao().add(filteredNames)
             }
-            itemDao().add(items)
+            itemDao().add(importedItems)
         }
     }
 }

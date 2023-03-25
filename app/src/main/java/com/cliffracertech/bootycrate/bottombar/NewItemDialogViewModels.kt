@@ -9,19 +9,20 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.cliffracertech.bootycrate.ViewModel
 import com.cliffracertech.bootycrate.model.NewItemDialogVisibilityState
 import com.cliffracertech.bootycrate.model.database.DatabaseListItem
 import com.cliffracertech.bootycrate.model.database.InventoryItem
+import com.cliffracertech.bootycrate.model.database.InventoryItemDao
 import com.cliffracertech.bootycrate.model.database.InventoryItemNameValidator
-import com.cliffracertech.bootycrate.model.database.ItemDao
+import com.cliffracertech.bootycrate.model.database.ListItemDao
 import com.cliffracertech.bootycrate.model.database.ItemGroup
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.ListItemGroupValidator
 import com.cliffracertech.bootycrate.model.database.ListItemNameValidator
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
+import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
 import com.cliffracertech.bootycrate.model.database.ShoppingListItemNameValidator
 import com.cliffracertech.bootycrate.model.database.Validator
 import com.cliffracertech.bootycrate.utils.collectAsState
@@ -39,12 +40,13 @@ import javax.inject.Inject
  *
  * The properties [itemColorGroup], [itemName], [itemExtraInfo], and [itemAmount]
  * should be updated with the proposed values for the new [ListItem]. The read-
- * only property [itemGroupId] describes the [ItemGroup.id] of the [ItemGroup]
- * that the new item will be added to. In the event that there is only, this
- * value will automatically change to the id of the only selected [ItemGroup].
- * Otherwise, the list of selected [ItemGroup]s provided by the property
- * [selectedItemGroups] should be displayed to the user, and clicks on a
- * selected [ItemGroup] should be connected to a [onItemGroupClick] call.
+ * only property [itemGroupName] describes the [ItemGroup.name] of the [ItemGroup]
+ * that the new item will be added to. In the event that there is only one
+ * selected item group, this value will automatically change to the name of the
+ * only selected [ItemGroup]. Otherwise, the list of selected [ItemGroup]s
+ * provided by the property [selectedItemGroups] should be displayed to the
+ * user, and clicks on a selected [ItemGroup] should be connected to a
+ * [onItemGroupClick] call.
  *
  * The property [messages] will be equal to a list of [Validator.Message]s that
  * describe informational messages, warnings, or error messages regarding the
@@ -57,16 +59,16 @@ import javax.inject.Inject
  * subclass T, and [onDismissRequest]. They might also override [resetFields]
  * to reset their properties that represent the state of a potential new item.
  */
-abstract class NewItemDialogViewModel<T: ListItem>(
-    private val nameValidator: ListItemNameValidator<T>,
-    private val itemDao: ItemDao,
+abstract class NewItemDialogViewModel(
+    private val nameValidator: ListItemNameValidator,
+    private val itemDao: ListItemDao,
     itemGroupDao: ItemGroupDao,
-    coroutineScope: CoroutineScope?
-) : ViewModel() {
-    protected val scope = coroutineScope ?: viewModelScope
-    private val itemGroupIdValidator = ListItemGroupValidator(itemGroupDao, scope)
+    coroutineScope: CoroutineScope
+) : ViewModel(coroutineScope) {
+    private val itemGroupValidator =
+        ListItemGroupValidator(itemGroupDao, coroutineScope)
 
-    val itemGroupId by itemGroupIdValidator::value
+    val itemGroupName by itemGroupValidator::value
     var itemColorGroup by mutableStateOf(ListItem.ColorGroup.values().first())
     var itemName by nameValidator::name
     var itemExtraInfo by nameValidator::extraInfo
@@ -75,38 +77,38 @@ abstract class NewItemDialogViewModel<T: ListItem>(
     val selectedItemGroups by
         itemGroupDao.getSelectedGroups()
             .map { it.toImmutableList() }
-            .collectAsState(null, scope)
+            .collectAsState(null, coroutineScope)
 
     fun onItemGroupClick(group: ItemGroup) {
-        itemGroupIdValidator.value = group.id
+        itemGroupValidator.value = group.name
     }
 
     val messages by combine(
-            itemGroupIdValidator.message,
+            itemGroupValidator.message,
             nameValidator.message,
         ) { itemGroupIdMessage, nameMessage ->
             listOfNotNull(itemGroupIdMessage, nameMessage)
-        }.map { it.toImmutableList() }
-        .collectAsState(emptyList<Validator.Message>().toImmutableList(), scope)
+        }.map(List<Validator.Message>::toImmutableList)
+        .collectAsState(emptyList<Validator.Message>().toImmutableList(), coroutineScope)
 
-    /** Return an instance of T given the values of [itemGroupId], [name],
+    /** Return an instance of T given the values of [itemGroupName], [name],
      * [extraInfo], the members [itemColorGroup] and [itemAmount], as well as
      * any additional item state properties that subclasses add. Due to the
-     * fact that the item's name, extra info, and [ItemGroup] id must be
+     * fact that the item's name, extra info, and [ItemGroup] name must be
      * validated, it is important to use the provided values rather than the
-     * member properties of the same name (which might have changed to a
+     * member properties of the same name (which might have changed to an
      * invalid value since they were last validated). */
     protected abstract suspend fun createItem(
-        itemGroupId: Long,
+        itemGroupName: String,
         name: String,
         extraInfo: String
     ): DatabaseListItem
 
     private suspend fun addItem(): Boolean {
-        val itemGroupId = itemGroupIdValidator.validate() ?: return false
+        val itemGroupName = itemGroupValidator.validate() ?: return false
         val itemNameAndExtraInfo = nameValidator.validate() ?: return false
         val item = createItem(
-            itemGroupId,
+            itemGroupName,
             itemNameAndExtraInfo.first,
             itemNameAndExtraInfo.second)
         itemDao.add(item)
@@ -128,7 +130,7 @@ abstract class NewItemDialogViewModel<T: ListItem>(
 
     fun onOkClick() {
         if (!confirmButtonsEnabled) return
-        scope.launch {
+        coroutineScope.launch {
             addItem()
             onDismissRequest()
         }
@@ -136,7 +138,7 @@ abstract class NewItemDialogViewModel<T: ListItem>(
 
     fun onAddAnotherClick() {
         if (!confirmButtonsEnabled) return
-        scope.launch {
+        coroutineScope.launch {
             addItem()
             resetFields()
         }
@@ -146,21 +148,23 @@ abstract class NewItemDialogViewModel<T: ListItem>(
 }
 
 /** A view model to provide data for a dialog to add new [ShoppingListItem]s. */
-@HiltViewModel
-class NewShoppingListItemDialogViewModel(
-    itemDao: ItemDao,
+@HiltViewModel class NewShoppingListItemDialogViewModel(
+    shoppingListDao: ShoppingListItemDao,
+    inventoryDao: InventoryItemDao,
     itemGroupDao: ItemGroupDao,
-    coroutineScope: CoroutineScope?,
+    coroutineScope: CoroutineScope,
     private val visibilityState: NewItemDialogVisibilityState,
-) : NewItemDialogViewModel<ShoppingListItem>(
-    ShoppingListItemNameValidator(itemDao),
-    itemDao, itemGroupDao, coroutineScope
+) : NewItemDialogViewModel(
+    ShoppingListItemNameValidator(shoppingListDao, inventoryDao),
+    shoppingListDao, itemGroupDao, coroutineScope
 ) {
     @Inject constructor(
-        itemDao: ItemDao,
+        shoppingListDao: ShoppingListItemDao,
+        inventoryDao: InventoryItemDao,
         itemGroupDao: ItemGroupDao,
         visibilityState: NewItemDialogVisibilityState
-    ) : this(itemDao, itemGroupDao, null, visibilityState)
+    ) : this(shoppingListDao, inventoryDao, itemGroupDao,
+             viewModelScope(), visibilityState)
 
     var itemIsChecked by mutableStateOf(false)
 
@@ -170,16 +174,16 @@ class NewShoppingListItemDialogViewModel(
     }
 
     override suspend fun createItem(
-        itemGroupId: Long,
+        itemGroupName: String,
         name: String,
         extraInfo: String
     ) = ShoppingListItem(
         name = name,
         extraInfo = extraInfo,
-        color = itemColorGroup.ordinal,
+        colorGroup = itemColorGroup,
         amount = itemAmount,
         isChecked = itemIsChecked
-    ).toDbListItem(itemGroupId)
+    ).toDbListItem(itemGroupName)
 
     override fun onDismissRequest() {
         visibilityState.showingNewShoppingListItemDialog = false
@@ -187,21 +191,23 @@ class NewShoppingListItemDialogViewModel(
 }
 
 /** A view model to provide data for a dialog to add new [InventoryItem]s. */
-@HiltViewModel
-class NewInventoryItemDialogViewModel(
-    itemDao: ItemDao,
+@HiltViewModel class NewInventoryItemDialogViewModel(
+    shoppingListDao: ShoppingListItemDao,
+    inventoryDao: InventoryItemDao,
     itemGroupDao: ItemGroupDao,
-    coroutineScope: CoroutineScope?,
+    coroutineScope: CoroutineScope,
     private val visibilityState: NewItemDialogVisibilityState,
-) : NewItemDialogViewModel<InventoryItem>(
-    InventoryItemNameValidator(itemDao),
-    itemDao, itemGroupDao, coroutineScope
+) : NewItemDialogViewModel(
+    InventoryItemNameValidator(shoppingListDao, inventoryDao),
+    inventoryDao, itemGroupDao, coroutineScope
 ) {
     @Inject constructor(
-        itemDao: ItemDao,
+        shoppingListDao: ShoppingListItemDao,
+        inventoryDao: InventoryItemDao,
         itemGroupDao: ItemGroupDao,
         visibilityState: NewItemDialogVisibilityState
-    ) : this(itemDao, itemGroupDao, null, visibilityState)
+    ) : this(shoppingListDao, inventoryDao, itemGroupDao,
+             viewModelScope(), visibilityState)
 
     var itemAutoAddToShoppingList by mutableStateOf(false)
     var itemAutoAddToShoppingListAmount by mutableStateOf(1)
@@ -213,17 +219,17 @@ class NewInventoryItemDialogViewModel(
     }
 
     override suspend fun createItem(
-        itemGroupId: Long,
+        itemGroupName: String,
         name: String,
         extraInfo: String
     ) = InventoryItem(
         name = name,
         extraInfo = extraInfo,
-        color = itemColorGroup.ordinal,
+        colorGroup = itemColorGroup,
         amount = itemAmount,
         autoAddToShoppingList = itemAutoAddToShoppingList,
         autoAddToShoppingListAmount = itemAutoAddToShoppingListAmount
-    ).toDbListItem(itemGroupId)
+    ).toDbListItem(itemGroupName)
 
     override fun onDismissRequest() {
         visibilityState.showingNewInventoryItemDialog = false

@@ -6,10 +6,22 @@ package com.cliffracertech.bootycrate
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 
 @HiltAndroidApp
-class BootyCrateApplication : Application() {
+class BootyCrateApplication : Application()
 
+open class ViewModel(
+    val coroutineScope: CoroutineScope
+) : androidx.lifecycle.ViewModel() {
+    override fun onCleared() { coroutineScope.cancel() }
+
+    companion object {
+        fun viewModelScope() = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    }
 }
 
 const val springStiffness = 700f

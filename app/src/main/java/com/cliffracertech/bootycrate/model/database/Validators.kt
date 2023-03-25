@@ -100,21 +100,20 @@ abstract class Validator <T>(private val initialValue: T) {
  * the Pair<String, String> returned by validate represents the validated name
  * and extraInfo, respectively, for the [ListItem].
  */
-abstract class ListItemNameValidator<T: ListItem>(
-    private val dao: ItemDao
+abstract class ListItemNameValidator(
+    private val shoppingListDao: ShoppingListItemDao,
+    private val inventoryDao: InventoryItemDao,
 ): Validator<Pair<String, String>>("" to "") {
 
-    var name
-        get() = value.first
+    var name get() = value.first
         set(newName) { value = newName to extraInfo }
-    var extraInfo
-        get() = value.second
+    var extraInfo get() = value.second
         set(newExtraInfo) { value = name to newExtraInfo }
 
     protected suspend fun nameAlreadyUsedInShoppingList(value: Pair<String, String>) =
-        dao.nameAlreadyUsedInShoppingList(value.first, value.second)
+        shoppingListDao.nameAlreadyUsed(value.first, value.second)
     protected suspend fun nameAlreadyUsedInInventory(value: Pair<String, String>) =
-        dao.nameAlreadyUsedInInventory(value.first, value.second)
+        inventoryDao.nameAlreadyUsed(value.first, value.second)
 
     private val itemHasNoNameErrorMessage = Message.Error(
         StringResource(R.string.new_item_no_name_error))
@@ -128,9 +127,11 @@ abstract class ListItemNameValidator<T: ListItem>(
     }
 }
 
-class ShoppingListItemNameValidator(dao: ItemDao) :
-    ListItemNameValidator<ShoppingListItem>(dao)
-{
+class ShoppingListItemNameValidator(
+    shoppingListDao: ShoppingListItemDao,
+    inventoryDao: InventoryItemDao,
+) : ListItemNameValidator(shoppingListDao, inventoryDao) {
+
     private val nameAlreadyUsedMessage = Message.Warning(
         StringResource(R.string.new_shopping_list_item_duplicate_name_warning))
     private val nameAlreadyUsedInOtherListMessage = Message.Warning(
@@ -145,9 +146,11 @@ class ShoppingListItemNameValidator(dao: ItemDao) :
     }
 }
 
-class InventoryItemNameValidator(dao: ItemDao) :
-    ListItemNameValidator<InventoryItem>(dao)
-{
+class InventoryItemNameValidator(
+    shoppingListDao: ShoppingListItemDao,
+    inventoryDao: InventoryItemDao,
+) : ListItemNameValidator(shoppingListDao, inventoryDao) {
+
     private val nameAlreadyUsedMessage = Message.Warning(
         StringResource(R.string.new_inventory_item_duplicate_name_warning))
     private val nameAlreadyUsedInOtherListMessage = Message.Warning(
@@ -163,30 +166,30 @@ class InventoryItemNameValidator(dao: ItemDao) :
 }
 
 /**
- * A [Validator] that checks that the proposed groupId for a new [ListItem]
- * instance matches an existing and selected [ItemGroup]. If there is only one
- * selected [ItemGroup] when a ListItemGroupValidator is instantiated, then its
- * id will automatically be set as the [value].
+ * A [Validator] that checks that the proposed item group name for a new
+ * [ListItem] instance matches an existing and selected [ItemGroup]. If
+ * there is only one selected [ItemGroup] when a ListItemGroupValidator
+ * is instantiated, then its name will automatically be set as the [value].
  */
 class ListItemGroupValidator(
     private val dao: ItemGroupDao,
     coroutineScope: CoroutineScope
-) : Validator<Long>(-1L) {
-    private fun List<ItemGroup>.contains(id: Long) =
-        find { it.id == id } != null
+) : Validator<String>("") {
+    private fun List<ItemGroup>.contains(name: String) =
+        find { it.name == name } != null
 
     init {
         coroutineScope.launch {
             val first = dao.getSelectedGroups().first()
-            if (value == -1L && first.size == 1)
-                value = first.first().id
+            if (value.isBlank() && first.size == 1)
+                value = first.first().name
         }
     }
 
     private val noItemGroupErrorMessage = Message.Error(
         StringResource(R.string.new_item_has_no_item_group_error_message))
 
-    override suspend fun messageFor(value: Long): Message? = when {
+    override suspend fun messageFor(value: String): Message? = when {
         !valueHasBeenChanged -> null
         !dao.getSelectedGroups().first().contains(value) ->
             noItemGroupErrorMessage

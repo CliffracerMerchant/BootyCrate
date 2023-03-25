@@ -206,7 +206,7 @@ fun inventoryItemCallback(
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
 ) = InventoryItemView(
-    ListItem.ColorGroup.values()[item.color],
+    item.colorGroup,
     item.name, item.extraInfo, item.amount,
     item.autoAddToShoppingList,
     item.autoAddToShoppingListAmount,

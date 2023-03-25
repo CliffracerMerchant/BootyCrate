@@ -8,25 +8,28 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.ViewModel
 import com.cliffracertech.bootycrate.activity.MessageHandler
 import com.cliffracertech.bootycrate.itemlist.ItemListViewModel.UiState
 import com.cliffracertech.bootycrate.itemlist.ItemListViewModel.UiState.*
-import com.cliffracertech.bootycrate.model.SearchQueryState
 import com.cliffracertech.bootycrate.model.SelectionState
-import com.cliffracertech.bootycrate.model.database.*
-import com.cliffracertech.bootycrate.settings.PrefKeys
+import com.cliffracertech.bootycrate.model.SharedState
+import com.cliffracertech.bootycrate.model.database.InventoryItem
+import com.cliffracertech.bootycrate.model.database.InventoryItemDao
+import com.cliffracertech.bootycrate.model.database.InventoryProvider
+import com.cliffracertech.bootycrate.model.database.InventoryProviderImpl
+import com.cliffracertech.bootycrate.model.database.ItemGroupDao
+import com.cliffracertech.bootycrate.model.database.ListItem
+import com.cliffracertech.bootycrate.model.database.ListItemDao
+import com.cliffracertech.bootycrate.model.database.ShoppingListItem
+import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
+import com.cliffracertech.bootycrate.model.database.ShoppingListProvider
+import com.cliffracertech.bootycrate.model.database.ShoppingListProviderImpl
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.collectAsState
-import com.cliffracertech.bootycrate.utils.enumPreferenceFlow
-import com.cliffracertech.bootycrate.utils.preferenceFlow
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,7 +37,8 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -57,25 +61,19 @@ import javax.inject.Inject
  * they add. [items] can be null if the list of items is still loading.
  */
 abstract class ItemListViewModel<T: ListItem>(
-    dataStore: DataStore<Preferences>,
-    searchQueryState: SearchQueryState,
+    searchQueryState: StateFlow<String?>,
     private val messageHandler: MessageHandler,
-    protected val dao: ItemDao,
+    private val dao: ListItemDao,
     private val itemGroupDao: ItemGroupDao,
     private val selection: SelectionState,
-    coroutineScope: CoroutineScope?
-): ViewModel() {
+    coroutineScope: CoroutineScope
+): ViewModel(coroutineScope) {
 
-    protected val scope = coroutineScope ?: viewModelScope
     abstract val collectionNameResId: StringResource.Id
-    private val searchQuery by searchQueryState::query
-    protected val searchQueryFlow = snapshotFlow { searchQuery }
-
-    protected val sort = dataStore.enumPreferenceFlow(
-        intPreferencesKey(PrefKeys.itemSort), ListItem.Sort.Color)
+    private val searchQuery by searchQueryState
+        .collectAsState(null, coroutineScope)
 
     protected abstract val items: ImmutableList<T>?
-    private val selectedItemIds get() = selection.selectedIds.keys
     private var expandedItemId by mutableStateOf<Long?>(null)
 
     /** The possible types of content for a screen showing a list of
@@ -102,18 +100,18 @@ abstract class ItemListViewModel<T: ListItem>(
                 if (searchQuery != null)
                     StringResource(R.string.no_search_results_message)
                 else StringResource(R.string.empty_list_message, collectionNameResId))
-            else -> Items(items, selectedItemIds.toImmutableSet(), expandedItemId)
+            else -> Items(items, selection.ids.toImmutableSet(), expandedItemId)
         }
     }
 
     fun onItemRenameRequest(id: Long, name: String) {
-        scope.launch { dao.updateName(id, name) }
+        coroutineScope.launch { dao.setName(id, name) }
     }
     fun onItemExtraInfoChangeRequest(id: Long, extraInfo: String) {
-        scope.launch { dao.updateExtraInfo(id, extraInfo) }
+        coroutineScope.launch { dao.setExtraInfo(id, extraInfo) }
     }
     fun onItemColorGroupChangeRequest(id: Long, colorGroup: ListItem.ColorGroup) {
-        scope.launch { dao.updateColorIndex(id, colorGroup.ordinal) }
+        coroutineScope.launch { dao.setColorGroup(id, colorGroup) }
     }
     abstract fun onItemAmountChangeRequest(id: Long, amount: Int)
 
@@ -122,13 +120,13 @@ abstract class ItemListViewModel<T: ListItem>(
     }
 
     fun onItemClick(id: Long) {
-        if (selection.selectedIds.isNotEmpty())
+        if (selection.ids.isNotEmpty())
             selection.toggle(id)
     }
 
     fun onItemLongClick(id: Long) = selection.toggle(id)
 
-    fun onItemSwipe(id: Long) { scope.launch {
+    fun onItemSwipe(id: Long) { coroutineScope.launch {
         deleteItem(id)
         messageHandler.postItemsDeletedMessage(1, ::undoDelete) {
             if (it != DISMISS_EVENT_ACTION && it != DISMISS_EVENT_CONSECUTIVE)
@@ -142,56 +140,53 @@ abstract class ItemListViewModel<T: ListItem>(
 }
 
 
-/**
- * An implementation of ItemListViewModel<ShoppingListItem> that adds the
- * callback [onItemCheckboxClick] to use as a callback for item checkbox clicks.
- */
+/** An implementation of ItemListViewModel<ShoppingListItem> that adds the
+ * callback [onItemCheckboxClick] to use as a callback for item checkbox clicks. */
 @HiltViewModel class ShoppingListViewModel(
     dataStore: DataStore<Preferences>,
-    searchQueryState: SearchQueryState,
+    searchQueryState: StateFlow<String?>,
     messageHandler: MessageHandler,
-    dao: ItemDao,
+    private val dao: ShoppingListItemDao,
     itemGroupDao: ItemGroupDao,
     selection: SelectionState,
-    coroutineScope: CoroutineScope?
+    coroutineScope: CoroutineScope,
 ) : ItemListViewModel<ShoppingListItem>(
-    dataStore, searchQueryState, messageHandler,
-    dao, itemGroupDao, selection, coroutineScope
-) {
+        searchQueryState, messageHandler,
+        dao, itemGroupDao, selection, coroutineScope),
+    ShoppingListProvider by ShoppingListProviderImpl(
+        searchQueryState, dao, dataStore, coroutineScope)
+{
     @Inject constructor(
         dataStore: DataStore<Preferences>,
-        searchQueryState: SearchQueryState,
+        @SharedState.SearchQuery
+        searchQueryState: MutableStateFlow<String?>,
         messageHandler: MessageHandler,
-        dao: ItemDao,
+        dao: ShoppingListItemDao,
         itemGroupDao: ItemGroupDao,
+        @SharedState.InventorySelection
         selection: SelectionState,
     ) : this(dataStore, searchQueryState, messageHandler,
-             dao, itemGroupDao, selection, null)
+             dao, itemGroupDao, selection, viewModelScope())
 
     override val collectionNameResId = StringResource.Id(R.string.shopping_list_description)
-    private val sortByCheckedKey = booleanPreferencesKey(PrefKeys.sortByChecked)
-    private val sortByChecked = dataStore.preferenceFlow(sortByCheckedKey, false)
 
-    override val items by
-        combine(sort, searchQueryFlow, sortByChecked, dao::getShoppingList)
-            .transformLatest { emitAll(it) }
-            .collectAsState(null, scope)
+    override val items by ::shoppingList
 
     override fun onItemAmountChangeRequest(id: Long, amount: Int) {
-        scope.launch { dao.updateShoppingListAmount(id, amount) }
+        coroutineScope.launch { dao.setAmount(id, amount) }
     }
 
     fun onItemCheckboxClick(id: Long) {
-        scope.launch { dao.toggleIsChecked(id) }
+        coroutineScope.launch { dao.toggleIsChecked(id) }
     }
 
-    override suspend fun deleteItem(id: Long) = dao.deleteShoppingListItem(id)
+    override suspend fun deleteItem(id: Long) = dao.delete(id)
 
     override fun emptyTrash() {
-        scope.launch { dao.emptyShoppingListTrash() }
+        coroutineScope.launch { dao.emptyTrash() }
     }
     override fun undoDelete() {
-        scope.launch { dao.undoDeleteShoppingListItems() }
+        coroutineScope.launch { dao.undoDelete() }
     }
 }
 
@@ -201,50 +196,51 @@ abstract class ItemListViewModel<T: ListItem>(
  * to use as callbacks for item interactions. */
 @HiltViewModel class InventoryViewModel(
     dataStore: DataStore<Preferences>,
-    searchQueryState: SearchQueryState,
+    searchQueryState: StateFlow<String?>,
     messageHandler: MessageHandler,
-    dao: ItemDao,
+    private val dao: InventoryItemDao,
     itemGroupDao: ItemGroupDao,
     selection: SelectionState,
-    coroutineScope: CoroutineScope?
+    coroutineScope: CoroutineScope,
 ) : ItemListViewModel<InventoryItem>(
-    dataStore, searchQueryState, messageHandler,
-    dao, itemGroupDao, selection, coroutineScope
-) {
+        searchQueryState, messageHandler,
+        dao, itemGroupDao, selection, coroutineScope),
+    InventoryProvider by InventoryProviderImpl(
+        searchQueryState, dao, dataStore, coroutineScope)
+{
     @Inject constructor(
         dataStore: DataStore<Preferences>,
-        searchQueryState: SearchQueryState,
+        @SharedState.SearchQuery
+        searchQueryState: MutableStateFlow<String?>,
         messageHandler: MessageHandler,
-        dao: ItemDao,
+        dao: InventoryItemDao,
         itemGroupDao: ItemGroupDao,
         selection: SelectionState,
     ) : this(dataStore, searchQueryState, messageHandler,
-             dao, itemGroupDao, selection, null)
+             dao, itemGroupDao, selection, viewModelScope())
 
     override val collectionNameResId = StringResource.Id(R.string.inventory_description)
 
-    override val items by combine(sort, searchQueryFlow, dao::getInventory)
-        .transformLatest { emitAll(it) }
-        .collectAsState(null, scope)
+    override val items by ::inventory
 
     override fun onItemAmountChangeRequest(id: Long, amount: Int) {
-        scope.launch { dao.updateInventoryAmount(id, amount) }
+        coroutineScope.launch { dao.setAmount(id, amount) }
     }
 
     fun onAutoAddToShoppingListCheckboxClick(id: Long) {
-        scope.launch { dao.toggleAutoAddToShoppingList(id) }
+        coroutineScope.launch { dao.toggleAutoAddToShoppingList(id) }
     }
     fun onAutoAddToShoppingListAmountChangeRequest(id: Long, amount: Int) {
-        scope.launch { dao.updateAutoAddToShoppingListAmount(id, amount) }
+        coroutineScope.launch { dao.setAutoAddToShoppingListAmount(id, amount) }
     }
 
 
-    override suspend fun deleteItem(id: Long) = dao.deleteInventoryItem(id)
+    override suspend fun deleteItem(id: Long) = dao.delete(id)
 
     override fun emptyTrash() {
-        scope.launch { dao.emptyInventoryTrash() }
+        coroutineScope.launch { dao.emptyTrash() }
     }
     override fun undoDelete() {
-        scope.launch { dao.undoDeleteInventoryItems() }
+        coroutineScope.launch { dao.undoDelete() }
     }
 }
