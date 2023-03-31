@@ -7,7 +7,7 @@ package com.cliffracertech.bootycrate.itemlist
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -26,10 +26,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
-import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
+import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
+import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 
 /** A checkmark that animates between its unchecked and checked states. */
 @Composable fun AnimatedCheckmark(checked: Boolean) {
@@ -107,32 +108,38 @@ import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 /** An interface containing callbacks for ShoppingListItem related interactions. */
 interface ShoppingListItemCallback : ListItemCallback {
     /** The callback that will be invoked when the item view's checkbox is clicked */
-    fun onCheckboxClick()
+    fun onCheckboxClick(id: Long)
 }
 
 /** Return a [ShoppingListItemCallback] implementation using the provided
  * lambdas as the implementations for the [ShoppingListItemCallback] methods
  * of the same name. */
 fun shoppingListItemCallback(
-    onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {},
-    onColorGroupClick: (ListItem.ColorGroup) -> Unit = {},
-    onRenameRequest: (String) -> Unit = {},
-    onExtraInfoChangeRequest: (String) -> Unit = {},
-    onAmountChangeRequest: (Int) -> Unit = {},
-    onEditButtonClick: () -> Unit = {},
+    onClick: (Long) -> Unit = {},
+    onLongClick: (Long) -> Unit = {},
+    onSwipe: (Long) -> Unit = {},
+    onColorGroupClick: (Long, ListItem.ColorGroup) -> Unit = { _, _ -> },
+    onRenameRequest: (Long, String) -> Unit = { _, _ -> },
+    onExtraInfoChangeRequest: (Long, String) -> Unit = { _, _ -> },
+    onAmountChangeRequest: (Long, Int) -> Unit = { _, _ -> },
+    onEditButtonClick: (Long) -> Unit = {},
     showEditButton: Boolean = true,
-    onCheckboxClick: () -> Unit = {}
+    onCheckboxClick: (Long) -> Unit = {}
 ) = object: ShoppingListItemCallback {
-    override fun onClick() = onClick()
-    override fun onLongClick() = onLongClick()
-    override fun onColorGroupClick(colorGroup: ListItem.ColorGroup) = onColorGroupClick(colorGroup)
-    override fun onRenameRequest(newName: String) = onRenameRequest(newName)
-    override fun onExtraInfoChangeRequest(newExtraInfo: String) = onExtraInfoChangeRequest(newExtraInfo)
-    override fun onAmountChangeRequest(newAmount: Int) = onAmountChangeRequest(newAmount)
-    override fun onEditButtonClick() = onEditButtonClick()
+    override fun onClick(id: Long) = onClick(id)
+    override fun onLongClick(id: Long) = onLongClick(id)
+    override fun onSwipe(id: Long) = onSwipe(id)
+    override fun onColorGroupClick(id: Long, colorGroup: ListItem.ColorGroup) =
+        onColorGroupClick(id, colorGroup)
+    override fun onRenameRequest(id: Long, newName: String) =
+        onRenameRequest(id, newName)
+    override fun onExtraInfoChangeRequest(id: Long, newExtraInfo: String) =
+        onExtraInfoChangeRequest(id, newExtraInfo)
+    override fun onAmountChangeRequest(id: Long, newAmount: Int) =
+        onAmountChangeRequest(id, newAmount)
+    override fun onEditButtonClick(id: Long) = onEditButtonClick(id)
     override val showEditButton = showEditButton
-    override fun onCheckboxClick() = onCheckboxClick()
+    override fun onCheckboxClick(id: Long) = onCheckboxClick(id)
 }
 
 /**
@@ -153,19 +160,22 @@ fun shoppingListItemCallback(
  * @param modifier The [Modifier] that will be used for the root layout
  */
 @Composable fun ShoppingListItemView(
+    id: Long,
     colorGroup: ListItem.ColorGroup,
     name: String,
     extraInfo: String,
     amount: Int,
     isChecked: Boolean,
+    isLinked: Boolean,
+    isEditable: Boolean,
     isSelected: Boolean,
     selectionBrush: Brush,
-    isEditable: Boolean,
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ListItemView(
-    colorGroup, name, extraInfo, amount,
-    isSelected, selectionBrush, isEditable,
+    id, colorGroup, name, extraInfo,
+    amount, isLinked, isEditable,
+    isSelected, selectionBrush,
     callback, modifier,
     colorIndicator = { showColorPicker ->
         val colors = ListItem.ColorGroup.colors()
@@ -176,7 +186,7 @@ fun shoppingListItemCallback(
             checked = isChecked,
             checkboxClickLabel = stringResource(
                 R.string.item_checkbox_description, name),
-            onCheckboxClick = callback::onCheckboxClick,
+            onCheckboxClick = { callback.onCheckboxClick(id) },
             colorIndicatorClickLabel = stringResource(
                 R.string.edit_item_color_description, name),
             onColorIndicatorClick = showColorPicker,
@@ -204,10 +214,9 @@ fun shoppingListItemCallback(
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ShoppingListItemView(
-    item.colorGroup, item.name, item.extraInfo,
-    item.amount, item.isChecked,
-    isSelected, selectionBrush, isEditable,
-    callback, modifier)
+    item.id, item.colorGroup, item.name, item.extraInfo,
+    item.amount, item.isChecked, item.isLinked, isEditable,
+    isSelected, selectionBrush, callback, modifier)
 
 @Preview @Composable
 fun ShoppingListItemViewPreview() = BootyCrateTheme {
@@ -223,14 +232,23 @@ fun ShoppingListItemViewPreview() = BootyCrateTheme {
     var isChecked by remember { mutableStateOf(false) }
     val callback = remember { shoppingListItemCallback(
         onLongClick = { isSelected = !isSelected },
-        onColorGroupClick = { colorGroup = it },
-        onRenameRequest = { name = it },
-        onExtraInfoChangeRequest = { extraInfo = it },
-        onAmountChangeRequest = { amount = it },
-        onEditButtonClick = { isEditable = !isEditable },
+        onColorGroupClick = { _, clickedColorGroup ->
+            colorGroup = clickedColorGroup
+        }, onRenameRequest = { _, newName -> name = newName },
+        onExtraInfoChangeRequest = { _, newExtraInfo ->
+            extraInfo = newExtraInfo
+        }, onAmountChangeRequest = { _, newAmount ->
+            amount = newAmount
+        }, onEditButtonClick = { isEditable = !isEditable },
         onCheckboxClick = { isChecked = !isChecked })
     }
-    ShoppingListItemView(colorGroup, name, extraInfo,
-                         amount, isChecked, isSelected,
-                         brush, isEditable, callback)
+    Box(Modifier
+        .background(MaterialTheme.colors.primary)
+        .padding(8.dp)
+    ) {
+        ShoppingListItemView(
+            id = 0, colorGroup, name, extraInfo,
+            amount, isChecked, isLinked = true,
+            isEditable, isSelected, brush, callback)
+    }
 }

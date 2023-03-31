@@ -30,7 +30,6 @@
     <string name="delete_all_items_confirmation_message">
         This will delete all items in the %1$s. Are you sure?</string>
     <string name="empty_list_message">The %1$s is empty</string>
-    <string name="edit_button_description">Edit item</string>
     <string name="delete_snackbar_text">%1$d item(s) deleted</string>
     <string name="undo_description">Undo</string>
     <string name="single_selection_description">1 item selected</string>
@@ -44,8 +43,11 @@
     <string name="integer_edit_decrease_button_description">Decrease amount</string>
     <string name="integer_edit_increase_button_description">Increase amount</string>
     <string name="integer_edit_value_description">Amount</string>
+    <string name="edit_button_description">Edit item</string>
     <string name="link_status_description">Linked status</string>
     <string name="collapse_button_description">Collapse item extra details</string>
+    <string name="select_item_description">Select %1$s</string>
+    <string name="deselect_item_description">Deselect %1$s</string>
 
     <string name="shopping_list_description">shopping list</string>
     <string name="add_to_shopping_list_description">Add to shopping list</string>

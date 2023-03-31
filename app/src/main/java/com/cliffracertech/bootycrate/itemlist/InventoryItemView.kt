@@ -78,69 +78,80 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 interface InventoryItemCallback : ListItemCallback {
     /** The callback that will be invoked when the item view's auto add to
      * shopping list checkbox is clicked */
-    fun onAutoAddToShoppingListCheckboxClick()
+    fun onAutoAddToShoppingListCheckboxClick(id: Long)
     /** The callback that will be invoked when the item view's auto add to
      * shopping list amount has been requested to change to the provider amount*/
-    fun onAutoAddToShoppingListAmountChangeRequest(newAmount: Int)
+    fun onAutoAddToShoppingListAmountChangeRequest(id: Long, newAmount: Int)
 }
 
 /** Return a [InventoryItemCallback] implementation using the provided lambdas
  * as the implementations for the [InventoryItemCallback] methods of the same name */
 fun inventoryItemCallback(
-    onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {},
-    onColorGroupClick: (ListItem.ColorGroup) -> Unit = {},
-    onRenameRequest: (String) -> Unit = {},
-    onExtraInfoChangeRequest: (String) -> Unit = {},
-    onAmountChangeRequest: (Int) -> Unit = {},
-    onEditButtonClick: () -> Unit = {},
+    onClick: (Long) -> Unit = {},
+    onLongClick: (Long) -> Unit = {},
+    onSwipe: (Long) -> Unit = {},
+    onColorGroupClick: (Long, ListItem.ColorGroup) -> Unit = { _, _ -> },
+    onRenameRequest: (Long, String) -> Unit = { _, _ -> },
+    onExtraInfoChangeRequest: (Long, String) -> Unit = { _, _ -> },
+    onAmountChangeRequest: (Long, Int) -> Unit = { _, _ -> },
+    onEditButtonClick: (Long) -> Unit = {},
     showEditButton: Boolean = true,
-    onAutoAddToShoppingListCheckboxClick: () -> Unit = {},
-    onAutoAddToShoppingListAmountChangeRequest: (Int) -> Unit = {}
+    onAutoAddToShoppingListCheckboxClick: (Long) -> Unit = {},
+    onAutoAddToShoppingListAmountChangeRequest: (Long, Int) -> Unit = { _, _ -> }
 ) = object: InventoryItemCallback {
-    override fun onClick() = onClick()
-    override fun onLongClick() = onLongClick()
-    override fun onColorGroupClick(colorGroup: ListItem.ColorGroup) = onColorGroupClick(colorGroup)
-    override fun onRenameRequest(newName: String) = onRenameRequest(newName)
-    override fun onExtraInfoChangeRequest(newExtraInfo: String) = onExtraInfoChangeRequest(newExtraInfo)
-    override fun onAmountChangeRequest(newAmount: Int) = onAmountChangeRequest(newAmount)
-    override fun onEditButtonClick() = onEditButtonClick()
+    override fun onClick(id: Long) = onClick(id)
+    override fun onLongClick(id: Long) = onLongClick(id)
+    override fun onSwipe(id: Long) = onSwipe(id)
+    override fun onColorGroupClick(id: Long, colorGroup: ListItem.ColorGroup) =
+        onColorGroupClick(id, colorGroup)
+    override fun onRenameRequest(id: Long, newName: String) =
+        onRenameRequest(id, newName)
+    override fun onExtraInfoChangeRequest(id: Long, newExtraInfo: String) =
+        onExtraInfoChangeRequest(id, newExtraInfo)
+    override fun onAmountChangeRequest(id: Long, newAmount: Int) =
+        onAmountChangeRequest(id, newAmount)
+    override fun onEditButtonClick(id: Long) = onEditButtonClick(id)
     override val showEditButton = showEditButton
-    override fun onAutoAddToShoppingListCheckboxClick() = onAutoAddToShoppingListCheckboxClick()
-    override fun onAutoAddToShoppingListAmountChangeRequest(newAmount: Int) =
-        onAutoAddToShoppingListAmountChangeRequest(newAmount)
+    override fun onAutoAddToShoppingListCheckboxClick(id: Long) =
+        onAutoAddToShoppingListCheckboxClick(id)
+    override fun onAutoAddToShoppingListAmountChangeRequest(id: Long, newAmount: Int) =
+        onAutoAddToShoppingListAmountChangeRequest(id, newAmount)
 }
 
 /**
  * A visual display of an [InventoryItem] that also allows user
  * interactions to e.g. change the [InventoryItem]'s state.
  *
+ * @param id The [ListItem.id] for the item
  * @param colorGroup The [ListItem.ColorGroup] that the item belongs to
  * @param name The name of the displayed item
  * @param extraInfo The extra info of the displayed item
  * @param amount The amount of the displayed item
+ * @param isLinked Whether or not the item is linked to another item
  * @param autoAddToShoppingList Whether or not auto add to shopping
  *     list is enabled for the item
  * @param autoAddToShoppingListAmount The auto add to shopping list
  *     threshold amount for the item
+ * @param isEditable Whether or not the item will present itself in its editable state
  * @param isSelected Whether or not the item is selected
  * @param selectionBrush The [Brush] that will be shown at half
  *     opacity over the normal background when isSelected is true
- * @param isEditable Whether or not the item will present itself in its editable state
  * @param callback The [InventoryItemCallback] whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
  */
 @Composable fun InventoryItemView(
+    id: Long,
     colorGroup: ListItem.ColorGroup,
     name: String,
     extraInfo: String,
     amount: Int,
+    isLinked: Boolean,
     autoAddToShoppingList: Boolean,
     autoAddToShoppingListAmount: Int,
+    isEditable: Boolean,
     isSelected: Boolean,
     selectionBrush: Brush,
-    isEditable: Boolean,
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
 ) {
@@ -149,8 +160,9 @@ fun inventoryItemCallback(
         colors.getOrElse(colorGroup.ordinal) { colors.first() }
     }
     ListItemView(
-        colorGroup, name, extraInfo, amount,
-        isSelected, selectionBrush, isEditable,
+        id, colorGroup, name, extraInfo,
+        amount, isLinked, isEditable,
+        isSelected, selectionBrush,
         callback, modifier,
         colorIndicator = { showColorPicker ->
             ColorIndicator(
@@ -165,7 +177,7 @@ fun inventoryItemCallback(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AnimatedCheckbox(
                     checked = autoAddToShoppingList,
-                    onClick = callback::onAutoAddToShoppingListCheckboxClick,
+                    onClick = { callback.onAutoAddToShoppingListCheckboxClick(id) },
                     onClickLabel = stringResource(
                         R.string.item_auto_add_to_shopping_list_checkbox_description, name),
                     tint = color)
@@ -179,7 +191,9 @@ fun inventoryItemCallback(
                         R.string.item_auto_add_to_shopping_list_amount_decrease_description, name),
                     increaseDescription = stringResource(
                         R.string.item_auto_add_to_shopping_list_amount_increase_description, name),
-                    onAmountChangeRequest = callback::onAutoAddToShoppingListAmountChangeRequest)
+                    onAmountChangeRequest = {
+                        callback.onAutoAddToShoppingListAmountChangeRequest(id, it)
+                    })
             }
         }
     }
@@ -206,11 +220,12 @@ fun inventoryItemCallback(
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
 ) = InventoryItemView(
-    item.colorGroup,
-    item.name, item.extraInfo, item.amount,
+    item.id, item.colorGroup,
+    item.name, item.extraInfo,
+    item.amount, item.isLinked,
     item.autoAddToShoppingList,
     item.autoAddToShoppingListAmount,
-    isSelected, selectionBrush, isEditable,
+    isEditable, isSelected, selectionBrush,
     callback, modifier)
 
 @Preview @Composable
@@ -229,17 +244,22 @@ fun InventoryItemViewPreview() = BootyCrateTheme {
     val callback = remember { inventoryItemCallback(
         onClick = { isSelected = !isSelected },
         onLongClick = { isSelected = !isSelected },
-        onColorGroupClick = { colorGroup = it },
-        onRenameRequest = { name = it },
-        onExtraInfoChangeRequest = { extraInfo = it },
-        onAmountChangeRequest = { amount = it },
+        onColorGroupClick = { _, newColorGroup -> colorGroup = newColorGroup },
+        onRenameRequest = { _, newName -> name = newName },
+        onExtraInfoChangeRequest = { _, newExtraInfo -> extraInfo = newExtraInfo },
+        onAmountChangeRequest = { _, newAmount -> amount = newAmount },
         onEditButtonClick = { isEditable = !isEditable },
-        onAutoAddToShoppingListCheckboxClick = { autoAddToShoppingList = !autoAddToShoppingList },
-        onAutoAddToShoppingListAmountChangeRequest = { autoAddToShoppingListAmount = it })
+        onAutoAddToShoppingListCheckboxClick = {
+            autoAddToShoppingList = !autoAddToShoppingList
+        }, onAutoAddToShoppingListAmountChangeRequest = { _, newAmount ->
+            autoAddToShoppingListAmount = newAmount
+        })
     }
-    InventoryItemView(colorGroup, name, extraInfo, amount,
-                      autoAddToShoppingList, autoAddToShoppingListAmount,
-                      isSelected, brush, isEditable, callback)
+    InventoryItemView(
+        id = 0, colorGroup, name, extraInfo,
+        amount, isLinked = true,
+        autoAddToShoppingList, autoAddToShoppingListAmount,
+        isEditable, isSelected, brush, callback)
 }
 
 

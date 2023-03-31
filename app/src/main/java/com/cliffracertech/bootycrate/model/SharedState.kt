@@ -119,7 +119,7 @@ class SelectionState @Inject constructor() {
     operator fun contains(id: Long) = id in _ids
 
     fun toggle(id: Long) {
-        if (_ids[id] != null)
+        if (_ids[id] == null)
             _ids[id] = Unit
         else _ids.remove(id)
     }

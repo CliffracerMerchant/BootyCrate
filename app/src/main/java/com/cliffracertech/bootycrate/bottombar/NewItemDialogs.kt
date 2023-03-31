@@ -101,22 +101,25 @@ import kotlinx.collections.immutable.ImmutableList
         onAddAnotherClick, onOkClick, messages, modifier
     ) {
         ShoppingListItemView(
+            id = 0,
             viewModel.itemColorGroup,
             viewModel.itemName,
             viewModel.itemExtraInfo,
             viewModel.itemAmount,
             viewModel.itemIsChecked,
+            isLinked = false,
+            isEditable = true,
             isSelected = false,
             selectionBrush = Brush.horizontalGradient(listOf(Color.Transparent)),
-            isEditable = true,
             callback = remember {
                 shoppingListItemCallback(
-                    onColorGroupClick = { viewModel.itemColorGroup = it },
-                    onRenameRequest = { viewModel.itemName = it },
-                    onExtraInfoChangeRequest = { viewModel.itemExtraInfo = it },
-                    onAmountChangeRequest = { viewModel.itemAmount = it },
+                    onColorGroupClick = { _, newColorGroup -> viewModel.itemColorGroup = newColorGroup },
+                    onRenameRequest = { _, newName -> viewModel.itemName = newName },
+                    onExtraInfoChangeRequest = { _, newExtraInfo -> viewModel.itemExtraInfo = newExtraInfo },
+                    onAmountChangeRequest = { _, newAmount -> viewModel.itemAmount = newAmount },
                     showEditButton = false)
-            })
+            }
+        )
     }
 }
 
@@ -136,26 +139,28 @@ import kotlinx.collections.immutable.ImmutableList
         onAddAnotherClick, onOkClick, messages, modifier
     ) {
         InventoryItemView(
+            id = 0,
             viewModel.itemColorGroup,
             viewModel.itemName,
             viewModel.itemExtraInfo,
             viewModel.itemAmount,
+            isLinked = false,
             viewModel.itemAutoAddToShoppingList,
             viewModel.itemAutoAddToShoppingListAmount,
+            isEditable = true,
             isSelected = false,
             selectionBrush = Brush.horizontalGradient(listOf(Color.Transparent)),
-            isEditable = true,
             callback = remember {
                 inventoryItemCallback(
-                    onColorGroupClick = { viewModel.itemColorGroup = it },
-                    onRenameRequest = { viewModel.itemName = it },
-                    onExtraInfoChangeRequest = { viewModel.itemExtraInfo = it },
-                    onAmountChangeRequest = { viewModel.itemAmount = it },
+                    onColorGroupClick = { _, newColorGroup -> viewModel.itemColorGroup = newColorGroup },
+                    onRenameRequest = { _, newName -> viewModel.itemName = newName },
+                    onExtraInfoChangeRequest = { _, newExtraInfo -> viewModel.itemExtraInfo = newExtraInfo },
+                    onAmountChangeRequest = { _, newAmount -> viewModel.itemAmount = newAmount },
                     showEditButton = false,
                     onAutoAddToShoppingListCheckboxClick = {
                         viewModel.itemAutoAddToShoppingList = !viewModel.itemAutoAddToShoppingList
-                    }, onAutoAddToShoppingListAmountChangeRequest = {
-                        viewModel.itemAutoAddToShoppingListAmount = it
+                    }, onAutoAddToShoppingListAmountChangeRequest = { _, newAmount ->
+                        viewModel.itemAutoAddToShoppingListAmount = newAmount
                     })
             })
     }
