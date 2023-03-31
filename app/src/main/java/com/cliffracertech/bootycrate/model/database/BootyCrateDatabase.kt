@@ -211,9 +211,9 @@ abstract class BootyCrateDatabase : RoomDatabase() {
         private fun SupportSQLiteDatabase.addEnsureAtLeastOneSelectedGroupTriggers() {
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_group_1`
                        AFTER DELETE ON itemGroup
-                       WHEN (SELECT COUNT(isSelected) FROM itemGroup WHERE isSelected) == 0
+                       WHEN (SELECT count(*) FROM itemGroup WHERE isSelected) == 0
                        BEGIN UPDATE itemGroup SET isSelected = 1
-                             WHERE id = (SELECT id FROM itemGroup LIMIT 1);
+                             WHERE name = (SELECT name FROM itemGroup LIMIT 1);
                        END;""")
             execSQL("""CREATE TRIGGER IF NOT EXISTS `ensure_at_least_one_selected_group_2`
                        BEFORE UPDATE OF isSelected ON itemGroup
@@ -228,14 +228,14 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                        WHEN new.isSelected == 1
                        AND (SELECT multiSelectGroups FROM settings LIMIT 1) == 0
                        BEGIN UPDATE itemGroup SET isSelected = 0
-                             WHERE id != new.id; END;""")
+                             WHERE name != new.name; END;""")
 
             execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_groups_2`
                        AFTER UPDATE OF multiSelectGroups ON settings
                        WHEN new.multiSelectGroups == 0
                        BEGIN UPDATE itemGroup SET isSelected = 0
-                             WHERE itemGroup.id != (SELECT id FROM itemGroup
-                                                    WHERE isSelected LIMIT 1);
+                             WHERE itemGroup.name != (SELECT name FROM itemGroup
+                                                      WHERE isSelected LIMIT 1);
                        END;""")
 
             execSQL("""CREATE TRIGGER IF NOT EXISTS `enforce_single_select_groups_3`
@@ -243,8 +243,7 @@ abstract class BootyCrateDatabase : RoomDatabase() {
                        WHEN (SELECT COUNT(*) FROM itemGroup WHERE isSelected) > 1
                        AND (select multiSelectGroups FROM settings LIMIT 1) == 0
                        BEGIN UPDATE itemGroup SET isSelected = 0
-                             WHERE itemGroup.id != (SELECT id FROM itemGroup
-                                                    WHERE isSelected LIMIT 1);
+                             WHERE itemGroup.name != new.name;
                        END;""")
         }
 
