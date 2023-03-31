@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Scaffold
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -180,6 +181,9 @@ class MainActivity : ComponentActivity() {
         val lastScreenValue = lastScreen
         lastScreen = visibleScreen
 
+        val shoppingListScrollState = rememberLazyListState()
+        val inventoryScrollState = rememberLazyListState()
+
         AnimatedContent(
             targetState = visibleScreen,
             modifier = modifier,
@@ -201,13 +205,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        ) {
-            when {
-                it.isShoppingList -> ShoppingListScreen(contentPadding)
-                it.isInventory ->    InventoryScreen(contentPadding)
-                it.isAppSettings -> {}
+        ) { when {
+            it.isShoppingList ->
+                ShoppingListScreen(Modifier, shoppingListScrollState, contentPadding)
+            it.isInventory ->
+                InventoryScreen(Modifier, inventoryScrollState, contentPadding)
+            it.isAppSettings -> {
+                val settingsScrollState = rememberLazyListState()
             }
-        }
+        }}
     }
 
 //    private fun checkForNeededMigrations() {

@@ -25,3 +25,4 @@ open class ViewModel(
 }
 
 const val springStiffness = 700f
+const val tweenDuration = 250

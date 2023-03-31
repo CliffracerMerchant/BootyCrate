@@ -13,8 +13,6 @@ import androidx.datastore.preferences.core.Preferences
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ViewModel
 import com.cliffracertech.bootycrate.activity.MessageHandler
-import com.cliffracertech.bootycrate.itemlist.ItemListViewModel.UiState
-import com.cliffracertech.bootycrate.itemlist.ItemListViewModel.UiState.*
 import com.cliffracertech.bootycrate.model.SelectionState
 import com.cliffracertech.bootycrate.model.SharedState
 import com.cliffracertech.bootycrate.model.database.InventoryItem
@@ -42,12 +40,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+sealed class AsyncListState {
+    object Loading: AsyncListState()
+    class Message(val text: StringResource) : AsyncListState()
+    class Content<T>(
+        override val items: ImmutableList<T>,
+        override val selectedItemIds: ImmutableSet<Long>,
+        override val expandedItemId: Long?
+    ) : AsyncListState(), ItemListState<T>
+}
+
 /**
  * An abstract view model to provide data and callbacks for a screen
  * that displays a list of ListItem subclasses.
  *
- * The property [uiState] contains the current [UiState] instance that
- * describes the data that should be displayed. UI interactions with
+ * The property [uiState] contains the current [AsyncListState] instance
+ * that describes the data that should be displayed. UI interactions with
  * individual items should be connected to the methods [onItemRenameRequest],
  * [onItemExtraInfoChangeRequest], [onItemColorGroupChangeRequest],
  * [onItemAmountChangeRequest], [onItemEditButtonClick], [onItemClick],
@@ -76,31 +84,18 @@ abstract class ItemListViewModel<T: ListItem>(
     protected abstract val items: ImmutableList<T>?
     private var expandedItemId by mutableStateOf<Long?>(null)
 
-    /** The possible types of content for a screen showing a list of
-     * [ListItem]s. These types are [Message], [Loading], and [Items]. */
-    sealed class UiState {
-        /** The list of items is still being loaded */
-        object Loading : UiState()
-        /** A message regarding the list of items should be displayed instead */
-        class Message(val text: StringResource) : UiState()
-        /** The list of items along with the set of selected item
-         * ids and the id, if any, of the item that is expanded */
-        class Items<T: ListItem>(
-            override val itemList: ImmutableList<T>,
-            override val selectedItemIds: ImmutableSet<Long>,
-            override val expandedItemId: Long?,
-        ) : UiState(), ItemListState<T>
-    }
-
     val uiState by derivedStateOf {
         val items = this.items
         when {
-            items == null -> Loading
-            items.isEmpty() -> Message(
+            items == null -> AsyncListState.Loading
+            items.isEmpty() -> AsyncListState.Message(
                 if (searchQuery != null)
                     StringResource(R.string.no_search_results_message)
                 else StringResource(R.string.empty_list_message, collectionNameResId))
-            else -> Items(items, selection.ids.toImmutableSet(), expandedItemId)
+            else -> AsyncListState.Content(
+                items = items,
+                selectedItemIds = selection.ids.toImmutableSet(),
+                expandedItemId = expandedItemId)
         }
     }
 
