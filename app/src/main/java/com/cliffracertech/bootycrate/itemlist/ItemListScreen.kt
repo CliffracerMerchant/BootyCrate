@@ -5,7 +5,7 @@
 package com.cliffracertech.bootycrate.itemlist
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -97,14 +97,21 @@ interface ItemListState<T> {
     }}
 
     // The item list is outside of the AnimatedContent block so that the
-    // item list will only fade in/out when it changes from empty or null
-    // to non-empty and non-null, instead of every time the list changes.
-    Crossfade(
-        targetState = listState as? AsyncListState.Content<T>,
-        animationSpec = tween(tweenDuration, easing = LinearEasing),
-    ) { contentState ->
-        if (contentState == null)
-            return@Crossfade
+    // item list will only fade in/out when listState changes to/from
+    // AsyncListState.Content, instead of every time the list changes.
+    AnimatedVisibility(
+        visible = listState is AsyncListState.Content<*>,
+        enter = fadeIn(tween(tweenDuration, easing = LinearEasing)),
+        exit = fadeOut(tween(tweenDuration, easing = LinearEasing)),
+    ) {
+        val contentState = listState as? AsyncListState.Content<T>
+        val currentItems = contentState?.items
+        // Because LazyColumn does not have appearance/disappearance animations
+        // for items, lastNonNullItems is used so that the last non-null list of
+        // items will fade out when listState changes from AsyncListState.Content
+        // to one of the other types instead of the items abruptly disappearing.
+        var lastNonNullItems = remember { currentItems ?: emptyList() }
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = lazyListState,
@@ -112,12 +119,17 @@ interface ItemListState<T> {
             verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            items(contentState.items, key = ListItem::id::get) {
-                itemContent(it,
-                    /*isSelected =*/ it.id in contentState.selectedItemIds,
-                    /*isExpanded =*/ it.id == contentState.expandedItemId)
+            items(
+                items = currentItems ?: lastNonNullItems,
+                key = ListItem::id::get
+            ) {
+                val isSelected = contentState?.selectedItemIds?.contains(it.id) ?: false
+                val isExpanded = it.id == contentState?.expandedItemId
+                itemContent(it, isSelected, isExpanded)
             }
         }
+        if (currentItems != null)
+            lastNonNullItems = currentItems
     }
 }
 
