@@ -163,7 +163,8 @@ class DrawerSizes(
     }
     val swipeableState = rememberSwipeableState(
         initialValue = Collapsed,
-        animationSpec = spring(stiffness = springStiffness))
+        animationSpec = spring(stiffness = springStiffness),
+        confirmStateChange = { !it.isHidden || vm.isHidden })
 
     LaunchedEffect(vm.isHidden) {
         swipeableState.animateTo(
