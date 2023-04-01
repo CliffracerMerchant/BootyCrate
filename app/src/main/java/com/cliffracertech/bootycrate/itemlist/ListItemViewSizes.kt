@@ -13,17 +13,18 @@ open class ListItemViewSizes(
     private val uneditableExtraInfoHeight: Dp = 20.dp
 ) {
     private val colorPickerOptionSize = 48.dp
-
-    val uneditableHeight = verticalPadding * 2 +
-        uneditableNameHeight + uneditableExtraInfoHeight
+    private val colorPickerSize = verticalPadding * 2 + colorPickerOptionSize * 2
 
     private val editableNameHeight = maxOf(48.dp, uneditableNameHeight)
     private val editableExtraInfoHeight = maxOf(48.dp, uneditableExtraInfoHeight)
     open val editableHeight: Dp =
         verticalPadding * 2 + editableNameHeight + editableExtraInfoHeight
 
+    val uneditableHeight = verticalPadding * 2 +
+        uneditableNameHeight + uneditableExtraInfoHeight
+
     fun height(showingColorPicker: Boolean, isEditable: Boolean) = when {
-        showingColorPicker -> colorPickerOptionSize * 2
+        showingColorPicker -> colorPickerSize
         isEditable ->         editableHeight
         else ->               uneditableHeight
     }

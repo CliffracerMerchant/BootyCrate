@@ -261,14 +261,13 @@ fun AmountEditPreview() = BootyCrateTheme {
     colorDescriptions: List<String>,
     onColorClick: (Int, Color) -> Unit,
 ) = BoxWithConstraints {
-    val maxColorsPerRow = ((maxWidth - 4.dp) / 48.dp).toInt()
+    val maxColorsPerRow = (maxWidth / 48.dp).toInt()
     val rows = ceil(colors.size.toFloat() / maxColorsPerRow).toInt()
     val columns = colors.size / rows
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
-        modifier = modifier.height(48.dp * rows + 4.dp),
-        contentPadding = PaddingValues(2.dp),
+        modifier = modifier.height(48.dp * rows),
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalArrangement = Arrangement.SpaceEvenly,
         userScrollEnabled = false
