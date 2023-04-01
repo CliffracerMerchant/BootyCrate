@@ -160,6 +160,7 @@ fun shoppingListItemCallback(
  * @param modifier The [Modifier] that will be used for the root layout
  */
 @Composable fun ShoppingListItemView(
+    sizes: ListItemViewSizes,
     id: Long,
     colorGroup: ListItem.ColorGroup,
     name: String,
@@ -173,7 +174,8 @@ fun shoppingListItemCallback(
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ListItemView(
-    id, colorGroup, name, extraInfo,
+    sizes, id,
+    colorGroup, name, extraInfo,
     amount, isLinked, isEditable,
     isSelected, selectionBrush,
     callback, modifier,
@@ -207,6 +209,7 @@ fun shoppingListItemCallback(
  * @param modifier The [Modifier] that will be used for the root layout
  */
 @Composable fun ShoppingListItemView(
+    sizes: ListItemViewSizes,
     item: ShoppingListItem,
     isSelected: Boolean,
     selectionBrush: Brush,
@@ -214,7 +217,8 @@ fun shoppingListItemCallback(
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ShoppingListItemView(
-    item.id, item.colorGroup, item.name, item.extraInfo,
+    sizes, item.id,
+    item.colorGroup, item.name, item.extraInfo,
     item.amount, item.isChecked, item.isLinked, isEditable,
     isSelected, selectionBrush, callback, modifier)
 
@@ -230,6 +234,8 @@ fun ShoppingListItemViewPreview() = BootyCrateTheme {
     var colorGroup by remember { mutableStateOf(ListItem.ColorGroup.Orange) }
     var amount by remember { mutableStateOf(5) }
     var isChecked by remember { mutableStateOf(false) }
+
+    val sizes = remember { ListItemViewSizes() }
     val callback = remember { shoppingListItemCallback(
         onLongClick = { isSelected = !isSelected },
         onColorGroupClick = { _, clickedColorGroup ->
@@ -247,7 +253,7 @@ fun ShoppingListItemViewPreview() = BootyCrateTheme {
         .padding(8.dp)
     ) {
         ShoppingListItemView(
-            id = 0, colorGroup, name, extraInfo,
+            sizes, id = 0, colorGroup, name, extraInfo,
             amount, isChecked, isLinked = true,
             isEditable, isSelected, brush, callback)
     }

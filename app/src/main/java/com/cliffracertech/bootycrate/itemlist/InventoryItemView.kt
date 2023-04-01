@@ -141,6 +141,7 @@ fun inventoryItemCallback(
  * @param modifier The [Modifier] that will be used for the root layout
  */
 @Composable fun InventoryItemView(
+    sizes: InventoryItemViewSizes,
     id: Long,
     colorGroup: ListItem.ColorGroup,
     name: String,
@@ -160,7 +161,8 @@ fun inventoryItemCallback(
         colors.getOrElse(colorGroup.ordinal) { colors.first() }
     }
     ListItemView(
-        id, colorGroup, name, extraInfo,
+        sizes, id,
+        colorGroup, name, extraInfo,
         amount, isLinked, isEditable,
         isSelected, selectionBrush,
         callback, modifier,
@@ -213,6 +215,7 @@ fun inventoryItemCallback(
  * @param modifier The [Modifier] that will be used for the root layout
  */
 @Composable fun InventoryItemView(
+    sizes: InventoryItemViewSizes,
     item: InventoryItem,
     isSelected: Boolean,
     selectionBrush: Brush,
@@ -220,7 +223,7 @@ fun inventoryItemCallback(
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
 ) = InventoryItemView(
-    item.id, item.colorGroup,
+    sizes, item.id, item.colorGroup,
     item.name, item.extraInfo,
     item.amount, item.isLinked,
     item.autoAddToShoppingList,
@@ -241,6 +244,8 @@ fun InventoryItemViewPreview() = BootyCrateTheme {
     var amount by remember { mutableStateOf(5) }
     var autoAddToShoppingList by remember { mutableStateOf(false) }
     var autoAddToShoppingListAmount by remember { mutableStateOf(1) }
+
+    val sizes = remember { InventoryItemViewSizes() }
     val callback = remember { inventoryItemCallback(
         onClick = { isSelected = !isSelected },
         onLongClick = { isSelected = !isSelected },
@@ -256,7 +261,8 @@ fun InventoryItemViewPreview() = BootyCrateTheme {
         })
     }
     InventoryItemView(
-        id = 0, colorGroup, name, extraInfo,
+        sizes, id = 0,
+        colorGroup, name, extraInfo,
         amount, isLinked = true,
         autoAddToShoppingList, autoAddToShoppingListAmount,
         isEditable, isSelected, brush, callback)

@@ -19,6 +19,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.itemlist.InventoryItemView
+import com.cliffracertech.bootycrate.itemlist.InventoryItemViewSizes
+import com.cliffracertech.bootycrate.itemlist.ListItemViewSizes
 import com.cliffracertech.bootycrate.itemlist.ShoppingListItemView
 import com.cliffracertech.bootycrate.itemlist.inventoryItemCallback
 import com.cliffracertech.bootycrate.itemlist.shoppingListItemCallback
@@ -101,6 +103,7 @@ import kotlinx.collections.immutable.ImmutableList
         onAddAnotherClick, onOkClick, messages, modifier
     ) {
         ShoppingListItemView(
+            sizes = remember { ListItemViewSizes() },
             id = 0,
             viewModel.itemColorGroup,
             viewModel.itemName,
@@ -139,6 +142,7 @@ import kotlinx.collections.immutable.ImmutableList
         onAddAnotherClick, onOkClick, messages, modifier
     ) {
         InventoryItemView(
+            sizes = remember { InventoryItemViewSizes() },
             id = 0,
             viewModel.itemColorGroup,
             viewModel.itemName,

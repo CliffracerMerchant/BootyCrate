@@ -104,6 +104,7 @@ interface ItemListState<T> {
         enter = fadeIn(tween(tweenDuration, easing = LinearEasing)),
         exit = fadeOut(tween(tweenDuration, easing = LinearEasing)),
     ) {
+        @Suppress("unchecked_cast")
         val contentState = listState as? AsyncListState.Content<T>
         val currentItems = contentState?.items
         // Because LazyColumn does not have appearance/disappearance animations
@@ -171,6 +172,7 @@ interface ItemListState<T> {
         contentPadding = contentPadding,
     ) { item, isSelected, isExpanded ->
         ShoppingListItemView(
+            sizes = remember { ListItemViewSizes() },
             item = item,
             isEditable = isExpanded,
             isSelected = isSelected,
@@ -220,6 +222,7 @@ interface ItemListState<T> {
         contentPadding = contentPadding,
     ) { item, isSelected, isExpanded ->
         InventoryItemView(
+            sizes = remember { InventoryItemViewSizes() },
             item = item,
             isEditable = isExpanded,
             isSelected = isSelected,
