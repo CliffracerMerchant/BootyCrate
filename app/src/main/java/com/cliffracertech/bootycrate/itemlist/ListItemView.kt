@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.itemlist
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -23,9 +24,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material.Icon
 import androidx.compose.material.ListItem
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -34,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -195,19 +201,32 @@ interface ListItemCallback {
                         readOnly = !isEditable,
                         textStyle = MaterialTheme.typography.subtitle1)
                 }
-                AmountEdit(
-                    amount = amount,
-                    isEditableByKeyboard = isEditable,
-                    tint = color,
-                    onAmountChangeRequest = {
-                        callback.onAmountChangeRequest(id, it)
-                    }, decreaseDescription = stringResource(
-                        R.string.item_amount_decrease_description, name),
-                    increaseDescription = stringResource(
-                        R.string.item_amount_increase_description, name),
-                    modifier = Modifier.graphicsLayer {
-                        translationX = 48.dp.toPx() * expansionProgress
-                    })
+                Column {
+                    AmountEdit(
+                        amount = amount,
+                        isEditableByKeyboard = isEditable,
+                        tint = color,
+                        onAmountChangeRequest = {
+                            callback.onAmountChangeRequest(id, it)
+                        }, decreaseDescription = stringResource(
+                            R.string.item_amount_decrease_description, name),
+                        increaseDescription = stringResource(
+                            R.string.item_amount_increase_description, name),
+                        modifier = Modifier.graphicsLayer {
+                            translationX = 48.dp.toPx() * expansionProgress
+                        })
+
+                    val isLinkedIndicatorAlpha by animateFloatAsState(
+                        targetValue = if (isLinked && isEditable) 1f else 0f,
+                        animationSpec = tween(tweenDuration, easing = LinearEasing))
+                    Icon(imageVector = Icons.Default.Link,
+                         contentDescription = null,
+                         modifier = Modifier
+                             .requiredSize(48.dp)
+                             .padding(12.dp)
+                             .align(Alignment.End)
+                             .alpha(isLinkedIndicatorAlpha))
+                }
 
                 if (callback.showEditButton) {
                     AnimatedEditToCloseButton(
