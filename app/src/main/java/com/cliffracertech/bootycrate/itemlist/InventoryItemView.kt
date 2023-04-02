@@ -47,10 +47,11 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
     onClick: () -> Unit,
 ) = Box(modifier
     .minTouchTargetSize()
+    .clip(CircleShape)
     .clickable(onClickLabel = clickLabel,
                role = Role.Button,
                onClick = onClick)
-    .padding(13.dp)
+    .padding(11.dp)
     .background(color, CircleShape))
 
 /** A [tint]ed checkbox that animates when its [checked] state changes, invokes
@@ -166,7 +167,7 @@ fun inventoryItemCallback(
         amount, isLinked, isEditable,
         isSelected, selectionBrush,
         callback, modifier,
-        colorIndicator = { showColorPicker ->
+        colorIndicator = { _, showColorPicker ->
             ColorIndicator(
                 color = color,
                 clickLabel = stringResource(

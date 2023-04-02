@@ -8,9 +8,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 open class ListItemViewSizes(
-    val verticalPadding: Dp = 8.dp,
-    private val uneditableNameHeight: Dp = 24.dp,
-    private val uneditableExtraInfoHeight: Dp = 20.dp
+    val verticalPadding: Dp = 4.dp,
+    private val uneditableNameHeight: Dp = 28.dp,
+    private val uneditableExtraInfoHeight: Dp = 22.dp
 ) {
     private val colorPickerOptionSize = 48.dp
     private val colorPickerSize = verticalPadding * 2 + colorPickerOptionSize * 2
@@ -39,8 +39,8 @@ open class ListItemViewSizes(
 
 class InventoryItemViewSizes(
     verticalPadding: Dp = 8.dp,
-    uneditableNameHeight: Dp = 24.dp,
-    uneditableExtraInfoHeight: Dp = 20.dp,
+    uneditableNameHeight: Dp = 28.dp,
+    uneditableExtraInfoHeight: Dp = 22.dp,
     autoAddToShoppingListHeight: Dp = 48.dp
 ): ListItemViewSizes(verticalPadding, uneditableNameHeight, uneditableExtraInfoHeight) {
     override val editableHeight =

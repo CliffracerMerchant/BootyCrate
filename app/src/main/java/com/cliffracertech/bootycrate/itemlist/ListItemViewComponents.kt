@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -278,7 +277,7 @@ fun AmountEditPreview() = BootyCrateTheme {
                                        colorDescriptions[index])
             Box(Modifier
                 .requiredSize(48.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(CircleShape)
                 .clickable(
                     role = Role.Button,
                     onClick = { onColorClick(index, color) },
@@ -325,5 +324,4 @@ fun ColorPickerPreview() = BootyCrateTheme {
             colorDescriptions = descriptions,
         ) { _, color -> currentColor = color }
     }
-
 }

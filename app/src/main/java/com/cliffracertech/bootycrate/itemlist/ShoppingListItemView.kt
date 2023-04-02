@@ -12,6 +12,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -49,17 +51,21 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 /**
  * A combination tinted checkbox and color indicator.
  *
- * CheckboxAndColorIndicator will appear as a tinted checkbox when
- * [showCheckboxProvider] returns true, or as a tinted circle otherwise. The
- * parameters [checkboxClickLabel] and [colorIndicatorClickLabel] define the
- * click labels that will be used for each state. [checked] indicates the
- * current checked state of the checkbox when [showCheckboxProvider] returns
- * true. The parameters [onCheckboxClick] and [onColorIndicatorClick] define
- * the callbacks that will be invoked when [showCheckboxProvider] returns
- * true or false, respectively.
+ * CheckboxAndColorIndicator will appear as a checkbox tinted to match [tint]
+ * when [showCheckbox] is true, or as a tinted circle otherwise. [checked]
+ * indicates the current checked state of the checkbox when [showCheckbox] is
+ * true.The parameters [checkboxClickLabel] and [colorIndicatorClickLabel]
+ * define the click labels that will be used for each state. The parameters
+ * [onCheckboxClick] and [onColorIndicatorClick] define the onclick callbacks
+ * that will be invoked when [showCheckbox] is true or false, respectively.
+ * The parameter [wasShowingCheckbox] only affects the state transition
+ * animations. It should be false when [showCheckbox] is changed from false
+ * to true, or true when showCheckbox has remained false but [checked] has
+ * changed in value.
  */
 @Composable fun CheckboxAndColorIndicator(
-    showCheckboxProvider: () -> Boolean,
+    showCheckbox: Boolean,
+    wasShowingCheckbox: Boolean,
     tint: Color,
     checked: Boolean,
     checkboxClickLabel: String,
@@ -67,42 +73,40 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
     colorIndicatorClickLabel: String,
     onColorIndicatorClick: () -> Unit,
     modifier: Modifier = Modifier,
+) = Box(modifier
+    .minTouchTargetSize()
+    .clip(CircleShape)
+    .then(if (showCheckbox) Modifier.clickable(
+              role = Role.Checkbox,
+              onClickLabel = checkboxClickLabel,
+              onClick = onCheckboxClick)
+          else Modifier.clickable(
+              role = Role.Button,
+              onClickLabel = colorIndicatorClickLabel,
+              onClick = onColorIndicatorClick))
+    .padding(11.dp)
 ) {
-    val showCheckbox = showCheckboxProvider()
-    Box(modifier
-        .minTouchTargetSize()
-        .clip(MaterialTheme.shapes.small)
-        .then(if (showCheckbox) Modifier.clickable(
-                  role = Role.Checkbox,
-                  onClickLabel = checkboxClickLabel,
-                  onClick = onCheckboxClick)
-              else Modifier.clickable(
-                  role = Role.Button,
-                  onClickLabel = colorIndicatorClickLabel,
-                  onClick = onColorIndicatorClick))
-        .padding(13.dp)
-    ) {
-        val uncheckedToCheckedBg = AnimatedImageVector.animatedVectorResource(
-            R.drawable.animated_checkbox_unchecked_to_checked_background)
-        val uncheckedToCircle = AnimatedImageVector.animatedVectorResource(
-            R.drawable.animated_checkbox_unchecked_background_to_circle)
-        val checkedToCircle = AnimatedImageVector.animatedVectorResource(
-            R.drawable.animated_checkbox_checked_background_to_circle)
-        val uncheckedToCheckedBgPainter = rememberAnimatedVectorPainter(
-            uncheckedToCheckedBg, checked)
-        val uncheckedToCirclePainter = rememberAnimatedVectorPainter(
-            uncheckedToCircle, !showCheckbox)
-        val checkedToCirclePainter = rememberAnimatedVectorPainter(
-            checkedToCircle, !showCheckbox)
-        Icon(contentDescription = null,
-             tint = tint,
-             painter = when {
-                 showCheckbox -> uncheckedToCheckedBgPainter
-                 checked ->      checkedToCirclePainter
-                 else ->         uncheckedToCirclePainter
-             })
-        AnimatedCheckmark(checked && showCheckbox)
-    }
+    val uncheckedToCheckedBg = AnimatedImageVector.animatedVectorResource(
+        R.drawable.animated_checkbox_unchecked_to_checked_background)
+    val uncheckedToCircle = AnimatedImageVector.animatedVectorResource(
+        R.drawable.animated_checkbox_unchecked_background_to_circle)
+    val checkedToCircle = AnimatedImageVector.animatedVectorResource(
+        R.drawable.animated_checkbox_checked_background_to_circle)
+    val uncheckedToCheckedPainter = rememberAnimatedVectorPainter(
+        uncheckedToCheckedBg, checked)
+    val uncheckedToCirclePainter = rememberAnimatedVectorPainter(
+        uncheckedToCircle, !showCheckbox)
+    val checkedToCirclePainter = rememberAnimatedVectorPainter(
+        checkedToCircle, !showCheckbox)
+    Icon(contentDescription = null,
+         tint = tint,
+         painter = when {
+             showCheckbox && wasShowingCheckbox ->
+                 uncheckedToCheckedPainter
+             checked -> checkedToCirclePainter
+             else -> uncheckedToCirclePainter
+         })
+    AnimatedCheckmark(checked && showCheckbox)
 }
 
 /** An interface containing callbacks for ShoppingListItem related interactions. */
@@ -179,11 +183,12 @@ fun shoppingListItemCallback(
     amount, isLinked, isEditable,
     isSelected, selectionBrush,
     callback, modifier,
-    colorIndicator = { showColorPicker ->
+    colorIndicator = { isCollapsed, showColorPicker ->
         val colors = ListItem.ColorGroup.colors()
         val color = colors.getOrElse(colorGroup.ordinal) { colors.first() }
         CheckboxAndColorIndicator(
-            showCheckboxProvider = { !isEditable },
+            showCheckbox = !isEditable,
+            wasShowingCheckbox = !isCollapsed,
             tint = color,
             checked = isChecked,
             checkboxClickLabel = stringResource(
@@ -192,7 +197,7 @@ fun shoppingListItemCallback(
             colorIndicatorClickLabel = stringResource(
                 R.string.edit_item_color_description, name),
             onColorIndicatorClick = showColorPicker,
-            modifier = modifier)
+            modifier = Modifier.requiredSize(48.dp))
     })
 
 /**

@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material.ListItem
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.springStiffness
+import com.cliffracertech.bootycrate.tweenDuration
 
 fun Modifier.minTouchTargetSize() =
     this.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
@@ -91,9 +93,11 @@ interface ListItemCallback {
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
  * @param colorIndicator A composable lambda whose contents will be used as the
- *     start aligned color indicator for the list item. As the content's on
- *     click should usually open the color picker, a lambda that will show the
- *     [ListItemView]'s color picker when invoked is provided.
+ *     start aligned color indicator for the list item. Whether or not the view
+ *     is fully collapsed (i.e. the transition that occurs when isEditable is
+ *     changed to false is complete) will be provided, along with a lambda that
+ *     will show the [ListItemView]'s color picker when invoked. This lambda
+ *     should usually be used as the content's onClick.
  * @param otherContent A composable lambda whose contents will be displayed
  *     beneath the other content. The [Transition]`<Boolean>` that is used when the
  *     view animates after [isEditable] changes is provided in case the added
@@ -113,7 +117,10 @@ interface ListItemCallback {
     selectionBrush: Brush,
     callback: ListItemCallback,
     modifier: Modifier = Modifier,
-    colorIndicator: @Composable (showColorPicker: () -> Unit) -> Unit,
+    colorIndicator: @Composable (
+            isCollapsed: Boolean,
+            showColorPicker: () -> Unit,
+        ) -> Unit,
     otherContent: @Composable ColumnScope.(
             expansionProgressProvider: () -> Float
         ) -> Unit = {},
@@ -162,6 +169,9 @@ interface ListItemCallback {
             val expansionProgress by animateFloatAsState(
                 targetValue = if (isEditable) 1f else 0f,
                 animationSpec = spring(stiffness = springStiffness / 10))
+            val isCollapsed by remember {
+                derivedStateOf { expansionProgress > 0f }
+            }
             val colors = ListItem.ColorGroup.colors()
             val color = remember(colorGroup) {
                 colors.getOrElse(colorGroup.ordinal) { colors.first() }
@@ -170,7 +180,7 @@ interface ListItemCallback {
             Row(verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.heightIn(min = 48.dp)
             ) {
-                colorIndicator { showColorPicker = true }
+                colorIndicator(isCollapsed) { showColorPicker = true }
                 Column(Modifier.weight(1f)) {
                     TextFieldEdit(
                         text = name,
