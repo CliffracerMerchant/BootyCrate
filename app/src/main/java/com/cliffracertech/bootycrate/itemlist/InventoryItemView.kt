@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.itemlist
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
@@ -13,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -167,37 +167,39 @@ fun inventoryItemCallback(
         amount, isLinked, isEditable,
         isSelected, selectionBrush,
         callback, modifier,
-        colorIndicator = { _, showColorPicker ->
+        colorIndicator = { colorIndicatorModifier, _, showColorPicker ->
             ColorIndicator(
                 color = color,
                 clickLabel = stringResource(
                     R.string.edit_item_color_description, name),
+                modifier = modifier,
                 onClick = showColorPicker)
         }
-    ) {
-
-        AnimatedVisibility(isEditable) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                AnimatedCheckbox(
-                    checked = autoAddToShoppingList,
-                    onClick = { callback.onAutoAddToShoppingListCheckboxClick(id) },
-                    onClickLabel = stringResource(
-                        R.string.item_auto_add_to_shopping_list_checkbox_description, name),
-                    tint = color)
-                Text(stringResource(R.string.auto_add_to_shopping_list_checkbox_text),
-                    style = MaterialTheme.typography.subtitle1)
-                AmountEdit(
-                    amount = autoAddToShoppingListAmount,
-                    isEditableByKeyboard = true,
-                    tint = color,
-                    decreaseDescription = stringResource(
-                        R.string.item_auto_add_to_shopping_list_amount_decrease_description, name),
-                    increaseDescription = stringResource(
-                        R.string.item_auto_add_to_shopping_list_amount_increase_description, name),
-                    onAmountChangeRequest = {
-                        callback.onAutoAddToShoppingListAmountChangeRequest(id, it)
-                    })
-            }
+    ) { otherContentModifier ->
+        Row(verticalAlignment = Alignment.CenterVertically,
+            modifier = otherContentModifier
+                .requiredHeight(sizes.autoAddToShoppingListHeight)
+                .padding(end = 48.dp)
+        ) {
+            AnimatedCheckbox(
+                checked = autoAddToShoppingList,
+                onClick = { callback.onAutoAddToShoppingListCheckboxClick(id) },
+                onClickLabel = stringResource(
+                    R.string.item_auto_add_to_shopping_list_checkbox_description, name),
+                tint = color)
+            Text(stringResource(R.string.auto_add_to_shopping_list_checkbox_text),
+                style = MaterialTheme.typography.subtitle1)
+            AmountEdit(
+                amount = autoAddToShoppingListAmount,
+                isEditableByKeyboard = true,
+                tint = color,
+                decreaseDescription = stringResource(
+                    R.string.item_auto_add_to_shopping_list_amount_decrease_description, name),
+                increaseDescription = stringResource(
+                    R.string.item_auto_add_to_shopping_list_amount_increase_description, name),
+                onAmountChangeRequest = {
+                    callback.onAutoAddToShoppingListAmountChangeRequest(id, it)
+                })
         }
     }
 }

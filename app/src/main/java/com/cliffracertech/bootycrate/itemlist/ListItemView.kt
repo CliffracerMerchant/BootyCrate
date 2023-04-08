@@ -17,12 +17,13 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.sizeIn
@@ -124,12 +125,11 @@ interface ListItemCallback {
     callback: ListItemCallback,
     modifier: Modifier = Modifier,
     colorIndicator: @Composable (
+            modifier: Modifier,
             isCollapsed: Boolean,
             showColorPicker: () -> Unit,
         ) -> Unit,
-    otherContent: @Composable ColumnScope.(
-            expansionProgressProvider: () -> Float
-        ) -> Unit = {},
+    otherContent: @Composable (otherContentModifier: Modifier) -> Unit = {},
 ) {
     var showColorPicker by remember { mutableStateOf(false) }
     val selectionBackgroundAlpha by animateFloatAsState(
@@ -139,7 +139,7 @@ interface ListItemCallback {
         targetValue = sizes.height(
             showingColorPicker = showColorPicker,
             isEditable = isEditable),
-        animationSpec = spring(stiffness = springStiffness / 10))
+        animationSpec = spring(stiffness = springStiffness))
 
     AnimatedContent(
         targetState = showColorPicker,
@@ -159,9 +159,9 @@ interface ListItemCallback {
                 onClickLabel = if (!isSelected) null else
                     stringResource(R.string.deselect_item_description),
                 onClick = { callback.onClick(id) }
-            ).padding(vertical = sizes.verticalPadding, horizontal = 2.dp),
+            ).padding(vertical = sizes.verticalPadding),
         transitionSpec = {
-            val springSpec = spring<Float>(stiffness = springStiffness / 10)
+            val springSpec = spring<Float>(stiffness = springStiffness)
             fadeIn(springSpec) + scaleIn(springSpec, initialScale = 0.9f) with
             fadeOut(springSpec) + scaleOut(springSpec, targetScale = 0.9f)
         }
@@ -171,22 +171,23 @@ interface ListItemCallback {
                 callback.onColorGroupClick(id, it)
                 showColorPicker = false
             }
-        else Column {
+        else Box {
             val expansionProgress by animateFloatAsState(
                 targetValue = if (isEditable) 1f else 0f,
-                animationSpec = spring(stiffness = springStiffness / 10))
-            val isCollapsed by remember {
-                derivedStateOf { expansionProgress > 0f }
-            }
+                animationSpec = spring(stiffness = springStiffness))
             val colors = ListItem.ColorGroup.colors()
             val color = remember(colorGroup) {
                 colors.getOrElse(colorGroup.ordinal) { colors.first() }
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.heightIn(min = 48.dp)
-            ) {
-                colorIndicator(isCollapsed) { showColorPicker = true }
+            val isCollapsed by remember { derivedStateOf { expansionProgress > 0f }}
+
+            Row(Modifier.heightIn(min = 48.dp)) {
+                colorIndicator(
+                    modifier = Modifier.graphicsLayer {
+                        translationY = sizes.colorIndicatorTopOffset(expansionProgress).toPx()
+                    }, isCollapsed = isCollapsed,
+                    showColorPicker = { showColorPicker = true })
                 Column(Modifier.weight(1f)) {
                     TextFieldEdit(
                         text = name,
@@ -201,44 +202,49 @@ interface ListItemCallback {
                         readOnly = !isEditable,
                         textStyle = MaterialTheme.typography.subtitle1)
                 }
-                Column {
-                    AmountEdit(
-                        amount = amount,
-                        isEditableByKeyboard = isEditable,
-                        tint = color,
-                        onAmountChangeRequest = {
-                            callback.onAmountChangeRequest(id, it)
-                        }, decreaseDescription = stringResource(
-                            R.string.item_amount_decrease_description, name),
-                        increaseDescription = stringResource(
-                            R.string.item_amount_increase_description, name),
-                        modifier = Modifier.graphicsLayer {
-                            translationX = 48.dp.toPx() * expansionProgress
-                        })
-
-                    val isLinkedIndicatorAlpha by animateFloatAsState(
-                        targetValue = if (isLinked && isEditable) 1f else 0f,
-                        animationSpec = tween(tweenDuration, easing = LinearEasing))
-                    Icon(imageVector = Icons.Default.Link,
-                         contentDescription = null,
-                         modifier = Modifier
-                             .requiredSize(48.dp)
-                             .padding(12.dp)
-                             .align(Alignment.End)
-                             .alpha(isLinkedIndicatorAlpha))
-                }
-
-                if (callback.showEditButton) {
-                    AnimatedEditToCloseButton(
-                        onClick = { callback.onEditButtonClick(id) },
-                        modifier = Modifier.graphicsLayer {
-                            val heightChange = (sizes.editableHeight - sizes.uneditableHeight).toPx()
-                            translationY = heightChange * expansionProgress
-                        }, isEditable = isEditable,
-                        itemName = name)
-                }
+                AmountEdit(
+                    amount = amount,
+                    isEditableByKeyboard = isEditable,
+                    tint = color,
+                    onAmountChangeRequest = {
+                        callback.onAmountChangeRequest(id, it)
+                    }, decreaseDescription = stringResource(
+                        R.string.item_amount_decrease_description, name),
+                    increaseDescription = stringResource(
+                        R.string.item_amount_increase_description, name),
+                    modifier = Modifier.graphicsLayer {
+                        translationX = sizes.amountEditEndOffset(expansionProgress).toPx()
+                    })
             }
-            otherContent{ expansionProgress }
+            if (callback.showEditButton)
+                AnimatedEditToCloseButton(
+                    onClick = { callback.onEditButtonClick(id) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .requiredSize(48.dp)
+                        .graphicsLayer {
+                            translationY = sizes.editButtonTopOffset(expansionProgress).toPx()
+                        },
+                    isEditable = isEditable,
+                    itemName = name)
+            val isLinkedIndicatorAlpha by animateFloatAsState(
+                targetValue = if (isLinked && isEditable) 1f else 0f,
+                animationSpec = tween(tweenDuration, easing = LinearEasing))
+            Icon(imageVector = Icons.Default.Link,
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .requiredSize(48.dp)
+                    .padding(12.dp)
+                    .offset(x = (-48).dp, y = 48.dp)
+                    .alpha(isLinkedIndicatorAlpha))
+
+            if (isCollapsed)
+                otherContent(Modifier
+                    .graphicsLayer {
+                        translationY = sizes.otherContentTopOffset(expansionProgress).toPx()
+                        alpha = expansionProgress
+                    })
         }
     }
 }

@@ -6,6 +6,7 @@ package com.cliffracertech.bootycrate.itemlist
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.res.animatedVectorResource
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.model.database.ListItem
+import com.cliffracertech.bootycrate.springStiffness
 import kotlin.math.ceil
 
 /** Compose the contents of [content] while being provided with the
@@ -95,7 +97,10 @@ import kotlin.math.ceil
         singleLine = true)
 }) { _, minHeight ->
     val height = maxOf(minHeight, (if (readOnly) 0 else 48).dp)
-    Box(modifier.animateContentSize().height(height)) {
+    Box(modifier = modifier
+        .animateContentSize(spring(stiffness = springStiffness))
+        .height(height)
+    ) {
         BasicTextField(
             value = text,
             onValueChange = onTextChange,
@@ -148,7 +153,10 @@ import kotlin.math.ceil
     val width = maxOf(valueWidth, valueEditMinWidth) + 96.dp
     val height = maxOf(valueHeight, 48.dp)
 
-    Box(modifier.animateContentSize().size(width, height)) {
+    Box(modifier = modifier
+        .animateContentSize(spring(stiffness = springStiffness))
+        .size(width, height)
+    ) {
         IconButton(
             onClick = { onAmountChangeRequest(amount - 1) },
             modifier = Modifier.align(Alignment.CenterStart),
