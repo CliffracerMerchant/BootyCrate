@@ -5,7 +5,6 @@
 package com.cliffracertech.bootycrate.itemlist
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -39,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
@@ -50,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.springStiffness
-import com.cliffracertech.bootycrate.tweenDuration
 
 fun Modifier.minTouchTargetSize() =
     this.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
@@ -235,9 +232,9 @@ interface ListItemCallback {
                         },
                     isEditable = isEditable,
                     itemName = name)
-            val isLinkedIndicatorAlpha by animateFloatAsState(
+            val linkedIndicatorAppearanceProgress by animateFloatAsState(
                 targetValue = if (isLinked && isEditable) 1f else 0f,
-                animationSpec = tween(tweenDuration, easing = LinearEasing))
+                animationSpec = spring(stiffness = springStiffness))
             Icon(imageVector = Icons.Default.Link,
                 contentDescription = null,
                 modifier = Modifier
@@ -245,7 +242,10 @@ interface ListItemCallback {
                     .requiredSize(48.dp)
                     .padding(12.dp)
                     .offset(x = (-48).dp, y = 48.dp)
-                    .alpha(isLinkedIndicatorAlpha))
+                    .graphicsLayer {
+                        alpha = linkedIndicatorAppearanceProgress
+                        translationY = -24.dp.toPx() * (1f - linkedIndicatorAppearanceProgress)
+                    })
 
             if (isCollapsed)
                 otherContent(Modifier
