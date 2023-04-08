@@ -18,7 +18,6 @@ import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -188,19 +187,28 @@ interface ListItemCallback {
                         translationY = sizes.colorIndicatorTopOffset(expansionProgress).toPx()
                     }, isCollapsed = isCollapsed,
                     showColorPicker = { showColorPicker = true })
-                Column(Modifier.weight(1f)) {
+                Box(Modifier.weight(1f)) {
                     TextFieldEdit(
                         text = name,
                         onTextChange = { callback.onRenameRequest(id, it) },
-                        tint = color,
+                        modifier = Modifier.graphicsLayer {
+                            val dpOffset = sizes.nameTopOffset(
+                                isEditable, extraInfo.isBlank(), expansionProgress)
+                            translationY = dpOffset.toPx()
+                        }, tint = color,
                         readOnly = !isEditable,
                         textStyle = MaterialTheme.typography.body1)
-                    TextFieldEdit(
-                        text = extraInfo,
-                        onTextChange = { callback.onExtraInfoChangeRequest(id, it) },
-                        tint = color,
-                        readOnly = !isEditable,
-                        textStyle = MaterialTheme.typography.subtitle1)
+                    if (isEditable || extraInfo.isNotBlank())
+                        TextFieldEdit(
+                            text = extraInfo,
+                            onTextChange = { callback.onExtraInfoChangeRequest(id, it) },
+                            modifier = Modifier.graphicsLayer {
+                                val dpOffset = sizes.extraInfoTopOffset(
+                                    isEditable, expansionProgress)
+                                translationY = dpOffset.toPx()
+                            }, tint = color,
+                            readOnly = !isEditable,
+                            textStyle = MaterialTheme.typography.subtitle1)
                 }
                 AmountEdit(
                     amount = amount,

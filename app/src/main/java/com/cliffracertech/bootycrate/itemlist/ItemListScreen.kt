@@ -147,7 +147,6 @@ interface ItemListState<T> {
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val vm: ShoppingListViewModel = viewModel()
-
     val startColor = MaterialTheme.colors.primary
     val endColor = MaterialTheme.colors.secondary
     val selectionBrush = remember(startColor, endColor) {
@@ -172,7 +171,7 @@ interface ItemListState<T> {
         contentPadding = contentPadding,
     ) { item, isSelected, isExpanded ->
         ShoppingListItemView(
-            sizes = remember { ListItemViewSizes() },
+            sizes = rememberListItemViewSizes(),
             item = item,
             isEditable = isExpanded,
             isSelected = isSelected,
@@ -196,7 +195,6 @@ interface ItemListState<T> {
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val vm: InventoryViewModel = viewModel()
-
     val startColor = MaterialTheme.colors.primary
     val endColor = MaterialTheme.colors.secondary
     val selectionBrush = remember(startColor, endColor) {
@@ -222,7 +220,7 @@ interface ItemListState<T> {
         contentPadding = contentPadding,
     ) { item, isSelected, isExpanded ->
         InventoryItemView(
-            sizes = remember { InventoryItemViewSizes() },
+            sizes = rememberInventoryItemViewSizes(),
             item = item,
             isEditable = isExpanded,
             isSelected = isSelected,

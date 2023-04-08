@@ -229,18 +229,19 @@ fun shoppingListItemCallback(
 
 @Preview @Composable
 fun ShoppingListItemViewPreview() = BootyCrateTheme {
-    var isSelected by remember { mutableStateOf(false) }
-    val color1 = MaterialTheme.colors.primary
-    val color2 = MaterialTheme.colors.secondary
-    val brush = remember { Brush.horizontalGradient(listOf(color1, color2)) }
-    var isEditable by remember { mutableStateOf(false) }
+    val sizes = rememberListItemViewSizes()
+    var colorGroup by remember { mutableStateOf(ListItem.ColorGroup.Orange) }
     var name by remember { mutableStateOf("Test item") }
     var extraInfo by remember { mutableStateOf("Test extra info") }
-    var colorGroup by remember { mutableStateOf(ListItem.ColorGroup.Orange) }
     var amount by remember { mutableStateOf(5) }
     var isChecked by remember { mutableStateOf(false) }
+    var isEditable by remember { mutableStateOf(false) }
+    var isSelected by remember { mutableStateOf(false) }
 
-    val sizes = remember { ListItemViewSizes() }
+    val color1 = MaterialTheme.colors.primary
+    val color2 = MaterialTheme.colors.secondary
+    val selectionBrush = remember { Brush.horizontalGradient(listOf(color1, color2)) }
+
     val callback = remember { shoppingListItemCallback(
         onLongClick = { isSelected = !isSelected },
         onColorGroupClick = { _, clickedColorGroup ->
@@ -260,6 +261,6 @@ fun ShoppingListItemViewPreview() = BootyCrateTheme {
         ShoppingListItemView(
             sizes, id = 0, colorGroup, name, extraInfo,
             amount, isChecked, isLinked = true,
-            isEditable, isSelected, brush, callback)
+            isEditable, isSelected, selectionBrush, callback)
     }
 }

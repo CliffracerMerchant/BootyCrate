@@ -172,7 +172,7 @@ fun inventoryItemCallback(
                 color = color,
                 clickLabel = stringResource(
                     R.string.edit_item_color_description, name),
-                modifier = modifier,
+                modifier = colorIndicatorModifier,
                 onClick = showColorPicker)
         }
     ) { otherContentModifier ->
@@ -236,19 +236,20 @@ fun inventoryItemCallback(
 
 @Preview @Composable
 fun InventoryItemViewPreview() = BootyCrateTheme {
-    var isSelected by remember { mutableStateOf(false) }
-    val color1 = MaterialTheme.colors.primary
-    val color2 = MaterialTheme.colors.secondary
-    val brush = remember { Brush.horizontalGradient(listOf(color1, color2)) }
-    var isEditable by remember { mutableStateOf(false) }
+    val sizes = rememberInventoryItemViewSizes()
+    var colorGroup by remember { mutableStateOf(ListItem.ColorGroup.Orange) }
     var name by remember { mutableStateOf("Test item") }
     var extraInfo by remember { mutableStateOf("Test extra info") }
-    var colorGroup by remember { mutableStateOf(ListItem.ColorGroup.Orange) }
     var amount by remember { mutableStateOf(5) }
     var autoAddToShoppingList by remember { mutableStateOf(false) }
     var autoAddToShoppingListAmount by remember { mutableStateOf(1) }
+    var isEditable by remember { mutableStateOf(false) }
+    var isSelected by remember { mutableStateOf(false) }
 
-    val sizes = remember { InventoryItemViewSizes() }
+    val color1 = MaterialTheme.colors.primary
+    val color2 = MaterialTheme.colors.secondary
+    val selectionBrush = remember { Brush.horizontalGradient(listOf(color1, color2)) }
+
     val callback = remember { inventoryItemCallback(
         onClick = { isSelected = !isSelected },
         onLongClick = { isSelected = !isSelected },
@@ -268,7 +269,7 @@ fun InventoryItemViewPreview() = BootyCrateTheme {
         colorGroup, name, extraInfo,
         amount, isLinked = true,
         autoAddToShoppingList, autoAddToShoppingListAmount,
-        isEditable, isSelected, brush, callback)
+        isEditable, isSelected, selectionBrush, callback)
 }
 
 

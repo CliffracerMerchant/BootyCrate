@@ -12,7 +12,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
-import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,9 +26,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -40,12 +38,14 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.springStiffness
+import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import kotlin.math.ceil
 
 /** Compose the contents of [content] while being provided with the
@@ -97,10 +97,7 @@ import kotlin.math.ceil
         singleLine = true)
 }) { _, minHeight ->
     val height = maxOf(minHeight, (if (readOnly) 0 else 48).dp)
-    Box(modifier = modifier
-        .animateContentSize(spring(stiffness = springStiffness))
-        .height(height)
-    ) {
+    Box(modifier = modifier.height(height)) {
         BasicTextField(
             value = text,
             onValueChange = onTextChange,
@@ -163,14 +160,12 @@ import kotlin.math.ceil
         ) {
             Icon(painterResource(R.drawable.minus_icon), decreaseDescription)
         }
-
         IconButton(
             onClick = { onAmountChangeRequest(amount + 1) },
             modifier = Modifier.align(Alignment.CenterEnd),
         ) {
             Icon(painterResource(R.drawable.plus_icon), increaseDescription)
         }
-
         BasicTextField(
             value = amount.toString(),
             onValueChange = { onAmountChangeRequest(it.toInt()) },
@@ -235,10 +230,7 @@ fun AmountEditPreview() = BootyCrateTheme {
     isEditable: Boolean,
     modifier: Modifier = Modifier,
     itemName: String,
-) = IconButton(
-    onClick = onClick,
-    modifier = modifier,
-) {
+) = IconButton(onClick, modifier) {
     val vector = AnimatedImageVector.animatedVectorResource(
         R.drawable.animated_edit_to_collapse)
     val painter = rememberAnimatedVectorPainter(vector, isEditable)
