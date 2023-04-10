@@ -40,6 +40,9 @@ open class ListItemViewSizes(
     }
     private val editableNameHeight = maxOf(48.dp, uneditableNameHeight)
     private val nameHeightChange = editableNameHeight - uneditableNameHeight
+    fun nameHeight(isEditable: Boolean) =
+        if (isEditable) editableNameHeight
+        else            uneditableNameHeight
 
     private val uneditableExtraInfoHeight = with (density) {
         Paragraph(
@@ -54,6 +57,9 @@ open class ListItemViewSizes(
     }
     private val editableExtraInfoHeight = maxOf(48.dp, uneditableExtraInfoHeight)
     private val extraInfoHeightChange = editableExtraInfoHeight - uneditableExtraInfoHeight
+    fun extraInfoHeight(isEditable: Boolean) =
+        if (isEditable) editableExtraInfoHeight
+        else            uneditableExtraInfoHeight
 
     val uneditableHeight = verticalPadding * 2 + maxOf(uneditableNameHeight + uneditableExtraInfoHeight, 48.dp)
     open val editableHeight = verticalPadding * 2 + editableNameHeight + editableExtraInfoHeight

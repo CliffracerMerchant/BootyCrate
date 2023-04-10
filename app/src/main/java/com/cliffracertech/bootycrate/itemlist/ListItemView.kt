@@ -188,24 +188,30 @@ interface ListItemCallback {
                     TextFieldEdit(
                         text = name,
                         onTextChange = { callback.onRenameRequest(id, it) },
-                        modifier = Modifier.graphicsLayer {
-                            val dpOffset = sizes.nameTopOffset(
-                                isEditable, extraInfo.isBlank(), expansionProgress)
-                            translationY = dpOffset.toPx()
-                        }, tint = color,
+                        modifier = Modifier
+                            .height(sizes.nameHeight(isEditable))
+                            .graphicsLayer {
+                                translationY = sizes.nameTopOffset(
+                                    isEditable, extraInfo.isBlank(), expansionProgress).toPx()
+                            },
+                        tint = color,
                         readOnly = !isEditable,
-                        textStyle = MaterialTheme.typography.body1)
+                        animationProgressProvider = { expansionProgress },
+                        textStyle = sizes.nameTextStyle)
                     if (isEditable || extraInfo.isNotBlank())
                         TextFieldEdit(
                             text = extraInfo,
                             onTextChange = { callback.onExtraInfoChangeRequest(id, it) },
-                            modifier = Modifier.graphicsLayer {
-                                val dpOffset = sizes.extraInfoTopOffset(
-                                    isEditable, expansionProgress)
-                                translationY = dpOffset.toPx()
-                            }, tint = color,
+                            modifier = Modifier
+                                .height(sizes.extraInfoHeight(isEditable))
+                                .graphicsLayer {
+                                    translationY = sizes.extraInfoTopOffset(
+                                        isEditable, expansionProgress).toPx()
+                                },
+                            tint = color,
                             readOnly = !isEditable,
-                            textStyle = MaterialTheme.typography.subtitle1)
+                            animationProgressProvider = { expansionProgress },
+                            textStyle = sizes.extraInfoTextStyle)
                 }
                 AmountEdit(
                     amount = amount,

@@ -29,9 +29,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -68,17 +72,21 @@ import kotlin.math.ceil
 }
 
 /**
-* A text field that toggles between an unconstrained size when [readOnly] is
-* true, and a minimum touch target size when [readOnly] is false.
-*
-* @param text The text that will be displayed
-* @param onTextChange The callback that will be invoked when the user attempts
-*     to change the [text] value through input
-* @param modifier The [Modifier] that will be used for the text field
-* @param tint The tint that will be used for the text cursor
-* @param readOnly Whether or not the text field will prevent editing of the
-*     text and allow its size to fall below minimum touch target sizes.
-* @param textStyle The [TextStyle] that will be used for the text.
+ * A text field that toggles between an unconstrained size when [readOnly] is
+ * true, and a minimum touch target size when [readOnly] is false.
+ *
+ * @param text The text that will be displayed
+ * @param onTextChange The callback that will be invoked when the user attempts
+ *     to change the [text] value through input
+ * @param modifier The [Modifier] that will be used for the text field
+ * @param tint The tint that will be used for the text cursor
+ * @param readOnly Whether or not the text field will prevent editing of the
+ *     text and allow its size to fall below minimum touch target sizes
+ * @param animationProgressProvider A lambda that returns the progress of a
+ *     transition between values of readOnly. The returned value should be
+ *     in the range of [0f, 1f], with 0f indicating that readOnly is false,
+ *     and 1f indicating that readOnly is true.
+ * @param textStyle The [TextStyle] that will be used for the text
 */
 @Composable fun TextFieldEdit(
     text: String,
@@ -86,39 +94,28 @@ import kotlin.math.ceil
     modifier: Modifier = Modifier,
     tint: Color = LocalContentColor.current,
     readOnly: Boolean = true,
+    animationProgressProvider: () -> Float = { if (readOnly) 0f else 1f },
     textStyle: TextStyle = LocalTextStyle.current,
-) = MeasureUnconstrainedViewSize(measurable = {
+) = Box(modifier, Alignment.CenterStart) {
+
+    val color = LocalContentColor.current
     BasicTextField(
         value = text,
-        onValueChange = {},
-        modifier = modifier,
-        readOnly = readOnly,
+        onValueChange = onTextChange,
+        modifier = Modifier.drawBehind {
+            val animationProgress = animationProgressProvider()
+            if (animationProgress == 0f)
+                return@drawBehind
+            drawLine(
+                color = color,
+                start = Offset(0f, size.height),
+                end = Offset(size.width, size.height),
+                strokeWidth = 1.dp.toPx(),
+                alpha = animationProgressProvider())
+        }, readOnly = readOnly,
         textStyle = textStyle,
-        singleLine = true)
-}) { _, minHeight ->
-    val height = maxOf(minHeight, (if (readOnly) 0 else 48).dp)
-    Box(modifier = modifier.height(height)) {
-        BasicTextField(
-            value = text,
-            onValueChange = onTextChange,
-            modifier = Modifier.align(Alignment.CenterStart),
-            readOnly = readOnly,
-            textStyle = textStyle,//.copy(textAlign = TextAlign.Center),
-            singleLine = true,
-            cursorBrush = remember(tint) { SolidColor(tint) },
-        ) { innerTextField ->
-            Box(contentAlignment = Alignment.CenterStart) {
-                innerTextField()
-                AnimatedVisibility(
-                    visible = !readOnly,
-                    modifier = Modifier.align(Alignment.BottomStart),
-                    enter = fadeIn(), exit = fadeOut()
-                ) {
-                    Divider(Modifier, LocalContentColor.current, 1.dp)
-                }
-            }
-        }
-    }
+        singleLine = true,
+        cursorBrush = remember(tint) { SolidColor(tint) })
 }
 
 /**
