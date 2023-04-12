@@ -161,22 +161,10 @@ import com.cliffracertech.bootycrate.springStiffness
         }
     }
 
-    if (viewModel.newShoppingListItemDialogIsVisible) {
-        val newShoppingListItemDialogVM: NewShoppingListItemDialogViewModel by viewModel()
-        NewShoppingListItemDialog(
-            onDismissRequest = newShoppingListItemDialogVM::onDismissRequest,
-            onAddAnotherClick = newShoppingListItemDialogVM::onAddAnotherClick,
-            onOkClick = newShoppingListItemDialogVM::onOkClick,
-            messages = newShoppingListItemDialogVM.messages)
-    }
+    if (viewModel.newShoppingListItemDialogIsVisible)
+        NewShoppingListItemDialog()
 
-    if (viewModel.newInventoryItemDialogIsVisible) {
-        val newInventoryItemDialogVM: NewInventoryItemDialogViewModel by viewModel()
-        NewInventoryItemDialog(
-            onDismissRequest = newInventoryItemDialogVM::onDismissRequest,
-            onAddAnotherClick = newInventoryItemDialogVM::onAddAnotherClick,
-            onOkClick = newInventoryItemDialogVM::onOkClick,
-            messages = newInventoryItemDialogVM.messages)
-    }
+    if (viewModel.newInventoryItemDialogIsVisible)
+        NewInventoryItemDialog()
 }
 

@@ -7,15 +7,18 @@ package com.cliffracertech.bootycrate.bottombar
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.itemlist.InventoryItemView
@@ -57,7 +60,7 @@ import kotlinx.collections.immutable.ImmutableList
 ) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = 8.dp),
         title = { Row {
             stringResource(R.string.add_button_description)
         }},
@@ -83,24 +86,22 @@ import kotlinx.collections.immutable.ImmutableList
                 enabled = confirmButtonsEnabled,
             ) { Text(stringResource(android.R.string.ok)) }
         }},
-        //properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     )
 }
 
 /** A [NewItemDialog] that contains a [ShoppingListItemView] to allow the user
- * to create new [ShoppingListItem]s. See [NewItemDialog] for parameter descriptions. */
-@Composable fun NewShoppingListItemDialog(
-    onDismissRequest: () -> Unit,
-    onAddAnotherClick: () -> Unit,
-    onOkClick: () -> Unit,
-    messages: ImmutableList<Validator.Message>,
-    modifier: Modifier = Modifier,
-) {
+ * to create new [ShoppingListItem]s. */
+@Composable fun NewShoppingListItemDialog(modifier: Modifier = Modifier) {
     val viewModel: NewShoppingListItemDialogViewModel = viewModel()
 
     NewItemDialog(
-        onDismissRequest, viewModel.confirmButtonsEnabled,
-        onAddAnotherClick, onOkClick, messages, modifier
+        onDismissRequest = viewModel::onDismissRequest,
+        confirmButtonsEnabled = viewModel.confirmButtonsEnabled,
+        onAddAnotherClick = viewModel::onAddAnotherClick,
+        onOkClick = viewModel::onOkClick,
+        messages = viewModel.messages,
+        modifier = modifier,
     ) {
         ShoppingListItemView(
             sizes = rememberListItemViewSizes(),
@@ -113,7 +114,7 @@ import kotlinx.collections.immutable.ImmutableList
             isLinked = false,
             isEditable = true,
             isSelected = false,
-            selectionBrush = Brush.horizontalGradient(listOf(Color.Transparent)),
+            selectionBrush = SolidColor(Color.Transparent),
             callback = remember {
                 shoppingListItemCallback(
                     onColorGroupClick = { _, newColorGroup -> viewModel.itemColorGroup = newColorGroup },
@@ -127,19 +128,17 @@ import kotlinx.collections.immutable.ImmutableList
 }
 
 /** A [NewItemDialog] that contains an [InventoryItemView] to allow the user to
- * create new [InventoryItem]s. See [NewItemDialog] for parameter descriptions. */
-@Composable fun NewInventoryItemDialog(
-    onDismissRequest: () -> Unit,
-    onAddAnotherClick: () -> Unit,
-    onOkClick: () -> Unit,
-    messages: ImmutableList<Validator.Message>,
-    modifier: Modifier = Modifier,
-) {
+ * create new [InventoryItem]s. */
+@Composable fun NewInventoryItemDialog(modifier: Modifier = Modifier) {
     val viewModel: NewInventoryItemDialogViewModel = viewModel()
 
     NewItemDialog(
-        onDismissRequest, viewModel.confirmButtonsEnabled,
-        onAddAnotherClick, onOkClick, messages, modifier
+        onDismissRequest = viewModel::onDismissRequest,
+        confirmButtonsEnabled = viewModel.confirmButtonsEnabled,
+        onAddAnotherClick = viewModel::onAddAnotherClick,
+        onOkClick = viewModel::onOkClick,
+        messages = viewModel.messages,
+        modifier = modifier,
     ) {
         InventoryItemView(
             sizes = rememberInventoryItemViewSizes(),
@@ -153,7 +152,7 @@ import kotlinx.collections.immutable.ImmutableList
             viewModel.itemAutoAddToShoppingListAmount,
             isEditable = true,
             isSelected = false,
-            selectionBrush = Brush.horizontalGradient(listOf(Color.Transparent)),
+            selectionBrush = SolidColor(Color.Transparent),
             callback = remember {
                 inventoryItemCallback(
                     onColorGroupClick = { _, newColorGroup -> viewModel.itemColorGroup = newColorGroup },
