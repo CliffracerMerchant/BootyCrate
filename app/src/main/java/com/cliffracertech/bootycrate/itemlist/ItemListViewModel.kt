@@ -33,7 +33,6 @@ import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
-import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -94,7 +93,7 @@ abstract class ItemListViewModel<T: ListItem>(
                 else StringResource(R.string.empty_list_message, collectionNameResId))
             else -> AsyncListState.Content(
                 items = items,
-                selectedItemIds = selection.ids.toImmutableSet(),
+                selectedItemIds = selection.ids,
                 expandedItemId = expandedItemId)
         }
     }

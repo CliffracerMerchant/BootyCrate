@@ -17,6 +17,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityRetainedComponent
 import dagger.hilt.android.scopes.ActivityRetainedScoped
+import kotlinx.collections.immutable.toImmutableSet
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Qualifier
@@ -111,7 +112,9 @@ class NavigationState @Inject constructor() {
 // multiple instances (one for the shopping list and one for the inventory).
 class SelectionState @Inject constructor() {
     private val _ids: SnapshotStateMap<Long, Unit> = mutableStateMapOf()
-    val ids: Set<Long> by _ids::keys
+    val ids by derivedStateOf {
+        _ids.keys.toImmutableSet()
+    }
 
     val size get() = ids.size
     val isEmpty get() = size == 0
