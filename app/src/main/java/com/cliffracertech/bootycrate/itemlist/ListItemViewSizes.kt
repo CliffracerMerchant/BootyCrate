@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.text.Paragraph
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -21,11 +22,14 @@ open class ListItemViewSizes(
     fontFamilyResolver: FontFamily.Resolver,
     density: Density,
     val verticalPadding: Dp = 8.dp,
-    private val nameTextStyle: TextStyle,
-    private val extraInfoTextStyle: TextStyle,
+    val nameTextStyle: TextStyle,
+    val extraInfoTextStyle: TextStyle,
+    amountTextStyle: TextStyle,
 ) {
     private val colorPickerOptionSize = 48.dp
     private val colorPickerSize = verticalPadding * 2 + colorPickerOptionSize * 2
+
+    val amountEditSizes = AmountEditSizes(amountTextStyle, fontFamilyResolver, density)
 
     private val uneditableNameHeight = with (density) {
         Paragraph(
@@ -110,8 +114,11 @@ open class ListItemViewSizes(
     fun colorIndicatorTopOffset(interpolation: Float) =
         colorIndicatorMaxTopOffset * interpolation
 
-    fun amountEditEndOffset(interpolation: Float) =
-        (-48).dp * (1f - interpolation)
+    fun amountEditXOffset(
+        isEditable: Boolean,
+        interpolation: Float
+    ) = if (isEditable) (-48).dp * (1f - interpolation)
+        else            48.dp * interpolation
 
     private val otherContentMaxTopOffset =
         editableNameHeight + editableExtraInfoHeight

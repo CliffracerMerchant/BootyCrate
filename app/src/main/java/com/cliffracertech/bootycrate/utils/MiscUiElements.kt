@@ -7,6 +7,7 @@ package com.cliffracertech.bootycrate.utils
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -20,6 +21,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
@@ -98,3 +100,17 @@ import kotlinx.collections.immutable.toImmutableList
     background(backgroundBrush, shape)
         .onPlaced { layoutStartX = it.positionInRoot().x }
 }
+
+/** Compose an [IconButton] with only an inner icon, using [imageVector] and
+ * [description] as the [ImageVector] and content description for the icon.*/
+@Composable fun SimpleIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    interactionSource: MutableInteractionSource =
+        remember { MutableInteractionSource() },
+    imageVector: ImageVector,
+    description: String? = null,
+) = IconButton(
+    onClick, modifier, enabled, interactionSource
+) { Icon(imageVector, description) }

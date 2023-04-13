@@ -4,28 +4,47 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.itemlist
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.LocalContentColor
+import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.RemoveCircleOutline
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,43 +52,20 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.springStiffness
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
+import com.cliffracertech.bootycrate.utils.SimpleIconButton
 import kotlin.math.ceil
-
-/** Compose the contents of [content] while being provided with the
-* unconstrained [Dp] dimensions of the content provided in [measurable]. */
-@Composable fun MeasureUnconstrainedViewSize(
-    measurable: @Composable () -> Unit,
-    content: @Composable (Dp, Dp) -> Unit,
-) = SubcomposeLayout { constraints ->
-    val (measuredWidth, measuredHeight) = run {
-        val size = subcompose("measurable", measurable)[0]
-            .measure(Constraints())
-        size.width.toDp() to size.height.toDp()
-    }
-    val contentPlaceable = subcompose("content") {
-        content(measuredWidth, measuredHeight)
-    }[0].measure(constraints)
-    layout(contentPlaceable.width, contentPlaceable.height) {
-        contentPlaceable.place(0, 0)
-    }
-}
 
 /**
  * A text field that toggles between an unconstrained size when [readOnly] is
@@ -121,91 +117,101 @@ import kotlin.math.ceil
 /**
 * An editor for an Int [amount] that displays decrease and increase buttons on
 * either side of the amount, and allows direct keyboard editing of the value
-* when [isEditableByKeyboard] is true. [decreaseDescription] and [increaseDescription]
+* when [valueIsFocusable] is true. [decreaseDescription] and [increaseDescription]
 * will be used as the content descriptions for the decrease and increase buttons,
 * respectively, while [tint] will be used to tint the text cursor when the amount
 * is being edited via the keyboard. An attempt to change the amount either by
 * keyboard or the buttons will cause [onAmountChangeRequest] to be invoked.
 */
 @Composable fun AmountEdit(
+    sizes: AmountEditSizes,
     amount: Int,
-    isEditableByKeyboard: Boolean,
+    valueIsFocusable: Boolean,
     tint: Color,
     decreaseDescription: String,
     increaseDescription: String,
     onAmountChangeRequest: (Int) -> Unit,
     modifier: Modifier = Modifier,
-) = MeasureUnconstrainedViewSize(measurable = {
-    BasicTextField(
-        value = amount.toString(),
-        onValueChange = {},
-        modifier = Modifier.width(IntrinsicSize.Max).height(IntrinsicSize.Max),
-        textStyle = MaterialTheme.typography.h5.copy(textAlign = TextAlign.Center),
-        singleLine = true)
-}) { valueWidth, valueHeight ->
-    val valueEditMinWidth = (if (isEditableByKeyboard) 48 else 0).dp
-    val width = maxOf(valueWidth, valueEditMinWidth) + 96.dp
-    val height = maxOf(valueHeight, 48.dp)
+) {
+    val isFocusableTransition = updateTransition(
+        targetState = valueIsFocusable,
+        label = "amount edit valueIsFocusable transition")
+    val width by isFocusableTransition.animateDp(
+        transitionSpec = { spring(stiffness = springStiffness) },
+        label = "amount Edit valueIsFocusable width transition",
+        targetValueByState = { sizes.width(amount, it) })
+    val underlineAlpha by isFocusableTransition.animateFloat(
+        transitionSpec = { spring(stiffness = springStiffness) },
+        label = "amount Edit valueIsFocusable underline alpha transition",
+        targetValueByState = { if (it) 1f else 0f })
+    val color = LocalContentColor.current
 
-    Box(modifier = modifier
-        .animateContentSize(spring(stiffness = springStiffness))
-        .size(width, height)
-    ) {
-        IconButton(
-            onClick = { onAmountChangeRequest(amount - 1) },
-            modifier = Modifier.align(Alignment.CenterStart),
-        ) {
-            Icon(painterResource(R.drawable.minus_icon), decreaseDescription)
-        }
-        IconButton(
-            onClick = { onAmountChangeRequest(amount + 1) },
-            modifier = Modifier.align(Alignment.CenterEnd),
-        ) {
-            Icon(painterResource(R.drawable.plus_icon), increaseDescription)
-        }
+    Box(modifier = modifier.size(width, sizes.height)) {
         BasicTextField(
             value = amount.toString(),
             onValueChange = { onAmountChangeRequest(it.toInt()) },
-            modifier = Modifier.align(Alignment.Center),
-            readOnly = !isEditableByKeyboard,
-            textStyle = MaterialTheme.typography.h5.copy(textAlign = TextAlign.Center),
+            modifier = Modifier
+                .align(Alignment.Center)
+                .drawBehind {
+                    if (underlineAlpha == 0f)
+                        return@drawBehind
+                    val startX = size.width / 2f - 24.dp.toPx()
+                    val endX = startX + 48.dp.toPx()
+                    drawLine(
+                        color = color,
+                        start = Offset(startX, size.height),
+                        end = Offset(endX, size.height),
+                        strokeWidth = 1.dp.toPx(),
+                        alpha = underlineAlpha)
+                },
+            readOnly = !valueIsFocusable,
+            textStyle = sizes.textStyle,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
-            cursorBrush = remember(tint) { SolidColor(tint) },
-            decorationBox = { valueDisplay ->
-                Box(Modifier.animateContentSize(), Alignment.Center) {
-                    valueDisplay()
-                    AnimatedVisibility(
-                        visible = isEditableByKeyboard,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .width(valueEditMinWidth),
-                        enter = fadeIn(), exit = fadeOut(),
-                    ) {
-                        Divider(Modifier, LocalContentColor.current, 1.dp)
-                    }
-                }
-            })
+            cursorBrush = remember(tint) { SolidColor(tint) })
+
+        SimpleIconButton(
+            onClick = { onAmountChangeRequest(amount - 1) },
+            modifier = Modifier.align(Alignment.CenterStart),
+            imageVector = Icons.Default.RemoveCircleOutline,
+            description = decreaseDescription)
+
+        SimpleIconButton(
+            onClick = { onAmountChangeRequest(amount + 1) },
+            modifier = Modifier.align(Alignment.CenterEnd),
+            imageVector = Icons.Default.AddCircleOutline,
+            description = increaseDescription)
     }
 }
 
 @Preview @Composable
 fun AmountEditPreview() = BootyCrateTheme {
     Row {
-        var isEditable by remember { mutableStateOf(false) }
+        val density = LocalDensity.current
+        val fontFamilyResolver = LocalFontFamilyResolver.current
+        val textStyle = MaterialTheme.typography.body1
+        val sizes = remember {
+            AmountEditSizes(textStyle, fontFamilyResolver, density)
+        }
         var amount by remember { mutableStateOf(2) }
+        var isFocusable by remember { mutableStateOf(false) }
+
         AmountEdit(
+            sizes = sizes,
             amount = amount,
+            valueIsFocusable = isFocusable,
             tint = Color.Red,
-            isEditableByKeyboard = isEditable,
             decreaseDescription = "",
             increaseDescription = "",
             onAmountChangeRequest = { amount = it },
-            modifier = Modifier.background(MaterialTheme.colors.surface,
-                                           MaterialTheme.shapes.small))
-        IconButton({ isEditable = !isEditable }) {
-            Icon(Icons.Default.Edit, "")
-        }
+            modifier = Modifier.background(
+                MaterialTheme.colors.surface,
+                MaterialTheme.shapes.small))
+        SimpleIconButton(
+            onClick = { isFocusable = !isFocusable },
+            imageVector = Icons.Default.Edit,
+            description = null)
+
     }
 }
 

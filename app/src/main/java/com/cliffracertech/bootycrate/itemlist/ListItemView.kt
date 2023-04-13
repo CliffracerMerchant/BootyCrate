@@ -214,8 +214,9 @@ interface ListItemCallback {
                             textStyle = sizes.extraInfoTextStyle)
                 }
                 AmountEdit(
+                    sizes = sizes.amountEditSizes,
                     amount = amount,
-                    isEditableByKeyboard = isEditable,
+                    valueIsFocusable = isEditable,
                     tint = color,
                     onAmountChangeRequest = {
                         callback.onAmountChangeRequest(id, it)
@@ -224,7 +225,8 @@ interface ListItemCallback {
                     increaseDescription = stringResource(
                         R.string.item_amount_increase_description, name),
                     modifier = Modifier.graphicsLayer {
-                        translationX = sizes.amountEditEndOffset(expansionProgress).toPx()
+                        translationX = sizes.amountEditXOffset(
+                            isEditable, expansionProgress).toPx()
                     })
             }
             if (callback.showEditButton)

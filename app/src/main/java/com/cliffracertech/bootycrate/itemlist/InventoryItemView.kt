@@ -190,8 +190,9 @@ fun inventoryItemCallback(
             Text(stringResource(R.string.auto_add_to_shopping_list_checkbox_text),
                 style = MaterialTheme.typography.subtitle1)
             AmountEdit(
+                sizes = sizes.amountEditSizes,
                 amount = autoAddToShoppingListAmount,
-                isEditableByKeyboard = true,
+                valueIsFocusable = true,
                 tint = color,
                 decreaseDescription = stringResource(
                     R.string.item_auto_add_to_shopping_list_amount_decrease_description, name),
