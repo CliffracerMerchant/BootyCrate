@@ -4,10 +4,8 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.itemlist
 
-import androidx.compose.animation.core.animateDp
-import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
@@ -23,6 +21,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -52,6 +51,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.res.stringResource
@@ -68,20 +68,20 @@ import com.cliffracertech.bootycrate.utils.SimpleIconButton
 import kotlin.math.ceil
 
 /**
- * A text field that toggles between an unconstrained size when [readOnly] is
- * true, and a minimum touch target size when [readOnly] is false.
+ * A text field that toggles between an unconstrained size when [isEditable]
+ * is false, and a minimum touch target size when [isEditable] is true.
  *
  * @param text The text that will be displayed
  * @param onTextChange The callback that will be invoked when the user attempts
  *     to change the [text] value through input
  * @param modifier The [Modifier] that will be used for the text field
  * @param tint The tint that will be used for the text cursor
- * @param readOnly Whether or not the text field will prevent editing of the
- *     text and allow its size to fall below minimum touch target sizes
- * @param animationProgressProvider A lambda that returns the progress of a
- *     transition between values of readOnly. The returned value should be
- *     in the range of [0f, 1f], with 0f indicating that readOnly is false,
- *     and 1f indicating that readOnly is true.
+ * @param isEditable Whether or not the text field will allow keyboard
+ *     focus of the text and enforce its minimum touch target size
+ * @param isEditableTransitionProgressProvider A lambda that returns the
+ *     progress of a transition between values of isEditable. The returned
+ *     value should be in the range of [0f, 1f], with 0f indicating that
+ *     isEditable is false, and 1f indicating that isEditable is true.
  * @param textStyle The [TextStyle] that will be used for the text
 */
 @Composable fun TextFieldEdit(
@@ -89,26 +89,30 @@ import kotlin.math.ceil
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     tint: Color = LocalContentColor.current,
-    readOnly: Boolean = true,
-    animationProgressProvider: () -> Float = { if (readOnly) 0f else 1f },
+    isEditable: Boolean = true,
+    isEditableTransitionProgressProvider: () -> Float = { if (isEditable) 0f else 1f },
     textStyle: TextStyle = LocalTextStyle.current,
 ) = Box(modifier, Alignment.CenterStart) {
 
     val color = LocalContentColor.current
+
     BasicTextField(
         value = text,
         onValueChange = onTextChange,
-        modifier = Modifier.drawBehind {
-            val animationProgress = animationProgressProvider()
-            if (animationProgress == 0f)
-                return@drawBehind
-            drawLine(
-                color = color,
-                start = Offset(0f, size.height),
-                end = Offset(size.width, size.height),
-                strokeWidth = 1.dp.toPx(),
-                alpha = animationProgressProvider())
-        }, readOnly = readOnly,
+        modifier = Modifier
+            .fillMaxWidth()
+            .drawBehind {
+                val animationProgress = isEditableTransitionProgressProvider()
+                if (animationProgress == 0f)
+                    return@drawBehind
+                drawLine(
+                    color = color,
+                    start = Offset(0f, size.height),
+                    end = Offset(size.width, size.height),
+                    strokeWidth = 1.dp.toPx(),
+                    alpha = animationProgress)
+            },
+        readOnly = !isEditable,
         textStyle = textStyle,
         singleLine = true,
         cursorBrush = remember(tint) { SolidColor(tint) })
@@ -132,37 +136,34 @@ import kotlin.math.ceil
     increaseDescription: String,
     onAmountChangeRequest: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    valueIsFocusableTransitionProgress: () -> Float =
+        { if (valueIsFocusable) 1f else 0f },
 ) {
-    val isFocusableTransition = updateTransition(
-        targetState = valueIsFocusable,
-        label = "amount edit valueIsFocusable transition")
-    val width by isFocusableTransition.animateDp(
-        transitionSpec = { spring(stiffness = springStiffness) },
-        label = "amount Edit valueIsFocusable width transition",
-        targetValueByState = { sizes.width(amount, it) })
-    val underlineAlpha by isFocusableTransition.animateFloat(
-        transitionSpec = { spring(stiffness = springStiffness) },
-        label = "amount Edit valueIsFocusable underline alpha transition",
-        targetValueByState = { if (it) 1f else 0f })
     val color = LocalContentColor.current
 
-    Box(modifier = modifier.size(width, sizes.height)) {
+    Box(modifier = modifier.size(sizes.width(valueIsFocusable), sizes.height)) {
         BasicTextField(
             value = amount.toString(),
             onValueChange = { onAmountChangeRequest(it.toInt()) },
             modifier = Modifier
                 .align(Alignment.Center)
-                .drawBehind {
-                    if (underlineAlpha == 0f)
+                .width(sizes.valueWidth(valueIsFocusable))
+                .graphicsLayer {
+                    val interp = valueIsFocusableTransitionProgress()
+                    translationX = sizes.valueXOffset(valueIsFocusable, interp).toPx()
+                }.drawBehind {
+                    val interp = valueIsFocusableTransitionProgress()
+                    if (interp == 0f)
                         return@drawBehind
-                    val startX = size.width / 2f - 24.dp.toPx()
-                    val endX = startX + 48.dp.toPx()
+                    val width = (24 + 24 * interp).dp.toPx()
+                    val startX = (size.width - width) / 2f
+                    val endX = startX + width
                     drawLine(
                         color = color,
                         start = Offset(startX, size.height),
                         end = Offset(endX, size.height),
                         strokeWidth = 1.dp.toPx(),
-                        alpha = underlineAlpha)
+                        alpha = interp)
                 },
             readOnly = !valueIsFocusable,
             textStyle = sizes.textStyle,
@@ -178,7 +179,12 @@ import kotlin.math.ceil
 
         SimpleIconButton(
             onClick = { onAmountChangeRequest(amount + 1) },
-            modifier = Modifier.align(Alignment.CenterEnd),
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .graphicsLayer {
+                    val interp = valueIsFocusableTransitionProgress()
+                    translationX = sizes.increaseButtonXOffset(valueIsFocusable, interp).toPx()
+                },
             imageVector = Icons.Default.AddCircleOutline,
             description = increaseDescription)
     }
@@ -195,11 +201,15 @@ fun AmountEditPreview() = BootyCrateTheme {
         }
         var amount by remember { mutableStateOf(2) }
         var isFocusable by remember { mutableStateOf(false) }
+        val isFocusableTransitionProgress by animateFloatAsState(
+            targetValue = if (isFocusable) 1f else 0f,
+            animationSpec = spring(stiffness = springStiffness))
 
         AmountEdit(
             sizes = sizes,
             amount = amount,
             valueIsFocusable = isFocusable,
+            valueIsFocusableTransitionProgress = { isFocusableTransitionProgress },
             tint = Color.Red,
             decreaseDescription = "",
             increaseDescription = "",

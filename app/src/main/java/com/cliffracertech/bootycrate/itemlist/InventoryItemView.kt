@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -142,7 +143,7 @@ fun inventoryItemCallback(
  * @param modifier The [Modifier] that will be used for the root layout
  */
 @Composable fun InventoryItemView(
-    sizes: InventoryItemViewSizes,
+    sizes: ListItemViewSizes,
     id: Long,
     colorGroup: ListItem.ColorGroup,
     name: String,
@@ -178,7 +179,7 @@ fun inventoryItemCallback(
     ) { otherContentModifier ->
         Row(verticalAlignment = Alignment.CenterVertically,
             modifier = otherContentModifier
-                .requiredHeight(sizes.autoAddToShoppingListHeight)
+                .requiredHeight(sizes.otherContentHeight)
                 .padding(end = 48.dp)
         ) {
             AnimatedCheckbox(
@@ -219,7 +220,7 @@ fun inventoryItemCallback(
  * @param modifier The [Modifier] that will be used for the root layout
  */
 @Composable fun InventoryItemView(
-    sizes: InventoryItemViewSizes,
+    sizes: ListItemViewSizes,
     item: InventoryItem,
     isSelected: Boolean,
     selectionBrush: Brush,
@@ -237,7 +238,8 @@ fun inventoryItemCallback(
 
 @Preview @Composable
 fun InventoryItemViewPreview() = BootyCrateTheme {
-    val sizes = rememberInventoryItemViewSizes()
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val sizes = rememberInventoryItemViewSizes(screenWidth)
     var colorGroup by remember { mutableStateOf(ListItem.ColorGroup.Orange) }
     var name by remember { mutableStateOf("Test item") }
     var extraInfo by remember { mutableStateOf("Test extra info") }

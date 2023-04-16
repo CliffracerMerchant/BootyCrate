@@ -7,7 +7,6 @@ package com.cliffracertech.bootycrate.itemlist
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -32,6 +31,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.model.database.InventoryItem
@@ -95,7 +96,6 @@ interface ItemListState<T> {
             Text(state.text.resolve(LocalContext.current))
         else -> {}
     }}
-
     // The item list is outside of the AnimatedContent block so that the
     // item list will only fade in/out when listState changes to/from
     // AsyncListState.Content, instead of every time the list changes.
@@ -124,7 +124,7 @@ interface ItemListState<T> {
                 items = currentItems ?: lastNonNullItems,
                 key = ListItem::id::get
             ) {
-                val isSelected = contentState?.selectedItemIds?.contains(it.id) ?: false
+                val isSelected = contentState?.selectedItemIds?.contains(it.id) == true
                 val isExpanded = it.id == contentState?.expandedItemId
                 itemContent(it, isSelected, isExpanded)
             }
@@ -134,36 +134,27 @@ interface ItemListState<T> {
     }
 }
 
+fun PaddingValues.horizontalPadding(): Dp =
+    calculateLeftPadding(LayoutDirection.Ltr) + calculateRightPadding(LayoutDirection.Ltr)
+
 /**
  * An interactable list of [ShoppingListItemView]s.
  *
  * @param modifier The [Modifier] that will be used for the root layout
- * @param lazyListState The [LazyListState] to use for the internal [LazyColumn]
+ * @param maxWidth The maximum width constraint for the ShoppingListScreen
  * @param contentPadding The [PaddingValues] instance to use for the [LazyColumn]'s content
+ * @param lazyListState The [LazyListState] to use for the internal [LazyColumn]
  */
 @Composable fun ShoppingListScreen(
     modifier: Modifier = Modifier,
-    lazyListState: LazyListState = rememberLazyListState(),
+    maxWidth: Dp,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    lazyListState: LazyListState = rememberLazyListState(),
 ) {
     val vm: ShoppingListViewModel = viewModel()
     val startColor = MaterialTheme.colors.primary
     val endColor = MaterialTheme.colors.secondary
-    val selectionBrush = remember(startColor, endColor) {
-        Brush.horizontalGradient(listOf(startColor, endColor))
-    }
-    val itemCallback = remember {
-        shoppingListItemCallback(
-            onClick = vm::onItemClick,
-            onLongClick = vm::onItemLongClick,
-            onSwipe = vm::onItemSwipe,
-            onColorGroupClick = vm::onItemColorGroupChangeRequest,
-            onRenameRequest = vm::onItemRenameRequest,
-            onExtraInfoChangeRequest = vm::onItemExtraInfoChangeRequest,
-            onAmountChangeRequest = vm::onItemAmountChangeRequest,
-            onEditButtonClick = vm::onItemEditButtonClick,
-            onCheckboxClick = vm::onItemCheckboxClick)
-    }
+
     ItemListScreen<ShoppingListItem>(
         listState = vm.uiState,
         modifier = modifier,
@@ -171,14 +162,30 @@ interface ItemListState<T> {
         contentPadding = contentPadding,
     ) { item, isSelected, isExpanded ->
         ShoppingListItemView(
-            sizes = rememberListItemViewSizes(),
+            sizes = rememberListItemViewSizes(
+                maxWidth = maxWidth - contentPadding.horizontalPadding()),
             item = item,
             isEditable = isExpanded,
             isSelected = isSelected,
-            selectionBrush = selectionBrush,
-            callback = itemCallback,
-            modifier = Modifier.animateItemPlacement(
-                spring(stiffness = springStiffness)))
+            selectionBrush = remember(startColor, endColor) {
+                Brush.horizontalGradient(listOf(startColor, endColor))
+            }, callback = remember {
+                shoppingListItemCallback(
+                    onClick = vm::onItemClick,
+                    onLongClick = vm::onItemLongClick,
+                    onSwipe = vm::onItemSwipe,
+                    onColorGroupClick = vm::onItemColorGroupChangeRequest,
+                    onRenameRequest = vm::onItemRenameRequest,
+                    onExtraInfoChangeRequest = vm::onItemExtraInfoChangeRequest,
+                    onAmountChangeRequest = vm::onItemAmountChangeRequest,
+                    onEditButtonClick = vm::onItemEditButtonClick,
+                    onCheckboxClick = vm::onItemCheckboxClick)
+            },
+//            modifier = Modifier.animateItemPlacement(
+//                tween(tweenDuration, easing = LinearOutSlowInEasing)
+////                spring(stiffness = springStiffness)
+//            )
+        )
     }
 }
 
@@ -186,33 +193,20 @@ interface ItemListState<T> {
  * An interactable list of [InventoryItemView]s.
  *
  * @param modifier The [Modifier] that will be used for the root layout
- * @param lazyListState The [LazyListState] to use for the internal [LazyColumn]
+ * @param maxWidth The maximum width constraint for the InventoryScreen
  * @param contentPadding The [PaddingValues] instance to use for the [LazyColumn]'s content
+ * @param lazyListState The [LazyListState] to use for the internal [LazyColumn]
  */
 @Composable fun InventoryScreen(
     modifier: Modifier = Modifier,
-    lazyListState: LazyListState = rememberLazyListState(),
+    maxWidth: Dp,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    lazyListState: LazyListState = rememberLazyListState(),
 ) {
     val vm: InventoryViewModel = viewModel()
     val startColor = MaterialTheme.colors.primary
     val endColor = MaterialTheme.colors.secondary
-    val selectionBrush = remember(startColor, endColor) {
-        Brush.horizontalGradient(listOf(startColor, endColor))
-    }
-    val itemCallback = remember {
-        inventoryItemCallback(
-            onClick = vm::onItemClick,
-            onLongClick = vm::onItemLongClick,
-            onSwipe = vm::onItemSwipe,
-            onColorGroupClick = vm::onItemColorGroupChangeRequest,
-            onRenameRequest = vm::onItemRenameRequest,
-            onExtraInfoChangeRequest = vm::onItemExtraInfoChangeRequest,
-            onAmountChangeRequest = vm::onItemAmountChangeRequest,
-            onEditButtonClick = vm::onItemEditButtonClick,
-            onAutoAddToShoppingListCheckboxClick = vm::onAutoAddToShoppingListCheckboxClick,
-            onAutoAddToShoppingListAmountChangeRequest = vm::onAutoAddToShoppingListAmountChangeRequest)
-    }
+
     ItemListScreen<InventoryItem>(
         listState = vm.uiState,
         modifier = modifier,
@@ -220,13 +214,30 @@ interface ItemListState<T> {
         contentPadding = contentPadding,
     ) { item, isSelected, isExpanded ->
         InventoryItemView(
-            sizes = rememberInventoryItemViewSizes(),
+            sizes = rememberInventoryItemViewSizes(
+                maxWidth - contentPadding.horizontalPadding()),
             item = item,
             isEditable = isExpanded,
             isSelected = isSelected,
-            selectionBrush = selectionBrush,
-            callback = itemCallback,
-            modifier = Modifier.animateItemPlacement(
-                spring(stiffness = springStiffness)))
+            selectionBrush = remember(startColor, endColor) {
+                Brush.horizontalGradient(listOf(startColor, endColor))
+            }, callback = remember {
+                inventoryItemCallback(
+                    onClick = vm::onItemClick,
+                    onLongClick = vm::onItemLongClick,
+                    onSwipe = vm::onItemSwipe,
+                    onColorGroupClick = vm::onItemColorGroupChangeRequest,
+                    onRenameRequest = vm::onItemRenameRequest,
+                    onExtraInfoChangeRequest = vm::onItemExtraInfoChangeRequest,
+                    onAmountChangeRequest = vm::onItemAmountChangeRequest,
+                    onEditButtonClick = vm::onItemEditButtonClick,
+                    onAutoAddToShoppingListCheckboxClick = vm::onAutoAddToShoppingListCheckboxClick,
+                    onAutoAddToShoppingListAmountChangeRequest = vm::onAutoAddToShoppingListAmountChangeRequest)
+            },
+//            modifier = Modifier.animateItemPlacement(
+//                tween(tweenDuration, easing = LinearOutSlowInEasing)
+//                spring(stiffness = springStiffness)
+//            )
+        )
     }
 }

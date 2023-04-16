@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -229,7 +230,8 @@ fun shoppingListItemCallback(
 
 @Preview @Composable
 fun ShoppingListItemViewPreview() = BootyCrateTheme {
-    val sizes = rememberListItemViewSizes()
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val sizes = rememberListItemViewSizes(screenWidth)
     var colorGroup by remember { mutableStateOf(ListItem.ColorGroup.Orange) }
     var name by remember { mutableStateOf("Test item") }
     var extraInfo by remember { mutableStateOf("Test extra info") }

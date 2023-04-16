@@ -17,7 +17,7 @@ import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideOut
 import androidx.compose.animation.with
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -126,10 +127,11 @@ class MainActivity : ComponentActivity() {
                     BootyCrateActionBar(onUnhandledBackButtonClick = ::onBackPressed)
                 },
             ) { padding ->
-                Box(Modifier.fillMaxSize()) {
+                BoxWithConstraints(Modifier.fillMaxSize()) {
                     MainContent(
                         visibleScreen = viewModel.visibleScreen,
                         modifier = Modifier.padding(padding),
+                        maxWidth = maxWidth,
                         contentPadding = PaddingValues(start = 8.dp, top = 8.dp,
                                                        end = 8.dp, bottom = 64.dp))
                     BootyCrateBottomAppDrawer(
@@ -175,6 +177,7 @@ class MainActivity : ComponentActivity() {
     @Composable fun MainContent(
         visibleScreen: NavigationState.Screen,
         modifier: Modifier = Modifier,
+        maxWidth: Dp,
         contentPadding: PaddingValues,
     ) {
         var lastScreen by remember { mutableStateOf(visibleScreen) }
@@ -207,9 +210,9 @@ class MainActivity : ComponentActivity() {
             }
         ) { when {
             it.isShoppingList ->
-                ShoppingListScreen(Modifier, shoppingListScrollState, contentPadding)
+                ShoppingListScreen(Modifier, maxWidth, contentPadding, shoppingListScrollState)
             it.isInventory ->
-                InventoryScreen(Modifier, inventoryScrollState, contentPadding)
+                InventoryScreen(Modifier, maxWidth, contentPadding, inventoryScrollState)
             it.isAppSettings -> {
                 val settingsScrollState = rememberLazyListState()
             }

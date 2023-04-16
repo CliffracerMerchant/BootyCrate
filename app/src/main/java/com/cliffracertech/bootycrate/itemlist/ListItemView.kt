@@ -17,7 +17,6 @@ import androidx.compose.animation.with
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -25,6 +24,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
 import androidx.compose.material.ListItem
 import androidx.compose.material.MaterialTheme
@@ -167,7 +167,7 @@ interface ListItemCallback {
                 callback.onColorGroupClick(id, it)
                 showColorPicker = false
             }
-        else Box {
+        else Box(Modifier.heightIn(min = 48.dp)) {
             val expansionProgress by animateFloatAsState(
                 targetValue = if (isEditable) 1f else 0f,
                 animationSpec = spring(stiffness = springStiffness))
@@ -178,57 +178,71 @@ interface ListItemCallback {
 
             val isCollapsed by remember { derivedStateOf { expansionProgress > 0f }}
 
-            Row(Modifier.heightIn(min = 48.dp)) {
-                colorIndicator(
-                    modifier = Modifier.graphicsLayer {
-                        translationY = sizes.colorIndicatorTopOffset(expansionProgress).toPx()
-                    }, isCollapsed = isCollapsed,
-                    showColorPicker = { showColorPicker = true })
-                Box(Modifier.weight(1f)) {
+            colorIndicator(
+                modifier = Modifier.graphicsLayer {
+                    translationY = sizes.colorIndicatorTopOffset(expansionProgress).toPx()
+                }, isCollapsed = isCollapsed,
+                showColorPicker = { showColorPicker = true })
+
+            // We want the text fields to stay at their expanded editable widths until
+            // the view is fully collapsed to prevent the underlines from noticeably
+            // changing in width at the beginning of the collapse animation.
+            val textFieldWidth by remember { derivedStateOf {
+                sizes.textFieldWidth(isEditable = expansionProgress > 0f)
+            }}
+            Box(Modifier
+                .width(textFieldWidth)
+                .offset(x = sizes.colorIndicatorSize)
+            ) {
+                TextFieldEdit(
+                    text = name,
+                    onTextChange = { callback.onRenameRequest(id, it) },
+                    modifier = Modifier
+                        .height(sizes.nameHeight(isEditable))
+                        .graphicsLayer {
+                            translationY = sizes.nameOffsetY(
+                                isEditable, extraInfo.isBlank(), expansionProgress).toPx()
+                        },
+                    tint = color,
+                    isEditable = !isEditable,
+                    isEditableTransitionProgressProvider = { expansionProgress },
+                    textStyle = sizes.nameTextStyle)
+                val extraInfoEditVisible by remember { derivedStateOf {
+                    expansionProgress > 0f || extraInfo.isNotBlank()
+                }}
+                if (extraInfoEditVisible)
                     TextFieldEdit(
-                        text = name,
-                        onTextChange = { callback.onRenameRequest(id, it) },
+                        text = extraInfo,
+                        onTextChange = { callback.onExtraInfoChangeRequest(id, it) },
                         modifier = Modifier
-                            .height(sizes.nameHeight(isEditable))
+                            .height(sizes.extraInfoHeight(isEditable))
                             .graphicsLayer {
-                                translationY = sizes.nameTopOffset(
-                                    isEditable, extraInfo.isBlank(), expansionProgress).toPx()
+                                translationY = sizes.extraInfoOffsetY(
+                                    isEditable, expansionProgress).toPx()
                             },
                         tint = color,
-                        readOnly = !isEditable,
-                        animationProgressProvider = { expansionProgress },
-                        textStyle = sizes.nameTextStyle)
-                    if (isEditable || extraInfo.isNotBlank())
-                        TextFieldEdit(
-                            text = extraInfo,
-                            onTextChange = { callback.onExtraInfoChangeRequest(id, it) },
-                            modifier = Modifier
-                                .height(sizes.extraInfoHeight(isEditable))
-                                .graphicsLayer {
-                                    translationY = sizes.extraInfoTopOffset(
-                                        isEditable, expansionProgress).toPx()
-                                },
-                            tint = color,
-                            readOnly = !isEditable,
-                            animationProgressProvider = { expansionProgress },
-                            textStyle = sizes.extraInfoTextStyle)
-                }
-                AmountEdit(
-                    sizes = sizes.amountEditSizes,
-                    amount = amount,
-                    valueIsFocusable = isEditable,
-                    tint = color,
-                    onAmountChangeRequest = {
-                        callback.onAmountChangeRequest(id, it)
-                    }, decreaseDescription = stringResource(
-                        R.string.item_amount_decrease_description, name),
-                    increaseDescription = stringResource(
-                        R.string.item_amount_increase_description, name),
-                    modifier = Modifier.graphicsLayer {
-                        translationX = sizes.amountEditXOffset(
+                        isEditable = !isEditable,
+                        isEditableTransitionProgressProvider = { expansionProgress },
+                        textStyle = sizes.extraInfoTextStyle)
+            }
+            AmountEdit(
+                sizes = sizes.amountEditSizes,
+                amount = amount,
+                valueIsFocusable = isEditable,
+                valueIsFocusableTransitionProgress = { expansionProgress },
+                tint = color,
+                onAmountChangeRequest = {
+                    callback.onAmountChangeRequest(id, it)
+                }, decreaseDescription = stringResource(
+                    R.string.item_amount_decrease_description, name),
+                increaseDescription = stringResource(
+                    R.string.item_amount_increase_description, name),
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .graphicsLayer {
+                        translationX = sizes.amountEditOffsetX(
                             isEditable, expansionProgress).toPx()
                     })
-            }
             if (callback.showEditButton)
                 AnimatedEditToCloseButton(
                     onClick = { callback.onEditButtonClick(id) },
@@ -236,7 +250,7 @@ interface ListItemCallback {
                         .align(Alignment.TopEnd)
                         .requiredSize(48.dp)
                         .graphicsLayer {
-                            translationY = sizes.editButtonTopOffset(expansionProgress).toPx()
+                            translationY = sizes.editButtonOffsetY(expansionProgress).toPx()
                         },
                     isEditable = isEditable,
                     itemName = name)
