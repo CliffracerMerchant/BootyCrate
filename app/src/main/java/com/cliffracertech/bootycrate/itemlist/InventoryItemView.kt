@@ -168,7 +168,7 @@ fun inventoryItemCallback(
         amount, isLinked, isEditable,
         isSelected, selectionBrush,
         callback, modifier,
-        colorIndicator = { colorIndicatorModifier, _, showColorPicker ->
+        colorIndicator = { _, showColorPicker, colorIndicatorModifier ->
             ColorIndicator(
                 color = color,
                 clickLabel = stringResource(

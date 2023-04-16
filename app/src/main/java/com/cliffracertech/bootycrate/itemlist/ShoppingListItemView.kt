@@ -184,12 +184,12 @@ fun shoppingListItemCallback(
     amount, isLinked, isEditable,
     isSelected, selectionBrush,
     callback, modifier,
-    colorIndicator = { colorIndicatorModifier, isCollapsed, showColorPicker ->
+    colorIndicator = { isCollapsed, showColorPicker, colorIndicatorModifier ->
         val colors = ListItem.ColorGroup.colors()
         val color = colors.getOrElse(colorGroup.ordinal) { colors.first() }
         CheckboxAndColorIndicator(
             showCheckbox = !isEditable,
-            wasShowingCheckbox = !isCollapsed,
+            wasShowingCheckbox = isCollapsed,
             tint = color,
             checked = isChecked,
             checkboxClickLabel = stringResource(

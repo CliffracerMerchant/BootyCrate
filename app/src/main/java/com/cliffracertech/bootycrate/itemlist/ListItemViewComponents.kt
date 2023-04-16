@@ -78,7 +78,7 @@ import kotlin.math.ceil
  * @param tint The tint that will be used for the text cursor
  * @param isEditable Whether or not the text field will allow keyboard
  *     focus of the text and enforce its minimum touch target size
- * @param isEditableTransitionProgressProvider A lambda that returns the
+ * @param editableTransitionProgressGetter A lambda that returns the
  *     progress of a transition between values of isEditable. The returned
  *     value should be in the range of [0f, 1f], with 0f indicating that
  *     isEditable is false, and 1f indicating that isEditable is true.
@@ -90,7 +90,7 @@ import kotlin.math.ceil
     modifier: Modifier = Modifier,
     tint: Color = LocalContentColor.current,
     isEditable: Boolean = true,
-    isEditableTransitionProgressProvider: () -> Float = { if (isEditable) 0f else 1f },
+    editableTransitionProgressGetter: () -> Float = { if (isEditable) 0f else 1f },
     textStyle: TextStyle = LocalTextStyle.current,
 ) = Box(modifier, Alignment.CenterStart) {
 
@@ -102,7 +102,7 @@ import kotlin.math.ceil
         modifier = Modifier
             .fillMaxWidth()
             .drawBehind {
-                val animationProgress = isEditableTransitionProgressProvider()
+                val animationProgress = editableTransitionProgressGetter()
                 if (animationProgress == 0f)
                     return@drawBehind
                 drawLine(
@@ -136,7 +136,7 @@ import kotlin.math.ceil
     increaseDescription: String,
     onAmountChangeRequest: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    valueIsFocusableTransitionProgress: () -> Float =
+    valueIsFocusableTransitionProgressGetter: () -> Float =
         { if (valueIsFocusable) 1f else 0f },
 ) {
     val color = LocalContentColor.current
@@ -149,10 +149,10 @@ import kotlin.math.ceil
                 .align(Alignment.Center)
                 .width(sizes.valueWidth(valueIsFocusable))
                 .graphicsLayer {
-                    val interp = valueIsFocusableTransitionProgress()
+                    val interp = valueIsFocusableTransitionProgressGetter()
                     translationX = sizes.valueXOffset(valueIsFocusable, interp).toPx()
                 }.drawBehind {
-                    val interp = valueIsFocusableTransitionProgress()
+                    val interp = valueIsFocusableTransitionProgressGetter()
                     if (interp == 0f)
                         return@drawBehind
                     val width = (24 + 24 * interp).dp.toPx()
@@ -182,7 +182,7 @@ import kotlin.math.ceil
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .graphicsLayer {
-                    val interp = valueIsFocusableTransitionProgress()
+                    val interp = valueIsFocusableTransitionProgressGetter()
                     translationX = sizes.increaseButtonXOffset(valueIsFocusable, interp).toPx()
                 },
             imageVector = Icons.Default.AddCircleOutline,
@@ -209,7 +209,7 @@ fun AmountEditPreview() = BootyCrateTheme {
             sizes = sizes,
             amount = amount,
             valueIsFocusable = isFocusable,
-            valueIsFocusableTransitionProgress = { isFocusableTransitionProgress },
+            valueIsFocusableTransitionProgressGetter = { isFocusableTransitionProgress },
             tint = Color.Red,
             decreaseDescription = "",
             increaseDescription = "",
