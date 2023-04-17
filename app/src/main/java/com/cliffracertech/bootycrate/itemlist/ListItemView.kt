@@ -186,11 +186,7 @@ private fun BoxScope.ListItemViewEditCollapseButton(
 }
 
 @Composable
-private fun BoxScope.ListItemViewLinkedIndicator(show: Boolean) {
-    val linkedIndicatorAppearanceProgress by animateFloatAsState(
-        targetValue = if (show) 1f else 0f,
-        animationSpec = spring(stiffness = springStiffness))
-    if (linkedIndicatorAppearanceProgress == 0f) return
+private fun BoxScope.ListItemViewLinkedIndicator(appearanceProgress: () -> Float) =
     Icon(imageVector = Icons.Default.Link,
         contentDescription = null,
         modifier = Modifier
@@ -199,10 +195,9 @@ private fun BoxScope.ListItemViewLinkedIndicator(show: Boolean) {
             .padding(12.dp)
             .offset(x = (-48).dp, y = 48.dp)
             .graphicsLayer {
-                alpha = linkedIndicatorAppearanceProgress
-                translationY = -24.dp.toPx() * (1f - linkedIndicatorAppearanceProgress)
+                alpha = appearanceProgress()
+                translationY = -24.dp.toPx() * (1f - alpha)
             })
-}
 
 /** The inner content for a ListItemView when it is not showing its color picker. */
 @Composable private fun ListItemViewRegularContent(
@@ -248,8 +243,13 @@ private fun BoxScope.ListItemViewLinkedIndicator(show: Boolean) {
         sizes, isEditable,
         { expansionProgress },
         id, name, callback)
-    ListItemViewLinkedIndicator(
-        show = isEditable && isLinked)
+
+    val linkedIndicatorAppearanceProgress by animateFloatAsState(
+        targetValue = if (isEditable && isLinked) 1f else 0f,
+        animationSpec = spring(stiffness = springStiffness))
+    if (linkedIndicatorAppearanceProgress > 0f)
+        ListItemViewLinkedIndicator{ linkedIndicatorAppearanceProgress }
+
     if (!isCollapsed)
         otherContent(Modifier.graphicsLayer {
             translationY = sizes.otherContentTopOffset(expansionProgress).toPx()
