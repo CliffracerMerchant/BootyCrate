@@ -100,8 +100,10 @@ class ListItemViewSizes(
     /** The y offset of the name when it is not editable and the extra
      * info is not blank. This will often be 0.dp, but may be a non-zero
      * value for small enough text sizes. */
-    private val uneditableNameOffsetY =
-        (maxOf(48.dp, uneditableNameHeight + uneditableExtraInfoHeight) - uneditableNameHeight - uneditableExtraInfoHeight) / 2f
+    private val uneditableNameOffsetY = run {
+        val textFieldsHeight = uneditableNameHeight + uneditableExtraInfoHeight
+        (maxOf(48.dp, textFieldsHeight) - textFieldsHeight) / 2f
+    }
     /** The y offset of the name when it is not editable and the extra
      * info is blank. This will usually be more than 0.dp, but may be
      * zero for large text sizes. */
@@ -144,7 +146,7 @@ class ListItemViewSizes(
 
     private val colorIndicatorMaxTopOffset =
         (editableNameHeight + editableExtraInfoHeight - 48.dp) / 2f
-    fun colorIndicatorTopOffset(interpolation: Float) =
+    fun colorIndicatorOffsetY(interpolation: Float) =
         colorIndicatorMaxTopOffset * interpolation
 
     private val amountEditMaxOffsetX = editableTextFieldWidth - uneditableTextFieldWidth
@@ -156,7 +158,7 @@ class ListItemViewSizes(
 
     private val otherContentMaxTopOffset =
         editableNameHeight + editableExtraInfoHeight
-    fun otherContentTopOffset(interpolation: Float) =
+    fun otherContentOffsetY(interpolation: Float) =
         otherContentMaxTopOffset * (interpolation / 2f + 0.5f)
 
     private val editButtonMaxYOffset = editableHeight - uneditableHeight

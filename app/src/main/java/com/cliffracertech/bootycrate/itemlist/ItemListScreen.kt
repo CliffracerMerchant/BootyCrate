@@ -77,8 +77,8 @@ interface ItemListState<T> {
     contentPadding: PaddingValues = PaddingValues(0.dp),
     itemContent: @Composable LazyItemScope.(
             item: T,
+            isExpanded: Boolean,
             isSelected: Boolean,
-            isExpanded: Boolean
         ) -> Unit,
 ) = Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     // AnimatedContent is used here instead of Crossfade due
@@ -105,13 +105,12 @@ interface ItemListState<T> {
         exit = fadeOut(tween(tweenDuration, easing = LinearEasing)),
     ) {
         @Suppress("unchecked_cast")
-        val contentState = listState as? AsyncListState.Content<T>
-        val currentItems = contentState?.items
+        val contentState = listState as? AsyncListState.Content<T> ?: return@AnimatedVisibility
+        val currentItems = contentState.items
         // Because LazyColumn does not have appearance/disappearance animations
         // for items, lastNonNullItems is used so that the last non-null list of
         // items will fade out when listState changes from AsyncListState.Content
         // to one of the other types instead of the items abruptly disappearing.
-        var lastNonNullItems = remember { currentItems ?: emptyList() }
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -121,16 +120,14 @@ interface ItemListState<T> {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             items(
-                items = currentItems ?: lastNonNullItems,
-                key = ListItem::id::get
+                items = currentItems,
+                key = ListItem::id::get,
             ) {
-                val isSelected = contentState?.selectedItemIds?.contains(it.id) == true
-                val isExpanded = it.id == contentState?.expandedItemId
-                itemContent(it, isSelected, isExpanded)
+                val isExpanded = contentState.expandedItemId == it.id
+                val isSelected = it.id in contentState.selectedItemIds
+                itemContent(it, isExpanded, isSelected)
             }
         }
-        if (currentItems != null)
-            lastNonNullItems = currentItems
     }
 }
 
@@ -160,7 +157,7 @@ fun PaddingValues.horizontalPadding(): Dp =
         modifier = modifier,
         lazyListState = lazyListState,
         contentPadding = contentPadding,
-    ) { item, isSelected, isExpanded ->
+    ) { item, isExpanded, isSelected ->
         ShoppingListItemView(
             sizes = rememberListItemViewSizes(
                 maxWidth = maxWidth - contentPadding.horizontalPadding()),
@@ -212,7 +209,7 @@ fun PaddingValues.horizontalPadding(): Dp =
         modifier = modifier,
         lazyListState = lazyListState,
         contentPadding = contentPadding,
-    ) { item, isSelected, isExpanded ->
+    ) { item, isExpanded, isSelected ->
         InventoryItemView(
             sizes = rememberInventoryItemViewSizes(
                 maxWidth - contentPadding.horizontalPadding()),
