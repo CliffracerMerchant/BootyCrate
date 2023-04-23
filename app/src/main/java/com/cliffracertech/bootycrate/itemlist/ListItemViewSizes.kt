@@ -129,7 +129,7 @@ class ListItemViewSizes(
         else            uneditableTextFieldWidth
 
     private val colorIndicatorMinOffsetY: Dp =
-        maxOf(uneditableTextFieldsHeight, 48.dp) - 48.dp / 2f
+        (maxOf(uneditableTextFieldsHeight, 48.dp) - 48.dp) / 2f
     private val colorIndicatorOffsetYChange: Dp = run {
         val maxOffset = (editableTextFieldsHeight - 48.dp) / 2f
         maxOffset - colorIndicatorMinOffsetY
@@ -246,7 +246,9 @@ class ListItemViewSizes(
     val density = LocalDensity.current
     val fontFamilyResolver = LocalFontFamilyResolver.current
     val otherContentHeight = remember {
-        singleLineTextSize("A", amountTextStyle, density, fontFamilyResolver).height
+        val textSize = singleLineTextSize(
+            "A", amountTextStyle, density, fontFamilyResolver)
+        maxOf(textSize.height, 48.dp)
     }
     return rememberListItemViewSizes(
         maxWidth, verticalPadding, otherContentHeight,
