@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
@@ -58,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
@@ -83,19 +83,18 @@ import kotlin.math.ceil
  *     value should be in the range of [0f, 1f], with 0f indicating that
  *     isEditable is false, and 1f indicating that isEditable is true.
  * @param textStyle The [TextStyle] that will be used for the text
-*/
+ */
 @Composable fun TextFieldEdit(
     text: String,
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     tint: Color = LocalContentColor.current,
     isEditable: Boolean = true,
-    editableTransitionProgressGetter: () -> Float = { if (isEditable) 0f else 1f },
+    editableTransitionProgressGetter: () -> Float = { if (isEditable) 1f else 0f },
     textStyle: TextStyle = LocalTextStyle.current,
 ) = Box(modifier, Alignment.CenterStart) {
 
     val color = LocalContentColor.current
-
     BasicTextField(
         value = text,
         onValueChange = onTextChange,
@@ -103,30 +102,35 @@ import kotlin.math.ceil
             .fillMaxWidth()
             .drawBehind {
                 val animationProgress = editableTransitionProgressGetter()
-                if (animationProgress == 0f)
-                    return@drawBehind
-                drawLine(
-                    color = color,
-                    start = Offset(0f, size.height),
-                    end = Offset(size.width, size.height),
-                    strokeWidth = 1.dp.toPx(),
-                    alpha = animationProgress)
+                if (animationProgress != 0f)
+                    drawLine(
+                        color = color,
+                        start = Offset(0f, size.height),
+                        end = Offset(size.width, size.height),
+                        strokeWidth = 1.dp.toPx(),
+                        alpha = animationProgress)
             },
-        readOnly = !isEditable,
+        enabled = isEditable,
         textStyle = textStyle,
         singleLine = true,
         cursorBrush = remember(tint) { SolidColor(tint) })
 }
 
 /**
-* An editor for an Int [amount] that displays decrease and increase buttons on
-* either side of the amount, and allows direct keyboard editing of the value
-* when [valueIsFocusable] is true. [decreaseDescription] and [increaseDescription]
-* will be used as the content descriptions for the decrease and increase buttons,
-* respectively, while [tint] will be used to tint the text cursor when the amount
-* is being edited via the keyboard. An attempt to change the amount either by
-* keyboard or the buttons will cause [onAmountChangeRequest] to be invoked.
-*/
+ * An editor for an Int [amount] that displays decrease and increase buttons on
+ * either side of the amount, and allows direct keyboard editing of the value
+ * when [valueIsFocusable] is true. [decreaseDescription] and [increaseDescription]
+ * will be used as the content descriptions for the decrease and increase buttons,
+ * respectively, while [tint] will be used to tint the text cursor when the amount
+ * is being edited via the keyboard. An attempt to change the amount either by
+ * keyboard or the buttons will cause [onAmountChangeRequest] to be invoked.
+ *
+ * The optional [valueIsFocusableTransitionProgressGetter] should return the
+ * progress of a transition between [valueIsFocusable] states in the range of
+ * [0f, 1f] (corresponding to the unfocusable and focusable states, respectively).
+ * If provided, this will allow the AmountEdit to smoothly animate between the
+ * two states.
+ */
 @Composable fun AmountEdit(
     sizes: AmountEditSizes,
     amount: Int,
@@ -165,7 +169,7 @@ import kotlin.math.ceil
                         strokeWidth = 1.dp.toPx(),
                         alpha = interp)
                 },
-            readOnly = !valueIsFocusable,
+            enabled = valueIsFocusable,
             textStyle = sizes.textStyle,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
@@ -195,7 +199,7 @@ fun AmountEditPreview() = BootyCrateTheme {
     Row {
         val density = LocalDensity.current
         val fontFamilyResolver = LocalFontFamilyResolver.current
-        val textStyle = MaterialTheme.typography.body1
+        val textStyle = MaterialTheme.typography.body1.copy(textAlign = TextAlign.Center)
         val sizes = remember {
             AmountEditSizes(textStyle, fontFamilyResolver, density)
         }
@@ -221,7 +225,6 @@ fun AmountEditPreview() = BootyCrateTheme {
             onClick = { isFocusable = !isFocusable },
             imageVector = Icons.Default.Edit,
             description = null)
-
     }
 }
 
@@ -288,19 +291,19 @@ fun AmountEditPreview() = BootyCrateTheme {
         itemsIndexed(colors) { index, color ->
             val label = stringResource(R.string.color_picker_option_description,
                                        colorDescriptions[index])
-            Box(Modifier
-                .requiredSize(48.dp)
-                .clip(CircleShape)
-                .clickable(
-                    role = Role.Button,
-                    onClick = { onColorClick(index, color) },
-                    onClickLabel = label)
-                .padding(10.dp)
-                .background(color, CircleShape)
+            Box(modifier = Modifier
+                    .requiredSize(48.dp)
+                    .clip(CircleShape)
+                    .clickable(
+                        role = Role.Button,
+                        onClick = { onColorClick(index, color) },
+                        onClickLabel = label)
+                    .padding(10.dp)
+                    .background(color, CircleShape),
+                contentAlignment = Alignment.Center
             ) {
                 if (color == currentColor)
-                    // The check mark's offset makes it appear more centered
-                    Icon(Icons.Default.Check, null, Modifier.offset(1.dp, 2.dp))
+                    Icon(Icons.Default.Check, null)
             }
         }
     }
@@ -332,6 +335,7 @@ fun ColorPickerPreview() = BootyCrateTheme {
     val descriptions = ListItem.ColorGroup.descriptions()
     Surface(shape = MaterialTheme.shapes.large) {
         ColorPicker(
+            modifier = Modifier.padding(vertical = 8.dp),
             currentColor = currentColor,
             colors = colors,
             colorDescriptions = descriptions,
