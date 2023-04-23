@@ -19,9 +19,11 @@ import androidx.compose.animation.with
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -120,12 +122,22 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setThemedContent {
             val scaffoldState = rememberScaffoldState()
+            val bottomBarAdditionalPadding =
+                WindowInsets.navigationBars
+                    .asPaddingValues(LocalDensity.current)
+                    .calculateBottomPadding()
             MessageDisplayer(this, scaffoldState.snackbarHostState, viewModel.messages)
             Scaffold(
                 scaffoldState = scaffoldState,
                 topBar = {
                     BootyCrateActionBar(onUnhandledBackButtonClick = ::onBackPressed)
-                },
+                }, bottomBar = {
+                    // The BootyCrateBottomAppDrawer is added in the regular content
+                    // section to have more control over it's placement. This spacer
+                    // is intended to match the bottom drawer's height in its collapsed
+                    // state to ensure proper snackbar placement.
+                    Spacer(Modifier.height(56.dp + bottomBarAdditionalPadding))
+                }
             ) { padding ->
                 BoxWithConstraints(Modifier.fillMaxSize()) {
                     MainContent(
@@ -136,9 +148,7 @@ class MainActivity : ComponentActivity() {
                                                        end = 8.dp, bottom = 64.dp))
                     BootyCrateBottomAppDrawer(
                         modifier = Modifier.align(Alignment.BottomStart),
-                        additionalPeekHeight = WindowInsets.navigationBars
-                            .asPaddingValues(LocalDensity.current)
-                            .calculateBottomPadding())
+                        additionalPeekHeight = bottomBarAdditionalPadding)
                 }
             }
         }
