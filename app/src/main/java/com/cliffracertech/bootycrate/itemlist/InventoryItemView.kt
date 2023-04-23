@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.InventoryItem
@@ -56,24 +58,33 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
     .background(color, CircleShape))
 
 /** A [tint]ed checkbox that animates when its [checked] state changes, invokes
- * [onClick] when clicked and uses [onClickLabel] to describe its click action. */
+ * [onClick] when clicked and uses [onClickLabel] to describe its click action.
+ * If [label] is not null, a label will be displayed to the right (in Ltr layouts)
+ * of the checkbox with a text style matching [labelTextStyle]. */
 @Composable fun AnimatedCheckbox(
     checked: Boolean,
     onClick: () -> Unit,
     onClickLabel: String,
     tint: Color,
     modifier: Modifier = Modifier,
-) = Box(modifier
-    .minTouchTargetSize()
-    .clip(MaterialTheme.shapes.small)
-    .clickable(true, onClickLabel, Role.Checkbox, onClick)
-    .padding(12.dp)
+    label: String? = null,
+    labelTextStyle: TextStyle = MaterialTheme.typography.subtitle1,
+) = Row(
+    modifier = modifier
+        .minTouchTargetSize()
+        .clip(CircleShape)
+        .clickable(true, onClickLabel, Role.Checkbox, onClick),
+    verticalAlignment = Alignment.CenterVertically
 ) {
-    val vector = AnimatedImageVector.animatedVectorResource(
-        R.drawable.animated_checkbox_unchecked_to_checked_background)
-    Icon(painter = rememberAnimatedVectorPainter(vector, checked),
-         contentDescription = null, tint = tint)
-    AnimatedCheckmark(checked)
+    Box(Modifier.size(48.dp).padding(11.dp)) {
+        val vector = AnimatedImageVector.animatedVectorResource(
+            R.drawable.animated_checkbox_unchecked_to_checked_background)
+        Icon(painter = rememberAnimatedVectorPainter(vector, checked),
+             contentDescription = null, tint = tint)
+        AnimatedCheckmark(checked)
+    }
+    if (label != null)
+        Text(label, style = labelTextStyle)
 }
 
 /** An interface containing callbacks for InventoryItem related interactions. */
@@ -188,9 +199,8 @@ fun inventoryItemCallback(
                 onClick = { callback.onAutoAddToShoppingListCheckboxClick(id) },
                 onClickLabel = stringResource(
                     R.string.item_auto_add_to_shopping_list_checkbox_description, name),
-                tint = color)
-            Text(stringResource(R.string.auto_add_to_shopping_list_checkbox_text),
-                style = MaterialTheme.typography.subtitle1)
+                tint = color,
+                label = stringResource(R.string.auto_add_to_shopping_list_checkbox_text))
             AmountEdit(
                 sizes = sizes.amountEditSizes,
                 amount = autoAddToShoppingListAmount,
