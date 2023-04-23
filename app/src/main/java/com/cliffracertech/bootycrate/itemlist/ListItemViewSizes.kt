@@ -242,9 +242,16 @@ class ListItemViewSizes(
     nameTextStyle: TextStyle = MaterialTheme.typography.body1,
     extraInfoTextStyle: TextStyle = MaterialTheme.typography.subtitle1,
     amountTextStyle: TextStyle = MaterialTheme.typography.h6.copy(textAlign = TextAlign.Center)
-) = rememberListItemViewSizes(
-    maxWidth, verticalPadding, otherContentHeight = 48.dp,
-    nameTextStyle, extraInfoTextStyle, amountTextStyle)
+): ListItemViewSizes {
+    val density = LocalDensity.current
+    val fontFamilyResolver = LocalFontFamilyResolver.current
+    val otherContentHeight = remember {
+        singleLineTextSize("A", amountTextStyle, density, fontFamilyResolver).height
+    }
+    return rememberListItemViewSizes(
+        maxWidth, verticalPadding, otherContentHeight,
+        nameTextStyle, extraInfoTextStyle, amountTextStyle)
+}
 
 /**
  * A container for size measurements for an [AmountEdit].
