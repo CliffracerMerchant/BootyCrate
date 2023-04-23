@@ -124,6 +124,7 @@ fun inventoryItemCallback(
  * A visual display of an [InventoryItem] that also allows user
  * interactions to e.g. change the [InventoryItem]'s state.
  *
+ * @param sizes The [ListItemViewSizes] instance to use for the view
  * @param id The [ListItem.id] for the item
  * @param colorGroup The [ListItem.ColorGroup] that the item belongs to
  * @param name The name of the displayed item
@@ -210,11 +211,12 @@ fun inventoryItemCallback(
  * A visual display of an [InventoryItem] that also allows user
  * interactions to e.g. change the [InventoryItem]'s state.
  *
+ * @param sizes The [ListItemViewSizes] instance to use for the view
  * @param item The [InventoryItem] instance whose data is being displayed
+ * @param isEditable Whether or not the item will present itself in its editable state
  * @param isSelected Whether or not the item is selected
  * @param selectionBrush The [Brush] that will be shown at half
  *     opacity over the normal background when isSelected is true
- * @param isEditable Whether or not the item will present itself in its editable state
  * @param callback The [InventoryItemCallback] whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
@@ -222,9 +224,9 @@ fun inventoryItemCallback(
 @Composable fun InventoryItemView(
     sizes: ListItemViewSizes,
     item: InventoryItem,
+    isEditable: Boolean,
     isSelected: Boolean,
     selectionBrush: Brush,
-    isEditable: Boolean,
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
 ) = InventoryItemView(

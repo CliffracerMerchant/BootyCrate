@@ -41,131 +41,180 @@ private fun singleLineTextSize(
     }
 }
 
+/**
+ * A container for size measurements for a [ListItemView].
+ *
+ * The entire [ListItemView]'s height and vertical padding should match the
+ * value returned by [height] and the value of [verticalPadding], respectively.
+ * The [ListItemView]'s sub-components should use the sizes, widths, or heights
+ * returned by [colorIndicatorSize], [nameHeight], [extraInfoHeight], and
+ * [textFieldWidth] (which applies to both the name and extra info). Likewise,
+ * the sub-components should have an x or y offset applied in a graphical layer
+ * that matches the [Dp] values returned by [colorIndicatorOffsetY], [nameOffsetY],
+ * [extraInfoOffsetY], [amountEditOffsetX], [otherContentOffsetY], and
+ * [editButtonOffsetY].
+ *
+ * @param maxWidth The maximum [Dp] width that the [ListItemView] should take up
+ * @param verticalPadding The vertical padding that the [ListItemView] should have
+ * @param otherContentHeight The [Dp] height of the other content that will be
+ *     displayed at the bottom of the [ListItemView] when in its expanded state
+ * @param nameTextStyle The text style that the name text field should use
+ * @param extraInfoTextStyle The text style that the extra info text field should use
+ * @param amountTextStyle The text style that the amount edit's value should use
+ * @param fontFamilyResolver The local [FontFamily.Resolver] in use
+ * @param density The local [Density] instance in use
+ */
 class ListItemViewSizes(
-    private val maxWidth: Dp,
+    maxWidth: Dp,
     val verticalPadding: Dp,
     val otherContentHeight: Dp,
     val nameTextStyle: TextStyle,
     val extraInfoTextStyle: TextStyle,
     amountTextStyle: TextStyle,
-    density: Density,
     fontFamilyResolver: FontFamily.Resolver,
+    density: Density,
 ) {
-    val colorIndicatorSize = 48.dp
-    private val colorPickerOptionSize = 48.dp
+    /** The [Dp] size (i.e. width and height) that the color indicator should use */
+    val colorIndicatorSize get() = 48.dp
+    private val colorPickerOptionSize get() = 48.dp
     private val colorPickerSize = verticalPadding * 2 + colorPickerOptionSize * 2
 
+    /** The [AmountEditSizes] instance that the amount edit should use */
     val amountEditSizes = AmountEditSizes(amountTextStyle, fontFamilyResolver, density)
 
     private val uneditableNameHeight =
         singleLineTextSize("A", nameTextStyle, density, fontFamilyResolver).height
     private val editableNameHeight = maxOf(48.dp, uneditableNameHeight)
     private val nameHeightChange = editableNameHeight - uneditableNameHeight
-    fun nameHeight(isEditable: Boolean) =
-        if (isEditable) editableNameHeight
-        else            uneditableNameHeight
 
     private val uneditableExtraInfoHeight =
         singleLineTextSize("A", extraInfoTextStyle, density, fontFamilyResolver).height
     private val editableExtraInfoHeight = maxOf(48.dp, uneditableExtraInfoHeight)
     private val extraInfoHeightChange = editableExtraInfoHeight - uneditableExtraInfoHeight
-    fun extraInfoHeight(isEditable: Boolean) =
-        if (isEditable) editableExtraInfoHeight
-        else            uneditableExtraInfoHeight
 
-    private val uneditableHeight = verticalPadding * 2 + maxOf(uneditableNameHeight + uneditableExtraInfoHeight, 48.dp)
-    private val editableHeight = verticalPadding * 2 + editableNameHeight + editableExtraInfoHeight + otherContentHeight
+    private val uneditableTextFieldsHeight get() = uneditableNameHeight + uneditableExtraInfoHeight
+    private val editableTextFieldsHeight get() = editableNameHeight + editableExtraInfoHeight
+    private val uneditableHeight = verticalPadding * 2 + maxOf(uneditableTextFieldsHeight, 48.dp)
+    private val editableHeight = verticalPadding * 2 + editableTextFieldsHeight + otherContentHeight
 
-    fun height(showingColorPicker: Boolean, isEditable: Boolean) = when {
+    val editButtonSize get() = 48.dp
+    private val uneditableTextFieldWidth: Dp =
+        maxWidth - colorIndicatorSize - editButtonSize - amountEditSizes.width(false)
+    private val editableTextFieldWidth: Dp =
+        maxWidth - colorIndicatorSize - amountEditSizes.width(true)
+
+    /** The height of the entire item view  */
+    fun height(showingColorPicker: Boolean, isExpanded: Boolean) = when {
         showingColorPicker -> colorPickerSize
-        isEditable ->         editableHeight
+        isExpanded ->         editableHeight
         else ->               uneditableHeight
     }
 
-    private val uneditableTextFieldWidth: Dp = run {
-        val editButtonSize = 48.dp
-        maxWidth - colorIndicatorSize - editButtonSize - amountEditSizes.width(false)
-    }
+    /** The [Dp] height that the name text field should
+     * use, depending on whether or not it [isExpanded] */
+    fun nameHeight(isExpanded: Boolean) =
+        if (isExpanded) editableNameHeight
+        else            uneditableNameHeight
 
-    private val editableTextFieldWidth: Dp = run {
-        maxWidth - colorIndicatorSize - amountEditSizes.width(true)
-    }
+    /** The [Dp] height that the extra info text field should
+     * use, depending on whether or not it [isExpanded] */
+    fun extraInfoHeight(isExpanded: Boolean) =
+        if (isExpanded) editableExtraInfoHeight
+        else            uneditableExtraInfoHeight
 
     /** Return the width that the name and extra info text field edits should
-     * occupy, depending on whether or not the [ListItemView] [isEditable]. */
-    fun textFieldWidth(isEditable: Boolean): Dp =
-        if (isEditable) editableTextFieldWidth
+     * occupy, depending on whether or not the [ListItemView] is expanded */
+    fun textFieldWidth(isExpanded: Boolean): Dp =
+        if (isExpanded) editableTextFieldWidth
         else            uneditableTextFieldWidth
+
+    private val colorIndicatorMinOffsetY: Dp =
+        maxOf(uneditableTextFieldsHeight, 48.dp) - 48.dp / 2f
+    private val colorIndicatorOffsetYChange: Dp = run {
+        val maxOffset = (editableTextFieldsHeight - 48.dp) / 2f
+        maxOffset - colorIndicatorMinOffsetY
+    }
+    /** The y offset of the color indicator, depending on the progress of the
+     * expand/collapsed animation. [interpolation] should be in the range of [0, 1f],
+     * corresponding to when the view is collapsed or expanded, respectively.*/
+    fun colorIndicatorOffsetY(interpolation: Float) =
+        colorIndicatorMinOffsetY + colorIndicatorOffsetYChange * interpolation
 
     /** The y offset of the name when it is not editable and the extra
      * info is not blank. This will often be 0.dp, but may be a non-zero
      * value for small enough text sizes. */
-    private val uneditableNameOffsetY = run {
-        val textFieldsHeight = uneditableNameHeight + uneditableExtraInfoHeight
-        (maxOf(48.dp, textFieldsHeight) - textFieldsHeight) / 2f
-    }
+    private val uneditableNameOffsetY =
+        (maxOf(48.dp, uneditableTextFieldsHeight) - uneditableTextFieldsHeight) / 2f
     /** The y offset of the name when it is not editable and the extra
      * info is blank. This will usually be more than 0.dp, but may be
      * zero for large text sizes. */
     private val uneditableNameOffsetYWithoutExtraInfo =
         (maxOf(48.dp, uneditableNameHeight) - uneditableNameHeight) / 2f
 
-    /** The y offset of the name, depending on whether or not the [ListItemView]
-     * [isEditable] and whether or not [extraInfoIsBlank]. [editableTransitionProgress]
-     * can be used in order to interpolate the returned value between its values
-     * when [isEditable] is true or false (corresponding to a [editableTransitionProgress]
-     * value of 1f or 0f, respectively). */
+    /** The y offset of the name, depending on whether or not the view [isExpanded]
+     * and whether or not [extraInfoIsBlank]. [interpolation] can be used in order
+     * to interpolate the returned value between its values when [isExpanded] is true
+     * or false (corresponding to a [interpolation] value of 1f or 0f, respectively). */
     fun nameOffsetY(
-        isEditable: Boolean,
+        isExpanded: Boolean,
         extraInfoIsBlank: Boolean,
-        editableTransitionProgress: Float = if (isEditable) 1f else 0f
+        interpolation: Float = if (isExpanded) 1f else 0f
     ): Dp {
         val uneditableNameOffsetY = if (!extraInfoIsBlank) uneditableNameOffsetY
                                     else uneditableNameOffsetYWithoutExtraInfo
-        val topChangeOffset = uneditableNameOffsetY * (1f - editableTransitionProgress)
+        val topChangeOffset = uneditableNameOffsetY * (1f - interpolation)
 
-        val heightChangeOffset = if (!isEditable) nameHeightChange / 2f * editableTransitionProgress
-                                 else -nameHeightChange / 2f * (1f - editableTransitionProgress)
+        val heightChangeOffset = if (!isExpanded) nameHeightChange / 2f * interpolation
+                                 else -nameHeightChange / 2f * (1f - interpolation)
 
         return topChangeOffset + heightChangeOffset
     }
 
     private val uneditableExtraInfoOffsetY = uneditableNameOffsetY + uneditableNameHeight
     private val extraInfoOffsetYChange = nameHeightChange - uneditableNameOffsetY
+    /** The y offset of the extra info, depending on whether or not the view [isExpanded].
+     * [interpolation] can be used in order to interpolate the returned value between its
+     * values when [isExpanded] is true or false (corresponding to a [interpolation] value
+     * of 1f or 0f, respectively). */
     fun extraInfoOffsetY(
-        isEditable: Boolean,
-        interpolation: Float
+        isExpanded: Boolean,
+        interpolation: Float = if (isExpanded) 1f else 0f
     ): Dp {
         val topChangeOffset = uneditableExtraInfoOffsetY + extraInfoOffsetYChange * interpolation
 
-        val heightChangeOffset = if (!isEditable) extraInfoHeightChange / 2f * interpolation
+        val heightChangeOffset = if (!isExpanded) extraInfoHeightChange / 2f * interpolation
                                  else -extraInfoHeightChange / 2f * (1f - interpolation)
 
         return topChangeOffset + heightChangeOffset
     }
 
-    private val colorIndicatorMaxTopOffset =
-        (editableNameHeight + editableExtraInfoHeight - 48.dp) / 2f
-    fun colorIndicatorOffsetY(interpolation: Float) =
-        colorIndicatorMaxTopOffset * interpolation
-
     private val amountEditMaxOffsetX = editableTextFieldWidth - uneditableTextFieldWidth
+    /** The x offset of the amount edit, depending on whether or not the view [isExpanded].
+     * [interpolation] can be used in order to interpolate the returned value between its
+     * values when [isExpanded] is true or false (corresponding to a [interpolation] value
+     * of 1f or 0f, respectively). */
     fun amountEditOffsetX(
-        isEditable: Boolean,
-        interpolation: Float
-    ) = if (isEditable) -amountEditMaxOffsetX * (1f - interpolation)
+        isExpanded: Boolean,
+        interpolation: Float = if (isExpanded) 1f else 0f
+    ) = if (isExpanded) -amountEditMaxOffsetX * (1f - interpolation)
         else            amountEditMaxOffsetX * interpolation - 48.dp
 
-    private val otherContentMaxTopOffset =
-        editableNameHeight + editableExtraInfoHeight
+    private val otherContentMaxOffsetY = editableNameHeight + editableExtraInfoHeight
+    /** The y offset for additional content passed in the [ListItemView]'s
+     * otherContent parameter. [interpolation] should be in the range of [0, 1f],
+     * corresponding to when the view is collapsed or expanded, respectively. */
     fun otherContentOffsetY(interpolation: Float) =
-        otherContentMaxTopOffset * (interpolation / 2f + 0.5f)
+        otherContentMaxOffsetY * (interpolation / 2f + 0.5f)
 
     private val editButtonMaxYOffset = editableHeight - uneditableHeight
+    /** The y offset for the edit/collapse button. [interpolation] should be
+     * in the range of [0, 1f], corresponding to when the view is collapsed or
+     * expanded, respectively. */
     fun editButtonOffsetY(interpolation: Float) =
         editButtonMaxYOffset * interpolation
 }
 
+/** Return a remembered [ListItemViewSizes] instance. */
 @Composable fun rememberListItemViewSizes(
     maxWidth: Dp,
     verticalPadding: Dp = 8.dp,
@@ -180,35 +229,57 @@ class ListItemViewSizes(
         ListItemViewSizes(
             maxWidth, verticalPadding, otherContentHeight,
             nameTextStyle, extraInfoTextStyle, amountTextStyle,
-            density, fontFamilyResolver)
+            fontFamilyResolver, density)
     }
 }
 
+/** Return a remember [ListItemViewSizes] instance with a
+ * [ListItemViewSizes.otherContentHeight] parameter value
+ * appropriate for an [InventoryItemView]. */
 @Composable fun rememberInventoryItemViewSizes(
     maxWidth: Dp,
     verticalPadding: Dp = 8.dp,
     nameTextStyle: TextStyle = MaterialTheme.typography.body1,
     extraInfoTextStyle: TextStyle = MaterialTheme.typography.subtitle1,
     amountTextStyle: TextStyle = MaterialTheme.typography.h6.copy(textAlign = TextAlign.Center)
-) = rememberListItemViewSizes(maxWidth, verticalPadding, otherContentHeight = 48.dp,
-                              nameTextStyle, extraInfoTextStyle, amountTextStyle)
+) = rememberListItemViewSizes(
+    maxWidth, verticalPadding, otherContentHeight = 48.dp,
+    nameTextStyle, extraInfoTextStyle, amountTextStyle)
 
+/**
+ * A container for size measurements for an [AmountEdit].
+ *
+ * The value returned by [width] and the value of [height] should be used as
+ * width and height for the entire amount edit. The value returned by [valueWidth]
+ * should be used for the amount edit's value's width. The values returned by
+ * [valueXOffset] and [increaseButtonXOffset] should be applied in graphical
+ * layers as the translationX for the value and increase button, respectively.
+ *
+ * @param textStyle The [TextStyle] to use for the amount edit
+ * @param fontFamilyResolver The local [FontFamily.Resolver] in use
+ * @param density The local [Density] instance in use
+ */
 class AmountEditSizes(
     val textStyle: TextStyle,
     fontFamilyResolver: FontFamily.Resolver,
     density: Density,
 ) {
-    private val unfocusableValueWidth: Dp
     val height: Dp
+    private val unfocusableValueWidth: Dp
 
     init {
-        val valueSize = singleLineTextSize("88", textStyle, density, fontFamilyResolver)
+        val valueSize = singleLineTextSize(
+            "99", textStyle, density, fontFamilyResolver)
+
         height = maxOf(valueSize.height, 48.dp)
+
+        val valuePadding = 8.dp
+        val valueWidth = valueSize.width + valuePadding
         // When the value is not focusable, the decrease and increase buttons are
         // allowed to overlap the value by up to 10.dp to save horizontal space.
         // This 20.dp min width for an unfocusable value ensures that the decrease
         // and increase buttons won't overlap each other in this case.
-        unfocusableValueWidth = (valueSize.width + 8.dp).coerceAtLeast(20.dp)
+        unfocusableValueWidth = (valueWidth).coerceAtLeast(20.dp)
     }
     private val focusableValueWidth = maxOf(unfocusableValueWidth, 48.dp)
 

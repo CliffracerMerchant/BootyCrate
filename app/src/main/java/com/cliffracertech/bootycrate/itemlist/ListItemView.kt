@@ -261,28 +261,30 @@ interface ListItemCallback {
  * A visual display of a [ListItem] that also allows user interactions to
  * e.g. change the [ListItem]'s state.
  *
+ * @param sizes The [ListItemViewSizes] instance to use for the view
+ * @param id The [ListItem.id] for the item being represented
  * @param colorGroup The [ListItem.ColorGroup] that the item belongs to
  * @param name The name of the displayed item
  * @param extraInfo The extra info of the displayed item
  * @param amount The amount of the displayed item
+ * @param isExpanded Whether or not the item will present itself in its
+ *     expanded state. This will allow the text fields and the value of
+ *     the amount edit to be keyboard focusable.
  * @param isSelected Whether or not the item is selected
  * @param selectionBrush The [Brush] that will be shown at half
  *     opacity over the normal background when isSelected is true
- * @param isEditable Whether or not the item will present itself in its editable state
  * @param callback The [ListItemCallback] whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
- * @param colorIndicator A composable lambda whose contents will be used as the
- *     start aligned color indicator for the list item. Whether or not the view
- *     is fully collapsed (i.e. the transition that occurs when isEditable is
- *     changed to false is complete) will be provided, along with a lambda that
+ * @param colorIndicator A composable lambda whose contents will be used as
+ *     the start aligned color indicator for the list item. Whether or not
+ *     the view is fully collapsed will be provided, along with a lambda that
  *     will show the [ListItemView]'s color picker when invoked. This lambda
  *     should usually be used as the content's onClick.
  * @param otherContent A composable lambda whose contents will be displayed
- *     beneath the other content. The [Transition]`<Boolean>` that is used when the
- *     view animates after [isEditable] changes is provided in case the added
- *     content needs to synchronize its appearance/disappearance with the rest
- *     of the view.
+ *     beneath the other content. If the provided [Modifier] is used as the
+ *     base modifier for the content, it will automatically be animated in/
+ *     out depending on the value of [isExpanded].
  */
 @Composable fun ListItemView(
     sizes: ListItemViewSizes,
@@ -292,7 +294,7 @@ interface ListItemCallback {
     extraInfo: String,
     amount: Int,
     isLinked: Boolean,
-    isEditable: Boolean,
+    isExpanded: Boolean,
     isSelected: Boolean,
     selectionBrush: Brush,
     callback: ListItemCallback,
@@ -311,7 +313,7 @@ interface ListItemCallback {
     val height by animateDpAsState(
         targetValue = sizes.height(
             showingColorPicker = showColorPicker,
-            isEditable = isEditable),
+            isExpanded = isExpanded),
         animationSpec = spring(stiffness = springStiffness))
 
     AnimatedContent(
@@ -349,7 +351,7 @@ interface ListItemCallback {
             sizes, id, colorGroup, name, extraInfo, amount, isLinked,
             // See ListItemViewRegularContent param isEditable for
             // why this is passed as an int instead of a boolean.
-            isEditable = if (isEditable) 1 else 0,
+            isEditable = if (isExpanded) 1 else 0,
             callback,
             showColorPicker = { showColorPicker = true },
             colorIndicator, otherContent)

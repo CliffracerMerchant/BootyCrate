@@ -35,7 +35,8 @@ import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 
-/** A checkmark that animates between its unchecked and checked states. */
+/** A checkmark that animates between its unchecked and
+ * checked states depending on the value of [checked]. */
 @Composable fun AnimatedCheckmark(checked: Boolean) {
     val uncheckedToChecked = AnimatedImageVector.animatedVectorResource(
         R.drawable.animated_checkbox_unchecked_to_checked_checkmark)
@@ -55,7 +56,7 @@ import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
  * CheckboxAndColorIndicator will appear as a checkbox tinted to match [tint]
  * when [showCheckbox] is true, or as a tinted circle otherwise. [checked]
  * indicates the current checked state of the checkbox when [showCheckbox] is
- * true.The parameters [checkboxClickLabel] and [colorIndicatorClickLabel]
+ * true. The parameters [checkboxClickLabel] and [colorIndicatorClickLabel]
  * define the click labels that will be used for each state. The parameters
  * [onCheckboxClick] and [onColorIndicatorClick] define the onclick callbacks
  * that will be invoked when [showCheckbox] is true or false, respectively.
@@ -151,16 +152,20 @@ fun shoppingListItemCallback(
  * A visual display of a [ShoppingListItem] that also allows user
  * interactions to e.g. change the [ShoppingListItem]'s state.
  *
+ * @param sizes The [ListItemViewSizes] instance to use for the view
+ * @param id The [id] of the item being represented. This is used
+ *     to identify the item in user interaction callbacks.
  * @param colorGroup The [ListItem.ColorGroup] that the item belongs to
  * @param name The name of the displayed item
  * @param extraInfo The extra info of the displayed item
  * @param amount The amount of the displayed item
  * @param isChecked Whether or not the item is currently checked
+ * @param isLinked Whether or not the item is linked to a similar item
+ * @param isEditable Whether or not the item will present itself in its editable state
  * @param isSelected Whether or not the item is selected
  * @param selectionBrush The [Brush] that will be shown at half
  *     opacity over the normal background when isSelected is true
- * @param isEditable Whether or not the item will present itself in its editable state
- * @param callback The ShoppingListItemCallback whose method implementations
+ * @param callback The [ShoppingListItemCallback] whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
  */
@@ -205,11 +210,12 @@ fun shoppingListItemCallback(
  * A visual display of a [ShoppingListItem] that also allows user
  * interactions to e.g. change the [ShoppingListItem]'s state.
  *
+ * @param sizes The [ListItemViewSizes] instance to use for the view
  * @param item The [ShoppingListItem] instance whose data is being displayed
+ * @param isEditable Whether or not the item will present itself in its editable state
  * @param isSelected Whether or not the item is selected
  * @param selectionBrush The [Brush] that will be shown at half
  *     opacity over the normal background when isSelected is true
- * @param isEditable Whether or not the item will present itself in its editable state
  * @param callback The ShoppingListItemCallback whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
@@ -217,9 +223,9 @@ fun shoppingListItemCallback(
 @Composable fun ShoppingListItemView(
     sizes: ListItemViewSizes,
     item: ShoppingListItem,
+    isEditable: Boolean,
     isSelected: Boolean,
     selectionBrush: Brush,
-    isEditable: Boolean,
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ShoppingListItemView(
