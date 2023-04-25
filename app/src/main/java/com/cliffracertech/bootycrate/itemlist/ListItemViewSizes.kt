@@ -210,8 +210,11 @@ class ListItemViewSizes(
     /** The y offset for the edit/collapse button. [interpolation] should be
      * in the range of [0, 1f], corresponding to when the view is collapsed or
      * expanded, respectively. */
-    fun editButtonOffsetY(interpolation: Float) =
-        editButtonMaxYOffset * interpolation
+    fun editButtonOffsetY(interpolation: Float) = editButtonMaxYOffset * interpolation
+
+    val swipeableAnchors = with(density) {
+        SwipeToDeleteState.anchors(maxWidth.toPx())
+    }
 }
 
 /** Return a remembered [ListItemViewSizes] instance. */

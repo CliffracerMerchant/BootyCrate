@@ -14,7 +14,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.with
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -24,6 +23,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
@@ -39,7 +39,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -170,7 +169,7 @@ interface ListItemCallback {
             onClick = { callback.onEditButtonClick(id) },
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .requiredSize(48.dp)
+                .size(sizes.editButtonSize)
                 .graphicsLayer {
                     val interp = isEditableTransitionProgressGetter()
                     translationY = sizes.editButtonOffsetY(interp).toPx()
@@ -208,13 +207,13 @@ interface ListItemCallback {
      * animations. Passing it as some other type prevents this. */
     isEditable: Int,
     callback: ListItemCallback,
-    showColorPicker: () -> Unit,
     colorIndicator: @Composable (
             isCollapsed: Boolean,
             showColorPicker: () -> Unit,
             modifier: Modifier,
         ) -> Unit,
     otherContent: @Composable (otherContentModifier: Modifier) -> Unit = {},
+    showColorPicker: () -> Unit,
 ) = Box(Modifier.heightIn(min = 48.dp)) {
 
     val isEditable = isEditable == 1
@@ -307,6 +306,7 @@ interface ListItemCallback {
     otherContent: @Composable (otherContentModifier: Modifier) -> Unit = {},
 ) {
     var showColorPicker by remember { mutableStateOf(false) }
+    val backgroundShape = MaterialTheme.shapes.large
     val selectionBackgroundAlpha by animateFloatAsState(
         targetValue = if (isSelected && !showColorPicker) 0.5f else 0f,
         animationSpec = tween(durationMillis = 300))
@@ -321,8 +321,12 @@ interface ListItemCallback {
         modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colors.surface)
+            .horizontalSwipeToDeleteSurface(
+                backgroundShape = backgroundShape,
+                backgroundColor = MaterialTheme.colors.surface,
+                horizontalContentPadding = 8.dp,
+                anchors = sizes.swipeableAnchors,
+                onSwipe = { callback.onSwipe(id) })
             .drawBehind {
                 drawRect(selectionBrush, alpha = selectionBackgroundAlpha)
             }.combinedClickable(
@@ -352,8 +356,7 @@ interface ListItemCallback {
             // See ListItemViewRegularContent param isEditable for
             // why this is passed as an int instead of a boolean.
             isEditable = if (isExpanded) 1 else 0,
-            callback,
-            showColorPicker = { showColorPicker = true },
-            colorIndicator, otherContent)
+            callback, colorIndicator, otherContent,
+            showColorPicker = { showColorPicker = true })
     }
 }

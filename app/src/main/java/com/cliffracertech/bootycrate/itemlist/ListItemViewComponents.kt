@@ -6,11 +6,13 @@ package com.cliffracertech.bootycrate.itemlist
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -25,8 +27,10 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.LocalContentColor
@@ -38,6 +42,8 @@ import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.RemoveCircleOutline
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,12 +51,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.res.stringResource
@@ -59,13 +72,113 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.springStiffness
+import com.cliffracertech.bootycrate.tweenDuration
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.SimpleIconButton
+import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.roundToInt
+
+enum class SwipeToDeleteState { Centered, SwipedLeft, SwipedRight;
+    companion object {
+        fun anchors(fullWidth: Float) = mapOf (
+            -fullWidth to SwipedLeft,
+            0f         to Centered,
+            fullWidth  to SwipedRight)
+    }
+}
+
+/**
+ * Adds a swipeable background.
+ *
+ * horizontalSwipeToDeleteSurface adds a horizontally swipeable background
+ * matching [backgroundShape] and [backgroundColor]. A delete icon and another
+ * background with the same shape, but with a color matching the [MaterialTheme]
+ * error color, will show underneath the primary background as it is being
+ * swiped. Any desired horizontal padding should be added using the
+ * [horizontalContentPadding] parameter, rather than with a normal padding
+ * modifier. This ensures that the delete background can appear up to the edges
+ * of the container. The swipeableState anchors must also be provided through
+ * the [anchors] parameter. After an item is swiped and following a short fade
+ * out, the [onSwipe] callback will be executed.
+ */
+fun Modifier.horizontalSwipeToDeleteSurface(
+    backgroundShape: CornerBasedShape,
+    backgroundColor: Color,
+    horizontalContentPadding: Dp,
+    anchors: Map<Float, SwipeToDeleteState>,
+    onSwipe: () -> Unit,
+) = composed {
+    val context = LocalContext.current
+    val deleteBackgroundColor = MaterialTheme.colors.error
+    val iconColor = LocalContentColor.current
+    val deleteIcon = remember(iconColor) {
+        ContextCompat.getDrawable(context, R.drawable.ic_delete_black_24dp)
+            ?.also { it.setTint(iconColor.toArgb())}
+    }
+
+    var swiped by remember { mutableStateOf(false) }
+    val swipeableState = rememberSwipeableState(
+        initialValue = SwipeToDeleteState.Centered,
+        animationSpec = spring(stiffness = springStiffness),
+        confirmStateChange = {
+            if (it != SwipeToDeleteState.Centered)
+                swiped = true
+            true
+        })
+    val alpha by animateFloatAsState(
+        targetValue = if (swiped) 0f else 1f,
+        animationSpec = tween(tweenDuration, 50),
+        label = "swiped item fade out",
+        finishedListener = {
+            if (it == 0f) onSwipe()
+        })
+
+    drawBehind {
+        val swipingRight = if (swipeableState.offset.value == 0f)
+                               return@drawBehind
+                           else swipeableState.offset.value > 0f
+
+        val cornerRadiusPx = backgroundShape.topStart.toPx(size, this)
+        val backgroundMargin = horizontalContentPadding.roundToPx()
+        val width = abs(swipeableState.offset.value) + 2 * cornerRadiusPx
+        val startX = if (swipingRight) backgroundMargin.toFloat()
+                     else size.width - backgroundMargin - width
+        drawRoundRect(
+            color = deleteBackgroundColor,
+            topLeft= Offset(startX, 0f),
+            size = Size(width, size.height),
+            cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx),
+            alpha = alpha)
+
+        deleteIcon?.apply {
+            bounds.top = ((size.height - intrinsicHeight) / 2f).roundToInt()
+            bounds.bottom = bounds.top + intrinsicHeight
+            val iconMargin = backgroundMargin + 12.dp.roundToPx()
+
+            val canvasWidth = size.width.roundToInt()
+            bounds.left = if (swipingRight) iconMargin
+                          else canvasWidth - iconMargin - intrinsicWidth
+            bounds.right = bounds.left + intrinsicWidth
+            this.alpha = (alpha * 255).toInt().coerceIn(0, 255)
+            drawIntoCanvas { draw(it.nativeCanvas) }
+        }
+    }.graphicsLayer {
+        translationX = swipeableState.offset.value
+        this.alpha = alpha
+    }.padding(horizontal = horizontalContentPadding)
+    .background(backgroundColor, backgroundShape)
+    .swipeable(swipeableState, anchors, Orientation.Horizontal,
+        thresholds = { _, _ -> FractionalThreshold(0.33f) },
+        velocityThreshold = Float.POSITIVE_INFINITY.dp)
+    .clip(backgroundShape)
+}
 
 /**
  * A text field that toggles between an unconstrained size when [isEditable]

@@ -144,8 +144,7 @@ class MainActivity : ComponentActivity() {
                         visibleScreen = viewModel.visibleScreen,
                         modifier = Modifier.padding(padding),
                         maxWidth = maxWidth,
-                        contentPadding = PaddingValues(start = 8.dp, top = 8.dp,
-                                                       end = 8.dp, bottom = 64.dp))
+                        contentPadding = PaddingValues(top = 8.dp, bottom = 64.dp))
                     BootyCrateBottomAppDrawer(
                         modifier = Modifier.align(Alignment.BottomStart),
                         additionalPeekHeight = bottomBarAdditionalPadding)
