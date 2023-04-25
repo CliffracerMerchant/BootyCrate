@@ -31,7 +31,7 @@ interface RenameItemGroupButtonHandler {
     fun onItemGroupRenameClick(itemGroup: ItemGroup)
 }
 
-class RenameItemGroupButtonHandlerImpl(
+class DefaultRenameItemGroupButtonHandler(
     private val dao: ItemGroupDao,
     private val coroutineScope: CoroutineScope,
 ) : RenameItemGroupButtonHandler {
@@ -74,7 +74,7 @@ interface DeleteItemGroupButtonHandler {
     fun onItemGroupDeleteClick(itemGroup: ItemGroup)
 }
 
-class DeleteItemGroupButtonHandlerImpl(
+class DefaultDeleteItemGroupButtonHandler(
     private val dao: ItemGroupDao,
     coroutineScope: CoroutineScope,
 ) : DeleteItemGroupButtonHandler {
@@ -110,7 +110,7 @@ interface AddItemGroupButtonHandler {
     fun onAddButtonClick()
 }
 
-class AddItemGroupButtonHandlerImpl(
+class DefaultAddItemGroupButtonHandler(
     private val dao: ItemGroupDao,
     coroutineScope: CoroutineScope,
 ) : AddItemGroupButtonHandler {
@@ -150,9 +150,9 @@ class AddItemGroupButtonHandlerImpl(
     private val settingsDao: SettingsDao,
     coroutineScope: CoroutineScope
 ) : ViewModel(coroutineScope),
-    RenameItemGroupButtonHandler by RenameItemGroupButtonHandlerImpl(itemGroupDao, coroutineScope),
-    DeleteItemGroupButtonHandler by DeleteItemGroupButtonHandlerImpl(itemGroupDao, coroutineScope),
-    AddItemGroupButtonHandler by AddItemGroupButtonHandlerImpl(itemGroupDao, coroutineScope)
+    RenameItemGroupButtonHandler by DefaultRenameItemGroupButtonHandler(itemGroupDao, coroutineScope),
+    DeleteItemGroupButtonHandler by DefaultDeleteItemGroupButtonHandler(itemGroupDao, coroutineScope),
+    AddItemGroupButtonHandler by DefaultAddItemGroupButtonHandler(itemGroupDao, coroutineScope)
 {
     @Inject constructor(
         navState: NavigationState,

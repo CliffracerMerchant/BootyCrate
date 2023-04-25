@@ -18,14 +18,14 @@ import com.cliffracertech.bootycrate.model.SharedState
 import com.cliffracertech.bootycrate.model.database.InventoryItem
 import com.cliffracertech.bootycrate.model.database.InventoryItemDao
 import com.cliffracertech.bootycrate.model.database.InventoryProvider
-import com.cliffracertech.bootycrate.model.database.InventoryProviderImpl
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.ListItemDao
+import com.cliffracertech.bootycrate.model.database.SearchableSortableInventoryProvider
+import com.cliffracertech.bootycrate.model.database.SearchableSortableShoppingListProvider
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
 import com.cliffracertech.bootycrate.model.database.ShoppingListProvider
-import com.cliffracertech.bootycrate.model.database.ShoppingListProviderImpl
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.collectAsState
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
@@ -147,7 +147,7 @@ abstract class ItemListViewModel<T: ListItem>(
 ) : ItemListViewModel<ShoppingListItem>(
         searchQueryState, messageHandler,
         dao, itemGroupDao, selection, coroutineScope),
-    ShoppingListProvider by ShoppingListProviderImpl(
+    ShoppingListProvider by SearchableSortableShoppingListProvider(
         searchQueryState, dao, dataStore, coroutineScope)
 {
     @Inject constructor(
@@ -199,7 +199,7 @@ abstract class ItemListViewModel<T: ListItem>(
 ) : ItemListViewModel<InventoryItem>(
         searchQueryState, messageHandler,
         dao, itemGroupDao, selection, coroutineScope),
-    InventoryProvider by InventoryProviderImpl(
+    InventoryProvider by SearchableSortableInventoryProvider(
         searchQueryState, dao, dataStore, coroutineScope)
 {
     @Inject constructor(

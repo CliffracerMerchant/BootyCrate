@@ -108,14 +108,15 @@ interface InventoryProvider {
 }
 
 /**
- * An implementation of [InventoryProvider] that provides the current [inventory].
+ * An implementation of [InventoryProvider] that provides the current [inventory]
+ * given a search query and a sorting method.
  *
  * @param searchQueryState A [StateFlow]`<String?>` that contains the current search query
  * @param dao A [ShoppingListItemDao] instance
  * @param dataStore: A [DataStore]`<Preferences>` that contains the app's preferences
  * @param scope The [CoroutineScope] that the [inventory] property will be updated in
  */
-class InventoryProviderImpl(
+class SearchableSortableInventoryProvider(
     searchQueryState: StateFlow<String?>,
     dao: InventoryItemDao,
     dataStore: DataStore<Preferences>,

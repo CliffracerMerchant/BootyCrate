@@ -157,14 +157,15 @@ interface ShoppingListProvider {
 }
 
 /**
- * An implementation of [ShoppingListProvider] that provides the current [shoppingList].
+ * An implementation of [ShoppingListProvider] that provides the current
+ * [shoppingList], given a search query and a sorting method.
  *
  * @param searchQueryState A [StateFlow]`<String?>` that contains the current search query
  * @param dao A [ShoppingListItemDao] instance
  * @param dataStore: A [DataStore]`<Preferences>` that contains the app's preferences
  * @param scope The [CoroutineScope] that the [shoppingList] property will be updated in
  */
-class ShoppingListProviderImpl(
+class SearchableSortableShoppingListProvider(
     searchQueryState: StateFlow<String?>,
     dao: ShoppingListItemDao,
     dataStore: DataStore<Preferences>,

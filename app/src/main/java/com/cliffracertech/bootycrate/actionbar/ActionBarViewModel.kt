@@ -18,12 +18,12 @@ import com.cliffracertech.bootycrate.model.SelectionState
 import com.cliffracertech.bootycrate.model.SharedState
 import com.cliffracertech.bootycrate.model.database.InventoryItemDao
 import com.cliffracertech.bootycrate.model.database.InventoryProvider
-import com.cliffracertech.bootycrate.model.database.InventoryProviderImpl
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ListItem
+import com.cliffracertech.bootycrate.model.database.SearchableSortableInventoryProvider
+import com.cliffracertech.bootycrate.model.database.SearchableSortableShoppingListProvider
 import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
 import com.cliffracertech.bootycrate.model.database.ShoppingListProvider
-import com.cliffracertech.bootycrate.model.database.ShoppingListProviderImpl
 import com.cliffracertech.bootycrate.settings.PrefKeys
 import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.utils.StringResource
@@ -67,9 +67,9 @@ enum class ChangeSortDeleteButtonState {
     private val inventorySelection: SelectionState,
     coroutineScope: CoroutineScope
 ) : ViewModel(coroutineScope),
-    ShoppingListProvider by ShoppingListProviderImpl(
+    ShoppingListProvider by SearchableSortableShoppingListProvider(
         searchQueryState, shoppingListDao, dataStore, coroutineScope),
-    InventoryProvider by InventoryProviderImpl(
+    InventoryProvider by SearchableSortableInventoryProvider(
         searchQueryState, inventoryDao, dataStore, coroutineScope)
 {
     @Inject constructor(
@@ -268,5 +268,4 @@ enum class ChangeSortDeleteButtonState {
             }
         }
     }
-
 }
