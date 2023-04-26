@@ -7,9 +7,14 @@ package com.cliffracertech.bootycrate.actionbar
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.with
@@ -32,14 +37,15 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.springStiffness
 import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
 
 /** Compose a [Row] with a gradient background and vertically centered
@@ -123,12 +129,16 @@ import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
     otherContent: @Composable RowScope.() -> Unit,
 ) = GradientToolBar(modifier) {
     // Back button
+    val springSpec = spring<IntOffset>(stiffness = springStiffness)
     AnimatedContent(
         targetState = showBackButton,
         contentAlignment = Alignment.Center,
-        transitionSpec = { slideInHorizontally { -it } with
-                           slideOutHorizontally { -it } using
-                           SizeTransform(clip = false) }
+        transitionSpec = {
+            slideInHorizontally(springSpec) { -it } with
+            slideOutHorizontally(springSpec) { -it } using
+            SizeTransform(clip = false) { _, _ ->
+                spring(stiffness = springStiffness)
+            }}
     ) { backButtonIsVisible ->
         if (!backButtonIsVisible)
             Spacer(Modifier.width(24.dp))
@@ -144,8 +154,12 @@ import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
         searchQuery,
         onSearchQueryChanged)
 
+    val enter = fadeIn(spring(stiffness = springStiffness)) +
+                scaleIn(spring(stiffness = springStiffness), 1.25f)
+    val exit = fadeOut(spring(stiffness = springStiffness)) +
+               scaleOut(spring(stiffness = springStiffness), 0.8f)
     // Search button
-    AnimatedVisibility(visible = showSearchButton) {
+    AnimatedVisibility(showSearchButton, Modifier, enter, exit) {
         val vector = AnimatedImageVector.animatedVectorResource(R.drawable.animated_search_to_close)
         val painter = rememberAnimatedVectorPainter(vector, searchQuery != null)
         IconButton(onClick = onSearchButtonClick) {
@@ -153,8 +167,11 @@ import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
         }
     }
     // Change sort button
-    AnimatedVisibility(visible = !changeSortDeleteButtonState.isInvisible) {
-        var showingSortMenu by rememberSaveable { mutableStateOf(false) }
+    AnimatedVisibility(
+        !changeSortDeleteButtonState.isInvisible,
+        Modifier, enter, exit
+    ) {
+        var showingSortMenu by remember { mutableStateOf(false) }
         IconButton(onClick = {
             if (changeSortDeleteButtonState.isChangeSort)
                 showingSortMenu = true
