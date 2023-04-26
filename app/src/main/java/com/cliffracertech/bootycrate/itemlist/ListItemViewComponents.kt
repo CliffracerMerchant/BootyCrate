@@ -5,7 +5,6 @@
 package com.cliffracertech.bootycrate.itemlist
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
@@ -76,8 +75,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.defaultSpring
 import com.cliffracertech.bootycrate.model.database.ListItem
-import com.cliffracertech.bootycrate.springStiffness
 import com.cliffracertech.bootycrate.tweenDuration
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.SimpleIconButton
@@ -126,7 +125,7 @@ fun Modifier.horizontalSwipeToDeleteSurface(
     var swiped by remember { mutableStateOf(false) }
     val swipeableState = rememberSwipeableState(
         initialValue = SwipeToDeleteState.Centered,
-        animationSpec = spring(stiffness = springStiffness),
+        animationSpec = defaultSpring(),
         confirmStateChange = {
             if (it != SwipeToDeleteState.Centered)
                 swiped = true
@@ -320,7 +319,7 @@ fun AmountEditPreview() = BootyCrateTheme {
         var isFocusable by remember { mutableStateOf(false) }
         val isFocusableTransitionProgress by animateFloatAsState(
             targetValue = if (isFocusable) 1f else 0f,
-            animationSpec = spring(stiffness = springStiffness))
+            animationSpec = defaultSpring())
 
         AmountEdit(
             sizes = sizes,

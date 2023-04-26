@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate
 
 import android.app.Application
+import androidx.compose.animation.core.spring
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,5 +25,6 @@ open class ViewModel(
     }
 }
 
-const val springStiffness = 700f
-const val tweenDuration = 250
+const val springStiffness = 700f / 1f
+fun <T> defaultSpring() = spring<T>(stiffness = springStiffness)
+const val tweenDuration = 200

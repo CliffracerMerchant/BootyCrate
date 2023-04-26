@@ -5,12 +5,15 @@
 package com.cliffracertech.bootycrate.actionbar
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.material.*
+import androidx.compose.material.DropdownMenu
+import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.Composable
@@ -24,8 +27,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.defaultSpring
 import com.cliffracertech.bootycrate.model.database.ListItem
-import com.cliffracertech.bootycrate.springStiffness
 
 /** Compose a [ListActionBar] with state provided by an instance of [ActionBarViewModel]. */
 @Composable fun BootyCrateActionBar(
@@ -58,12 +61,11 @@ import com.cliffracertech.bootycrate.springStiffness
         onSortOptionClick = viewModel::onSortOptionClick,
         onDeleteButtonClick = viewModel::onDeleteButtonClick
     ) {
+        val spring = defaultSpring<Float>()
         AnimatedVisibility(
             visible = viewModel.showMoreOptionsButton,
-            enter = fadeIn(spring(stiffness = springStiffness)) +
-                    scaleIn(spring(stiffness = springStiffness), 1.25f),
-            exit = fadeOut(spring(stiffness = springStiffness)) +
-                   scaleOut(spring(stiffness = springStiffness), 0.8f),
+            enter = fadeIn(spring) + scaleIn(spring, 1.25f),
+            exit = fadeOut(spring) + scaleOut(spring, 0.8f),
         ) {
             var showingMenu by rememberSaveable { mutableStateOf(false) }
             IconButton({ showingMenu = true }) {

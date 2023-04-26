@@ -4,7 +4,6 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.bottomdrawer
 
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.forEachGesture
 import androidx.compose.foundation.layout.Box
@@ -39,8 +38,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.bottombar.BootyCrateBottomAppBar
 import com.cliffracertech.bootycrate.bottomdrawer.DrawerState.*
+import com.cliffracertech.bootycrate.defaultSpring
 import com.cliffracertech.bootycrate.itemgroupselector.ItemGroupSelector
-import com.cliffracertech.bootycrate.springStiffness
 import com.cliffracertech.bootycrate.ui.ConfirmDialog
 import com.cliffracertech.bootycrate.ui.ConfirmatoryDialogState
 import com.cliffracertech.bootycrate.ui.NameDialog
@@ -163,7 +162,7 @@ class DrawerSizes(
     }
     val swipeableState = rememberSwipeableState(
         initialValue = Collapsed,
-        animationSpec = spring(stiffness = springStiffness),
+        animationSpec = defaultSpring(),
         confirmStateChange = { !it.isHidden || vm.isHidden })
 
     LaunchedEffect(vm.isHidden) {

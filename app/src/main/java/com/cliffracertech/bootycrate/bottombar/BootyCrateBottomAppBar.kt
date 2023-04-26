@@ -5,7 +5,6 @@
 package com.cliffracertech.bootycrate.bottombar
 
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -41,9 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.defaultSpring
 import com.cliffracertech.bootycrate.itemlist.minTouchTargetSize
 import com.cliffracertech.bootycrate.model.NavigationState
-import com.cliffracertech.bootycrate.springStiffness
 
 @Composable fun NavBarItem(
     title: String,
@@ -83,7 +82,7 @@ import com.cliffracertech.bootycrate.springStiffness
     var cutoutLayoutCoordinates by remember { mutableStateOf(Rect.Zero) }
     val cutoutWidth by animateDpAsState(
         targetValue = cutoutContentWidth(viewModel.checkoutButtonIsVisible),
-        animationSpec = spring(stiffness = springStiffness))
+        animationSpec = defaultSpring())
 
     val topEdge = remember {
         TopEdgeWithCutout(

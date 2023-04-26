@@ -7,7 +7,6 @@ package com.cliffracertech.bootycrate.itemlist
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -47,8 +46,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.defaultSpring
 import com.cliffracertech.bootycrate.model.database.ListItem
-import com.cliffracertech.bootycrate.springStiffness
 
 fun Modifier.minTouchTargetSize() =
     this.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
@@ -217,9 +216,9 @@ interface ListItemCallback {
 ) = Box(Modifier.heightIn(min = 48.dp)) {
 
     val isEditable = isEditable == 1
+    val floatSpec = defaultSpring<Float>()
     val expansionProgress by animateFloatAsState(
-        targetValue = if (isEditable) 1f else 0f,
-        animationSpec = spring(stiffness = springStiffness))
+        if (isEditable) 1f else 0f, floatSpec)
     val isCollapsed by remember { derivedStateOf { expansionProgress == 0f }}
 
     val colors = ListItem.ColorGroup.colors()
@@ -244,10 +243,9 @@ interface ListItemCallback {
         id, name, callback)
 
     val linkedIndicatorAppearanceProgress by animateFloatAsState(
-        targetValue = if (isEditable && isLinked) 1f else 0f,
-        animationSpec = spring(stiffness = springStiffness))
+        if (isEditable && isLinked) 1f else 0f, floatSpec)
     if (linkedIndicatorAppearanceProgress > 0f)
-        ListItemViewLinkedIndicator{ linkedIndicatorAppearanceProgress }
+        ListItemViewLinkedIndicator { linkedIndicatorAppearanceProgress }
 
     if (!isCollapsed)
         otherContent(Modifier.graphicsLayer {
@@ -314,7 +312,7 @@ interface ListItemCallback {
         targetValue = sizes.height(
             showingColorPicker = showColorPicker,
             isExpanded = isExpanded),
-        animationSpec = spring(stiffness = springStiffness))
+        animationSpec = defaultSpring())
 
     AnimatedContent(
         targetState = showColorPicker,
@@ -341,9 +339,9 @@ interface ListItemCallback {
             ).padding(vertical = sizes.verticalPadding),
         contentAlignment = Alignment.Center,
         transitionSpec = {
-            val springSpec = spring<Float>(stiffness = springStiffness)
-            fadeIn(springSpec) + scaleIn(springSpec, initialScale = 0.9f) with
-            fadeOut(springSpec) + scaleOut(springSpec, targetScale = 0.9f)
+            val spring = defaultSpring<Float>()
+            fadeIn(spring) + scaleIn(spring, initialScale = 0.9f) with
+            fadeOut(spring) + scaleOut(spring, targetScale = 0.9f)
         }
     ) { showingColorPicker ->
         if (showingColorPicker)

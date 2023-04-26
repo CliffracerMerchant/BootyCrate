@@ -7,7 +7,6 @@ package com.cliffracertech.bootycrate.actionbar
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.res.animatedVectorResource
@@ -45,7 +44,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.springStiffness
+import com.cliffracertech.bootycrate.defaultSpring
 import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
 
 /** Compose a [Row] with a gradient background and vertically centered
@@ -129,16 +128,15 @@ import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
     otherContent: @Composable RowScope.() -> Unit,
 ) = GradientToolBar(modifier) {
     // Back button
-    val springSpec = spring<IntOffset>(stiffness = springStiffness)
+    val springSpec = defaultSpring<IntOffset>()
     AnimatedContent(
         targetState = showBackButton,
         contentAlignment = Alignment.Center,
         transitionSpec = {
             slideInHorizontally(springSpec) { -it } with
             slideOutHorizontally(springSpec) { -it } using
-            SizeTransform(clip = false) { _, _ ->
-                spring(stiffness = springStiffness)
-            }}
+            SizeTransform(clip = false) { _, _ -> defaultSpring()
+        }}
     ) { backButtonIsVisible ->
         if (!backButtonIsVisible)
             Spacer(Modifier.width(24.dp))
@@ -154,10 +152,9 @@ import com.cliffracertech.bootycrate.utils.EnumDropdownMenu
         searchQuery,
         onSearchQueryChanged)
 
-    val enter = fadeIn(spring(stiffness = springStiffness)) +
-                scaleIn(spring(stiffness = springStiffness), 1.25f)
-    val exit = fadeOut(spring(stiffness = springStiffness)) +
-               scaleOut(spring(stiffness = springStiffness), 0.8f)
+    val spring = defaultSpring<Float>()
+    val enter = fadeIn(spring) + scaleIn(spring, 1.25f)
+    val exit = fadeOut(spring) + scaleOut(spring, 0.8f)
     // Search button
     AnimatedVisibility(showSearchButton, Modifier, enter, exit) {
         val vector = AnimatedImageVector.animatedVectorResource(R.drawable.animated_search_to_close)

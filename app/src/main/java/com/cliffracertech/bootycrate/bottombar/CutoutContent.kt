@@ -5,7 +5,6 @@
 package com.cliffracertech.bootycrate.bottombar
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -58,7 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.toSize
 import androidx.core.graphics.scaleMatrix
 import com.cliffracertech.bootycrate.R
-import com.cliffracertech.bootycrate.springStiffness
+import com.cliffracertech.bootycrate.defaultSpring
 import com.cliffracertech.bootycrate.ui.theme.BootyCrateTheme
 import com.cliffracertech.bootycrate.utils.clippedGradientBackground
 import kotlinx.collections.immutable.ImmutableList
@@ -274,7 +273,7 @@ fun cutoutContentWidth(showingCheckoutButton: Boolean) =
     ) {
         val checkoutButtonAppearanceProgress by animateFloatAsState(
             targetValue = if (checkoutButtonIsVisible) 1f else 0f,
-            animationSpec = spring(stiffness = springStiffness))
+            animationSpec = defaultSpring())
 
         if (checkoutButtonAppearanceProgress > 0f)
             CheckoutButton(
