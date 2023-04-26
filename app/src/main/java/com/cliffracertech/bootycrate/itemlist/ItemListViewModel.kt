@@ -157,7 +157,7 @@ abstract class ItemListViewModel<T: ListItem>(
         messageHandler: MessageHandler,
         dao: ShoppingListItemDao,
         itemGroupDao: ItemGroupDao,
-        @SharedState.InventorySelection
+        @SharedState.ShoppingListSelection
         selection: SelectionState,
     ) : this(dataStore, searchQueryState, messageHandler,
              dao, itemGroupDao, selection, viewModelScope())
@@ -209,6 +209,7 @@ abstract class ItemListViewModel<T: ListItem>(
         messageHandler: MessageHandler,
         dao: InventoryItemDao,
         itemGroupDao: ItemGroupDao,
+        @SharedState.InventorySelection
         selection: SelectionState,
     ) : this(dataStore, searchQueryState, messageHandler,
              dao, itemGroupDao, selection, viewModelScope())

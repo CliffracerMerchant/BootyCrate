@@ -141,10 +141,10 @@ class SharedState {
     @Qualifier @Retention(AnnotationRetention.BINARY)
     annotation class InventorySelection
 
-    @ShoppingListSelection @Provides
+    @ShoppingListSelection @ActivityRetainedScoped @Provides
     fun provideShoppingListSelection() = SelectionState()
 
-    @InventorySelection @Provides
+    @InventorySelection @ActivityRetainedScoped @Provides
     fun provideInventorySelection() = SelectionState()
 
     @Qualifier @Retention(AnnotationRetention.BINARY)
