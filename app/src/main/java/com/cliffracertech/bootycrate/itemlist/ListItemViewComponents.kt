@@ -196,7 +196,7 @@ fun Modifier.horizontalSwipeToDeleteSurface(
  *     isEditable is false, and 1f indicating that isEditable is true.
  * @param textStyle The [TextStyle] that will be used for the text
  */
-@Composable fun TextFieldEdit(
+@Composable fun ListItemTextField(
     text: String,
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,

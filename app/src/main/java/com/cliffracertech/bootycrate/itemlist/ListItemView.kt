@@ -97,7 +97,7 @@ interface ListItemCallback {
     .width(sizes.textFieldWidth(!isFullyCollapsed))
     .offset(x = sizes.colorIndicatorSize)
 ) {
-    TextFieldEdit(
+    ListItemTextField(
         text = name,
         onTextChange = { callback.onRenameRequest(id, it) },
         modifier = Modifier
@@ -112,7 +112,7 @@ interface ListItemCallback {
         editableTransitionProgressGetter = editableTransitionProgressGetter,
         textStyle = sizes.nameTextStyle)
     if (!isFullyCollapsed || extraInfo.isNotBlank())
-        TextFieldEdit(
+        ListItemTextField(
             text = extraInfo,
             onTextChange = { callback.onExtraInfoChangeRequest(id, it) },
             modifier = Modifier
