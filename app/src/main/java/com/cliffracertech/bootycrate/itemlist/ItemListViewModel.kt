@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.itemlist
 
+import androidx.annotation.CallSuper
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,7 +129,11 @@ abstract class ItemListViewModel<T: ListItem>(
         }
     }}
 
-    protected abstract suspend fun deleteItem(id: Long)
+    @CallSuper
+    protected open suspend fun deleteItem(id: Long) {
+        if (id == expandedItemId)
+            expandedItemId = null
+    }
     protected abstract fun emptyTrash()
     protected abstract fun undoDelete()
 }
@@ -174,7 +179,10 @@ abstract class ItemListViewModel<T: ListItem>(
         coroutineScope.launch { dao.toggleIsChecked(id) }
     }
 
-    override suspend fun deleteItem(id: Long) = dao.delete(id)
+    override suspend fun deleteItem(id: Long) {
+        dao.delete(id)
+        super.deleteItem(id)
+    }
 
     override fun emptyTrash() {
         coroutineScope.launch { dao.emptyTrash() }
@@ -230,7 +238,10 @@ abstract class ItemListViewModel<T: ListItem>(
     }
 
 
-    override suspend fun deleteItem(id: Long) = dao.delete(id)
+    override suspend fun deleteItem(id: Long) {
+        dao.delete(id)
+        super.deleteItem(id)
+    }
 
     override fun emptyTrash() {
         coroutineScope.launch { dao.emptyTrash() }
