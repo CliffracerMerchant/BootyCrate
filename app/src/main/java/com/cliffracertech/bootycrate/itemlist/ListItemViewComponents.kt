@@ -139,7 +139,8 @@ fun Modifier.horizontalSwipeToDeleteSurface(
             if (it == 0f) onSwipe()
         })
 
-    drawBehind {
+    fillMaxWidth()
+    .drawBehind {
         val swipingRight = if (swipeableState.offset.value == 0f)
                                return@drawBehind
                            else swipeableState.offset.value > 0f

@@ -45,17 +45,26 @@ private fun singleLineTextSize(
  * A container for size measurements for a [ListItemView].
  *
  * The entire [ListItemView]'s height and vertical padding should match the
- * value returned by [height] and the value of [verticalPadding], respectively.
+ * value returned by [height] and the value of [internalVerticalPadding], respectively.
  * The [ListItemView]'s sub-components should use the sizes, widths, or heights
- * returned by [colorIndicatorSize], [nameHeight], [extraInfoHeight], and
- * [textFieldWidth] (which applies to both the name and extra info). Likewise,
- * the sub-components should have an x or y offset applied in a graphical layer
- * that matches the [Dp] values returned by [colorIndicatorOffsetY], [nameOffsetY],
- * [extraInfoOffsetY], [amountEditOffsetX], [otherContentOffsetY], and
- * [editButtonOffsetY].
+ * returned by [colorIndicatorSize], [nameHeight], [extraInfoHeight], [textFieldWidth]
+ * (which applies to both the name and extra info), and [editButtonSize].
+ * Likewise, the sub-components should have an x or y offset applied in a
+ * graphical layer that matches the [Dp] values returned by [colorIndicatorOffsetY],
+ * [nameOffsetY], [extraInfoOffsetY], [amountEditOffsetX], [otherContentOffsetY],
+ * and [editButtonOffsetY].
  *
  * @param maxWidth The maximum [Dp] width that the [ListItemView] should take up
- * @param verticalPadding The vertical padding that the [ListItemView] should have
+ * @param internalVerticalPadding The vertical padding that the
+ *     item view should have inside its background
+ * @param externalHorizontalPadding The horizontal padding that the item
+ *     view should have outside its background. To allow its swipe to delete
+ *     background to reach the edges of the container, the item view should
+ *     use a [horizontalSwipeToDeleteSurface] [Modifier], with its
+ *     horizontalContentPadding set to equal externalHorizontalPadding.
+ *     Due to the components at either end of the item view having their
+ *     own horizontal padding, the internal (i.e. inside its background)
+ *     horizontal padding of the ListItemView should be zero.
  * @param otherContentHeight The [Dp] height of the other content that will be
  *     displayed at the bottom of the [ListItemView] when in its expanded state
  * @param nameTextStyle The text style that the name text field should use
@@ -66,7 +75,8 @@ private fun singleLineTextSize(
  */
 class ListItemViewSizes(
     maxWidth: Dp,
-    val verticalPadding: Dp,
+    val internalVerticalPadding: Dp,
+    val externalHorizontalPadding: Dp,
     val otherContentHeight: Dp,
     val nameTextStyle: TextStyle,
     val extraInfoTextStyle: TextStyle,
@@ -77,7 +87,7 @@ class ListItemViewSizes(
     /** The [Dp] size (i.e. width and height) that the color indicator should use */
     val colorIndicatorSize get() = 48.dp
     private val colorPickerOptionSize get() = 48.dp
-    private val colorPickerSize = verticalPadding * 2 + colorPickerOptionSize * 2
+    private val colorPickerSize = internalVerticalPadding * 2 + colorPickerOptionSize * 2
 
     /** The [AmountEditSizes] instance that the amount edit should use */
     val amountEditSizes = AmountEditSizes(amountTextStyle, fontFamilyResolver, density)
@@ -94,14 +104,16 @@ class ListItemViewSizes(
 
     private val uneditableTextFieldsHeight get() = uneditableNameHeight + uneditableExtraInfoHeight
     private val editableTextFieldsHeight get() = editableNameHeight + editableExtraInfoHeight
-    private val uneditableHeight = verticalPadding * 2 + maxOf(uneditableTextFieldsHeight, 48.dp)
-    private val editableHeight = verticalPadding * 2 + editableTextFieldsHeight + otherContentHeight
+    private val uneditableHeight =
+        internalVerticalPadding * 2 + maxOf(uneditableTextFieldsHeight, 48.dp)
+    private val editableHeight =
+        internalVerticalPadding * 2 + editableTextFieldsHeight + otherContentHeight
 
     val editButtonSize get() = 48.dp
     private val uneditableTextFieldWidth: Dp =
-        maxWidth - colorIndicatorSize - editButtonSize - amountEditSizes.width(false)
+        maxWidth - externalHorizontalPadding * 2 - colorIndicatorSize - editButtonSize - amountEditSizes.width(false)
     private val editableTextFieldWidth: Dp =
-        maxWidth - colorIndicatorSize - amountEditSizes.width(true)
+        maxWidth - externalHorizontalPadding * 2 - colorIndicatorSize - amountEditSizes.width(true)
 
     /** The height of the entire item view  */
     fun height(showingColorPicker: Boolean, isExpanded: Boolean) = when {
@@ -220,7 +232,8 @@ class ListItemViewSizes(
 /** Return a remembered [ListItemViewSizes] instance. */
 @Composable fun rememberListItemViewSizes(
     maxWidth: Dp,
-    verticalPadding: Dp = 8.dp,
+    internalVerticalPadding: Dp = 8.dp,
+    externalHorizontalPadding: Dp = 8.dp,
     otherContentHeight: Dp = 0.dp,
     nameTextStyle: TextStyle = MaterialTheme.typography.body1,
     extraInfoTextStyle: TextStyle = MaterialTheme.typography.subtitle1,
@@ -230,7 +243,8 @@ class ListItemViewSizes(
     val density = LocalDensity.current
     return remember(density) {
         ListItemViewSizes(
-            maxWidth, verticalPadding, otherContentHeight,
+            maxWidth, internalVerticalPadding,
+            externalHorizontalPadding, otherContentHeight,
             nameTextStyle, extraInfoTextStyle, amountTextStyle,
             fontFamilyResolver, density)
     }
@@ -241,7 +255,8 @@ class ListItemViewSizes(
  * appropriate for an [InventoryItemView]. */
 @Composable fun rememberInventoryItemViewSizes(
     maxWidth: Dp,
-    verticalPadding: Dp = 8.dp,
+    internalVerticalPadding: Dp = 8.dp,
+    externalHorizontalPadding: Dp = 8.dp,
     nameTextStyle: TextStyle = MaterialTheme.typography.body1,
     extraInfoTextStyle: TextStyle = MaterialTheme.typography.subtitle1,
     amountTextStyle: TextStyle = MaterialTheme.typography.h6.copy(textAlign = TextAlign.Center)
@@ -254,7 +269,8 @@ class ListItemViewSizes(
         maxOf(textSize.height, 48.dp)
     }
     return rememberListItemViewSizes(
-        maxWidth, verticalPadding, otherContentHeight,
+        maxWidth, internalVerticalPadding,
+        externalHorizontalPadding, otherContentHeight,
         nameTextStyle, extraInfoTextStyle, amountTextStyle)
 }
 

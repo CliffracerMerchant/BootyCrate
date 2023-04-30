@@ -16,7 +16,6 @@ import androidx.compose.animation.with
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
@@ -317,12 +316,11 @@ interface ListItemCallback {
     AnimatedContent(
         targetState = showColorPicker,
         modifier = modifier
-            .fillMaxWidth()
             .height(height)
             .horizontalSwipeToDeleteSurface(
                 backgroundShape = backgroundShape,
                 backgroundColor = MaterialTheme.colors.surface,
-                horizontalContentPadding = 8.dp,
+                horizontalContentPadding = sizes.externalHorizontalPadding,
                 anchors = sizes.swipeableAnchors,
                 onSwipe = { callback.onSwipe(id) })
             .drawBehind {
@@ -336,7 +334,7 @@ interface ListItemCallback {
                 onClickLabel = if (!isSelected) null else
                     stringResource(R.string.deselect_item_description),
                 onClick = { callback.onClick(id) }
-            ).padding(vertical = sizes.verticalPadding),
+            ).padding(vertical = sizes.internalVerticalPadding),
         contentAlignment = Alignment.Center,
         transitionSpec = {
             val spring = defaultSpring<Float>()
