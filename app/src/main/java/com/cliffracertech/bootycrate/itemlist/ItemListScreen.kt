@@ -37,18 +37,22 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cliffracertech.bootycrate.model.database.InventoryItem
 import com.cliffracertech.bootycrate.model.database.ListItem
-import com.cliffracertech.bootycrate.model.database.ShoppingListItem
-import com.cliffracertech.bootycrate.springStiffness
 import com.cliffracertech.bootycrate.tweenDuration
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
 
 /** An interface that describes the possible states for a list of selectable,
- * expandable items that only allows one expanded item at a time. */
+ * expandable, color sortable items that only allows one expanded item at a
+ * time, and for a color picker to be shown for only one item at a time. */
 interface ItemListState<T> {
+    /** The list of items */
     val items: ImmutableList<T>
+    /** The set of item ids that represent the selected items */
     val selectedItemIds: ImmutableSet<Long>
+    /** The id, if any, of the expanded item */
     val expandedItemId: Long?
+    /** The id, if any, of the item for whom a color picker is being shown */
+    val colorPickerItemId: Long?
 }
 
 /**
@@ -68,17 +72,20 @@ interface ItemListState<T> {
  *     or [AsyncListState.Message], or as the [LazyColumn.contentPadding] when
  *     [listState] is a [AsyncListState.Content].
  * @param itemContent The content that will be shown for each [T] instance
- *     when [listState] is a [AsyncListState.Content]`<T>` instance
+ *     when [listState] is a [AsyncListState.Content]`<T>` instance. Whether
+ *     or not the item is expanded, selected, or should show its color picker
+ *     is provided.
  */
 @Composable fun <T: ListItem> ItemListScreen(
-    listState: AsyncListState,
+    listState: AsyncListState<T>,
     modifier: Modifier = Modifier,
     lazyListState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     itemContent: @Composable LazyItemScope.(
             item: T,
-            isExpanded: Boolean,
-            isSelected: Boolean,
+            selected: Boolean,
+            expanded: Boolean,
+            showColorPicker: Boolean,
         ) -> Unit,
 ) = Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     // AnimatedContent is used here instead of Crossfade due
@@ -105,8 +112,8 @@ interface ItemListState<T> {
         exit = fadeOut(tween(tweenDuration, easing = LinearEasing)),
     ) {
         @Suppress("unchecked_cast")
-        val contentState = listState as? AsyncListState.Content<T> ?: return@AnimatedVisibility
-        val currentItems = contentState.items
+        val contentState = listState as? AsyncListState.Content<T>
+            ?: return@AnimatedVisibility
         // Because LazyColumn does not have appearance/disappearance animations
         // for items, lastNonNullItems is used so that the last non-null list of
         // items will fade out when listState changes from AsyncListState.Content
@@ -120,19 +127,21 @@ interface ItemListState<T> {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             items(
-                items = currentItems,
+                items = contentState.items,
                 key = ListItem::id::get,
             ) {
-                val isExpanded = contentState.expandedItemId == it.id
-                val isSelected = it.id in contentState.selectedItemIds
-                itemContent(it, isExpanded, isSelected)
+                val expanded = it.id == contentState.expandedItemId
+                val selected = it.id in contentState.selectedItemIds
+                val showColorPicker = it.id == contentState.colorPickerItemId
+                itemContent(it, selected, expanded, showColorPicker)
             }
         }
     }
 }
 
 fun PaddingValues.horizontalPadding(): Dp =
-    calculateLeftPadding(LayoutDirection.Ltr) + calculateRightPadding(LayoutDirection.Ltr)
+    calculateLeftPadding(LayoutDirection.Ltr) +
+    calculateRightPadding(LayoutDirection.Ltr)
 
 /**
  * An interactable list of [ShoppingListItemView]s.
@@ -152,25 +161,27 @@ fun PaddingValues.horizontalPadding(): Dp =
     val startColor = MaterialTheme.colors.primary
     val endColor = MaterialTheme.colors.secondary
 
-    ItemListScreen<ShoppingListItem>(
-        listState = vm.uiState,
+    ItemListScreen(
+        listState = vm.listState,
         modifier = modifier,
         lazyListState = lazyListState,
         contentPadding = contentPadding,
-    ) { item, isExpanded, isSelected ->
+    ) { item, selected, expanded, showColorPicker ->
         ShoppingListItemView(
             sizes = rememberListItemViewSizes(
                 maxWidth = maxWidth - contentPadding.horizontalPadding()),
             item = item,
-            isEditable = isExpanded,
-            isSelected = isSelected,
             selectionBrush = remember(startColor, endColor) {
                 Brush.horizontalGradient(listOf(startColor, endColor))
-            }, callback = remember {
+            }, selected = selected,
+            expanded = expanded,
+            showColorPicker = showColorPicker,
+            callback = remember {
                 shoppingListItemCallback(
                     onClick = vm::onItemClick,
                     onLongClick = vm::onItemLongClick,
                     onSwipe = vm::onItemSwipe,
+                    onColorIndicatorClick = vm::onItemColorIndicatorClick,
                     onColorGroupClick = vm::onItemColorGroupChangeRequest,
                     onRenameRequest = vm::onItemRenameRequest,
                     onExtraInfoChangeRequest = vm::onItemExtraInfoChangeRequest,
@@ -204,25 +215,27 @@ fun PaddingValues.horizontalPadding(): Dp =
     val startColor = MaterialTheme.colors.primary
     val endColor = MaterialTheme.colors.secondary
 
-    ItemListScreen<InventoryItem>(
-        listState = vm.uiState,
+    ItemListScreen(
+        listState = vm.listState,
         modifier = modifier,
         lazyListState = lazyListState,
         contentPadding = contentPadding,
-    ) { item, isExpanded, isSelected ->
+    ) { item, selected, expanded, showColorPicker ->
         InventoryItemView(
             sizes = rememberInventoryItemViewSizes(
                 maxWidth - contentPadding.horizontalPadding()),
             item = item,
-            isEditable = isExpanded,
-            isSelected = isSelected,
             selectionBrush = remember(startColor, endColor) {
                 Brush.horizontalGradient(listOf(startColor, endColor))
-            }, callback = remember {
+            }, selected = selected,
+            expanded = expanded,
+            showColorPicker = showColorPicker,
+            callback = remember {
                 inventoryItemCallback(
                     onClick = vm::onItemClick,
                     onLongClick = vm::onItemLongClick,
                     onSwipe = vm::onItemSwipe,
+                    onColorIndicatorClick = vm::onItemColorIndicatorClick,
                     onColorGroupClick = vm::onItemColorGroupChangeRequest,
                     onRenameRequest = vm::onItemRenameRequest,
                     onExtraInfoChangeRequest = vm::onItemExtraInfoChangeRequest,

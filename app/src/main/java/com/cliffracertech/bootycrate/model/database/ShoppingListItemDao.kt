@@ -4,6 +4,7 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.model.database
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -11,7 +12,11 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.room.Dao
 import androidx.room.Query
+import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.itemlist.AsyncListState
+import com.cliffracertech.bootycrate.model.ItemListVolatileState
 import com.cliffracertech.bootycrate.settings.PrefKeys
+import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.collectAsState
 import com.cliffracertech.bootycrate.utils.enumPreferenceFlow
 import com.cliffracertech.bootycrate.utils.preferenceFlow
@@ -151,7 +156,8 @@ import kotlinx.coroutines.flow.transformLatest
     abstract suspend fun checkoutVisibleItems()
 }
 
-/** A provider of the current [shoppingList]. */
+/** A provider of the current [ImmutableList] of [ShoppingListItem]s
+ * through its member [shoppingList]. */
 interface ShoppingListProvider {
     val shoppingList: ImmutableList<ShoppingListItem>?
 }
@@ -165,7 +171,7 @@ interface ShoppingListProvider {
  * @param dataStore: A [DataStore]`<Preferences>` that contains the app's preferences
  * @param scope The [CoroutineScope] that the [shoppingList] property will be updated in
  */
-class SearchableSortableShoppingListProvider(
+class DefaultShoppingListProvider(
     searchQueryState: StateFlow<String?>,
     dao: ShoppingListItemDao,
     dataStore: DataStore<Preferences>,
@@ -180,4 +186,46 @@ class SearchableSortableShoppingListProvider(
         combine(sort, searchQueryState, sortByChecked, dao::getItems)
             .transformLatest { emitAll(it) }
             .collectAsState(null, scope)
+}
+
+/** A provider of the current [AsyncListState]`<ShoppingListItem>`
+ * through its member [shoppingListState]. */
+interface AsyncShoppingListStateProvider {
+    val shoppingListState: AsyncListState<ShoppingListItem>
+}
+
+/**
+ * An implementation of [AsyncShoppingListStateProvider] that provides the
+ * current [shoppingListState] depending on the provided search query,
+ * [ItemListVolatileState], and sorting method.
+ *
+ * @param searchQueryState A [StateFlow]`<String?>` that contains the current search query
+ * @param volatileState An [ItemListVolatileState] that contains the item list's
+ *     selection and other volatile UI state
+ * @param dao A [ShoppingListItemDao] instance
+ * @param dataStore: A [DataStore]`<Preferences>` that contains the app's preferences
+ * @param scope The [CoroutineScope] that the [shoppingList] property will be updated in
+ */
+class DefaultAsyncShoppingListStateProvider(
+    searchQueryState: StateFlow<String?>,
+    volatileState: ItemListVolatileState,
+    dao: ShoppingListItemDao,
+    dataStore: DataStore<Preferences>,
+    scope: CoroutineScope,
+): AsyncShoppingListStateProvider,
+    ShoppingListProvider by DefaultShoppingListProvider(
+        searchQueryState, dao, dataStore, scope)
+{
+    override val shoppingListState by derivedStateOf {
+        val items = shoppingList
+        when (items?.size) {
+            null -> AsyncListState.Loading
+            0 -> AsyncListState.Message(
+                if (searchQueryState.value != null)
+                    StringResource(R.string.no_search_results_message)
+                else StringResource(R.string.empty_list_message,
+                    R.string.shopping_list_description))
+            else -> AsyncListState.Content(items, volatileState)
+        }
+    }
 }

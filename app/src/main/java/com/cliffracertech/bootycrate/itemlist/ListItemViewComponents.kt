@@ -181,15 +181,15 @@ fun Modifier.horizontalSwipeToDeleteSurface(
 }
 
 /**
- * A text field that toggles between an unconstrained size when [isEditable]
- * is false, and a minimum touch target size when [isEditable] is true.
+ * A text field that toggles between an unconstrained size when [editable]
+ * is false, and a minimum touch target size when [editable] is true.
  *
  * @param text The text that will be displayed
  * @param onTextChange The callback that will be invoked when the user attempts
  *     to change the [text] value through input
  * @param modifier The [Modifier] that will be used for the text field
  * @param tint The tint that will be used for the text cursor
- * @param isEditable Whether or not the text field will allow keyboard
+ * @param editable Whether or not the text field will allow keyboard
  *     focus of the text and enforce its minimum touch target size
  * @param editableTransitionProgressGetter A lambda that returns the
  *     progress of a transition between values of isEditable. The returned
@@ -202,8 +202,8 @@ fun Modifier.horizontalSwipeToDeleteSurface(
     onTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     tint: Color = LocalContentColor.current,
-    isEditable: Boolean = true,
-    editableTransitionProgressGetter: () -> Float = { if (isEditable) 1f else 0f },
+    editable: Boolean = true,
+    editableTransitionProgressGetter: () -> Float = { if (editable) 1f else 0f },
     textStyle: TextStyle = LocalTextStyle.current,
 ) = Box(modifier, Alignment.CenterStart) {
 
@@ -223,7 +223,7 @@ fun Modifier.horizontalSwipeToDeleteSurface(
                         strokeWidth = 1.dp.toPx(),
                         alpha = animationProgress)
             },
-        enabled = isEditable,
+        enabled = editable,
         textStyle = textStyle,
         singleLine = true,
         cursorBrush = remember(tint) { SolidColor(tint) })
@@ -232,44 +232,44 @@ fun Modifier.horizontalSwipeToDeleteSurface(
 /**
  * An editor for an Int [amount] that displays decrease and increase buttons on
  * either side of the amount, and allows direct keyboard editing of the value
- * when [valueIsFocusable] is true. [decreaseDescription] and [increaseDescription]
+ * when [focusable] is true. [decreaseDescription] and [increaseDescription]
  * will be used as the content descriptions for the decrease and increase buttons,
  * respectively, while [tint] will be used to tint the text cursor when the amount
  * is being edited via the keyboard. An attempt to change the amount either by
  * keyboard or the buttons will cause [onAmountChangeRequest] to be invoked.
  *
- * The optional [valueIsFocusableTransitionProgressGetter] should return the
- * progress of a transition between [valueIsFocusable] states in the range of
- * [0f, 1f] (corresponding to the unfocusable and focusable states, respectively).
- * If provided, this will allow the AmountEdit to smoothly animate between the
+ * The optional [focusableTransitionProgressGetter] should return the progress
+ * of a transition between [focusable] states in the range of [0f, 1f]
+ * (corresponding to the unfocusable and focusable states, respectively). If
+ * provided, this will allow the AmountEdit to smoothly animate between the
  * two states.
  */
 @Composable fun AmountEdit(
     sizes: AmountEditSizes,
     amount: Int,
-    valueIsFocusable: Boolean,
+    focusable: Boolean,
     tint: Color,
     decreaseDescription: String,
     increaseDescription: String,
     onAmountChangeRequest: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    valueIsFocusableTransitionProgressGetter: () -> Float =
-        { if (valueIsFocusable) 1f else 0f },
+    focusableTransitionProgressGetter: () -> Float =
+        { if (focusable) 1f else 0f },
 ) {
     val color = LocalContentColor.current
 
-    Box(modifier = modifier.size(sizes.width(valueIsFocusable), sizes.height)) {
+    Box(modifier = modifier.size(sizes.width(focusable), sizes.height)) {
         BasicTextField(
             value = amount.toString(),
             onValueChange = { onAmountChangeRequest(it.toInt()) },
             modifier = Modifier
                 .align(Alignment.Center)
-                .width(sizes.valueWidth(valueIsFocusable))
+                .width(sizes.valueWidth(focusable))
                 .graphicsLayer {
-                    val interp = valueIsFocusableTransitionProgressGetter()
-                    translationX = sizes.valueXOffset(valueIsFocusable, interp).toPx()
+                    val interp = focusableTransitionProgressGetter()
+                    translationX = sizes.valueXOffset(focusable, interp).toPx()
                 }.drawBehind {
-                    val interp = valueIsFocusableTransitionProgressGetter()
+                    val interp = focusableTransitionProgressGetter()
                     if (interp == 0f)
                         return@drawBehind
                     val width = (24 + 24 * interp).dp.toPx()
@@ -282,7 +282,7 @@ fun Modifier.horizontalSwipeToDeleteSurface(
                         strokeWidth = 1.dp.toPx(),
                         alpha = interp)
                 },
-            enabled = valueIsFocusable,
+            enabled = focusable,
             textStyle = sizes.textStyle,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
@@ -299,8 +299,8 @@ fun Modifier.horizontalSwipeToDeleteSurface(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .graphicsLayer {
-                    val interp = valueIsFocusableTransitionProgressGetter()
-                    translationX = sizes.increaseButtonXOffset(valueIsFocusable, interp).toPx()
+                    val interp = focusableTransitionProgressGetter()
+                    translationX = sizes.increaseButtonXOffset(focusable, interp).toPx()
                 },
             imageVector = Icons.Default.AddCircleOutline,
             description = increaseDescription)
@@ -317,16 +317,16 @@ fun AmountEditPreview() = BootyCrateTheme {
             AmountEditSizes(textStyle, fontFamilyResolver, density)
         }
         var amount by remember { mutableStateOf(2) }
-        var isFocusable by remember { mutableStateOf(false) }
-        val isFocusableTransitionProgress by animateFloatAsState(
-            targetValue = if (isFocusable) 1f else 0f,
+        var focusable by remember { mutableStateOf(false) }
+        val focusableTransitionProgress by animateFloatAsState(
+            targetValue = if (focusable) 1f else 0f,
             animationSpec = defaultSpring())
 
         AmountEdit(
             sizes = sizes,
             amount = amount,
-            valueIsFocusable = isFocusable,
-            valueIsFocusableTransitionProgressGetter = { isFocusableTransitionProgress },
+            focusable = focusable,
+            focusableTransitionProgressGetter = { focusableTransitionProgress },
             tint = Color.Red,
             decreaseDescription = "",
             increaseDescription = "",
@@ -335,7 +335,7 @@ fun AmountEditPreview() = BootyCrateTheme {
                 MaterialTheme.colors.surface,
                 MaterialTheme.shapes.small))
         SimpleIconButton(
-            onClick = { isFocusable = !isFocusable },
+            onClick = { focusable = !focusable },
             imageVector = Icons.Default.Edit,
             description = null)
     }

@@ -17,11 +17,11 @@ import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.SelectionState
 import com.cliffracertech.bootycrate.model.SharedState
 import com.cliffracertech.bootycrate.model.database.InventoryItemDao
-import com.cliffracertech.bootycrate.model.database.InventoryProvider
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ListItem
-import com.cliffracertech.bootycrate.model.database.SearchableSortableInventoryProvider
-import com.cliffracertech.bootycrate.model.database.SearchableSortableShoppingListProvider
+import com.cliffracertech.bootycrate.model.database.DefaultInventoryProvider
+import com.cliffracertech.bootycrate.model.database.DefaultShoppingListProvider
+import com.cliffracertech.bootycrate.model.database.InventoryProvider
 import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
 import com.cliffracertech.bootycrate.model.database.ShoppingListProvider
 import com.cliffracertech.bootycrate.settings.PrefKeys
@@ -67,9 +67,9 @@ enum class ChangeSortDeleteButtonState {
     private val inventorySelection: SelectionState,
     coroutineScope: CoroutineScope
 ) : ViewModel(coroutineScope),
-    ShoppingListProvider by SearchableSortableShoppingListProvider(
+    ShoppingListProvider by DefaultShoppingListProvider(
         searchQueryState, shoppingListDao, dataStore, coroutineScope),
-    InventoryProvider by SearchableSortableInventoryProvider(
+    InventoryProvider by DefaultInventoryProvider(
         searchQueryState, inventoryDao, dataStore, coroutineScope)
 {
     @Inject constructor(
@@ -81,9 +81,9 @@ enum class ChangeSortDeleteButtonState {
         messageHandler: MessageHandler,
         @SharedState.SearchQuery
         searchQueryState: MutableStateFlow<String?>,
-        @SharedState.ShoppingListSelection
+        @SharedState.ShoppingListVolatileState
         shoppingListSelection: SelectionState,
-        @SharedState.InventorySelection
+        @SharedState.InventoryVolatileState
         inventorySelection: SelectionState,
     ) : this(dataStore, shoppingListDao, inventoryDao, itemGroupDao,
              navigationState, messageHandler, searchQueryState,

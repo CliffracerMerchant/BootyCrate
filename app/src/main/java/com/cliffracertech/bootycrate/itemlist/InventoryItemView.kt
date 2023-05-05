@@ -103,6 +103,7 @@ fun inventoryItemCallback(
     onClick: (Long) -> Unit = {},
     onLongClick: (Long) -> Unit = {},
     onSwipe: (Long) -> Unit = {},
+    onColorIndicatorClick: (Long) -> Unit = {},
     onColorGroupClick: (Long, ListItem.ColorGroup) -> Unit = { _, _ -> },
     onRenameRequest: (Long, String) -> Unit = { _, _ -> },
     onExtraInfoChangeRequest: (Long, String) -> Unit = { _, _ -> },
@@ -115,6 +116,7 @@ fun inventoryItemCallback(
     override fun onClick(id: Long) = onClick(id)
     override fun onLongClick(id: Long) = onLongClick(id)
     override fun onSwipe(id: Long) = onSwipe(id)
+    override fun onColorIndicatorClick(id: Long) = onColorIndicatorClick(id)
     override fun onColorGroupClick(id: Long, colorGroup: ListItem.ColorGroup) =
         onColorGroupClick(id, colorGroup)
     override fun onRenameRequest(id: Long, newName: String) =
@@ -141,15 +143,17 @@ fun inventoryItemCallback(
  * @param name The name of the displayed item
  * @param extraInfo The extra info of the displayed item
  * @param amount The amount of the displayed item
- * @param isLinked Whether or not the item is linked to another item
+ * @param linked Whether or not the item is linked to another item
  * @param autoAddToShoppingList Whether or not auto add to shopping
  *     list is enabled for the item
  * @param autoAddToShoppingListAmount The auto add to shopping list
  *     threshold amount for the item
- * @param isEditable Whether or not the item will present itself in its editable state
- * @param isSelected Whether or not the item is selected
  * @param selectionBrush The [Brush] that will be shown at half
- *     opacity over the normal background when isSelected is true
+ *     opacity over the normal background when selected is true
+ * @param selected Whether or not the item is selected
+ * @param expanded Whether or not the item will present itself in its expanded
+ *     state that allows for additional editing
+ * @param showColorPicker Whether or not the item should show its color picker
  * @param callback The [InventoryItemCallback] whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
@@ -161,12 +165,13 @@ fun inventoryItemCallback(
     name: String,
     extraInfo: String,
     amount: Int,
-    isLinked: Boolean,
+    linked: Boolean,
     autoAddToShoppingList: Boolean,
     autoAddToShoppingListAmount: Int,
-    isEditable: Boolean,
-    isSelected: Boolean,
     selectionBrush: Brush,
+    selected: Boolean,
+    expanded: Boolean,
+    showColorPicker: Boolean,
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
 ) {
@@ -175,18 +180,16 @@ fun inventoryItemCallback(
         colors.getOrElse(colorGroup.ordinal) { colors.first() }
     }
     ListItemView(
-        sizes, id,
-        colorGroup, name, extraInfo,
-        amount, isLinked, isEditable,
-        isSelected, selectionBrush,
+        sizes, id, colorGroup, name, extraInfo, amount, linked,
+        selectionBrush, selected, expanded, showColorPicker,
         callback, modifier,
-        colorIndicator = { _, showColorPicker, colorIndicatorModifier ->
+        colorIndicator = { _, showingColorPicker, colorIndicatorModifier ->
             ColorIndicator(
                 color = color,
                 clickLabel = stringResource(
                     R.string.edit_item_color_description, name),
                 modifier = colorIndicatorModifier,
-                onClick = showColorPicker)
+                onClick = showingColorPicker)
         }
     ) { otherContentModifier ->
         Row(verticalAlignment = Alignment.CenterVertically,
@@ -204,7 +207,7 @@ fun inventoryItemCallback(
             AmountEdit(
                 sizes = sizes.amountEditSizes,
                 amount = autoAddToShoppingListAmount,
-                valueIsFocusable = true,
+                focusable = true,
                 tint = color,
                 decreaseDescription = stringResource(
                     R.string.item_auto_add_to_shopping_list_amount_decrease_description, name),
@@ -223,10 +226,12 @@ fun inventoryItemCallback(
  *
  * @param sizes The [ListItemViewSizes] instance to use for the view
  * @param item The [InventoryItem] instance whose data is being displayed
- * @param isEditable Whether or not the item will present itself in its editable state
- * @param isSelected Whether or not the item is selected
  * @param selectionBrush The [Brush] that will be shown at half
  *     opacity over the normal background when isSelected is true
+ * @param selected Whether or not the item is selected
+ * @param expanded Whether or not the item will present itself in its
+ *     expanded, editable state
+ * @param showColorPicker Whether or not the item should show its color picker
  * @param callback The [InventoryItemCallback] whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
@@ -234,18 +239,20 @@ fun inventoryItemCallback(
 @Composable fun InventoryItemView(
     sizes: ListItemViewSizes,
     item: InventoryItem,
-    isEditable: Boolean,
-    isSelected: Boolean,
     selectionBrush: Brush,
+    selected: Boolean,
+    expanded: Boolean,
+    showColorPicker: Boolean,
     callback: InventoryItemCallback,
     modifier: Modifier = Modifier
 ) = InventoryItemView(
     sizes, item.id, item.colorGroup,
     item.name, item.extraInfo,
-    item.amount, item.isLinked,
+    item.amount, item.linked,
     item.autoAddToShoppingList,
     item.autoAddToShoppingListAmount,
-    isEditable, isSelected, selectionBrush,
+    selectionBrush, selected,
+    expanded, showColorPicker,
     callback, modifier)
 
 @Preview @Composable
@@ -258,33 +265,38 @@ fun InventoryItemViewPreview() = BootyCrateTheme {
     var amount by remember { mutableStateOf(5) }
     var autoAddToShoppingList by remember { mutableStateOf(false) }
     var autoAddToShoppingListAmount by remember { mutableStateOf(1) }
-    var isEditable by remember { mutableStateOf(false) }
-    var isSelected by remember { mutableStateOf(false) }
-
     val color1 = MaterialTheme.colors.primary
     val color2 = MaterialTheme.colors.secondary
     val selectionBrush = remember { Brush.horizontalGradient(listOf(color1, color2)) }
+    var selected by remember { mutableStateOf(false) }
+    var editable by remember { mutableStateOf(false) }
+    var showColorPicker by remember { mutableStateOf(false) }
 
-    val callback = remember { inventoryItemCallback(
-        onClick = { isSelected = !isSelected },
-        onLongClick = { isSelected = !isSelected },
-        onColorGroupClick = { _, newColorGroup -> colorGroup = newColorGroup },
-        onRenameRequest = { _, newName -> name = newName },
-        onExtraInfoChangeRequest = { _, newExtraInfo -> extraInfo = newExtraInfo },
-        onAmountChangeRequest = { _, newAmount -> amount = newAmount },
-        onEditButtonClick = { isEditable = !isEditable },
-        onAutoAddToShoppingListCheckboxClick = {
-            autoAddToShoppingList = !autoAddToShoppingList
-        }, onAutoAddToShoppingListAmountChangeRequest = { _, newAmount ->
-            autoAddToShoppingListAmount = newAmount
-        })
-    }
     InventoryItemView(
-        sizes, id = 0,
-        colorGroup, name, extraInfo,
-        amount, isLinked = true,
-        autoAddToShoppingList, autoAddToShoppingListAmount,
-        isEditable, isSelected, selectionBrush, callback)
+        sizes, id = 0, colorGroup,
+        name, extraInfo, amount,
+        linked = true,
+        autoAddToShoppingList,
+        autoAddToShoppingListAmount,
+        selectionBrush, selected,
+        editable, showColorPicker,
+        callback = remember { inventoryItemCallback(
+            onClick = { selected = !selected },
+            onLongClick = { selected = !selected },
+            onColorIndicatorClick = { showColorPicker = true },
+            onColorGroupClick = { _, newColorGroup ->
+                colorGroup = newColorGroup
+                showColorPicker = false
+            }, onRenameRequest = { _, newName -> name = newName },
+            onExtraInfoChangeRequest = { _, newExtraInfo -> extraInfo = newExtraInfo },
+            onAmountChangeRequest = { _, newAmount -> amount = newAmount },
+            onEditButtonClick = { editable = !editable },
+            onAutoAddToShoppingListCheckboxClick = {
+                autoAddToShoppingList = !autoAddToShoppingList
+            }, onAutoAddToShoppingListAmountChangeRequest = { _, newAmount ->
+                autoAddToShoppingListAmount = newAmount
+            })
+        })
 }
 
 

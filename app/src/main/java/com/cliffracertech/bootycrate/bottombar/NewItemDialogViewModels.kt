@@ -182,7 +182,7 @@ abstract class NewItemDialogViewModel(
         extraInfo = extraInfo,
         colorGroup = itemColorGroup,
         amount = itemAmount,
-        isChecked = itemIsChecked
+        checked = itemIsChecked
     ).toDbListItem(itemGroupName)
 
     override fun onDismissRequest() {

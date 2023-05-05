@@ -7,7 +7,6 @@ package com.cliffracertech.bootycrate.itemlist
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
@@ -124,6 +123,7 @@ fun shoppingListItemCallback(
     onClick: (Long) -> Unit = {},
     onLongClick: (Long) -> Unit = {},
     onSwipe: (Long) -> Unit = {},
+    onColorIndicatorClick: (Long) -> Unit = {},
     onColorGroupClick: (Long, ListItem.ColorGroup) -> Unit = { _, _ -> },
     onRenameRequest: (Long, String) -> Unit = { _, _ -> },
     onExtraInfoChangeRequest: (Long, String) -> Unit = { _, _ -> },
@@ -135,6 +135,7 @@ fun shoppingListItemCallback(
     override fun onClick(id: Long) = onClick(id)
     override fun onLongClick(id: Long) = onLongClick(id)
     override fun onSwipe(id: Long) = onSwipe(id)
+    override fun onColorIndicatorClick(id: Long) = onColorIndicatorClick(id)
     override fun onColorGroupClick(id: Long, colorGroup: ListItem.ColorGroup) =
         onColorGroupClick(id, colorGroup)
     override fun onRenameRequest(id: Long, newName: String) =
@@ -159,12 +160,14 @@ fun shoppingListItemCallback(
  * @param name The name of the displayed item
  * @param extraInfo The extra info of the displayed item
  * @param amount The amount of the displayed item
- * @param isChecked Whether or not the item is currently checked
- * @param isLinked Whether or not the item is linked to a similar item
- * @param isEditable Whether or not the item will present itself in its editable state
- * @param isSelected Whether or not the item is selected
+ * @param checked Whether or not the item is currently checked
+ * @param linked Whether or not the item is linked to a similar item
  * @param selectionBrush The [Brush] that will be shown at half
  *     opacity over the normal background when isSelected is true
+ * @param selected Whether or not the item is selected
+ * @param expanded Whether or not the item will present itself in its
+ *     expanded state that allows for additional editing
+ * @param showColorPicker Whether or not the item should show its color picker
  * @param callback The [ShoppingListItemCallback] whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
@@ -176,33 +179,33 @@ fun shoppingListItemCallback(
     name: String,
     extraInfo: String,
     amount: Int,
-    isChecked: Boolean,
-    isLinked: Boolean,
-    isEditable: Boolean,
-    isSelected: Boolean,
+    checked: Boolean,
+    linked: Boolean,
     selectionBrush: Brush,
+    selected: Boolean,
+    expanded: Boolean,
+    showColorPicker: Boolean,
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ListItemView(
-    sizes, id,
-    colorGroup, name, extraInfo,
-    amount, isLinked, isEditable,
-    isSelected, selectionBrush,
-    callback, modifier,
-    colorIndicator = { isCollapsed, showColorPicker, colorIndicatorModifier ->
+    sizes, id, colorGroup,
+    name, extraInfo, amount, linked,
+    selectionBrush, selected, expanded,
+    showColorPicker, callback, modifier,
+    colorIndicator = { isCollapsed, showingColorPicker, colorIndicatorModifier ->
         val colors = ListItem.ColorGroup.colors()
         val color = colors.getOrElse(colorGroup.ordinal) { colors.first() }
         CheckboxAndColorIndicator(
-            showCheckbox = !isEditable,
+            showCheckbox = !expanded,
             wasShowingCheckbox = isCollapsed,
             tint = color,
-            checked = isChecked,
+            checked = checked,
             checkboxClickLabel = stringResource(
                 R.string.item_checkbox_description, name),
             onCheckboxClick = { callback.onCheckboxClick(id) },
             colorIndicatorClickLabel = stringResource(
                 R.string.edit_item_color_description, name),
-            onColorIndicatorClick = showColorPicker,
+            onColorIndicatorClick = showingColorPicker,
             modifier = colorIndicatorModifier.requiredSize(48.dp))
     })
 
@@ -212,10 +215,12 @@ fun shoppingListItemCallback(
  *
  * @param sizes The [ListItemViewSizes] instance to use for the view
  * @param item The [ShoppingListItem] instance whose data is being displayed
- * @param isEditable Whether or not the item will present itself in its editable state
- * @param isSelected Whether or not the item is selected
  * @param selectionBrush The [Brush] that will be shown at half
  *     opacity over the normal background when isSelected is true
+ * @param selected Whether or not the item is selected
+ * @param expanded Whether or not the item will present itself in its expanded
+ *     state that allows for additional editing
+ * @param showColorPicker Whether or not the item should show its color picker
  * @param callback The ShoppingListItemCallback whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
@@ -223,16 +228,18 @@ fun shoppingListItemCallback(
 @Composable fun ShoppingListItemView(
     sizes: ListItemViewSizes,
     item: ShoppingListItem,
-    isEditable: Boolean,
-    isSelected: Boolean,
     selectionBrush: Brush,
+    selected: Boolean,
+    expanded: Boolean,
+    showColorPicker: Boolean,
     callback: ShoppingListItemCallback,
     modifier: Modifier = Modifier
 ) = ShoppingListItemView(
     sizes, item.id,
     item.colorGroup, item.name, item.extraInfo,
-    item.amount, item.isChecked, item.isLinked, isEditable,
-    isSelected, selectionBrush, callback, modifier)
+    item.amount, item.checked, item.linked,
+    selectionBrush, selected, expanded,
+    showColorPicker, callback, modifier)
 
 @Preview @Composable
 fun ShoppingListItemViewPreview() = BootyCrateTheme {
@@ -242,33 +249,32 @@ fun ShoppingListItemViewPreview() = BootyCrateTheme {
     var name by remember { mutableStateOf("Test item") }
     var extraInfo by remember { mutableStateOf("Test extra info") }
     var amount by remember { mutableStateOf(5) }
-    var isChecked by remember { mutableStateOf(false) }
-    var isEditable by remember { mutableStateOf(false) }
-    var isSelected by remember { mutableStateOf(false) }
-
+    var checked by remember { mutableStateOf(false) }
     val color1 = MaterialTheme.colors.primary
     val color2 = MaterialTheme.colors.secondary
     val selectionBrush = remember { Brush.horizontalGradient(listOf(color1, color2)) }
+    var selected by remember { mutableStateOf(false) }
+    var editable by remember { mutableStateOf(false) }
+    var showColorPicker by remember { mutableStateOf(false) }
 
-    val callback = remember { shoppingListItemCallback(
-        onLongClick = { isSelected = !isSelected },
-        onColorGroupClick = { _, clickedColorGroup ->
-            colorGroup = clickedColorGroup
-        }, onRenameRequest = { _, newName -> name = newName },
-        onExtraInfoChangeRequest = { _, newExtraInfo ->
-            extraInfo = newExtraInfo
-        }, onAmountChangeRequest = { _, newAmount ->
-            amount = newAmount
-        }, onEditButtonClick = { isEditable = !isEditable },
-        onCheckboxClick = { isChecked = !isChecked })
-    }
-    Box(Modifier
-        .background(MaterialTheme.colors.primary)
-        .padding(8.dp)
-    ) {
-        ShoppingListItemView(
-            sizes, id = 0, colorGroup, name, extraInfo,
-            amount, isChecked, isLinked = true,
-            isEditable, isSelected, selectionBrush, callback)
-    }
+    ShoppingListItemView(
+        sizes, id = 0, colorGroup,
+        name, extraInfo, amount,
+        checked, linked = true,
+        selectionBrush, selected,
+        editable, showColorPicker,
+        callback = remember { shoppingListItemCallback(
+            onLongClick = { selected = !selected },
+            onColorIndicatorClick = { showColorPicker = true },
+            onColorGroupClick = { _, clickedColorGroup ->
+                colorGroup = clickedColorGroup
+                showColorPicker = false
+            }, onRenameRequest = { _, newName -> name = newName },
+            onExtraInfoChangeRequest = { _, newExtraInfo ->
+                extraInfo = newExtraInfo
+            }, onAmountChangeRequest = { _, newAmount ->
+                amount = newAmount
+            }, onEditButtonClick = { editable = !editable },
+            onCheckboxClick = { checked = !checked })
+        })
 }

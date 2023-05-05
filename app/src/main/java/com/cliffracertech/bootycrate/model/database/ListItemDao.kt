@@ -18,12 +18,12 @@ import androidx.room.*
         private const val shoppingListItemFields =
             "item.id, item.name, extraInfo, colorGroup, " +
             "shoppingListAmount as amount, " +
-            "$inInventory as isLinked, isChecked"
+            "$inInventory as linked, isChecked as checked"
 
         private const val inventoryItemFields =
             "item.id, item.name, extraInfo, colorGroup, " +
             "inventoryAmount as amount, " +
-            "$onShoppingList as isLinked, " +
+            "$onShoppingList as linked, " +
             "autoAddToShoppingList, autoAddToShoppingListAmount"
 
         const val selectShoppingListItems =

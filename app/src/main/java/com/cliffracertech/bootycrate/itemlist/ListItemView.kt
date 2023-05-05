@@ -32,9 +32,7 @@ import androidx.compose.material.icons.filled.Link
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -61,8 +59,10 @@ interface ListItemCallback {
     fun onLongClick(id: Long)
     /** The callback that will be invoked when the item is swiped off the screen */
     fun onSwipe(id: Long)
+    /** The callback that will be invoked when the item's color indicator is clicked */
+    fun onColorIndicatorClick(id: Long)
     /** The callback that will be invoked when the given [colorGroup]
-     * has been clicked in the item's color group selector */
+     * has been clicked in the item's color group picker */
     fun onColorGroupClick(id: Long, colorGroup: ListItem.ColorGroup)
     /** The callback that will be invoked when the item's
      * name has been requested to be changed to [newName] */
@@ -81,9 +81,9 @@ interface ListItemCallback {
 
 @Composable private fun ListItemViewTextFields(
     sizes: ListItemViewSizes,
-    isEditable: Boolean,
+    editable: Boolean,
     editableTransitionProgressGetter: () -> Float,
-    isFullyCollapsed: Boolean,
+    fullyCollapsed: Boolean,
     id: Long,
     name: String,
     extraInfo: String,
@@ -93,43 +93,43 @@ interface ListItemCallback {
     // We want the text fields to stay at their expanded editable widths until
     // the view is fully collapsed to prevent the underlines from noticeably
     // changing in width at the beginning of the collapse animation.
-    .width(sizes.textFieldWidth(!isFullyCollapsed))
+    .width(sizes.textFieldWidth(!fullyCollapsed))
     .offset(x = sizes.colorIndicatorSize)
 ) {
     ListItemTextField(
         text = name,
         onTextChange = { callback.onRenameRequest(id, it) },
         modifier = Modifier
-            .height(sizes.nameHeight(isEditable))
+            .height(sizes.nameHeight(editable))
             .graphicsLayer {
                 val interp = editableTransitionProgressGetter()
                 translationY = sizes.nameOffsetY(
-                    isEditable, extraInfo.isBlank(), interp).toPx()
+                    editable, extraInfo.isBlank(), interp).toPx()
             },
         tint = tint,
-        isEditable = isEditable,
+        editable = editable,
         editableTransitionProgressGetter = editableTransitionProgressGetter,
         textStyle = sizes.nameTextStyle)
-    if (!isFullyCollapsed || extraInfo.isNotBlank())
+    if (!fullyCollapsed || extraInfo.isNotBlank())
         ListItemTextField(
             text = extraInfo,
             onTextChange = { callback.onExtraInfoChangeRequest(id, it) },
             modifier = Modifier
-                .height(sizes.extraInfoHeight(isEditable))
+                .height(sizes.extraInfoHeight(editable))
                 .graphicsLayer {
                     translationY = sizes.extraInfoOffsetY(
-                        isEditable, editableTransitionProgressGetter()).toPx()
+                        editable, editableTransitionProgressGetter()).toPx()
                 },
             tint = tint,
-            isEditable = isEditable,
+            editable = editable,
             editableTransitionProgressGetter = editableTransitionProgressGetter,
             textStyle = sizes.extraInfoTextStyle)
 }
 
 @Composable private fun BoxScope.ListItemViewAmountEdit(
     sizes: ListItemViewSizes,
-    valueIsFocusable: Boolean,
-    valueIsFocusableTransitionProgressGetter: () -> Float,
+    focusable: Boolean,
+    focusableTransitionProgressGetter: () -> Float,
     id: Long,
     name: String,
     amount: Int,
@@ -138,7 +138,7 @@ interface ListItemCallback {
 ) = AmountEdit(
     sizes = sizes.amountEditSizes,
     amount = amount,
-    valueIsFocusable = valueIsFocusable,
+    focusable = focusable,
     tint = tint,
     decreaseDescription = stringResource(
         R.string.item_amount_decrease_description, name),
@@ -149,15 +149,15 @@ interface ListItemCallback {
     }, modifier = Modifier
         .align(Alignment.TopEnd)
         .graphicsLayer {
-            val interp = valueIsFocusableTransitionProgressGetter()
-            translationX = sizes.amountEditOffsetX(valueIsFocusable, interp).toPx()
+            val interp = focusableTransitionProgressGetter()
+            translationX = sizes.amountEditOffsetX(focusable, interp).toPx()
         },
-    valueIsFocusableTransitionProgressGetter = valueIsFocusableTransitionProgressGetter)
+    focusableTransitionProgressGetter = focusableTransitionProgressGetter)
 
 @Composable private fun BoxScope.ListItemViewEditCollapseButton(
     sizes: ListItemViewSizes,
-    isEditable: Boolean,
-    isEditableTransitionProgressGetter: () -> Float,
+    editable: Boolean,
+    editableTransitionProgressGetter: () -> Float,
     id: Long,
     name: String,
     callback: ListItemCallback,
@@ -169,15 +169,15 @@ interface ListItemCallback {
                 .align(Alignment.TopEnd)
                 .size(sizes.editButtonSize)
                 .graphicsLayer {
-                    val interp = isEditableTransitionProgressGetter()
+                    val interp = editableTransitionProgressGetter()
                     translationY = sizes.editButtonOffsetY(interp).toPx()
                 },
-            isEditable = isEditable,
+            isEditable = editable,
             itemName = name)
 }
 
 @Composable private fun BoxScope.ListItemViewLinkedIndicator(
-    appearanceProgress: () -> Float
+    appearanceProgressGetter: () -> Float
 ) = Icon(
     imageVector = Icons.Default.Link,
     contentDescription = null,
@@ -187,7 +187,7 @@ interface ListItemCallback {
         .padding(12.dp)
         .offset(x = (-48).dp, y = 48.dp)
         .graphicsLayer {
-            alpha = appearanceProgress()
+            alpha = appearanceProgressGetter()
             translationY = -24.dp.toPx() * (1f - alpha)
         })
 
@@ -199,26 +199,25 @@ interface ListItemCallback {
     name: String,
     extraInfo: String,
     amount: Int,
-    isLinked: Boolean,
+    showLinkIndicator: Boolean,
     /** For some reason, passing isEditable as a boolean prevents this
      * content from skipping recomposition during the expand collapse
      * animations. Passing it as some other type prevents this. */
-    isEditable: Int,
+    editable: Int,
     callback: ListItemCallback,
     colorIndicator: @Composable (
-            isCollapsed: Boolean,
-            showColorPicker: () -> Unit,
+            collapsed: Boolean,
+            colorIndicatorOnClick: () -> Unit,
             modifier: Modifier,
         ) -> Unit,
     otherContent: @Composable (otherContentModifier: Modifier) -> Unit = {},
-    showColorPicker: () -> Unit,
+    colorIndicatorOnClick: () -> Unit,
 ) = Box(Modifier.heightIn(min = 48.dp)) {
 
-    val isEditable = isEditable == 1
-    val floatSpec = defaultSpring<Float>()
+    val editable = editable == 1
     val expansionProgress by animateFloatAsState(
-        if (isEditable) 1f else 0f, floatSpec)
-    val isCollapsed by remember { derivedStateOf { expansionProgress == 0f }}
+        if (editable) 1f else 0f, defaultSpring())
+    val collapsed by remember { derivedStateOf { expansionProgress == 0f }}
 
     val colors = ListItem.ColorGroup.colors()
     val tint = remember(colorGroup) {
@@ -226,27 +225,27 @@ interface ListItemCallback {
     }
 
     colorIndicator(
-        modifier = Modifier.graphicsLayer {
+        collapsed , colorIndicatorOnClick,
+        Modifier.graphicsLayer {
             translationY = sizes.colorIndicatorOffsetY(expansionProgress).toPx()
-        }, isCollapsed = isCollapsed,
-        showColorPicker = showColorPicker)
+        })
     ListItemViewTextFields(
-        sizes, isEditable, { expansionProgress },
-        isCollapsed, id, name, extraInfo, tint, callback)
+        sizes, editable, { expansionProgress },
+        collapsed, id, name, extraInfo, tint, callback)
     ListItemViewAmountEdit(
-        sizes, isEditable, { expansionProgress },
+        sizes, editable, { expansionProgress },
         id, name, amount, tint, callback)
     ListItemViewEditCollapseButton(
-        sizes, isEditable,
+        sizes, editable,
         { expansionProgress },
         id, name, callback)
 
     val linkedIndicatorAppearanceProgress by animateFloatAsState(
-        if (isEditable && isLinked) 1f else 0f, floatSpec)
+        if (editable && showLinkIndicator) 1f else 0f, defaultSpring())
     if (linkedIndicatorAppearanceProgress > 0f)
         ListItemViewLinkedIndicator { linkedIndicatorAppearanceProgress }
 
-    if (!isCollapsed)
+    if (!collapsed)
         otherContent(Modifier.graphicsLayer {
             translationY = sizes.otherContentOffsetY(expansionProgress).toPx()
             alpha = expansionProgress
@@ -263,20 +262,21 @@ interface ListItemCallback {
  * @param name The name of the displayed item
  * @param extraInfo The extra info of the displayed item
  * @param amount The amount of the displayed item
- * @param isExpanded Whether or not the item will present itself in its
+ * @param selectionBrush The [Brush] that will be shown at half
+ *     opacity over the normal background when selected is true
+ * @param selected Whether or not the item is selected
+ * @param expanded Whether or not the item will present itself in its
  *     expanded state. This will allow the text fields and the value of
  *     the amount edit to be keyboard focusable.
- * @param isSelected Whether or not the item is selected
- * @param selectionBrush The [Brush] that will be shown at half
- *     opacity over the normal background when isSelected is true
+ * @param showColorPicker Whether or not the item should show its color picker
  * @param callback The [ListItemCallback] whose method implementations
  *     will be used as the callbacks for user interactions
  * @param modifier The [Modifier] that will be used for the root layout
  * @param colorIndicator A composable lambda whose contents will be used as
- *     the start aligned color indicator for the list item. Whether or not
- *     the view is fully collapsed will be provided, along with a lambda that
- *     will show the [ListItemView]'s color picker when invoked. This lambda
- *     should usually be used as the content's onClick.
+ *     the start aligned color indicator for the list item. Three parameters
+ *     are provided: whether or not the view is fully collapsed, an onClick
+ *     lambda to use for the content, and a [Modifier] should be used as the
+ *     root modifier for the content.
  * @param otherContent A composable lambda whose contents will be displayed
  *     beneath the other content. If the provided [Modifier] is used as the
  *     base modifier for the content, it will automatically be animated in/
@@ -289,28 +289,26 @@ interface ListItemCallback {
     name: String,
     extraInfo: String,
     amount: Int,
-    isLinked: Boolean,
-    isExpanded: Boolean,
-    isSelected: Boolean,
+    linked: Boolean,
     selectionBrush: Brush,
+    selected: Boolean,
+    expanded: Boolean,
+    showColorPicker: Boolean,
     callback: ListItemCallback,
     modifier: Modifier = Modifier,
     colorIndicator: @Composable (
             isCollapsed: Boolean,
-            showColorPicker: () -> Unit,
+            onClick: () -> Unit,
             modifier: Modifier,
         ) -> Unit,
     otherContent: @Composable (otherContentModifier: Modifier) -> Unit = {},
 ) {
-    var showColorPicker by remember { mutableStateOf(false) }
     val backgroundShape = MaterialTheme.shapes.large
     val selectionBackgroundAlpha by animateFloatAsState(
-        targetValue = if (isSelected && !showColorPicker) 0.5f else 0f,
+        targetValue = if (selected && !showColorPicker) 0.5f else 0f,
         animationSpec = tween(durationMillis = 300))
     val height by animateDpAsState(
-        targetValue = sizes.height(
-            showingColorPicker = showColorPicker,
-            isExpanded = isExpanded),
+        targetValue = sizes.height(showColorPicker, expanded),
         animationSpec = defaultSpring())
 
     AnimatedContent(
@@ -328,10 +326,10 @@ interface ListItemCallback {
             }.combinedClickable(
                 role = Role.Switch,
                 onLongClickLabel = stringResource(
-                    if (isSelected) R.string.deselect_item_description
+                    if (selected) R.string.deselect_item_description
                     else            R.string.select_item_description),
                 onLongClick = { callback.onLongClick(id) },
-                onClickLabel = if (!isSelected) null else
+                onClickLabel = if (!selected) null else
                     stringResource(R.string.deselect_item_description),
                 onClick = { callback.onClick(id) }
             ).padding(vertical = sizes.internalVerticalPadding),
@@ -345,14 +343,13 @@ interface ListItemCallback {
         if (showingColorPicker)
             ListItemColorGroupPicker(Modifier, colorGroup) {
                 callback.onColorGroupClick(id, it)
-                showColorPicker = false
             }
         else ListItemViewRegularContent(
-            sizes, id, colorGroup, name, extraInfo, amount, isLinked,
+            sizes, id, colorGroup, name, extraInfo, amount, linked,
             // See ListItemViewRegularContent param isEditable for
             // why this is passed as an int instead of a boolean.
-            isEditable = if (isExpanded) 1 else 0,
+            editable = if (expanded) 1 else 0,
             callback, colorIndicator, otherContent,
-            showColorPicker = { showColorPicker = true })
+            colorIndicatorOnClick = { callback.onColorIndicatorClick(id) })
     }
 }

@@ -5,30 +5,24 @@
 package com.cliffracertech.bootycrate.itemlist
 
 import androidx.annotation.CallSuper
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.ViewModel
 import com.cliffracertech.bootycrate.activity.MessageHandler
-import com.cliffracertech.bootycrate.model.SelectionState
+import com.cliffracertech.bootycrate.model.ItemListVolatileState
 import com.cliffracertech.bootycrate.model.SharedState
+import com.cliffracertech.bootycrate.model.database.AsyncInventoryStateProvider
+import com.cliffracertech.bootycrate.model.database.AsyncShoppingListStateProvider
+import com.cliffracertech.bootycrate.model.database.DefaultAsyncInventoryStateProvider
+import com.cliffracertech.bootycrate.model.database.DefaultAsyncShoppingListStateProvider
 import com.cliffracertech.bootycrate.model.database.InventoryItem
 import com.cliffracertech.bootycrate.model.database.InventoryItemDao
-import com.cliffracertech.bootycrate.model.database.InventoryProvider
 import com.cliffracertech.bootycrate.model.database.ItemGroupDao
 import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.ListItemDao
-import com.cliffracertech.bootycrate.model.database.SearchableSortableInventoryProvider
-import com.cliffracertech.bootycrate.model.database.SearchableSortableShoppingListProvider
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
-import com.cliffracertech.bootycrate.model.database.ShoppingListProvider
 import com.cliffracertech.bootycrate.utils.StringResource
-import com.cliffracertech.bootycrate.utils.collectAsState
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
 import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -40,64 +34,50 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed class AsyncListState {
-    object Loading: AsyncListState()
-    class Message(val text: StringResource) : AsyncListState()
-    class Content<T>(
+sealed class AsyncListState<out T: Any> {
+    object Loading: AsyncListState<Nothing>()
+    class Message(val text: StringResource) : AsyncListState<Nothing>()
+    class Content<T: ListItem>(
         override val items: ImmutableList<T>,
         override val selectedItemIds: ImmutableSet<Long>,
-        override val expandedItemId: Long?
-    ) : AsyncListState(), ItemListState<T>
+        override val expandedItemId: Long?,
+        override val colorPickerItemId: Long?,
+    ) : AsyncListState<T>(), ItemListState<T> {
+        constructor(
+            items: ImmutableList<T>,
+            volatileState: ItemListVolatileState
+        ): this(items,
+            volatileState.selection.ids,
+            volatileState.expandedItemId,
+            volatileState.colorPickerItemId)
+    }
 }
 
 /**
  * An abstract view model to provide data and callbacks for a screen
  * that displays a list of ListItem subclasses.
  *
- * The property [uiState] contains the current [AsyncListState] instance
+ * The property [listState] contains the current [AsyncListState] instance
  * that describes the data that should be displayed. UI interactions with
  * individual items should be connected to the methods [onItemRenameRequest],
- * [onItemExtraInfoChangeRequest], [onItemColorGroupChangeRequest],
- * [onItemAmountChangeRequest], [onItemEditButtonClick], [onItemClick],
- * [onItemLongClick], and [onItemSwipe].
+ * [onItemExtraInfoChangeRequest], [onItemColorIndicatorClick],
+ * [onItemColorGroupChangeRequest], [onItemAmountChangeRequest],
+ * [onItemEditButtonClick], [onItemClick], [onItemLongClick], and [onItemSwipe].
 
- * The current sorting option and search query are exposed to subclasses
- * through the properties [searchQuery] and [sort]. Subclasses should override
- * the abstract property [items] to to be equal to an ImmutableList<T>?
- * containing all of the items in the database that match the current sorting
+ * Subclasses should override the method [deleteItem] and the abstract property
+ * [listState]. [listState] should be overridden to be equal to an [AsyncListState]`<T>`
+ * describing the list of items in the database that match the current sorting
  * option and search query, as well as any additional sorting parameters that
- * they add. [items] can be null if the list of items is still loading.
+ * they add. [listState] can be null if the list of items is still loading.
  */
 abstract class ItemListViewModel<T: ListItem>(
-    searchQueryState: StateFlow<String?>,
     private val messageHandler: MessageHandler,
     private val dao: ListItemDao,
     private val itemGroupDao: ItemGroupDao,
-    private val selection: SelectionState,
+    private val volatileState: ItemListVolatileState,
     coroutineScope: CoroutineScope
 ): ViewModel(coroutineScope) {
-
-    abstract val collectionNameResId: StringResource.Id
-    private val searchQuery by searchQueryState
-        .collectAsState(null, coroutineScope)
-
-    protected abstract val items: ImmutableList<T>?
-    private var expandedItemId by mutableStateOf<Long?>(null)
-
-    val uiState by derivedStateOf {
-        val items = this.items
-        when {
-            items == null -> AsyncListState.Loading
-            items.isEmpty() -> AsyncListState.Message(
-                if (searchQuery != null)
-                    StringResource(R.string.no_search_results_message)
-                else StringResource(R.string.empty_list_message, collectionNameResId))
-            else -> AsyncListState.Content(
-                items = items,
-                selectedItemIds = selection.ids,
-                expandedItemId = expandedItemId)
-        }
-    }
+    abstract val listState: AsyncListState<T>
 
     fun onItemRenameRequest(id: Long, name: String) {
         coroutineScope.launch { dao.setName(id, name) }
@@ -105,21 +85,25 @@ abstract class ItemListViewModel<T: ListItem>(
     fun onItemExtraInfoChangeRequest(id: Long, extraInfo: String) {
         coroutineScope.launch { dao.setExtraInfo(id, extraInfo) }
     }
+
+    fun onItemColorIndicatorClick(id: Long) = volatileState.toggleShowColorPickerFor(id)
+
     fun onItemColorGroupChangeRequest(id: Long, colorGroup: ListItem.ColorGroup) {
-        coroutineScope.launch { dao.setColorGroup(id, colorGroup) }
+        if (id == volatileState.colorPickerItemId) {
+            coroutineScope.launch { dao.setColorGroup(id, colorGroup) }
+            volatileState.toggleShowColorPickerFor(id)
+        }
     }
     abstract fun onItemAmountChangeRequest(id: Long, amount: Int)
 
-    fun onItemEditButtonClick(id: Long) {
-        expandedItemId = if (expandedItemId == id) null else id
-    }
+    fun onItemEditButtonClick(id: Long) = volatileState.toggleExpansionFor(id)
 
     fun onItemClick(id: Long) {
-        if (selection.ids.isNotEmpty())
-            selection.toggle(id)
+        if (volatileState.selection.ids.isNotEmpty())
+            volatileState.selection.toggle(id)
     }
 
-    fun onItemLongClick(id: Long) = selection.toggle(id)
+    fun onItemLongClick(id: Long) = volatileState.selection.toggle(id)
 
     fun onItemSwipe(id: Long) { coroutineScope.launch {
         deleteItem(id)
@@ -131,8 +115,10 @@ abstract class ItemListViewModel<T: ListItem>(
 
     @CallSuper
     protected open suspend fun deleteItem(id: Long) {
-        if (id == expandedItemId)
-            expandedItemId = null
+        if (id == volatileState.expandedItemId)
+            volatileState.toggleExpansionFor(id)
+        if (id == volatileState.colorPickerItemId)
+            volatileState.toggleShowColorPickerFor(id)
     }
     protected abstract fun emptyTrash()
     protected abstract fun undoDelete()
@@ -147,13 +133,12 @@ abstract class ItemListViewModel<T: ListItem>(
     messageHandler: MessageHandler,
     private val dao: ShoppingListItemDao,
     itemGroupDao: ItemGroupDao,
-    selection: SelectionState,
+    volatileState: ItemListVolatileState,
     coroutineScope: CoroutineScope,
 ) : ItemListViewModel<ShoppingListItem>(
-        searchQueryState, messageHandler,
-        dao, itemGroupDao, selection, coroutineScope),
-    ShoppingListProvider by SearchableSortableShoppingListProvider(
-        searchQueryState, dao, dataStore, coroutineScope)
+        messageHandler, dao, itemGroupDao, volatileState, coroutineScope),
+    AsyncShoppingListStateProvider by DefaultAsyncShoppingListStateProvider(
+        searchQueryState, volatileState, dao, dataStore, coroutineScope)
 {
     @Inject constructor(
         dataStore: DataStore<Preferences>,
@@ -162,14 +147,12 @@ abstract class ItemListViewModel<T: ListItem>(
         messageHandler: MessageHandler,
         dao: ShoppingListItemDao,
         itemGroupDao: ItemGroupDao,
-        @SharedState.ShoppingListSelection
-        selection: SelectionState,
+        @SharedState.ShoppingListVolatileState
+        volatileState: ItemListVolatileState,
     ) : this(dataStore, searchQueryState, messageHandler,
-             dao, itemGroupDao, selection, viewModelScope())
+             dao, itemGroupDao, volatileState, viewModelScope())
 
-    override val collectionNameResId = StringResource.Id(R.string.shopping_list_description)
-
-    override val items by ::shoppingList
+    override val listState by ::shoppingListState
 
     override fun onItemAmountChangeRequest(id: Long, amount: Int) {
         coroutineScope.launch { dao.setAmount(id, amount) }
@@ -193,7 +176,7 @@ abstract class ItemListViewModel<T: ListItem>(
 }
 
 
-/** An implementation of ItemListViewModel<InventoryItem> that adds the methods
+/** An implementation of [ItemListViewModel]`<InventoryItem>` that adds the methods
  * [onAutoAddToShoppingListCheckboxClick] and [onAutoAddToShoppingListAmountChangeRequest]
  * to use as callbacks for item interactions. */
 @HiltViewModel class InventoryViewModel(
@@ -202,13 +185,12 @@ abstract class ItemListViewModel<T: ListItem>(
     messageHandler: MessageHandler,
     private val dao: InventoryItemDao,
     itemGroupDao: ItemGroupDao,
-    selection: SelectionState,
+    volatileState: ItemListVolatileState,
     coroutineScope: CoroutineScope,
 ) : ItemListViewModel<InventoryItem>(
-        searchQueryState, messageHandler,
-        dao, itemGroupDao, selection, coroutineScope),
-    InventoryProvider by SearchableSortableInventoryProvider(
-        searchQueryState, dao, dataStore, coroutineScope)
+        messageHandler, dao, itemGroupDao, volatileState, coroutineScope),
+    AsyncInventoryStateProvider by DefaultAsyncInventoryStateProvider(
+        searchQueryState, volatileState, dao, dataStore, coroutineScope)
 {
     @Inject constructor(
         dataStore: DataStore<Preferences>,
@@ -217,14 +199,12 @@ abstract class ItemListViewModel<T: ListItem>(
         messageHandler: MessageHandler,
         dao: InventoryItemDao,
         itemGroupDao: ItemGroupDao,
-        @SharedState.InventorySelection
-        selection: SelectionState,
+        @SharedState.InventoryVolatileState
+        volatileState: ItemListVolatileState,
     ) : this(dataStore, searchQueryState, messageHandler,
-             dao, itemGroupDao, selection, viewModelScope())
+             dao, itemGroupDao, volatileState, viewModelScope())
 
-    override val collectionNameResId = StringResource.Id(R.string.inventory_description)
-
-    override val items by ::inventory
+    override val listState by ::inventoryState
 
     override fun onItemAmountChangeRequest(id: Long, amount: Int) {
         coroutineScope.launch { dao.setAmount(id, amount) }

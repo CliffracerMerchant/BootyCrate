@@ -17,7 +17,10 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -109,6 +112,7 @@ import kotlinx.collections.immutable.ImmutableList
  * to create new [ShoppingListItem]s. */
 @Composable fun NewShoppingListItemDialog(modifier: Modifier = Modifier) {
     val viewModel: NewShoppingListItemDialogViewModel = viewModel()
+    var showColorPicker by remember { mutableStateOf(false) }
 
     NewItemDialog(
         onDismissRequest = viewModel::onDismissRequest,
@@ -126,19 +130,22 @@ import kotlinx.collections.immutable.ImmutableList
             viewModel.itemExtraInfo,
             viewModel.itemAmount,
             viewModel.itemIsChecked,
-            isLinked = false,
-            isEditable = true,
-            isSelected = false,
+            linked = false,
             selectionBrush = SolidColor(Color.Transparent),
+            selected = false,
+            expanded = true,
+            showColorPicker = showColorPicker,
             callback = remember {
                 shoppingListItemCallback(
-                    onColorGroupClick = { _, newColorGroup -> viewModel.itemColorGroup = newColorGroup },
-                    onRenameRequest = { _, newName -> viewModel.itemName = newName },
+                    onColorIndicatorClick = { _ -> showColorPicker = true },
+                    onColorGroupClick = { _, newColorGroup ->
+                        viewModel.itemColorGroup = newColorGroup
+                        showColorPicker = false
+                    }, onRenameRequest = { _, newName -> viewModel.itemName = newName },
                     onExtraInfoChangeRequest = { _, newExtraInfo -> viewModel.itemExtraInfo = newExtraInfo },
                     onAmountChangeRequest = { _, newAmount -> viewModel.itemAmount = newAmount },
                     showEditButton = false)
-            }
-        )
+            })
     }
 }
 
@@ -146,6 +153,7 @@ import kotlinx.collections.immutable.ImmutableList
  * create new [InventoryItem]s. */
 @Composable fun NewInventoryItemDialog(modifier: Modifier = Modifier) {
     val viewModel: NewInventoryItemDialogViewModel = viewModel()
+    var showColorPicker by remember { mutableStateOf(false) }
 
     NewItemDialog(
         onDismissRequest = viewModel::onDismissRequest,
@@ -162,16 +170,20 @@ import kotlinx.collections.immutable.ImmutableList
             viewModel.itemName,
             viewModel.itemExtraInfo,
             viewModel.itemAmount,
-            isLinked = false,
+            linked = false,
             viewModel.itemAutoAddToShoppingList,
             viewModel.itemAutoAddToShoppingListAmount,
-            isEditable = true,
-            isSelected = false,
             selectionBrush = SolidColor(Color.Transparent),
+            selected = false,
+            expanded = true,
+            showColorPicker = showColorPicker,
             callback = remember {
                 inventoryItemCallback(
-                    onColorGroupClick = { _, newColorGroup -> viewModel.itemColorGroup = newColorGroup },
-                    onRenameRequest = { _, newName -> viewModel.itemName = newName },
+                    onColorIndicatorClick = { _ -> showColorPicker = true },
+                    onColorGroupClick = { _, newColorGroup ->
+                        viewModel.itemColorGroup = newColorGroup
+                        showColorPicker = false
+                    }, onRenameRequest = { _, newName -> viewModel.itemName = newName },
                     onExtraInfoChangeRequest = { _, newExtraInfo -> viewModel.itemExtraInfo = newExtraInfo },
                     onAmountChangeRequest = { _, newAmount -> viewModel.itemAmount = newAmount },
                     showEditButton = false,

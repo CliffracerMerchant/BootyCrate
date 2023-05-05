@@ -4,13 +4,18 @@
  * or in the file LICENSE in the project's root directory. */
 package com.cliffracertech.bootycrate.model.database
 
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.room.Dao
 import androidx.room.Query
+import com.cliffracertech.bootycrate.R
+import com.cliffracertech.bootycrate.itemlist.AsyncListState
+import com.cliffracertech.bootycrate.model.ItemListVolatileState
 import com.cliffracertech.bootycrate.settings.PrefKeys
+import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.collectAsState
 import com.cliffracertech.bootycrate.utils.enumPreferenceFlow
 import kotlinx.collections.immutable.ImmutableList
@@ -108,15 +113,15 @@ interface InventoryProvider {
 }
 
 /**
- * An implementation of [InventoryProvider] that provides the current [inventory]
- * given a search query and a sorting method.
+ * An implementation of [InventoryProvider] that provides the current
+ * [inventory], given a search query and a sorting method.
  *
  * @param searchQueryState A [StateFlow]`<String?>` that contains the current search query
  * @param dao A [ShoppingListItemDao] instance
  * @param dataStore: A [DataStore]`<Preferences>` that contains the app's preferences
- * @param scope The [CoroutineScope] that the [inventory] property will be updated in
+ * @param scope The [CoroutineScope] that the [inventory] will be updated in
  */
-class SearchableSortableInventoryProvider(
+class DefaultInventoryProvider(
     searchQueryState: StateFlow<String?>,
     dao: InventoryItemDao,
     dataStore: DataStore<Preferences>,
@@ -126,7 +131,49 @@ class SearchableSortableInventoryProvider(
         intPreferencesKey(PrefKeys.itemSort), ListItem.Sort.Color)
 
     override val inventory by
-    combine(sort, searchQueryState, dao::getItems)
-        .transformLatest { emitAll(it) }
-        .collectAsState(null, scope)
+        combine(sort, searchQueryState, dao::getItems)
+            .transformLatest { emitAll(it) }
+            .collectAsState(null, scope)
+}
+
+/** A provider of the current [AsyncListState]`<InventoryItem>`
+ * through its member [inventoryState]. */
+interface AsyncInventoryStateProvider {
+    val inventoryState: AsyncListState<InventoryItem>
+}
+
+/**
+ * An implementation of [AsyncInventoryStateProvider] that provides the
+ * current [inventoryState] depending on the provided search query,
+ * [ItemListVolatileState], and sorting method.
+ *
+ * @param searchQueryState A [StateFlow]`<String?>` that contains the current search query
+ * @param volatileState An [ItemListVolatileState] that contains the item list's
+ *     selection and other volatile UI state
+ * @param dao A [ShoppingListItemDao] instance
+ * @param dataStore: A [DataStore]`<Preferences>` that contains the app's preferences
+ * @param scope The [CoroutineScope] that the [inventory] property will be updated in
+ */
+class DefaultAsyncInventoryStateProvider(
+    searchQueryState: StateFlow<String?>,
+    volatileState: ItemListVolatileState,
+    dao: InventoryItemDao,
+    dataStore: DataStore<Preferences>,
+    scope: CoroutineScope,
+): AsyncInventoryStateProvider,
+    InventoryProvider by DefaultInventoryProvider(
+        searchQueryState, dao, dataStore, scope)
+{
+    override val inventoryState by derivedStateOf {
+        val items = inventory
+        when (items?.size) {
+            null -> AsyncListState.Loading
+            0 -> AsyncListState.Message(
+                if (searchQueryState.value != null)
+                    StringResource(R.string.no_search_results_message)
+                else StringResource(R.string.empty_list_message,
+                    R.string.shopping_list_description))
+            else -> AsyncListState.Content(items, volatileState)
+        }
+    }
 }

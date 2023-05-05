@@ -108,15 +108,17 @@ class NavigationState @Inject constructor() {
     }
 }
 
-// SelectionState is not ActivityRetainedScoped because we want to allow
-// multiple instances (one for the shopping list and one for the inventory).
-class SelectionState @Inject constructor() {
+/** A state holder that holds a set of [Long] ids that represent selected
+ * items. The [ImmutableSet] of selected item ids can be accessed through
+ * the [ids] member. The selection's contents can be altered via the
+ * methods [toggle], [addAll], and [clear]. */
+class SelectionState {
     private val _ids: SnapshotStateMap<Long, Unit> = mutableStateMapOf()
     val ids by derivedStateOf {
         _ids.keys.toImmutableSet()
     }
 
-    val size get() = ids.size
+    val size by ids::size
     val isEmpty get() = size == 0
 
     operator fun contains(id: Long) = id in _ids
@@ -133,19 +135,58 @@ class SelectionState @Inject constructor() {
     fun clear() = _ids.clear()
 }
 
+/** A holder of volatile state (i.e. state that would not typically be
+ * remembered across restarts) for a list of expandable, selectable, and
+ * color sortable items. The [SelectionState] can be accessed through
+ * [selection]. The id of the expanded item can be accessed through
+ * [expandedItemId], and changed via the method [toggleExpansionFor].
+ * Likewise, the id of the item for whom a color picker is being shown
+ * can be accessed through [colorPickerItemId] and changed via the method
+ * [toggleShowColorPickerFor]. */
+class ItemListVolatileState @Inject constructor() {
+    val selection = SelectionState()
+
+    var expandedItemId by mutableStateOf<Long?>(null)
+        private set
+    fun toggleExpansionFor(itemId: Long) {
+        colorPickerItemId = null
+        expandedItemId = if (expandedItemId != itemId) itemId
+                         else                          null
+    }
+
+    var colorPickerItemId by mutableStateOf<Long?>(null)
+        private set
+    fun toggleShowColorPickerFor(itemId: Long) {
+        if (expandedItemId != itemId)
+            expandedItemId = null
+        colorPickerItemId = if (colorPickerItemId != itemId) itemId
+                            else                             null
+    }
+}
+
 @Module @InstallIn(ActivityRetainedComponent::class)
 class SharedState {
     @Qualifier @Retention(AnnotationRetention.BINARY)
-    annotation class ShoppingListSelection
+    annotation class ShoppingListVolatileState
 
     @Qualifier @Retention(AnnotationRetention.BINARY)
-    annotation class InventorySelection
+    annotation class InventoryVolatileState
 
-    @ShoppingListSelection @ActivityRetainedScoped @Provides
-    fun provideShoppingListSelection() = SelectionState()
+    @ShoppingListVolatileState @ActivityRetainedScoped @Provides
+    fun provideShoppingListVolatileState() = ItemListVolatileState()
 
-    @InventorySelection @ActivityRetainedScoped @Provides
-    fun provideInventorySelection() = SelectionState()
+    @InventoryVolatileState @ActivityRetainedScoped @Provides
+    fun provideInventoryVolatileState() = ItemListVolatileState()
+
+    @ShoppingListVolatileState @ActivityRetainedScoped @Provides
+    fun provideShoppingListSelection(
+        @ShoppingListVolatileState volatileState: ItemListVolatileState
+    ) = volatileState.selection
+
+    @InventoryVolatileState @ActivityRetainedScoped @Provides
+    fun provideInventorySelection(
+        @InventoryVolatileState volatileState: ItemListVolatileState
+    ) = volatileState.selection
 
     @Qualifier @Retention(AnnotationRetention.BINARY)
     annotation class SearchQuery

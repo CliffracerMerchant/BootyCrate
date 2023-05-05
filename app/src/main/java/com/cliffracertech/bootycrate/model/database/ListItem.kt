@@ -52,7 +52,6 @@ class DatabaseListItem(
     @ColumnInfo(name="inInventoryTrash", defaultValue="0")
     val inInventoryTrash: Boolean = false
 ) {
-
     override fun toString() ="""
         id = $id
         groupName = $groupName
@@ -79,17 +78,20 @@ class DatabaseListItem(
 
 }
 
-/** An abstract class that mirrors DatabaseListItem, but only contains
- * the fields necessary for a visual representation of the object. */
+/** An abstract class that mirrors [DatabaseListItem], but omits the
+ * fields not necessary for a visual representation of the object,
+ * and adds the calculated [linked] field that represents whether
+ * or not the item is linked to a similar item on another list. */
+// Meta note: A shopping list item being linked means it is also in the inventory
+//            An inventory item being linked means it is also on the shopping list
 abstract class ListItem(
     val id: Long = 0,
     val name: String,
     val extraInfo: String = "",
     val colorGroup: ColorGroup = ColorGroup.values().first(),
     val amount: Int = 1,
-    val isLinked: Boolean = false,
+    val linked: Boolean = false,
 ) {
-
     /** Return a [String] that describes the name, extra info, and amount of an item. */
     fun toUserFacingString() = "${amount}x $name" + (if (extraInfo.isNotBlank()) ", $extraInfo" else "")
 
@@ -165,38 +167,35 @@ abstract class ListItem(
     }
 }
 
-/** A ListItem subclass that provides an implementation of toDbListItem
- * and adds the isChecked field to mirror the DatabaseListItem field. */
+/** A [ListItem] subclass that provides the method [toDbListItem] to convert
+ * itself to a [DatabaseListItem], and adds the isChecked field to mirror the
+ * [DatabaseListItem] field. */
 class ShoppingListItem(
     id: Long = 0,
     name: String,
     extraInfo: String = "",
     colorGroup: ColorGroup = ColorGroup.values().first(),
     amount: Int = 1,
-    isLinked: Boolean = false,
-    val isChecked: Boolean = false
-): ListItem(id, name, extraInfo, colorGroup, amount, isLinked) {
-
+    linked: Boolean = false,
+    val checked: Boolean = false
+): ListItem(id, name, extraInfo, colorGroup, amount, linked) {
     fun toDbListItem(groupName: String) = DatabaseListItem(
-        id, groupName, name, extraInfo, colorGroup,
-        isChecked = isChecked,
-        shoppingListAmount = amount)
+        id, groupName, name, extraInfo, colorGroup, checked, amount)
 }
 
-/** A ListItem subclass that provides an implementation of toDbListItem
- * and adds the autoAddToShoppingList and autoAddToShoppingListAmount fields to
- * mirror the DatabaseListItem fields. */
+/** A [ListItem] subclass that provides the method [toDbListItem] to convert
+ * itself to a [DatabaseListItem], and adds the [autoAddToShoppingList] and
+ * [autoAddToShoppingListAmount] fields to mirror the [DatabaseListItem] fields. */
 class InventoryItem(
     id: Long = 0,
     name: String,
     extraInfo: String = "",
     colorGroup: ColorGroup = ColorGroup.values().first(),
     amount: Int = 0,
-    isLinked: Boolean = false,
+    linked: Boolean = false,
     val autoAddToShoppingList: Boolean = false,
     val autoAddToShoppingListAmount: Int = 1
-): ListItem(id, name, extraInfo, colorGroup, amount, isLinked) {
-
+): ListItem(id, name, extraInfo, colorGroup, amount, linked) {
     fun toDbListItem(groupName: String) = DatabaseListItem(
         id, groupName, name, extraInfo, colorGroup,
         inventoryAmount = amount,
