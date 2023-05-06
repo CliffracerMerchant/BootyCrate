@@ -224,7 +224,7 @@ class DefaultAsyncShoppingListStateProvider(
                 if (searchQueryState.value != null)
                     StringResource(R.string.no_search_results_message)
                 else StringResource(R.string.empty_list_message,
-                    R.string.shopping_list_description))
+                    StringResource.Id(R.string.shopping_list_description)))
             else -> AsyncListState.Content(items, volatileState)
         }
     }
