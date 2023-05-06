@@ -118,8 +118,9 @@ class SelectionState {
         _ids.keys.toImmutableSet()
     }
 
-    val size by ids::size
-    val isEmpty get() = size == 0
+    val size get() = _ids.size
+    val isEmpty get() = _ids.isEmpty()
+    val isNotEmpty get() = _ids.isNotEmpty()
 
     operator fun contains(id: Long) = id in _ids
 

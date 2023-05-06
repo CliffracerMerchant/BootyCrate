@@ -99,7 +99,7 @@ abstract class ItemListViewModel<T: ListItem>(
     fun onItemEditButtonClick(id: Long) = volatileState.toggleExpansionFor(id)
 
     fun onItemClick(id: Long) {
-        if (volatileState.selection.ids.isNotEmpty())
+        if (volatileState.selection.isNotEmpty)
             volatileState.selection.toggle(id)
     }
 
