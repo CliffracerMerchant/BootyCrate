@@ -214,10 +214,16 @@ enum class ChangeSortDeleteButtonState {
     val shareActionVisible = true
 
     fun onAddToInventoryClick() {
-        coroutineScope.launch { inventoryDao.addFromShoppingListItems(shoppingListSelection.ids) }
+        coroutineScope.launch {
+            inventoryDao.addFromShoppingListItems(shoppingListSelection.ids)
+            shoppingListSelection.clear()
+        }
     }
     fun onAddToShoppingListClick() {
-        coroutineScope.launch { shoppingListDao.addFromInventoryItems(inventorySelection.ids) }
+        coroutineScope.launch {
+            shoppingListDao.addFromInventoryItems(inventorySelection.ids)
+            inventorySelection.clear()
+        }
     }
     fun onCheckAllClick() {
         coroutineScope.launch { shoppingListDao.checkAllVisibleItems() }
@@ -245,6 +251,7 @@ enum class ChangeSortDeleteButtonState {
                             else                       inventorySelection
             val items = if (selection.isEmpty) allItems
                         else allItems?.filter { it.id in selection }
+                                      .also { selection.clear() }
 
             if (items?.isEmpty() != false) {
                 val collectionNameResId =
