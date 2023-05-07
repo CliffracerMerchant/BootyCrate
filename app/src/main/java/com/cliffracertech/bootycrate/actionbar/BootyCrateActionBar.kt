@@ -17,6 +17,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,7 +43,11 @@ import com.cliffracertech.bootycrate.model.database.ListItem
     val title = remember(viewModel.title) {
         viewModel.title.resolve(context)
     }
-
+    LaunchedEffect(viewModel.intents) {
+        viewModel.intents.collect {
+            context.startActivity(it, null)
+        }
+    }
     ListActionBar(
         modifier = modifier,
         showBackButton = viewModel.showBackButton,

@@ -267,7 +267,8 @@ enum class ChangeSortDeleteButtonState {
                 val intent = Intent(Intent.ACTION_SEND)
                 intent.putExtra(Intent.EXTRA_TEXT, message)
                 intent.type = "text/plain"
-                _intents.tryEmit(intent)
+                val chooserIntent = Intent.createChooser(intent, null)
+                _intents.tryEmit(chooserIntent)
             }
         }
     }
