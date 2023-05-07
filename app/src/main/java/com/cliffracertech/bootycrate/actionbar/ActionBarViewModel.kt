@@ -65,6 +65,15 @@ enum class ChangeSortDeleteButtonState {
     val isInvisible get() = this == Invisible
 }
 
+/**
+ * A holder of state and callbacks for the BootyCrate action bar. The action
+ * bar should read and update its visual state according to the values of
+ * [showBackButton], [title], [searchQuery] (which should override the title
+ * when it is not null), [showSearchButton], [changeSortDeleteButtonState],
+ * and [optionsMenuItems]. Callbacks that should be connected to actions on
+ * their respective UI components include [onBackPressed], [onSearchButtonClick],
+ * [onSearchQueryChangeRequest], [onSortOptionClick], and [onDeleteButtonClick]
+ */
 @HiltViewModel class ActionBarViewModel(
     private val dataStore: DataStore<Preferences>,
     private val shoppingListDao: ShoppingListItemDao,
