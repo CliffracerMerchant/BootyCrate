@@ -174,10 +174,13 @@ enum class ChangeSortDeleteButtonState {
         coroutineScope.launch {
             val itemCount = selectedItemCount
 
-            if (screen.isShoppingList)
+            if (screen.isShoppingList) {
                 shoppingListDao.delete(shoppingListSelection.ids)
-            else inventoryDao.delete(inventorySelection.ids)
-
+                shoppingListSelection.clear()
+            } else {
+                inventoryDao.delete(inventorySelection.ids)
+                inventorySelection.clear()
+            }
             messageHandler.postItemsDeletedMessage(
                 count = itemCount,
                 onUndo = {
