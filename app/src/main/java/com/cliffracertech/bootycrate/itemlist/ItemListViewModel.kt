@@ -23,8 +23,6 @@ import com.cliffracertech.bootycrate.model.database.ListItemDao
 import com.cliffracertech.bootycrate.model.database.ShoppingListItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
 import com.cliffracertech.bootycrate.utils.StringResource
-import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
-import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableSet
@@ -105,13 +103,13 @@ abstract class ItemListViewModel<T: ListItem>(
 
     fun onItemLongClick(id: Long) = volatileState.selection.toggle(id)
 
-    fun onItemSwipe(id: Long) { coroutineScope.launch {
-        deleteItem(id)
-        messageHandler.postItemsDeletedMessage(1, ::undoDelete) {
-            if (it != DISMISS_EVENT_ACTION && it != DISMISS_EVENT_CONSECUTIVE)
-                emptyTrash()
-        }
-    }}
+    fun onItemSwipe(id: Long) {
+        coroutineScope.launch { deleteItem(id) }
+        messageHandler.postItemsDeletedMessage(
+            count = 1,
+            onUndo = ::undoDelete,
+            onTimeout = ::emptyTrash)
+    }
 
     @CallSuper
     protected open suspend fun deleteItem(id: Long) {
@@ -166,7 +164,6 @@ abstract class ItemListViewModel<T: ListItem>(
         dao.delete(id)
         super.deleteItem(id)
     }
-
     override fun emptyTrash() {
         coroutineScope.launch { dao.emptyTrash() }
     }
@@ -217,12 +214,10 @@ abstract class ItemListViewModel<T: ListItem>(
         coroutineScope.launch { dao.setAutoAddToShoppingListAmount(id, amount) }
     }
 
-
     override suspend fun deleteItem(id: Long) {
         dao.delete(id)
         super.deleteItem(id)
     }
-
     override fun emptyTrash() {
         coroutineScope.launch { dao.emptyTrash() }
     }

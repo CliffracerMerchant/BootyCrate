@@ -29,8 +29,6 @@ import com.cliffracertech.bootycrate.settings.edit
 import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.collectAsState
 import com.cliffracertech.bootycrate.utils.enumPreferenceState
-import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_ACTION
-import com.google.android.material.snackbar.BaseTransientBottomBar.BaseCallback.DISMISS_EVENT_CONSECUTIVE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
@@ -186,13 +184,12 @@ enum class ChangeSortDeleteButtonState {
                     if (screen.isShoppingList)
                         coroutineScope.launch { shoppingListDao.undoDelete() }
                     else coroutineScope.launch { inventoryDao.undoDelete() }
-                }, onDismiss = { reason: Int ->
-                    if (reason != DISMISS_EVENT_ACTION && reason != DISMISS_EVENT_CONSECUTIVE)
-                        coroutineScope.launch {
-                            if (screen.isShoppingList)
-                                shoppingListDao.emptyTrash()
-                            else inventoryDao.emptyTrash()
-                        }
+                }, onTimeout = {
+                    coroutineScope.launch {
+                        if (screen.isShoppingList)
+                            shoppingListDao.emptyTrash()
+                        else inventoryDao.emptyTrash()
+                    }
                 })
         }
     }
@@ -201,7 +198,6 @@ enum class ChangeSortDeleteButtonState {
     val showMoreOptionsButton by derivedStateOf {
         !visibleScreen.isAppSettings
     }
-
 
     val addToInventoryActionVisible by derivedStateOf {
         shoppingListSelection.size > 0

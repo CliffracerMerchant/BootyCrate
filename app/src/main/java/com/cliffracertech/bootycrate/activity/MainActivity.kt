@@ -122,11 +122,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setThemedContent {
             val scaffoldState = rememberScaffoldState()
-            val bottomBarAdditionalPadding =
-                WindowInsets.navigationBars
+            scaffoldState.snackbarHostState.ShowSnackBarsFor(viewModel.messages)
+
+            val bottomBarAdditionalPadding = WindowInsets.navigationBars
                     .asPaddingValues(LocalDensity.current)
                     .calculateBottomPadding()
-            MessageDisplayer(this, scaffoldState.snackbarHostState, viewModel.messages)
             Scaffold(
                 scaffoldState = scaffoldState,
                 topBar = {
