@@ -31,6 +31,17 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.defaultSpring
 import com.cliffracertech.bootycrate.model.database.ListItem
 
+@Composable private fun OptionsMenuItem(
+    data: OptionsMenuItem,
+    closeMenu: () -> Unit,
+) = DropdownMenuItem(
+    onClick = {
+        closeMenu()
+        data.onClick()
+    }, content = {
+        Text(stringResource(data.titleResId))
+    })
+
 /** Compose a [ListActionBar] with state provided by an instance of [ActionBarViewModel]. */
 @Composable fun BootyCrateActionBar(
     modifier: Modifier = Modifier,
@@ -68,35 +79,20 @@ import com.cliffracertech.bootycrate.model.database.ListItem
     ) {
         val spring = defaultSpring<Float>()
         AnimatedVisibility(
-            visible = viewModel.showMoreOptionsButton,
+            visible = viewModel.optionsMenuItems != null,
             enter = fadeIn(spring) + scaleIn(spring, 1.25f),
             exit = fadeOut(spring) + scaleOut(spring, 0.8f),
         ) {
             var showingMenu by rememberSaveable { mutableStateOf(false) }
             IconButton({ showingMenu = true }) {
                 Icon(Icons.Default.MoreVert, stringResource(R.string.more_options_description))
-                val dropdownMenuItem = @Composable { onClick: () -> Unit, titleResId: Int ->
-                    DropdownMenuItem(onClick = {
-                        showingMenu = false
-                        onClick()
-                    }) { Text(stringResource(titleResId)) }
-                }
+
                 DropdownMenu(
                     expanded = showingMenu,
                     onDismissRequest = { showingMenu = false },
                 ) {
-                    if (viewModel.addToInventoryActionVisible)
-                        dropdownMenuItem(viewModel::onAddToInventoryClick, R.string.add_to_inventory_description)
-                    if (viewModel.addToShoppingListActionVisible)
-                        dropdownMenuItem(viewModel::onAddToShoppingListClick, R.string.add_to_shopping_list_description)
-                    if (viewModel.checkAllActionVisible)
-                        dropdownMenuItem(viewModel::onCheckAllClick, R.string.check_all_description)
-                    if (viewModel.uncheckAllActionVisible)
-                        dropdownMenuItem(viewModel::onUncheckAllClick, R.string.uncheck_all_description)
-                    if (viewModel.selectAllActionVisible)
-                        dropdownMenuItem(viewModel::onSelectAllClick, R.string.select_all_description)
-                    if (viewModel.shareActionVisible)
-                        dropdownMenuItem(viewModel::onShareClick, R.string.share_description)
+                    for (item in viewModel.optionsMenuItems ?: return@DropdownMenu)
+                        OptionsMenuItem(item) { showingMenu = false }
                 }
             }
         }

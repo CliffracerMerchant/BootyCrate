@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.actionbar
 
 import android.content.Intent
+import androidx.annotation.StringRes
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.datastore.core.DataStore
@@ -16,12 +17,12 @@ import com.cliffracertech.bootycrate.activity.MessageHandler
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.SelectionState
 import com.cliffracertech.bootycrate.model.SharedState
-import com.cliffracertech.bootycrate.model.database.InventoryItemDao
-import com.cliffracertech.bootycrate.model.database.ItemGroupDao
-import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.DefaultInventoryProvider
 import com.cliffracertech.bootycrate.model.database.DefaultShoppingListProvider
+import com.cliffracertech.bootycrate.model.database.InventoryItemDao
 import com.cliffracertech.bootycrate.model.database.InventoryProvider
+import com.cliffracertech.bootycrate.model.database.ItemGroupDao
+import com.cliffracertech.bootycrate.model.database.ListItem
 import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
 import com.cliffracertech.bootycrate.model.database.ShoppingListProvider
 import com.cliffracertech.bootycrate.settings.PrefKeys
@@ -30,6 +31,7 @@ import com.cliffracertech.bootycrate.utils.StringResource
 import com.cliffracertech.bootycrate.utils.collectAsState
 import com.cliffracertech.bootycrate.utils.enumPreferenceState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -38,6 +40,16 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
+
+/**
+ * An option within an options menu
+ *
+ * @param titleResId The id of the string resource to use as the item's title
+ * @param onClick The callback that should be invoked when the item is clicked
+ */
+data class OptionsMenuItem(
+    @StringRes val titleResId: Int,
+    val onClick: () -> Unit)
 
 /** A set of values representing the state of a combo change sorting method and delete button. */
 enum class ChangeSortDeleteButtonState {
@@ -197,56 +209,37 @@ enum class ChangeSortDeleteButtonState {
         }
     }
 
-
-    val showMoreOptionsButton by derivedStateOf {
-        !visibleScreen.isAppSettings
-    }
-
-    val addToInventoryActionVisible by derivedStateOf {
-        shoppingListSelection.size > 0
-    }
-    val addToShoppingListActionVisible by derivedStateOf {
-        inventorySelection.size > 0
-    }
-    val checkAllActionVisible by derivedStateOf {
-        visibleScreen.isShoppingList
-    }
-    val uncheckAllActionVisible by ::checkAllActionVisible
-
-    val selectAllActionVisible = true
-    val shareActionVisible = true
-
-    fun onAddToInventoryClick() {
-        coroutineScope.launch {
-            inventoryDao.addFromShoppingListItems(shoppingListSelection.ids)
-            shoppingListSelection.clear()
+    private val addToInventoryItem =
+        OptionsMenuItem(R.string.add_to_inventory_description) {
+            coroutineScope.launch {
+                inventoryDao.addFromShoppingListItems(shoppingListSelection.ids)
+                shoppingListSelection.clear()
+            }
         }
-    }
-    fun onAddToShoppingListClick() {
-        coroutineScope.launch {
-            shoppingListDao.addFromInventoryItems(inventorySelection.ids)
-            inventorySelection.clear()
+    private val addToShoppingListItem =
+        OptionsMenuItem(R.string.add_to_shopping_list_description) {
+            coroutineScope.launch {
+                shoppingListDao.addFromInventoryItems(inventorySelection.ids)
+                inventorySelection.clear()
+            }
         }
-    }
-    fun onCheckAllClick() {
+    private val checkAllItem = OptionsMenuItem(R.string.check_all_description) {
         coroutineScope.launch { shoppingListDao.checkAllVisibleItems() }
     }
-    fun onUncheckAllClick() {
+    private val uncheckAllItem = OptionsMenuItem(R.string.uncheck_all_description) {
         coroutineScope.launch { shoppingListDao.uncheckAllVisibleItems() }
     }
-    fun onSelectAllClick() {
-        if (visibleScreen.isShoppingList) {
-            val shoppingList = this.shoppingList ?: return
-            shoppingListSelection.addAll(shoppingList.map { it.id })
-        } else if (visibleScreen.isInventory) {
-            val inventory = this.inventory ?: return
-            inventorySelection.addAll(inventory.map { it.id })
+    private val selectAllItem = OptionsMenuItem(R.string.select_all_description) {
+        if (visibleScreen.isShoppingList) shoppingList?.let {
+            shoppingListSelection.addAll(it.map(ListItem::id))
+        } else if (visibleScreen.isInventory) inventory?.let {
+            inventorySelection.addAll(it.map(ListItem::id))
         }
     }
-    fun onShareClick() {
+    private val shareItem = OptionsMenuItem(R.string.share_description) {
         val screen = visibleScreen
         if (!screen.isShoppingList && !screen.isInventory)
-            return
+            return@OptionsMenuItem
         coroutineScope.launch {
             val allItems = if (screen.isInventory) inventory
                            else                    shoppingList
@@ -274,5 +267,41 @@ enum class ChangeSortDeleteButtonState {
                 _intents.tryEmit(chooserIntent)
             }
         }
+    }
+
+    private val checkedItemCount by shoppingListDao
+        .getVisibleCheckedItemCount()
+        .collectAsState(0, coroutineScope)
+
+    /** The list of options menu items that should be shown. If the
+     * value is null, the button to open the options menu should be
+     * hidden. Otherwise, a drop down menu item should be shown for
+     * each [OptionsMenuItem] in the list. */
+    val optionsMenuItems by derivedStateOf {
+        val shoppingListSize = shoppingList?.size ?: 0
+        val inventorySize = inventory?.size ?: 0
+
+        if (visibleScreen.isAppSettings ||
+           (visibleScreen.isShoppingList && shoppingListSize == 0) ||
+           (visibleScreen.isInventory && inventorySize == 0))
+                null
+        else mutableListOf<OptionsMenuItem>().apply {
+            if (visibleScreen.isShoppingList) {
+                if (shoppingListSelection.isNotEmpty)
+                    add(addToInventoryItem)
+                if (shoppingListSelection.size < shoppingListSize)
+                    add(selectAllItem)
+                if (checkedItemCount < shoppingListSize)
+                    add(checkAllItem)
+                if (checkedItemCount > 0)
+                    add(uncheckAllItem)
+            } else { // visibleScreen.isInventory
+                if (inventorySelection.isNotEmpty)
+                    add(addToShoppingListItem)
+                if (inventorySelection.size < inventorySize)
+                    add(selectAllItem)
+            }
+            add(shareItem)
+        }.toImmutableList()
     }
 }
