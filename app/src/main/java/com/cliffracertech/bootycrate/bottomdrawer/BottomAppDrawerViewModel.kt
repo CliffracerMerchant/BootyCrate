@@ -22,6 +22,9 @@ import com.cliffracertech.bootycrate.utils.collectAsState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -163,6 +166,9 @@ class DefaultAddItemGroupButtonHandler(
     val isHidden by derivedStateOf {
         !navState.visibleScreen.isRootScreen
     }
+    private val _collapseEvents = MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    val collapseEvents = _collapseEvents.asSharedFlow()
 
     fun onSettingsButtonClick() {
         navState.addToStack(NavigationState.AdditionalScreenType.AppSettings)
@@ -192,6 +198,8 @@ class DefaultAddItemGroupButtonHandler(
     fun onItemGroupClick(itemGroup: ItemGroup) {
         coroutineScope.launch {
             itemGroupDao.toggleIsSelected(itemGroup.name)
+            if (!multiSelectItemGroups)
+                _collapseEvents.emit(Unit)
         }
     }
 }

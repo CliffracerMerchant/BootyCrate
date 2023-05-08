@@ -170,6 +170,11 @@ class DrawerSizes(
             if (vm.isHidden) Hidden
             else             Collapsed)
     }
+    LaunchedEffect(vm.collapseEvents) {
+        vm.collapseEvents.collect {
+            swipeableState.animateTo(Collapsed)
+        }
+    }
 
     BottomAppDrawer(
         sizes = drawerSizes,
