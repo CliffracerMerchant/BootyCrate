@@ -21,7 +21,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,16 +30,28 @@ import com.cliffracertech.bootycrate.R
 import com.cliffracertech.bootycrate.defaultSpring
 import com.cliffracertech.bootycrate.model.database.ListItem
 
-@Composable private fun OptionsMenuItem(
-    data: OptionsMenuItem,
-    closeMenu: () -> Unit,
-) = DropdownMenuItem(
-    onClick = {
-        closeMenu()
-        data.onClick()
-    }, content = {
-        Text(stringResource(data.titleResId))
-    })
+@Composable private fun OptionsMenuButton(
+    items: List<OptionsMenuItem>,
+) {
+    var showingMenu by remember { mutableStateOf(false) }
+
+    IconButton({ showingMenu = true }) {
+        Icon(Icons.Default.MoreVert,
+            stringResource(R.string.more_options_description))
+
+        DropdownMenu(
+            expanded = showingMenu,
+            onDismissRequest = { showingMenu = false },
+        ) {
+            items.forEach {
+                DropdownMenuItem({
+                    showingMenu = false
+                    it.onClick()
+                }) { Text(stringResource(it.titleResId)) }
+            }
+        }
+    }
+}
 
 /** Compose a [ListActionBar] with state provided by an instance of [ActionBarViewModel]. */
 @Composable fun BootyCrateActionBar(
@@ -79,22 +90,11 @@ import com.cliffracertech.bootycrate.model.database.ListItem
     ) {
         val spring = defaultSpring<Float>()
         AnimatedVisibility(
-            visible = viewModel.optionsMenuItems != null,
+            visible = viewModel.optionsMenuItems.isNotEmpty(),
             enter = fadeIn(spring) + scaleIn(spring, 1.25f),
             exit = fadeOut(spring) + scaleOut(spring, 0.8f),
         ) {
-            var showingMenu by rememberSaveable { mutableStateOf(false) }
-            IconButton({ showingMenu = true }) {
-                Icon(Icons.Default.MoreVert, stringResource(R.string.more_options_description))
-
-                DropdownMenu(
-                    expanded = showingMenu,
-                    onDismissRequest = { showingMenu = false },
-                ) {
-                    for (item in viewModel.optionsMenuItems ?: return@DropdownMenu)
-                        OptionsMenuItem(item) { showingMenu = false }
-                }
-            }
+            OptionsMenuButton(viewModel.optionsMenuItems)
         }
     }
 }

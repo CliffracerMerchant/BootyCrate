@@ -5,6 +5,7 @@
 package com.cliffracertech.bootycrate.actionbar
 
 import android.content.Intent
+import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -36,6 +37,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.*
@@ -72,7 +74,9 @@ enum class ChangeSortDeleteButtonState {
  * when it is not null), [showSearchButton], [changeSortDeleteButtonState],
  * and [optionsMenuItems]. Callbacks that should be connected to actions on
  * their respective UI components include [onBackPressed], [onSearchButtonClick],
- * [onSearchQueryChangeRequest], [onSortOptionClick], and [onDeleteButtonClick]
+ * [onSearchQueryChangeRequest], [onSortOptionClick], and [onDeleteButtonClick].
+ * All [Intent]s emitted from the [SharedFlow] property [intents] should be
+ * launched in a new activity using [Context.startActivity].
  */
 @HiltViewModel class ActionBarViewModel(
     private val dataStore: DataStore<Preferences>,
@@ -108,9 +112,15 @@ enum class ChangeSortDeleteButtonState {
              navigationState, messageHandler, searchQueryState,
              shoppingListSelection, inventorySelection, viewModelScope())
 
-    private val _searchQuery by searchQueryState.collectAsState(null, coroutineScope)
-
+    private val shoppingListSize get() = shoppingList?.size ?: 0
+    private val inventorySize get() = inventory?.size ?: 0
     private val visibleScreen by navigationState::visibleScreen
+    private val showingEmptyShoppingList get() = visibleScreen.isShoppingList && shoppingListSize == 0
+    private val showingEmptyInventory get() = visibleScreen.isInventory && inventorySize == 0
+    private val showingNonEmptyShoppingList get() = visibleScreen.isShoppingList && shoppingListSize > 0
+    private val showingNonEmptyInventory get() = visibleScreen.isInventory && inventorySize > 0
+
+    private val _searchQuery by searchQueryState.collectAsState(null, coroutineScope)
 
     private val selectedItemCount by derivedStateOf {
         when {
@@ -122,10 +132,12 @@ enum class ChangeSortDeleteButtonState {
     private val selectedItemGroups by
         itemGroupDao.getSelectedGroups().collectAsState(emptyList(), coroutineScope)
 
+
     private val _intents = MutableSharedFlow<Intent>(
         replay = 0, extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST)
     val intents = _intents.asSharedFlow()
+
 
     val showBackButton by derivedStateOf {
         visibleScreen.isAppSettings ||
@@ -161,12 +173,14 @@ enum class ChangeSortDeleteButtonState {
         }
     }}
 
+
     val searchQuery: String? by derivedStateOf {
         if (selectedItemCount > 0) null else _searchQuery
     }
 
     val showSearchButton by derivedStateOf {
-        !visibleScreen.isAppSettings && selectedItemCount == 0
+        (showingNonEmptyShoppingList && shoppingListSelection.isEmpty) ||
+        (showingNonEmptyInventory && inventorySelection.isEmpty)
     }
 
     fun onSearchButtonClick() {
@@ -184,9 +198,11 @@ enum class ChangeSortDeleteButtonState {
         dataStore.edit(sortKey, sort.ordinal, coroutineScope)
 
     val changeSortDeleteButtonState by derivedStateOf { when {
-        visibleScreen.isAppSettings -> ChangeSortDeleteButtonState.Invisible
-        selectedItemCount > 0 ->       ChangeSortDeleteButtonState.Delete
-        else ->                        ChangeSortDeleteButtonState.ChangeSort
+        visibleScreen.isAppSettings ||
+        showingEmptyInventory ||
+        showingEmptyShoppingList -> ChangeSortDeleteButtonState.Invisible
+        selectedItemCount > 0 ->    ChangeSortDeleteButtonState.Delete
+        else ->                     ChangeSortDeleteButtonState.ChangeSort
     }}
 
     fun onDeleteButtonClick() {
@@ -204,17 +220,15 @@ enum class ChangeSortDeleteButtonState {
             }
             messageHandler.postItemsDeletedMessage(
                 count = itemCount,
-                onUndo = {
+                onUndo = { coroutineScope.launch {
                     if (screen.isShoppingList)
-                        coroutineScope.launch { shoppingListDao.undoDelete() }
-                    else coroutineScope.launch { inventoryDao.undoDelete() }
-                }, onTimeout = {
-                    coroutineScope.launch {
-                        if (screen.isShoppingList)
-                            shoppingListDao.emptyTrash()
-                        else inventoryDao.emptyTrash()
-                    }
-                })
+                        shoppingListDao.undoDelete()
+                    else inventoryDao.undoDelete()
+                }}, onTimeout = { coroutineScope.launch {
+                    if (screen.isShoppingList)
+                        shoppingListDao.emptyTrash()
+                    else inventoryDao.emptyTrash()
+                }})
         }
     }
 
@@ -252,16 +266,16 @@ enum class ChangeSortDeleteButtonState {
         coroutineScope.launch {
             val allItems = if (screen.isInventory) inventory
                            else                    shoppingList
-            val selection = if (screen.isShoppingList) shoppingListSelection
-                            else                       inventorySelection
+            val selection = if (screen.isInventory) inventorySelection
+                            else                    shoppingListSelection
             val items = if (selection.isEmpty) allItems
                         else allItems?.filter { it.id in selection }
                                       .also { selection.clear() }
 
             if (items?.isEmpty() != false) {
                 val collectionNameResId =
-                    if (screen.isInventory) R.string.shopping_list_description
-                    else                    R.string.inventory_description
+                    if (screen.isInventory) R.string.inventory_description
+                    else                    R.string.shopping_list_description
                 messageHandler.postMessage(StringResource(
                     R.string.empty_list_message, collectionNameResId))
             } else {
@@ -283,17 +297,14 @@ enum class ChangeSortDeleteButtonState {
         .collectAsState(0, coroutineScope)
 
     /** The list of options menu items that should be shown. If the
-     * value is null, the button to open the options menu should be
+     * list is empty, the button to open the options menu should be
      * hidden. Otherwise, a drop down menu item should be shown for
      * each [OptionsMenuItem] in the list. */
     val optionsMenuItems by derivedStateOf {
-        val shoppingListSize = shoppingList?.size ?: 0
-        val inventorySize = inventory?.size ?: 0
-
         if (visibleScreen.isAppSettings ||
            (visibleScreen.isShoppingList && shoppingListSize == 0) ||
            (visibleScreen.isInventory && inventorySize == 0))
-                null
+                emptyList()
         else mutableListOf<OptionsMenuItem>().apply {
             if (visibleScreen.isShoppingList) {
                 if (shoppingListSelection.isNotEmpty)
