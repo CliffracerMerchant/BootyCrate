@@ -87,6 +87,8 @@ import com.cliffracertech.bootycrate.model.NavigationState
     val topEdge = remember {
         TopEdgeWithCutout(
             density = density,
+            width = maxWidth,
+            initialCutoutWidth = cutoutContentWidth(showingCheckoutButton = false),
             cutout = TopCutout(
                 density = density,
                 depth = 53.dp,
@@ -111,7 +113,7 @@ import com.cliffracertech.bootycrate.model.NavigationState
                 }),
             indicator = TopEdgeWithCutout.Indicator(
                 density = density,
-                width = 60.dp,
+                width = 56.dp,
                 thickness = 8.dp,
                 color = Color.Gray),
             topOuterCornerRadius = 25.dp)

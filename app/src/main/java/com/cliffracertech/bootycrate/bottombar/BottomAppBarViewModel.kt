@@ -7,7 +7,7 @@ package com.cliffracertech.bootycrate.bottombar
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.cliffracertech.bootycrate.ViewModel.Companion.viewModelScope
 import com.cliffracertech.bootycrate.model.NavigationState
 import com.cliffracertech.bootycrate.model.NewItemDialogVisibilityState
 import com.cliffracertech.bootycrate.model.database.ShoppingListItemDao
@@ -43,16 +43,14 @@ import javax.inject.Inject
     private val navState: NavigationState,
     private val dialogVisibilityState: NewItemDialogVisibilityState,
     private val shoppingListDao: ShoppingListItemDao,
-    coroutineScope: CoroutineScope?
+    private val coroutineScope: CoroutineScope
 ) : ViewModel() {
 
     @Inject constructor(
         navigationState: NavigationState,
         dialogVisibilityState: NewItemDialogVisibilityState,
         shoppingListDao: ShoppingListItemDao,
-    ) : this(navigationState, dialogVisibilityState, shoppingListDao, null)
-
-    private val scope = coroutineScope ?: viewModelScope
+    ) : this(navigationState, dialogVisibilityState, shoppingListDao, viewModelScope())
 
     /** The navigation destination that the nav indicator should
      * hover above to indicate that it is the active one. */
@@ -60,7 +58,7 @@ import javax.inject.Inject
 
     private val checkedItemsSize by shoppingListDao
         .getVisibleCheckedItemCount()
-        .collectAsState(0, scope)
+        .collectAsState(0, coroutineScope)
 
     val checkoutButtonIsVisible by derivedStateOf {
         selectedRootScreen.isShoppingList
@@ -81,11 +79,11 @@ import javax.inject.Inject
             oldShoppingListSize = shoppingListSize
             if (selectedRootScreen.isShoppingList) 0
             else change
-        }.drop(1).shareIn(scope, SharingStarted.WhileSubscribed(3000), 0)
+        }.drop(1).shareIn(coroutineScope, SharingStarted.WhileSubscribed(3000), 0)
 
     fun onCheckoutButtonConfirm() {
         if (selectedRootScreen.isShoppingList)
-            scope.launch { shoppingListDao.checkoutVisibleItems() }
+            coroutineScope.launch { shoppingListDao.checkoutVisibleItems() }
     }
 
     val newShoppingListItemDialogIsVisible by
